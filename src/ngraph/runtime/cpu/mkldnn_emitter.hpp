@@ -551,11 +551,11 @@ namespace ngraph
                     Shape wei_layer_tz{
                         num_fused_layers,
                         direction,
-                        static_cast<unsigned long>(rnn_node->get_src_layer_feature_size()),
                         rnn_cell_n_gates,
+                        static_cast<unsigned long>(rnn_node->get_src_layer_feature_size()),
                         feature_size};
                     Shape wei_iter_tz{
-                        num_fused_layers, direction, feature_size, rnn_cell_n_gates, feature_size};
+                        num_fused_layers, direction, rnn_cell_n_gates, feature_size, feature_size};
                     Shape bias_tz{num_fused_layers, direction, rnn_cell_n_gates, feature_size};
                     Shape dst_layer_tz{src_sequence_length_max, batch, feature_size};
                     Shape dst_iter_tz{
@@ -594,9 +594,55 @@ namespace ngraph
                                          const mkldnn::memory::desc& dst_layer_desc,
                                          const mkldnn::memory::desc& dst_iter_desc);
 
+                template <typename OP>
                 size_t build_rnn_backward(const ngraph::Node* node,
                                           const std::vector<TensorViewWrapper>& args,
-                                          const std::vector<TensorViewWrapper>& out);
+                                          const std::vector<TensorViewWrapper>& out)
+
+                {
+                    auto rnn_bprop_op = static_cast<const OP*>(node);
+                    auto rnn_attributes = rnn_bprop_op->get_rnn_attributes();
+                    auto et = node->get_input_element_type(0);
+                    Shape src_layer_dims{
+                        rnn_attributes.timestep, rnn_attributes.batch, rnn_attributes.slc};
+
+                    Shape src_iter_dims{rnn_attributes.layer,
+                                        rnn_attributes.direction,
+                                        rnn_attributes.states,
+                                        rnn_attributes.batch,
+                                        rnn_attributes.slc};
+
+                    Shape wei_layer_dims{rnn_attributes.layer,
+                                         rnn_attributes.direction,
+                                         rnn_attributes.gates,
+                                         rnn_attributes.slc,
+                                         rnn_attributes.sic};
+
+                    Shape wei_iter_dims{rnn_attributes.layer,
+                                        rnn_attributes.direction,
+                                        rnn_attributes.gates,
+                                        rnn_attributes.sic,
+                                        rnn_attributes.sic};
+
+                    Shape bias_dims{rnn_attributes.layer,
+                                    rnn_attributes.direction,
+                                    rnn_attributes.gates,
+                                    rnn_attributes.sic};
+
+                    return build_rnn_backword_primitive(src_layer_dims,
+                                                        src_iter_dims,
+                                                        wei_layer_dims,
+                                                        wei_iter_dims,
+                                                        bias_dims,
+                                                        et);
+                }
+
+                size_t build_rnn_backword_primitive(Shape& src_layer_dims,
+                                                    Shape& src_iter_dims,
+                                                    Shape& wei_layer_dims,
+                                                    Shape& wei_iter_dims,
+                                                    Shape& bias_dims,
+                                                    ngraph::element::Type& et);
 
                 size_t build_concat(const std::vector<mkldnn::memory::desc>& inputs_data_desc,
                                     const mkldnn::memory::desc& result_desc,

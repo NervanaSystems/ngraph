@@ -104,7 +104,8 @@ namespace ngraph
                 auto& diff_dst_iter_tensor = external_function->get_tensor_data(args[8].get_name());
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                auto rnn_bprop_index = mkldnn_emitter->build_rnn_backward(node, args, out);
+                auto rnn_bprop_index =
+                    mkldnn_emitter->build_rnn_backward<ngraph::op::RnnBackprop>(node, args, out);
 
                 auto& fprop_deps = mkldnn_emitter->get_primitive_deps(rnn_bprop_index - 1);
                 auto functor_fprop = [&, rnn_bprop_index](CPURuntimeContext* ctx,

@@ -55,6 +55,8 @@ namespace ngraph
             size_t get_num_cell_states() const { return m_num_cell_states; }
             size_t get_direction() const { return m_direction; }
             size_t get_num_fused_layers() const { return m_num_fused_layers; }
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const NodeVector& deltas) override;
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
@@ -70,6 +72,40 @@ namespace ngraph
             size_t m_num_cell_states;
             size_t m_direction;
             size_t m_num_fused_layers;
+        };
+
+        class LstmBackprop : public Op
+        {
+        public:
+            LstmBackprop(std::shared_ptr<Node> result_forward,
+                         std::shared_ptr<Node> fprop_src_layer,
+                         std::shared_ptr<Node> fprop_src_iter,
+                         std::shared_ptr<Node> fprop_weights_layer,
+                         std::shared_ptr<Node> fprop_weights_iter,
+                         std::shared_ptr<Node> fprop_bias,
+                         std::shared_ptr<Node> fprop_dst_layer,
+                         std::shared_ptr<Node> fprop_dst_iter,
+                         std::shared_ptr<Node> diff_dst_layer,
+                         std::shared_ptr<Node> diff_dst_iter);
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+
+            struct RnnAttributes
+            {
+                size_t timestep;  /* sequence_len or number of timesteps */
+                size_t batch;     /* batch size */
+                size_t states;    /* number of recurrent states */
+                size_t layer;     /* number of rnn layers */
+                size_t direction; /* rnn direction */
+                size_t gates;     /* number of gates */
+                size_t slc;       /* input feature size */
+                size_t sic;       /* hidden state feature size */
+            };
+            RnnAttributes get_rnn_attributes() const { return m_rnn_attributes; }
+            std::shared_ptr<Node> get_fprop_node() const { return m_fprop_node; }
+        private:
+            std::shared_ptr<Node> m_fprop_node;
+            RnnAttributes m_rnn_attributes;
         };
     }
 }
