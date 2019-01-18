@@ -551,11 +551,11 @@ namespace ngraph
                     Shape wei_layer_tz{
                         num_fused_layers,
                         direction,
-                        rnn_cell_n_gates,
                         static_cast<unsigned long>(rnn_node->get_src_layer_feature_size()),
+                        rnn_cell_n_gates,
                         feature_size};
                     Shape wei_iter_tz{
-                        num_fused_layers, direction, rnn_cell_n_gates, feature_size, feature_size};
+                        num_fused_layers, direction, feature_size, rnn_cell_n_gates, feature_size};
                     Shape bias_tz{num_fused_layers, direction, rnn_cell_n_gates, feature_size};
                     Shape dst_layer_tz{src_sequence_length_max, batch, feature_size};
                     Shape dst_iter_tz{
@@ -614,14 +614,14 @@ namespace ngraph
 
                     Shape wei_layer_dims{rnn_attributes.layer,
                                          rnn_attributes.direction,
-                                         rnn_attributes.gates,
                                          rnn_attributes.slc,
+                                         rnn_attributes.gates,
                                          rnn_attributes.sic};
 
                     Shape wei_iter_dims{rnn_attributes.layer,
                                         rnn_attributes.direction,
-                                        rnn_attributes.gates,
                                         rnn_attributes.sic,
+                                        rnn_attributes.gates,
                                         rnn_attributes.sic};
 
                     Shape bias_dims{rnn_attributes.layer,
