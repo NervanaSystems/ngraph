@@ -21,6 +21,7 @@
 #include <unordered_map>
 
 #include "core/attribute.hpp"
+#include "ngraph/log.hpp"
 #include "op/abs.hpp"
 #include "op/acos.hpp"
 #include "op/add.hpp"
@@ -102,20 +103,19 @@ namespace ngraph
     {
         namespace detail
         {
-            const Operator& find(const std::string& name,
-                                 std::int64_t version,
-                                 const std::string& domain,
-                                 const std::map<std::int64_t, Operator>& map)
+            const std::map<std::int64_t, Operator>::const_iterator
+                find(std::int64_t version, const std::map<std::int64_t, Operator>& map)
             {
+                std::map<std::int64_t, Operator>::const_iterator it{};
                 while (version > 0)
                 {
-                    const auto it = map.find(version--);
+                    it = map.find(version--);
                     if (it != std::end(map))
                     {
-                        return it->second;
+                        return it;
                     }
                 }
-                throw error::UnsupportedVersion{name, version, domain};
+                return it;
             }
         }
 
@@ -136,9 +136,20 @@ namespace ngraph
             {
                 throw error::UnknownDomain{domain};
             }
+            if (version > OperatorsBridge::LATEST_SUPPORTED_OPSET_VERSION)
+            {
+                NGRAPH_WARN << "Currently operator set version: " << version << " is unsupported."
+                            << " Falling back to: "
+                            << OperatorsBridge::LATEST_SUPPORTED_OPSET_VERSION;
+            }
             for (const auto& op : dm->second)
             {
-                result.emplace(op.first, detail::find(op.first, version, domain, op.second));
+                const auto& it = detail::find(version, op.second);
+                if (it == std::end(op.second))
+                {
+                    throw error::UnsupportedVersion{op.first, version, domain};
+                }
+                result.emplace(op.first, it->second);
             }
             return result;
         }
@@ -148,6 +159,34 @@ namespace ngraph
             std::int64_t version = 10;
             return _get_operator_set(version, domain);
         }
+
+        bool OperatorsBridge::_is_operator_registered(const std::string& name,
+                                                      std::int64_t version,
+                                                      const std::string& domain)
+        {
+            // search for domain
+            auto dm_map = m_map.find(domain);
+            if (dm_map == std::end(m_map))
+            {
+                return false;
+            }
+            // search for name
+            auto op_map = dm_map->second.find(name);
+            if (op_map == std::end(dm_map->second))
+            {
+                return false;
+            }
+
+            if (detail::find(version, op_map->second) != std::end(op_map->second))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
 #define REGISTER_OPERATOR(name_, ver_, fn_)                                                        \
     m_map[""][name_].emplace(ver_, std::bind(op::set_##ver_::fn_, std::placeholders::_1))
 

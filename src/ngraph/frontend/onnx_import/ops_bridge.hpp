@@ -62,6 +62,8 @@ namespace ngraph
         class OperatorsBridge
         {
         public:
+            static constexpr const int LATEST_SUPPORTED_OPSET_VERSION = ONNX_OPSET_VERSION;
+
             OperatorsBridge(const OperatorsBridge&) = delete;
             OperatorsBridge& operator=(const OperatorsBridge&) = delete;
             OperatorsBridge(OperatorsBridge&&) = delete;
@@ -85,6 +87,13 @@ namespace ngraph
                 instance()._register_operator(name, version, domain, std::move(fn));
             }
 
+            static bool is_operator_registered(const std::string& name,
+                                               std::int64_t version,
+                                               const std::string& domain)
+            {
+                return instance()._is_operator_registered(name, version, domain);
+            }
+
         private:
             std::unordered_map<std::string,
                                std::unordered_map<std::string, std::map<std::int64_t, Operator>>>
@@ -104,6 +113,10 @@ namespace ngraph
                                     Operator fn);
             OperatorSet _get_operator_set(std::int64_t version, const std::string& domain);
             OperatorSet _get_operator_set(const std::string& domain);
+
+            bool _is_operator_registered(const std::string& name,
+                                         std::int64_t version,
+                                         const std::string& domain);
         };
 
     } // namespace onnx_import
