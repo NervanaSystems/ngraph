@@ -130,6 +130,8 @@ add_library(onnx_import STATIC
         op/softplus.hpp
         op/softsign.cpp
         op/softsign.hpp
+        op/space_to_depth.cpp
+        op/space_to_depth.hpp
         op/split.cpp
         op/split.hpp
         op/sqrt.hpp
