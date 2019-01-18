@@ -99,6 +99,14 @@ namespace ngraph
             return op_list;
         }
 
+        bool is_operator_supported(const std::string& op_name,
+                                   std::int64_t version,
+                                   const std::string& domain)
+        {
+            return OperatorsBridge::is_operator_registered(
+                op_name, version, domain == "ai.onnx" ? "" : domain);
+        }
+
     } // namespace onnx_import
 
 } // namespace ngraph

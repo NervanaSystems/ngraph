@@ -91,13 +91,6 @@ namespace ngraph
                                    NVShape slice_strides,
                                    NVShape output_shape);
 
-                size_t build_reduce_window(const OpName op_name,
-                                           const std::vector<std::string>& dtypes,
-                                           NVShape input_shape,
-                                           NVShape output_shape,
-                                           NVShape reduce_window_shape,
-                                           NVShape reduce_window_strides);
-
                 size_t build_reverse_sequence(const std::array<std::string, 3>& dtypes,
                                               NVShape input_shape0,
                                               NVShape input_shape1,
