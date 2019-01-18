@@ -1075,15 +1075,15 @@ TEST(builder, dynamic_scaled_QC_fusion_channelwise)
     Shape shape_b{64, 64, 1, 1}; // filter shape
     Shape shape_r{1, 64, 4, 4}; // output shape
     vector<uint8_t> a_data(shape_size(shape_a));
-    std::ifstream ifs("data.in");
+    std::ifstream ifs("./files/dynamic_scaled_QC_fusion_channelwise.1");
     ifs.read(reinterpret_cast<char *>(&a_data[0]), shape_size(shape_a) * sizeof(uint8_t));
     ifs.close();
     vector<uint8_t> r_data(shape_size(shape_r));
-    std::ifstream ifsr("results.in");
+    std::ifstream ifsr("./files/dynamic_scaled_QC_fusion_channelwise.3");
     ifsr.read(reinterpret_cast<char *>(&r_data[0]), shape_size(shape_r) * sizeof(uint8_t));
     ifsr.close();
     vector<float> b_data(shape_size(shape_b));
-    std::ifstream ifs2("weights.in");
+    std::ifstream ifs2("./files/dynamic_scaled_QC_fusion_channelwise.2");
     ifs2.read(reinterpret_cast<char *>(&b_data[0]), shape_size(shape_b) * sizeof(float));
     ifs2.close();
     vector<float> c_data(64);
