@@ -1580,7 +1580,7 @@ protected:
 TEST_P(lin_quant_model_param_test, model_resnet50)
 {
     auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/final_int8_resnet50_static_input.onnx"));
+        file_util::path_join(SERIALIZED_ZOO, "onnx/final_int8_resnet50_static_shapes.onnx"));
 
     Inputs inputs{read_binary_file<float>(input_filename)};
     Outputs expected_output{read_binary_file<float>(output_filename)};
