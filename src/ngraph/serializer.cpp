@@ -943,7 +943,12 @@ static shared_ptr<ngraph::Function>
                                           [](size_t s) { return s == 0; }))
                     << "Legacy padding_interior field must be zero everywhere.";
 
-                node = make_shared<op::Pad>(args[0], args[1], padding_below, padding_above);
+                auto pad_mode = node_js.count("pad_mode") == 0
+                                    ? op::PadMode::CONSTANT
+                                    : static_cast<op::PadMode>(node_js.at("pad_mode"));
+
+                node =
+                    make_shared<op::Pad>(args[0], args[1], padding_below, padding_above, pad_mode);
                 break;
             }
             case OP_TYPEID::Parameter:
@@ -1543,6 +1548,7 @@ static json write(const Node& n, bool binary_constant_data)
         auto tmp = dynamic_cast<const op::Pad*>(&n);
         node["padding_below"] = tmp->get_padding_below();
         node["padding_above"] = tmp->get_padding_above();
+        node["pad_mode"] = tmp->get_pad_mode();
         break;
     }
     case OP_TYPEID::Parameter:

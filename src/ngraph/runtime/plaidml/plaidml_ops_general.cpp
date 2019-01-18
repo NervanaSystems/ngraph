@@ -216,6 +216,9 @@ void ngraph::runtime::plaidml::ImplPad::Apply()
     // interior padding.
     Shape padding_interior(op.get_padding_below().size(), 0);
 
+    // FIXME: Check inserted by amprocte, should support the new modes as well.
+    NGRAPH_ASSERT(op.get_pad_mode() == op::PadMode::CONSTANT);
+
     auto dim_limit = op().get_shape().size();
 
     bool any_zero_dims = false;

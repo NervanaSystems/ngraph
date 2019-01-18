@@ -846,6 +846,12 @@ std::string runtime::gpu::GPU_Emitter::emit_Pad(EMIT_ARGS)
     auto padding_below = pad->get_padding_below();
     auto padding_above = pad->get_padding_above();
     auto padding_interior = pad->get_padding_interior();
+    auto pad_mode = pad->get_pad_mode();
+
+    if (pad_mode != op::PadMode::CONSTANT)
+    {
+        throw unsupported_op("Pad modes other than CONSTANT are unsupported");
+    }
 
     auto& cuda_emitter = compiled_function->get_primitive_emitter()->get_cuda_emitter();
 

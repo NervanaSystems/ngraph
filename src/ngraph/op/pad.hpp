@@ -23,6 +23,14 @@ namespace ngraph
 {
     namespace op
     {
+        /// \brief Modes for the `Pad` operator.
+        enum class PadMode
+        {
+            CONSTANT = 0,
+            EDGE,
+            REFLECT
+        };
+
         /// \brief Generic padding operation.
         class Pad : public Op
         {
@@ -36,7 +44,8 @@ namespace ngraph
             Pad(const std::shared_ptr<Node>& arg,
                 const std::shared_ptr<Node>& arg_pad_value,
                 const CoordinateDiff& padding_below,
-                const CoordinateDiff& padding_above);
+                const CoordinateDiff& padding_above,
+                PadMode pad_mode = PadMode::CONSTANT);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -44,6 +53,8 @@ namespace ngraph
             const CoordinateDiff& get_padding_below() const { return m_padding_below; }
             /// \return The padding-above sizes.
             const CoordinateDiff& get_padding_above() const { return m_padding_above; }
+            /// \return The padding mode.
+            PadMode get_pad_mode() const { return m_pad_mode; }
             /// \return The default value for Pad.
             virtual std::shared_ptr<Node> get_default_value() const override;
 
@@ -53,6 +64,7 @@ namespace ngraph
                                            const NodeVector& deltas) override;
             CoordinateDiff m_padding_below;
             CoordinateDiff m_padding_above;
+            PadMode m_pad_mode;
         };
     }
 }

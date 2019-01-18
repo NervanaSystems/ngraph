@@ -21,6 +21,7 @@
 #include "ngraph/assertion.hpp"
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/coordinate_transform.hpp"
+#include "ngraph/op/pad.hpp" // for op::PadMode
 
 namespace ngraph
 {
@@ -35,7 +36,8 @@ namespace ngraph
                      const Shape& arg0_shape,
                      const Shape& out_shape,
                      const CoordinateDiff& padding_below,
-                     const CoordinateDiff& padding_above)
+                     const CoordinateDiff& padding_above,
+                     op::PadMode pad_mode)
             {
                 Coordinate input_start(arg0_shape.size(), 0); // start at (0,0,...,0)
                 Coordinate input_end =
@@ -70,9 +72,25 @@ namespace ngraph
                 {
                     const Coordinate& out_coord = *output_it;
 
-                    T v = input_transform.has_source_coordinate(in_coord)
-                              ? arg0[input_transform.index(in_coord)]
-                              : *arg1;
+                    T v;
+
+                    if (input_transform.has_source_coordinate(in_coord))
+                    {
+                        v = arg0[input_transform.index(in_coord)];
+                    }
+                    else
+                    {
+                        switch (pad_mode)
+                        {
+                        case op::PadMode::CONSTANT: v = *arg1; break;
+                        case op::PadMode::EDGE:
+                            throw std::invalid_argument("EDGE padding mode not implemented");
+                            break;
+                        case op::PadMode::REFLECT:
+                            throw std::invalid_argument("REFLECT padding mode not implemented");
+                            break;
+                        }
+                    }
 
                     out[output_transform.index(out_coord)] = v;
 

@@ -24,10 +24,12 @@ using namespace ngraph;
 op::Pad::Pad(const shared_ptr<Node>& arg,
              const shared_ptr<Node>& arg_pad_value,
              const CoordinateDiff& padding_below,
-             const CoordinateDiff& padding_above)
+             const CoordinateDiff& padding_above,
+             PadMode pad_mode)
     : Op("Pad", check_single_output_args({arg, arg_pad_value}))
     , m_padding_below(padding_below)
     , m_padding_above(padding_above)
+    , m_pad_mode(pad_mode)
 {
     constructor_validate_and_infer_types();
 }
@@ -83,7 +85,8 @@ void op::Pad::validate_and_infer_types()
 shared_ptr<Node> op::Pad::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Pad>(new_args.at(0), new_args.at(1), m_padding_below, m_padding_above);
+    return make_shared<Pad>(
+        new_args.at(0), new_args.at(1), m_padding_below, m_padding_above, m_pad_mode);
 }
 
 /* (TODO(amprocte): this comment was written back when we still had "interior" padding

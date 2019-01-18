@@ -368,6 +368,12 @@ static bool
         return false;
     }
 
+    // Only match constant padding
+    if (matched_pad->get_pad_mode() != op::PadMode::CONSTANT)
+    {
+        return false;
+    }
+
     // Only match no padding in the batch dimension
     if (matched_pad->get_padding_above().at(batch_index) != 0 ||
         matched_pad->get_padding_below().at(batch_index) != 0)
