@@ -63,6 +63,8 @@ add_library(onnx_import STATIC
         op/conv.hpp
         op/conv_transpose.cpp
         op/conv_transpose.hpp
+        op/depth_to_space.cpp
+        op/depth_to_space.hpp
         op/div.hpp
         op/elu.cpp
         op/elu.hpp
