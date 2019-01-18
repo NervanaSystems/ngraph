@@ -2937,6 +2937,213 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_negative_exterior_1d_check_limits)
               read_vector<float>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, pad_edge_1d)
+{
+    Shape shape_a{6};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_r{11};
+    CoordinateDiff padding_below{2};
+    CoordinateDiff padding_above{3};
+    auto f = make_shared<Function>(
+        make_shared<op::Pad>(A, B, padding_below, padding_above, op::PadMode::EDGE),
+        ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, test::NDArray<float, 1>({1, 2, 3, 4, 5, 6}).get_vector());
+    auto b = backend->create_tensor(element::f32, shape_b);
+    copy_data(b, vector<float>{2112});
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a, b});
+    EXPECT_EQ((test::NDArray<float, 1>({1, 1, 1, 2, 3, 4, 5, 6, 6, 6, 6}).get_vector()),
+              read_vector<float>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, pad_edge_1d_top_neg)
+{
+    Shape shape_a{6};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_r{5};
+    CoordinateDiff padding_below{2};
+    CoordinateDiff padding_above{-3};
+    auto f = make_shared<Function>(
+        make_shared<op::Pad>(A, B, padding_below, padding_above, op::PadMode::EDGE),
+        ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, test::NDArray<float, 1>({1, 2, 3, 4, 5, 6}).get_vector());
+    auto b = backend->create_tensor(element::f32, shape_b);
+    copy_data(b, vector<float>{2112});
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a, b});
+    EXPECT_EQ((test::NDArray<float, 1>({1, 1, 1, 2, 3}).get_vector()), read_vector<float>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, pad_edge_1d_top_neg_bigger_than_tensor)
+{
+    Shape shape_a{6};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_r{1};
+    CoordinateDiff padding_below{2};
+    CoordinateDiff padding_above{-7};
+    auto f = make_shared<Function>(
+        make_shared<op::Pad>(A, B, padding_below, padding_above, op::PadMode::EDGE),
+        ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, test::NDArray<float, 1>({1, 2, 3, 4, 5, 6}).get_vector());
+    auto b = backend->create_tensor(element::f32, shape_b);
+    copy_data(b, vector<float>{2112});
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a, b});
+    EXPECT_EQ((test::NDArray<float, 1>({1}).get_vector()), read_vector<float>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, pad_edge_1d_bottom_neg)
+{
+    Shape shape_a{6};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_r{7};
+    CoordinateDiff padding_below{-2};
+    CoordinateDiff padding_above{3};
+    auto f = make_shared<Function>(
+        make_shared<op::Pad>(A, B, padding_below, padding_above, op::PadMode::EDGE),
+        ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, test::NDArray<float, 1>({1, 2, 3, 4, 5, 6}).get_vector());
+    auto b = backend->create_tensor(element::f32, shape_b);
+    copy_data(b, vector<float>{2112});
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a, b});
+    EXPECT_EQ((test::NDArray<float, 1>({3, 4, 5, 6, 6, 6, 6}).get_vector()),
+              read_vector<float>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, pad_edge_1d_bottom_neg_bigger_than_tensor)
+{
+    Shape shape_a{6};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_r{2};
+    CoordinateDiff padding_below{-7};
+    CoordinateDiff padding_above{3};
+    auto f = make_shared<Function>(
+        make_shared<op::Pad>(A, B, padding_below, padding_above, op::PadMode::EDGE),
+        ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, test::NDArray<float, 1>({1, 2, 3, 4, 5, 6}).get_vector());
+    auto b = backend->create_tensor(element::f32, shape_b);
+    copy_data(b, vector<float>{2112});
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a, b});
+    EXPECT_EQ((test::NDArray<float, 1>({6, 6}).get_vector()), read_vector<float>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, pad_edge_2d)
+{
+    Shape shape_a{3, 4};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_r{6, 9};
+    CoordinateDiff padding_below{2, 3};
+    CoordinateDiff padding_above{1, 2};
+    auto f = make_shared<Function>(
+        make_shared<op::Pad>(A, B, padding_below, padding_above, op::PadMode::EDGE),
+        ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 2>({{1, 2, 3, 4}, {5, 6, 7, 8}, {9, 10, 11, 12}}).get_vector());
+    auto b = backend->create_tensor(element::f32, shape_b);
+    copy_data(b, vector<float>{2112});
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a, b});
+    EXPECT_EQ((test::NDArray<float, 2>({{1, 1, 1, 1, 2, 3, 4, 4, 4},
+                                        {1, 1, 1, 1, 2, 3, 4, 4, 4},
+                                        {1, 1, 1, 1, 2, 3, 4, 4, 4},
+                                        {5, 5, 5, 5, 6, 7, 8, 8, 8},
+                                        {9, 9, 9, 9, 10, 11, 12, 12, 12},
+                                        {9, 9, 9, 9, 10, 11, 12, 12, 12}})
+                   .get_vector()),
+              read_vector<float>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, pad_edge_2d_with_neg)
+{
+    Shape shape_a{3, 4};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_r{6, 5};
+    CoordinateDiff padding_below{2, -1};
+    CoordinateDiff padding_above{1, 2};
+    auto f = make_shared<Function>(
+        make_shared<op::Pad>(A, B, padding_below, padding_above, op::PadMode::EDGE),
+        ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 2>({{1, 2, 3, 4}, {5, 6, 7, 8}, {9, 10, 11, 12}}).get_vector());
+    auto b = backend->create_tensor(element::f32, shape_b);
+    copy_data(b, vector<float>{2112});
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a, b});
+    EXPECT_EQ((test::NDArray<float, 2>({{2, 3, 4, 4, 4},
+                                        {2, 3, 4, 4, 4},
+                                        {2, 3, 4, 4, 4},
+                                        {6, 7, 8, 8, 8},
+                                        {10, 11, 12, 12, 12},
+                                        {10, 11, 12, 12, 12}})
+                   .get_vector()),
+              read_vector<float>(result));
+}
+
 // NGRAPH_TEST(${BACKEND_NAME}, pad_interior_exterior_1d)
 // {
 //     Shape shape_a{6};

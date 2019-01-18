@@ -86,14 +86,16 @@ namespace ngraph
                         // Truncate each out-of-bound dimension.
                         for (size_t i = 0; i < c.size(); i++)
                         {
-                            if (c[i] < padding_below[i])
+                            if (static_cast<ptrdiff_t>(c[i]) < padding_below[i])
                             {
                                 c[i] = padding_below[i];
                             }
 
-                            if (c[i] >= (padding_below[i] + arg0_shape[i] + padding_above[i]))
+                            if (static_cast<ptrdiff_t>(c[i]) >=
+                                (padding_below[i] + static_cast<ptrdiff_t>(arg0_shape[i])))
                             {
-                                c[i] = padding_below[i] + arg0_shape[i] - 1;
+                                c[i] = static_cast<size_t>(
+                                    padding_below[i] + static_cast<ptrdiff_t>(arg0_shape[i]) - 1);
                             }
                         }
                         v = arg0[input_transform.index(c)];
