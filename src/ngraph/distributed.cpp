@@ -33,7 +33,7 @@ ngraph::Distributed::Distributed()
 
 ngraph::Distributed::~Distributed()
 {
-    MPI_Finalize();
+   // MPI_Finalize();
 }
 
 int ngraph::Distributed::get_size() const
