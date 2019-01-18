@@ -1755,6 +1755,8 @@ TEST(onnx_${BACKEND_NAME}, model_space_to_depth_chw)
 
 TEST(onnx_${BACKEND_NAME}, model_space_to_depth_bad_blocksize)
 {
+    // This model fails to import since the depth channel length must be a multiple of the
+    // `blocksize` attribute value.
     EXPECT_THROW(onnx_import::import_onnx_model(file_util::path_join(
                      SERIALIZED_ZOO, "onnx/space_to_depth_bad_blocksize.onnx")),
                  std::runtime_error);
@@ -1762,6 +1764,7 @@ TEST(onnx_${BACKEND_NAME}, model_space_to_depth_bad_blocksize)
 
 TEST(onnx_${BACKEND_NAME}, model_space_to_depth_no_blocksize)
 {
+    // This model fails to import since it lacks of required `blocksize` attribute.
     EXPECT_THROW(onnx_import::import_onnx_model(
                      file_util::path_join(SERIALIZED_ZOO, "onnx/space_to_depth_no_blocksize.onnx")),
                  std::runtime_error);
