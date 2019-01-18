@@ -1714,6 +1714,28 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_3d_strided_different_strides)
     EXPECT_EQ((vector<float>{0, 3, 8, 11, 32, 35, 40, 43}), read_vector<float>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, slice_3d_start_just_oob)
+{
+    Shape shape_a{20, 10, 5};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_r{20, 0, 5};
+    auto r =
+        make_shared<op::Slice>(A, Coordinate{0, 10, 0}, Coordinate{20, 10, 5}, Strides{1, 1, 1});
+    auto f = make_shared<Function>(r, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    vector<float> a_data(20 * 10 * 5, 222.0f);
+    copy_data(a, a_data);
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a});
+    EXPECT_EQ((vector<float>{}), read_vector<float>(result));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, scalar_constant_float32)
 {
     auto r = op::Constant::create(element::f32, Shape{}, {4.75});
