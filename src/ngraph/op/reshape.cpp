@@ -25,10 +25,12 @@ using namespace ngraph;
 
 op::Reshape::Reshape(const shared_ptr<Node>& arg,
                      const AxisVector& input_order,
-                     const Shape& output_shape)
+                     const Shape& output_shape,
+                     const std::string& created_by)
     : Op("Reshape", check_single_output_args({arg}))
     , m_input_order(input_order)
     , m_output_shape(output_shape)
+    , m_created_by(created_by)
 {
     constructor_validate_and_infer_types();
 }

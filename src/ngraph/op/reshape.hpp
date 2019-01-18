@@ -69,7 +69,8 @@ namespace ngraph
             ///        be of the form \f$(b_0,\dots,b_{j-1})\f$ where \f$\Pi(a_i) = \Pi(b_i)\f$.
             Reshape(const std::shared_ptr<Node>& arg,
                     const AxisVector& input_order,
-                    const Shape& output_shape);
+                    const Shape& output_shape,
+                    const std::string& created_by = "ngraph");
 
             void validate_and_infer_types() override;
 
@@ -81,6 +82,8 @@ namespace ngraph
             /// \return The shape of the output tensor.
             const Shape& get_output_shape() const { return m_output_shape; }
             bool get_is_transpose() const { return m_is_transpose; }
+            std::string get_created_by() const { return m_created_by; }
+
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
@@ -88,6 +91,7 @@ namespace ngraph
             const AxisVector m_input_order;
             const Shape m_output_shape;
             bool m_is_transpose{false};
+            std::string m_created_by; 
         };
     }
 }
