@@ -1561,7 +1561,7 @@ TEST(onnx_${BACKEND_NAME}, model_matmul_vec_ten3d)
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, DISABLED_model_softplus)
+TEST(onnx_${BACKEND_NAME}, model_softplus)
 {
     auto function =
         onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/softplus.onnx"));
@@ -1602,27 +1602,28 @@ TEST(onnx_${BACKEND_NAME}, DISABLED_model_softplus)
     Outputs expected_output{output};
     Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+}
 
-    inputs.clear();
-    outputs.clear();
-    expected_output.clear();
+TEST(onnx_${BACKEND_NAME}, model_softplus_infinity)
+{
+    auto function =
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/softplus.onnx"));
 
-    inputs.emplace_back(std::vector<float>{std::numeric_limits<float>::infinity(),
-                                           std::numeric_limits<float>::infinity(),
-                                           std::numeric_limits<float>::infinity(),
-                                           std::numeric_limits<float>::infinity(),
-                                           std::numeric_limits<float>::infinity(),
-                                           std::numeric_limits<float>::infinity(),
-                                           std::numeric_limits<float>::infinity(),
-                                           std::numeric_limits<float>::infinity(),
-                                           std::numeric_limits<float>::infinity(),
-                                           std::numeric_limits<float>::infinity(),
-                                           std::numeric_limits<float>::infinity(),
-                                           std::numeric_limits<float>::infinity(),
-                                           std::numeric_limits<float>::infinity()});
-    input = inputs.back();
-    outputs = execute(function, inputs, "${BACKEND_NAME}");
+    Inputs inputs{std::vector<float>{std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity()}};
 
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
     for (float v : outputs.front())
     {
         EXPECT_TRUE(std::isinf(v));
