@@ -116,20 +116,6 @@ void op::Lstm::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector&
     auto fprop_dst_layer = goes.at(0);
     auto fprop_dst_iter = goes.at(1);
 
-    // mkldnn rnn bprop needs weights in the format mkldnn_ldgoi, but the rnn fprop weighst are in
-    // mkldnn_ldigo so we will reshape the weights
-    auto& weight_layer_shape = weights_layer->get_shape();
-    if (weight_layer_shape[0] == this->m_src_layer_feature_size)
-    {
-        weights_layer = std::make_shared<op::Reshape>(
-            weights_layer, AxisVector{1, 0}, Shape{weight_layer_shape[1], weight_layer_shape[0]});
-    }
-    auto& weight_iter_shape = weights_iter->get_shape();
-    if (weight_iter_shape[0] == this->m_src_iter_feature_size)
-    {
-        weights_iter = std::make_shared<op::Reshape>(
-            weights_iter, AxisVector{1, 0}, Shape{weight_iter_shape[1], weight_iter_shape[0]});
-    }
     auto lstm_bprop =
         std::make_shared<op::LstmBackprop>(static_pointer_cast<op::Lstm>(shared_from_this()),
                                            src_layer,
