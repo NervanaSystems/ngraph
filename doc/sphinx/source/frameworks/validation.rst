@@ -4,7 +4,7 @@
 Validated Models and Workloads
 ##############################
 
-We validated performance for the following TensorFlow\* and MXNet\* workloads:
+We validated performance [#f1]_ for the following TensorFlow\* and MXNet\* workloads:
 
 
 TensorFlow 
@@ -95,7 +95,7 @@ Additionally, we validated the following workloads are functional through
 
 .. rubric:: Footnotes
 
-.. [#1] Benchmarking performance of DL systems is a young discipline; it is a
+.. [#f1] Benchmarking performance of DL systems is a young discipline; it is a
    good idea to be vigilant for results based on atypical distortions in the 
    configuration parameters. Every topology is different, and performance 
    changes can be attributed to multiple causes. Also watch out for the word 

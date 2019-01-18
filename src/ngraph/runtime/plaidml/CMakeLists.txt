@@ -31,7 +31,6 @@ set(SRC
     plaidml_ops_convert.cpp
     plaidml_ops_convolution.cpp
     plaidml_ops_dot.cpp
-    plaidml_ops_function.cpp
     plaidml_ops_general.cpp
     plaidml_ops_index_reduction.cpp
     plaidml_ops_io.cpp
