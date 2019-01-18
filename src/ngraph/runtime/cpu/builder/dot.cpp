@@ -176,12 +176,12 @@ namespace ngraph
                                 k,
                                 1.0f,
                                 static_cast<float*>(arg0_tensor),
-                                max(1UL, lda),
+                                max<size_t>(1UL, lda),
                                 static_cast<float*>(arg1_tensor),
-                                max(1UL, ldb),
+                                max<size_t>(1UL, ldb),
                                 beta,
                                 static_cast<float*>(out_tensor),
-                                max(1UL, result_shape[1]));
+                                max<size_t>(1UL, result_shape[1]));
                         };
                     functors.emplace_back(functor);
                     return;
