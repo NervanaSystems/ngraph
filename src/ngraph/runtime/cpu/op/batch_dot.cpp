@@ -16,6 +16,7 @@
 
 #include "batch_dot.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/op/reshape.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -68,4 +69,42 @@ op::BatchDot::BatchDot(shared_ptr<Node> a, shared_ptr<Node> b, bool transpose_a,
     NGRAPH_DEBUG << "dot_shape shape = " << vector_to_string(dot_shape);
 
     set_output_type(0, a->get_element_type(), dot_shape);
+}
+
+void op::BatchDot::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+{
+    auto delta = deltas.at(0); // NxIxK
+
+    auto a = get_inputs().at(0).get_output().get_node(); // NxIxJ (maybe transposed)
+    auto b = get_inputs().at(1).get_output().get_node(); // NxJxK (maybe transposed)
+
+    auto batch_transpose = [](const shared_ptr<Node>& node) {
+        const auto& batch_shape = node->get_shape();
+        // index 0 is the batch, only transposing the others.
+        AxisVector input_order{0, 2, 1};
+        Shape output_shape{batch_shape[0], batch_shape[2], batch_shape[1]};
+        return make_shared<op::Reshape>(node, input_order, output_shape);
+    };
+
+    // if b is already transposed, it does not need to be transposed again
+    auto delta_dot_b = make_shared<op::BatchDot>(delta, b, false, !m_transpose_b); // IK.KJ->IJ
+    // if a is transposed, the result need to be transposed to match original a shape.
+    if (m_transpose_a)
+    {
+        adjoints.add_delta(a, batch_transpose(delta_dot_b));
+    }
+    else
+    {
+        adjoints.add_delta(a, delta_dot_b);
+    }
+
+    auto a_dot_delta = make_shared<BatchDot>(a, delta, !m_transpose_a, false); // JI.IK->JK
+    if (m_transpose_b)
+    {
+        adjoints.add_delta(b, batch_transpose(a_dot_delta));
+    }
+    else
+    {
+        adjoints.add_delta(b, a_dot_delta);
+    }
 }

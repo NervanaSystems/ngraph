@@ -278,8 +278,7 @@ TEST(cpu_fusion, cpu_fusion_pass_basic)
     auto add = dot + broadcast;
     auto graph = make_shared<op::Abs>(add);
     pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(
-        runtime::cpu::pass::CPUFusion::REGULAR_FUSIONS);
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::REGULAR_FUSIONS);
     auto func = make_shared<Function>(graph, ParameterVector{A, B, C});
     pass_manager.run_passes(func);
     ASSERT_NE(std::dynamic_pointer_cast<op::MatmulBias>(graph->get_argument(0)), nullptr);
@@ -300,8 +299,7 @@ TEST(cpu_fusion, commutative_matmul_bias)
     auto add = broadcast + dot;
     auto graph = make_shared<op::Abs>(add);
     pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(
-        runtime::cpu::pass::CPUFusion::REGULAR_FUSIONS);
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::REGULAR_FUSIONS);
     auto func = make_shared<Function>(graph, ParameterVector{A, B, C});
     pass_manager.run_passes(func);
     ASSERT_NE(std::dynamic_pointer_cast<op::MatmulBias>(graph->get_argument(0)), nullptr);
@@ -323,8 +321,7 @@ TEST(cpu_fusion, cpu_fusion_pass_matmul_bias)
 
     auto graph = make_shared<op::Abs>(add);
     pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(
-        runtime::cpu::pass::CPUFusion::REGULAR_FUSIONS);
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::REGULAR_FUSIONS);
     auto func = make_shared<Function>(graph, ParameterVector{W, x, b});
     pass_manager.run_passes(func);
     auto gmm = graph->get_argument(0);
@@ -345,8 +342,7 @@ TEST(cpu_fusion, cpu_fusion_pass_matmul_no_bias)
     auto graph = make_shared<op::Abs>(re_dot);
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(
-        runtime::cpu::pass::CPUFusion::REGULAR_FUSIONS);
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::REGULAR_FUSIONS);
     auto func = make_shared<Function>(graph, ParameterVector{W, x});
     pass_manager.run_passes(func);
     size_t mmb = count_ops_of_type<op::MatmulBias>(func);
@@ -360,8 +356,7 @@ TEST(cpu_fusion, gemm_mlp)
     stringstream ss(json_string);
     shared_ptr<Function> func = ngraph::deserialize(ss);
     pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(
-        runtime::cpu::pass::CPUFusion::REGULAR_FUSIONS);
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::REGULAR_FUSIONS);
     pass_manager.run_passes(func);
     auto mmbs = count_ops_of_type<op::MatmulBias>(func);
     ASSERT_EQ(mmbs, 3);
@@ -372,8 +367,7 @@ TEST(cpu_fusion, fuse_fprop_bn)
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::VisualizeTree>("bn_fprop_before_fusion.png");
     pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(
-        runtime::cpu::pass::CPUFusion::REGULAR_FUSIONS);
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::REGULAR_FUSIONS);
     pass_manager.register_pass<pass::VisualizeTree>("bn_fprop_after_fusion.png");
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/bn_fprop_b2c3h2w2.json");
     const string json_string = file_util::read_file_to_string(json_path);
@@ -503,8 +497,7 @@ TEST(cpu_fusion, fuse_conv_bias)
 {
     pass::Manager pass_manager;
     pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(
-        runtime::cpu::pass::CPUFusion::DIFFERENTIABLE_FUSIONS);
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::DIFFERENTIABLE_FUSIONS);
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "conv_bias.json");
     const string json_string = file_util::read_file_to_string(json_path);
     stringstream ss(json_string);
@@ -851,8 +844,7 @@ TEST(cpu_fusion, fuse_conv_relu)
     auto func = make_shared<Function>(abs_node, ParameterVector{A, weights});
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(
-        runtime::cpu::pass::CPUFusion::REGULAR_FUSIONS);
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::REGULAR_FUSIONS);
     pass_manager.run_passes(func);
     size_t cb = count_ops_of_type<op::ConvolutionRelu>(func);
     ASSERT_GT(cb, 0);
@@ -1280,8 +1272,7 @@ std::vector<shared_ptr<runtime::Tensor>> rnn_matrix_fusion_eval(const size_t tim
     {
         pass::Manager pass_manager;
         pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion>();
-        pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(
-            runtime::cpu::pass::CPUFusion::REGULAR_FUSIONS);
+        pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::REGULAR_FUSIONS);
         pass_manager.run_passes(func);
         // check all of our dot/add are converted to a single MatmulBias op.
         size_t count = count_ops_of_type<op::MatmulBias>(func);
@@ -1340,8 +1331,7 @@ TEST(cpu_fusion, rnn_fusion_from_json_model)
 {
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(
-        runtime::cpu::pass::CPUFusion::REGULAR_FUSIONS);
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::REGULAR_FUSIONS);
     const string json_path =
         file_util::path_join(SERIALIZED_ZOO, "mxnet/rnn-10-step-fusion-test.json");
     const string json_string = file_util::read_file_to_string(json_path);
@@ -2301,20 +2291,11 @@ TEST(cpu_fusion, fuse_1_layer_rnn)
     }
 }
 
-static std::shared_ptr<Function> make_function(const std::string& file_name)
-{
-    const string json_path = file_util::path_join(SERIALIZED_ZOO, file_name);
-    const string json_string = file_util::read_file_to_string(json_path);
-    stringstream ss(json_string);
-    shared_ptr<Function> func = ngraph::deserialize(ss);
-    return func;
-}
-
 TEST(cpu_fusion, rnn_fusion_1lstm_cell)
 {
     const std::string file_name("mxnet/1_lstm_cell_forward.json");
-    auto cpu_f = make_function(file_name);
-    auto int_f = make_function(file_name);
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
     test::Uniform<float> rng(-1.0f, 1.0f);
     vector<vector<float>> args;
 
@@ -2335,8 +2316,8 @@ TEST(cpu_fusion, rnn_fusion_1lstm_cell)
 TEST(cpu_fusion, rnn_fusion_1rnn_layer_3lstm_cell)
 {
     const std::string file_name("mxnet/1rnn_layer_3lstm_cell.json");
-    auto cpu_f = make_function(file_name);
-    auto int_f = make_function(file_name);
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
     test::Uniform<float> rng(-1.0f, 1.0f);
     vector<vector<float>> args;
 
@@ -2357,8 +2338,8 @@ TEST(cpu_fusion, rnn_fusion_1rnn_layer_3lstm_cell)
 TEST(cpu_fusion, rnn_fusion_2rnn_layer_3lstm_cell)
 {
     const std::string file_name("mxnet/2rnn_layer_3lstm_cell.json");
-    auto cpu_f = make_function(file_name);
-    auto int_f = make_function(file_name);
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
     test::Uniform<float> rng(-1.0f, 1.0f);
     vector<vector<float>> args;
 
@@ -3016,8 +2997,8 @@ TEST(cpu_fusion, fuse_batch_dot_forward)
     pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
 
     const std::string file_name("mxnet/batch_dot_3.json");
-    auto cpu_f = make_function(file_name);
-    auto int_f = make_function(file_name);
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
     pass_manager.run_passes(cpu_f);
     test::Uniform<float> rng(0.0f, 1.0f);
     vector<vector<float>> args;
@@ -3036,11 +3017,42 @@ TEST(cpu_fusion, fuse_batch_dot_forward)
     }
 }
 
+TEST(cpu_fusion, fuse_batch_dot_backward)
+{
+    const std::string file_name("mxnet/batch_dot_3.json");
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
+    pass_manager.run_passes(cpu_f);
+
+    auto int_df = autodiff::backprop_function(int_f);
+    auto cpu_df = autodiff::backprop_function(cpu_f);
+
+    test::Uniform<float> rng(-1.0f, 1.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_df->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    auto int_results = execute(int_df, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_df, args, "CPU");
+
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+    }
+}
+
 TEST(cpu_fusion, fuse_rnn_across_layer_2layer_3timestep)
 {
     const std::string file_name("mxnet/2layer_3timestep_ic100oc100.json");
-    auto cpu_f = make_function(file_name);
-    auto int_f = make_function(file_name);
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
     test::Uniform<float> rng(-1.0f, 1.0f);
     vector<vector<float>> args;
 

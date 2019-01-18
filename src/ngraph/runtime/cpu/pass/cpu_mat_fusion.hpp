@@ -29,12 +29,22 @@ namespace ngraph
                 class CPURnnMatFusion : public ngraph::pass::FunctionPass
                 {
                 public:
-                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+                    virtual bool
+                        run_on_function(std::shared_ptr<ngraph::Function> function) override;
                 };
                 class CPUBatchFusion : public ngraph::pass::FunctionPass
                 {
                 public:
-                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+                    CPUBatchFusion(ngraph::pass::FusionType type = ngraph::pass::ALL_FUSIONS)
+                        : FunctionPass()
+                        , m_fusion_type(type)
+                    {
+                    }
+                    virtual bool
+                        run_on_function(std::shared_ptr<ngraph::Function> function) override;
+
+                private:
+                    ngraph::pass::FusionType m_fusion_type;
                 };
             }
         }

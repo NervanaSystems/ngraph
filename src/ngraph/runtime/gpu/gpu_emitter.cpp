@@ -60,7 +60,6 @@
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/floor.hpp"
-#include "ngraph/op/function_call.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
@@ -85,8 +84,6 @@
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
-#include "ngraph/op/reduce.hpp"
-#include "ngraph/op/reduce_window.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -94,7 +91,6 @@
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/select.hpp"
-#include "ngraph/op/select_and_scatter.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/sign.hpp"
 #include "ngraph/op/sin.hpp"
@@ -121,8 +117,6 @@
 
 using namespace std;
 using namespace ngraph;
-
-#define TI(x) type_index(typeid(x))
 
 function<std::string(EMIT_ARGS)> runtime::gpu::GPU_Emitter::get_emit_function(const Node& node)
 {
@@ -604,13 +598,6 @@ std::string runtime::gpu::GPU_Emitter::emit_Floor(EMIT_ARGS)
     return emit_elementwise<ngraph::op::Floor>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_FunctionCall(EMIT_ARGS)
-{
-    auto function_call = static_cast<const ngraph::op::FunctionCall*>(node);
-    shared_ptr<Function> function = function_call->get_functions()[0];
-    return compiled_function->add_call_to_runtime(function_name, function->get_name(), args, out);
-}
-
 std::string runtime::gpu::GPU_Emitter::emit_GenerateMask(EMIT_ARGS)
 {
     throw ngraph_error("GenerateMask is not supported yet on NVIDIA GPU");
@@ -899,164 +886,6 @@ std::string runtime::gpu::GPU_Emitter::emit_Quantize(EMIT_ARGS)
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Reduce(EMIT_ARGS)
-{
-    if (out[0].get_size() == 0)
-    {
-        return "";
-    }
-
-    const ngraph::op::Reduce* reduce_op = static_cast<const ngraph::op::Reduce*>(node);
-
-    auto axes_set = reduce_op->get_reduction_axes();
-    std::vector<element::Type> dtypes;
-    dtypes.push_back(args[0].get_element_type());
-    dtypes.push_back(out[0].get_element_type());
-    auto& cuda_emitter = compiled_function->get_primitive_emitter()->get_cuda_emitter();
-    auto reduction_function_ops = reduce_op->get_functions()[0]->get_ops();
-
-    size_t emitter_index;
-    // Reduction function should only have one op
-    std::shared_ptr<Node> reduce_func;
-    std::string op_name;
-    int op_count = 0;
-    for (auto op : reduction_function_ops)
-    {
-        if (op->is_constant() || op->is_parameter() || op->is_output())
-        {
-            continue;
-        }
-        op_count++;
-        op_name = op->get_name();
-        reduce_func = op;
-        if (op_count != 1)
-        {
-            throw runtime_error("reduce with more than one op is not implement yet.");
-        }
-    }
-
-    if (dynamic_pointer_cast<ngraph::op::Add>(reduce_func))
-    {
-        emitter_index = cuda_emitter->build_reduce<ngraph::op::Add>(
-            dtypes, args[0].get_shape(), out[0].get_shape(), axes_set, true);
-    }
-    else if (dynamic_pointer_cast<ngraph::op::Multiply>(reduce_func))
-    {
-        emitter_index = cuda_emitter->build_reduce<ngraph::op::Multiply>(
-            dtypes, args[0].get_shape(), out[0].get_shape(), axes_set, true);
-    }
-    else if (dynamic_pointer_cast<ngraph::op::Maximum>(reduce_func))
-    {
-        emitter_index = cuda_emitter->build_reduce<ngraph::op::Maximum>(
-            dtypes, args[0].get_shape(), out[0].get_shape(), axes_set, true);
-    }
-    else if (dynamic_pointer_cast<ngraph::op::Minimum>(reduce_func))
-    {
-        emitter_index = cuda_emitter->build_reduce<ngraph::op::Minimum>(
-            dtypes, args[0].get_shape(), out[0].get_shape(), axes_set, true);
-    }
-    else if (dynamic_pointer_cast<ngraph::op::And>(reduce_func))
-    {
-        emitter_index = cuda_emitter->build_reduce<ngraph::op::And>(
-            dtypes, args[0].get_shape(), out[0].get_shape(), axes_set, true);
-    }
-    else if (dynamic_pointer_cast<ngraph::op::Or>(reduce_func))
-    {
-        emitter_index = cuda_emitter->build_reduce<ngraph::op::Or>(
-            dtypes, args[0].get_shape(), out[0].get_shape(), axes_set, true);
-    }
-    else
-    {
-        throw runtime_error("reduce with function " + op_name + " is not implement yet.");
-    }
-
-    return compiled_function->add_to_runtime(emitter_index, function_name, args, out);
-}
-
-std::string runtime::gpu::GPU_Emitter::emit_ReduceWindow(EMIT_ARGS)
-{
-    static const unordered_map<type_index, ngraph::runtime::gpu::OpName> reduce_window_map{
-        {TI(ngraph::op::Add), ngraph::runtime::gpu::OpName::add},
-        {TI(ngraph::op::Multiply), ngraph::runtime::gpu::OpName::multiply},
-        {TI(ngraph::op::Maximum), ngraph::runtime::gpu::OpName::maximum},
-        {TI(ngraph::op::Minimum), ngraph::runtime::gpu::OpName::minimum}};
-
-    const ngraph::op::ReduceWindow* reduce_window_op =
-        static_cast<const ngraph::op::ReduceWindow*>(node);
-
-    if (out[0].get_size() == 0)
-    {
-        return "";
-    }
-
-    size_t index;
-    // one of args0 axes has zero size, zero output, use args1 value
-    if (args[0].get_size() == 0)
-    {
-        throw ngraph_error("ReduceWindow for zero-size input is not currently supported");
-    }
-    else if (args[0].get_size() == out[0].get_size())
-    {
-        auto& host_emitter = compiled_function->get_primitive_emitter()->get_host_emitter();
-        index = host_emitter->build_memcpy(cudaMemcpyDeviceToDevice,
-                                           out[0].get_size() * out[0].get_element_type().size());
-    }
-    else
-    {
-        // in current implementation:
-        // 1. reduction function should only have one op
-        // 2. the op should be in the op_map
-        // otherwise, throw an error message
-        auto reduction_function_ops = reduce_window_op->get_functions()[0]->get_ops();
-        unordered_map<type_index, ngraph::runtime::gpu::OpName>::const_iterator it =
-            reduce_window_map.end();
-        int op_count = 0;
-        for (auto op : reduction_function_ops)
-        {
-            if (op->is_constant() || op->is_parameter() || op->is_output())
-            {
-                continue;
-            }
-            op_count++;
-            // Work around a compiler warning (*node inside typeid may have effects
-            // with shared pointers, which is fine here but clang doesn't like it.)
-            auto& fn = *op;
-            auto f_ptr = reduce_window_map.find(type_index(typeid(fn)));
-            if (op_count != 1)
-            {
-                throw runtime_error("reduce with more than one op is not implement yet.");
-            }
-            else if (f_ptr == reduce_window_map.end())
-            {
-                throw runtime_error("reduce with function " + fn.get_name() +
-                                    " is not implement yet.");
-            }
-            else
-            {
-                it = f_ptr;
-            }
-        }
-
-        if (it == reduce_window_map.end())
-        {
-            throw runtime_error("no valid op found in reduction function.");
-        }
-
-        auto& cuda_emitter = compiled_function->get_primitive_emitter()->get_cuda_emitter();
-        // this dtypes is two build the binary op, expect both input has same type with args[0]
-        vector<string> dtypes{args[0].get_type(), args[0].get_type(), out[0].get_type()};
-
-        index = cuda_emitter->build_reduce_window(it->second,
-                                                  dtypes,
-                                                  args[0].get_shape(),
-                                                  out[0].get_shape(),
-                                                  reduce_window_op->get_window_shape(),
-                                                  reduce_window_op->get_window_movement_strides());
-    }
-
-    return compiled_function->add_to_runtime(index, function_name, args, out);
-}
-
 std::string runtime::gpu::GPU_Emitter::emit_Relu(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Relu>(compiled_function, function_name, node, args, out);
@@ -1295,11 +1124,6 @@ std::string runtime::gpu::GPU_Emitter::emit_ScalarConstantLike(EMIT_ARGS)
 std::string runtime::gpu::GPU_Emitter::emit_Select(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Select>(compiled_function, function_name, node, args, out);
-}
-
-std::string runtime::gpu::GPU_Emitter::emit_SelectAndScatter(EMIT_ARGS)
-{
-    throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_ShapeOf(EMIT_ARGS)
