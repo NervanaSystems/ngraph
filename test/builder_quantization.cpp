@@ -19,6 +19,8 @@
 #include <cmath>
 #include <cstdlib>
 #include <string>
+#include <iostream>
+#include <fstream>
 
 #include "gtest/gtest.h"
 #include "ngraph/builder/quantization.hpp"
@@ -1065,5 +1067,73 @@ TEST(builder, dynamic_scaled_QC_fusion)
     auto result = backend->create_tensor(element::u8, shape_r);
     backend->call_with_validate(backend->compile(f), {result}, {a, b, c, d, e, e_a, g});
     EXPECT_EQ((vector<uint8_t>{0, 0, 1, 1, 2, 1, 0, 1, 1, 2, 0, 0, 0, 0, 0, 1}),
+              read_vector<uint8_t>(result));
+}
+TEST(builder, dynamic_scaled_QC_fusion_channelwise)
+{
+    Shape shape_a{1, 64, 4, 4}; // input shape
+    Shape shape_b{64, 64, 1, 1}; // filter shape
+    Shape shape_r{1, 64, 4, 4}; // output shape
+    vector<uint8_t> a_data(shape_size(shape_a));
+    std::ifstream ifs("data.in");
+    ifs.read(reinterpret_cast<char *>(&a_data[0]), shape_size(shape_a) * sizeof(uint8_t));
+    ifs.close();
+    vector<uint8_t> r_data(shape_size(shape_r));
+    std::ifstream ifsr("results.in");
+    ifsr.read(reinterpret_cast<char *>(&r_data[0]), shape_size(shape_r) * sizeof(uint8_t));
+    ifsr.close();
+    vector<float> b_data(shape_size(shape_b));
+    std::ifstream ifs2("weights.in");
+    ifs2.read(reinterpret_cast<char *>(&b_data[0]), shape_size(shape_b) * sizeof(float));
+    ifs2.close();
+    vector<float> c_data(64);
+    auto A = make_shared<op::Parameter>(element::u8, shape_a);
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto Bias = make_shared<op::Parameter>(element::f32, Shape{64});
+    auto C = make_shared<op::Parameter>(element::f32, Shape{});
+    auto D = make_shared<op::Parameter>(element::f32, Shape{});
+    auto E = make_shared<op::Parameter>(element::f32, Shape{});
+    auto F = make_shared<op::Parameter>(element::f32, Shape{});
+    auto CV = ngraph::builder::ScaledQuantizedConvolutionFusion(A,
+                                                                B,
+                                                                Bias,
+                                                                nullptr,
+                                                                nullptr,
+                                                                nullptr,
+                                                                nullptr,
+                                                                nullptr,
+                                                                C,
+                                                                D,
+                                                                nullptr,
+                                                                nullptr,
+                                                                E,
+                                                                F,
+                                                                Strides{1, 1}, // move_strides
+                                                                Strides{1, 1}, // filter_dilation
+                                                                CoordinateDiff{0, 0}, // below_pads
+                                                                CoordinateDiff{0, 0}, // above_pads
+                                                                Strides{1, 1}, // data_dilation
+                                                                true,
+                                                                false);
+    auto f = make_shared<Function>(NodeVector{CV}, ParameterVector{A, B, Bias, C, D, E, F});
+    auto backend = runtime::Backend::create("CPU");
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::u8, shape_a);
+    copy_data(a, a_data);
+    auto b = backend->create_tensor(element::f32, shape_b);
+    copy_data(b, b_data);
+    auto c = backend->create_tensor(element::f32, Shape{64});
+    copy_data(c, c_data);
+    auto d = backend->create_tensor(element::f32, Shape{});
+    copy_data(d, vector<float>{0.0f});
+    auto e = backend->create_tensor(element::f32, Shape{});
+    copy_data(e, vector<float>{1.0f});
+    auto e_a = backend->create_tensor(element::f32, Shape{});
+    copy_data(e_a, vector<float>{17.618633f});
+    auto g = backend->create_tensor(element::f32, Shape{});
+    copy_data(g, vector<float>{0.0f});
+    auto result = backend->create_tensor(element::u8, shape_r);
+    backend->call_with_validate(backend->compile(f), {result}, {a, b, c, d, e, e_a, g});
+    EXPECT_EQ(r_data,
               read_vector<uint8_t>(result));
 }
