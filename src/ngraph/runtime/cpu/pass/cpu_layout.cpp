@@ -188,11 +188,19 @@ static void set_native_layouts(runtime::cpu::CPU_ExternalFunction* external_func
         auto shape = tv->get_shape();
         auto tvl = tv->get_tensor_layout();
         auto cpu_tvl = dynamic_cast<runtime::cpu::LayoutDescriptor*>(tvl.get());
-
+        auto strides = cpu_tvl->get_strides();
+        if (shape == Shape{})
+        {
+            shape = Shape{1};
+        }
+        if (strides == Strides{})
+        {
+            strides = Strides{1};
+        }
+        // mkldnn treats Shape{} as undefined
         if (cpu_tvl && cpu_tvl->is_mkldnn_layout())
         {
-            auto native_md =
-                mkldnn_utils::create_blocked_mkldnn_md(shape, cpu_tvl->get_strides(), et);
+            auto native_md = mkldnn_utils::create_blocked_mkldnn_md(shape, strides, et);
             if (!mkldnn_utils::compare_mkldnn_mds(cpu_tvl->get_mkldnn_md(), native_md))
             {
                 auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
@@ -256,10 +264,19 @@ static void set_native_layouts(runtime::cpu::CPU_ExternalFunction* external_func
         auto shape = tv->get_shape();
         auto et = tv->get_element_type();
         auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
-        if (mkldnn_utils::can_create_mkldnn_md(shape, layout->get_strides(), et))
+        auto strides = layout->get_strides();
+
+        if (shape == Shape{})
         {
-            auto native_md =
-                mkldnn_utils::create_blocked_mkldnn_md(shape, layout->get_strides(), et);
+            shape = Shape{1};
+        }
+        if (strides == Strides{})
+        {
+            strides = Strides{1};
+        }
+        if (mkldnn_utils::can_create_mkldnn_md(shape, strides, et))
+        {
+            auto native_md = mkldnn_utils::create_blocked_mkldnn_md(shape, strides, et);
             layout->set_mkldnn_md(native_md);
         }
         tv->set_tensor_layout(layout);

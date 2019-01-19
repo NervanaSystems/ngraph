@@ -914,6 +914,29 @@ TEST(builder, scaled_Q_signed)
     EXPECT_EQ((vector<int8_t>{-127, 0, 1, 3, 5, 64, 127, 127}), read_vector<int8_t>(result));
 }
 
+TEST(builder, scaled_Q_DQ_scalar_input)
+{
+    vector<float> a_data = {5.0f};
+    Shape shape_a{};
+    AxisSet quantization_axes;
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto B = op::Constant::create(element::f32, Shape{}, {-5.0f});
+    auto C = op::Constant::create(element::f32, Shape{}, {5.0f});
+    auto QT = ngraph::builder::ScaledQuantize(A, B, C, element::i8, quantization_axes, round_mode);
+    auto DQT = ngraph::builder::ScaledDequantize(QT, B, C, element::f32, quantization_axes);
+    auto f = make_shared<Function>(NodeVector{DQT}, ParameterVector{A});
+    constant_fold(f);
+    auto backend = runtime::Backend::create("CPU");
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, a_data);
+    auto result = backend->create_tensor(element::f32, shape_a);
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a});
+    EXPECT_EQ((vector<float>{5.0}), read_vector<float>(result));
+}
+
 TEST(builder, scaled_DQ_signed)
 {
     vector<int8_t> a_data = {42};
