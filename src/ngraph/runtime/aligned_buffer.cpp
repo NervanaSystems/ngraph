@@ -17,7 +17,7 @@
 #include <cstdlib> // llvm 8.1 gets confused about `malloc` otherwise
 #include <memory>
 
-#include "ngraph/log.hpp"
+#include "ngraph/except.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 
 using namespace ngraph;
@@ -38,8 +38,7 @@ runtime::AlignedBuffer::AlignedBuffer(size_t byte_size, size_t alignment)
         m_allocated_buffer = static_cast<char*>(malloc(allocation_size));
         if (m_allocated_buffer == nullptr)
         {
-            NGRAPH_ERR << "malloc failed to allocate buffer of size " << m_byte_size;
-            std::exit(1);
+            throw ngraph_error("Error allocating Aligned Buffer");
         }
         m_aligned_buffer = m_allocated_buffer;
         size_t mod = size_t(m_aligned_buffer) % alignment;
