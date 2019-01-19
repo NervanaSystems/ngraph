@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2018 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,19 +14,28 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#pragma once
 
-#include "ngraph/function.hpp"
-#include "ngraph/op/function_call.hpp"
-#include "pyngraph/ops/function_call.hpp"
+#include <algorithm>
+#include <cmath>
+#include <numeric>
+#include <vector>
+#include "ngraph/shape.hpp"
 
-namespace py = pybind11;
-
-void regclass_pyngraph_op_FunctionCall(py::module m)
+namespace ngraph
 {
-    py::class_<ngraph::op::FunctionCall, std::shared_ptr<ngraph::op::FunctionCall>, ngraph::Node>
-        function_call(m, "FunctionCall");
-    function_call.doc() = "ngraph.impl.op.FunctionCall wraps ngraph::op::FunctionCall";
-    function_call.def(py::init<std::shared_ptr<ngraph::Function>, const ngraph::NodeVector&>());
+    namespace runtime
+    {
+        namespace gcpu
+        {
+            namespace kernel
+            {
+                template <typename T>
+                void result(const T* arg, T* out, size_t count)
+                {
+                    memcpy(out, arg, sizeof(T) * count);
+                }
+            }
+        }
+    }
 }

@@ -71,7 +71,6 @@ set (SRC
     op/experimental/quantized_max_pool.cpp
     op/experimental/shape_of.cpp
     op/floor.cpp
-    op/function_call.cpp
     op/get_output_element.cpp
     op/greater.cpp
     op/greater_eq.cpp
@@ -96,15 +95,12 @@ set (SRC
     op/power.cpp
     op/product.cpp
     op/quantize.cpp
-    op/reduce.cpp
-    op/reduce_window.cpp
     op/relu.cpp
     op/replace_slice.cpp
     op/reshape.cpp
     op/result.cpp
     op/reverse.cpp
     op/reverse_sequence.cpp
-    op/select_and_scatter.cpp
     op/select.cpp
     op/sigmoid.cpp
     op/sign.cpp
@@ -127,8 +123,6 @@ set (SRC
     op/util/logical_reduction.cpp
     op/util/unary_elementwise_arithmetic.cpp
     partial_shape.cpp
-    pass/any_all_insertion.cpp
-    pass/any_all_replacement.cpp
     pass/assign_placement.cpp
     pass/algebraic_simplification.cpp
     pass/common_function_collection.cpp
@@ -137,7 +131,6 @@ set (SRC
     pass/dump_sorted.cpp
     pass/get_output_element_elimination.cpp
     pass/graph_rewrite.cpp
-    pass/inliner.cpp
     pass/like_replacement.cpp
     pass/liveness.cpp
     pass/manager.cpp
@@ -146,7 +139,8 @@ set (SRC
     pass/memory_visualize.cpp
     pass/nop_elimination.cpp
     pass/pass.cpp
-    pass/pass_config.cpp
+    pass/pass_config.cpp 
+    pass/prefix_reshape_elimination.cpp 
     pass/propagate_cacheability.cpp
     pass/reshape_elimination.cpp
     pass/reshape_sinking.cpp

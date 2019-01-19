@@ -39,6 +39,5 @@ struct ngraph::runtime::plaidml::Config
     std::shared_ptr<vertexai::ctx> ctx;
     std::shared_ptr<vertexai::plaidml::device> dev;
     bool debug;
-    bool winograd;
     std::string graphviz;
 };

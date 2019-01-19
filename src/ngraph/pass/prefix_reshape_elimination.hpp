@@ -16,8 +16,24 @@
 
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include "ngraph/pass/graph_rewrite.hpp"
 
-namespace py = pybind11;
+namespace ngraph
+{
+    namespace pass
+    {
+        class PrefixReshapeElimination;
+    }
+}
 
-void regclass_pyngraph_op_Reduce(py::module m);
+// A pass to eliminate reshapes whose output shapes are the same as
+// their input shape modulo leading size-1 axes.
+//
+// N.B. This pass MUST only be used by backends that can handle the
+//      omission of leading size-1 axes, e.g. backends that implement
+//      NumPy-style broadcast semantics.
+class ngraph::pass::PrefixReshapeElimination final : public ngraph::pass::GraphRewrite
+{
+public:
+    PrefixReshapeElimination();
+};
