@@ -102,8 +102,66 @@ namespace ngraph
                         break;
                     }
                     case op::PadMode::REFLECT:
-                        throw std::invalid_argument("REFLECT padding mode not implemented");
+                    {
+                        // The algorithm here is a bit complicated because if the padding is
+                        // bigger than the tensor, we may reflect multiple times.
+                        //
+                        // Example:
+                        //
+                        // Input shape:     [2]
+                        // Padding:         6 below, 6 above
+                        // Output shape:    [14]
+                        //
+                        // Input:                       a b
+                        // Expected output: a b a b a b a b a b a b a b
+                        //
+                        // Computation for coordinate 13 of output:
+                        //
+                        //         . . . . . . a b . . . . .[.] -> (oob above by 6 spaces, so reflection is at top-6)
+                        //         .[.]. . . . a b . . . . . .  -> (oob below by 5 spaces, so reflection is at bottom+5)
+                        //         . . . . . . a b . . .[.]. .  -> (oob above by 4 spaces, so reflection is at top-4)
+                        //         . . .[.]. . a b . . . . . .  -> (oob below by 3 spaces, so reflection is at bottom+3)
+                        //         . . . . . . a b .[.]. . . .  -> (oob above by 2 spaces, so reflection is at top-2)
+                        //         . . . . .[.]a b . . . . . .  -> (oob below by 1 space,  so reflection is at bottom+1)
+                        //         . . . . . . a[b]. . . . . .  -> (no longer oob, so copy from here)
+                        //
+                        // Note that this algorithm works because REFLECT padding only makes sense
+                        // if each dim is >= 2.
+                        Coordinate c = in_coord; // have to copy because in_coord is const
+
+                        for (size_t i = 0; i < c.size(); i++)
+                        {
+                            ptrdiff_t new_dim = c[i];
+                            bool done_reflecting = false;
+
+                            while (!done_reflecting)
+                            {
+                                if (new_dim < padding_below[i])
+                                {
+                                    ptrdiff_t distance_oob = padding_below[i] - new_dim;
+                                    new_dim = padding_below[i] + distance_oob;
+                                }
+                                else if (new_dim >=
+                                         padding_below[i] + static_cast<ptrdiff_t>(arg0_shape[i]))
+                                {
+                                    ptrdiff_t distance_oob =
+                                        new_dim - padding_below[i] -
+                                        (static_cast<ptrdiff_t>(arg0_shape[i]) - 1);
+                                    new_dim = padding_below[i] +
+                                              static_cast<ptrdiff_t>(arg0_shape[i]) - distance_oob -
+                                              1;
+                                }
+                                else
+                                {
+                                    done_reflecting = true;
+                                }
+                            }
+
+                            c[i] = static_cast<size_t>(new_dim);
+                        }
+                        v = arg0[input_transform.index(c)];
                         break;
+                    }
                     }
 
                     out[output_transform.index(out_coord)] = v;
