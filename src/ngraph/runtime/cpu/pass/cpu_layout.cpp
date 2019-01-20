@@ -192,9 +192,6 @@ static void set_native_layouts(runtime::cpu::CPU_ExternalFunction* external_func
         if (shape == Shape{})
         {
             shape = Shape{1};
-        }
-        if (strides == Strides{})
-        {
             strides = Strides{1};
         }
         // mkldnn treats Shape{} as undefined
@@ -269,9 +266,6 @@ static void set_native_layouts(runtime::cpu::CPU_ExternalFunction* external_func
         if (shape == Shape{})
         {
             shape = Shape{1};
-        }
-        if (strides == Strides{})
-        {
             strides = Strides{1};
         }
         if (mkldnn_utils::can_create_mkldnn_md(shape, strides, et))
