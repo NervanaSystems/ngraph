@@ -7,10 +7,15 @@ Generally nGraph doesn't support tensors of types:
 * `complex64`,
 * `complex128`.
 
-Value in `()` _brackets_ means that this op is available since specific opset version.
-Values seperated by `-` _dash_ represents opset versions introducing some changes. 
-In example operator `Abs` is supported in all opset versions starting from `1` to `6` 
-and to the latest opset version.
+Value in `()` _parenthesis_ indicates that this op was introduced since the specific 
+ONNX Standard opset version. 
+Values seperated by `-` _dash_ indicate the changes were made to that op definition 
+in the ONNX Standard. If there were minor changes they are usually supported by single 
+implementation, otherwise there are multiple versions, each appropriate for specific opset 
+version range.
+For example, with the schema represented below the operator `Abs` is supported in all 
+opset versions starting from `1` to `6` and to the latest opset version.
+
 
 | Name | Opset Version(s) supported | Comment 
 |------|----------------------------|---------
