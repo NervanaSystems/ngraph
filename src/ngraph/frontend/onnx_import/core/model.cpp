@@ -71,6 +71,11 @@ namespace ngraph
             return (op != std::end(dm->second));
         }
 
+        void Model::enable_opset_domain(const std::string& domain)
+        {
+            m_opset.emplace(domain, OperatorsBridge::get_operator_set(domain));
+        }
+
     } // namespace onnx_import
 
 } // namespace ngraph

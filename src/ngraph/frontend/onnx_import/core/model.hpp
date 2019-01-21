@@ -61,6 +61,8 @@ namespace ngraph
             /// \return `true` if the operator is available, otherwise it returns `false`.
             bool is_operator_available(const onnx::NodeProto& node_proto) const;
 
+            void enable_opset_domain(const std::string& domain);
+
         private:
             const onnx::ModelProto* m_model_proto;
             std::unordered_map<std::string, OperatorSet> m_opset;

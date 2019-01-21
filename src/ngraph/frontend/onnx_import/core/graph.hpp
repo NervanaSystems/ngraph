@@ -59,7 +59,7 @@ namespace ngraph
             ParameterVector m_parameters;
             std::map<std::string, std::shared_ptr<ngraph::Node>> m_ng_node_cache;
             std::map<std::string, Tensor> m_initializers;
-            const Model* m_model;
+            Model* m_model;
         };
 
         inline std::ostream& operator<<(std::ostream& outs, const Graph& graph)
