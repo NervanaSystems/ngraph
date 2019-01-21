@@ -127,7 +127,7 @@ public:
     /// \brief A set of properties supported by a backend
     enum class Property
     {
-        memory_attach /// A tensor can attach the user memory
+        memory_attach /// New tensor can use attached memory
     };
 
     /// \brief Test if a backend particular property is supported
