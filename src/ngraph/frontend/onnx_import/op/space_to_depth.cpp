@@ -18,10 +18,10 @@
 #include <cstdint>
 #include <memory>
 
-#include "space_to_depth.hpp"
 #include "exceptions.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/shape.hpp"
+#include "space_to_depth.hpp"
 #include "utils/reshape.hpp"
 
 namespace ngraph
