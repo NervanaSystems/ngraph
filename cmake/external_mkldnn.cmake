@@ -21,6 +21,12 @@ include(ExternalProject)
 #------------------------------------------------------------------------------
 
 if(MKLDNN_INCLUDE_DIR AND MKLDNN_LIB_DIR)
+    if(NOT LINUX)
+        message(FATAL_ERROR "Unsupported platform for prebuilt mkl-dnn!")
+    endif()
+    if(NOT MKLML_LIB_DIR)
+        set(MKLML_LIB_DIR ${MKLDNN_LIB_DIR})
+    endif()
     ExternalProject_Add(
         ext_mkldnn
         DOWNLOAD_COMMAND ""
@@ -33,11 +39,11 @@ if(MKLDNN_INCLUDE_DIR AND MKLDNN_LIB_DIR)
     target_include_directories(libmkldnn SYSTEM INTERFACE ${MKLDNN_INCLUDE_DIR})
     target_link_libraries(libmkldnn INTERFACE
         ${MKLDNN_LIB_DIR}/libmkldnn.so
-        ${MKLDNN_LIB_DIR}/libmklml_intel.so
-        ${MKLDNN_LIB_DIR}/libiomp5.so
+        ${MKLML_LIB_DIR}/libmklml_intel.so
+        ${MKLML_LIB_DIR}/libiomp5.so
         )
 
-    install(DIRECTORY ${MKLDNN_LIB_DIR}/ DESTINATION ${NGRAPH_INSTALL_LIB})
+    install(FILES ${MKLDNN_LIB_DIR}/libmkldnn.so ${MKLML_LIB_DIR}/libmklml_intel.so ${MKLML_LIB_DIR}/libiomp5.so  DESTINATION ${NGRAPH_INSTALL_LIB})
     return()
 endif()
 
@@ -92,40 +98,76 @@ else()
 endif()
 set(MKLDNN_LIBS ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libmkldnn${CMAKE_SHARED_LIBRARY_SUFFIX})
 
-ExternalProject_Add(
-    ext_mkldnn
-    DEPENDS ext_mkl
-    GIT_REPOSITORY ${MKLDNN_GIT_REPO_URL}
-    GIT_TAG ${MKLDNN_GIT_TAG}
-    UPDATE_COMMAND ""
-    CONFIGURE_COMMAND
-    # Patch gets mad if it applied for a second time so:
-    #    --forward tells patch to ignore if it has already been applied
-    #    --reject-file tells patch to not right a reject file
-    #    || exit 0 changes the exit code for the PATCH_COMMAND to zero so it is not an error
-    # I don't like it, but it works
-    PATCH_COMMAND patch -p1 --forward --reject-file=- -i ${CMAKE_SOURCE_DIR}/cmake/${MKLDNN_PATCH_FILE} || exit 0
-    # Uncomment below with any in-flight MKL-DNN patches
-    # PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
-    CMAKE_GENERATOR ${CMAKE_GENERATOR}
-    CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
-    CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
-    CMAKE_ARGS
-        ${NGRAPH_FORWARD_CMAKE_ARGS}
-        -DWITH_TEST=FALSE
-        -DWITH_EXAMPLE=FALSE
-        -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/mkldnn
-        -DMKLDNN_ENABLE_CONCURRENT_EXEC=ON
-        -DMKLROOT=${MKL_ROOT}
-        "-DARCH_OPT_FLAGS=-march=${NGRAPH_TARGET_ARCH} -mtune=${NGRAPH_TARGET_ARCH}"
-    TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/tmp"
-    STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/stamp"
-    DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/download"
-    SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/src"
-    BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/build"
-    INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn"
-    EXCLUDE_FROM_ALL TRUE
-    )
+if (WIN32)
+    ExternalProject_Add(
+        ext_mkldnn
+        DEPENDS ext_mkl
+        GIT_REPOSITORY ${MKLDNN_GIT_REPO_URL}
+        GIT_TAG ${MKLDNN_GIT_TAG}
+        UPDATE_COMMAND ""
+        CONFIGURE_COMMAND
+        # Patch gets mad if it applied for a second time so:
+        #    --forward tells patch to ignore if it has already been applied
+        #    --reject-file tells patch to not right a reject file
+        #    || exit 0 changes the exit code for the PATCH_COMMAND to zero so it is not an error
+        # I don't like it, but it works
+        PATCH_COMMAND patch -p1 --forward --reject-file=- -i ${CMAKE_SOURCE_DIR}/cmake/${MKLDNN_PATCH_FILE} || exit 0
+        # Uncomment below with any in-flight MKL-DNN patches
+        # PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
+        CMAKE_GENERATOR ${CMAKE_GENERATOR}
+        CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
+        CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
+        CMAKE_ARGS
+            ${NGRAPH_FORWARD_CMAKE_ARGS}
+            -DWITH_TEST=FALSE
+            -DWITH_EXAMPLE=FALSE
+            -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/mkldnn
+            -DMKLDNN_ENABLE_CONCURRENT_EXEC=ON
+            -DMKLROOT=${MKL_ROOT}
+        TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/tmp"
+        STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/stamp"
+        DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/download"
+        SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/src"
+        BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/build"
+        INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn"
+        EXCLUDE_FROM_ALL TRUE
+        )
+else()
+    ExternalProject_Add(
+        ext_mkldnn
+        DEPENDS ext_mkl
+        GIT_REPOSITORY ${MKLDNN_GIT_REPO_URL}
+        GIT_TAG ${MKLDNN_GIT_TAG}
+        UPDATE_COMMAND ""
+        CONFIGURE_COMMAND
+        # Patch gets mad if it applied for a second time so:
+        #    --forward tells patch to ignore if it has already been applied
+        #    --reject-file tells patch to not right a reject file
+        #    || exit 0 changes the exit code for the PATCH_COMMAND to zero so it is not an error
+        # I don't like it, but it works
+        PATCH_COMMAND patch -p1 --forward --reject-file=- -i ${CMAKE_SOURCE_DIR}/cmake/${MKLDNN_PATCH_FILE} || exit 0
+        # Uncomment below with any in-flight MKL-DNN patches
+        # PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
+        CMAKE_GENERATOR ${CMAKE_GENERATOR}
+        CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
+        CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
+        CMAKE_ARGS
+            ${NGRAPH_FORWARD_CMAKE_ARGS}
+            -DWITH_TEST=FALSE
+            -DWITH_EXAMPLE=FALSE
+            -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/mkldnn
+            -DMKLDNN_ENABLE_CONCURRENT_EXEC=ON
+            -DMKLROOT=${MKL_ROOT}
+            "-DARCH_OPT_FLAGS=-march=${NGRAPH_TARGET_ARCH} -mtune=${NGRAPH_TARGET_ARCH}"
+        TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/tmp"
+        STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/stamp"
+        DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/download"
+        SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/src"
+        BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/build"
+        INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn"
+        EXCLUDE_FROM_ALL TRUE
+        )
+endif()
 
 ExternalProject_Add_Step(
     ext_mkldnn
@@ -144,7 +186,7 @@ add_library(libmkldnn INTERFACE)
 add_dependencies(libmkldnn ext_mkldnn)
 target_include_directories(libmkldnn SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/mkldnn/include)
 target_link_libraries(libmkldnn INTERFACE
-    ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libmkldnn${CMAKE_SHARED_LIBRARY_SUFFIX}
+    ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${CMAKE_SHARED_LIBRARY_PREFIX}mkldnn${CMAKE_SHARED_LIBRARY_SUFFIX}
     libmkl
     )
 

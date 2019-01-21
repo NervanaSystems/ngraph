@@ -14,11 +14,13 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/cpu/kernel/reduce_function.hpp"
-#include "ngraph/op/reduce.hpp"
+#include "ngraph/op/all.hpp"
+#include "ngraph/op/any.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
+#include "ngraph/runtime/reference/all.hpp"
+#include "ngraph/runtime/reference/any.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
 using namespace std;
@@ -31,111 +33,53 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Reduce)
+            void Builder::BUILDER_DECL(ngraph::op::Any)
             {
-                auto reduce = static_cast<const ngraph::op::Reduce*>(node);
-                auto function = reduce->get_functions()[0];
-
                 auto& functors = external_function->get_functors();
-                auto& callees = external_function->get_callees();
-
-                if (!callees.count(function->get_name()))
-                {
-                    callees[function->get_name()] = make_shared<CPU_ExternalFunction>(function);
-                }
-                auto& reducer_external_function = callees[function->get_name()];
-
+                auto reduce = static_cast<const ngraph::op::Any*>(node);
                 auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
                 auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
 
                 auto arg0_shape = args[0].get_shape();
                 auto out_shape = out[0].get_shape();
 
                 auto reduction_axes = reduce->get_reduction_axes();
-
-                if (reduction_axes.empty())
-                {
-                    size_t size = args[0].get_size() * args[0].get_element_type().size();
-                    auto functor = [&, size](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        memcpy(out_tensor, arg0_tensor, size);
-                    };
-                    functors.emplace_back(functor);
-                }
-                else if (reduction_axes.size() == 1)
-                {
-                    std::function<decltype(runtime::cpu::kernel::reduce_function_1rd<float, 1>)>
-                        kernel;
-
-                    SELECT_KERNEL_BY_RANK(kernel,
-                                          args[0].get_element_type(),
-                                          arg0_shape.size(),
-                                          runtime::cpu::kernel::reduce_function_1rd);
-
-                    auto functor = [&, kernel, arg0_shape, out_shape, reduction_axes](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        kernel(arg0_tensor,
-                               arg1_tensor,
-                               out_tensor,
-                               arg0_shape,
-                               out_shape,
-                               reduction_axes,
-                               ectx->arena,
-                               reducer_external_function);
-                    };
-                    functors.emplace_back(functor);
-                }
-                else if (arg0_shape.size() == 2 && reduction_axes.size() == 2)
-                {
-                    std::function<decltype(runtime::cpu::kernel::reduce_function_2d_2rd<float>)>
-                        kernel;
-
-                    SELECT_KERNEL(kernel,
-                                  args[0].get_element_type(),
-                                  runtime::cpu::kernel::reduce_function_2d_2rd);
-
-                    auto functor = [&, kernel, arg0_shape, out_shape, reduction_axes](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        kernel(arg0_tensor,
-                               arg1_tensor,
-                               out_tensor,
-                               arg0_shape,
-                               out_shape,
-                               reduction_axes,
-                               ectx->arena,
-                               reducer_external_function);
-                    };
-                    functors.emplace_back(functor);
-                }
-                else if (arg0_shape.size() == 3 && reduction_axes.size() == 2)
-                {
-                    std::function<decltype(runtime::cpu::kernel::reduce_function_3d_2rd<float>)>
-                        kernel;
-
-                    SELECT_KERNEL(kernel,
-                                  args[0].get_element_type(),
-                                  runtime::cpu::kernel::reduce_function_3d_2rd);
-
-                    auto functor = [&, kernel, arg0_shape, out_shape, reduction_axes](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        kernel(arg0_tensor,
-                               arg1_tensor,
-                               out_tensor,
-                               arg0_shape,
-                               out_shape,
-                               reduction_axes,
-                               ectx->arena,
-                               reducer_external_function);
-                    };
-                    functors.emplace_back(functor);
-                }
-                else
-                {
-                    throw ngraph_error("Unsupported Reduce");
-                }
+                auto functor = [&, arg0_shape, out_shape, reduction_axes](
+                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    runtime::reference::any(static_cast<char*>(arg0_tensor),
+                                            static_cast<char*>(out_tensor),
+                                            arg0_shape,
+                                            out_shape,
+                                            reduction_axes);
+                };
+                functors.emplace_back(functor);
             }
 
-            REGISTER_OP_BUILDER(Reduce);
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::All)
+            {
+                auto& functors = external_function->get_functors();
+                auto reduce = static_cast<const ngraph::op::All*>(node);
+                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+
+                auto arg0_shape = args[0].get_shape();
+                auto out_shape = out[0].get_shape();
+
+                auto reduction_axes = reduce->get_reduction_axes();
+                auto functor = [&, arg0_shape, out_shape, reduction_axes](
+                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    runtime::reference::all(static_cast<char*>(arg0_tensor),
+                                            static_cast<char*>(out_tensor),
+                                            arg0_shape,
+                                            out_shape,
+                                            reduction_axes);
+                };
+                functors.emplace_back(functor);
+            }
+
+            REGISTER_OP_BUILDER(Any);
+            REGISTER_OP_BUILDER(All);
         }
     }
 }
