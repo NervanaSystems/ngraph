@@ -14,22 +14,27 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include <fstream>
+#include <sstream>
 
-#include <cstddef>
+#include <mlsl.hpp>
 
-namespace ngraph
-{   
-    namespace distributed
-    { 
-        class Distributed
-        {
-        public:
-            Distributed();
-            virtual ~Distributed(){}
-            void finalize(); 
-            int get_size() const;
-            int get_rank() const;
-        };
-    }
-} 
+#include "gtest/gtest.h"
+
+#include "ngraph/file_util.hpp"
+#include "ngraph/ngraph.hpp"
+#include "ngraph/serializer.hpp"
+#include "util/random.hpp"
+
+#include "ngraph/distributed/distributed.hpp"
+#include "ngraph/log.hpp"
+
+using namespace std;
+using namespace ngraph;
+
+TEST(distributed_arch, simple_test)
+{
+    NGRAPH_INFO<< "distributed_arch simple_test begin"; 
+
+    NGRAPH_INFO<< "distributed_arch simple_test end";
+}

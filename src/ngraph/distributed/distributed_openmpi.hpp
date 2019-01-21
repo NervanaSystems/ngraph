@@ -28,7 +28,8 @@ namespace ngraph
         {
         public:
             DistributedOpenMPI();
-            ~DistributedOpenMPI();
+            virtual ~DistributedOpenMPI(){}
+            void finalize(); 
             int get_size() const;
             int get_rank() const;
         };

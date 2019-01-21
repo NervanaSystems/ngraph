@@ -26,6 +26,9 @@
 #include "ngraph/serializer.hpp"
 #include "util/random.hpp"
 
+#include "ngraph/distributed/distributed.hpp"
+#include "ngraph/log.hpp"
+
 using namespace std;
 using namespace ngraph;
 

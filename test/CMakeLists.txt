@@ -141,7 +141,9 @@ set(MULTI_TEST_SRC
     convolution_test.in.cpp
 )
 if(NGRAPH_DISTRIBUTED_ENABLE)
-    list(APPEND MULTI_TEST_SRC distributed.in.cpp)
+    list(APPEND MULTI_TEST_SRC 
+                              distributed_class.cpp
+                              distributed.in.cpp)
 endif()
 if (NGRAPH_CPU_ENABLE)
     list(APPEND MULTI_TEST_SRC backend_graph_comparison.in.cpp)
@@ -186,6 +188,11 @@ endif()
 if(NGRAPH_DISTRIBUTED_ENABLE)
     target_compile_definitions(unit-test PRIVATE NGRAPH_DISTRIBUTED)
     target_link_libraries(unit-test PRIVATE libmlsl)
+
+    find_package(MPI REQUIRED)
+    target_include_directories(unit-test  SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+    target_link_libraries(unit-test  PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+
 endif()
 
 target_link_libraries(unit-test PRIVATE ngraph_test_util)

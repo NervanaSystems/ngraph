@@ -28,7 +28,8 @@ namespace ngraph
         {
         public:
             DistributedMLSL();
-            ~DistributedMLSL();
+            virtual ~DistributedMLSL(){}
+            void finalize();
             int get_size() const;
             int get_rank() const;
         };

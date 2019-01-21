@@ -16,27 +16,32 @@
 
 #ifdef NGRAPH_DISTRIBUTED
 
+#include "ngraph/log.hpp"
 #include "ngraph/distributed/distributed.hpp"
 
 using namespace ngraph;
 
 ngraph::distributed::Distributed::Distributed()
 {
-    
+    NGRAPH_INFO << "DistributedMLSL::Distributed() -- begin ";
+    NGRAPH_INFO << "DistributedMLSL::Distributed() -- end ";
 }
 
-ngraph::distributed::Distributed::~Distributed()
+void ngraph::distributed::Distributed::finalize()
 {
-    
+    NGRAPH_INFO << "DistributedMLSL::finalize() -- begin ";
+    NGRAPH_INFO << "DistributedMLSL::finalize() -- end ";   
 }
 
 int ngraph::distributed::Distributed::get_size() const
-{
+{   
+    NGRAPH_INFO << "Distributed::get_size() -- begin & end";
     return 1;
 }
 
 int ngraph::distributed::Distributed::get_rank() const
-{
+{   
+    NGRAPH_INFO << "Distributed::get_rank() -- begin & end";
     return 1;
 }
 #endif
