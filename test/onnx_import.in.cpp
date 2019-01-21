@@ -1769,4 +1769,3 @@ TEST(onnx_${BACKEND_NAME}, model_space_to_depth_no_blocksize)
                      file_util::path_join(SERIALIZED_ZOO, "onnx/space_to_depth_no_blocksize.onnx")),
                  std::runtime_error);
 }
-
