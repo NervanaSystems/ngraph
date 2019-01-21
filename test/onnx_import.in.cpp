@@ -20,6 +20,7 @@
 #include <iterator>
 #include <limits>
 #include <sstream>
+#include <stdexcept>
 #include <vector>
 
 #include "gtest/gtest.h"
@@ -1711,6 +1712,55 @@ TEST(onnx_${BACKEND_NAME}, is_op_supported)
             return {std::make_shared<ngraph::op::Add>(ng_inputs.at(0), ng_inputs.at(1))};
         });
     EXPECT_TRUE(onnx_import::is_operator_supported("AddQ", 1, "com.intel.ai"));
+}
+
+TEST(onnx_${BACKEND_NAME}, model_depth_to_space)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/depth_to_space.onnx"));
+
+    Inputs inputs;
+    inputs.emplace_back(std::vector<float>{
+        0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f, 13.f, 14.f, 15.f});
+
+    Outputs expected_output{std::vector<float>{
+        0.f, 4.f, 1.f, 5.f, 8.f, 12.f, 9.f, 13.f, 2.f, 6.f, 3.f, 7.f, 10.f, 14.f, 11.f, 15.f}};
+
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+}
+
+TEST(onnx_${BACKEND_NAME}, model_depth_to_space_chw)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/depth_to_space_chw.onnx"));
+
+    Inputs inputs;
+    inputs.emplace_back(std::vector<float>{
+        0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f, 13.f, 14.f, 15.f});
+
+    Outputs expected_output{std::vector<float>{
+        0.f, 4.f, 1.f, 5.f, 8.f, 12.f, 9.f, 13.f, 2.f, 6.f, 3.f, 7.f, 10.f, 14.f, 11.f, 15.f}};
+
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+}
+
+TEST(onnx_${BACKEND_NAME}, model_depth_to_space_bad_blocksize)
+{
+    // This model fails to import since the depth channel length must be a multiple of the
+    // `blocksize` attribute value.
+    EXPECT_THROW(onnx_import::import_onnx_model(file_util::path_join(
+                     SERIALIZED_ZOO, "onnx/depth_to_space_bad_blocksize.onnx")),
+                 std::runtime_error);
+}
+
+TEST(onnx_${BACKEND_NAME}, model_depth_to_space_no_blocksize)
+{
+    // This model fails to import since it lacks of required parameter `blocksize`.
+    EXPECT_THROW(onnx_import::import_onnx_model(
+                     file_util::path_join(SERIALIZED_ZOO, "onnx/depth_to_space_no_blocksize.onnx")),
+                 std::runtime_error);
 }
 
 TEST(onnx_${BACKEND_NAME}, model_space_to_depth)
