@@ -37,6 +37,7 @@ namespace ngraph
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
+                    auto qconv = static_cast<const ngraph::op::QuantizedConvolution*>(node);
                     auto& functors = external_function->get_functors();
                     auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
                     auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
@@ -87,6 +88,7 @@ namespace ngraph
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
+                    auto qconv = static_cast<const ngraph::op::QuantizedConvolutionRelu*>(node);
                     auto& functors = external_function->get_functors();
                     auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
                     auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
@@ -137,6 +139,7 @@ namespace ngraph
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
+                    auto qconv = static_cast<const ngraph::op::QuantizedConvolutionBias*>(node);
                     auto& functors = external_function->get_functors();
                     auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
                     auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
@@ -189,6 +192,7 @@ namespace ngraph
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
+                    auto qconv = static_cast<const ngraph::op::QuantizedConvolutionBiasAdd*>(node);
                     auto& functors = external_function->get_functors();
                     auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
                     auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
@@ -265,6 +269,8 @@ namespace ngraph
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
+                    auto qconv =
+                        static_cast<const ngraph::op::QuantizedConvolutionBiasSignedAdd*>(node);
                     auto& functors = external_function->get_functors();
                     auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
                     auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
