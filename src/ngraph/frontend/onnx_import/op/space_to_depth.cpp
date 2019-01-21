@@ -18,7 +18,7 @@
 #include <cstdint>
 #include <memory>
 
-#include "depth_to_space.hpp"
+#include "space_to_depth.hpp"
 #include "exceptions.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/shape.hpp"
