@@ -98,7 +98,7 @@ opset versions starting from `1` to `6` and to the latest opset version.
 
 ## Unsupported Ops:
 
-### (maybe) Lack of features in nGraph
+### Lack of support in nGraph
 | Name | Opset supported | NGCORE | NGONNX | Comment |
 |------|-----------------|--------|--------|---------|
 | Acosh | (9) | 283 | 444 | |
@@ -116,7 +116,7 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | RandomUniformLike | - | 199 | 434 | Lack of PRNG in nGraph. |
 | Cast | 1-6- | 290 | 452 | Float16 unsupported. |
 
-### Futher analysis needed. (maybe) Lack of features in nGraph.
+### Futher analysis needed
 | Name | Opset supported | NGCORE | NGONNX | Comment |
 |------|-----------------|--------|--------|---------|
 | GRU | - | | 325, 177 | Should be possible to implement. Look at `LSTM` |
