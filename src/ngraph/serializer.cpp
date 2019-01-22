@@ -333,14 +333,10 @@ shared_ptr<ngraph::Function> ngraph::deserialize(istream& in)
                         {
                             if (info.get_name() == const_name)
                             {
-                                void* const_data = malloc(info.get_size());
-                                if (!const_data)
-                                {
-                                    throw ngraph_error("Error allocating const_data memory");
-                                }
+                                void* const_data = ngraph_malloc(info.get_size());
                                 reader.read(const_name, const_data, info.get_size());
                                 const_node = make_shared<op::Constant>(et, shape, const_data);
-                                free(const_data);
+                                ngraph_free(const_data);
                                 break;
                             }
                         }
