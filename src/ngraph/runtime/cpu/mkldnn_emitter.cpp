@@ -1084,12 +1084,6 @@ size_t MKLDNNEmitter::build_rnn_backword_primitive(Shape& src_layer_dims,
                                                    Shape& bias_dims,
                                                    ngraph::element::Type& et)
 {
-    auto formatted_md = [&](Shape& dimensions, mkldnn::memory::format layout) {
-        return mkldnn::memory::desc(mkldnn::memory::dims(dimensions.begin(), dimensions.end()),
-                                    mkldnn::memory::data_type::f32,
-                                    layout);
-    };
-
     auto src_layer_md = build_memory_descriptor(src_layer_dims, et, mkldnn::memory::format::tnc);
     auto src_iter_md = build_memory_descriptor(src_iter_dims, et, mkldnn::memory::format::ldsnc);
     auto wei_layer_md = build_memory_descriptor(wei_layer_dims, et, mkldnn::memory::format::ldigo);
