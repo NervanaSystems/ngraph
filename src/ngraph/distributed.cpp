@@ -14,37 +14,68 @@
 // limitations under the License.
 //*****************************************************************************
 
-#ifdef NGRAPH_DISTRIBUTED
 
-#include <mlsl.hpp>
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
+
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE 
+    #include <mlsl.hpp>
+#else
+    #include <mpi.h>
+#endif
 
 #include "ngraph/distributed.hpp"
 
 using namespace ngraph;
 
 ngraph::Distributed::Distributed()
-{
+{   
+
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
     if (!MLSL::Environment::GetEnv().IsInitialized())
     {
         MLSL::Environment::GetEnv().Init(nullptr, nullptr);
     }
+#else
+    int flag = 0;
+    MPI_Initialized(&flag);
+    if (!flag)
+    {
+        MPI_Init(NULL, NULL);
+    }
+#endif 
 }
 
 ngraph::Distributed::~Distributed()
-{
+{   
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
     if (MLSL::Environment::GetEnv().IsInitialized())
     {
         MLSL::Environment::GetEnv().Finalize();
     }
+#else
+    MPI_Finalize();
+#endif 
 }
 
-size_t ngraph::Distributed::get_size() const
-{
-    return MLSL::Environment::GetEnv().GetProcessCount();
+int ngraph::Distributed::get_size() const
+{   
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
+    return static_cast<int>(MLSL::Environment::GetEnv().GetProcessCount());
+#else
+    int size;
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    return size;
+#endif 
 }
 
-size_t ngraph::Distributed::get_rank() const
+int ngraph::Distributed::get_rank() const
 {
-    return MLSL::Environment::GetEnv().GetProcessIdx();
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
+    return static_cast<int>(MLSL::Environment::GetEnv().GetProcessIdx());
+#else
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    return rank;
+#endif 
 }
 #endif

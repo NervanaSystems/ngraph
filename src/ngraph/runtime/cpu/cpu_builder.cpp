@@ -103,6 +103,11 @@
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
+#if defined NGRAPH_DISTRIBUTED_ENABLE && !defined NGRAPH_DISTRIBUTED_MLSL_ENABLE
+#include <mpi.h>
+#include "ngraph/op/allreduce.hpp"
+#endif
+
 using namespace std;
 using namespace ngraph;
 

@@ -127,10 +127,14 @@
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
-#ifdef NGRAPH_DISTRIBUTED
-#include <mlsl.hpp>
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
 
-#include "ngraph/op/allreduce.hpp"
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
+    #include <mlsl.hpp>
+#else 
+    #include <mpi.h>
+#endif
+    #include "ngraph/op/allreduce.hpp"
 #endif
 
 using namespace std;
@@ -200,11 +204,12 @@ namespace ngraph
                 writer.block_end();
             }
 
-#ifdef NGRAPH_DISTRIBUTED
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::AllReduce)
             {
                 const element::Type& element_type = args[0].get_element_type();
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
                 auto data_type = "MLSL::DT_FLOAT";
 
                 if (element_type == element::f32)
@@ -222,6 +227,24 @@ namespace ngraph
                        << data_type << ", MLSL::RT_SUM, MLSL::GT_DATA);\n";
                 writer << "ctx->mlsl_env->Wait(req);\n";
                 writer.block_end();
+#else           
+                auto data_type = "MPI_FLOAT";
+
+                if (element_type == element::f32)
+                {
+                    data_type = "MPI_FLOAT";
+                }
+                else if (element_type == element::f64)
+                {
+                    data_type = "MPI_DOUBLE";
+                }
+
+                writer.block_begin();
+                writer << "MPI_Allreduce(" << args[0].get_name() << ", " << out[0].get_name()
+                       << ", " << out[0].get_size() << ", " << data_type
+                       << ", MPI_SUM, MPI_COMM_WORLD);\n";
+                writer.block_end();
+#endif 
             }
 #endif
 

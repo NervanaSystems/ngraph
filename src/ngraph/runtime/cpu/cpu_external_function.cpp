@@ -480,8 +480,12 @@ void runtime::cpu::CPU_ExternalFunction::compile()
         writer << "#include <tbb/flow_graph.h>";
     }
 
-#ifdef NGRAPH_DISTRIBUTED
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
     writer << "#include <mlsl.hpp>\n";
+#else 
+    writer << "#include <mpi.h>\n\n";
+#endif 
     writer << "#define NGRAPH_DISTRIBUTED\n";
 #endif
 

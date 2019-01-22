@@ -16,10 +16,12 @@
 
 #pragma once
 
-#ifdef NGRAPH_DISTRIBUTED
-
-#include <mlsl.hpp>
-
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
+    #include <mlsl.hpp>
+#else 
+    #include <mpi.h>
+#endif 
 #include "ngraph/type/element_type.hpp"
 
 namespace ngraph
@@ -31,6 +33,7 @@ namespace ngraph
             template <typename T>
             void allreduce(T* arg, T* out, const element::Type element_type, int count)
             {
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
                 auto data_type = MLSL::DT_FLOAT;
 
                 if (element_type == element::f32)
@@ -52,6 +55,24 @@ namespace ngraph
                     arg, out, count, data_type, MLSL::RT_SUM, MLSL::GT_DATA);
                 env.Wait(req);
                 env.DeleteDistribution(distribution);
+#else 
+                auto data_type = MPI_FLOAT;
+
+                if (element_type == element::f32)
+                {
+                    data_type = MPI_FLOAT;
+                }
+                else if (element_type == element::f64)
+                {
+                    data_type = MPI_DOUBLE;
+                }
+                else
+                {
+                    throw std::runtime_error("AllReduce op supports only f32 and f64 types");
+                }
+
+                MPI_Allreduce(arg, out, count, data_type, MPI_SUM, MPI_COMM_WORLD);
+#endif 
             }
         }
     }

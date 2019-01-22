@@ -33,7 +33,7 @@
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 
-#ifdef NGRAPH_DISTRIBUTED
+#if defined NGRAPH_DISTRIBUTED_ENABLE 
 #include "ngraph/distributed.hpp"
 #endif
 
@@ -298,7 +298,7 @@ OPTIONS
         return 1;
     }
 
-#ifdef NGRAPH_DISTRIBUTED
+#if defined NGRAPH_DISTRIBUTED_ENABLE
     ngraph::Distributed dist;
 #endif
 
