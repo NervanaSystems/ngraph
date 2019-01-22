@@ -38,6 +38,7 @@ namespace ngraph
 
 bool validate_list(const std::list<std::shared_ptr<ngraph::Node>>& nodes);
 std::shared_ptr<ngraph::Function> make_test_graph();
+std::shared_ptr<ngraph::Function> make_function_from_file(const std::string& file_name);
 
 template <typename T>
 void copy_data(std::shared_ptr<ngraph::runtime::Tensor> tv, const std::vector<T>& data)

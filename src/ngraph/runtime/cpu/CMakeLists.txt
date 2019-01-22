@@ -45,7 +45,6 @@ set(SRC
     builder/convolution.cpp
     builder/dot.cpp
     builder/embedding_lookup.cpp
-    builder/function_call.cpp
     builder/leaky_relu.cpp
     builder/lstm.cpp
     builder/lrn.cpp
@@ -58,7 +57,6 @@ set(SRC
     builder/pad.cpp
     builder/product.cpp
     builder/reduce_function.cpp
-    builder/reduce_function_window.cpp
     builder/replace_slice.cpp
     builder/quantization.cpp
     builder/quantized_avg_pool.cpp
@@ -69,7 +67,6 @@ set(SRC
     builder/reverse_sequence.cpp
     builder/rnn.cpp
     builder/select.cpp
-    builder/select_and_scatter.cpp
     builder/sigmoid.cpp
     builder/slice.cpp
     builder/state.cpp
@@ -136,7 +133,7 @@ if (NGRAPH_HALIDE)
         )
 endif()
 
-if (NGRAPH_TBB_ENABLE)
+if (NGRAPH_TBB_ENABLE AND NOT WIN32)
     include(${TBB_ROOT}/cmake/TBBBuild.cmake)
     tbb_build(TBB_ROOT ${TBB_ROOT} MAKE_ARGS tbb_build_dir=${CMAKE_CURRENT_BINARY_DIR}/tbb_build
                 tbb_build_prefix=tbb CONFIG_DIR TBB_DIR)
@@ -200,7 +197,9 @@ if (NGRAPH_CPU_ENABLE)
 
     if(OPENMP_FOUND)
         target_compile_options(cpu_backend PRIVATE "${OpenMP_CXX_FLAGS}")
-        target_compile_definitions(cpu_backend PRIVATE EIGEN_OPENMP)
+        if (NOT WIN32)
+            target_compile_definitions(cpu_backend PRIVATE EIGEN_OPENMP)
+        endif()
     else()
          message(WARNING "The build toolset doesn't support OpenMP. This will impact performance and lead to slowdowns.")
     endif()
@@ -227,5 +226,7 @@ if (NGRAPH_CPU_ENABLE)
         set_property(TARGET cpu_backend APPEND PROPERTY LINK_FLAGS "-Wl,-Bsymbolic-functions -Wl,--exclude-libs=ALL")
     endif()
 
-    install(TARGETS cpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
+    if (NOT WIN32)
+        install(TARGETS cpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
+    endif()
 endif()
