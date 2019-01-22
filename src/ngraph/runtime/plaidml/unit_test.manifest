@@ -53,21 +53,10 @@ batch_norm_inference_0eps_f64
 batch_norm_inference_f64
 batch_norm_training_0eps_f64
 softmax_axis_3d_double  # To debug
-reduce_matrix_rows_zero  # To debug: possible broadcasting error?
-reduce_matrix_cols_zero  # To debug: possible broadcasting error?
-reduce_3d_to_vector  # To debug: possible broadcasting error?
 replace_slice_matrix_inplace
 max_pool_2d_1channel_1image_overpadded
 max_pool_3d
 maxpool_bprop_larger_than_cache
-reduce_window_emulating_max_pool_1d_1channel_1image
-reduce_window_emulating_max_pool_1d_1channel_2image
-reduce_window_emulating_max_pool_1d_2channel_2image
-reduce_window_emulating_max_pool_2d_2channel_2image
-reduce_window_emulating_max_pool_2d_1channel_1image_strided
-select_and_scatter_with_overlap
-select_and_scatter_without_overlap
-select_and_scatter_3d_without_overlap
 generate_mask
 avg_pool_3d
 avg_pool_3d_uneven_strided_padded_include_in_computation
@@ -109,23 +98,3 @@ sum_stable_acc_double  # To debug: precision errors
 embedding_lookup_4x5_reverse
 embedding_lookup_10x1_arbitrary
 embedding_lookup_10x1_arbitrary_index_type_int
-any_trivial                             # Requires boolean reduction in PlaidML
-any_2x2_to_scalar_true                  # Requires boolean reduction in PlaidML
-any_2x3_eliminate_row_dim               # Requires boolean reduction in PlaidML
-any_2x2x3_eliminate_dim_0               # Requires boolean reduction in PlaidML
-any_2x2x3_eliminate_dim_1               # Requires boolean reduction in PlaidML
-any_2x2x3_eliminate_dim_2               # Requires boolean reduction in PlaidML
-any_2x2x3_eliminate_dims_0_1            # Requires boolean reduction in PlaidML
-any_2x2x3_eliminate_dims_0_2            # Requires boolean reduction in PlaidML
-any_2x2x3_eliminate_dims_1_2            # Requires boolean reduction in PlaidML
-any_2x2x3_eliminate_dims_0_1_2          # Requires boolean reduction in PlaidML
-all_trivial                             # Requires boolean reduction in PlaidML
-all_2x2_to_scalar_false                 # Requires boolean reduction in PlaidML
-all_2x3_eliminate_col_dim               # Requires boolean reduction in PlaidML
-all_2x2x3_eliminate_dim_0               # Requires boolean reduction in PlaidML
-all_2x2x3_eliminate_dim_1               # Requires boolean reduction in PlaidML
-all_2x2x3_eliminate_dim_2               # Requires boolean reduction in PlaidML
-all_2x2x3_eliminate_dims_0_1            # Requires boolean reduction in PlaidML
-all_2x2x3_eliminate_dims_0_2            # Requires boolean reduction in PlaidML
-all_2x2x3_eliminate_dims_1_2            # Requires boolean reduction in PlaidML
-all_2x2x3_eliminate_dims_0_1_2          # Requires boolean reduction in PlaidML
