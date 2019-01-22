@@ -183,15 +183,6 @@ TEST(DISABLED_gpu_fusion, fuse_1_layer_rnn)
     }
 }
 
-static std::shared_ptr<Function> make_function(const std::string& file_name)
-{
-    const string json_path = file_util::path_join(SERIALIZED_ZOO, file_name);
-    const string json_string = file_util::read_file_to_string(json_path);
-    stringstream ss(json_string);
-    shared_ptr<Function> func = ngraph::deserialize(ss);
-    return func;
-}
-
 TEST(gpu_fusion, lstm_analytic)
 {
     auto input_xt = std::make_shared<op::Parameter>(element::f32, Shape{1, 1});
@@ -432,8 +423,8 @@ TEST(gpu_fusion, fuse_2_layer_rnn_1lstm_analytic)
 TEST(gpu_fusion, rnn_fusion_inter_vs_gpu_1lstm_cell)
 {
     const std::string file_name("mxnet/1_lstm_cell_forward.json");
-    auto gpu_f = make_function(file_name);
-    auto int_f = make_function(file_name);
+    auto gpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
     test::Uniform<float> rng(-10.0f, 10.0f);
     vector<vector<float>> args;
 
@@ -454,8 +445,8 @@ TEST(gpu_fusion, rnn_fusion_inter_vs_gpu_1lstm_cell)
 TEST(DISABLED_gpu_fusion, rnn_fusion_inter_vs_gpu_1rnn_layer_3lstm_cell)
 {
     const std::string file_name("mxnet/1rnn_layer_3lstm_cell.json");
-    auto gpu_f = make_function(file_name);
-    auto int_f = make_function(file_name);
+    auto gpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
     test::Uniform<float> rng(-10.0f, 10.0f);
     vector<vector<float>> args;
 
@@ -476,8 +467,8 @@ TEST(DISABLED_gpu_fusion, rnn_fusion_inter_vs_gpu_1rnn_layer_3lstm_cell)
 TEST(gpu_fusion, rnn_fusion_inter_vs_gpu_2rnn_layer_3lstm_cell)
 {
     const std::string file_name("mxnet/2rnn_layer_3lstm_cell.json");
-    auto gpu_f = make_function(file_name);
-    auto int_f = make_function(file_name);
+    auto gpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
     test::Uniform<float> rng(-10.0f, 10.0f);
     vector<vector<float>> args;
 
@@ -516,8 +507,8 @@ TEST(gpu_fusion, fuse_rnn_across_layer)
 TEST(gpu_fusion, fuse_rnn_across_2layer_1timestep)
 {
     const std::string file_name("mxnet/2rnn_layer_1timestep.json");
-    auto gpu_f = make_function(file_name);
-    auto int_f = make_function(file_name);
+    auto gpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
     test::Uniform<float> rng(-10.0f, 10.0f);
     vector<vector<float>> args;
 
