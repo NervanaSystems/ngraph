@@ -19,8 +19,8 @@
 
 #include "gtest/gtest.h"
 
-#include "ngraph/file_util.hpp"
 #include "ngraph/distributed.hpp"
+#include "ngraph/file_util.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/serializer.hpp"
 #include "util/random.hpp"
@@ -30,14 +30,14 @@ using namespace ngraph;
 
 TEST(distributed_${BACKEND_NAME}, allreduce)
 {
-    Distributed dist_instance; 
+    Distributed dist_instance;
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::AllReduce>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto comm_size = dist_instance.get_size();
-    
+
     auto v = vector<float>{1, 2, 3, 4};
     auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 2, 3, 4});

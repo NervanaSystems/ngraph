@@ -24,8 +24,8 @@ namespace ngraph
     {
     public:
         Distributed();
-        virtual ~Distributed(){}
-        void finalize(); 
+        virtual ~Distributed() {}
+        void finalize();
         int get_size() const;
         int get_rank() const;
     };
