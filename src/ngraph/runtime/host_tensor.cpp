@@ -46,7 +46,12 @@ runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type,
     else if (m_buffer_size > 0)
     {
         size_t allocation_size = m_buffer_size + runtime::alignment;
-        m_allocated_buffer_pool = static_cast<char*>(malloc(allocation_size));
+        auto ptr = malloc(allocation_size);
+        if (!ptr)
+        {
+            throw ngraph_error("Error allocating buffer for HostTensor");
+        }
+        m_allocated_buffer_pool = static_cast<char*>(ptr);
         m_aligned_buffer_pool = m_allocated_buffer_pool;
         size_t mod = size_t(m_aligned_buffer_pool) % alignment;
         if (mod != 0)

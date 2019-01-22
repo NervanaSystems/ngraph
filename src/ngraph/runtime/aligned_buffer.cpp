@@ -35,11 +35,12 @@ runtime::AlignedBuffer::AlignedBuffer(size_t byte_size, size_t alignment)
     if (m_byte_size > 0)
     {
         size_t allocation_size = m_byte_size + alignment;
-        m_allocated_buffer = static_cast<char*>(malloc(allocation_size));
-        if (m_allocated_buffer == nullptr)
+        auto ptr = malloc(allocation_size);
+        if (!ptr)
         {
-            throw ngraph_error("Error allocating Aligned Buffer");
+            throw ngraph_error("Error allocating Aligned Buffer memory");
         }
+        m_allocated_buffer = static_cast<char*>(ptr);
         m_aligned_buffer = m_allocated_buffer;
         size_t mod = size_t(m_aligned_buffer) % alignment;
 

@@ -55,7 +55,15 @@ namespace ngraph
             class MKLDNNWorkspace
             {
             public:
-                MKLDNNWorkspace(size_t size) { buf = reinterpret_cast<char*>(malloc(size)); }
+                MKLDNNWorkspace(size_t size)
+                {
+                    auto ptr = malloc(size);
+                    if (!ptr)
+                    {
+                        throw ngraph_error("Error allocating MKLDNN Workspace memory");
+                    }
+                    buf = reinterpret_cast<char*>(ptr);
+                }
                 ~MKLDNNWorkspace() { free(buf); }
                 char* buf;
 
