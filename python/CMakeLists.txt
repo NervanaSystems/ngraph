@@ -23,6 +23,13 @@ if (WIN32)
     return()
 endif()
 
+if (LINUX)
+    find_program(PATCHELF patchelf)
+    if (NOT PATCHELF)
+        message(FATAL_ERROR "Please install patchelf!")
+    endif()
+endif()
+
 include(ExternalProject)
 
 set(PYBIND11_SOURCE_DIR "${CMAKE_BINARY_DIR}/pybind11")
