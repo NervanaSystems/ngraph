@@ -45,7 +45,7 @@ ngraph::Distributed::Distributed()
 #endif 
 }
 
-ngraph::Distributed::~Distributed()
+void ngraph::Distributed::finalize()
 {   
 #ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
     if (MLSL::Environment::GetEnv().IsInitialized())

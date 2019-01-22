@@ -17,14 +17,10 @@
 #include <fstream>
 #include <sstream>
 
-#if defined NGRAPH_DISTRIBUTED_MLSL_ENABLE
-#include <mlsl.hpp>
-#else 
-#include <mpi.h>
-#endif 
 #include "gtest/gtest.h"
 
 #include "ngraph/file_util.hpp"
+#include "ngraph/distributed.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/serializer.hpp"
 #include "util/random.hpp"
@@ -34,21 +30,14 @@ using namespace ngraph;
 
 TEST(distributed_${BACKEND_NAME}, allreduce)
 {
+    Distributed dist_instance; 
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::AllReduce>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
+    auto comm_size = dist_instance.get_size();
     
-#if defined NGRAPH_DISTRIBUTED_MLSL_ENABLE
-    auto comm_size = MLSL::Environment::GetEnv().GetProcessCount();
-
-#else 
-    int comm_size;
-    MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
-#endif 
-
     auto v = vector<float>{1, 2, 3, 4};
     auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 2, 3, 4});
