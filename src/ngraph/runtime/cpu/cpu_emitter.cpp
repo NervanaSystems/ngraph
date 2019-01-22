@@ -126,11 +126,11 @@
 #ifdef NGRAPH_DISTRIBUTED_ENABLE
 
 #ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
-    #include <mlsl.hpp>
-#else 
-    #include <mpi.h>
+#include <mlsl.hpp>
+#else
+#include <mpi.h>
 #endif
-    #include "ngraph/op/allreduce.hpp"
+#include "ngraph/op/allreduce.hpp"
 #endif
 
 using namespace std;
@@ -223,7 +223,7 @@ namespace ngraph
                        << data_type << ", MLSL::RT_SUM, MLSL::GT_DATA);\n";
                 writer << "ctx->mlsl_env->Wait(req);\n";
                 writer.block_end();
-#else           
+#else
                 auto data_type = "MPI_FLOAT";
 
                 if (element_type == element::f32)
@@ -240,7 +240,7 @@ namespace ngraph
                        << ", " << out[0].get_size() << ", " << data_type
                        << ", MPI_SUM, MPI_COMM_WORLD);\n";
                 writer.block_end();
-#endif 
+#endif
             }
 #endif
 

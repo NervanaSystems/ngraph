@@ -16,12 +16,10 @@
 #ifdef NGRAPH_DISTRIBUTED_ENABLE
 
 #ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
-    #include <mlsl.hpp>
+#include <mlsl.hpp>
 #else
-    #include <mpi.h>
-#endif 
-
-
+#include <mpi.h>
+#endif
 
 #include "ngraph/op/allreduce.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
@@ -79,7 +77,7 @@ namespace ngraph
                     MPI_Allreduce(
                         arg_tensor, out_tensor, count, data_type, MPI_SUM, MPI_COMM_WORLD);
                 };
-#endif 
+#endif
                 functors.emplace_back(functor);
             }
 

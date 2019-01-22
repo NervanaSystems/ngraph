@@ -33,7 +33,7 @@
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 
-#if defined NGRAPH_DISTRIBUTED_ENABLE 
+#if defined NGRAPH_DISTRIBUTED_ENABLE
 #include "ngraph/distributed.hpp"
 #endif
 
