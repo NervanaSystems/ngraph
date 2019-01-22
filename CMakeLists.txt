@@ -340,11 +340,15 @@ else()
     include(cmake/external_llvm.cmake)
 endif()
 
-include(cmake/external_tbb.cmake)
+if (WIN32)
+    include(cmake/external_tbb_prebuilt.cmake)
+else()
+    include(cmake/external_tbb.cmake)
+endif()
+
 if (NGRAPH_DISTRIBUTED_ENABLE AND NGRAPH_DISTRIBUTED_MLSL_ENABLE)
     include(cmake/external_mlsl.cmake)
 endif()
-
 
 if (NGRAPH_HALIDE)
     message(WARNING "Halide build system integration is currently using an older LLVM release \
@@ -365,6 +369,7 @@ if (NGRAPH_UNIT_TEST_ENABLE)
     add_subdirectory(test)
     message(STATUS "unit tests enabled")
 else()
+    add_subdirectory(test/models)
     add_subdirectory(test/util)
     message(STATUS "unit tests disabled")
 endif()
