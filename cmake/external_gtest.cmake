@@ -24,7 +24,6 @@ include(ExternalProject)
 SET(GTEST_GIT_REPO_URL https://github.com/google/googletest.git)
 SET(GTEST_GIT_LABEL release-1.8.1)
 
-set(COMPILE_FLAGS -fPIC)
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     if (DEFINED NGRAPH_USE_CXX_ABI)
         set(COMPILE_FLAGS "${COMPILE_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${NGRAPH_USE_CXX_ABI}")
@@ -32,6 +31,10 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 endif()
 
 set(GTEST_OUTPUT_DIR ${EXTERNAL_PROJECTS_ROOT}/gtest/build/googlemock/gtest)
+
+if (APPLE OR LINUX)
+    set(COMPILE_FLAGS -fPIC)
+endif()
 
 set(GTEST_CMAKE_ARGS
     -DCMAKE_CXX_FLAGS=${COMPILE_FLAGS}
