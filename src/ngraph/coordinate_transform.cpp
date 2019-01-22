@@ -134,7 +134,7 @@ CoordinateTransform::CoordinateTransform(const Shape& source_shape,
     for (size_t i = 0; i < m_n_axes; i++)
     {
         if (source_start_corner[i] >= padded_upper_bounds[i] &&
-            !(source_start_corner[i] == 0 && source_shape[i] == 0))
+            source_start_corner[i] != source_shape[i])
         {
             std::stringstream ss;
 

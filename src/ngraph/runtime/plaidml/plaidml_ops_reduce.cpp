@@ -15,6 +15,8 @@
 //*****************************************************************************
 
 #include "ngraph/coordinate_transform.hpp"
+#include "ngraph/op/all.hpp"
+#include "ngraph/op/any.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/product.hpp"
@@ -84,12 +86,26 @@ namespace ngraph
                         .finalize());
             }
 
+            NGRAPH_PLAIDML_OP_CLASS(ImplAll, ReductionBase<op::All>);
+            NGRAPH_PLAIDML_OP_CLASS(ImplAny, ReductionBase<op::Any>);
             NGRAPH_PLAIDML_OP_CLASS(ImplMax, ReductionBase<op::Max>);
             NGRAPH_PLAIDML_OP_CLASS(ImplMin, ReductionBase<op::Min>);
             NGRAPH_PLAIDML_OP_CLASS(ImplProduct, ReductionBase<op::Product>);
             NGRAPH_PLAIDML_OP_CLASS(ImplSum, ReductionBase<op::Sum>);
         }
     }
+}
+
+// All reduces a tensor, taking the boolean minimum along the specified axes.
+void ngraph::runtime::plaidml::ImplAll::Apply()
+{
+    build_reduction("<");
+}
+
+// Any reduces a tensor, taking the boolean maximum along the specified axes.
+void ngraph::runtime::plaidml::ImplAny::Apply()
+{
+    build_reduction(">");
 }
 
 // Max reduces a tensor, taking the maximum along the specified axes.
