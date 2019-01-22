@@ -728,14 +728,14 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Dequantize)
                 {
                     auto dequantize = static_cast<op::Dequantize*>(node);
-                    auto offset_const_op = std::dynamic_pointer_cast<ngraph::op::Constant>(
-                        dequantize->get_argument(2));
                     // TODO(nbpatel): Support dynamic offset via mkldnn
                     // Go through reference if the offset is not a constant
-                    if (offset_const_op == nullptr)
+                    if (!dequantize->get_argument(2)->is_constant())
                     {
                         return;
                     }
+                    auto offset_const_op =
+                        std::static_pointer_cast<ngraph::op::Constant>(dequantize->get_argument(2));
                     // TODO: MKLDNN only handles float / not double
                     if (node->get_output_element_type(0) != element::f32)
                     {
@@ -766,15 +766,15 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Quantize)
                 {
                     auto quantize = static_cast<op::Quantize*>(node);
-                    auto offset_const_op =
-                        std::dynamic_pointer_cast<ngraph::op::Constant>(quantize->get_argument(2));
-                    op::Quantize::RoundMode round_mode = quantize->get_round_mode();
                     // TODO(nbpatel): Support dynamic offset via mkldnn
                     // Go through reference if the offset is not a constant
-                    if (offset_const_op == nullptr)
+                    if (!quantize->get_argument(2)->is_constant())
                     {
                         return;
                     }
+                    auto offset_const_op =
+                        std::static_pointer_cast<ngraph::op::Constant>(quantize->get_argument(2));
+                    op::Quantize::RoundMode round_mode = quantize->get_round_mode();
                     if (round_mode != op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN)
                     {
                         return;
