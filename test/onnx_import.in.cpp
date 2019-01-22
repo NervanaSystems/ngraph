@@ -1706,12 +1706,12 @@ TEST(onnx_${BACKEND_NAME}, model_argmin_int32)
 TEST(onnx_${BACKEND_NAME}, model_conv3d_dilated)
 {
     auto function = onnx_import::import_onnx_model(
-            file_util::path_join(SERIALIZED_ZOO, "onnx/conv3d_dilated.onnx"));
+        file_util::path_join(SERIALIZED_ZOO, "onnx/conv3d_dilated.onnx"));
 
     Inputs inputs{read_binary_file<float>(
-            file_util::path_join(SERIALIZED_ZOO, "onnx/conv3d_dilated_input0.bin"))};
+        file_util::path_join(SERIALIZED_ZOO, "onnx/conv3d_dilated_input0.bin"))};
     Outputs expected_output{read_binary_file<float>(
-            file_util::path_join(SERIALIZED_ZOO, "onnx/conv3d_dilated_output0.bin"))};
+        file_util::path_join(SERIALIZED_ZOO, "onnx/conv3d_dilated_output0.bin"))};
 
     Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
@@ -1720,12 +1720,12 @@ TEST(onnx_${BACKEND_NAME}, model_conv3d_dilated)
 TEST(onnx_${BACKEND_NAME}, model_conv3d_dilated_strided)
 {
     auto function = onnx_import::import_onnx_model(
-            file_util::path_join(SERIALIZED_ZOO, "onnx/conv3d_dilated_strided.onnx"));
+        file_util::path_join(SERIALIZED_ZOO, "onnx/conv3d_dilated_strided.onnx"));
 
     Inputs inputs{read_binary_file<float>(
-            file_util::path_join(SERIALIZED_ZOO, "onnx/conv3d_dilated_strided_input0.bin"))};
+        file_util::path_join(SERIALIZED_ZOO, "onnx/conv3d_dilated_strided_input0.bin"))};
     Outputs expected_output{read_binary_file<float>(
-            file_util::path_join(SERIALIZED_ZOO, "onnx/conv3d_dilated_strided_output0.bin"))};
+        file_util::path_join(SERIALIZED_ZOO, "onnx/conv3d_dilated_strided_output0.bin"))};
 
     Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
