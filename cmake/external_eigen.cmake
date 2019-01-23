@@ -17,8 +17,8 @@
 # Enable ExternalProject CMake module
 include(ExternalProject)
 
-set(EIGEN_GIT_TAG patched)
-set(EIGEN_GIT_URL https://github.com/NervanaSystems/eigen)
+set(EIGEN_GIT_TAG 3.3.7)
+set(EIGEN_GIT_URL https://github.com/eigenteam/eigen-git-mirror.git)
 
 #------------------------------------------------------------------------------
 # Download Eigen
