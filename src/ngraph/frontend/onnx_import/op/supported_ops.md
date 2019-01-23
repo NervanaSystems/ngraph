@@ -125,7 +125,7 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | IsNaN | (9) | | 440 | Hacky way is to generate constant nodes with representations of NaN and compare with them. |
 | Loop | - | | 432 | Static loops with some preconditions may be possible, however no idea how to pass graph (proto?) as a _body_ attribute. (what about graph contains `Loop`?) |
 | OneHot | (9) | | 453 | Furhter analysis needed. Unclear nGraph doc of `OneHot` op. |
-| Scan | - |  | 433 | Further analysis needed. - determine whehter it is possible to import graph passed by op attribute. |
+| Scan | - |  | 433 | Further analysis needed. - determine whether it is possible to import graph passed by op attribute. |
 
 ### Dynamic operators
 | Name | Opset supported | NGCORE | NGONNX | Comment |
