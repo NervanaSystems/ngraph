@@ -51,7 +51,7 @@ namespace
     std::vector<T> read_binary_file(const std::string& path)
     {
         std::vector<T> file_content;
-        std::ifstream inputs_fs{file_util::path_join(SERIALIZED_ZOO, path),
+        std::ifstream inputs_fs{file_util::path_join(TEST_FILES, path),
                                 std::ios::in | std::ios::binary};
         EXPECT_TRUE(inputs_fs);
 
@@ -1568,8 +1568,8 @@ protected:
 
     void SetUp() override
     {
-        input_filename = "onnx/final_int8_resnet50_input" + std::to_string(test_set_id) + ".bin";
-        output_filename = "onnx/final_int8_resnet50_output" + std::to_string(test_set_id) + ".bin";
+        input_filename = "onnx/resnet50_int8_input" + std::to_string(test_set_id) + ".bin";
+        output_filename = "onnx/resnet50_int8_output" + std::to_string(test_set_id) + ".bin";
     }
 
     std::uint32_t test_set_id;
@@ -1580,7 +1580,7 @@ protected:
 TEST_P(lin_quant_model_param_test, model_resnet50)
 {
     auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/final_int8_resnet50_static_input.onnx"));
+        file_util::path_join(SERIALIZED_ZOO, "onnx/resnet50_int8_tf_do_static_input.onnx"));
 
     Inputs inputs{read_binary_file<float>(input_filename)};
     Outputs expected_output{read_binary_file<float>(output_filename)};
