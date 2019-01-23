@@ -194,7 +194,7 @@ namespace ngraph
                     auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
                     auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
                     auto& arg3_tensor = external_function->get_tensor_data(args[3].get_name());
-                    size_t copy_size = args[3].get_size();
+                    size_t arg3_size = args[3].get_size();
                     auto& arg4_tensor = external_function->get_tensor_data(args[4].get_name());
                     auto& arg5_tensor = external_function->get_tensor_data(args[5].get_name());
                     auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
@@ -221,7 +221,7 @@ namespace ngraph
                                     conv_attr,
                                     deps,
                                     conv_index,
-                                    copy_size](CPURuntimeContext* ctx,
+                                    arg3_size](CPURuntimeContext* ctx,
                                                CPUExecutionContext* ectx) mutable {
                         if (ctx->first_iteration)
                         {
@@ -258,7 +258,7 @@ namespace ngraph
                         {
                             memcpy(static_cast<char*>(out0_tensor),
                                    static_cast<char*>(arg3_tensor),
-                                   copy_size);
+                                   arg3_size);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
@@ -285,7 +285,7 @@ namespace ngraph
                     auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
                     auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
                     auto& arg3_tensor = external_function->get_tensor_data(args[3].get_name());
-                    size_t copy_size = args[3].get_size();
+                    size_t arg3_size = args[3].get_size();
                     auto& arg4_tensor = external_function->get_tensor_data(args[4].get_name());
                     auto& arg5_tensor = external_function->get_tensor_data(args[5].get_name());
                     auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
@@ -308,7 +308,7 @@ namespace ngraph
                                     conv_attr,
                                     deps,
                                     conv_index,
-                                    copy_size](CPURuntimeContext* ctx,
+                                    arg3_size](CPURuntimeContext* ctx,
                                                CPUExecutionContext* ectx) mutable {
                         if (ctx->first_iteration)
                         {
@@ -345,7 +345,7 @@ namespace ngraph
                         {
                             memcpy(static_cast<char*>(out0_tensor),
                                    static_cast<char*>(arg3_tensor),
-                                   copy_size);
+                                   arg3_size);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
