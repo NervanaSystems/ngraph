@@ -595,9 +595,10 @@ namespace ngraph
                                          const mkldnn::memory::desc& dst_iter_desc);
 
                 template <typename OP>
-                size_t build_rnn_backward(const ngraph::Node* node,
-                                          const std::vector<TensorViewWrapper>& args,
-                                          const std::vector<TensorViewWrapper>& out)
+                std::unordered_map<std::string, size_t>
+                    build_rnn_backward(const ngraph::Node* node,
+                                       const std::vector<TensorViewWrapper>& args,
+                                       const std::vector<TensorViewWrapper>& out)
 
                 {
                     auto rnn_bprop_op = static_cast<const OP*>(node);
@@ -637,12 +638,13 @@ namespace ngraph
                                                         et);
                 }
 
-                size_t build_rnn_backword_primitive(Shape& src_layer_dims,
-                                                    Shape& src_iter_dims,
-                                                    Shape& wei_layer_dims,
-                                                    Shape& wei_iter_dims,
-                                                    Shape& bias_dims,
-                                                    ngraph::element::Type& et);
+                std::unordered_map<std::string, size_t>
+                    build_rnn_backword_primitive(Shape& src_layer_dims,
+                                                 Shape& src_iter_dims,
+                                                 Shape& wei_layer_dims,
+                                                 Shape& wei_iter_dims,
+                                                 Shape& bias_dims,
+                                                 ngraph::element::Type& et);
 
                 size_t build_concat(const std::vector<mkldnn::memory::desc>& inputs_data_desc,
                                     const mkldnn::memory::desc& result_desc,

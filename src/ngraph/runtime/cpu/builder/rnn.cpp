@@ -104,11 +104,13 @@ namespace ngraph
                 auto& diff_dst_iter_tensor = external_function->get_tensor_data(args[8].get_name());
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                auto rnn_bprop_index =
+                auto rnn_bprop_primitive_index =
                     mkldnn_emitter->build_rnn_backward<ngraph::op::RnnBackprop>(node, args, out);
 
-                auto& fprop_deps = mkldnn_emitter->get_primitive_deps(rnn_bprop_index - 1);
-                auto functor_fprop = [&, rnn_bprop_index](CPURuntimeContext* ctx,
+                auto& fprop_deps = mkldnn_emitter->get_primitive_deps(
+                    rnn_bprop_primitive_index["rnn_fwd_primitive"]);
+                auto rnn_fprop_index = rnn_bprop_primitive_index["rnn_fwd_primitive"];
+                auto functor_fprop = [&, rnn_fprop_index](CPURuntimeContext* ctx,
                                                           CPUExecutionContext* ectx) {
                     cpu::mkldnn_utils::set_memory_ptr(ctx, fprop_deps[0], fprop_src_layer_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, fprop_deps[1], fprop_src_iter_tensor);
@@ -121,10 +123,46 @@ namespace ngraph
                     cpu::mkldnn_utils::set_memory_ptr(ctx, fprop_deps[6], fprop_dst_iter_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(
                         ctx, fprop_deps[7], ctx->mkldnn_workspaces[fprop_deps[8]]);
-                    cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, rnn_bprop_index - 1);
+                    cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, rnn_fprop_index);
                 };
 
-                auto& bprop_deps = mkldnn_emitter->get_primitive_deps(rnn_bprop_index);
+                // insert reorders if their is weight conversion needed
+                auto functor_reorder_weights_layer = [&, rnn_bprop_primitive_index](
+                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    if (rnn_bprop_primitive_index.find("weights_layer_reorder_primitive") !=
+                        rnn_bprop_primitive_index.end())
+                    {
+                        size_t reorder_index =
+                            rnn_bprop_primitive_index.at("weights_layer_reorder_primitive");
+                        auto& deps = mkldnn_emitter->get_primitive_deps(reorder_index);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], fprop_weights_layer_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[1], ctx->mkldnn_workspaces[deps[2]]);
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, reorder_index);
+                        fprop_weights_layer_tensor = ctx->mkldnn_workspaces[deps[2]];
+                    }
+                };
+
+                auto functor_reorder_weights_iter = [&, rnn_bprop_primitive_index](
+                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    if (rnn_bprop_primitive_index.find("weights_iter_reorder_primitive") !=
+                        rnn_bprop_primitive_index.end())
+                    {
+                        size_t reorder_index =
+                            rnn_bprop_primitive_index.at("weights_iter_reorder_primitive");
+                        auto& wt_deps = mkldnn_emitter->get_primitive_deps(reorder_index);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, wt_deps[0], fprop_weights_iter_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, wt_deps[1], ctx->mkldnn_workspaces[wt_deps[2]]);
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, reorder_index);
+                        fprop_weights_iter_tensor = ctx->mkldnn_workspaces[wt_deps[2]];
+                    }
+                };
+
+                auto& bprop_deps = mkldnn_emitter->get_primitive_deps(
+                    rnn_bprop_primitive_index["rnn_bwd_primitive"]);
+                auto rnn_bprop_index = rnn_bprop_primitive_index["rnn_bwd_primitive"];
                 auto functor_bprop = [&, rnn_bprop_index](CPURuntimeContext* ctx,
                                                           CPUExecutionContext* ectx) {
                     cpu::mkldnn_utils::set_memory_ptr(ctx, bprop_deps[0], fprop_src_layer_tensor);
@@ -149,9 +187,15 @@ namespace ngraph
                         ctx, bprop_deps[14], ctx->mkldnn_workspaces[bprop_deps[15]]);
                     cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, rnn_bprop_index);
                 };
-                auto functor = [&, functor_fprop, functor_bprop](CPURuntimeContext* ctx,
-                                                                 CPUExecutionContext* ectx) {
+                auto functor = [&,
+                                functor_fprop,
+                                functor_bprop,
+                                functor_reorder_weights_layer,
+                                functor_reorder_weights_iter](CPURuntimeContext* ctx,
+                                                              CPUExecutionContext* ectx) {
                     functor_fprop(ctx, ectx);
+                    functor_reorder_weights_layer(ctx, ectx);
+                    functor_reorder_weights_iter(ctx, ectx);
                     functor_bprop(ctx, ectx);
                 };
                 functors.emplace_back(functor);
