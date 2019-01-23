@@ -29,6 +29,7 @@
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
 #include "util/ndarray.hpp"
+#include "util/test_control.hpp"
 #include "util/test_tools.hpp"
 
 using namespace ngraph;
@@ -1841,6 +1842,9 @@ TEST(onnx_${BACKEND_NAME}, model_space_to_depth_no_blocksize)
 }
 
 
+namespace
+{
+
 class lin_quant_model_param_test : public testing::TestWithParam<std::uint32_t>
 {
 protected:
@@ -1862,7 +1866,9 @@ protected:
     std::string output_filename;
 };
 
-TEST_P(lin_quant_model_param_test, model_resnet50)
+} // anonymous namespace
+
+NGRAPH_TEST_P(${BACKEND_NAME}, lin_quant_model_param_test, model_resnet50)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/resnet50_int8_tf_do_static_input.onnx"));
@@ -1898,6 +1904,7 @@ TEST_P(lin_quant_model_param_test, model_resnet50)
     EXPECT_EQ(exp_idx, got_idx - class_shift);
 }
 
-INSTANTIATE_TEST_CASE_P(onnx_${BACKEND_NAME},
-                        lin_quant_model_param_test,
-                        testing::Range(std::uint32_t{0}, std::uint32_t{9}));
+NGRAPH_INSTANTIATE_TEST_CASE_P(${BACKEND_NAME},
+                               onnx,
+                               lin_quant_model_param_test,
+                               testing::Range(std::uint32_t{0}, std::uint32_t{9}));
