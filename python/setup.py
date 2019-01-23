@@ -106,7 +106,8 @@ def parallelCCompile(
         self._compile(obj, src, ext, cc_args, extra_postargs, pp_opts)
 
     # convert to list, imap is evaluated on-demand
-    list(multiprocessing.pool.ThreadPool().imap(_single_compile, objects))
+    pool = multiprocessing.pool.ThreadPool()
+    list(pool.imap(_single_compile, objects))
     return objects
 
 
@@ -204,7 +205,6 @@ sources = [
     'pyngraph/ops/pad.cpp',
     'pyngraph/ops/parameter.cpp',
     'pyngraph/ops/power.cpp',
-    'pyngraph/ops/reduce.cpp',
     'pyngraph/ops/regmodule_pyngraph_op.cpp',
     'pyngraph/ops/relu.cpp',
     'pyngraph/ops/replace_slice.cpp',
@@ -222,7 +222,6 @@ sources = [
     'pyngraph/ops/tanh.cpp',
     'pyngraph/ops/topk.cpp',
     'pyngraph/ops/allreduce.cpp',
-    'pyngraph/ops/function_call.cpp',
     'pyngraph/ops/get_output_element.cpp',
     'pyngraph/ops/min.cpp',
     'pyngraph/ops/batch_norm.cpp',

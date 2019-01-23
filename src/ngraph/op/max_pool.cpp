@@ -19,7 +19,6 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/greater.hpp"
-#include "ngraph/op/select_and_scatter.hpp"
 #include "ngraph/util.hpp"
 #include "ngraph/validation_util.hpp"
 
