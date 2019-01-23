@@ -187,7 +187,7 @@ namespace ngraph
                     return;
                 }
 
-                std::function<decltype(identity(runtime::cpu::kernel::dot<float>))> kernel;
+                std::function<void(void*, void*, void*, const Shape&, const Shape&, const Shape&, int)> kernel;
 
                 SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::dot);
 

@@ -278,9 +278,6 @@ namespace ngraph
                 {
                 }
             };
-
-            // Workaround for MSVC error C3556
-            template <typename T> T identity(T);
         }
     }
 }
