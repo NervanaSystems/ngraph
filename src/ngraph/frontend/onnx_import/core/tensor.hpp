@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 #pragma once
 
 #include <onnx-ml.pb.h>
+#include <utility>
 #include <vector>
 
 #include "ngraph/shape.hpp"
@@ -26,24 +27,33 @@ namespace ngraph
 {
     namespace onnx_import
     {
+        // Detecting automatically the underlying type used to store the information
+        // for data type of values a tensor is holding. A bug was discovered in protobuf
+        // which forced ONNX team to switch from `enum TensorProto_DataType` to `int32`
+        // in order to workaround the bug. This line allows using both versions of ONNX
+        // generated wrappers.
+        using TensorProto_DataType = decltype(onnx::TensorProto{}.data_type());
+
         namespace error
         {
             namespace tensor
             {
                 struct invalid_data_type : ngraph_error
                 {
-                    explicit invalid_data_type(onnx::TensorProto_DataType type)
+                    explicit invalid_data_type(TensorProto_DataType type)
                         : ngraph_error{"invalid data type: " +
-                                       onnx::TensorProto_DataType_Name(type)}
+                                       onnx::TensorProto_DataType_Name(
+                                           static_cast<onnx::TensorProto_DataType>(type))}
                     {
                     }
                 };
 
                 struct unsupported_data_type : ngraph_error
                 {
-                    explicit unsupported_data_type(onnx::TensorProto_DataType type)
+                    explicit unsupported_data_type(TensorProto_DataType type)
                         : ngraph_error{"unsupported data type: " +
-                                       onnx::TensorProto_DataType_Name(type)}
+                                       onnx::TensorProto_DataType_Name(
+                                           static_cast<onnx::TensorProto_DataType>(type))}
                     {
                     }
                 };
@@ -320,7 +330,7 @@ namespace ngraph
                 }
             }
 
-            operator onnx::TensorProto_DataType() const { return m_tensor_proto->data_type(); }
+            operator TensorProto_DataType() const { return m_tensor_proto->data_type(); }
         private:
             const onnx::TensorProto* m_tensor_proto;
             Shape m_shape;

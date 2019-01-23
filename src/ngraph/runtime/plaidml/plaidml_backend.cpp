@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,20 +31,22 @@ ngraph::runtime::plaidml::PlaidML_Backend::PlaidML_Backend(const char* configura
 std::shared_ptr<ngraph::runtime::Tensor> ngraph::runtime::plaidml::PlaidML_Backend::create_tensor(
     const ngraph::element::Type& element_type, const ngraph::Shape& shape)
 {
-    return std::make_shared<PlaidML_Tensor>(&m_config, element_type, shape, "direct_data", nullptr);
+    return std::make_shared<PlaidML_Tensor>(
+        this, &m_config, element_type, shape, "direct_data", nullptr);
 }
 
 std::shared_ptr<ngraph::runtime::Tensor> ngraph::runtime::plaidml::PlaidML_Backend::create_tensor(
     const ngraph::element::Type& element_type, const Shape& shape, void* memory_pointer)
 {
     return std::make_shared<PlaidML_Tensor>(
-        &m_config, element_type, shape, "direct_data", memory_pointer);
+        this, &m_config, element_type, shape, "direct_data", memory_pointer);
 }
 
-bool ngraph::runtime::plaidml::PlaidML_Backend::compile(std::shared_ptr<Function> func)
+std::shared_ptr<ngraph::Function>
+    ngraph::runtime::plaidml::PlaidML_Backend::compile(std::shared_ptr<Function> func)
 {
     m_cache.compile(func, &m_compiler);
-    return true;
+    return func;
 }
 
 bool ngraph::runtime::plaidml::PlaidML_Backend::call(

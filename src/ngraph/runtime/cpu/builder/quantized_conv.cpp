@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -61,7 +61,6 @@ namespace ngraph
                         CPURuntimeContext* ctx, CPUExecutionContext* ectx) mutable {
                         // Create MKLDNN convolution primitive during the first iteration.
                         // Assumes the scales dont change for the duration of the graph
-                        // if (ctx->first_iteration && rebuild)
                         if (ctx->first_iteration)
                         {
                             vector<float> dyn_scales;

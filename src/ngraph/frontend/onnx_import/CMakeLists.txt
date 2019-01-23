@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright (c) 2017-2018 Intel Copyright
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -7,7 +7,7 @@
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by application law or agreed to in writing, software
+# Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
@@ -17,12 +17,12 @@
 set(ONNX_OPSET_VERSION 9 CACHE INTERNAL "Supported version of ONNX operator set")
 
 add_library(onnx_import_interface OBJECT
-        onnx.cpp
-        onnx.hpp
-        core/operator_set.hpp
         core/node.cpp
         core/node.hpp
-        core/weight.hpp)
+        core/operator_set.hpp
+        core/weight.hpp
+        onnx.cpp
+        onnx.hpp)
 
 add_library(onnx_import STATIC
         core/attribute.cpp
@@ -70,6 +70,8 @@ add_library(onnx_import STATIC
         op/conv.hpp
         op/conv_transpose.cpp
         op/conv_transpose.hpp
+        op/depth_to_space.cpp
+        op/depth_to_space.hpp
         op/div.hpp
         op/elu.cpp
         op/elu.hpp
@@ -137,6 +139,8 @@ add_library(onnx_import STATIC
         op/softplus.hpp
         op/softsign.cpp
         op/softsign.hpp
+        op/space_to_depth.cpp
+        op/space_to_depth.hpp
         op/split.cpp
         op/split.hpp
         op/sqrt.hpp
@@ -167,12 +171,8 @@ add_library(onnx_import STATIC
 
 set(ONNX_IMPORT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "")
 
+add_dependencies(onnx_import_interface protobuf::libprotobuf onnx::libonnx onnx::libonnx_proto)
 add_dependencies(onnx_import onnx_import_interface)
-
-if (NOT NGRAPH_USE_SYSTEM_PROTOBUF)
-    add_dependencies(onnx_import_interface protobuf::libprotobuf)
-    add_dependencies(onnx_import_interface onnx::libonnx_proto)
-endif()
 
 set_property(TARGET onnx_import PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_include_directories(onnx_import PRIVATE ${ONNX_IMPORT_INCLUDE_DIR} ${NGRAPH_INCLUDE_PATH}

@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2018 Intel Corporation
+# Copyright 2018-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -93,31 +93,3 @@ def test_topk():
                                  [9, 8, 7],
                                  [6, 2, 5],
                                  [3, 1, 4]], dtype=np.float32))
-
-
-def test_reduce():
-    from functools import reduce
-    np.random.seed(133391)
-
-    # default reduce all axes
-    init_val = np.float32(0.)
-    input_data = np.random.randn(3, 4, 5).astype(np.float32)
-    expected = np.sum(input_data)
-    reduction_function_args = [init_val, ng.impl.op.Add]
-    result = run_op_node([input_data], ng.reduce, *reduction_function_args)
-    assert np.allclose(result, expected)
-
-    reduction_axes = (0, 2)
-    init_val = np.float32(0.)
-    input_data = np.random.randn(3, 4, 5).astype(np.float32)
-    expected = np.sum(input_data, axis=reduction_axes)
-    reduction_function_args = [init_val, ng.impl.op.Add, list(reduction_axes)]
-    result = run_op_node([input_data], ng.reduce, *reduction_function_args)
-    assert np.allclose(result, expected)
-
-    reduction_axes = (0, )
-    input_data = np.random.randn(100).astype(np.float32)
-    expected = reduce(lambda x, y: x - y, input_data, np.float32(0.))
-    reduction_function_args = [init_val, ng.impl.op.Subtract, list(reduction_axes)]
-    result = run_op_node([input_data], ng.reduce, *reduction_function_args)
-    assert np.allclose(result, expected)

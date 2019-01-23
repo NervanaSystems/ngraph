@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -90,13 +90,6 @@ namespace ngraph
                                    NVShape lower_bounds,
                                    NVShape slice_strides,
                                    NVShape output_shape);
-
-                size_t build_reduce_window(const OpName op_name,
-                                           const std::vector<std::string>& dtypes,
-                                           NVShape input_shape,
-                                           NVShape output_shape,
-                                           NVShape reduce_window_shape,
-                                           NVShape reduce_window_strides);
 
                 size_t build_reverse_sequence(const std::array<std::string, 3>& dtypes,
                                               NVShape input_shape0,

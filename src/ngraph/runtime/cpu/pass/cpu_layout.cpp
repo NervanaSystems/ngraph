@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -79,7 +79,7 @@ static shared_ptr<Node>
 {
     vector<shared_ptr<Node>> new_args;
     bool replace_node = false;
-    uint index = 0;
+    uint32_t index = 0;
 
     if (required_mds.size() != node->get_input_size())
     {
@@ -179,7 +179,7 @@ static void set_native_layouts(runtime::cpu::CPU_ExternalFunction* external_func
 {
     std::vector<shared_ptr<Node>> new_args;
     bool replace_node = false;
-    uint index = 0;
+    uint32_t index = 0;
     for (descriptor::Input& input : node->get_inputs())
     {
         const auto& output = input.get_output();

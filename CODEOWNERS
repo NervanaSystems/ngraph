@@ -6,11 +6,11 @@
 
 /cmake/                             @rkimballn1 @silee2
 
-/.ci/                               @aslepko @crlishka
-/.ci/travis/                        @postrational
-/.ci/onnx/                          @postrational
-/contrib/docker/                    @aslepko @crlishka
-/.travis.yml                        @postrational
+/.ci/                               @aslepko
+/.ci/travis/                        @aslepko @postrational
+/.ci/onnx/                          @aslepko @postrational
+/contrib/docker/                    @aslepko
+/.travis.yml                        @aslepko @postrational
 
 /.clang-format                      @rkimballn1
 /.gitattributes                     @rkimballn1
@@ -35,9 +35,9 @@
 /src/ngraph/codegen/                @rkimballn1
 /src/ngraph/frontend/               @postrational
 /src/ngraph/op/                     @diyessi @aprocter
-/src/ngraph/pass/                   @Krovatkin
-/src/ngraph/pattern/                @Krovatkin
-/src/ngraph/runtime/                @rkimballn1 @Krovatkin
+/src/ngraph/pass/                   @jbobba
+/src/ngraph/pattern/                @jbobba
+/src/ngraph/runtime/                @rkimballn1 @jbobba
 /src/ngraph/runtime/cpu/            @jbobba
 /src/ngraph/runtime/gpu/            @rkimballn1
 /src/ngraph/runtime/hybrid/         @sasadep

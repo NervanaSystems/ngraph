@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2018 Intel Corporation
+# Copyright 2018-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 import mxnet as mx
 
-# Convert gluon model to a static model 
+# Convert gluon model to a static model
 from mxnet.gluon.model_zoo import vision
 import time
 
@@ -30,12 +30,12 @@ resnet_gluon.forward(input_data)
 resnet_gluon.export('resnet50_v2')
 resnet_sym, arg_params, aux_params = mx.model.load_checkpoint('resnet50_v2', 0)
 
-# Load the model into nGraph as a static graph 
+# Load the model into nGraph as a static graph
 model = resnet_sym.simple_bind(ctx=mx.cpu(), data=batch_shape, grad_req='null')
 model.copy_params_from(arg_params, aux_params)
 
 # To test the model's performance, we've provided this helpful code snippet
-# customizable 
+# customizable
 
 dry_run = 5
 num_batches = 100

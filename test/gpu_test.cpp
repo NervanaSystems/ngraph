@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -212,10 +212,10 @@ TEST(gpu_test, topk_fanout_graph_transform)
 
     EXPECT_EQ((vector<int32_t>{2, 1, 1, 2, 1, 2, 0, 1}), read_vector<int32_t>(r0));
     EXPECT_EQ((vector<int32_t>{2, 1, 1, 2, 1, 2, 0, 1}), read_vector<int32_t>(r1));
-    EXPECT_TRUE(
-        test::all_close_f(vector<float>{4, 4, 3, 3, 3, 4, 2, 3}, read_vector<float>(r2), 24, 0));
-    EXPECT_TRUE(
-        test::all_close_f(vector<float>{4, 4, 3, 3, 3, 4, 2, 3}, read_vector<float>(r3), 24, 0));
+    EXPECT_TRUE(test::all_close_f(
+        vector<float>{4, 4, 3, 3, 3, 4, 2, 3}, read_vector<float>(r2), MIN_FLOAT_TOLERANCE_BITS));
+    EXPECT_TRUE(test::all_close_f(
+        vector<float>{4, 4, 3, 3, 3, 4, 2, 3}, read_vector<float>(r3), MIN_FLOAT_TOLERANCE_BITS));
     auto reshape_count = count_ops_of_type<ngraph::op::Reshape>(gpu_f);
     EXPECT_EQ(reshape_count, 10);
 }
