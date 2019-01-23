@@ -58,6 +58,56 @@ string runtime::intelgpu::get_opencl_type_name(const element::Type& ngraph_type)
     }
 }
 
+string runtime::intelgpu::get_opencl_type_min_max_value(const element::Type& ngraph_type,
+                                                        bool is_min)
+{
+    if (ngraph_type == ngraph::element::f32)
+    {
+        return is_min ? "-INFINITY" : "INFINITY";
+    }
+    else if (ngraph_type == ngraph::element::f64)
+    {
+        return is_min ? "-INFINITY" : "INFINITY";
+    }
+    else if (ngraph_type == ngraph::element::i64)
+    {
+        return is_min ? "LONG_MIN" : "LONG_MAX";
+    }
+    else if (ngraph_type == ngraph::element::u64)
+    {
+        return is_min ? "0" : "ULONG_MAX";
+    }
+    else if (ngraph_type == ngraph::element::i32)
+    {
+        return is_min ? "INT_MIN" : "INT_MAX";
+    }
+    else if (ngraph_type == ngraph::element::u32)
+    {
+        return is_min ? "0" : "UINT_MAX";
+    }
+    else if (ngraph_type == ngraph::element::i16)
+    {
+        return is_min ? "SHRT_MIN" : "SHRT_MAX";
+    }
+    else if (ngraph_type == ngraph::element::u16)
+    {
+        return is_min ? "0" : "USHRT_MAX";
+    }
+    else if (ngraph_type == ngraph::element::i8)
+    {
+        return is_min ? "CHAR_MIN" : "CHAR_MAX";
+    }
+    else if (ngraph_type == ngraph::element::u8)
+    {
+        return is_min ? "0" : "UCHAR_MAX";
+    }
+    else
+    {
+        throw ngraph_error("Unsupported type '" + ngraph_type.c_type_string() +
+                           "' in runtime::intelgpu::get_opencl_type_min_max_value()");
+    }
+}
+
 vector<cldnn_arg> runtime::intelgpu::get_kernel_args(size_t input, size_t output)
 {
     vector<cldnn_arg> result;
