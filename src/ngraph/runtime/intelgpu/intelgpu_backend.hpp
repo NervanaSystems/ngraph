@@ -58,6 +58,8 @@ public:
     std::vector<PerformanceCounter>
         get_performance_data(std::shared_ptr<Function> func) const override;
 
+    bool is_supported_property(const Property prop) const override;
+
 private:
     class FunctionInstance
     {
