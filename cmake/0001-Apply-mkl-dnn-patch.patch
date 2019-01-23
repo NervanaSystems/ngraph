@@ -1,3 +1,13 @@
+From c9c10d190afc69ae78fc2ce8210a756434efeb4f Mon Sep 17 00:00:00 2001
+From: Sang Ik Lee <sang.ik.lee@intel.com>
+Date: Wed, 23 Jan 2019 13:02:57 -0800
+Subject: [PATCH] Apply mkl-dnn patch.
+
+---
+ cmake/OpenMP.cmake | 11 ++++++++---
+ src/CMakeLists.txt |  4 ++++
+ 2 files changed, 12 insertions(+), 3 deletions(-)
+
 diff --git a/cmake/OpenMP.cmake b/cmake/OpenMP.cmake
 index f9c3620e..ed1ad6c2 100644
 --- a/cmake/OpenMP.cmake
@@ -40,3 +50,6 @@ index 83ed499a..3dc4fcf4 100644
  set_property(TARGET ${TARGET_NAME} PROPERTY CXX_STANDARD 11)
  set_property(TARGET ${TARGET_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
  set_property(TARGET ${TARGET_NAME} PROPERTY VERSION "${PROJECT_VERSION}.0")
+-- 
+2.20.1
+

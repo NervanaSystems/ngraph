@@ -92,9 +92,9 @@ target_link_libraries(libmkl INTERFACE ${MKL_LIBS})
 set(MKLDNN_GIT_REPO_URL https://github.com/intel/mkl-dnn)
 set(MKLDNN_GIT_TAG "830a100")
 if(NGRAPH_LIB_VERSIONING_ENABLE)
-    set(MKLDNN_PATCH_FILE mkldnn.patch)
+    set(MKLDNN_PATCH_FILE 0001-Apply-mkl-dnn-patch.patch)
 else()
-    set(MKLDNN_PATCH_FILE mkldnn_no_so_link.patch)
+    set(MKLDNN_PATCH_FILE 0001-Apply-mkl-dnn-no-so-link-patch.patch)
 endif()
 set(MKLDNN_LIBS ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libmkldnn${CMAKE_SHARED_LIBRARY_SUFFIX})
 
@@ -105,15 +105,8 @@ if (WIN32)
         GIT_REPOSITORY ${MKLDNN_GIT_REPO_URL}
         GIT_TAG ${MKLDNN_GIT_TAG}
         UPDATE_COMMAND ""
-        CONFIGURE_COMMAND
-        # Patch gets mad if it applied for a second time so:
-        #    --forward tells patch to ignore if it has already been applied
-        #    --reject-file tells patch to not right a reject file
-        #    || exit 0 changes the exit code for the PATCH_COMMAND to zero so it is not an error
-        # I don't like it, but it works
-        PATCH_COMMAND patch -p1 --forward --reject-file=- -i ${CMAKE_SOURCE_DIR}/cmake/${MKLDNN_PATCH_FILE} || exit 0
-        # Uncomment below with any in-flight MKL-DNN patches
-        # PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
+        # Use git apply for applying patch
+        PATCH_COMMAND git apply ${CMAKE_SOURCE_DIR}/cmake/${MKLDNN_PATCH_FILE}
         CMAKE_GENERATOR ${CMAKE_GENERATOR}
         CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
         CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
@@ -139,15 +132,8 @@ else()
         GIT_REPOSITORY ${MKLDNN_GIT_REPO_URL}
         GIT_TAG ${MKLDNN_GIT_TAG}
         UPDATE_COMMAND ""
-        CONFIGURE_COMMAND
-        # Patch gets mad if it applied for a second time so:
-        #    --forward tells patch to ignore if it has already been applied
-        #    --reject-file tells patch to not right a reject file
-        #    || exit 0 changes the exit code for the PATCH_COMMAND to zero so it is not an error
-        # I don't like it, but it works
-        PATCH_COMMAND patch -p1 --forward --reject-file=- -i ${CMAKE_SOURCE_DIR}/cmake/${MKLDNN_PATCH_FILE} || exit 0
-        # Uncomment below with any in-flight MKL-DNN patches
-        # PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
+        # Use git apply for applying patch
+        PATCH_COMMAND git apply ${CMAKE_SOURCE_DIR}/cmake/${MKLDNN_PATCH_FILE}
         CMAKE_GENERATOR ${CMAKE_GENERATOR}
         CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
         CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}

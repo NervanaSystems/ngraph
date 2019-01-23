@@ -1,3 +1,13 @@
+From 42ca884f3837f4d899b7a86bb7154b60c08a623c Mon Sep 17 00:00:00 2001
+From: Sang Ik Lee <sang.ik.lee@intel.com>
+Date: Wed, 23 Jan 2019 13:05:19 -0800
+Subject: [PATCH] Apply mkl-dnn no so link patch.
+
+---
+ cmake/OpenMP.cmake | 11 ++++++++---
+ src/CMakeLists.txt |  6 ++++--
+ 2 files changed, 12 insertions(+), 5 deletions(-)
+
 diff --git a/cmake/OpenMP.cmake b/cmake/OpenMP.cmake
 index f9c3620e..ed1ad6c2 100644
 --- a/cmake/OpenMP.cmake
@@ -26,7 +36,7 @@ index f9c3620e..ed1ad6c2 100644
              set (CMAKE_SHARED_LINKER_FLAGS "-Wl,--as-needed")
          endif()
 diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
-index 83ed499..d7f4ea0 100644
+index 83ed499a..d7f4ea0d 100644
 --- a/src/CMakeLists.txt
 +++ b/src/CMakeLists.txt
 @@ -98,10 +98,12 @@ else()
@@ -41,6 +51,9 @@ index 83ed499..d7f4ea0 100644
  set_property(TARGET ${TARGET_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
 -set_property(TARGET ${TARGET_NAME} PROPERTY VERSION "${PROJECT_VERSION}.0")
 -set_property(TARGET ${TARGET_NAME} PROPERTY SOVERSION "0")
-
+ 
  if(MINGW)
-     # We need to install *.dll into bin/ and *.a into lib/.
+     # We need to install *.dll into bin/ and *.a into lib/. 
+-- 
+2.20.1
+
