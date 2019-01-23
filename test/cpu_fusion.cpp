@@ -3443,8 +3443,10 @@ TEST(cpu_fusion, autodiff_rnn_1cell)
 {
     auto src_layer = make_shared<op::Parameter>(element::f32, Shape{1, 1});
     auto src_iter = make_shared<op::Parameter>(element::f32, Shape{2, 1});
-    auto weights_layer = make_shared<op::Parameter>(element::f32, Shape{1, 4});
-    auto weights_iter = make_shared<op::Parameter>(element::f32, Shape{1, 4});
+    auto weights_layer = make_shared<op::Parameter>(element::f32, Shape{4, 1});
+    auto weights_layer_reshape = make_shared<op::Parameter>(element::f32, Shape{1, 4});
+    auto weights_iter = make_shared<op::Parameter>(element::f32, Shape{4, 1});
+    auto weights_iter_reshape = make_shared<op::Parameter>(element::f32, Shape{1, 4});
     auto biases = make_shared<op::Parameter>(element::f32, Shape{4});
     auto diff_dst_layer = make_shared<op::Parameter>(element::f32, Shape{1, 1});
     auto diff_dst_iter = make_shared<op::Parameter>(element::f32, Shape{2, 1});
@@ -3457,8 +3459,8 @@ TEST(cpu_fusion, autodiff_rnn_1cell)
     const int num_of_rnn_fused_layer = 1;
     auto rnn_node = make_shared<op::Rnn>(src_layer,
                                          src_iter,
-                                         weights_layer,
-                                         weights_iter,
+                                         weights_layer_reshape,
+                                         weights_iter_reshape,
                                          biases,
                                          number_of_timesteps,
                                          number_of_gates_per_cell,
@@ -3470,17 +3472,22 @@ TEST(cpu_fusion, autodiff_rnn_1cell)
     auto dst_layer = std::make_shared<op::GetOutputElement>(rnn_node, 0);
     auto dst_iter = std::make_shared<op::GetOutputElement>(rnn_node, 1);
 
-    auto cpu_f = make_shared<Function>(
-        NodeVector{dst_layer, dst_iter},
-        ParameterVector{src_layer, src_iter, weights_layer, weights_iter, biases});
+    auto cpu_f = make_shared<Function>(NodeVector{dst_layer, dst_iter},
+                                       ParameterVector{src_layer,
+                                                       src_iter,
+                                                       weights_layer,
+                                                       weights_layer_reshape,
+                                                       weights_iter,
+                                                       weights_iter_reshape,
+                                                       biases});
 
     ngraph::autodiff::Adjoints adjoints(NodeVector{dst_layer, dst_iter},
                                         NodeVector{diff_dst_layer, diff_dst_iter});
 
     auto diff_src_layer = adjoints.backprop_node(src_layer);
     auto diff_src_iter = adjoints.backprop_node(src_iter);
-    auto diff_weights_layer = adjoints.backprop_node(weights_layer);
-    auto diff_weights_iter = adjoints.backprop_node(weights_iter);
+    auto diff_weights_layer = adjoints.backprop_node(weights_layer_reshape);
+    auto diff_weights_iter = adjoints.backprop_node(weights_iter_reshape);
     auto diff_bias = adjoints.backprop_node(biases);
 
     auto cpu_df = make_shared<Function>(
@@ -3488,7 +3495,9 @@ TEST(cpu_fusion, autodiff_rnn_1cell)
         ParameterVector{src_layer,
                         src_iter,
                         weights_layer,
+                        weights_layer_reshape,
                         weights_iter,
+                        weights_iter_reshape,
                         biases,
                         diff_dst_layer,
                         diff_dst_iter});
@@ -3514,11 +3523,14 @@ TEST(cpu_fusion, autodiff_rnn_1cell)
         diff_src_layer_t, diff_src_iter_t, diff_wei_layer_t, diff_wei_iter_t, diff_bias_t};
     backend->call_with_validate(backend->compile(cpu_df), results, args);
 
+    /*
     for (auto& res_tensor : results)
     {
         for (auto& i : read_vector<float>(res_tensor))
         {
             // make comparision with the expected v/s computed values
+            std::cout << i << std::endl;
         }
     }
+    */
 }

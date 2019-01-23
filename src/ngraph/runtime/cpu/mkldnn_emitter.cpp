@@ -1138,8 +1138,8 @@ std::unordered_map<std::string, size_t>
         build_memory_descriptor(src_iter_dims, et, mkldnn::memory::format::ldsnc),
         build_memory_descriptor(src_layer_dims, et, mkldnn::memory::format::tnc),
         build_memory_descriptor(src_iter_dims, et, mkldnn::memory::format::ldsnc),
-        build_memory_descriptor(wei_layer_dims, et, mkldnn::memory::format::ldgoi),
-        build_memory_descriptor(wei_iter_dims, et, mkldnn::memory::format::ldgoi),
+        build_memory_descriptor(wei_layer_dims, et, mkldnn::memory::format::ldigo),
+        build_memory_descriptor(wei_iter_dims, et, mkldnn::memory::format::ldigo),
         build_memory_descriptor(bias_dims, et, mkldnn::memory::format::ldgo),
         build_memory_descriptor(src_layer_dims, et, mkldnn::memory::format::tnc),
         build_memory_descriptor(src_iter_dims, et, mkldnn::memory::format::ldsnc));
