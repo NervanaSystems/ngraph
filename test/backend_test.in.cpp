@@ -3372,12 +3372,12 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_reflect_2d_with_neg)
     auto handle = backend->compile(f);
     backend->call_with_validate(handle, {result}, {a, b});
 
-    EXPECT_EQ((test::NDArray<float, 2>({9, 10, 11, 12, 11, 10},
-                                       {5, 6, 7, 8, 7, 6},
-                                       {1, 2, 3, 4, 3, 2},
-                                       {5, 6, 7, 8, 7, 6},
-                                       {9, 10, 11, 12, 11, 10},
-                                       {5, 6, 7, 8, 7, 6})
+    EXPECT_EQ((test::NDArray<float, 2>({{9, 10, 11, 12, 11, 10},
+                                        {5, 6, 7, 8, 7, 6},
+                                        {1, 2, 3, 4, 3, 2},
+                                        {5, 6, 7, 8, 7, 6},
+                                        {9, 10, 11, 12, 11, 10},
+                                        {5, 6, 7, 8, 7, 6}})
                    .get_vector()),
               read_vector<float>(result));
 }

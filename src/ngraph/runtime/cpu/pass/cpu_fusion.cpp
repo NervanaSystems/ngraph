@@ -369,7 +369,7 @@ static bool
     }
 
     // Only match constant padding
-    if (matched_pad->get_pad_mode() != op::PadMode::CONSTANT)
+    if (matched_pad->get_pad_mode() != ngraph::op::PadMode::CONSTANT)
     {
         return false;
     }

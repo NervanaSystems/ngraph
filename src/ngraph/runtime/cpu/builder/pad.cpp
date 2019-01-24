@@ -48,7 +48,7 @@ namespace ngraph
                 auto out_shape = out[0].get_shape();
                 auto padding_below = pad->get_padding_below();
                 auto padding_above = pad->get_padding_above();
-                NGRAPH_ASSERT(pad->get_pad_mode() == op::Pad::CONSTANT);
+                NGRAPH_ASSERT(pad->get_pad_mode() == ngraph::op::PadMode::CONSTANT);
 
                 std::function<decltype(runtime::cpu::kernel::pad_and_slice<float, 1>)> kernel;
 
