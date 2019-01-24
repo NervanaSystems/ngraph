@@ -1,6 +1,6 @@
 #!/bin/bash
 # INTEL CONFIDENTIAL
-# Copyright 2018 Intel Corporation All Rights Reserved.
+# Copyright 2018-2019 Intel Corporation All Rights Reserved.
 # The source code contained or described herein and all documents related to the
 # source code ("Material") are owned by Intel Corporation or its suppliers or
 # licensors. Title to the Material remains with Intel Corporation or its
@@ -51,11 +51,11 @@ function build_ngraph() {
                 check_cached_ngraph
                 if [[ -n $(ls /home/ngraph/build 2> /dev/null) ]]; then
                     cp -Rf "${NGRAPH_CACHE_DIR}/ngraph/build" "${ngraph_directory}/ngraph/" || return 1
-                else 
+                else
                     return 1
                 fi
                 for f in $(find ${ngraph_directory}/ngraph/build/ -name 'CMakeCache.txt');
-                do 	
+                do
                     sed -i "s\\${NGRAPH_CACHE_DIR}\\${ngraph_directory}\\g" $f
                 done
             ;;

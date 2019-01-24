@@ -49,7 +49,7 @@ namespace ngraph
             {
                 // TODO: need to handle the case where offset is provided (assuming 0)
                 // TODO: need to establish cross-nGraph view of scale (mult or div)
-                auto requantization_scale = output_scale / (input_scale * filter_scale);
+                auto requantization_scale = (input_scale * filter_scale) / output_scale;
 
                 return make_shared<op::QuantizedConvolution>(input,
                                                              filter,
@@ -79,8 +79,7 @@ namespace ngraph
             {
                 // TODO: need to handle the case where offset is provided (assuming 0)
                 // TODO: need to establish cross-nGraph view of scale (mult or div)
-                auto requantization_scale = output_scale / (input_scale * filter_scale);
-
+                auto requantization_scale = (input_scale * filter_scale) / output_scale;
 
                 return make_shared<op::QuantizedConvolutionBias>(input,
                                                                  filter,

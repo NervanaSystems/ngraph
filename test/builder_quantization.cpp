@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -675,7 +675,7 @@ TEST(builder, scaled_QC_with_bias_signed_add_and_relu)
     auto result = backend->create_tensor(element::u8, shape_r);
     auto handle = backend->compile(f);
     backend->call_with_validate(handle, {result}, {a, b, c, d});
-    EXPECT_EQ((vector<uint8_t>{76, 110, 99, 105, 122, 218, 255, 136, 110, 165, 142, 133}),
+    EXPECT_EQ((vector<uint8_t>{74, 106, 93, 97, 112, 127, 127, 127, 110, 127, 127, 127}),
               read_vector<uint8_t>(result));
 }
 
@@ -750,7 +750,7 @@ TEST(builder, dynamic_scaled_QC_with_bias_signed_add_and_relu)
     auto result = backend->create_tensor(element::u8, shape_r);
     auto handle = backend->compile(f);
     backend->call_with_validate(handle, {result}, {a, b, c, d, e, e_a, g, h, i, j, k, l});
-    EXPECT_EQ((vector<uint8_t>{76, 110, 99, 105, 122, 218, 255, 136, 110, 165, 142, 133}),
+    EXPECT_EQ((vector<uint8_t>{74, 106, 93, 97, 112, 127, 127, 127, 110, 127, 127, 127}),
               read_vector<uint8_t>(result));
 }
 

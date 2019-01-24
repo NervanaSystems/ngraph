@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,7 +41,6 @@
 #include "pyngraph/ops/equal.hpp"
 #include "pyngraph/ops/exp.hpp"
 #include "pyngraph/ops/floor.hpp"
-#include "pyngraph/ops/function_call.hpp"
 #include "pyngraph/ops/get_output_element.hpp"
 #include "pyngraph/ops/greater.hpp"
 #include "pyngraph/ops/greater_eq.hpp"
@@ -64,7 +63,6 @@
 #include "pyngraph/ops/parameter.hpp"
 #include "pyngraph/ops/power.hpp"
 #include "pyngraph/ops/product.hpp"
-#include "pyngraph/ops/reduce.hpp"
 #include "pyngraph/ops/relu.hpp"
 #include "pyngraph/ops/replace_slice.hpp"
 #include "pyngraph/ops/reshape.hpp"

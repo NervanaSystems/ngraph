@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -97,6 +97,14 @@ namespace ngraph
                 op_list.emplace(op.first);
             }
             return op_list;
+        }
+
+        bool is_operator_supported(const std::string& op_name,
+                                   std::int64_t version,
+                                   const std::string& domain)
+        {
+            return OperatorsBridge::is_operator_registered(
+                op_name, version, domain == "ai.onnx" ? "" : domain);
         }
 
     } // namespace onnx_import

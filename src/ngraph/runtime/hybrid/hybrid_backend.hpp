@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,8 +37,7 @@ namespace ngraph
 class ngraph::runtime::hybrid::HybridBackend : public ngraph::runtime::Backend
 {
 public:
-    HybridBackend(
-        const std::vector<std::pair<std::string, std::shared_ptr<runtime::Backend>>>& backend_list);
+    HybridBackend(const std::vector<std::shared_ptr<runtime::Backend>>& backend_list);
 
     std::shared_ptr<ngraph::runtime::Tensor>
         create_tensor(const ngraph::element::Type& element_type,
@@ -69,5 +68,7 @@ private:
     };
 
     std::map<std::shared_ptr<ngraph::Function>, FunctionInstance> m_function_map;
-    std::vector<std::pair<std::string, std::shared_ptr<runtime::Backend>>> m_backend_list;
+    std::vector<std::shared_ptr<runtime::Backend>> m_backend_list;
+
+    size_t get_placement(const runtime::Tensor* t);
 };

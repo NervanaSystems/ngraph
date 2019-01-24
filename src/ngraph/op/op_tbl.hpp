@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -78,7 +78,6 @@ NGRAPH_OP(Dot, ngraph::op)
 NGRAPH_OP(Equal, ngraph::op)
 NGRAPH_OP(Exp, ngraph::op)
 NGRAPH_OP(Floor, ngraph::op)
-NGRAPH_OP(FunctionCall, ngraph::op)
 NGRAPH_OP(GenerateMask, ngraph::op)
 NGRAPH_OP(GetOutputElement, ngraph::op)
 NGRAPH_OP(Greater, ngraph::op)
@@ -104,8 +103,6 @@ NGRAPH_OP(Parameter, ngraph::op)
 NGRAPH_OP(Power, ngraph::op)
 NGRAPH_OP(Product, ngraph::op)
 NGRAPH_OP(Quantize, ngraph::op)
-NGRAPH_OP(Reduce, ngraph::op)
-NGRAPH_OP(ReduceWindow, ngraph::op)
 NGRAPH_OP(Relu, ngraph::op)
 NGRAPH_OP(ReluBackprop, ngraph::op)
 NGRAPH_OP(ReplaceSlice, ngraph::op)
@@ -115,7 +112,6 @@ NGRAPH_OP(Reverse, ngraph::op)
 NGRAPH_OP(ReverseSequence, ngraph::op)
 NGRAPH_OP(ScalarConstantLike, ngraph::op)
 NGRAPH_OP(Select, ngraph::op)
-NGRAPH_OP(SelectAndScatter, ngraph::op)
 NGRAPH_OP(ShapeOf, ngraph::op)
 NGRAPH_OP(Sigmoid, ngraph::op)
 NGRAPH_OP(SigmoidBackprop, ngraph::op)
