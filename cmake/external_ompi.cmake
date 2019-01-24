@@ -27,20 +27,26 @@ set(OMPI_GIT_BRANCH v2.1.1)
 # The 'BUILD_BYPRODUCTS' arguments was introduced in CMake 3.2.
 
 ExternalProject_Add(
-    ext_protobuf
-    PREFIX protobuf
+    ext_ompi
+    PREFIX ext_ompi
     GIT_REPOSITORY ${OMPI_GIT_REPO_URL}
     GIT_TAG ${OMPI_GIT_BRANCH}
     INSTALL_COMMAND ""
     UPDATE_COMMAND ""
     PATCH_COMMAND ""
-    CONFIGURE_COMMAND ./autogen.sh && ./configure --disable-shared CXXFLAGS=-fPIC
-    BUILD_COMMAND ${MAKE}
-    TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/tmp"
-    STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/stamp"
-    DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/download"
-    SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/src"
-    BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/src"
-    INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf"
+    CONFIGURE_COMMAND ./autogen.pl && ./configure --prefix=${EXTERNAL_PROJECTS_ROOT}/ompi/install
+    TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/ompi/tmp"
+    STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/ompi/stamp"
+    DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/ompi/download"
+    SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/ompi/src"
+    BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/ompi/src"
+    INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/ompi"
     EXCLUDE_FROM_ALL TRUE
     )
+
+    ExternalProject_Get_Property(ext_ompi SOURCE_DIR BINARY_DIR)
+    ExternalProject_Get_Property(ext_ompi INSTALL_DIR)
+    add_library(libompi INTERFACE)
+    target_include_directories(libompi SYSTEM INTERFACE ${SOURCE_DIR}/include)
+    # target_link_libraries(libompi INTERFACE ${INSTALL_DIR}/lib/libompi.so)
+    add_dependencies(libompi ext_ompi)

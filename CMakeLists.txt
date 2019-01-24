@@ -338,6 +338,7 @@ else()
 endif()
 if (NGRAPH_DISTRIBUTED_ENABLE)
     include(cmake/external_mlsl.cmake)
+    include(cmake/external_ompi.cmake)
 endif()
 
 

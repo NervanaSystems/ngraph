@@ -182,6 +182,8 @@ if(NGRAPH_DISTRIBUTED_ENABLE)
     target_compile_definitions(ngraph PRIVATE NGRAPH_DISTRIBUTED)
     target_include_directories(ngraph SYSTEM PRIVATE libmlsl)
     target_link_libraries(ngraph PRIVATE libmlsl)
+    target_include_directories(ngraph SYSTEM PRIVATE libompi)
+    target_link_libraries(ngraph PRIVATE libompi)
 endif()
 
 add_subdirectory(frontend)
