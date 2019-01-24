@@ -42,53 +42,15 @@ bool runtime::hybrid::pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Fun
     ngraph::pass::MemoryManager mm(m_alignment, false);
     for (shared_ptr<Node> node : function->get_ordered_ops())
     {
-        std::map<descriptor::Tensor*, descriptor::Tensor*> in_place_outputs;
-        std::set<const descriptor::Tensor*> reused_inputs;
-
-        if (node->is_op())
-        {
-            auto op = std::static_pointer_cast<op::Op>(node);
-            // concat and slice in_place_oi should be treated differently
-            if (!std::dynamic_pointer_cast<op::Concat>(node) &&
-                !std::dynamic_pointer_cast<op::Slice>(node))
-            {
-                if (auto op_annotations = op->get_op_annotations())
-                {
-                    for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
-                    {
-                        auto output = &node->get_outputs().at(oi_pair.output).get_tensor();
-                        auto input = &node->get_inputs().at(oi_pair.input).get_tensor();
-                        auto input_node =
-                            node->get_inputs().at(oi_pair.input).get_output().get_node();
-
-                        // For destructive kernel, this should be the last use
-                        // Non-destructive kernels can pass through if memory sharing is disabled
-                        if ((node->liveness_free_list.count(input) != 0 ||
-                             std::dynamic_pointer_cast<op::GetOutputElement>(node)) &&
-                            node->liveness_new_list.count(output) != 0)
-                        {
-                            in_place_outputs.insert({output, input});
-                            reused_inputs.insert(input);
-                        }
-                    }
-                }
-            }
-        }
-
         for (descriptor::Tensor* tensor : node->liveness_new_list)
         {
-            size_t offset = in_place_outputs.count(tensor)
-                                ? in_place_outputs.at(tensor)->get_pool_offset()
-                                : mm.allocate(tensor->size());
+            size_t offset = mm.allocate(tensor->size());
             tensor->set_pool_offset(offset);
         }
 
         for (const descriptor::Tensor* tensor : node->liveness_free_list)
         {
-            if (reused_inputs.count(tensor) == 0)
-            {
-                mm.free(tensor->get_pool_offset());
-            }
+            mm.free(tensor->get_pool_offset());
         }
     }
     function->set_temporary_pool_size(mm.max_allocated());
