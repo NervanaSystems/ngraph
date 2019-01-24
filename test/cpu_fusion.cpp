@@ -28,6 +28,7 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/concat.hpp"
+#include "ngraph/runtime/cpu/op/deconv.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/negative.hpp"
@@ -1100,6 +1101,86 @@ TEST(cpu_fusion, conv_add)
     int_results = execute(int_f, args, "INTERPRETER");
     cpu_results = execute(cpu_f, args, "CPU");
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
+}
+
+shared_ptr<Function> gen_deconv(const bool add_goe)
+{
+    Shape data_batch_shape{100, 512, 4, 4};
+    Shape filters_shape{64, 512, 4, 4};
+    auto data_label = std::make_shared<pattern::op::Label>(element::f32, data_batch_shape);
+    auto filters = std::make_shared<op::Parameter>(element::f32, filters_shape);
+    Shape conv_out_shape{100, 64, 1, 1};
+    auto out_delta = std::make_shared<op::Parameter>(element::f32, conv_out_shape);
+
+    auto conv = std::make_shared<op::ConvolutionBackpropData>(data_label->get_shape(),
+                                                              filters,
+                                                              out_delta,
+                                                              Strides{1, 1},
+                                                              Strides{1, 1},
+                                                              CoordinateDiff{0, 0},
+                                                              CoordinateDiff{0, 0},
+                                                              Strides{1, 1});
+    auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
+
+    auto mean = std::make_shared<op::Parameter>(element::f32, Shape{512});
+    auto var = std::make_shared<op::Parameter>(element::f32, Shape{512});
+    auto gamma = std::make_shared<op::Parameter>(element::f32, Shape{512});
+    auto beta = std::make_shared<op::Parameter>(element::f32, Shape{512});
+    double eps = 0.001;
+    
+    auto goe_bn = std::make_shared<op::GetOutputElement>(conv, 0);
+
+    // Adding a goe will stop fusion since the patterns wont expect to see this op
+    auto bn =
+        add_goe ? std::make_shared<op::BatchNormInference>(goe_bn, gamma, beta, mean, var, eps)
+                : std::make_shared<op::BatchNormInference>(conv, gamma, beta, mean, var, eps);
+
+    return make_shared<Function>(NodeVector{bn},
+            ParameterVector{filters, out_delta, gamma, beta, mean, var});
+}
+
+TEST(cpu_fusion, fuse_deconv)
+{
+    auto func_fuse1 = gen_deconv(false);
+    auto func_fuse2 = gen_deconv(true);
+
+    {
+        pass::Manager pass_manager;
+        pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+        pass_manager.run_passes(func_fuse1);
+        ASSERT_EQ(count_ops_of_type<op::DeconvolutionBias>(func_fuse1), 1);
+    }
+
+    {
+        pass::Manager pass_manager;
+        pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+        pass_manager.run_passes(func_fuse2);
+        ASSERT_EQ(count_ops_of_type<op::DeconvolutionBias>(func_fuse2), 0);
+        ASSERT_EQ(count_ops_of_type<op::Relu>(func_fuse2), 0);
+    }
+}
+
+TEST(cpu_fusion, deconv_vals)
+{
+    auto fuse_func = gen_deconv(false);
+    auto nofuse_func = gen_deconv(true);
+
+    NGRAPH_DEBUG << "GD: Generated fuse function";
+    test::Uniform<float> rng(1.0f, 100.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : fuse_func->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    NGRAPH_DEBUG << "GD: populated values ";
+    auto fuse_results = execute(fuse_func, args, "CPU");
+    NGRAPH_DEBUG << " GD: executed fuse_func";
+    auto nofuse_results = execute(nofuse_func, args, "CPU");
+    NGRAPH_DEBUG << " GD: executed nofuse_func";
+
+    EXPECT_TRUE(test::all_close(fuse_results.at(0), nofuse_results.at(0)));
 }
 
 shared_ptr<Function> gen_groupconv_batchnorm(const bool add_goe,

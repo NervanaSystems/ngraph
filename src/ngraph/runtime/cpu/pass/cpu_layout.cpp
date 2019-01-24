@@ -711,14 +711,16 @@ namespace ngraph
                         auto convolution =
                             static_cast<const ngraph::op::DeconvolutionBias*>(node.get());
 
-                        auto arg0_shape = node->get_input_shape(0);
-                        auto arg1_shape = node->get_input_shape(1);
+                        auto arg0_shape = convolution->get_data_batch_shape();
+                        auto arg1_shape = node->get_input_shape(0);
                         auto arg2_shape = node->get_input_shape(2);
-                        auto result_shape = node->get_output_shape(0);
+                        auto result_shape = node->get_input_shape(1);
                         auto filter_strides = convolution->get_window_movement_strides_forward();
                         auto padding_below = convolution->get_padding_below_forward();
                         auto padding_above = convolution->get_padding_above_forward();
 
+                        NGRAPH_DEBUG << "Arg0: " << arg0_shape << ", Arg1: " << arg1_shape << 
+                                    ", Arg2: " << arg2_shape << ", out: "<<result_shape;
                         Strides window_dilation_strides_adjusted;
 
                         for (size_t s : convolution->get_window_dilation_strides_forward())
@@ -744,26 +746,28 @@ namespace ngraph
                         memory::dims mkldnn_padding_above(padding_above.begin(),
                                                           padding_above.end());
 
-                        const memory::desc input_desc(mkldnn_arg0_shape, et, memory::format::any);
-                        const memory::desc weights_desc(mkldnn_arg1_shape, et, memory::format::any);
-                        const memory::desc bias_desc(mkldnn_arg2_shape, et, memory::format::any);
-                        const memory::desc result_desc(
+                         memory::desc input_desc(mkldnn_arg0_shape, et, memory::format::any);
+                         memory::desc weights_desc(mkldnn_arg1_shape, et, memory::format::any);
+                         memory::desc bias_desc(mkldnn_arg2_shape, et, memory::format::any);
+                         memory::desc result_desc(
                             mkldnn_result_shape, et, memory::format::any);
+
+                        NGRAPH_DEBUG << "GD: creating deconv_desc";
 
                         deconvolution_forward::desc deconv_desc(prop_kind::forward,
                                                                 algorithm::deconvolution_direct,
-                                                                input_desc,   //src_desc
+                                                                result_desc,   //src_desc
                                                                 weights_desc, //weights_desc
                                                                 bias_desc,    //bias_desc
-                                                                result_desc,  // dst_desc
+                                                                input_desc,  // dst_desc
                                                                 mkldnn_filter_strides,
-                                                                mkldnn_dilated_strides,
                                                                 mkldnn_padding_below,
                                                                 mkldnn_padding_above,
                                                                 padding_kind::zero);
+                        NGRAPH_DEBUG << "GD: creating deconv_prim_desc";
                         deconvolution_forward::primitive_desc deconv_prim_desc(deconv_desc,
                                                                                cpu_engine);
-
+                        NGRAPH_DEBUG << "GD: After creating deconv_prim_desc";
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
                         i_mds.push_back(deconv_prim_desc.src_primitive_desc().desc());
@@ -771,7 +775,9 @@ namespace ngraph
                         i_mds.push_back(deconv_prim_desc.bias_primitive_desc().desc());
                         o_mds.push_back(deconv_prim_desc.dst_primitive_desc().desc());
 
+                        NGRAPH_DEBUG << "GD: calling insert_input_conversions";
                         node = insert_input_conversions(external_function, node, i_mds);
+                        NGRAPH_DEBUG << "GD: calling set_output_layouts";
                         set_output_layouts(node, o_mds);
                     }
                     else
