@@ -14,10 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cstdlib> // llvm 8.1 gets confused about `malloc` otherwise
 #include <memory>
 
 #include "ngraph/runtime/aligned_buffer.hpp"
+#include "ngraph/util.hpp"
 
 using namespace ngraph;
 
@@ -34,7 +34,7 @@ runtime::AlignedBuffer::AlignedBuffer(size_t byte_size, size_t alignment)
     if (m_byte_size > 0)
     {
         size_t allocation_size = m_byte_size + alignment;
-        m_allocated_buffer = static_cast<char*>(malloc(allocation_size));
+        m_allocated_buffer = static_cast<char*>(ngraph_malloc(allocation_size));
         m_aligned_buffer = m_allocated_buffer;
         size_t mod = size_t(m_aligned_buffer) % alignment;
 
@@ -54,6 +54,6 @@ runtime::AlignedBuffer::~AlignedBuffer()
 {
     if (m_allocated_buffer != nullptr)
     {
-        free(m_allocated_buffer);
+        ngraph_free(m_allocated_buffer);
     }
 }

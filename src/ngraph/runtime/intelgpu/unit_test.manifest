@@ -23,6 +23,7 @@ batch_norm_three_outputs
 batch_norm_bprop_n4c3h2w2
 dequantize
 dequantize_axes
+dequantize_dynamic_offset
 dequantize_int32
 dequantize_int32_zero_offset
 dequantize_int8
@@ -41,6 +42,7 @@ quantize_axes
 quantize_clamp_int32
 quantize_clamp_int8
 quantize_clamp_uint8
+quantize_dynamic_offset
 quantize_int32
 quantize_int32_zero_offset
 quantize_int8
