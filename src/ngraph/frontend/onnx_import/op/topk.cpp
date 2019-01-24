@@ -18,6 +18,7 @@
 #include <memory>
 #include <vector>
 
+#include "exceptions.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -39,10 +40,15 @@ namespace ngraph
                     std::int64_t axis{node.get_attribute_value<std::int64_t>("axis", -1)};
                     std::int64_t k{node.get_attribute_value<std::int64_t>("k")};
 
+                    auto num_dimensions = data->get_shape().size();
+
                     if (axis < 0)
                     {
-                        axis += data->get_shape().size();
+                        axis += num_dimensions;
                     }
+
+                    ASSERT_VALID_ARGUMENT(node, axis > num_dimensions)
+                        << "`axis` parameter is out of range: " << axis;
 
                     std::shared_ptr<ngraph::Node> top_k =
                         std::make_shared<ngraph::op::TopK>(data, axis, element::i64, k);
