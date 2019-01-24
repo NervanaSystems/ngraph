@@ -261,7 +261,12 @@ if (NGRAPH_PLAIDML_ENABLE)
 endif()
 
 if (NOT DEFINED NGRAPH_TBB_ENABLE)
-    set(NGRAPH_TBB_ENABLE ${NGRAPH_CPU_ENABLE})
+    # Disable TBB on Windows for now.
+    if(WIN32)
+        set(NGRAPH_TBB_ENABLE FALSE})
+    else()
+        set(NGRAPH_TBB_ENABLE ${NGRAPH_CPU_ENABLE})
+    endif()
 endif()
 
 add_custom_target(style-check
@@ -323,23 +328,37 @@ include(cmake/external_gtest.cmake)
 include(cmake/external_json.cmake)
 include(cmake/external_eigen.cmake)
 include(cmake/external_mkldnn.cmake)
-include(cmake/external_cldnn.cmake)
-
-if (NGRAPH_USE_PREBUILT_LLVM OR DEFINED LLVM_TARBALL_URL)
-    include(cmake/external_llvm_prebuilt.cmake)
-elseif (NOT NGRAPH_DEX_ONLY OR NOT MSVS)
-    include(cmake/external_llvm.cmake)
+if(NGRAPH_INTELGPU_ENABLE)
+    include(cmake/external_cldnn.cmake)
 endif()
 
-if (WIN32 OR APPLE)
-    include(cmake/external_tbb_prebuilt.cmake)
+if ((NGRAPH_GPU_ENABLE OR NGRAPH_CPU_ENABLE) AND NOT NGRAPH_DEX_ONLY)
+    set(NGRAPH_CODEGEN_ENABLE TRUE)
 else()
-    include(cmake/external_tbb.cmake)
+    set(NGRAPH_CODEGEN_ENABLE FALSE)
 endif()
+
+if(NGRAPH_CODEGEN_ENABLE)
+    if (NGRAPH_USE_PREBUILT_LLVM OR DEFINED LLVM_TARBALL_URL)
+        include(cmake/external_llvm_prebuilt.cmake)
+    elseif (NOT MSVS)
+        include(cmake/external_llvm.cmake)
+    else()
+        message(FATAL_ERROR "CODEGEN not support on Windows!")
+    endif()
+endif()
+
+if(NGRAPH_TBB_ENABLE)
+    if (WIN32 OR APPLE)
+        include(cmake/external_tbb_prebuilt.cmake)
+    else()
+        include(cmake/external_tbb.cmake)
+    endif()
+endif()
+
 if (NGRAPH_DISTRIBUTED_ENABLE)
     include(cmake/external_mlsl.cmake)
 endif()
-
 
 if (NGRAPH_HALIDE)
     message(WARNING "Halide build system integration is currently using an older LLVM release \
