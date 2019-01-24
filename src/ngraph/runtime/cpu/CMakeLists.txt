@@ -199,9 +199,11 @@ if (NGRAPH_CPU_ENABLE)
 
     if (MSVS)
         target_compile_definitions(cpu_backend PRIVATE EIGEN_HAS_CONSTEXPR)
-        set_source_files_properties(builder/dot.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
+        # under debug mode, more files besides builder/dot.cpp rises the error
+        target_compile_options(cpu_backend PRIVATE "/bigobj" )
     endif()
-    
+    target_compile_definitions(cpu_backend PRIVATE CPU_BACKEND_DLL_EXPORTS)
+
     if(NGRAPH_DISTRIBUTED_ENABLE)
         target_compile_definitions(cpu_backend PRIVATE NGRAPH_DISTRIBUTED)
         target_include_directories(cpu_backend SYSTEM PRIVATE libmlsl)

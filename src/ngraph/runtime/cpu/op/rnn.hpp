@@ -18,6 +18,7 @@
 
 #include "ngraph/op/op.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 
 namespace ngraph
 {
@@ -46,7 +47,7 @@ namespace ngraph
         class Rnn : public Op
         {
         public:
-            Rnn(std::shared_ptr<Node> src_layer,
+            CPU_BACKEND_API Rnn(std::shared_ptr<Node> src_layer,
                 std::shared_ptr<Node> src_iter,
                 std::shared_ptr<Node> weights_layer,
                 std::shared_ptr<Node> weights_iter,

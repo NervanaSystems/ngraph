@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 
 namespace ngraph
 {
@@ -32,7 +33,7 @@ namespace ngraph
     }
 }
 
-class ngraph::runtime::cpu::pass::CPUFusion : public ngraph::pass::GraphRewrite
+class CPU_BACKEND_API ngraph::runtime::cpu::pass::CPUFusion : public ngraph::pass::GraphRewrite
 {
 public:
     // 30 different fusion groups that we can nest/mix&match/etc

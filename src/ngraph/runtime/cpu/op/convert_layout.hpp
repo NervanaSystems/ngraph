@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 
 namespace ngraph
 {
@@ -31,14 +32,14 @@ namespace ngraph
                 /// \brief Layout Conversion
                 ///
                 /// Converts an input tensor to a tensor with the given layout descriptor
-                class ConvertLayout : public ngraph::op::Op
+                class  ConvertLayout : public ngraph::op::Op
                 {
                 public:
-                    ConvertLayout(
+                    CPU_BACKEND_API ConvertLayout(
                         const std::shared_ptr<Node>& arg,
                         const std::shared_ptr<ngraph::runtime::cpu::LayoutDescriptor>& layout);
 
-                    ConvertLayout(
+                    CPU_BACKEND_API ConvertLayout(
                         const std::shared_ptr<Node>& arg,
                         size_t output_index,
                         const std::shared_ptr<ngraph::runtime::cpu::LayoutDescriptor>& layout);

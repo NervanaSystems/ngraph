@@ -29,6 +29,7 @@
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
 #include "ngraph/runtime/tensor.hpp"
+#include "cpu_backend_visibility.h"
 
 namespace ngraph
 {
@@ -36,7 +37,7 @@ namespace ngraph
     {
         namespace cpu
         {
-            class CPU_CountTracepoint
+            class CPU_BACKEND_API CPU_CountTracepoint
             {
             public:
                 /// \brief A convenience class that wraps user's callback to run it every *count* iterations
@@ -56,7 +57,7 @@ namespace ngraph
                 size_t m_iteration;
             };
 
-            class CPU_Debugger
+            class CPU_BACKEND_API CPU_Debugger
             {
             public:
                 CPU_Debugger(CPU_CallFrame& callframe);

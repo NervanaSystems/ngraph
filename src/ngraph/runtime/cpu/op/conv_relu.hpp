@@ -19,6 +19,7 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 
 namespace ngraph
 {
@@ -28,9 +29,9 @@ namespace ngraph
         class ConvolutionRelu : public Op
         {
         public:
-            ConvolutionRelu(const std::shared_ptr<op::Convolution>& conv);
+            CPU_BACKEND_API ConvolutionRelu(const std::shared_ptr<op::Convolution>& conv);
 
-            ConvolutionRelu(const std::shared_ptr<Node>& data_batch,
+            CPU_BACKEND_API ConvolutionRelu(const std::shared_ptr<Node>& data_batch,
                             const std::shared_ptr<Node>& filters,
                             const Strides& window_movement_strides,
                             const Strides& window_dilation_strides,
