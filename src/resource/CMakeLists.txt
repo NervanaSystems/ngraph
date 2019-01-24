@@ -14,6 +14,10 @@
 # limitations under the License.
 # ******************************************************************************
 
+if(NOT NGRAPH_CODEGEN_ENABLE)
+    return()
+endif()
+
 set (SRC
     main.cpp
     util.cpp
