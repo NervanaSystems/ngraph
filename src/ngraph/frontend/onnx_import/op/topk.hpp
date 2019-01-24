@@ -27,12 +27,11 @@ namespace ngraph
         {
             namespace set_1
             {
-                /// \brief Return a node which performs TopK.
+                /// \brief Performs ONNX TopK operation.
                 ///
-                /// \param data Input data
-                /// \param kaxis TopK Axis
-                /// \param k K
-                /// \return The new node which performs TopK (both values and indices)
+                /// \param node The ONNX node object representing this operation.
+                /// \return The vector containing Ngraph nodes producing output of ONNX TopK
+                ///         operation(both values and indices).
                 NodeVector topk(const Node& node);
 
             } // namespace set_1
