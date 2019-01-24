@@ -47,7 +47,7 @@ namespace ngraph
                         axis += num_dimensions;
                     }
 
-                    ASSERT_VALID_ARGUMENT(node, axis > num_dimensions)
+                    ASSERT_VALID_ARGUMENT(node, axis < num_dimensions)
                         << "`axis` parameter is out of range: " << axis;
 
                     std::shared_ptr<ngraph::Node> top_k =
