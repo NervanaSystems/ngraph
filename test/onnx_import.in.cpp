@@ -1870,7 +1870,7 @@ namespace
 NGRAPH_TEST_P(${BACKEND_NAME}, lin_quant_model_param_test, model_resnet50)
 {
     auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/resnet50_int8.onnx"));
+        file_util::path_join(SERIALIZED_ZOO, "onnx/resnet50_int8_dynamic_scale.onnx"));
 
     Inputs inputs{read_binary_file<float>(input_filename)};
     Outputs expected_output{read_binary_file<float>(output_filename)};
@@ -1906,4 +1906,4 @@ NGRAPH_TEST_P(${BACKEND_NAME}, lin_quant_model_param_test, model_resnet50)
 NGRAPH_INSTANTIATE_TEST_CASE_P(${BACKEND_NAME},
                                onnx,
                                lin_quant_model_param_test,
-                               testing::Range(std::uint32_t{0}, std::uint32_t{9}));
+                               testing::Range(std::uint32_t{0}, std::uint32_t{10}));
