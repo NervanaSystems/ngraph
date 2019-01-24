@@ -1615,4 +1615,4 @@ TEST_P(lin_quant_model_param_test, model_resnet50)
 
 INSTANTIATE_TEST_CASE_P(onnx,
                         lin_quant_model_param_test,
-                        testing::Range(std::uint32_t{0}, std::uint32_t{9}));
+                        testing::Range(std::uint32_t{0}, std::uint32_t{10}));
