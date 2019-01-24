@@ -20,6 +20,7 @@
 #include "ngraph/cpio.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/log.hpp"
+#include "misc.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -33,7 +34,7 @@ TEST(tools, nbench_functional)
 
     ss << NBENCH_PATH << " -f " << model_path << " -b INTERPRETER -i 2 -w 2";
     auto cmd = ss.str();
-    auto f = popen(cmd.c_str(), "r");
+    auto f = port_open(cmd.c_str(), "r");
     if (f)
     {
         stringstream str;
@@ -45,7 +46,7 @@ TEST(tools, nbench_functional)
             str << s;
         }
         string output = str.str();
-        auto status = pclose(f);
+        auto status = port_close(f);
         ASSERT_EQ(status, 0) << output;
     }
     else

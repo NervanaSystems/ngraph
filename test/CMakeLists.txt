@@ -43,6 +43,7 @@ set(SRC
     inliner.cpp
     input_output_assign.cpp
     main.cpp
+    misc.cpp
     nop_elimination.cpp
     op.cpp
     partial_shape.cpp
