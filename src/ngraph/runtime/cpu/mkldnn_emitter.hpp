@@ -73,6 +73,7 @@ namespace ngraph
                 const std::vector<mkldnn::primitive*>& get_mkldnn_primitives() const;
                 const std::vector<char*>& get_mkldnn_workspaces();
 
+                size_t primitive_init(size_t count);
                 size_t insert_primitive(mkldnn::primitive* primitive);
                 size_t insert_workspace(std::unique_ptr<MKLDNNWorkspace>& workspace);
                 const std::vector<size_t>& get_primitive_deps(size_t index) const;
@@ -88,6 +89,7 @@ namespace ngraph
                                                     const mkldnn::memory::dims& strides,
                                                     mkldnn::memory::data_type dtype) const;
                 size_t build_memory_primitive(const mkldnn::memory::desc& desc);
+                void build_memory_primitive(const mkldnn::memory::desc& desc, size_t index);
 
                 size_t build_convolution_forward(const mkldnn::memory::desc& input_data_desc,
                                                  const mkldnn::memory::desc& weights_desc,
@@ -380,6 +382,15 @@ namespace ngraph
                                              const ngraph::Shape& padding_below,
                                              const ngraph::Shape& padding_above);
 
+                void pooling_forward(mkldnn::algorithm pooling_algorithm,
+                                     const mkldnn::memory::desc& input_desc,
+                                     const mkldnn::memory::desc& result_desc,
+                                     const ngraph::Strides& window_strides,
+                                     const ngraph::Shape& window_shape,
+                                     const ngraph::Shape& padding_below,
+                                     const ngraph::Shape& padding_above,
+                                     size_t pool_index);
+
                 size_t build_pooling_backward(mkldnn::algorithm pooling_algorithm,
                                               const mkldnn::memory::desc& diff_dst_desc,
                                               const mkldnn::memory::desc& diff_src_desc,
@@ -417,6 +428,10 @@ namespace ngraph
                 size_t build_reorder(const mkldnn::memory::desc& input_desc,
                                      const mkldnn::memory::desc& result_desc);
 
+                void reorder(const mkldnn::memory::desc& input_desc,
+                             const mkldnn::memory::desc& result_desc,
+                             size_t reorder_index);
+
                 size_t build_lrn_forward(const mkldnn::memory::desc& input_desc,
                                          const mkldnn::memory::desc& result_desc,
                                          float alpha,
@@ -424,19 +439,52 @@ namespace ngraph
                                          float bias,
                                          int nsize);
 
+                void lrn_forward(const mkldnn::memory::desc& input_desc,
+                                 const mkldnn::memory::desc& result_desc,
+                                 float alpha,
+                                 float beta,
+                                 float bias,
+                                 int nsize,
+                                 size_t lrn_index);
+
                 size_t build_relu_forward(const mkldnn::memory::desc& input_desc,
                                           const mkldnn::memory::desc& result_desc);
+
+                void relu_forward(const mkldnn::memory::desc& input_desc,
+                                  const mkldnn::memory::desc& result_desc,
+                                  size_t relu_index);
 
                 size_t build_relu_backward(const mkldnn::memory::desc& input_desc,
                                            const mkldnn::memory::desc& delta_desc,
                                            const mkldnn::memory::desc& result_desc);
 
+                void relu_backward(const mkldnn::memory::desc& input_desc,
+                                   const mkldnn::memory::desc& delta_desc,
+                                   const mkldnn::memory::desc& result_desc,
+                                   size_t relu_index);
+
                 size_t build_sigmoid_forward(const mkldnn::memory::desc& input_desc,
                                              const mkldnn::memory::desc& result_desc);
+
+                void sigmoid_forward(const mkldnn::memory::desc& input_desc,
+                                     const mkldnn::memory::desc& result_desc,
+                                     size_t sigmoid_index);
 
                 size_t build_sigmoid_backward(const mkldnn::memory::desc& input_desc,
                                               const mkldnn::memory::desc& delta_desc,
                                               const mkldnn::memory::desc& result_desc);
+
+                void sigmoid_backward(const mkldnn::memory::desc& input_desc,
+                                      const mkldnn::memory::desc& delta_desc,
+                                      const mkldnn::memory::desc& result_desc,
+                                      size_t sigmoid_index);
+
+                void elementwise_add(const mkldnn::memory::desc& input0_data_desc,
+                                     const mkldnn::memory::desc& input1_data_desc,
+                                     const mkldnn::memory::desc& result_desc,
+                                     const std::vector<float>& scale_vector,
+                                     const std::vector<mkldnn::memory::primitive_desc>& input_pd,
+                                     size_t index);
 
                 size_t build_elementwise_add(
                     const mkldnn::memory::desc& input0_data_desc,
@@ -455,6 +503,17 @@ namespace ngraph
                                                bool bn_training_flag,
                                                const mkldnn::post_ops& pops = mkldnn::post_ops());
 
+                void batchnorm_forward(const mkldnn::memory::desc& input_desc,
+                                       const mkldnn::memory::desc& weights_desc,
+                                       const mkldnn::memory::desc& result_desc,
+                                       const mkldnn::memory::desc& mean_desc,
+                                       const mkldnn::memory::desc& variance_desc,
+                                       const double eps,
+                                       bool use_global_stats,
+                                       bool bn_training_flag,
+                                       size_t batchnorm_index,
+                                       const mkldnn::post_ops& pops = mkldnn::post_ops());
+
                 size_t build_batchnorm_backward(const mkldnn::memory::desc& weights_desc,
                                                 const mkldnn::memory::desc& input_desc,
                                                 const mkldnn::memory::desc& mean_desc,
@@ -463,6 +522,16 @@ namespace ngraph
                                                 const mkldnn::memory::desc& dinput_desc,
                                                 const mkldnn::memory::desc& dweights_desc,
                                                 const double eps);
+
+                void batchnorm_backward(const mkldnn::memory::desc& weights_desc,
+                                        const mkldnn::memory::desc& input_desc,
+                                        const mkldnn::memory::desc& mean_desc,
+                                        const mkldnn::memory::desc& variance_desc,
+                                        const mkldnn::memory::desc& delta_desc,
+                                        const mkldnn::memory::desc& dinput_desc,
+                                        const mkldnn::memory::desc& dweights_desc,
+                                        const double eps,
+                                        size_t batchnorm_index);
 
                 template <typename OP>
                 size_t build_rnn(const ngraph::Node* node,
@@ -555,22 +624,48 @@ namespace ngraph
                                     const mkldnn::memory::desc& result_desc,
                                     const size_t concat_dim);
 
+                void concat(const std::vector<mkldnn::memory::desc>& inputs_data_desc,
+                            const mkldnn::memory::desc& result_desc,
+                            const size_t concat_dim,
+                            size_t concat_index);
+
                 size_t build_slice(const mkldnn::memory::desc& input_desc,
                                    const mkldnn::memory::desc& result_desc,
                                    const ngraph::Coordinate& lower_bounds,
                                    const ngraph::Shape& result_shape);
 
+                void slice(const mkldnn::memory::desc& input_desc,
+                           const mkldnn::memory::desc& result_desc,
+                           const ngraph::Coordinate& lower_bounds,
+                           const ngraph::Shape& result_shape,
+                           size_t slice_index);
+
                 size_t build_softmax_forward(const mkldnn::memory::desc& input_desc,
                                              const mkldnn::memory::desc& result_desc,
                                              int softmax_axis);
+
+                void softmax_forward(const mkldnn::memory::desc& input_desc,
+                                     const mkldnn::memory::desc& result_desc,
+                                     int softmax_axis,
+                                     size_t softmax_index);
 
                 size_t build_leaky_relu(const mkldnn::memory::desc& input_desc,
                                         const mkldnn::memory::desc& result_desc,
                                         float alpha);
 
+                void leaky_relu(const mkldnn::memory::desc& input_desc,
+                                const mkldnn::memory::desc& result_desc,
+                                float alpha,
+                                size_t leaky_relu_index);
+
                 size_t build_bounded_relu(const mkldnn::memory::desc& input_desc,
                                           const mkldnn::memory::desc& result_desc,
                                           float alpha);
+
+                void bounded_relu(const mkldnn::memory::desc& input_desc,
+                                  const mkldnn::memory::desc& result_desc,
+                                  float alpha,
+                                  size_t bounded_relu_index);
 
                 size_t build_quantized_max_pool(const ngraph::Node* node);
 
@@ -821,6 +916,8 @@ namespace ngraph
 
                     m_mkldnn_primitives[conv_idx] = prim;
                 }
+
+                size_t elementwise_add_init();
 
             private:
                 std::vector<mkldnn::primitive*> m_mkldnn_primitives;

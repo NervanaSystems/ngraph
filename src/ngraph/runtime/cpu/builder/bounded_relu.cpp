@@ -45,11 +45,16 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    auto bounded_relu_index =
-                        mkldnn_emitter->build_bounded_relu(input_desc, result_desc, alpha);
+                    auto bounded_relu_index = mkldnn_emitter->primitive_init(3);
+
                     auto& deps = mkldnn_emitter->get_primitive_deps(bounded_relu_index);
-                    auto functor = [&, bounded_relu_index](CPURuntimeContext* ctx,
-                                                           CPUExecutionContext* ectx) {
+                    auto functor = [&, input_desc, result_desc, alpha, bounded_relu_index](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        if (ctx->first_iteration)
+                        {
+                            mkldnn_emitter->bounded_relu(
+                                input_desc, result_desc, alpha, bounded_relu_index);
+                        }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], input_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, bounded_relu_index);

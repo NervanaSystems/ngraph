@@ -56,13 +56,16 @@ namespace ngraph
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                    size_t softmax_index = mkldnn_emitter->build_softmax_forward(
-                        input_desc, result_desc, softmax_axis);
-
+                    size_t softmax_index = mkldnn_emitter->primitive_init(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(softmax_index);
 
-                    auto functor = [&, softmax_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                    auto functor = [&, input_desc, result_desc, softmax_axis, softmax_index](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        if (ctx->first_iteration)
+                        {
+                            mkldnn_emitter->softmax_forward(
+                                input_desc, result_desc, softmax_axis, softmax_index);
+                        }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, softmax_index);

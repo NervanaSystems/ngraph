@@ -54,19 +54,29 @@ namespace ngraph
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                    size_t max_pool_index =
-                        mkldnn_emitter->build_pooling_forward(mkldnn::algorithm::pooling_max,
-                                                              input_desc,
-                                                              result_desc,
-                                                              window_movement_strides,
-                                                              window_shape,
-                                                              padding_below,
-                                                              padding_above);
-
+                    size_t max_pool_index = mkldnn_emitter->primitive_init(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(max_pool_index);
 
-                    auto functor = [&, max_pool_index](CPURuntimeContext* ctx,
-                                                       CPUExecutionContext* ectx) {
+                    auto functor = [&,
+                                    input_desc,
+                                    result_desc,
+                                    window_movement_strides,
+                                    window_shape,
+                                    padding_below,
+                                    padding_above,
+                                    max_pool_index](CPURuntimeContext* ctx,
+                                                    CPUExecutionContext* ectx) {
+                        if (ctx->first_iteration)
+                        {
+                            mkldnn_emitter->pooling_forward(mkldnn::algorithm::pooling_max,
+                                                            input_desc,
+                                                            result_desc,
+                                                            window_movement_strides,
+                                                            window_shape,
+                                                            padding_below,
+                                                            padding_above,
+                                                            max_pool_index);
+                        }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, max_pool_index);

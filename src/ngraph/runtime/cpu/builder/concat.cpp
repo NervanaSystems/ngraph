@@ -101,13 +101,23 @@ namespace ngraph
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
                     size_t concat_dim =
-                        (dynamic_cast<const ngraph::op::Concat*>(node))->get_concatenation_axis();
-                    auto concat_index =
-                        mkldnn_emitter->build_concat(inputs_data_desc, result_desc, concat_dim);
+                        (static_cast<const ngraph::op::Concat*>(node))->get_concatenation_axis();
+                    auto concat_index = mkldnn_emitter->primitive_init(args.size() + 2);
                     auto& deps = mkldnn_emitter->get_primitive_deps(concat_index);
 
-                    auto functor = [&, arg_tensors, nargs, concat_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    auto functor = [&,
+                                    inputs_data_desc,
+                                    result_desc,
+                                    concat_dim,
+                                    arg_tensors,
+                                    nargs,
+                                    concat_index](CPURuntimeContext* ctx,
+                                                  CPUExecutionContext* ectx) {
+                        if (ctx->first_iteration)
+                        {
+                            mkldnn_emitter->concat(
+                                inputs_data_desc, result_desc, concat_dim, concat_index);
+                        }
                         for (size_t i = 0; i < nargs; i++)
                         {
                             cpu::mkldnn_utils::set_memory_ptr(ctx, deps[i], arg_tensors[i]);

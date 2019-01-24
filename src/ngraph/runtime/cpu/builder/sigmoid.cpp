@@ -45,12 +45,15 @@ namespace ngraph
                 auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                 auto out_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                auto sigmoid_index = mkldnn_emitter->build_sigmoid_forward(input_desc, out_desc);
-
+                auto sigmoid_index = mkldnn_emitter->primitive_init(3);
                 auto& deps = mkldnn_emitter->get_primitive_deps(sigmoid_index);
 
-                auto functor = [&, sigmoid_index](CPURuntimeContext* ctx,
-                                                  CPUExecutionContext* ectx) {
+                auto functor = [&, input_desc, out_desc, sigmoid_index](CPURuntimeContext* ctx,
+                                                                        CPUExecutionContext* ectx) {
+                    if (ctx->first_iteration)
+                    {
+                        mkldnn_emitter->sigmoid_forward(input_desc, out_desc, sigmoid_index);
+                    }
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
                     cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, sigmoid_index);
@@ -77,12 +80,16 @@ namespace ngraph
                 auto delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
                 auto out_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                size_t sigmoid_index =
-                    mkldnn_emitter->build_sigmoid_backward(input_desc, delta_desc, out_desc);
-
+                size_t sigmoid_index = mkldnn_emitter->primitive_init(4);
                 auto& deps = mkldnn_emitter->get_primitive_deps(sigmoid_index);
-                auto functor = [&, sigmoid_index](CPURuntimeContext* ctx,
-                                                  CPUExecutionContext* ectx) {
+
+                auto functor = [&, input_desc, delta_desc, out_desc, sigmoid_index](
+                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    if (ctx->first_iteration)
+                    {
+                        mkldnn_emitter->sigmoid_backward(
+                            input_desc, delta_desc, out_desc, sigmoid_index);
+                    }
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out_tensor);

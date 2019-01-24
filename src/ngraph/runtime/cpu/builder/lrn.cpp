@@ -45,17 +45,26 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto input_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-
-                    auto lrn_index =
-                        mkldnn_emitter->build_lrn_forward(input_data_desc,
-                                                          result_desc,
-                                                          static_cast<float>(lrn->get_alpha()),
-                                                          static_cast<float>(lrn->get_beta()),
-                                                          static_cast<float>(lrn->get_bias()),
-                                                          static_cast<int>(lrn->get_nsize()));
-
+                    auto alpha = static_cast<float>(lrn->get_alpha());
+                    auto beta = static_cast<float>(lrn->get_beta());
+                    auto bias = static_cast<float>(lrn->get_bias());
+                    auto nsize = static_cast<int>(lrn->get_nsize());
+                    auto lrn_index = mkldnn_emitter->primitive_init(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(lrn_index);
-                    functor = [&, lrn_index](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+
+                    functor = [&,
+                               input_data_desc,
+                               result_desc,
+                               alpha,
+                               beta,
+                               bias,
+                               nsize,
+                               lrn_index](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        if (ctx->first_iteration)
+                        {
+                            mkldnn_emitter->lrn_forward(
+                                input_data_desc, result_desc, alpha, beta, bias, nsize, lrn_index);
+                        }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, lrn_index);

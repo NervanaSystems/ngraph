@@ -43,12 +43,15 @@ namespace ngraph
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                    size_t relu_index = mkldnn_emitter->build_relu_forward(input_desc, result_desc);
-
+                    size_t relu_index = mkldnn_emitter->primitive_init(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(relu_index);
 
-                    auto functor = [&, relu_index](CPURuntimeContext* ctx,
-                                                   CPUExecutionContext* ectx) {
+                    auto functor = [&, input_desc, result_desc, relu_index](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        if (ctx->first_iteration)
+                        {
+                            mkldnn_emitter->relu_forward(input_desc, result_desc, relu_index);
+                        }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, relu_index);
@@ -78,12 +81,16 @@ namespace ngraph
                     auto delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                    size_t relu_index =
-                        mkldnn_emitter->build_relu_backward(input_desc, delta_desc, result_desc);
-
+                    size_t relu_index = mkldnn_emitter->primitive_init(4);
                     auto& deps = mkldnn_emitter->get_primitive_deps(relu_index);
-                    auto functor = [&, relu_index](CPURuntimeContext* ctx,
-                                                   CPUExecutionContext* ectx) {
+
+                    auto functor = [&, input_desc, delta_desc, result_desc, relu_index](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        if (ctx->first_iteration)
+                        {
+                            mkldnn_emitter->relu_backward(
+                                input_desc, delta_desc, result_desc, relu_index);
+                        }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg_fwd_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], delta_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out_tensor);
