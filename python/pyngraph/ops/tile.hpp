@@ -14,37 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <utility>
+#pragma once
 
-#include "ngraph/op/tile.hpp"
-#include "ngraph/runtime/plaidml/plaidml_impl.hpp"
+#include <pybind11/pybind11.h>
 
-namespace vp = vertexai::plaidml;
+namespace py = pybind11;
 
-namespace ngraph
-{
-    namespace runtime
-    {
-        namespace plaidml
-        {
-            NGRAPH_PLAIDML_OP_CLASS(ImplTile, OpImpl<op::Tile>);
-        }
-    }
-}
-
-void ngraph::runtime::plaidml::ImplTile::Apply()
-{
-    vertexai::plaidml::function::positional_t inputs;
-
-    for (std::size_t idx = 0; idx < op().get_input_size(); ++idx)
-    {
-        inputs.emplace_back(op_input(idx));
-    }
-
-    auto app = vp::function{op().func()}.apply(inputs);
-
-    for (std::size_t idx = 0; idx < op().get_output_size(); ++idx)
-    {
-        set_output(idx, app.get_output(idx));
-    }
-}
+void regclass_pyngraph_op_Tile(py::module m);

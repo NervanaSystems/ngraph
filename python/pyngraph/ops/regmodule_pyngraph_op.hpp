@@ -79,6 +79,7 @@
 #include "pyngraph/ops/sum.hpp"
 #include "pyngraph/ops/tan.hpp"
 #include "pyngraph/ops/tanh.hpp"
+#include "pyngraph/ops/tile.hpp"
 #include "pyngraph/ops/topk.hpp"
 
 namespace py = pybind11;

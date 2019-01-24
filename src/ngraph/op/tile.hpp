@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,33 +16,28 @@
 
 #pragma once
 
+#include <string>
 #include <tuple>
 #include <vector>
-
-#include <plaidml/plaidml++.h>
 
 #include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace op
     {
-        namespace plaidml
-        {
-            namespace op
-            {
-                /// An op directly representing PlaidML Tile code.
-                class Tile;
-            }
-        }
+        /// An op directly representing PlaidML Tile code.
+        ///
+        /// N.B. Not all backends support Tile operations.
+        class Tile;
     }
 }
 
-class ngraph::runtime::plaidml::op::Tile final : public Node
+class ngraph::op::Tile final : public Node
 {
 public:
     Tile(const std::string& node_type,
-         vertexai::plaidml::function function,
+         const std::string& function,
          const NodeVector& args,
          std::vector<std::tuple<element::Type, PartialShape>> outputs);
 
@@ -50,8 +45,8 @@ public:
 
     std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const final;
 
-    vertexai::plaidml::function func() const { return m_function; }
+    const std::string& func() const { return m_function; }
 private:
-    vertexai::plaidml::function m_function;
+    std::string m_function;
     std::vector<std::tuple<element::Type, PartialShape>> m_output_shapes;
 };

@@ -220,6 +220,7 @@ sources = [
     'pyngraph/ops/sum.cpp',
     'pyngraph/ops/tan.cpp',
     'pyngraph/ops/tanh.cpp',
+    'pyngraph/ops/tile.cpp',
     'pyngraph/ops/topk.cpp',
     'pyngraph/ops/allreduce.cpp',
     'pyngraph/ops/get_output_element.cpp',

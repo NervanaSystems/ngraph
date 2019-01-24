@@ -14,37 +14,20 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <utility>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 #include "ngraph/op/tile.hpp"
-#include "ngraph/runtime/plaidml/plaidml_impl.hpp"
+#include "pyngraph/ops/tile.hpp"
 
-namespace vp = vertexai::plaidml;
+namespace py = pybind11;
 
-namespace ngraph
+void regclass_pyngraph_op_Tile(py::module m)
 {
-    namespace runtime
-    {
-        namespace plaidml
-        {
-            NGRAPH_PLAIDML_OP_CLASS(ImplTile, OpImpl<op::Tile>);
-        }
-    }
-}
-
-void ngraph::runtime::plaidml::ImplTile::Apply()
-{
-    vertexai::plaidml::function::positional_t inputs;
-
-    for (std::size_t idx = 0; idx < op().get_input_size(); ++idx)
-    {
-        inputs.emplace_back(op_input(idx));
-    }
-
-    auto app = vp::function{op().func()}.apply(inputs);
-
-    for (std::size_t idx = 0; idx < op().get_output_size(); ++idx)
-    {
-        set_output(idx, app.get_output(idx));
-    }
+    py::class_<ngraph::op::Tile, std::shared_ptr<ngraph::op::Tile>, ngraph::Node> tile(m, "Tile");
+    tile.doc() = "ngraph.impl.op.Tile wraps ngraph::op::Tile";
+    tile.def(py::init<const std::string&,
+                      const std::string&,
+                      const ngraph::NodeVector&,
+                      std::vector<std::tuple<ngraph::element::Type, ngraph::PartialShape>>>());
 }

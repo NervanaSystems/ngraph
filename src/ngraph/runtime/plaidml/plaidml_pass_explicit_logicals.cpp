@@ -26,11 +26,11 @@
 #include "ngraph/op/not.hpp"
 #include "ngraph/op/not_equal.hpp"
 #include "ngraph/op/or.hpp"
+#include "ngraph/op/tile.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/any_of.hpp"
 #include "ngraph/pattern/op/label.hpp"
-#include "ngraph/runtime/plaidml/plaidml_ops_tile.hpp"
 #include "ngraph/runtime/plaidml/plaidml_pass_explicit_logicals.hpp"
 
 void ngraph::runtime::plaidml::pass::ExplicitLogicals::construct_logical_to_data()
@@ -81,7 +81,7 @@ void ngraph::runtime::plaidml::pass::ExplicitLogicals::construct_logical_to_data
             consumer,
             std::make_shared<op::Tile>(
                 "ConvertLogicalToData",
-                vertexai::plaidml::function{"function (I) -> (O) { O = as_int(I ? 1 : 0, 8);}"},
+                "function (I) -> (O) { O = as_int(I ? 1 : 0, 8);}",
                 NodeVector{producer},
                 std::vector<std::tuple<element::Type, PartialShape>>{
                     {std::make_tuple(element::i8, PartialShape{producer->get_output_shape(0)})}}));
