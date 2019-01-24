@@ -61,6 +61,7 @@ generate_mask
 avg_pool_3d
 avg_pool_3d_uneven_strided_padded_include_in_computation
 quantize_dynamic_offset                 # Quantization/Dequantization is unimplemented
+dequantize_dynamic_offset               # Quantization/Dequantization is unimplemented
 dequantize_int8_zero_offset             # Quantization/Dequantization is unimplemented
 dequantize_int32                        # Quantization/Dequantization is unimplemented
 dequantize_int32_zero_offset            # Quantization/Dequantization is unimplemented
