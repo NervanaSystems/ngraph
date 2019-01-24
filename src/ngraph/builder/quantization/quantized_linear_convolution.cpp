@@ -81,7 +81,6 @@ namespace ngraph
                 // TODO: need to establish cross-nGraph view of scale (mult or div)
                 auto requantization_scale = (input_scale * filter_scale) / output_scale;
 
-
                 return make_shared<op::QuantizedConvolutionBias>(input,
                                                                  filter,
                                                                  bias,

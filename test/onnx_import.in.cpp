@@ -1844,27 +1844,26 @@ TEST(onnx_${BACKEND_NAME}, model_space_to_depth_no_blocksize)
 
 namespace
 {
-
-class lin_quant_model_param_test : public testing::TestWithParam<std::uint32_t>
-{
-protected:
-    lin_quant_model_param_test()
-        : input_filename("")
-        , output_filename("")
+    class lin_quant_model_param_test : public testing::TestWithParam<std::uint32_t>
     {
-        test_set_id = GetParam();
-    }
+    protected:
+        lin_quant_model_param_test()
+            : input_filename("")
+            , output_filename("")
+        {
+            test_set_id = GetParam();
+        }
 
-    void SetUp() override
-    {
-        input_filename = "onnx/resnet50_int8_input" + std::to_string(test_set_id) + ".bin";
-        output_filename = "onnx/resnet50_int8_output" + std::to_string(test_set_id) + ".bin";
-    }
+        void SetUp() override
+        {
+            input_filename = "onnx/resnet50_int8_input" + std::to_string(test_set_id) + ".bin";
+            output_filename = "onnx/resnet50_int8_output" + std::to_string(test_set_id) + ".bin";
+        }
 
-    std::uint32_t test_set_id;
-    std::string input_filename;
-    std::string output_filename;
-};
+        std::uint32_t test_set_id;
+        std::string input_filename;
+        std::string output_filename;
+    };
 
 } // anonymous namespace
 
