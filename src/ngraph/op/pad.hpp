@@ -53,6 +53,10 @@ namespace ngraph
             const CoordinateDiff& get_padding_below() const { return m_padding_below; }
             /// \return The padding-above sizes.
             const CoordinateDiff& get_padding_above() const { return m_padding_above; }
+            /// \brief DEPRECATED. This is just a stub for backends that used to implement the
+            ///        interior padding feature, which is no longer supported.
+            /// \return Returns a shape full of zeros, with the same rank as get_padding_below().
+            const Shape& get_padding_interior() const { return m_padding_interior_fake; }
             /// \return The padding mode.
             PadMode get_pad_mode() const { return m_pad_mode; }
             /// \return The default value for Pad.
@@ -64,6 +68,7 @@ namespace ngraph
                                            const NodeVector& deltas) override;
             CoordinateDiff m_padding_below;
             CoordinateDiff m_padding_above;
+            Shape m_padding_interior_fake; // LEGACY: This is all zeros.
             PadMode m_pad_mode;
         };
     }
