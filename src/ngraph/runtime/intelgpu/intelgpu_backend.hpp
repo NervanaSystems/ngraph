@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -58,12 +58,16 @@ public:
     std::vector<PerformanceCounter>
         get_performance_data(std::shared_ptr<Function> func) const override;
 
+    bool is_supported_property(const Property prop) const override;
+
 private:
     class FunctionInstance
     {
     public:
         std::shared_ptr<cldnn::network> ocl_network = nullptr;
         bool m_performance_counters_enabled = false;
+        double m_compilation_time = 0.0;
+        double m_consumed_memory = 0.0;
     };
 
     std::map<std::shared_ptr<Function>, FunctionInstance> ocl_networks;
@@ -74,11 +78,11 @@ private:
     // Statistic related things
     void print_call_performance(const std::shared_ptr<cldnn::network> network,
                                 const std::shared_ptr<Function> func,
-                                size_t time_compile,
-                                size_t time_call,
-                                double mem_before_call,
-                                double mem_after_compilation,
-                                double mem_after_call) const;
+                                double time_compile,
+                                double time_call,
+                                double mem_compilation_consumed,
+                                double mem_call_consumed,
+                                double mem_current) const;
 
     bool m_profile_enable = false;
     long m_profile_lines_limit_count = 10;

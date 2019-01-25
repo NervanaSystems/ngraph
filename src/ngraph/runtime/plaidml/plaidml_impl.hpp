@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,63 +35,53 @@ namespace ngraph
             // PlaidML Operation implementation support.
             //
             // To add a new operation:
-            //  1) Include the operation header
-            //  2) Write the per-operation implementation definition
-            //  3) Register the operation type, by instantiating Impl<op::OpClass>::Registration at
-            //     global scope.
-            //
-            // Operation implementation definitions have access to all methods and member variables
-            // of the general Impl template.
+            //  1) Include the operation header (this file)
+            //  2) Use NGRAPH_PLAIDML_OP_CLASS() to instantiate the
+            //     operation classes (or roll your own, based on the
+            //     macro).
+            //  3) Write the per-operation implementation definition
 
-            // The accessor for the global operation handler map.
-            std::unordered_map<std::type_index, std::function<void(Build*, const ngraph::Node&)>>*
-                OpImplMap();
-
-            // BaseImpl provides a context for operation interpretation, and provides a few useful
-            // utility methods.
-            template <typename O>
-            class BaseImpl
+            // The OpImpl template is generally used as the base class
+            // for operation implementations.
+            template <class O>
+            class OpImpl
             {
             public:
-                BaseImpl(Build* build, const O& op)
-                    : m_build{build}
-                    , m_op{op}
-                {
-                }
+                using Op = O;
 
-            protected:
-                Build* build() { return m_build; }
-                const O& op() { return m_op; }
+                virtual ~OpImpl() {}
+                // Apply the operation implementation to the current
+                // build.
+                //
+                // set_build() and set_op() must be called before
+                // applying the operation implementation.  (Typically,
+                // OpImplDescriptor is used to handle this.)
+                virtual void Apply() = 0;
+
+                Build* build() const { return m_build; }
+                void set_build(Build* build) { m_build = build; }
+                const Op& op() const { return *m_op; }
+                void set_op(const Op* op) { m_op = op; }
                 // Returns the indicated operation input as a PlaidML variable.
-                vertexai::plaidml::variable
-                    op_input(std::size_t idx,
-                             TensorContents as_contents = TensorContents::DATA) const
+                vertexai::plaidml::variable op_input(std::size_t idx) const
                 {
                     const auto& ti = m_build->bindings.at(
-                        m_op.get_inputs()[idx].get_output().get_tensor_ptr().get());
-                    if (as_contents == TensorContents::DATA &&
-                        ti.contents == TensorContents::LOGICAL)
-                    {
-                        return plaidml_logical_to_data(ti.var, m_build->config->debug);
-                    }
+                        op().get_inputs()[idx].get_output().get_tensor_ptr().get());
                     return ti.var;
                 }
 
                 // Returns the 0th operation input as a PlaidML variable.
-                vertexai::plaidml::variable op_input() const
-                {
-                    return op_input(0, TensorContents::DATA);
-                }
+                vertexai::plaidml::variable op_input() const { return op_input(0); }
                 // Validates that the number of operation inputs matches the expected operation
                 // input count.
                 void check_inputs(std::size_t expected_input_count) const
                 {
-                    if (m_op.get_input_size() != expected_input_count)
+                    if (op().get_input_size() != expected_input_count)
                     {
                         std::ostringstream os;
-                        os << "The PlaidML nGraph backend only supports " << m_op.description()
+                        os << "The PlaidML nGraph backend only supports " << op().description()
                            << " operations with an input count == " << expected_input_count
-                           << " (got " << m_op.get_input_size() << " inputs)";
+                           << " (got " << op().get_input_size() << " inputs)";
                         throw std::runtime_error{os.str()};
                     }
                 }
@@ -100,12 +90,12 @@ namespace ngraph
                 // expected operation input count.
                 void check_inputs_ge(std::size_t minimum_input_count) const
                 {
-                    if (m_op.get_input_size() < minimum_input_count)
+                    if (op().get_input_size() < minimum_input_count)
                     {
                         std::ostringstream os;
-                        os << "The PlaidML nGraph backend only supports " << m_op.description()
+                        os << "The PlaidML nGraph backend only supports " << op().description()
                            << " operations with an input count >= " << minimum_input_count
-                           << " (got " << m_op.get_input_size() << " inputs)";
+                           << " (got " << op().get_input_size() << " inputs)";
                         throw std::runtime_error{os.str()};
                     }
                 }
@@ -114,12 +104,12 @@ namespace ngraph
                 // output count.
                 void check_outputs(std::size_t expected_output_count) const
                 {
-                    if (m_op.get_output_size() != expected_output_count)
+                    if (op().get_output_size() != expected_output_count)
                     {
                         std::ostringstream os;
-                        os << "The PlaidML nGraph backend only supports " << m_op.description()
+                        os << "The PlaidML nGraph backend only supports " << op().description()
                            << " operations with an output count == " << expected_output_count
-                           << " (got " << m_op.get_output_size() << " outputs)";
+                           << " (got " << op().get_output_size() << " outputs)";
                         throw std::runtime_error{os.str()};
                     }
                 }
@@ -129,7 +119,7 @@ namespace ngraph
                                 vertexai::plaidml::variable var,
                                 TensorContents contents = TensorContents::DATA)
                 {
-                    m_build->bindings.emplace(m_op.get_output_tensor_ptr(idx).get(),
+                    m_build->bindings.emplace(op().get_output_tensor_ptr(idx).get(),
                                               TensorInfo{std::move(var), contents});
                 }
 
@@ -137,65 +127,82 @@ namespace ngraph
                 void set_output(vertexai::plaidml::variable var,
                                 TensorContents contents = TensorContents::DATA)
                 {
-                    m_build->bindings.emplace(m_op.get_output_tensor_ptr().get(),
+                    m_build->bindings.emplace(op().get_output_tensor_ptr().get(),
                                               TensorInfo{std::move(var), contents});
                 }
 
                 // Gets a useful name for the current op.
-                std::string get_op_name() const { return this->m_op.description(); }
+                std::string get_op_name() const { return op().description(); }
                 // Starts a Tile function builder.
-                builder::Function start_tile_function() const
+                builder::Function start_tile_function(bool debug = false) const
                 {
-                    return builder::Function{get_op_name(), m_build->config->debug};
+                    return builder::Function{get_op_name(), debug || m_build->config->debug};
                 }
 
             private:
-                Build* m_build;
-                const O& m_op;
+                Build* m_build = nullptr;
+                const Op* m_op = nullptr;
             };
 
-            // ParentImpl sets the base implementation class for a particular operation class; the
-            // Impl template uses this to figure out which class to derive from when implementing a
-            // particular operation.  This is meant to be specialized as needed.
-            template <typename O>
-            struct ParentImpl
-            {
-                using Type = BaseImpl<O>;
-            };
-
-            // Impl is the common operation implementation class.  It declares an operator(), to be
-            // subsequently defined with the implementation for the particular operation.
-            //
-            // Operations that do require extensions may derive their common class from BaseImpl,
-            // and pass it to the Impl template.  Alternatively, they may specialize the Impl
-            // template, replacing it with their own implementation.
-            template <typename O>
-            class Impl : public ParentImpl<O>::Type
+            // OpImplDescriptorBase is the non-template virtual base
+            // class for OpImplDescriptor.  It solely exists to lever
+            // up to a typed OpImplDescriptor in a safe way.
+            class OpImplDescriptorBase
             {
             public:
-                Impl(Build* build, const O& op)
-                    : ParentImpl<O>::Type{build, op}
-                {
-                }
-                void operator()();
+                virtual ~OpImplDescriptorBase() {}
+                virtual void Apply(Build* build, const ngraph::Node* op) = 0;
+            };
 
-                static void handler(Build* build, const ngraph::Node& node)
-                {
-                    Impl<O>(build, dynamic_cast<const O&>(node))();
-                }
+            // OpImplDescriptor describes an operation implementation class,
+            // and can be used to apply the implementation to a build in progress.
+            template <class OI>
+            class OpImplDescriptor final : public OpImplDescriptorBase
+            {
+            public:
+                using Impl = OI;
 
-                // Registration handles the registration of a particular operation implementation.
-                // To use it, instantiate a variable of type Impl<op::OpClass>::Registration at
-                // global scope.
-                class Registration
+                void Apply(Build* build, const ngraph::Node* op) final
                 {
-                public:
-                    Registration()
-                    {
-                        OpImplMap()->emplace(std::type_index{typeid(O)}, &Impl<O>::handler);
-                    }
-                };
+                    Impl impl;
+                    impl.set_build(build);
+                    impl.set_op(static_cast<const typename Impl::Op*>(op));
+                    impl.Apply();
+                }
+            };
+
+            using OpImplMap =
+                std::unordered_map<std::type_index, std::unique_ptr<OpImplDescriptorBase>>;
+
+            // The accessor for the global operation handler map.
+            OpImplMap* GlobalOpImplMap();
+
+            // OpImplRegistration handles the registration of a particular operation implementation.
+            // To use it, instantiate a variable of type OpImplRegistration<OpImplDescriptor> at
+            // global scope.
+            template <class OID>
+            class OpImplRegistration final
+            {
+            public:
+                OpImplRegistration()
+                {
+                    GlobalOpImplMap()->emplace(std::type_index{typeid(typename OID::Impl::Op)},
+                                               std::unique_ptr<OpImplDescriptorBase>{new OID()});
+                }
             };
         }
     }
 }
+
+// A macro to make the usual case of declaring operations a little simpler.
+#define NGRAPH_PLAIDML_OP_CLASS(_Impl, _Parent)                                                    \
+    class _Impl final : public _Parent                                                             \
+    {                                                                                              \
+    public:                                                                                        \
+        void Apply() final;                                                                        \
+    };                                                                                             \
+                                                                                                   \
+    namespace                                                                                      \
+    {                                                                                              \
+        OpImplRegistration<OpImplDescriptor<_Impl>> register_##_Impl;                              \
+    }

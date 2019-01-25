@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -58,13 +58,13 @@ shared_ptr<runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_Backend::make_call_fra
 shared_ptr<runtime::Tensor>
     runtime::cpu::CPU_Backend::create_tensor(const element::Type& element_type, const Shape& shape)
 {
-    return make_shared<runtime::cpu::CPUTensorView>(element_type, shape);
+    return make_shared<runtime::cpu::CPUTensorView>(element_type, shape, this);
 }
 
 shared_ptr<runtime::Tensor> runtime::cpu::CPU_Backend::create_tensor(
     const element::Type& element_type, const Shape& shape, void* memory_pointer)
 {
-    return make_shared<runtime::cpu::CPUTensorView>(element_type, shape, memory_pointer);
+    return make_shared<runtime::cpu::CPUTensorView>(element_type, shape, memory_pointer, this);
 }
 
 runtime::Handle runtime::cpu::CPU_Backend::compile(shared_ptr<Function> func)
@@ -144,4 +144,19 @@ vector<runtime::PerformanceCounter>
         }
     }
     return rc;
+}
+
+bool runtime::cpu::CPU_Backend::is_supported(const Node& op) const
+{
+    return true;
+}
+
+bool runtime::cpu::CPU_Backend::is_supported_property(const Property prop) const
+{
+    if (prop == Property::memory_attach)
+    {
+        return true;
+    }
+
+    return false;
 }

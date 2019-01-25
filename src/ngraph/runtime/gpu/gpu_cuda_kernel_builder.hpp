@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -137,12 +137,6 @@ namespace ngraph
                 static void get_replace_slice_op(codegen::CodeWriter& writer,
                                                  const std::string& name,
                                                  GPUKernelArgs& args,
-                                                 const size_t rank);
-
-                static void get_reduce_window_op(codegen::CodeWriter& writer,
-                                                 const std::string& name,
-                                                 const std::string& op,
-                                                 const std::vector<std::string>& data_types,
                                                  const size_t rank);
 
                 static void get_reverse_sequence_op(codegen::CodeWriter& writer,

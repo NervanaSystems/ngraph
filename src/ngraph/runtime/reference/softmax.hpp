@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,8 +32,7 @@ namespace ngraph
             void softmax(const T* arg, T* out, const Shape& shape, const AxisSet& axes)
             {
                 auto temp_shape = reduce(shape, axes);
-                auto temp_elements = std::accumulate(
-                    temp_shape.begin(), temp_shape.end(), 1, std::multiplies<size_t>());
+                auto temp_elements = shape_size(temp_shape);
                 auto temp_ptr = new T[temp_elements];
 
                 max(arg, temp_ptr, shape, temp_shape, axes);

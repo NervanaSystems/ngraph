@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ include(ExternalProject)
 #------------------------------------------------------------------------------
 
 set(CLDNN_GIT_REPO_URL https://github.com/intel/clDNN.git)
-set(CLDNN_GIT_LABEL 02add7c4ce2baa81e2a32fa02d733dcc4f013108)
+set(CLDNN_GIT_LABEL f91d7d83d8f121e4e159776b108e316f2f08bdf5)
 set(BOOST_VERSION 1.64.0)
 set(OUT_DIR ${EXTERNAL_PROJECTS_ROOT}/cldnn/out)
 
@@ -32,7 +32,7 @@ endif()
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     if (DEFINED NGRAPH_USE_CXX_ABI)
         set(COMPILE_FLAGS "${COMPILE_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${NGRAPH_USE_CXX_ABI}")
-    endif()    
+    endif()
 endif()
 
 ExternalProject_Add(
@@ -43,9 +43,12 @@ ExternalProject_Add(
     # Disable install step
     INSTALL_COMMAND ""
     UPDATE_COMMAND ""
-    CMAKE_ARGS 
+    CMAKE_GENERATOR ${CMAKE_GENERATOR}
+    CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
+    CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
+    CMAKE_ARGS
+                ${NGRAPH_FORWARD_CMAKE_ARGS}
                 # -DCLDNN__OUTPUT_DIR=out/Debug
-                -DCMAKE_BUILD_TYPE=Release
                 -DCLDNN__BOOST_VERSION=${BOOST_VERSION}
                 -DCLDNN__INCLUDE_TESTS=FALSE
                 -DCLDNN__INCLUDE_TUTORIAL=FALSE
@@ -63,5 +66,5 @@ else()
     ExternalProject_Get_Property(ext_cldnn SOURCE_DIR BINARY_DIR)
     add_dependencies(libcldnn ext_cldnn)
     target_include_directories(libcldnn SYSTEM INTERFACE ${SOURCE_DIR}/api)
-    target_link_libraries(libcldnn INTERFACE ${SOURCE_DIR}/build/out/Linux64/Release/libclDNN64.so)
+    target_link_libraries(libcldnn INTERFACE ${SOURCE_DIR}/build/out/Linux64/${CMAKE_BUILD_TYPE}/${CMAKE_SHARED_LIBRARY_PREFIX}clDNN64${CMAKE_SHARED_LIBRARY_SUFFIX})
 endif()

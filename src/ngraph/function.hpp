@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -73,8 +73,6 @@ namespace ngraph
 
         const std::string& get_friendly_name() const;
         const std::string& get_name() const;
-        // so we can use `dynamic_cast` in FunctionCall to double check if we are dealing with
-        //  an XLA or regular function
         void set_name(const std::string& name);
         std::list<std::shared_ptr<Node>> get_ops(bool include_control_deps = true) const;
         std::list<std::shared_ptr<Node>> get_ordered_ops(bool include_control_deps = true) const;

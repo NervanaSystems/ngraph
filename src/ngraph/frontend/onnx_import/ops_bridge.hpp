@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -62,6 +62,8 @@ namespace ngraph
         class OperatorsBridge
         {
         public:
+            static constexpr const int LATEST_SUPPORTED_OPSET_VERSION = ONNX_OPSET_VERSION;
+
             OperatorsBridge(const OperatorsBridge&) = delete;
             OperatorsBridge& operator=(const OperatorsBridge&) = delete;
             OperatorsBridge(OperatorsBridge&&) = delete;
@@ -78,6 +80,13 @@ namespace ngraph
                                           Operator fn)
             {
                 instance()._register_operator(name, version, domain, std::move(fn));
+            }
+
+            static bool is_operator_registered(const std::string& name,
+                                               std::int64_t version,
+                                               const std::string& domain)
+            {
+                return instance()._is_operator_registered(name, version, domain);
             }
 
         private:
@@ -98,6 +107,9 @@ namespace ngraph
                                     const std::string& domain,
                                     Operator fn);
             OperatorSet _get_operator_set(std::int64_t version, const std::string& domain);
+            bool _is_operator_registered(const std::string& name,
+                                         std::int64_t version,
+                                         const std::string& domain);
         };
 
     } // namespace onnx_import

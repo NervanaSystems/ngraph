@@ -1,4 +1,4 @@
-. about: 
+.. about: 
 
 
 Architecture, Features, FAQs
@@ -25,7 +25,7 @@ frameworks and backends currently are functioning.
    :alt: 
 
 Bridge
-^^^^^^
+------
 
 Starting from the top of the stack, nGraph receives a computational
 graph from a deep learning framework such as TensorFlow\* or MXNet\*.
@@ -38,7 +38,7 @@ Parts of the graph that are not encapsulated will default to framework
 implementation when executed.
 
 nGraph Core
-^^^^^^^^^^^
+-----------
 
 nGraph uses a strongly-typed and platform-neutral
 ``Intermediate Representation (IR)`` to construct a "stateless"
@@ -56,7 +56,7 @@ ResNet\* for TensorFlow\ *, the same optimization can be readily applied
 to MXNet* or ONNX\* implementations of ResNet\*.
 
 Hybrid Transformer
-^^^^^^^^^^^^^^^^^^
+------------------
 
 Hybrid transformer takes the nGraph IR, and partitions it into
 subgraphs, which can then be assigned to the best-performing backend.
@@ -72,7 +72,7 @@ Once the subgraphs are assigned, the corresponding backend will execute
 the IR.
 
 Backends
-^^^^^^^^
+--------
 
 Focusing our attention on the CPU backend, when the IR is passed to the
 Intel® Architecture (IA) transformer, it can be executed in two modes:
@@ -104,7 +104,7 @@ Flow Graph.
 .. _features:
 
 Features
-========
+########
 
 nGraph performs a combination of device-specific and non-device-specific
 optimizations:
@@ -126,45 +126,20 @@ optimizations:
    with nGraph translating element order to work best for whatever given
    or available device.
 
-Beta Limitations
-----------------
-
-In this Beta release, nGraph only supports Just In Time compilation, but
-we plan to add support for Ahead of Time compilation in the official
-release of nGraph. nGraph currently has limited support for dynamic
-graphs.
-
-
-.. _no-lockin:
-
-Develop without lock-in
------------------------
-
-Being able to increase training performance or reduce inference latency by 
-simply adding another device of *any* form factor -- more compute (CPU), GPU or 
-VPU processing power, custom ASIC or FPGA, or a yet-to-be invented generation of 
-NNP or accelerator -- is a key benefit for framework developers building with 
-nGraph. Our commitment to bake flexibility into our ecosystem ensures developers' 
-freedom to design user-facing APIs for various hardware deployments directly 
-into their frameworks. 
-
-.. figure:: ../graphics/develop-without-lockin.png
-
-
 .. _faq:
 
 FAQs
-====
+####
 
 Why nGraph? 
------------
+===========
 
 The value we're offering to the developer community is empowerment: we are 
 confident that Intel® Architecture already provides the best computational 
 resources available for the breadth of ML/DL tasks. 
 
 How does it work?
-------------------
+=================
 
 The :doc:`nGraph Core <../ops/index>` uses a **strongly-typed** and 
 **platform-neutral** :abbr:`Intermediate Representation (IR)` to construct a 
@@ -174,7 +149,7 @@ outputs from zero or more tensor inputs.
 
 
 How do I connect a framework? 
------------------------------
+=============================
 
 The nGraph Library manages framework bridges for some of the more widely-known 
 frameworks. A bridge acts as an intermediary between the nGraph core and the 
@@ -203,7 +178,7 @@ MXNet currently make use of custom bridge code, see the section on
 
 
 How do I run an inference model?
---------------------------------
+================================
 
 Framework bridge code is *not* the only way to connect a model (function graph) 
 to nGraph's :doc:`../ops/index`. We've also built an importer for models that 
@@ -215,7 +190,7 @@ the :doc:`../howto/import` documentation.
 .. _whats_next:
 
 What's next?
-============
+############
   
 We developed nGraph to simplify the realization of optimized deep learning 
 performance across frameworks and hardware platforms. You can read more about 

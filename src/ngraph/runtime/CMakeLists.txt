@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,10 +15,7 @@
 # ******************************************************************************
 
 add_subdirectory(interpreter)
-
-if (NGRAPH_HYBRID_ENABLE)
-    add_subdirectory(hybrid)
-endif()
+add_subdirectory(hybrid)
 
 if (NGRAPH_CPU_ENABLE)
     add_subdirectory(cpu)
@@ -40,4 +37,10 @@ if (NGRAPH_GPUH_ENABLE)
     add_subdirectory(gpuh)
 endif()
 
-add_subdirectory(plaidml)
+if (NGRAPH_GENERIC_CPU_ENABLE)
+    add_subdirectory(generic_cpu)
+endif()
+
+if (NGRAPH_PLAIDML_ENABLE)
+    add_subdirectory(plaidml)
+endif()

@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,21 +14,18 @@
 # limitations under the License.
 # ******************************************************************************
 
-if (NGRAPH_HYBRID_ENABLE)
-    add_library(hybrid_backend SHARED
-        hybrid_backend.cpp
-        hybrid_util.cpp
-        pass/assign_placement.cpp)
-    if(NGRAPH_LIB_VERSIONING_ENABLE)
-        set_target_properties(hybrid_backend PROPERTIES
-            VERSION ${NGRAPH_VERSION}
-            SOVERSION ${NGRAPH_API_VERSION})
-    endif()
-    target_link_libraries(hybrid_backend PUBLIC ngraph)
-    set_target_properties(hybrid_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
-
-    install(TARGETS hybrid_backend
-        LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"
-        ARCHIVE DESTINATION "${NGRAPH_INSTALL_LIB}"
+add_library(hybrid_base STATIC
+    hybrid_backend.cpp
+    hybrid_util.cpp
+    pass/assign_placement.cpp
+    pass/dump.cpp
+    pass/fix_get_output_element.cpp
+    pass/liveness.cpp
+    pass/memory_layout.cpp
     )
-endif()
+target_link_libraries(hybrid_base PUBLIC ngraph)
+set_target_properties(hybrid_base PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+
+install(TARGETS hybrid_base
+    ARCHIVE DESTINATION "${NGRAPH_INSTALL_LIB}"
+)

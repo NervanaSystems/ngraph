@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -292,7 +292,8 @@ namespace ngraph
                         data_dilated = data_dilated || (s != 1);
                     }
 
-                    if (!data_dilated && data_rank == 4 && delta_rank == 4 &&
+                    if (!data_dilated && data_rank == delta_rank &&
+                        (data_rank == 4 || data_rank == 5) &&
                         node->get_input_element_type(0) == element::f32)
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
@@ -727,6 +728,12 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Dequantize)
                 {
                     auto dequantize = static_cast<op::Dequantize*>(node);
+                    // TODO(nbpatel): Support dynamic offset via mkldnn
+                    // Go through reference if the offset is not a constant
+                    if (!dequantize->get_argument(2)->is_constant())
+                    {
+                        return;
+                    }
                     auto offset_const_op =
                         std::static_pointer_cast<ngraph::op::Constant>(dequantize->get_argument(2));
                     // TODO: MKLDNN only handles float / not double
@@ -759,6 +766,12 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Quantize)
                 {
                     auto quantize = static_cast<op::Quantize*>(node);
+                    // TODO(nbpatel): Support dynamic offset via mkldnn
+                    // Go through reference if the offset is not a constant
+                    if (!quantize->get_argument(2)->is_constant())
+                    {
+                        return;
+                    }
                     auto offset_const_op =
                         std::static_pointer_cast<ngraph::op::Constant>(quantize->get_argument(2));
                     op::Quantize::RoundMode round_mode = quantize->get_round_mode();

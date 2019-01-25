@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,6 +34,14 @@ namespace ngraph
         class NodePass;
         class CallGraphPass;
         class Manager;
+        enum FusionType
+        {
+            //`DIFFERENTIABLE_FUSIONS` produce ops that support autodiff
+            // i.e. implement `generate_adjoints`
+            DIFFERENTIABLE_FUSIONS = 0x1,
+            REGULAR_FUSIONS = 0x2,
+            ALL_FUSIONS = 0xFFFFFFFF
+        };
     }
 }
 
