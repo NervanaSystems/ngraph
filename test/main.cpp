@@ -22,13 +22,13 @@
 
 using namespace std;
 
-#ifdef NGRAPH_DISTRIBUTED
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
 #include "ngraph/distributed.hpp"
 #endif
 
 int main(int argc, char** argv)
 {
-#ifdef NGRAPH_DISTRIBUTED
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
     ngraph::Distributed dist;
 #endif
     const char* exclude = "--gtest_filter=-benchmark.*";

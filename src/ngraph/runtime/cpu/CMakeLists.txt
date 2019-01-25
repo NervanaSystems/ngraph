@@ -195,7 +195,6 @@ if (NGRAPH_CPU_ENABLE)
     endif()
 
     if(NGRAPH_DISTRIBUTED_ENABLE)
-        target_compile_definitions(cpu_backend PRIVATE NGRAPH_DISTRIBUTED)
         if(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
             target_include_directories(cpu_backend SYSTEM PRIVATE libmlsl)
             target_link_libraries(cpu_backend PRIVATE libmlsl)

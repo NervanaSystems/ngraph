@@ -25,7 +25,6 @@ if (NGRAPH_INTERPRETER_ENABLE)
     set_target_properties(interpreter_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 
     if(NGRAPH_DISTRIBUTED_ENABLE)
-        target_compile_definitions(interpreter_backend PRIVATE NGRAPH_DISTRIBUTED)
         if(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
             target_include_directories(interpreter_backend SYSTEM PRIVATE libmlsl)
             target_link_libraries(interpreter_backend PRIVATE libmlsl)

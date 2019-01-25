@@ -182,7 +182,6 @@ if(NGRAPH_ADDRESS_SANITIZER)
 endif()
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
-    target_compile_definitions(unit-test PRIVATE NGRAPH_DISTRIBUTED)
     if(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
         target_link_libraries(unit-test PRIVATE libmlsl)
     else()

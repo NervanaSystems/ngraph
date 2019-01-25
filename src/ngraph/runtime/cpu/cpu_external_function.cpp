@@ -477,7 +477,6 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #else
     writer << "#include <mpi.h>\n\n";
 #endif
-    writer << "#define NGRAPH_DISTRIBUTED\n";
 #endif
 
     writer +=

@@ -107,7 +107,6 @@ option(NGRAPH_NOP_ENABLE "Control the building of the NOP backend" TRUE)
 option(NGRAPH_GPUH_ENABLE "Control the building of the Hybrid GPU backend" FALSE)
 option(NGRAPH_GENERIC_CPU_ENABLE "Enable build nGraph for generic CPU backend" FALSE)
 option(NGRAPH_DISTRIBUTED_ENABLE "Add distributed mode to the CPU backend" FALSE)
-option(NGRAPH_DISTRIBUTED_MLSL_ENABLE "Add distributed mlsl mode to the for CPU only backend" FALSE)
 option(NGRAPH_DEBUG_ENABLE "Enable output for NGRAPH_DEBUG statements" FALSE)
 option(NGRAPH_ONNX_IMPORT_ENABLE "Enable ONNX importer" FALSE)
 option(NGRAPH_DEX_ONLY "Build CPU DEX without codegen" FALSE)
@@ -117,6 +116,13 @@ option(NGRAPH_PYTHON_BUILD_ENABLE "Enable build nGraph python package wheel" FAL
 
 if (NGRAPH_GPUH_ENABLE)
     set(NGRAPH_GPU_ENABLE TRUE)
+endif()
+
+if (NGRAPH_DISTRIBUTED_ENABLE)
+    option(NGRAPH_DISTRIBUTED_MLSL_ENABLE "Add distributed mlsl mode to the for CPU only backend" FALSE)
+endif()
+if (NGRAPH_DISTRIBUTED_MLSL_ENABLE)
+    set(NGRAPH_DISTRIBUTED_ENABLE TRUE)
 endif()
 
 message(STATUS "NGRAPH_UNIT_TEST_ENABLE:      ${NGRAPH_UNIT_TEST_ENABLE}")

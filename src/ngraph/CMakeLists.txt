@@ -179,7 +179,6 @@ add_library(ngraph SHARED ${SRC})
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
     target_sources(ngraph PRIVATE distributed.cpp)
-    target_compile_definitions(ngraph PRIVATE NGRAPH_DISTRIBUTED)
     if(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
         target_include_directories(ngraph SYSTEM PRIVATE libmlsl)
         target_link_libraries(ngraph PRIVATE libmlsl)
