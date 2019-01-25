@@ -348,6 +348,8 @@ endif()
 
 if (NGRAPH_DISTRIBUTED_ENABLE AND NGRAPH_DISTRIBUTED_MLSL_ENABLE)
     include(cmake/external_mlsl.cmake)
+else()
+    include(cmake/external_ompi.cmake)
 endif()
 
 if (NGRAPH_HALIDE)
