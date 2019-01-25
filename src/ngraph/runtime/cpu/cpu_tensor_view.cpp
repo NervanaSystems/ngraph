@@ -24,6 +24,7 @@
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/shape.hpp"
+#include "ngraph/util.hpp"
 
 using namespace mkldnn;
 using namespace ngraph;
@@ -56,11 +57,7 @@ runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_
     else if (buffer_size > 0)
     {
         size_t allocation_size = buffer_size + BufferAlignment;
-        auto ptr = malloc(allocation_size);
-        if (!ptr)
-        {
-            throw ngraph_error("Error allocating CPU Tensor View memory");
-        }
+        auto ptr = ngraph_malloc(allocation_size);
         buffer = static_cast<char*>(ptr);
 
 // GCC major versions below 5 do not implement C++11 std::align
@@ -85,7 +82,7 @@ runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_
 
 runtime::cpu::CPUTensorView::~CPUTensorView()
 {
-    free(buffer);
+    ngraph_free(buffer);
 }
 
 char* runtime::cpu::CPUTensorView::get_data_ptr()
