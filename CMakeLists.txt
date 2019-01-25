@@ -268,6 +268,7 @@ if (NOT DEFINED NGRAPH_TBB_ENABLE)
     # Disable TBB on Windows for now.
     if(WIN32)
         set(NGRAPH_TBB_ENABLE FALSE})
+        message(STATUS "Disabling TBB on Windows.")
     else()
         set(NGRAPH_TBB_ENABLE ${NGRAPH_CPU_ENABLE})
     endif()
