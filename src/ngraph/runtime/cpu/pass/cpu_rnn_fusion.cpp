@@ -849,7 +849,6 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
                                              num_fused_rnn_layers);
 
         auto layer_rnn_ht = std::make_shared<op::GetOutputElement>(rnn, 0);
-        std::cout << "In bi Rnn call back" << std::endl;
         ngraph::replace_node(m.get_match_root(), layer_rnn_ht);
         return true;
     };

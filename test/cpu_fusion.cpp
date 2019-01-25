@@ -33,6 +33,7 @@
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/relu.hpp"
+#include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tanh.hpp"
@@ -3424,4 +3425,21 @@ TEST(cpu_fusion, rnn_input_fusion_inter_vs_cpu)
     {
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
     }
+}
+
+TEST(cpu_fusion, fuse_bi_directional_rnn)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
+    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
+    pass_manager.register_pass<runtime::cpu::pass::BiDirectionalRnn>();
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/5_timestep_gnmt.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    pass_manager.run_passes(func);
+    // Bidirectional graph pass will folds the reverse seq
+    auto rev_seq_ops = get_ops_of_type<op::ReverseSequence>(func);
+    EXPECT_EQ(rev_seq_ops.size(), 0);
 }
