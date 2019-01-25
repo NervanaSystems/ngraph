@@ -39,7 +39,9 @@ namespace ngraph
 class ngraph::pass::VisualizeTree : public ModulePass
 {
 public:
-    VisualizeTree(const std::string& file_name);
+    using node_modifiers_t =
+        std::function<void(const Node& node, std::vector<std::string>& attributes)>;
+    VisualizeTree(const std::string& file_name, node_modifiers_t nm = nullptr);
     bool run_on_module(std::vector<std::shared_ptr<ngraph::Function>>&) override;
 
     static std::string get_file_ext();
@@ -54,4 +56,5 @@ private:
     std::set<std::shared_ptr<Node>> m_nodes_with_attributes;
     std::unordered_map<std::type_index, std::function<void(const Node&, std::ostream& ss)>>
         m_ops_to_details;
+    node_modifiers_t m_node_modifiers = nullptr;
 };
