@@ -14,8 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 #include "misc.hpp"
-#include <stdio.h>
-#include <stdlib.h>
+
 
 FILE *port_open(const char *command, const char *type) {
 #ifdef _WIN32

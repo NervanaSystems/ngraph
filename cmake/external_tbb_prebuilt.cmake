@@ -39,6 +39,7 @@ set(SOURCE_DIR ${SOURCE_DIR}/${ARCHIVE_FILE_BASE})
 
 if (WIN32)
     set(TBB_LINK_LIBS ${SOURCE_DIR}/lib/intel64/vc14/tbb.lib)
+    set(TBB_LINK_LIBS_DEBUG ${SOURCE_DIR}/lib/intel64/vc14/tbb_debug.lib)
 else()
     set(TBB_LINK_LIBS
         ${SOURCE_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}clangTooling${CMAKE_SHARED_LIBRARY_SUFFIX}
@@ -50,4 +51,6 @@ endif()
 add_library(libtbb INTERFACE)
 add_dependencies(libtbb ext_tbb)
 target_include_directories(libtbb SYSTEM INTERFACE ${SOURCE_DIR}/include)
-target_link_libraries(libtbb INTERFACE ${TBB_LINK_LIBS})
+target_link_libraries(libtbb INTERFACE
+    debug ${TBB_LINK_LIBS_DEBUG}
+    optimized ${TBB_LINK_LIBS} )

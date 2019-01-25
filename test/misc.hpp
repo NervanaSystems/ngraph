@@ -15,7 +15,8 @@
 //*****************************************************************************
 
 #pragma once
-
+#include <stdio.h>
+#include <stdlib.h>
 
 FILE *port_open(const char *command, const char *type);
 int port_close(FILE *stream);
