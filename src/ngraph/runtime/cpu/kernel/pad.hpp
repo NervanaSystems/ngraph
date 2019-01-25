@@ -111,6 +111,7 @@ namespace ngraph
                          const Shape& out_shape,
                          const CoordinateDiff& padding_below,
                          const CoordinateDiff& padding_above,
+                         const ngraph::op::PadMode pad_mode,
                          int arena)
                 {
                     reference::pad(static_cast<const ElementType*>(arg0),
@@ -119,7 +120,8 @@ namespace ngraph
                                    arg0_shape,
                                    out_shape,
                                    padding_below,
-                                   padding_above);
+                                   padding_above,
+                                   pad_mode);
                 }
             }
         }
