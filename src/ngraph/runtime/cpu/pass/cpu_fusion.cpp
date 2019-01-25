@@ -30,9 +30,12 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/quantized_conv.hpp"
+#include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/maximum.hpp"
@@ -41,6 +44,7 @@
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/parameter.hpp"
+#include "ngraph/op/quantize.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -976,6 +980,69 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_relu()
     };
 
     auto m = std::make_shared<pattern::Matcher>(prelu, callback, "CPUFusion.ConvBiasRelu");
+    this->add_matcher(m);
+}
+
+void ngraph::runtime::cpu::pass::CPUFusion::construct_qconv_bias_dq_relu_q()
+{
+    Shape shape{2, 2, 1, 1};
+    auto data_batch = std::make_shared<pattern::op::Label>(element::u8, shape);
+    auto filters = std::make_shared<pattern::op::Label>(element::i8, shape);
+    auto bias = std::make_shared<pattern::op::Label>(element::i32, Shape{shape[0]});
+    auto requantization_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto dq_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto dq_zero_point = std::make_shared<pattern::op::Label>(element::i8, Shape{});
+    auto q_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto q_zero_point = std::make_shared<pattern::op::Label>(element::u8, Shape{});
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+
+    auto qconv_bias = std::make_shared<op::QuantizedConvolutionBias>(data_batch,
+                                                                     filters,
+                                                                     bias,
+                                                                     Strides{1, 1},
+                                                                     Strides{1, 1},
+                                                                     CoordinateDiff{0, 0},
+                                                                     CoordinateDiff{0, 0},
+                                                                     Strides{1, 1},
+                                                                     requantization_scale);
+    auto dq = std::make_shared<op::Dequantize>(
+        qconv_bias, dq_scale, dq_zero_point, element::f32, AxisSet{});
+
+    auto prelu = std::make_shared<op::Relu>(dq);
+    auto q = std::make_shared<op::Quantize>(
+        prelu, q_scale, q_zero_point, element::u8, AxisSet{}, round_mode);
+
+    pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In a callback for construct_conv_bias_dq_relu_q against "
+                     << m.get_match_root()->get_name();
+
+        auto qconv = std::static_pointer_cast<op::QuantizedConvolutionBias>(
+            m.get_match_root()->get_argument(0)->get_argument(0)->get_argument(0));
+
+        if (qconv->get_users().size() > 1)
+        {
+            NGRAPH_DEBUG << "QuantizedConvolutionBias has more than one user";
+            return false;
+        }
+
+        // QuantizedConvolutionBias created only if it can run with MKLDNN.
+        // No further checks needed.
+        auto qconv_bias_relu =
+            std::make_shared<op::QuantizedConvolutionBias>(qconv->get_argument(0),
+                                                           qconv->get_argument(1),
+                                                           qconv->get_argument(2),
+                                                           qconv->get_window_movement_strides(),
+                                                           qconv->get_window_dilation_strides(),
+                                                           qconv->get_padding_below(),
+                                                           qconv->get_padding_above(),
+                                                           qconv->get_data_dilation_strides(),
+                                                           qconv->get_argument(3),
+                                                           true);
+        ngraph::replace_node(m.get_match_root(), qconv_bias_relu);
+        return true;
+    };
+
+    auto m = std::make_shared<pattern::Matcher>(q, callback, "CPUFusion.QConvBiasRelu");
     this->add_matcher(m);
 }
 

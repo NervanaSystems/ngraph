@@ -70,6 +70,7 @@ public:
             construct_conv_add_relu();
             construct_update_slice();
             construct_fuse_lstm_recurrent_state();
+            construct_qconv_bias_dq_relu_q();
         }
     }
 
@@ -99,4 +100,5 @@ private:
     void construct_groupconv_batchnorm_global_stats_folding_relu();
     void construct_update_slice();
     void construct_fuse_lstm_recurrent_state();
+    void construct_qconv_bias_dq_relu_q();
 };
