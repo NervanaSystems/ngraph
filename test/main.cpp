@@ -44,5 +44,9 @@ int main(int argc, char** argv)
     ::testing::InitGoogleTest(&argc, argv_vector.data());
     int rc = RUN_ALL_TESTS();
 
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
+    dist.finalize();
+#endif
+
     return rc;
 }
