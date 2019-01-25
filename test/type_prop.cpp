@@ -9109,6 +9109,62 @@ TEST(type_prop, pad_deduce_above_padding_wrong_rank)
     }
 }
 
+TEST(type_prop, pad_deduce_too_small_for_edge)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{5, 0, 2});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
+    CoordinateDiff padding_below{1, 2, 3};
+    CoordinateDiff padding_above{1, 2, 3};
+    try
+    {
+        auto pad =
+            make_shared<op::Pad>(param0, param1, padding_below, padding_above, op::PadMode::EDGE);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Input too small for edge padding not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string(
+                "EDGE padding mode requires an input of dimension of at least 1 at each axis"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, pad_deduce_too_small_for_reflect)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{5, 1, 2});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
+    CoordinateDiff padding_below{1, 2, 3};
+    CoordinateDiff padding_above{1, 2, 3};
+    try
+    {
+        auto pad = make_shared<op::Pad>(
+            param0, param1, padding_below, padding_above, op::PadMode::REFLECT);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Input too small for reflect padding not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string(
+                "REFLECT padding mode requires an input of dimension of at least 2 at each axis"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
 TEST(type_prop, pad_deduce_too_much_negative_padding)
 {
     // Deduce type

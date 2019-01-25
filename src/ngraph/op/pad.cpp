@@ -76,6 +76,16 @@ void op::Pad::validate_and_infer_types()
                     << " is negative after padding (padding below: " << m_padding_below << ", "
                     << ", padding above: " << m_padding_above << ").";
                 result_dims[i] = static_cast<size_t>(result_dim);
+
+                NODE_VALIDATION_ASSERT(
+                    this, m_pad_mode != op::PadMode::EDGE || static_cast<size_t>(arg_shape[i]) >= 1)
+                    << "EDGE padding mode requires an input of dimension of at least 1 at each "
+                       "axis.";
+                NODE_VALIDATION_ASSERT(this,
+                                       m_pad_mode != op::PadMode::REFLECT ||
+                                           static_cast<size_t>(arg_shape[i]) >= 2)
+                    << "REFLECT padding mode requires an input of dimension of at least 2 at each "
+                       "axis.";
             }
         }
     }
