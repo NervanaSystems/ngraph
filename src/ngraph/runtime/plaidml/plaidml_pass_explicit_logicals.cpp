@@ -84,7 +84,7 @@ void ngraph::runtime::plaidml::pass::ExplicitLogicals::construct_logical_to_data
                 vertexai::plaidml::function{"function (I) -> (O) { O = as_int(I ? 1 : 0, 8);}"},
                 NodeVector{producer},
                 std::vector<std::tuple<element::Type, PartialShape>>{
-                    {element::i8, PartialShape{producer->get_output_shape(0)}}}));
+                    {std::make_tuple(element::i8, PartialShape{producer->get_output_shape(0)})}}));
         return true;
     };
 
