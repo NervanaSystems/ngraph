@@ -265,7 +265,6 @@ namespace ngraph
                     throw error::tensor::invalid_data_type{tensor.data_type()};
                 }
 
-
                 template <>
                 inline std::vector<uint32_t> get_data(const onnx::TensorProto& tensor)
                 {
@@ -279,7 +278,6 @@ namespace ngraph
                     }
                     throw error::tensor::invalid_data_type{tensor.data_type()};
                 }
-
 
                 template <>
                 inline std::vector<uint64_t> get_data(const onnx::TensorProto& tensor)
