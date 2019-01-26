@@ -702,6 +702,9 @@ namespace ngraph
                 {
                     auto quantized_conv_bias =
                         static_cast<op::QuantizedConvolutionBiasSignedAdd*>(node);
+                    std::cout << "ARG 0 " << node->get_input_element_type(0) << std::endl;
+                    std::cout << "ARG 1 " << node->get_input_element_type(1) << std::endl;
+                    std::cout << "ARG 2 " << node->get_input_element_type(3) << std::endl;
                     if (node->get_input_element_type(0) == element::u8 &&
                         node->get_input_element_type(1) == element::i8 &&
                         node->get_input_element_type(3) == element::i8)

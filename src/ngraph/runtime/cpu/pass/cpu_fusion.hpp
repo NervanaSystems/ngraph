@@ -28,6 +28,8 @@ namespace ngraph
             {
                 class CPUFusion;
                 class CPUFusionQuant;
+                //class CPUFusionQuantSum;
+                //class CPUFusionQuantSum_1;
             }
         }
     }
@@ -72,6 +74,8 @@ public:
             construct_update_slice();
             construct_fuse_lstm_recurrent_state();
             construct_qconv_dq_bias();
+            construct_qconv_bias_dq_signed_add_relu();
+            //construct_qconv_bias_dq_unsigned_add_relu();
             construct_qconv_bias_dq_relu_q();
         }
     }
@@ -103,6 +107,8 @@ private:
     void construct_update_slice();
     void construct_fuse_lstm_recurrent_state();
     void construct_qconv_dq_bias();
+    void construct_qconv_bias_dq_signed_add_relu();
+    void construct_qconv_bias_dq_unsigned_add_relu();
     void construct_qconv_bias_dq_relu_q();
 };
 
@@ -121,3 +127,40 @@ public:
 private:
     void construct_qconv_bias_relu();
 };
+
+/*
+class ngraph::runtime::cpu::pass::CPUFusionQuantSum : public ngraph::pass::GraphRewrite
+{
+public:
+    CPUFusionQuantSum(ngraph::pass::FusionType fusions = ngraph::pass::ALL_FUSIONS)
+        : GraphRewrite()
+    {
+        if (fusions & ngraph::pass::REGULAR_FUSIONS)
+        {
+            construct_qconv_bias_dq();
+        }
+    }
+
+private:
+    void construct_qconv_bias_dq();
+};
+*/
+/*
+class ngraph::runtime::cpu::pass::CPUFusionQuantSum_1 : public ngraph::pass::GraphRewrite
+{
+public:
+    CPUFusionQuantSum_1(ngraph::pass::FusionType fusions = ngraph::pass::ALL_FUSIONS)
+        : GraphRewrite()
+    {
+        if (fusions & ngraph::pass::REGULAR_FUSIONS)
+        {
+            construct_qconv_bias_dq_signed_add_relu();
+            construct_qconv_bias_dq_unsigned_add_relu();
+        }
+    }
+
+private:
+    void construct_qconv_bias_dq_signed_add_relu();
+    void construct_qconv_bias_dq_unsigned_add_relu();
+};
+*/

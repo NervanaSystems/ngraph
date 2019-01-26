@@ -1841,7 +1841,6 @@ TEST(onnx_${BACKEND_NAME}, model_space_to_depth_no_blocksize)
                  std::runtime_error);
 }
 
-
 namespace
 {
     class lin_quant_model_param_test : public testing::TestWithParam<std::uint32_t>
