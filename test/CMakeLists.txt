@@ -36,7 +36,6 @@ set(SRC
     cse.cpp
     element_type.cpp
     file_util.cpp
-    graph_partition.cpp
     includes.cpp
     input_output_assign.cpp
     main.cpp

@@ -139,8 +139,8 @@ set (SRC
     pass/memory_visualize.cpp
     pass/nop_elimination.cpp
     pass/pass.cpp
-    pass/pass_config.cpp 
-    pass/prefix_reshape_elimination.cpp 
+    pass/pass_config.cpp
+    pass/prefix_reshape_elimination.cpp
     pass/propagate_cacheability.cpp
     pass/reshape_elimination.cpp
     pass/reshape_sinking.cpp

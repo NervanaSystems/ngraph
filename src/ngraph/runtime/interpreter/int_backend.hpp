@@ -143,6 +143,7 @@ namespace ngraph
         namespace interpreter
         {
             class INTBackend;
+            class INTExecutable;
         }
     }
 }
@@ -161,52 +162,49 @@ public:
 
     std::shared_ptr<Tensor> create_tensor(const element::Type& type, const Shape& shape) override;
 
-    Handle compile(std::shared_ptr<Function> function) override;
-
-    bool call(std::shared_ptr<Function> function,
-              const std::vector<std::shared_ptr<Tensor>>& outputs,
-              const std::vector<std::shared_ptr<Tensor>>& intputs) override;
-
-    void set_nan_check(std::shared_ptr<Function> func, bool);
-
-    void enable_performance_data(std::shared_ptr<Function> func, bool enable) override;
-    std::vector<PerformanceCounter>
-        get_performance_data(std::shared_ptr<Function> func) const override;
+    std::shared_ptr<Executable> compile(std::shared_ptr<Function> function,
+                                        bool enable_performance_data = false) override;
 
     bool is_supported(const Node& node) const override;
 
 private:
-    int get_alignment() const { return 64; }
-    class FunctionInstance
-    {
-    public:
-        bool m_is_compiled = false;
-        bool m_nan_check_enabled = false;
-        bool m_performance_counters_enabled = false;
-        std::unordered_map<const Node*, stopwatch> m_timer_map;
-        std::vector<NodeWrapper> m_wrapped_nodes;
-        std::unordered_map<const Node*, std::shared_ptr<RNGState>> m_states;
-        std::shared_ptr<AlignedBuffer> m_temporary_memory;
-
-        void* get_temporary_pointer(size_t offset) { return m_temporary_memory->get_ptr(offset); }
-    };
-    std::map<std::shared_ptr<Function>, FunctionInstance> m_function_map;
     std::set<std::string> m_unsupported_op_name_list;
+};
 
+class ngraph::runtime::interpreter::INTExecutable : public Executable
+{
+public:
+    INTExecutable(const std::shared_ptr<Function>& function,
+                  bool enable_performance_collection = false);
+
+    bool call(const std::vector<std::shared_ptr<Tensor>>& outputs,
+              const std::vector<std::shared_ptr<Tensor>>& intputs) override;
+
+    void set_nan_check(bool value) { m_nan_check_enabled = value; }
+    std::vector<PerformanceCounter> get_performance_data() const override;
+
+private:
+    int get_alignment() const { return 64; }
+    bool m_nan_check_enabled = false;
+    bool m_performance_counters_enabled = false;
+    std::unordered_map<const Node*, stopwatch> m_timer_map;
+    std::vector<NodeWrapper> m_wrapped_nodes;
+    std::unordered_map<const Node*, std::shared_ptr<RNGState>> m_states;
+    std::shared_ptr<AlignedBuffer> m_temporary_memory;
+
+    void* get_temporary_pointer(size_t offset) { return m_temporary_memory->get_ptr(offset); }
     static void perform_nan_check(const std::vector<std::shared_ptr<HostTensor>>&,
                                   const Node* op = nullptr);
 
     void generate_calls(const element::Type& type,
                         const NodeWrapper& op,
                         const std::vector<void*>& outputs,
-                        const std::vector<const void*>& inputs,
-                        FunctionInstance& instance);
+                        const std::vector<const void*>& inputs);
 
     template <typename T>
     void op_engine(const NodeWrapper& node_wrapper,
                    const std::vector<void*>& out,
-                   const std::vector<const void*>& args,
-                   FunctionInstance& instance)
+                   const std::vector<const void*>& args)
     {
         const Node& node = node_wrapper.get_node();
         std::string node_op = node.description();
@@ -364,15 +362,15 @@ private:
         }
         case OP_TYPEID::GenerateMask:
         {
-            if (instance.m_states.count(&node) == 0)
+            if (m_states.count(&node) == 0)
             {
                 const op::GenerateMask* gm = static_cast<const op::GenerateMask*>(&node);
-                instance.m_states[&node] = std::unique_ptr<ngraph::RNGState>(
+                m_states[&node] = std::unique_ptr<ngraph::RNGState>(
                     ngraph::RNGState::create_rng_state(gm->get_seed(), gm->get_probability()));
             }
 
             bool training = static_cast<bool>(static_cast<const T*>(args[0])[0]);
-            auto state = instance.m_states.at(&node).get();
+            auto state = m_states.at(&node).get();
             size_t element_count = shape_size(node.get_output_shape(0));
             reference::generate_mask<T>(
                 reinterpret_cast<T*>(out[0]), element_count, state, training);

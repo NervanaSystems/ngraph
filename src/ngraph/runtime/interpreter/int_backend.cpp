@@ -64,12 +64,17 @@ shared_ptr<runtime::Tensor> runtime::interpreter::INTBackend::create_tensor(
     return make_shared<runtime::HostTensor>(type, shape, memory_pointer, this);
 }
 
-runtime::Handle runtime::interpreter::INTBackend::compile(shared_ptr<Function> function)
+shared_ptr<runtime::Executable>
+    runtime::interpreter::INTBackend::compile(shared_ptr<Function> function,
+                                              bool enable_performance_collection)
 {
-    FunctionInstance& instance = m_function_map[function];
-    if (!instance.m_is_compiled)
+    return make_shared<INTExecutable>(function, enable_performance_collection);
+}
+
+runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& function,
+                                                   bool enable_performance_collection)
+{
     {
-        instance.m_is_compiled = true;
         pass::Manager pass_manager;
         pass_manager.register_pass<pass::LikeReplacement>();
         pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
@@ -78,32 +83,20 @@ runtime::Handle runtime::interpreter::INTBackend::compile(shared_ptr<Function> f
         pass_manager.run_passes(function);
 
         size_t memory_pool_size = function->get_temporary_pool_size();
-        instance.m_temporary_memory.reset(new AlignedBuffer(memory_pool_size, get_alignment()));
+        m_temporary_memory.reset(new AlignedBuffer(memory_pool_size, get_alignment()));
 
         for (const shared_ptr<Node>& node : function->get_ordered_ops())
         {
-            instance.m_wrapped_nodes.emplace_back(node);
+            m_wrapped_nodes.emplace_back(node);
         }
     }
 
-    return function;
+    set_parameters_and_results(*function);
 }
 
-bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
-                                            const vector<shared_ptr<runtime::Tensor>>& outputs,
-                                            const vector<shared_ptr<runtime::Tensor>>& inputs)
+bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                               const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
-    auto fit = m_function_map.find(function);
-    if (fit == m_function_map.end())
-    {
-        throw runtime_error("compile() must be called before call().");
-    }
-    FunctionInstance& instance = fit->second;
-    if (!instance.m_is_compiled)
-    {
-        throw runtime_error("compile() must be called before call().");
-    }
-
     // convert inputs to HostTensor
     vector<void*> func_inputs;
     vector<shared_ptr<runtime::HostTensor>> htv_inputs;
@@ -113,7 +106,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         func_inputs.push_back(static_cast<void*>(host_tensor->get_data_ptr()));
         htv_inputs.push_back(host_tensor);
     }
-    if (instance.m_nan_check_enabled)
+    if (m_nan_check_enabled)
     {
         perform_nan_check(htv_inputs);
     }
@@ -129,7 +122,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
     // map function params -> HostTensor
     unordered_map<descriptor::Tensor*, void*> tensor_map;
     size_t input_count = 0;
-    for (auto param : function->get_parameters())
+    for (auto param : get_parameters())
     {
         for (size_t i = 0; i < param->get_output_size(); ++i)
         {
@@ -139,9 +132,9 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
     }
 
     // map function outputs -> HostTensor
-    for (size_t output_count = 0; output_count < function->get_output_size(); ++output_count)
+    for (size_t output_count = 0; output_count < get_results().size(); ++output_count)
     {
-        auto output = function->get_output_op(output_count);
+        auto output = get_results()[output_count];
         if (!dynamic_pointer_cast<op::Result>(output))
         {
             throw ngraph_error("One of function's outputs isn't op::Result");
@@ -151,7 +144,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
     }
 
     // for each ordered op in the graph
-    for (const NodeWrapper& wrapped : instance.m_wrapped_nodes)
+    for (const NodeWrapper& wrapped : m_wrapped_nodes)
     {
         const Node* op = &wrapped.get_node();
         auto type_id = wrapped.get_typeid();
@@ -185,7 +178,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
             if (it == tensor_map.end())
             {
                 auto offset = op->get_output_tensor(i).get_pool_offset();
-                host_tensor = instance.get_temporary_pointer(offset);
+                host_tensor = get_temporary_pointer(offset);
                 tensor_map.insert({tensor, host_tensor});
             }
             else
@@ -224,16 +217,16 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         }
 #pragma GCC diagnostic pop
 
-        if (instance.m_performance_counters_enabled)
+        if (m_performance_counters_enabled)
         {
-            instance.m_timer_map[op].start();
+            m_timer_map[op].start();
         }
-        generate_calls(type, wrapped, op_outputs, op_inputs, instance);
-        if (instance.m_performance_counters_enabled)
+        generate_calls(type, wrapped, op_outputs, op_inputs);
+        if (m_performance_counters_enabled)
         {
-            instance.m_timer_map[op].stop();
+            m_timer_map[op].stop();
         }
-        if (instance.m_nan_check_enabled)
+        if (m_nan_check_enabled)
         {
             perform_nan_check(htv_outputs, op);
         }
@@ -242,26 +235,25 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
     return true;
 }
 
-void runtime::interpreter::INTBackend::generate_calls(const element::Type& type,
-                                                      const NodeWrapper& op,
-                                                      const vector<void*>& outputs,
-                                                      const vector<const void*>& inputs,
-                                                      FunctionInstance& instance)
+void runtime::interpreter::INTExecutable::generate_calls(const element::Type& type,
+                                                         const NodeWrapper& op,
+                                                         const vector<void*>& outputs,
+                                                         const vector<const void*>& inputs)
 {
     stringstream ss;
     switch (type.get_type_enum())
     {
-    case element::Type_t::boolean: op_engine<char>(op, outputs, inputs, instance); break;
-    case element::Type_t::f32: op_engine<float>(op, outputs, inputs, instance); break;
-    case element::Type_t::f64: op_engine<double>(op, outputs, inputs, instance); break;
-    case element::Type_t::i8: op_engine<int8_t>(op, outputs, inputs, instance); break;
-    case element::Type_t::i16: op_engine<int16_t>(op, outputs, inputs, instance); break;
-    case element::Type_t::i32: op_engine<int32_t>(op, outputs, inputs, instance); break;
-    case element::Type_t::i64: op_engine<int64_t>(op, outputs, inputs, instance); break;
-    case element::Type_t::u8: op_engine<uint8_t>(op, outputs, inputs, instance); break;
-    case element::Type_t::u16: op_engine<uint16_t>(op, outputs, inputs, instance); break;
-    case element::Type_t::u32: op_engine<uint32_t>(op, outputs, inputs, instance); break;
-    case element::Type_t::u64: op_engine<uint64_t>(op, outputs, inputs, instance); break;
+    case element::Type_t::boolean: op_engine<char>(op, outputs, inputs); break;
+    case element::Type_t::f32: op_engine<float>(op, outputs, inputs); break;
+    case element::Type_t::f64: op_engine<double>(op, outputs, inputs); break;
+    case element::Type_t::i8: op_engine<int8_t>(op, outputs, inputs); break;
+    case element::Type_t::i16: op_engine<int16_t>(op, outputs, inputs); break;
+    case element::Type_t::i32: op_engine<int32_t>(op, outputs, inputs); break;
+    case element::Type_t::i64: op_engine<int64_t>(op, outputs, inputs); break;
+    case element::Type_t::u8: op_engine<uint8_t>(op, outputs, inputs); break;
+    case element::Type_t::u16: op_engine<uint16_t>(op, outputs, inputs); break;
+    case element::Type_t::u32: op_engine<uint32_t>(op, outputs, inputs); break;
+    case element::Type_t::u64: op_engine<uint64_t>(op, outputs, inputs); break;
     case element::Type_t::undefined:
     case element::Type_t::dynamic:
     case element::Type_t::bf16:
@@ -270,25 +262,11 @@ void runtime::interpreter::INTBackend::generate_calls(const element::Type& type,
     }
 }
 
-void runtime::interpreter::INTBackend::set_nan_check(shared_ptr<Function> func, bool enable)
-{
-    FunctionInstance& instance = m_function_map[func];
-    instance.m_nan_check_enabled = enable;
-}
-
-void runtime::interpreter::INTBackend::enable_performance_data(shared_ptr<Function> func,
-                                                               bool enable)
-{
-    FunctionInstance& instance = m_function_map[func];
-    instance.m_performance_counters_enabled = enable;
-}
-
 vector<runtime::PerformanceCounter>
-    runtime::interpreter::INTBackend::get_performance_data(shared_ptr<Function> func) const
+    runtime::interpreter::INTExecutable::get_performance_data() const
 {
     vector<runtime::PerformanceCounter> rc;
-    const FunctionInstance& instance = m_function_map.at(func);
-    for (const pair<const Node*, stopwatch> p : instance.m_timer_map)
+    for (const pair<const Node*, stopwatch> p : m_timer_map)
     {
         rc.emplace_back(p.first->get_name().c_str(),
                         p.second.get_total_microseconds(),
@@ -297,7 +275,7 @@ vector<runtime::PerformanceCounter>
     return rc;
 }
 
-void runtime::interpreter::INTBackend::perform_nan_check(
+void runtime::interpreter::INTExecutable::perform_nan_check(
     const vector<shared_ptr<HostTensor>>& tensors, const Node* op)
 {
     size_t arg_number = 1;
