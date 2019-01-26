@@ -1,0 +1,43 @@
+# ******************************************************************************
+# Copyright 2017-2019 Intel Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ******************************************************************************
+
+# Environment to build manylinux1 ngraph-core
+
+FROM quay.io/pypa/manylinux1_x86_64
+
+RUN curl -O https://cmake.org/files/v3.5/cmake-3.5.2-Linux-x86_64.tar.gz
+RUN tar -xf cmake-3.5.2-Linux-x86_64.tar.gz
+RUN ln -s /cmake-3.5.2-Linux-x86_64/bin/cmake /usr/local/bin/cmake
+RUN /opt/python/cp27-cp27mu/bin/pip install virtualenv
+RUN ln -s /opt/python/cp27-cp27mu/bin/python /usr/local/bin/python
+RUN ln -s /opt/python/cp27-cp27mu/bin/python2 /usr/local/bin/python2
+RUN ln -s /opt/python/cp27-cp27mu/bin/python2.7 /usr/local/bin/python2.7
+RUN ln -s /opt/python/cp27-cp27mu/bin/pip /usr/local/bin/pip
+RUN ln -s /opt/python/cp27-cp27mu/bin/virtualenv /usr/local/bin/virtualenv
+RUN cd /opt/rh/devtoolset-2/root/usr/lib/gcc && ln -s x86_64-CentOS-linux x86_64-redhat-linux
+RUN cd /opt/rh/devtoolset-2/root/usr/include/c++/4.8.2 && ln -s x86_64-CentOS-linux x86_64-redhat-linux
+RUN cd /opt/rh/devtoolset-2/root/usr/libexec/gcc && ln -s x86_64-CentOS-linux x86_64-redhat-linux
+RUN git clone --depth 1 --single-branch -b llvmorg-7.0.1 https://github.com/llvm/llvm-project.git
+RUN cd llvm-project/llvm && cp CMakeLists.txt CMakeLists.txt.orig && \
+  sed '132,137d' CMakeLists.txt.orig > CMakeLists.txt
+RUN cd llvm-project && mkdir build && cd build && \
+  cmake -DCMAKE_INSTALL_PREFIX=/opt/rh/devtoolset-2/root/usr -DCMAKE_BUILD_TYPE=Release \
+    -DLLVM_ENABLE_PROJECTS="clang;openmp" -DLLVM_INCLUDE_TESTS=OFF \
+    -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_BUILD_TOOLS=OFF -DLLVM_TARGETS_TO_BUILD=X86 \
+    -DLIBOMP_OMPT_SUPPORT=OFF ../llvm && \
+  make -j`grep processor /proc/cpuinfo | wc -l` install
+
+WORKDIR /home
