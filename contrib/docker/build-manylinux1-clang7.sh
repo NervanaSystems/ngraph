@@ -18,6 +18,6 @@ set -e
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-CC=clang CXX=clang++ cmake -DNGRAPH_PYTHON_BUILD_ENABLE=TRUE -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DNGRAPH_MANYLINUX_ENABLE=TRUE ${SCRIPT_DIR}/../..
+CC=clang CXX=clang++ CXXFLAGS="-std=c++11" cmake -DNGRAPH_PYTHON_BUILD_ENABLE=TRUE -DNGRAPH_MANYLINUX_ENABLE=TRUE ${SCRIPT_DIR}/../..
 lcores=$(grep processor /proc/cpuinfo | wc -l)
 make -j$lcores python_wheel
