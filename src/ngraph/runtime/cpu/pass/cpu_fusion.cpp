@@ -21,6 +21,7 @@
 #include <unordered_set>
 
 #include "cpu_fusion.hpp"
+#include "ngraph/builder/make_constant.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/add.hpp"
@@ -980,6 +981,188 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_relu()
     };
 
     auto m = std::make_shared<pattern::Matcher>(prelu, callback, "CPUFusion.ConvBiasRelu");
+    this->add_matcher(m);
+}
+
+void ngraph::runtime::cpu::pass::CPUFusion::construct_qconv_dq_bias()
+{
+    Shape shape{2, 2, 1, 1};
+    auto data_batch = std::make_shared<pattern::op::Label>(element::i8, shape);
+    auto filters = std::make_shared<pattern::op::Label>(element::i8, shape);
+    auto requantization_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto input_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto filter_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto bias = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto dq_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto dq_zero_point = std::make_shared<pattern::op::Label>(element::i8, Shape{});
+    auto constant = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto reshape =
+        std::make_shared<op::Reshape>(constant, AxisVector{0, 1, 2, 3}, Shape{2, 2, 1, 1});
+    auto pbroadcast = std::make_shared<op::Broadcast>(reshape, shape, AxisSet{});
+
+    auto qconv = std::make_shared<op::QuantizedConvolution>(data_batch,
+                                                            filters,
+                                                            Strides{1, 1},
+                                                            Strides{1, 1},
+                                                            CoordinateDiff{0, 0},
+                                                            CoordinateDiff{0, 0},
+                                                            Strides{1, 1},
+                                                            requantization_scale,
+                                                            input_scale,
+                                                            filter_scale);
+
+    auto qconv_quant_label =
+        std::make_shared<pattern::op::Label>(qconv, nullptr, NodeVector{qconv});
+    auto dq = std::make_shared<op::Dequantize>(
+        qconv_quant_label, dq_scale, dq_zero_point, element::f32, AxisSet{});
+    auto reshape_a = std::make_shared<op::Reshape>(dq, AxisVector{0, 1, 2, 3}, Shape{2, 2, 1, 1});
+    auto reshape_b =
+        std::make_shared<op::Reshape>(reshape_a, AxisVector{0, 1, 2, 3}, Shape{2, 2, 1, 1});
+    auto pbroadcast_a = std::make_shared<op::Broadcast>(reshape_b, shape, AxisSet{});
+    auto qonv_dq_bias = pbroadcast + pbroadcast_a;
+
+    ngraph::pattern::graph_rewrite_callback callback = [qconv_quant_label,
+                                                        constant](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for construct_conv_bias against node = "
+                     << m.get_match_root()->get_name();
+        std::cout << "IN PATTERN 2" << std::endl;
+        auto pattern_map = m.get_pattern_map();
+        auto qconv =
+            std::static_pointer_cast<op::QuantizedConvolution>(pattern_map[qconv_quant_label]);
+        auto bias = pattern_map[constant];
+        auto bias_shape = bias->get_shape();
+        auto input_scale = qconv->get_argument(3);
+        auto filter_scale = qconv->get_argument(4);
+
+        if (bias->get_users().size() > 1)
+        {
+            std::cout << "BIAS MORE THAN ONE USER" << std::endl;
+        }
+        if (bias->get_element_type() == element::f32)
+        {
+            auto zero = ngraph::builder::make_constant(element::i32, Shape{}, 0);
+            AxisSet quantization_axes;
+            auto range = ngraph::builder::make_constant(element::f32,
+                                                        Shape{},
+                                                        std::numeric_limits<uint8_t>::max() *
+                                                            std::numeric_limits<int8_t>::max());
+            auto bias_scale = (input_scale * filter_scale) / range;
+            op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+
+            bias = std::make_shared<op::Quantize>(
+                bias, bias_scale, zero, element::i32, quantization_axes, round_mode);
+        }
+
+        auto qconv_bias =
+            std::make_shared<op::QuantizedConvolutionBias>(qconv->get_argument(0),
+                                                           qconv->get_argument(1),
+                                                           bias,
+                                                           qconv->get_window_movement_strides(),
+                                                           qconv->get_window_dilation_strides(),
+                                                           qconv->get_padding_below(),
+                                                           qconv->get_padding_above(),
+                                                           qconv->get_data_dilation_strides(),
+                                                           qconv->get_argument(2),
+                                                           false);
+        ngraph::replace_node(m.get_match_root(), qconv_bias);
+        return true;
+    };
+    auto m =
+        std::make_shared<ngraph::pattern::Matcher>(qonv_dq_bias, callback, "CPUFusion.QConvBias");
+    this->add_matcher(m);
+}
+
+void ngraph::runtime::cpu::pass::CPUFusionQuant::construct_qconv_bias_relu()
+{
+    Shape shape{2, 2, 1, 1};
+    auto data_batch = std::make_shared<pattern::op::Label>(element::i8, shape);
+    auto filters = std::make_shared<pattern::op::Label>(element::i8, shape);
+    auto requantization_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto input_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto filter_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto bias = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto dq_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto dq_zero_point = std::make_shared<pattern::op::Label>(element::i8, Shape{});
+    auto q_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto q_zero_point = std::make_shared<pattern::op::Label>(element::u8, Shape{});
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+    auto constant = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto reshape =
+        std::make_shared<op::Reshape>(constant, AxisVector{0, 1, 2, 3}, Shape{2, 2, 1, 1});
+    auto pbroadcast = std::make_shared<op::Broadcast>(reshape, shape, AxisSet{});
+
+    auto qconv = std::make_shared<op::QuantizedConvolution>(data_batch,
+                                                            filters,
+                                                            Strides{1, 1},
+                                                            Strides{1, 1},
+                                                            CoordinateDiff{0, 0},
+                                                            CoordinateDiff{0, 0},
+                                                            Strides{1, 1},
+                                                            requantization_scale,
+                                                            input_scale,
+                                                            filter_scale);
+
+    auto qconv_quant_label =
+        std::make_shared<pattern::op::Label>(qconv, nullptr, NodeVector{qconv});
+    auto dq = std::make_shared<op::Dequantize>(
+        qconv_quant_label, dq_scale, dq_zero_point, element::f32, AxisSet{});
+    auto reshape_a = std::make_shared<op::Reshape>(dq, AxisVector{0, 1, 2, 3}, Shape{2, 2, 1, 1});
+    auto reshape_b =
+        std::make_shared<op::Reshape>(reshape_a, AxisVector{0, 1, 2, 3}, Shape{2, 2, 1, 1});
+    auto pbroadcast_a = std::make_shared<op::Broadcast>(reshape_b, shape, AxisSet{});
+    auto qonv_dq_bias = pbroadcast + pbroadcast_a;
+    auto relu = std::make_shared<op::Relu>(qonv_dq_bias);
+    auto q = std::make_shared<op::Quantize>(
+        relu, q_scale, q_zero_point, element::u8, AxisSet{}, round_mode);
+    auto reshape_c = std::make_shared<op::Reshape>(q, AxisVector{0, 1, 2, 3}, Shape{2, 2, 1, 1});
+
+    ngraph::pattern::graph_rewrite_callback callback = [qconv_quant_label,
+                                                        constant](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for construct_conv_bias against node = "
+                     << m.get_match_root()->get_name();
+        std::cout << "IN PATTERN 1" << std::endl;
+        auto pattern_map = m.get_pattern_map();
+        auto qconv =
+            std::static_pointer_cast<op::QuantizedConvolution>(pattern_map[qconv_quant_label]);
+        auto bias = pattern_map[constant];
+        auto bias_shape = bias->get_shape();
+        auto input_scale = qconv->get_argument(3);
+        auto filter_scale = qconv->get_argument(4);
+
+        if (bias->get_users().size() > 1)
+        {
+            std::cout << "BIAS MORE THAN ONE USER" << std::endl;
+        }
+        if (bias->get_element_type() == element::f32)
+        {
+            auto zero = ngraph::builder::make_constant(element::i32, Shape{}, 0);
+            AxisSet quantization_axes;
+            auto range = ngraph::builder::make_constant(element::f32,
+                                                        Shape{},
+                                                        std::numeric_limits<uint8_t>::max() *
+                                                            std::numeric_limits<int8_t>::max());
+            auto bias_scale = (input_scale * filter_scale) / range;
+            op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+
+            bias = std::make_shared<op::Quantize>(
+                bias, bias_scale, zero, element::i32, quantization_axes, round_mode);
+        }
+
+        auto qconv_bias =
+            std::make_shared<op::QuantizedConvolutionBias>(qconv->get_argument(0),
+                                                           qconv->get_argument(1),
+                                                           bias,
+                                                           qconv->get_window_movement_strides(),
+                                                           qconv->get_window_dilation_strides(),
+                                                           qconv->get_padding_below(),
+                                                           qconv->get_padding_above(),
+                                                           qconv->get_data_dilation_strides(),
+                                                           qconv->get_argument(2),
+                                                           true);
+        ngraph::replace_node(m.get_match_root(), qconv_bias);
+        return true;
+    };
+    auto m = std::make_shared<ngraph::pattern::Matcher>(reshape_c, callback, "CPUFusion.QConvBias");
     this->add_matcher(m);
 }
 
