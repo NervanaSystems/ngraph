@@ -37,6 +37,8 @@
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
+#include "ngraph/runtime/cpu/op/group_conv.hpp"
+#include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -73,7 +75,7 @@ namespace ngraph
                 const std::vector<mkldnn::primitive*>& get_mkldnn_primitives() const;
                 const std::vector<char*>& get_mkldnn_workspaces();
 
-                size_t primitive_init(size_t count);
+                size_t primitive_init(size_t count, bool new_workspace = false);
                 size_t insert_primitive(mkldnn::primitive* primitive);
                 size_t insert_workspace(std::unique_ptr<MKLDNNWorkspace>& workspace);
                 const std::vector<size_t>& get_primitive_deps(size_t index) const;
@@ -399,6 +401,15 @@ namespace ngraph
                                               const ngraph::Shape& padding_below,
                                               const ngraph::Shape& padding_above);
 
+                void pooling_backward(mkldnn::algorithm pooling_algorithm,
+                                      const mkldnn::memory::desc& diff_dst_desc,
+                                      const mkldnn::memory::desc& diff_src_desc,
+                                      const ngraph::Strides& window_strides,
+                                      const ngraph::Shape& window_shape,
+                                      const ngraph::Shape& padding_below,
+                                      const ngraph::Shape& padding_above,
+                                      size_t pool_index);
+
                 size_t build_max_pooling_with_indices_forward(mkldnn::algorithm pooling_algorithm,
                                                               const mkldnn::memory::desc& src_desc,
                                                               const mkldnn::memory::desc& dst_desc,
@@ -406,6 +417,15 @@ namespace ngraph
                                                               const ngraph::Shape& window_shape,
                                                               const ngraph::Shape& padding_below,
                                                               const ngraph::Shape& padding_above);
+
+                void max_pooling_with_indices_forward(mkldnn::algorithm pooling_algorithm,
+                                                      const mkldnn::memory::desc& src_desc,
+                                                      const mkldnn::memory::desc& dst_desc,
+                                                      const ngraph::Strides& window_strides,
+                                                      const ngraph::Shape& window_shape,
+                                                      const ngraph::Shape& padding_below,
+                                                      const ngraph::Shape& padding_above,
+                                                      size_t max_pool_index);
 
                 size_t build_max_pooling_backward(mkldnn::algorithm pooling_algorithm,
                                                   const mkldnn::memory::desc& fprop_src_desc,
@@ -416,6 +436,17 @@ namespace ngraph
                                                   const ngraph::Shape& padding_below,
                                                   const ngraph::Shape& padding_above);
 
+                void max_pooling_backward(mkldnn::algorithm pooling_algorithm,
+                                          const mkldnn::memory::desc& fprop_src_desc,
+                                          const mkldnn::memory::desc& diff_dst_desc,
+                                          const mkldnn::memory::desc& diff_src_desc,
+                                          const ngraph::Strides& window_strides,
+                                          const ngraph::Shape& window_shape,
+                                          const ngraph::Shape& padding_below,
+                                          const ngraph::Shape& padding_above,
+                                          size_t fwd_pool_index,
+                                          size_t bwd_pool_index);
+
                 size_t build_max_pooling_with_indices_backward(
                     mkldnn::algorithm pooling_algorithm,
                     const mkldnn::memory::desc& diff_dst_desc,
@@ -424,6 +455,15 @@ namespace ngraph
                     const ngraph::Shape& window_shape,
                     const ngraph::Shape& padding_below,
                     const ngraph::Shape& padding_above);
+
+                void max_pooling_with_indices_backward(mkldnn::algorithm pooling_algorithm,
+                                                       const mkldnn::memory::desc& diff_dst_desc,
+                                                       const mkldnn::memory::desc& diff_src_desc,
+                                                       const ngraph::Strides& window_strides,
+                                                       const ngraph::Shape& window_shape,
+                                                       const ngraph::Shape& padding_below,
+                                                       const ngraph::Shape& padding_above,
+                                                       size_t max_pool_index);
 
                 size_t build_reorder(const mkldnn::memory::desc& input_desc,
                                      const mkldnn::memory::desc& result_desc);
@@ -715,7 +755,8 @@ namespace ngraph
                 template <typename OP,
                           typename std::enable_if<
                               (std::is_same<OP, ngraph::op::Convolution>::value ||
-                               std::is_same<OP, ngraph::op::QuantizedConvolution>::value),
+                               std::is_same<OP, ngraph::op::QuantizedConvolution>::value ||
+                               std::is_same<OP, ngraph::op::GroupConvolution>::value),
                               std::nullptr_t>::type = nullptr>
                 bool has_relu(const ngraph::Node* node)
                 {
@@ -725,7 +766,8 @@ namespace ngraph
                 template <typename OP,
                           typename std::enable_if<
                               (!std::is_same<OP, ngraph::op::Convolution>::value &&
-                               !std::is_same<OP, ngraph::op::QuantizedConvolution>::value),
+                               !std::is_same<OP, ngraph::op::QuantizedConvolution>::value &&
+                               !std::is_same<OP, ngraph::op::GroupConvolution>::value),
                               std::nullptr_t>::type = nullptr>
                 bool has_relu(const ngraph::Node* node)
                 {
@@ -739,7 +781,8 @@ namespace ngraph
                         std::is_same<OP, ngraph::op::ConvolutionBiasAdd>() ||
                         std::is_same<OP, ngraph::op::QuantizedConvolutionBias>() ||
                         std::is_same<OP, ngraph::op::QuantizedConvolutionBiasAdd>() ||
-                        std::is_same<OP, ngraph::op::QuantizedConvolutionBiasSignedAdd>())
+                        std::is_same<OP, ngraph::op::QuantizedConvolutionBiasSignedAdd>() ||
+                        std::is_same<OP, ngraph::op::GroupConvolutionBias>())
                     {
                         return true;
                     }
@@ -874,7 +917,7 @@ namespace ngraph
                 void convolution_forward(const mkldnn::convolution_forward::desc& desc,
                                          const mkldnn::primitive_attr& attr,
                                          const mkldnn::engine& engine,
-                                         size_t& conv_idx)
+                                         size_t conv_idx)
                 {
                     size_t input_idx, weights_idx, results_idx, bias_idx;
                     input_idx = m_primitive_deps[conv_idx][0];
@@ -916,8 +959,6 @@ namespace ngraph
 
                     m_mkldnn_primitives[conv_idx] = prim;
                 }
-
-                size_t elementwise_add_init();
 
             private:
                 std::vector<mkldnn::primitive*> m_mkldnn_primitives;

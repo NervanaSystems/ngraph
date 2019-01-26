@@ -145,20 +145,33 @@ namespace ngraph
                     auto diff_dst_desc = runtime::cpu::mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto diff_src_desc = runtime::cpu::mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                    size_t avg_pool_index = mkldnn_emitter->build_pooling_backward(
-                        (apb->get_include_padding_in_avg_computation()
-                             ? mkldnn::algorithm::pooling_avg_include_padding
-                             : mkldnn::algorithm::pooling_avg_exclude_padding),
-                        diff_dst_desc,
-                        diff_src_desc,
-                        apb->get_window_movement_strides(),
-                        apb->get_window_shape(),
-                        apb->get_padding_below(),
-                        apb->get_padding_above());
-
+                    size_t avg_pool_index = mkldnn_emitter->primitive_init(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(avg_pool_index);
-                    auto functor = [&, avg_pool_index](CPURuntimeContext* ctx,
-                                                       CPUExecutionContext* ectx) {
+
+                    auto functor = [&,
+                                    include_padding_in_avg_computation,
+                                    diff_dst_desc,
+                                    diff_src_desc,
+                                    window_movement_strides,
+                                    window_shape,
+                                    padding_below,
+                                    padding_above,
+                                    avg_pool_index](CPURuntimeContext* ctx,
+                                                    CPUExecutionContext* ectx) {
+                        if (ctx->first_iteration)
+                        {
+                            mkldnn_emitter->pooling_backward(
+                                (include_padding_in_avg_computation
+                                     ? mkldnn::algorithm::pooling_avg_include_padding
+                                     : mkldnn::algorithm::pooling_avg_exclude_padding),
+                                diff_dst_desc,
+                                diff_src_desc,
+                                window_movement_strides,
+                                window_shape,
+                                padding_below,
+                                padding_above,
+                                avg_pool_index);
+                        }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], delta_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, avg_pool_index);

@@ -138,36 +138,54 @@ namespace ngraph
                     auto diff_dst_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
                     auto diff_src_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                    size_t max_pool_index = mkldnn_emitter->build_max_pooling_backward(
-                        mkldnn::algorithm::pooling_max,
-                        fprop_src_desc,
-                        diff_dst_desc,
-                        diff_src_desc,
-                        mpb->get_window_movement_strides(),
-                        mpb->get_window_shape(),
-                        mpb->get_padding_below(),
-                        mpb->get_padding_above());
+                    size_t fwd_pool_index = mkldnn_emitter->primitive_init(4, true);
+                    auto& fdeps = mkldnn_emitter->get_primitive_deps(fwd_pool_index);
 
-                    auto& fdeps = mkldnn_emitter->get_primitive_deps(max_pool_index - 1);
-                    auto functor_fprop = [&, max_pool_index](CPURuntimeContext* ctx,
+                    auto functor_fprop = [&, fwd_pool_index](CPURuntimeContext* ctx,
                                                              CPUExecutionContext* ectx) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, fdeps[0], arg_fwd_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, fdeps[1], out_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, fdeps[2], ctx->mkldnn_workspaces[fdeps[3]]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, max_pool_index - 1);
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, fwd_pool_index);
                     };
-                    auto& bdeps = mkldnn_emitter->get_primitive_deps(max_pool_index);
-                    auto functor_bprop = [&, max_pool_index](CPURuntimeContext* ctx,
+
+                    size_t bwd_pool_index = mkldnn_emitter->primitive_init(4, true);
+                    auto& bdeps = mkldnn_emitter->get_primitive_deps(bwd_pool_index);
+                    auto functor_bprop = [&, bwd_pool_index](CPURuntimeContext* ctx,
                                                              CPUExecutionContext* ectx) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, bdeps[0], delta_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, bdeps[1], ctx->mkldnn_workspaces[bdeps[3]]);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, bdeps[2], out_tensor);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, max_pool_index);
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, bwd_pool_index);
                     };
-                    auto functor = [&, functor_fprop, functor_bprop](CPURuntimeContext* ctx,
-                                                                     CPUExecutionContext* ectx) {
+                    auto functor = [&,
+                                    fprop_src_desc,
+                                    diff_dst_desc,
+                                    diff_src_desc,
+                                    window_movement_strides,
+                                    window_shape,
+                                    padding_below,
+                                    padding_above,
+                                    fwd_pool_index,
+                                    bwd_pool_index,
+                                    functor_fprop,
+                                    functor_bprop](CPURuntimeContext* ctx,
+                                                   CPUExecutionContext* ectx) {
+                        if (ctx->first_iteration)
+                        {
+                            mkldnn_emitter->max_pooling_backward(mkldnn::algorithm::pooling_max,
+                                                                 fprop_src_desc,
+                                                                 diff_dst_desc,
+                                                                 diff_src_desc,
+                                                                 window_movement_strides,
+                                                                 window_shape,
+                                                                 padding_below,
+                                                                 padding_above,
+                                                                 fwd_pool_index,
+                                                                 bwd_pool_index);
+                        }
                         functor_fprop(ctx, ectx);
                         functor_bprop(ctx, ectx);
                     };
@@ -220,23 +238,38 @@ namespace ngraph
                 auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
                 auto& out1_tensor = external_function->get_tensor_data(out[1].get_name());
 
+                auto window_shape = max_pool->get_window_shape();
+                auto window_movement_strides = max_pool->get_window_movement_strides();
+                auto padding_below = max_pool->get_padding_below();
+                auto padding_above = max_pool->get_padding_above();
+
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 auto input_desc = runtime::cpu::mkldnn_utils::get_input_mkldnn_md(node, 0);
                 auto result_desc = runtime::cpu::mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                size_t max_pool_index = mkldnn_emitter->build_max_pooling_with_indices_forward(
-                    mkldnn::algorithm::pooling_max,
-                    input_desc,
-                    result_desc,
-                    max_pool->get_window_movement_strides(),
-                    max_pool->get_window_shape(),
-                    max_pool->get_padding_below(),
-                    max_pool->get_padding_above());
-
+                size_t max_pool_index = mkldnn_emitter->primitive_init(4);
                 auto& deps = mkldnn_emitter->get_primitive_deps(max_pool_index);
 
-                auto functor = [&, max_pool_index](CPURuntimeContext* ctx,
-                                                   CPUExecutionContext* ectx) {
+                auto functor = [&,
+                                input_desc,
+                                result_desc,
+                                window_movement_strides,
+                                window_shape,
+                                padding_below,
+                                padding_above,
+                                max_pool_index](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    if (ctx->first_iteration)
+                    {
+                        mkldnn_emitter->max_pooling_with_indices_forward(
+                            mkldnn::algorithm::pooling_max,
+                            input_desc,
+                            result_desc,
+                            window_movement_strides,
+                            window_shape,
+                            padding_below,
+                            padding_above,
+                            max_pool_index);
+                    }
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out0_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out1_tensor);
@@ -253,31 +286,46 @@ namespace ngraph
                     throw ngraph_error("MaxPoolWithIndicesBackprop isn't supported");
                 }
 
+                auto mpb = static_cast<const ngraph::op::MaxPoolWithIndicesBackprop*>(node);
+
                 auto& functors = external_function->get_functors();
 
                 auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
                 auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
                 auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
 
-                auto mpb = static_cast<const ngraph::op::MaxPoolWithIndicesBackprop*>(node);
+                auto window_shape = mpb->get_window_shape();
+                auto window_movement_strides = mpb->get_window_movement_strides();
+                auto padding_below = mpb->get_padding_below();
+                auto padding_above = mpb->get_padding_above();
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 auto diff_dst_desc = runtime::cpu::mkldnn_utils::get_input_mkldnn_md(node, 1);
                 auto diff_src_desc = runtime::cpu::mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                size_t max_pool_index = mkldnn_emitter->build_max_pooling_with_indices_backward(
-                    mkldnn::algorithm::pooling_max,
-                    diff_dst_desc,
-                    diff_src_desc,
-                    mpb->get_window_movement_strides(),
-                    mpb->get_window_shape(),
-                    mpb->get_padding_below(),
-                    mpb->get_padding_above());
-
+                size_t max_pool_index = mkldnn_emitter->primitive_init(4);
                 auto& deps = mkldnn_emitter->get_primitive_deps(max_pool_index);
 
-                auto functor = [&, max_pool_index](CPURuntimeContext* ctx,
-                                                   CPUExecutionContext* ectx) {
+                auto functor = [&,
+                                diff_dst_desc,
+                                diff_src_desc,
+                                window_movement_strides,
+                                window_shape,
+                                padding_below,
+                                padding_above,
+                                max_pool_index](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    if (ctx->first_iteration)
+                    {
+                        mkldnn_emitter->max_pooling_with_indices_backward(
+                            mkldnn::algorithm::pooling_max,
+                            diff_dst_desc,
+                            diff_src_desc,
+                            window_movement_strides,
+                            window_shape,
+                            padding_below,
+                            padding_above,
+                            max_pool_index);
+                    }
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg1_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg2_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out_tensor);

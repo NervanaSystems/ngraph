@@ -659,6 +659,44 @@ size_t MKLDNNEmitter::build_pooling_backward(mkldnn::algorithm pooling_algorithm
     return primitive_index;
 }
 
+void MKLDNNEmitter::pooling_backward(mkldnn::algorithm pooling_algorithm,
+                                     const mkldnn::memory::desc& diff_dst_desc,
+                                     const mkldnn::memory::desc& diff_src_desc,
+                                     const ngraph::Strides& window_strides,
+                                     const ngraph::Shape& window_shape,
+                                     const ngraph::Shape& padding_below,
+                                     const ngraph::Shape& padding_above,
+                                     size_t pool_index)
+{
+    size_t input_index = m_primitive_deps[pool_index][0];
+    build_memory_primitive(diff_dst_desc, input_index);
+    size_t result_index = m_primitive_deps[pool_index][1];
+    build_memory_primitive(diff_src_desc, result_index);
+
+    m_mkldnn_primitives[pool_index] = new mkldnn::pooling_backward(
+        {{pooling_algorithm,
+          diff_src_desc,
+          diff_dst_desc,
+          mkldnn::memory::dims(window_strides.begin(), window_strides.end()),
+          mkldnn::memory::dims(window_shape.begin(), window_shape.end()),
+          mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
+          mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
+          mkldnn::padding_kind::zero},
+         executor::global_cpu_engine,
+         {{mkldnn::prop_kind::forward_training,
+           pooling_algorithm,
+           diff_src_desc,
+           diff_dst_desc,
+           mkldnn::memory::dims(window_strides.begin(), window_strides.end()),
+           mkldnn::memory::dims(window_shape.begin(), window_shape.end()),
+           mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
+           mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
+           mkldnn::padding_kind::zero},
+          executor::global_cpu_engine}},
+        *m_mkldnn_primitives[input_index],
+        *m_mkldnn_primitives[result_index]);
+}
+
 size_t MKLDNNEmitter::build_max_pooling_backward(mkldnn::algorithm pooling_algorithm,
                                                  const mkldnn::memory::desc& fprop_src_desc,
                                                  const mkldnn::memory::desc& diff_dst_desc,
@@ -720,6 +758,72 @@ size_t MKLDNNEmitter::build_max_pooling_backward(mkldnn::algorithm pooling_algor
     return bwd_primitive_index;
 }
 
+void MKLDNNEmitter::max_pooling_backward(mkldnn::algorithm pooling_algorithm,
+                                         const mkldnn::memory::desc& fprop_src_desc,
+                                         const mkldnn::memory::desc& diff_dst_desc,
+                                         const mkldnn::memory::desc& diff_src_desc,
+                                         const ngraph::Strides& window_strides,
+                                         const ngraph::Shape& window_shape,
+                                         const ngraph::Shape& padding_below,
+                                         const ngraph::Shape& padding_above,
+                                         size_t fwd_pool_index,
+                                         size_t bwd_pool_index)
+{
+    size_t fprop_src_index = m_primitive_deps[fwd_pool_index][0];
+    build_memory_primitive(fprop_src_desc, fprop_src_index);
+    size_t diff_dst_index = m_primitive_deps[bwd_pool_index][0];
+    build_memory_primitive(diff_dst_desc, diff_dst_index);
+    size_t diff_src_index = m_primitive_deps[fwd_pool_index][1];
+    build_memory_primitive(diff_src_desc, diff_src_index);
+    m_primitive_deps[bwd_pool_index][2] = diff_src_index;
+
+    mkldnn::pooling_forward::primitive_desc fwd_pd{
+        {mkldnn::prop_kind::forward_training,
+         pooling_algorithm,
+         diff_src_desc,
+         diff_dst_desc,
+         mkldnn::memory::dims(window_strides.begin(), window_strides.end()),
+         mkldnn::memory::dims(window_shape.begin(), window_shape.end()),
+         mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
+         mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
+         mkldnn::padding_kind::zero},
+        executor::global_cpu_engine};
+
+    size_t ws_index = m_primitive_deps[fwd_pool_index][1];
+    build_memory_primitive(fwd_pd.workspace_primitive_desc().desc(), ws_index);
+    m_primitive_deps[bwd_pool_index][1] = ws_index;
+
+    // Allocate workspace
+    // TODO (jbobba): Might need to align memory
+    auto ws = std::unique_ptr<MKLDNNWorkspace>(
+        new MKLDNNWorkspace(fwd_pd.workspace_primitive_desc().get_size()));
+    auto ws_buf_index = insert_workspace(ws);
+    m_primitive_deps[fwd_pool_index][3] = ws_buf_index;
+    m_primitive_deps[bwd_pool_index][3] = ws_buf_index;
+
+    m_mkldnn_primitives[fwd_pool_index] = new mkldnn::pooling_forward(
+        fwd_pd,
+        *m_mkldnn_primitives[fprop_src_index],
+        *m_mkldnn_primitives
+            [diff_src_index], // HACK - Uses diff_src buffer. Safe since diff_src > fprop_dst
+        *m_mkldnn_primitives[ws_index]);
+
+    m_mkldnn_primitives[bwd_pool_index] = new mkldnn::pooling_backward(
+        {{pooling_algorithm,
+          diff_src_desc,
+          diff_dst_desc,
+          mkldnn::memory::dims(window_strides.begin(), window_strides.end()),
+          mkldnn::memory::dims(window_shape.begin(), window_shape.end()),
+          mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
+          mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
+          mkldnn::padding_kind::zero},
+         executor::global_cpu_engine,
+         fwd_pd},
+        *m_mkldnn_primitives[diff_dst_index],
+        *m_mkldnn_primitives[ws_index],
+        *m_mkldnn_primitives[diff_src_index]);
+}
+
 size_t MKLDNNEmitter::build_max_pooling_with_indices_forward(mkldnn::algorithm pooling_algorithm,
                                                              const mkldnn::memory::desc& src_desc,
                                                              const mkldnn::memory::desc& dst_desc,
@@ -753,6 +857,42 @@ size_t MKLDNNEmitter::build_max_pooling_with_indices_forward(mkldnn::algorithm p
 
     m_primitive_deps[fwd_primitive_index] = {src_index, dst_index, ws_index};
     return fwd_primitive_index;
+}
+
+void MKLDNNEmitter::max_pooling_with_indices_forward(mkldnn::algorithm pooling_algorithm,
+                                                     const mkldnn::memory::desc& src_desc,
+                                                     const mkldnn::memory::desc& dst_desc,
+                                                     const ngraph::Strides& window_strides,
+                                                     const ngraph::Shape& window_shape,
+                                                     const ngraph::Shape& padding_below,
+                                                     const ngraph::Shape& padding_above,
+                                                     size_t max_pool_index)
+{
+    size_t src_index = m_primitive_deps[max_pool_index][0];
+    build_memory_primitive(src_desc, src_index);
+    size_t dst_index = m_primitive_deps[max_pool_index][1];
+    build_memory_primitive(dst_desc, dst_index);
+
+    mkldnn::pooling_forward::primitive_desc fwd_pd{
+        {mkldnn::prop_kind::forward_training,
+         pooling_algorithm,
+         src_desc,
+         dst_desc,
+         mkldnn::memory::dims(window_strides.begin(), window_strides.end()),
+         mkldnn::memory::dims(window_shape.begin(), window_shape.end()),
+         mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
+         mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
+         mkldnn::padding_kind::zero},
+        executor::global_cpu_engine};
+
+    size_t ws_index = m_primitive_deps[max_pool_index][2];
+    build_memory_primitive(fwd_pd.workspace_primitive_desc().desc(), ws_index);
+
+    m_mkldnn_primitives[max_pool_index] =
+        new mkldnn::pooling_forward(fwd_pd,
+                                    *m_mkldnn_primitives[src_index],
+                                    *m_mkldnn_primitives[dst_index],
+                                    *m_mkldnn_primitives[ws_index]);
 }
 
 size_t MKLDNNEmitter::build_max_pooling_with_indices_backward(
@@ -798,6 +938,51 @@ size_t MKLDNNEmitter::build_max_pooling_with_indices_backward(
 
     m_primitive_deps[bwd_primitive_index] = {diff_dst_index, fprop_ws_index, diff_src_index};
     return bwd_primitive_index;
+}
+
+void MKLDNNEmitter::max_pooling_with_indices_backward(mkldnn::algorithm pooling_algorithm,
+                                                      const mkldnn::memory::desc& diff_dst_desc,
+                                                      const mkldnn::memory::desc& diff_src_desc,
+                                                      const ngraph::Strides& window_strides,
+                                                      const ngraph::Shape& window_shape,
+                                                      const ngraph::Shape& padding_below,
+                                                      const ngraph::Shape& padding_above,
+                                                      size_t max_pool_index)
+{
+    size_t diff_dst_index = m_primitive_deps[max_pool_index][0];
+    build_memory_primitive(diff_dst_desc, diff_dst_index);
+    size_t diff_src_index = m_primitive_deps[max_pool_index][2];
+    build_memory_primitive(diff_src_desc, diff_src_index);
+
+    mkldnn::pooling_forward::primitive_desc fwd_pd{
+        {mkldnn::prop_kind::forward_training,
+         pooling_algorithm,
+         diff_src_desc,
+         diff_dst_desc,
+         mkldnn::memory::dims(window_strides.begin(), window_strides.end()),
+         mkldnn::memory::dims(window_shape.begin(), window_shape.end()),
+         mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
+         mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
+         mkldnn::padding_kind::zero},
+        executor::global_cpu_engine};
+
+    size_t fprop_ws_index = m_primitive_deps[max_pool_index][1];
+    build_memory_primitive(fwd_pd.workspace_primitive_desc().desc(), fprop_ws_index);
+
+    m_mkldnn_primitives[max_pool_index] = new mkldnn::pooling_backward(
+        {{pooling_algorithm,
+          diff_src_desc,
+          diff_dst_desc,
+          mkldnn::memory::dims(window_strides.begin(), window_strides.end()),
+          mkldnn::memory::dims(window_shape.begin(), window_shape.end()),
+          mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
+          mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
+          mkldnn::padding_kind::zero},
+         executor::global_cpu_engine,
+         fwd_pd},
+        *m_mkldnn_primitives[diff_dst_index],
+        *m_mkldnn_primitives[fprop_ws_index],
+        *m_mkldnn_primitives[diff_src_index]);
 }
 
 size_t MKLDNNEmitter::build_reorder(const mkldnn::memory::desc& input_desc,
@@ -1667,21 +1852,17 @@ size_t MKLDNNEmitter::convolution_forward_init(bool with_bias)
     return m_mkldnn_primitives.size() - 1;
 }
 
-size_t MKLDNNEmitter::elementwise_add_init()
-{
-    size_t size = m_mkldnn_primitives.size();
-    m_mkldnn_primitives.resize(size + 4, nullptr);
-    m_primitive_deps[m_mkldnn_primitives.size() - 1] = {size, size + 1, size + 2};
-    return m_mkldnn_primitives.size() - 1;
-}
-
-size_t MKLDNNEmitter::primitive_init(size_t count)
+size_t MKLDNNEmitter::primitive_init(size_t count, bool new_workspace)
 {
     size_t size = m_mkldnn_primitives.size();
     m_mkldnn_primitives.resize(size + count, nullptr);
     for (auto i = 0; i < count; i++)
     {
         m_primitive_deps[m_mkldnn_primitives.size() - 1].push_back(size + i);
+    }
+    if (new_workspace)
+    {
+        m_primitive_deps[m_mkldnn_primitives.size() - 1].push_back(0);
     }
     return m_mkldnn_primitives.size() - 1;
 }
