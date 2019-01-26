@@ -106,7 +106,7 @@ namespace ngraph
             std::shared_ptr<ngraph::Node>
                 get_ng_node(ParameterVector& parameters,
                             const std::map<std::string, Tensor>& initializers,
-                            const Weights& weights = {}) const
+                            const Weights& weights = Weights{}) const
             {
                 const auto it = initializers.find(get_name());
                 if (it != std::end(initializers))
