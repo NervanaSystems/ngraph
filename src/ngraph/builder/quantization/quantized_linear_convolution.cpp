@@ -17,6 +17,9 @@
 #include <memory>
 
 #include "ngraph/builder/quantization/quantized_linear_convolution.hpp"
+
+#include "ngraph/builder/make_constant.hpp"
+#include "ngraph/builder/quantization.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
@@ -80,6 +83,18 @@ namespace ngraph
                 // TODO: need to handle the case where offset is provided (assuming 0)
                 // TODO: need to establish cross-nGraph view of scale (mult or div)
                 auto requantization_scale = (input_scale * filter_scale) / output_scale;
+
+                if (bias->get_element_type() != element::i32)
+                {
+                    auto zero = make_constant(element::i32, input_scale->get_shape(), 0);
+                    AxisSet quantization_axes;
+                    auto bias_scale = input_scale * filter_scale;
+                    op::Quantize::RoundMode round_mode =
+                        op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+
+                    bias = make_shared<op::Quantize>(
+                        bias, bias_scale, zero, element::i32, quantization_axes, round_mode);
+                }
 
                 return make_shared<op::QuantizedConvolutionBias>(input,
                                                                  filter,
