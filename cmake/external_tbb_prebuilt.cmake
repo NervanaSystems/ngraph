@@ -16,10 +16,13 @@
 
 include(ExternalProject)
 
+set(ARCHIVE_FILE_BASE tbb2019_20181203oss)
 if (WIN32)
-    set(ARCHIVE_FILE_BASE tbb2019_20181203oss)
     set(TBB_FILE https://github.com/01org/tbb/releases/download/2019_U3/${ARCHIVE_FILE_BASE}_win.zip)
     set(TBB_SHA1_HASH 1989458a49e780d76248edac13b963f80c9a460c)
+elseif(APPLE)
+    set(TBB_FILE https://github.com/01org/tbb/releases/download/2019_U3/${ARCHIVE_FILE_BASE}_mac.tgz)
+    set(TBB_SHA1_HASH 36926fb46add578b88a5c7e19652b94bb612e4be)
 endif()
 
 ExternalProject_Add(
@@ -37,11 +40,26 @@ ExternalProject_Add(
 ExternalProject_Get_Property(ext_tbb SOURCE_DIR)
 set(SOURCE_DIR ${SOURCE_DIR}/${ARCHIVE_FILE_BASE})
 
-set(TBB_LINK_LIBS
-    ${SOURCE_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}clangTooling${CMAKE_SHARED_LIBRARY_SUFFIX}
-    ${SOURCE_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}clangTooling${CMAKE_SHARED_LIBRARY_SUFFIX}
-    ${SOURCE_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}clangTooling${CMAKE_SHARED_LIBRARY_SUFFIX}
-)
+if (WIN32)
+    set(TBB_LINK_LIBS
+        ${SOURCE_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}clangTooling${CMAKE_SHARED_LIBRARY_SUFFIX}
+    )
+elseif(APPLE)
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        set(TBB_LIB_NAME tbb_debug)
+    else()
+        set(TBB_LIB_NAME tbb)
+    endif()
+    set(TBB_LINK_LIBS
+        ${SOURCE_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}
+    )
+
+    add_custom_command(TARGET ext_tbb POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${SOURCE_DIR}/lib ${NGRAPH_BUILD_DIR}
+        COMMENT "Move tbb libraries to ngraph build directory"
+    )
+endif()
+
 
 add_library(libtbb INTERFACE)
 add_dependencies(libtbb ext_tbb)
