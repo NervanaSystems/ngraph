@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/hybrid/hybrid_util.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 
@@ -25,20 +26,20 @@ static Node* take_independent_node_with_placement_priority(
     map<size_t, deque<Node*>>& independent_nodes_by_placement, size_t placement)
 {
     Node* selected_node = nullptr;
-    if (independent_nodes_by_placement.find(placement) != independent_nodes_by_placement.end() &&
-        independent_nodes_by_placement.at(placement).size() != 0)
+    auto it = independent_nodes_by_placement.find(placement);
+    if (it != independent_nodes_by_placement.end() && it->second.size() != 0)
     {
-        selected_node = independent_nodes_by_placement.at(placement).front();
-        independent_nodes_by_placement.at(placement).pop_front();
+        selected_node = it->second.front();
+        it->second.pop_front();
     }
     else
     {
-        for (auto& it : independent_nodes_by_placement)
+        for (auto& p : independent_nodes_by_placement)
         {
-            if (it.second.size() > 0)
+            if (p.second.size() > 0)
             {
-                selected_node = it.second.front();
-                it.second.pop_front();
+                selected_node = p.second.front();
+                p.second.pop_front();
                 break;
             }
         }
@@ -196,14 +197,36 @@ pair<vector<shared_ptr<Function>>, unordered_map<shared_ptr<op::Parameter>, shar
     // Map from (intermediate) parameter to result node, for guiding data copy among devices
     unordered_map<shared_ptr<op::Parameter>, shared_ptr<op::Result>> map_parameter_to_result;
 
+    // for (auto x : f->get_parameters())
+    // {
+    //     NGRAPH_INFO << x->get_name();
+    // }
+    // cluster zero ends up with all of the Parameters, even if they are not needed in cluster
+    // zero. Remove all Parameters from cluster zero.
+    unordered_set<shared_ptr<Node>> new_cluster;
+    for (auto node : clusters[0])
+    {
+        if (node->description() != "Parameter")
+        {
+            new_cluster.insert(node);
+        }
+    }
+    clusters[0].swap(new_cluster);
+    for (auto node : clusters[0])
+    {
+        NGRAPH_INFO << node->get_name();
+    }
+
     // Split neighboring nodes if they belong to different clusters
     // TODO: optimization to group multiple result node from the same source,
     //       and to group the parameter node in the same cluster with the same result node source
     unordered_map<shared_ptr<Node>, unordered_set<shared_ptr<Node>>*> map_node_to_cluster;
     for (auto& cluster : clusters)
     {
+        NGRAPH_INFO << "***************** new cluster";
         for (auto node : cluster)
         {
+            NGRAPH_INFO << node->get_name();
             map_node_to_cluster[node] = &cluster;
         }
     }
@@ -215,6 +238,8 @@ pair<vector<shared_ptr<Function>>, unordered_map<shared_ptr<op::Parameter>, shar
             auto dst_cluster = map_node_to_cluster.at(dst_node);
             if (src_cluster != dst_cluster)
             {
+                NGRAPH_INFO << "src=" << src_node->description()
+                            << ", dst=" << dst_node->description();
                 // Split src_node and dst_node
                 map<shared_ptr<op::Result>, shared_ptr<op::Parameter>> res_par_pair_map =
                     ::insert_result_parameter_split(src_node, dst_node);
