@@ -313,7 +313,7 @@ void runtime::intelgpu::do_pad_operation(cldnn::topology& topology,
                                          const string& output_name,
                                          const Shape& output_shape,
                                          const element::Type& output_type,
-                                         const Shape& pad_below)
+                                         const CoordinateDiff& pad_below)
 {
     const string entry_point_name = "op_pad_" + output_name;
     const size_t cldnn_gws_lim = 3;
@@ -346,6 +346,10 @@ void runtime::intelgpu::do_pad_operation(cldnn::topology& topology,
                        << var_idx << ")\n";
             }
             writer.block_begin();
+
+            // FIXME: Padding can now be negative, and I am not sure I know precisely how to
+            // account for that here so I am throwing in an assert. --amprocte
+            NGRAPH_ASSERT(pad_below.at(i) >= 0);
 
             writer << "uint input_idx" << var_idx << " = i" << var_idx << " - "
                    << pad_below.at(var_idx) << " /*pad_below*/;\n";
