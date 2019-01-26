@@ -180,31 +180,41 @@ public:
     bool call(const std::vector<std::shared_ptr<Tensor>>& outputs,
               const std::vector<std::shared_ptr<Tensor>>& intputs) override;
 
-    void set_nan_check(bool value) { m_nan_check_enabled = value; }
+    void set_nan_check(bool enable);
+
     std::vector<PerformanceCounter> get_performance_data() const override;
 
 private:
     int get_alignment() const { return 64; }
-    bool m_nan_check_enabled = false;
-    bool m_performance_counters_enabled = false;
-    std::unordered_map<const Node*, stopwatch> m_timer_map;
-    std::vector<NodeWrapper> m_wrapped_nodes;
-    std::unordered_map<const Node*, std::shared_ptr<RNGState>> m_states;
-    std::shared_ptr<AlignedBuffer> m_temporary_memory;
+    class FunctionInstance
+    {
+    public:
+        bool m_is_compiled = false;
+        bool m_nan_check_enabled = false;
+        bool m_performance_counters_enabled = false;
+        std::unordered_map<const Node*, stopwatch> m_timer_map;
+        std::vector<NodeWrapper> m_wrapped_nodes;
+        std::unordered_map<const Node*, std::shared_ptr<RNGState>> m_states;
+        std::shared_ptr<AlignedBuffer> m_temporary_memory;
 
-    void* get_temporary_pointer(size_t offset) { return m_temporary_memory->get_ptr(offset); }
+        void* get_temporary_pointer(size_t offset) { return m_temporary_memory->get_ptr(offset); }
+    } m_function_instance;
+    std::set<std::string> m_unsupported_op_name_list;
+
     static void perform_nan_check(const std::vector<std::shared_ptr<HostTensor>>&,
                                   const Node* op = nullptr);
 
     void generate_calls(const element::Type& type,
                         const NodeWrapper& op,
                         const std::vector<void*>& outputs,
-                        const std::vector<const void*>& inputs);
+                        const std::vector<const void*>& inputs,
+                        FunctionInstance& instance);
 
     template <typename T>
     void op_engine(const NodeWrapper& node_wrapper,
                    const std::vector<void*>& out,
-                   const std::vector<const void*>& args)
+                   const std::vector<const void*>& args,
+                   FunctionInstance& instance)
     {
         const Node& node = node_wrapper.get_node();
         std::string node_op = node.description();
@@ -362,15 +372,15 @@ private:
         }
         case OP_TYPEID::GenerateMask:
         {
-            if (m_states.count(&node) == 0)
+            if (instance.m_states.count(&node) == 0)
             {
                 const op::GenerateMask* gm = static_cast<const op::GenerateMask*>(&node);
-                m_states[&node] = std::unique_ptr<ngraph::RNGState>(
+                instance.m_states[&node] = std::unique_ptr<ngraph::RNGState>(
                     ngraph::RNGState::create_rng_state(gm->get_seed(), gm->get_probability()));
             }
 
             bool training = static_cast<bool>(static_cast<const T*>(args[0])[0]);
-            auto state = m_states.at(&node).get();
+            auto state = instance.m_states.at(&node).get();
             size_t element_count = shape_size(node.get_output_shape(0));
             reference::generate_mask<T>(
                 reinterpret_cast<T*>(out[0]), element_count, state, training);
