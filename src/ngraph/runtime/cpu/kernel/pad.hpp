@@ -79,8 +79,10 @@ namespace ngraph
                         in_dims[i] = input_shape[i];
 
                         padding[i] = {
-                            padding_below[i] >= 0 ? (unsigned long int)padding_below[i] : 0,
-                            padding_above[i] >= 0 ? (unsigned long int)padding_above[i] : 0};
+                            padding_below[i] >= 0 ? static_cast<unsigned long int>(padding_below[i])
+                                                  : 0,
+                            padding_above[i] >= 0 ? static_cast<unsigned long int>(padding_above[i])
+                                                  : 0};
 
                         if (padding_below[i] < 0)
                         {
