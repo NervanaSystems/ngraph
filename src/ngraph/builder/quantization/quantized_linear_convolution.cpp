@@ -60,7 +60,8 @@ namespace ngraph
                                                              data_dilation_strides,
                                                              requantization_scale,
                                                              input_scale,
-                                                             filter_scale);
+                                                             filter_scale,
+                                                             output_scale);
             }
 
             std::shared_ptr<Node>
