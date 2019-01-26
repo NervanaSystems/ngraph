@@ -49,10 +49,6 @@ if (NGRAPH_GENERIC_CPU_ENABLE)
     target_link_libraries(nbench PRIVATE gcpu_backend)
 endif()
 
-if (NGRAPH_DISTRIBUTED_ENABLE AND NGRAPH_DISTRIBUTED_MLSL_ENABLE)
-    target_link_libraries(nbench PRIVATE libmlsl)
-endif()
-
 if(NGRAPH_DISTRIBUTED_ENABLE)
     if(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
         target_link_libraries(nbench PRIVATE libmlsl)

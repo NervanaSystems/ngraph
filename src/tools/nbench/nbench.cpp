@@ -423,6 +423,8 @@ OPTIONS
         cout << "============================================================================\n";
         print_results(aggregate_perf_data, timing_detail);
     }
-
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
+    dist.finalize();
+#endif
     return rc;
 }
