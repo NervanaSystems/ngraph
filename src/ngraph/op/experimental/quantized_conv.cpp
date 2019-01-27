@@ -30,8 +30,13 @@ op::QuantizedConvolution::QuantizedConvolution(const shared_ptr<Node>& data_batc
                                                const CoordinateDiff& padding_below,
                                                const CoordinateDiff& padding_above,
                                                const Strides& data_dilation_strides,
-                                               const std::shared_ptr<Node> scale)
-    : Op("QuantizedConvolution", check_single_output_args({data_batch, filters, scale}))
+                                               const std::shared_ptr<Node> scale,
+                                               const std::shared_ptr<Node> input_scale,
+                                               const std::shared_ptr<Node> filter_scale,
+                                               const std::shared_ptr<Node> output_scale)
+    : Op("QuantizedConvolution",
+         check_single_output_args(
+             {data_batch, filters, scale, input_scale, filter_scale, output_scale}))
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
     , m_padding_below(padding_below)

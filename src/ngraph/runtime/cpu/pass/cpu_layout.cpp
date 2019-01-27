@@ -451,6 +451,8 @@ namespace ngraph
                 template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::QuantizedConvolution)
                 {
+                    auto qconvolution =
+                        static_cast<const ngraph::op::QuantizedConvolution*>(node.get());
                     if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
                         vector<memory::desc> i_mds;
@@ -462,6 +464,16 @@ namespace ngraph
                             node.get(), 2, false, memory::format::x);
 
                         i_mds.push_back(scale_input_md);
+
+                        if (qconvolution->get_argument(3) != nullptr)
+                        {
+                            auto input_scale_md = mkldnn_utils::create_default_mkldnn_md(
+                                node.get(), 3, false, memory::format::x);
+                            auto filter_scale_md = mkldnn_utils::create_default_mkldnn_md(
+                                node.get(), 4, false, memory::format::x);
+                            i_mds.push_back(input_scale_md);
+                            i_mds.push_back(filter_scale_md);
+                        }
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
                     }
