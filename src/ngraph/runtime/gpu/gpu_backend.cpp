@@ -49,7 +49,6 @@ extern "C" void delete_backend(runtime::Backend* backend)
 
 runtime::gpu::GPU_Backend::GPU_Backend()
     : runtime::Backend()
-    , m_context(new BackendContext())
 {
 }
 
@@ -118,24 +117,43 @@ shared_ptr<runtime::Tensor> runtime::gpu::GPU_Backend::create_tensor(
     return make_shared<runtime::gpu::GPUTensor>(element_type, shape, memory_pointer, this);
 }
 
-runtime::Handle runtime::gpu::GPU_Backend::compile(shared_ptr<Function> func)
+shared_ptr<runtime::Executable> runtime::gpu::GPU_Backend::compile(shared_ptr<Function> func,
+                                                                   bool timing_enable)
 {
-    FunctionInstance& instance = m_function_map[func];
+    shared_ptr<runtime::Executable> rc;
+    auto it = m_exec_map.find(func);
+    if (it != m_exec_map.end())
+    {
+        rc = it->second;
+    }
+    else
+    {
+        rc = make_shared<GPU_Executable>(func, timing_enable);
+        m_exec_map.insert({func, rc});
+    }
+    return rc;
+}
+
+runtime::gpu::GPU_Executable::GPU_Executable(shared_ptr<Function> func, bool enable_timing)
+    : m_context(new GPU_Backend::BackendContext())
+
+{
+    FunctionInstance& instance = m_function_instance;
     if (instance.m_compiled_function == nullptr)
     {
         m_context->bind_cuda_context_to_thread();
         instance.m_compiled_function = runtime::gpu::GPUCompiledFunction::make(func, m_context);
-        instance.m_compiled_function->m_emit_timing = instance.m_performance_counters_enabled;
+        instance.m_compiled_function->m_emit_timing = enable_timing;
         instance.m_compiled_function->compile();
         instance.m_runtime = instance.m_compiled_function->m_runtime;
         instance.m_inputs.resize(func->get_parameters().size());
         instance.m_outputs.resize(func->get_output_size());
     }
-    return func;
+    set_parameters_and_results(*func);
 }
 
-void runtime::gpu::GPU_Backend::initialize_io(void** target,
-                                              const vector<shared_ptr<runtime::Tensor>>& source)
+void runtime::gpu::GPU_Executable::initialize_io(void** target,
+                                                 const vector<shared_ptr<runtime::Tensor>>& source)
 {
     for (size_t i = 0; i < source.size(); i++)
     {
@@ -152,11 +170,10 @@ void runtime::gpu::GPU_Backend::initialize_io(void** target,
     }
 }
 
-bool runtime::gpu::GPU_Backend::call(shared_ptr<Function> func,
-                                     const vector<shared_ptr<runtime::Tensor>>& outputs,
+bool runtime::gpu::GPU_Executable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                      const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
-    FunctionInstance& instance = m_function_map[func];
+    FunctionInstance& instance = m_function_instance;
     if (instance.m_compiled_function == nullptr)
     {
         throw runtime_error("compile() must be called before call().");
@@ -175,33 +192,18 @@ bool runtime::gpu::GPU_Backend::call(shared_ptr<Function> func,
     return true;
 }
 
-void runtime::gpu::GPU_Backend::remove_compiled_function(shared_ptr<Function> func)
-{
-    m_function_map.erase(func);
-}
+// void runtime::gpu::GPU_Backend::remove_compiled_function(shared_ptr<Function> func)
+// {
+//     m_function_map.erase(func);
+// }
 
-void runtime::gpu::GPU_Backend::enable_performance_data(shared_ptr<Function> func, bool enable)
-{
-    FunctionInstance& instance = m_function_map[func];
-    if (instance.m_compiled_function != nullptr)
-    {
-        throw runtime_error("Performance data collection must be enabled prior to compiling.");
-    }
-    instance.m_performance_counters_enabled = enable;
-}
-
-vector<runtime::PerformanceCounter>
-    runtime::gpu::GPU_Backend::get_performance_data(shared_ptr<Function> func) const
+vector<runtime::PerformanceCounter> runtime::gpu::GPU_Executable::get_performance_data() const
 {
     std::vector<runtime::PerformanceCounter> rc;
-    auto it = m_function_map.find(func);
-    if (it != m_function_map.end())
+    const FunctionInstance& instance = m_function_instance;
+    if (instance.m_compiled_function != nullptr)
     {
-        const FunctionInstance& instance = it->second;
-        if (instance.m_compiled_function != nullptr)
-        {
-            instance.m_compiled_function->get_performance_data(rc);
-        }
+        instance.m_compiled_function->get_performance_data(rc);
     }
     return rc;
 }
