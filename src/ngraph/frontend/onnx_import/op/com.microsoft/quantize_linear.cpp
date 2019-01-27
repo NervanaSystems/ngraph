@@ -80,7 +80,8 @@ namespace onnxruntime
                 y_zero_point,
                 y_zero_point->get_element_type(),
                 axis_set,
-                ngraph::op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY)};
+                // TODO (arogowiec) : Get rounding mode from ONNX instead of hard-coding
+                ngraph::op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN)};
         }
 
     } // namespace ngraph_ep

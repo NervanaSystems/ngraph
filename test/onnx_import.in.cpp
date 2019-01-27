@@ -1869,7 +1869,7 @@ namespace
 NGRAPH_TEST_P(${BACKEND_NAME}, lin_quant_model_param_test, model_resnet50)
 {
     auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/resnet50_int8_dynamic_scale.onnx"));
+        file_util::path_join(SERIALIZED_ZOO, "onnx/v7.onnx"));
 
     Inputs inputs{read_binary_file<float>(input_filename)};
     Outputs expected_output{read_binary_file<float>(output_filename)};
@@ -1902,6 +1902,36 @@ NGRAPH_TEST_P(${BACKEND_NAME}, lin_quant_model_param_test, model_resnet50)
     EXPECT_EQ(exp_idx, got_idx - class_shift);
 }
 
+// TODO - Remove perf test before merging to master
+NGRAPH_TEST_P(${BACKEND_NAME}, lin_quant_model_param_test, model_resnet50_perf)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/v7.onnx"));
+
+    Inputs inputs{read_binary_file<float>(input_filename)};
+    Outputs expected_output{read_binary_file<float>(output_filename)};
+
+    size_t num_iterations = 10;
+    stopwatch timer;
+    timer.start();
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}", num_iterations)};
+    timer.stop();
+    std::cout << "Performance num_iterations: " << num_iterations << ", ms/iteration: " << static_cast<double>(timer.get_milliseconds()) / num_iterations << std::endl;
+
+    const auto& expected = expected_output.front();
+    const auto& got = outputs.front();
+
+    int class_shift = got.size() - expected.size();
+
+    auto exp_idx =
+        std::distance(expected.begin(), std::max_element(expected.begin(), expected.end()));
+    auto got_idx = std::distance(got.begin(), std::max_element(got.begin(), got.end()));
+
+    std::cout << "expected_index    = " << exp_idx << std::endl;
+    std::cout << "got_index    = " << got_idx << std::endl;
+
+    EXPECT_EQ(exp_idx, got_idx - class_shift);
+}
 NGRAPH_INSTANTIATE_TEST_CASE_P(${BACKEND_NAME},
                                onnx,
                                lin_quant_model_param_test,
