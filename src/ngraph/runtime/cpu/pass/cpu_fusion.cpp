@@ -1021,7 +1021,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_qconv_dq_bias()
     auto reshape_b =
         std::make_shared<op::Reshape>(reshape_a, AxisVector{0, 1, 2, 3}, Shape{2, 2, 1, 1});
     auto pbroadcast_a = std::make_shared<op::Broadcast>(reshape_b, shape, AxisSet{});
-    auto qonv_dq_bias = pbroadcast + pbroadcast_a;
+    auto qconv_dq_bias = pbroadcast + pbroadcast_a;
+    auto reshape_transpose = std::make_shared<op::Reshape>(qconv_dq_bias, AxisVector{0, 1, 2, 3}, Shape{2, 2, 1, 1});
 
     ngraph::pattern::graph_rewrite_callback callback = [qconv_quant_label,
                                                         constant](pattern::Matcher& m) {
@@ -1072,7 +1073,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_qconv_dq_bias()
         return true;
     };
     auto m =
-        std::make_shared<ngraph::pattern::Matcher>(qonv_dq_bias, callback, "CPUFusion.QConvBias");
+        std::make_shared<ngraph::pattern::Matcher>(reshape_transpose, callback, "CPUFusion.QConvBias");
     this->add_matcher(m);
 }
 
@@ -1392,9 +1393,33 @@ void ngraph::runtime::cpu::pass::CPUFusionQuantSum::construct_qconv_bias_dq_unsi
     this->add_matcher(m);
 }
 */
+void ngraph::runtime::cpu::pass::CPUFusionQuantSum::construct_dq_q()
+{
+    Shape shape{2, 2, 1, 1};
+    auto input = std::make_shared<pattern::op::Label>(element::i8, shape);
+    auto dq_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto dq_zp = std::make_shared<pattern::op::Label>(element::i8, Shape{});
+    
+    auto q_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto q_zp = std::make_shared<pattern::op::Label>(element::i8, Shape{});
+    
+    auto dq = std::make_shared<op::Dequantize>(input, dq_scale, dq_zp, element::f32, AxisSet{});
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+    auto q = std::make_shared<op::Quantize>(dq, q_scale, q_zp, element::i8, AxisSet{}, round_mode);
+    
+    pattern::graph_rewrite_callback callback = [input](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In a callback for construct_dq_q against "
+                     << m.get_match_root()->get_name();
+        ngraph::replace_node(m.get_match_root(), m.get_pattern_map()[input]);
+        return true;
+    };
+
+    auto m = std::make_shared<pattern::Matcher>(q, callback, "CPUFusionQuantSum.DQandQ");
+    this->add_matcher(m);
+}
+
 void ngraph::runtime::cpu::pass::CPUFusionQuantSum::construct_qconv_bias_dq_signed_add_relu()
 {
-    std::cout << "ENTERING " << std::endl;
     Shape shape{2, 2, 1, 1};
     auto data_batch = std::make_shared<pattern::op::Label>(element::u8, shape);
     auto filters = std::make_shared<pattern::op::Label>(element::i8, shape);
@@ -1428,9 +1453,7 @@ void ngraph::runtime::cpu::pass::CPUFusionQuantSum::construct_qconv_bias_dq_sign
         add_input, dq_scale2, dq_zero_point2, element::f32, AxisSet{});
     auto reshape_a_r =
         std::make_shared<op::Reshape>(dq_r, AxisVector{0, 1, 2, 3}, Shape{2, 2, 1, 1});
-    auto reshape_b_r =
-        std::make_shared<op::Reshape>(reshape_a_r, AxisVector{0, 1, 2, 3}, Shape{2, 2, 1, 1});
-    auto pbroadcast_a_r = std::make_shared<op::Broadcast>(reshape_b_r, shape, AxisSet{});
+    auto pbroadcast_a_r = std::make_shared<op::Broadcast>(reshape_a_r, shape, AxisSet{});
     //Add left + right
     auto add = std::make_shared<op::Add>(pbroadcast_a, pbroadcast_a_r);
     auto prelu = std::make_shared<op::Relu>(add);
