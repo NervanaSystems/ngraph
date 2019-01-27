@@ -22,6 +22,7 @@
 #include "exceptions.hpp"
 #include "ngraph/axis_set.hpp"
 #include "ngraph/op/dequantize.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/shape.hpp"
 #include "quantize_linear.hpp"
 
@@ -72,6 +73,12 @@ namespace onnxruntime
                     << "y_scale must be a scalar if no axis is provided.";
                 ASSERT_VALID_ARGUMENT(node, y_zero_point_shape.size() == 0)
                     << "y_zero_point must be a scalar if no axis is provided.";
+            }
+
+            if (x->get_element_type() != y_zero_point->get_element_type())
+            {
+                auto y_zp_constant = std::static_pointer_cast<ngraph::op::Constant>(y_zero_point);
+                y_zero_point =  ngraph::op::Constant::create<std::uint8_t>(x->get_element_type(), y_zero_point->get_shape(), y_zp_constant->get_vector<std::uint8_t>());
             }
 
             return {std::make_shared<ngraph::op::Dequantize>(
