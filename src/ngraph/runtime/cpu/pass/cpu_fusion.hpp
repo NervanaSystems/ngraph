@@ -133,11 +133,13 @@ public:
         if (fusions & ngraph::pass::REGULAR_FUSIONS)
         {
             construct_qconv_bias_dq_signed_add_relu();
+            construct_dq_q();
             //construct_qconv_bias_dq_unsigned_add_relu();
         }
     }
 
 private:
+    void construct_dq_q();
     void construct_qconv_bias_dq_signed_add_relu();
     //    void construct_qconv_bias_dq_unsigned_add_relu();
 };
