@@ -1022,7 +1022,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_qconv_dq_bias()
         std::make_shared<op::Reshape>(reshape_a, AxisVector{0, 1, 2, 3}, Shape{2, 2, 1, 1});
     auto pbroadcast_a = std::make_shared<op::Broadcast>(reshape_b, shape, AxisSet{});
     auto qconv_dq_bias = pbroadcast + pbroadcast_a;
-    auto reshape_transpose = std::make_shared<op::Reshape>(qconv_dq_bias, AxisVector{0, 1, 2, 3}, Shape{2, 2, 1, 1});
+    auto reshape_transpose =
+        std::make_shared<op::Reshape>(qconv_dq_bias, AxisVector{0, 1, 2, 3}, Shape{2, 2, 1, 1});
 
     ngraph::pattern::graph_rewrite_callback callback = [qconv_quant_label,
                                                         constant](pattern::Matcher& m) {
@@ -1064,7 +1065,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_qconv_dq_bias()
                                                            qconv->get_padding_above(),
                                                            qconv->get_data_dilation_strides(),
                                                            qconv->get_argument(2),
-                                                           false);
+                                                           false,
+                                                           output_scale);
 
         auto zero_point = op::Constant::create(element::i8, Shape{}, {0});
         auto DQ = std::make_shared<op::Dequantize>(
@@ -1072,8 +1074,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_qconv_dq_bias()
         ngraph::replace_node(m.get_match_root(), DQ);
         return true;
     };
-    auto m =
-        std::make_shared<ngraph::pattern::Matcher>(reshape_transpose, callback, "CPUFusion.QConvBias");
+    auto m = std::make_shared<ngraph::pattern::Matcher>(
+        reshape_transpose, callback, "CPUFusion.QConvBias");
     this->add_matcher(m);
 }
 
@@ -1135,6 +1137,7 @@ void ngraph::runtime::cpu::pass::CPUFusionQuant::construct_qconv_bias_relu()
         auto bias_shape = bias->get_shape();
         auto input_scale = qconv->get_argument(3);
         auto filter_scale = qconv->get_argument(4);
+        auto output_scale = qconv->get_argument(5);
 
         if (bias->get_users().size() > 1)
         {
@@ -1162,7 +1165,8 @@ void ngraph::runtime::cpu::pass::CPUFusionQuant::construct_qconv_bias_relu()
                                                            qconv->get_padding_above(),
                                                            qconv->get_data_dilation_strides(),
                                                            qconv->get_argument(2),
-                                                           true);
+                                                           true,
+                                                           output_scale);
         ngraph::replace_node(m.get_match_root(), qconv_bias);
         return true;
     };
@@ -1177,6 +1181,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_qconv_bias_dq_relu_q()
     auto filters = std::make_shared<pattern::op::Label>(element::i8, shape);
     auto bias = std::make_shared<pattern::op::Label>(element::i32, Shape{shape[0]});
     auto requantization_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto output_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
     auto dq_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
     auto dq_zero_point = std::make_shared<pattern::op::Label>(element::i8, Shape{});
     auto q_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
@@ -1191,7 +1196,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_qconv_bias_dq_relu_q()
                                                                      CoordinateDiff{0, 0},
                                                                      CoordinateDiff{0, 0},
                                                                      Strides{1, 1},
-                                                                     requantization_scale);
+                                                                     requantization_scale,
+                                                                     false,
+                                                                     output_scale);
     auto dq = std::make_shared<op::Dequantize>(
         qconv_bias, dq_scale, dq_zero_point, element::f32, AxisSet{});
 
@@ -1205,6 +1212,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_qconv_bias_dq_relu_q()
 
         auto qconv = std::static_pointer_cast<op::QuantizedConvolutionBias>(
             m.get_match_root()->get_argument(0)->get_argument(0)->get_argument(0));
+        auto output_scale = qconv->get_argument(4);
 
         if (qconv->get_users().size() > 1)
         {
@@ -1224,7 +1232,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_qconv_bias_dq_relu_q()
                                                            qconv->get_padding_above(),
                                                            qconv->get_data_dilation_strides(),
                                                            qconv->get_argument(3),
-                                                           true);
+                                                           true,
+                                                           output_scale);
         ngraph::replace_node(m.get_match_root(), qconv_bias_relu);
         return true;
     };
@@ -1399,14 +1408,14 @@ void ngraph::runtime::cpu::pass::CPUFusionQuantSum::construct_dq_q()
     auto input = std::make_shared<pattern::op::Label>(element::i8, shape);
     auto dq_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
     auto dq_zp = std::make_shared<pattern::op::Label>(element::i8, Shape{});
-    
+
     auto q_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
     auto q_zp = std::make_shared<pattern::op::Label>(element::i8, Shape{});
-    
+
     auto dq = std::make_shared<op::Dequantize>(input, dq_scale, dq_zp, element::f32, AxisSet{});
     op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
     auto q = std::make_shared<op::Quantize>(dq, q_scale, q_zp, element::i8, AxisSet{}, round_mode);
-    
+
     pattern::graph_rewrite_callback callback = [input](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_dq_q against "
                      << m.get_match_root()->get_name();
@@ -1425,6 +1434,7 @@ void ngraph::runtime::cpu::pass::CPUFusionQuantSum::construct_qconv_bias_dq_sign
     auto filters = std::make_shared<pattern::op::Label>(element::i8, shape);
     auto bias = std::make_shared<pattern::op::Label>(element::i32, Shape{shape[0]});
     auto requantization_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto output_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
     auto dq_scale1 = std::make_shared<pattern::op::Label>(element::f32, Shape{});
     auto dq_zero_point1 = std::make_shared<pattern::op::Label>(element::i8, Shape{});
     auto dq_scale2 = std::make_shared<pattern::op::Label>(element::f32, Shape{});
@@ -1438,7 +1448,9 @@ void ngraph::runtime::cpu::pass::CPUFusionQuantSum::construct_qconv_bias_dq_sign
                                                                      CoordinateDiff{0, 0},
                                                                      CoordinateDiff{0, 0},
                                                                      Strides{1, 1},
-                                                                     requantization_scale);
+                                                                     requantization_scale,
+                                                                     false,
+                                                                     output_scale);
     auto qconv_bias_label =
         std::make_shared<pattern::op::Label>(qconv_bias, nullptr, NodeVector{qconv_bias});
 
@@ -1466,8 +1478,10 @@ void ngraph::runtime::cpu::pass::CPUFusionQuantSum::construct_qconv_bias_dq_sign
         auto add_m = std::dynamic_pointer_cast<op::Add>(m.get_match_root()->get_argument(0));
         auto pattern_map = m.get_pattern_map();
         auto inplace_input = pattern_map[add_input];
-        auto qconv = std::static_pointer_cast<op::QuantizedConvolutionBias>(pattern_map[qconv_bias_label]);
+        auto qconv =
+            std::static_pointer_cast<op::QuantizedConvolutionBias>(pattern_map[qconv_bias_label]);
         auto sum_scale = op::Constant::create(element::f32, Shape{}, {1});
+        auto output_scale = qconv->get_argument(4);
 
         if (get_user_count(qconv.get()) > 1)
         {
@@ -1505,7 +1519,7 @@ void ngraph::runtime::cpu::pass::CPUFusionQuantSum::construct_qconv_bias_dq_sign
         auto zero_point = op::Constant::create(element::i8, Shape{}, {0});
         auto temp_dq_scale = op::Constant::create(element::f32, Shape{}, {1});
         auto DQ = std::make_shared<op::Dequantize>(
-            qconv_bias_add_relu, temp_dq_scale, zero_point, element::f32, AxisSet{});
+            qconv_bias_add_relu, output_scale, zero_point, element::f32, AxisSet{});
         ngraph::replace_node(m.get_match_root(), DQ);
         return true;
     };

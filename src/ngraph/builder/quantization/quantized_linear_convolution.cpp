@@ -107,7 +107,9 @@ namespace ngraph
                                                                  padding_below,
                                                                  padding_above,
                                                                  data_dilation_strides,
-                                                                 requantization_scale);
+                                                                 requantization_scale,
+                                                                 false,
+                                                                 output_scale);
             }
         }
     }
