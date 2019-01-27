@@ -21,6 +21,7 @@
 
 #include "exceptions.hpp"
 #include "ngraph/axis_set.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/shape.hpp"
@@ -75,11 +76,22 @@ namespace onnxruntime
                     << "y_zero_point must be a scalar if no axis is provided.";
             }
 
+            // TODO:  THIS IS A WORKAROUND WHICH SHOULD BE REMOVED
+            // nGraph requires same data type for input and offset nodes.
             if (x->get_element_type() != y_zero_point->get_element_type())
             {
+                // Currently only support Constant node.
+                ASSERT_IS_SUPPORTED(node, y_zero_point->is_constant())
+                    << "doesn't support zero point input of other type than Constant.";
+
                 auto y_zp_constant = std::static_pointer_cast<ngraph::op::Constant>(y_zero_point);
-                y_zero_point =  ngraph::op::Constant::create<std::uint8_t>(x->get_element_type(), y_zero_point->get_shape(), y_zp_constant->get_vector<std::uint8_t>());
+
+                y_zero_point = ngraph::op::Constant::create<std::uint8_t>(
+                    x->get_element_type(),
+                    y_zero_point->get_shape(),
+                    y_zp_constant->get_vector<std::uint8_t>());
             }
+            // END TODO
 
             return {std::make_shared<ngraph::op::Dequantize>(
                 x, y_scale, y_zero_point, y_scale->get_element_type(), axis_set)};
