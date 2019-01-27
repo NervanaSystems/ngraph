@@ -49,6 +49,8 @@ namespace ngraph
                     compile(std::shared_ptr<Function> func,
                             bool enable_performance_counters = false) override;
 
+                void remove_compiled_function(shared_ptr<Executable> exec) override;
+
                 bool is_supported(const Node& node) const override;
                 bool is_supported_property(const Property prop) const override;
 

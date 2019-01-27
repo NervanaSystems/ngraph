@@ -1903,9 +1903,16 @@ bool runtime::intelgpu::IntelGPUExecutable::call(const vector<shared_ptr<runtime
     return true;
 }
 
-void runtime::intelgpu::IntelGPUBackend::remove_compiled_function(shared_ptr<Function> func)
+void runtime::intelgpu::IntelGPUBackend::remove_compiled_function(shared_ptr<Executable> exec)
 {
-    ocl_networks.erase(func);
+    for (auto it = ocl_networks.begin(); it != ocl_networks.end(); ++it)
+    {
+        if (it->second == exec)
+        {
+            ocl_networks.erase(it);
+            break;
+        }
+    }
 }
 
 // The cldnn::network contains something like "generic_layer_0_Parameter_254_0" names

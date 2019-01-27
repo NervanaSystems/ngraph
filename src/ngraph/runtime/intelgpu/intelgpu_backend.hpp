@@ -50,7 +50,7 @@ public:
 
     std::shared_ptr<runtime::Executable> compile(std::shared_ptr<Function> func,
                                                  bool enable_timing = false) override;
-    void remove_compiled_function(std::shared_ptr<Function> func);
+    void remove_compiled_function(std::shared_ptr<runtime::Executable> exec) override;
 
     bool is_supported_property(const Property prop) const override;
 

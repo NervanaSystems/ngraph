@@ -144,6 +144,10 @@ bool runtime::Backend::is_supported_property(const Property prop) const
     return false;
 }
 
+void runtime::Backend::remove_compiled_function(std::shared_ptr<Executable> exec)
+{
+}
+
 bool runtime::Backend::call_with_validate(
     std::shared_ptr<Executable> exec,
     const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
