@@ -491,27 +491,3 @@ void Node::validate_and_infer_elementwise_logical()
 
     set_output_type(0, element::boolean, args_pshape);
 }
-
-bool Node::validate_punt_if_dynamic()
-{
-    bool any_dynamic = false;
-
-    for (auto& input : m_inputs)
-    {
-        any_dynamic |= input.get_partial_shape().is_dynamic();
-        any_dynamic |= input.get_element_type().is_dynamic();
-    }
-
-    if (any_dynamic)
-    {
-        for (size_t i = 0; i < get_output_size(); i++)
-        {
-            set_output_type(i, element::dynamic, PartialShape::dynamic());
-        }
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
