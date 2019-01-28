@@ -197,6 +197,11 @@ class BuildExt(build_ext):
                 retval = False
         return retval
 
+    def append_flag(self, flag, flags):
+        """Check and append a compiler flag"""
+        if self.has_flag(flag):
+            flags += [flag]
+
     def cpp_flag(self):
         """Check and return compiler flag."""
         flags = []
@@ -204,17 +209,13 @@ class BuildExt(build_ext):
             flags += ['-std=c++11']
         else:
             raise RuntimeError('Unsupported compiler -- C++11 support is needed!')
-        if self.has_flag('-fstack-protector-strong'):
-            flags += ['-fstack-protector-strong']
-        elif self.has_flag('-fstack-protector'):
-            flags += ['-fstack-protector']
-        if self.has_flag('-fvisibility=hidden'):
-            flags += ['-fvisibility=hidden']
-        if self.has_flag('-flto'):
-            if not 'clang' in '${CMAKE_CXX_COMPILER}':
+        if self.has_flag('-flto')
+            if 'clang' not in '${CMAKE_CXX_COMPILER}':
                 flags += ['-flto']
-        if self.has_flag('-fPIC'):
-            flags += ['-fPIC']
+        self.append_flag('-fstack-protector-strong', flags)
+        self.append_flag('-fstack-protector', flags)
+        self.append_flag('-fvisibility=hidden', flags):
+        self.append_flag('-fPIC', flags):
         flags += ['-Wformat', '-Wformat-security']
         flags += ['-O2', '-D_FORTIFY_SOURCE=2']
         return flags
