@@ -1822,8 +1822,8 @@ TEST(onnx_${BACKEND_NAME}, model_space_to_depth_no_blocksize)
 
 TEST(onnx_${BACKEND_NAME}, model_top_k)
 {
-    auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/top_k.onnx"));
+    auto function =
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/top_k.onnx"));
 
     Inputs inputs;
     inputs.emplace_back(std::vector<float>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11});

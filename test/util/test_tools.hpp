@@ -130,8 +130,8 @@ void random_init(ngraph::runtime::Tensor* tv, std::default_random_engine& engine
 template <typename T>
 std::vector<std::shared_ptr<ngraph::runtime::Tensor>>
     prepare_and_run(const std::shared_ptr<ngraph::Function>& function,
-                                     std::vector<std::vector<T>> args,
-                                     const std::string& backend_id)
+                    std::vector<std::vector<T>> args,
+                    const std::string& backend_id)
 {
     auto backend = ngraph::runtime::Backend::create(backend_id);
 
