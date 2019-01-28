@@ -198,7 +198,7 @@ class BuildExt(build_ext):
         return retval
 
     def append_flag(self, flag, flags):
-        """Check and append a compiler flag"""
+        """Check and append a compiler flag."""
         if self.has_flag(flag):
             flags += [flag]
 
