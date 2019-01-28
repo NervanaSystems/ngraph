@@ -21,11 +21,18 @@
 #include "ngraph/file_util.hpp"
 #include "ngraph/log.hpp"
 
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
+#include "ngraph/distributed.hpp"
+#endif
+
 using namespace ngraph;
 using namespace std;
 
 TEST(tools, nbench_functional)
 {
+    // #ifdef NGRAPH_DISTRIBUTED_ENABLE
+    //     ngraph::Distributed dist;
+    // #endif
     const string model = "mxnet/mnist_mlp_forward.json";
     const string model_path = file_util::path_join(SERIALIZED_ZOO, model);
 
@@ -52,4 +59,7 @@ TEST(tools, nbench_functional)
     {
         FAIL();
     }
+    // #ifdef NGRAPH_DISTRIBUTED_ENABLE
+    //     dist.finalize();
+    // #endif
 }

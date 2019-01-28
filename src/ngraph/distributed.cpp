@@ -49,6 +49,27 @@ ngraph::Distributed::Distributed()
 
 ngraph::Distributed::~Distributed()
 {
+    //     distributed_instance_counter -= 1;
+    //     if (distributed_instance_counter == 0)
+    //     {
+    // #ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
+    //         if (MLSL::Environment::GetEnv().IsInitialized())
+    //         {
+    //             MLSL::Environment::GetEnv().Finalize();
+    //         }
+    // #else
+    //         int flag = 0;
+    //         MPI_Initialized(&flag);
+    //         if (flag)
+    //         {
+    //             MPI_Finalize();
+    //         }
+    // #endif
+    //     }
+}
+
+void ngraph::Distributed::finalize()
+{
     distributed_instance_counter -= 1;
     if (distributed_instance_counter == 0)
     {

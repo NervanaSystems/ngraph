@@ -27,6 +27,7 @@ namespace ngraph
     public:
         Distributed();
         ~Distributed();
+        void finalize();
         int get_size() const;
         int get_rank() const;
     };
