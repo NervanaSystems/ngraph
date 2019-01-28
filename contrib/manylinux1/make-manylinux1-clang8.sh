@@ -45,8 +45,8 @@ fi
 # build the docker base image
 docker build  --rm=true \
        ${DOCKER_HTTP_PROXY} ${DOCKER_HTTPS_PROXY} \
-       -f="${SCRIPT_DIR}/Dockerfile.ngraph.manylinux1_clang7" \
-       -t="ngraph:manylinux1_clang7" \
+       -f="${SCRIPT_DIR}/Dockerfile.ngraph.manylinux1_clang8" \
+       -t="ngraph:manylinux1_clang8" \
        ${SCRIPT_DIR}
 
 # build manulinux1 wheels
@@ -54,5 +54,5 @@ docker run -it -u`id -u`:`id -g` \
        -v ${NGRAPH_DIR}:${NGRAPH_DIR} \
        -v `pwd`:`pwd` -w `pwd` \
        ${DOCKER_RUN_HTTP_PROXY} ${DOCKER_RUN_HTTPS_PROXY} \
-       ngraph:manylinux1_clang7 \
+       ngraph:manylinux1_clang8 \
        ${SCRIPT_DIR}/build-manylinux1-clang.sh
