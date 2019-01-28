@@ -106,7 +106,8 @@ def parallelCCompile(
         self._compile(obj, src, ext, cc_args, extra_postargs, pp_opts)
 
     # convert to list, imap is evaluated on-demand
-    list(multiprocessing.pool.ThreadPool().imap(_single_compile, objects))
+    pool = multiprocessing.pool.ThreadPool()
+    list(pool.imap(_single_compile, objects))
     return objects
 
 
@@ -204,7 +205,6 @@ sources = [
     'pyngraph/ops/pad.cpp',
     'pyngraph/ops/parameter.cpp',
     'pyngraph/ops/power.cpp',
-    'pyngraph/ops/reduce.cpp',
     'pyngraph/ops/regmodule_pyngraph_op.cpp',
     'pyngraph/ops/relu.cpp',
     'pyngraph/ops/replace_slice.cpp',
@@ -222,7 +222,6 @@ sources = [
     'pyngraph/ops/tanh.cpp',
     'pyngraph/ops/topk.cpp',
     'pyngraph/ops/allreduce.cpp',
-    'pyngraph/ops/function_call.cpp',
     'pyngraph/ops/get_output_element.cpp',
     'pyngraph/ops/min.cpp',
     'pyngraph/ops/batch_norm.cpp',
@@ -373,6 +372,10 @@ class BuildExt(build_ext):
             ext.extra_compile_args += ['-O2', '-D_FORTIFY_SOURCE=2']
         build_ext.build_extensions(self)
 
+
+if sys.platform == 'darwin':
+    # This turns out to be needed when building using Anaconda python on macOS.
+    os.environ['MACOSX_DEPLOYMENT_TARGET'] = '10.9'
 
 with open(os.path.join(PYNGRAPH_ROOT_DIR, 'requirements.txt')) as req:
     requirements = req.read().splitlines()

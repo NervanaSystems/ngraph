@@ -21,6 +21,7 @@
 #include <unordered_map>
 
 #include "core/attribute.hpp"
+#include "ngraph/log.hpp"
 #include "op/abs.hpp"
 #include "op/acos.hpp"
 #include "op/add.hpp"
@@ -39,6 +40,7 @@
 #include "op/conv.hpp"
 #include "op/conv_transpose.hpp"
 #include "op/cos.hpp"
+#include "op/depth_to_space.hpp"
 #include "op/div.hpp"
 #include "op/elu.hpp"
 #include "op/equal.hpp"
@@ -83,6 +85,7 @@
 #include "op/softmax.hpp"
 #include "op/softplus.hpp"
 #include "op/softsign.hpp"
+#include "op/space_to_depth.hpp"
 #include "op/split.hpp"
 #include "op/sqrt.hpp"
 #include "op/squeeze.hpp"
@@ -102,20 +105,19 @@ namespace ngraph
     {
         namespace detail
         {
-            const Operator& find(const std::string& name,
-                                 std::int64_t version,
-                                 const std::string& domain,
-                                 const std::map<std::int64_t, Operator>& map)
+            const std::map<std::int64_t, Operator>::const_iterator
+                find(std::int64_t version, const std::map<std::int64_t, Operator>& map)
             {
+                std::map<std::int64_t, Operator>::const_iterator it{};
                 while (version > 0)
                 {
-                    const auto it = map.find(version--);
+                    it = map.find(version--);
                     if (it != std::end(map))
                     {
-                        return it->second;
+                        return it;
                     }
                 }
-                throw error::UnsupportedVersion{name, version, domain};
+                return it;
             }
         }
 
@@ -136,11 +138,49 @@ namespace ngraph
             {
                 throw error::UnknownDomain{domain};
             }
+            if (version > OperatorsBridge::LATEST_SUPPORTED_OPSET_VERSION)
+            {
+                NGRAPH_WARN << "Currently operator set version: " << version << " is unsupported."
+                            << " Falling back to: "
+                            << OperatorsBridge::LATEST_SUPPORTED_OPSET_VERSION;
+            }
             for (const auto& op : dm->second)
             {
-                result.emplace(op.first, detail::find(op.first, version, domain, op.second));
+                const auto& it = detail::find(version, op.second);
+                if (it == std::end(op.second))
+                {
+                    throw error::UnsupportedVersion{op.first, version, domain};
+                }
+                result.emplace(op.first, it->second);
             }
             return result;
+        }
+
+        bool OperatorsBridge::_is_operator_registered(const std::string& name,
+                                                      std::int64_t version,
+                                                      const std::string& domain)
+        {
+            // search for domain
+            auto dm_map = m_map.find(domain);
+            if (dm_map == std::end(m_map))
+            {
+                return false;
+            }
+            // search for name
+            auto op_map = dm_map->second.find(name);
+            if (op_map == std::end(dm_map->second))
+            {
+                return false;
+            }
+
+            if (detail::find(version, op_map->second) != std::end(op_map->second))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
 #define REGISTER_OPERATOR(name_, ver_, fn_)                                                        \
@@ -167,6 +207,7 @@ namespace ngraph
             REGISTER_OPERATOR("Conv", 1, conv);
             REGISTER_OPERATOR("ConvTranspose", 1, conv_transpose);
             REGISTER_OPERATOR("Cos", 1, cos);
+            REGISTER_OPERATOR("DepthToSpace", 1, depth_to_space);
             REGISTER_OPERATOR("Div", 1, div);
             REGISTER_OPERATOR("Div", 7, div);
             REGISTER_OPERATOR("Dropout", 1, identity);
@@ -225,6 +266,7 @@ namespace ngraph
             REGISTER_OPERATOR("Softmax", 1, softmax);
             REGISTER_OPERATOR("Softplus", 1, softplus);
             REGISTER_OPERATOR("Softsign", 1, softsign);
+            REGISTER_OPERATOR("SpaceToDepth", 1, space_to_depth);
             REGISTER_OPERATOR("Split", 1, split);
             REGISTER_OPERATOR("Sqrt", 1, sqrt);
             REGISTER_OPERATOR("Squeeze", 1, squeeze);
