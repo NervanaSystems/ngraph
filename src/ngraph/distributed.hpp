@@ -22,10 +22,11 @@ namespace ngraph
 {
     class Distributed
     {
+        static int distributed_instance_counter;
+
     public:
         Distributed();
-        virtual ~Distributed() {}
-        void finalize();
+        ~Distributed();
         int get_size() const;
         int get_rank() const;
     };

@@ -23,8 +23,11 @@
 #endif
 
 #include "ngraph/distributed.hpp"
+#include "ngraph/log.hpp"
 
 using namespace ngraph;
+
+int ngraph::Distributed::distributed_instance_counter = 0;
 
 ngraph::Distributed::Distributed()
 {
@@ -41,18 +44,28 @@ ngraph::Distributed::Distributed()
         MPI_Init(NULL, NULL);
     }
 #endif
+    distributed_instance_counter += 1;
 }
 
-void ngraph::Distributed::finalize()
+ngraph::Distributed::~Distributed()
 {
-#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
-    if (MLSL::Environment::GetEnv().IsInitialized())
+    distributed_instance_counter -= 1;
+    if (distributed_instance_counter == 0)
     {
-        MLSL::Environment::GetEnv().Finalize();
-    }
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
+        if (MLSL::Environment::GetEnv().IsInitialized())
+        {
+            MLSL::Environment::GetEnv().Finalize();
+        }
 #else
-    MPI_Finalize();
+        int flag = 0;
+        MPI_Initialized(&flag);
+        if (flag)
+        {
+            MPI_Finalize();
+        }
 #endif
+    }
 }
 
 int ngraph::Distributed::get_size() const

@@ -33,10 +33,6 @@
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 
-#if defined NGRAPH_DISTRIBUTED_ENABLE
-#include "ngraph/distributed.hpp"
-#endif
-
 using namespace std;
 using namespace ngraph;
 
@@ -298,10 +294,6 @@ OPTIONS
         return 1;
     }
 
-#if defined NGRAPH_DISTRIBUTED_ENABLE
-    ngraph::Distributed dist;
-#endif
-
     vector<string> models;
     if (!directory.empty())
     {
@@ -423,8 +415,5 @@ OPTIONS
         cout << "============================================================================\n";
         print_results(aggregate_perf_data, timing_detail);
     }
-#ifdef NGRAPH_DISTRIBUTED_ENABLE
-    dist.finalize();
-#endif
     return rc;
 }
