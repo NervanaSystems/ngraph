@@ -121,6 +121,18 @@ bool runtime::cpu::CPU_Executable::call(const vector<shared_ptr<runtime::Tensor>
     return rc;
 }
 
+void runtime::cpu::CPU_Backend::remove_compiled_function(shared_ptr<Executable> exec)
+{
+    for (auto it = m_exec_map.begin(); it != m_exec_map.end(); ++it)
+    {
+        if (it->second == exec)
+        {
+            m_exec_map.erase(it);
+            break;
+        }
+    }
+}
+
 vector<runtime::PerformanceCounter> runtime::cpu::CPU_Executable::get_performance_data() const
 {
     vector<runtime::PerformanceCounter> rc;

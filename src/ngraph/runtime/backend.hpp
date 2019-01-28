@@ -101,6 +101,8 @@ public:
     /// \returns true if the property is supported, false otherwise.
     virtual bool is_supported_property(const Property prop) const;
 
+    virtual void remove_compiled_function(std::shared_ptr<Executable> exec);
+
     /// The following methods are temporary hacks to reduce the number of changes in this PR
     /// They will be removed in a follow-on PR
     bool call_with_validate(std::shared_ptr<Executable> handle,
