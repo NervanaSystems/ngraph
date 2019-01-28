@@ -31,6 +31,10 @@ import setuptools
 import os
 import distutils.ccompiler
 
+# distutils.ccompiler always uses CC for compiling c++ files.
+os.environ['CC'] = '${CMAKE_CXX_COMPILER}'
+os.environ['CXX'] = '${CMAKE_CXX_COMPILER}'
+
 __version__ = '${NGRAPH_VERSION_SHORT}'
 
 
@@ -207,7 +211,8 @@ class BuildExt(build_ext):
         if self.has_flag('-fvisibility=hidden'):
             flags += ['-fvisibility=hidden']
         if self.has_flag('-flto'):
-            flags += ['-flto']
+            if not 'clang' in '${CMAKE_CXX_COMPILER}':
+                flags += ['-flto']
         if self.has_flag('-fPIC'):
             flags += ['-fPIC']
         flags += ['-Wformat', '-Wformat-security']
