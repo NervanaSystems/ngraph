@@ -26,6 +26,7 @@ backwards_batch_norm_training
 dequantize
 dequantize_zero_offset
 dequantize_axes
+dequantize_dynamic_offset
 dequantize_int8
 dequantize_int8_zero_offset
 dequantize_int32
@@ -33,6 +34,7 @@ dequantize_int32_zero_offset
 quantize
 quantize_zero_offset
 quantize_axes
+quantize_dynamic_offset
 quantize_int8
 quantize_int8_zero_offset
 quantize_int32

@@ -273,9 +273,12 @@ void runtime::intelgpu::do_product_operation(cldnn::topology& topology,
     const size_t input_size = shape_size<Shape>(input_shape);
     codegen::CodeWriter writer;
 
-    writer << "__kernel void " << function_name << "(const __global float input"
-           << array_dims(input_shape) << ", __global float output" << array_dims(output_shape)
-           << ")\n";
+    runtime::intelgpu::gen_func_def(writer,
+                                    function_name,
+                                    {get_opencl_type_name(output_type)},
+                                    {input_shape},
+                                    get_opencl_type_name(output_type),
+                                    output_shape);
 
     writer.block_begin();
     {
@@ -309,7 +312,7 @@ void runtime::intelgpu::do_product_operation(cldnn::topology& topology,
                 ++var_idx;
             }
 
-            writer << "output" << access_dims(input_shape, "i", axis) << " *= input"
+            writer << "output" << access_dims(input_shape, "i", axis) << " *= input0"
                    << access_dims(input_shape) << ";\n";
 
             // Closing brackets for loop
