@@ -171,7 +171,7 @@ void runtime::gpu::GPU_Executable::initialize_io(void** target,
 }
 
 bool runtime::gpu::GPU_Executable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
-                                     const vector<shared_ptr<runtime::Tensor>>& inputs)
+                                        const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     FunctionInstance& instance = m_function_instance;
     if (instance.m_compiled_function == nullptr)
