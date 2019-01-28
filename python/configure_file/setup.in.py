@@ -209,7 +209,7 @@ class BuildExt(build_ext):
             flags += ['-std=c++11']
         else:
             raise RuntimeError('Unsupported compiler -- C++11 support is needed!')
-        if self.has_flag('-flto')
+        if self.has_flag('-flto'):
             if 'clang' not in '${CMAKE_CXX_COMPILER}':
                 flags += ['-flto']
         self.append_flag('-fstack-protector-strong', flags)
