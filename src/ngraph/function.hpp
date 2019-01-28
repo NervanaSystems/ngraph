@@ -85,6 +85,11 @@ namespace ngraph
 
         void validate_nodes_and_infer_types();
 
+        /// \brief Returns the sum of the size of all nodes in the graph plus the size of
+        /// all constant data. This has little value beyond comparing the relative size of
+        /// graphs and should not be considered the actual memory consumption of a graph.
+        size_t get_graph_size() const;
+
     protected:
         ResultVector m_results;
         ParameterVector m_parameters;
