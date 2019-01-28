@@ -47,24 +47,9 @@ namespace ngraph
             }
 
             const std::string& get_type() const { return m_type; }
-            runtime::Handle compile(const std::shared_ptr<Function>& function) const
+            std::shared_ptr<ngraph::runtime::Executable> compile(const std::shared_ptr<Function>& function) const
             {
                 return get().compile(function);
-            }
-
-            bool call(const std::shared_ptr<Function>& function,
-                      const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                      const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) const
-            {
-                return get().call(function, outputs, inputs);
-            }
-
-            bool call_with_validate(
-                const std::shared_ptr<Function>& function,
-                const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) const
-            {
-                return get().call_with_validate(function, outputs, inputs);
             }
 
         private:
@@ -79,6 +64,38 @@ namespace ngraph
                 }
                 return *m_backend;
             }
+        };
+
+        /// \brief ONNXIFI extensions to nGraph Executable
+        class Executable
+        {
+        public:
+            Executable(const Executable&) = delete;
+            Executable& operator=(const Executable&) = delete;
+
+            Executable(Executable&&) = default;
+            Executable& operator=(Executable&&) = default;
+
+            explicit Executable(const std::shared_ptr<runtime::Executable>& executable)
+                : m_executable{executable}
+            {
+            }
+
+            bool call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                      const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) const
+            {
+                return m_executable->call(outputs, inputs);
+            }
+
+            bool call_with_validate(
+                const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) const
+            {
+                return m_executable->call_with_validate(outputs, inputs);
+            }
+
+        private:
+            mutable std::shared_ptr<runtime::Executable> m_executable{nullptr};
         };
 
     } // namespace onnxifi
