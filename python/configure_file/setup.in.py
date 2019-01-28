@@ -214,8 +214,8 @@ class BuildExt(build_ext):
                 flags += ['-flto']
         self.append_flag('-fstack-protector-strong', flags)
         self.append_flag('-fstack-protector', flags)
-        self.append_flag('-fvisibility=hidden', flags):
-        self.append_flag('-fPIC', flags):
+        self.append_flag('-fvisibility=hidden', flags)
+        self.append_flag('-fPIC', flags)
         flags += ['-Wformat', '-Wformat-security']
         flags += ['-O2', '-D_FORTIFY_SOURCE=2']
         return flags
