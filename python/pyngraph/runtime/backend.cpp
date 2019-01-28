@@ -36,6 +36,6 @@ void regclass_pyngraph_runtime_Backend(py::module m)
                     ngraph::runtime::Backend::create_tensor);
     backend.def("compile",
                 (std::unique_ptr<ngraph::runtime::Executable>(ngraph::runtime::Backend::*)(
-                    std::shared_ptr<ngraph::Function>)) &
+                    std::shared_ptr<ngraph::Function>, bool)) &
                     ngraph::runtime::Backend::compile);
 }
