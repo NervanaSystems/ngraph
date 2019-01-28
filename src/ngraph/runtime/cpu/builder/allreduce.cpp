@@ -38,6 +38,10 @@ namespace ngraph
                 auto count = static_cast<int>(out[0].get_size());
                 auto data_type = MPI_FLOAT;
 
+                int my_rank;
+                MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+                MPI_Barrier(MPI_COMM_WORLD);
+
                 if (args[0].get_element_type() == element::f32)
                 {
                     data_type = MPI_FLOAT;
