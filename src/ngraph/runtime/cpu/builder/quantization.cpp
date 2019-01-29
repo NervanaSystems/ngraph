@@ -54,7 +54,6 @@ namespace ngraph
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
                     auto scale_const_op = std::dynamic_pointer_cast<ngraph::op::Constant>(
                         dequantize->get_argument(1));
-                    std::vector<float> scales;
                     if (scale_const_op == nullptr)
                     {
                         auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
@@ -241,15 +240,11 @@ namespace ngraph
 
                     auto scale_const_op =
                         std::dynamic_pointer_cast<ngraph::op::Constant>(quantize->get_argument(1));
-                    std::vector<float> scales;
                     if (scale_const_op == nullptr)
                     {
                         auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
                         auto scales_size = shape_size(args[1].get_shape());
 
-                        // Dummy value while we wait for the actual values that are provided during
-                        // execution
-                        scales.push_back(1.0f);
                         size_t quantize_index = mkldnn_emitter->primitive_init(3);
                         auto& deps = mkldnn_emitter->get_primitive_deps(quantize_index);
 
@@ -275,6 +270,7 @@ namespace ngraph
                     else
                     {
                         auto scale = scale_const_op->get_vector<float>();
+                        std::vector<float> scales;
                         scales.push_back(1.0 / scale[0]);
                         size_t quantize_index = mkldnn_emitter->primitive_init(3);
                         auto& deps = mkldnn_emitter->get_primitive_deps(quantize_index);
