@@ -40,7 +40,6 @@ namespace ngraph
 
                 int my_rank;
                 MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-                MPI_Barrier(MPI_COMM_WORLD);
 
                 if (args[0].get_element_type() == element::f32)
                 {
@@ -51,7 +50,7 @@ namespace ngraph
                     data_type = MPI_DOUBLE;
                 }
 
-                auto functor = [&, count, data_type](CPURuntimeContext* ctx,
+                auto functor = [&, count, data_type, my_rank, args, out, node](CPURuntimeContext* ctx,
                                                      CPUExecutionContext* ectx) {
                     std::cout<<"count == "<<my_rank<<" "<<count<<" "<<args[0].get_name()
                                           <<" "<<out[0].get_name()<<" node info: "<<node->description()<<std::endl;
