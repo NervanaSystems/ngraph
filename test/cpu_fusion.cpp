@@ -3458,13 +3458,39 @@ TEST(cpu_fusion, fuse_bi_directional_rnn)
     pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
     pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
     pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
+    pass_manager.register_pass<runtime::cpu::pass::MultiLayerRNNFusion>();
     pass_manager.register_pass<runtime::cpu::pass::BiDirectionalRnn>();
-    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/5_timestep_gnmt.json");
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/lstm_bi_directional.json");
     const string json_string = file_util::read_file_to_string(json_path);
     stringstream ss(json_string);
     shared_ptr<Function> func = ngraph::deserialize(ss);
     pass_manager.run_passes(func);
     // Bidirectional graph pass will folds the reverse seq
-    auto rev_seq_ops = get_ops_of_type<op::ReverseSequence>(func);
+    auto rev_seq_ops = get_ops_of_type<op::Reverse>(func);
+    auto rnn_ops = get_ops_of_type<op::Rnn>(func);
     EXPECT_EQ(rev_seq_ops.size(), 0);
+    // fuse two bi-directional rnn layers in to one MKLDNN Op
+    EXPECT_EQ(rnn_ops.size(), 1);
+}
+
+TEST(cpu_fusion, bi_rnn_interpreter_vs_cpu)
+{
+    const std::string file_name("mxnet/lstm_bi_directional.json");
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < int_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+    }
 }

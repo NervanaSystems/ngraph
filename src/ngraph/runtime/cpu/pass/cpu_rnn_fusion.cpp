@@ -39,6 +39,7 @@
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/result.hpp"
+#include "ngraph/op/reverse.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/sum.hpp"
@@ -766,15 +767,23 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
     auto rnn_left_to_right_goe0 = std::make_shared<op::GetOutputElement>(rnn_left_to_right, 0);
     auto rnn_right_to_left_goe0 = std::make_shared<op::GetOutputElement>(rnn_right_to_left, 0);
 
-    auto rnn_rtol_goe0_reshape =
+    auto rnn_rtol_goe0_reshape_ntc =
         std::make_shared<pattern::op::Skip>(rnn_right_to_left_goe0, reshape_pred);
-    auto rnn_ltor_goe0_reshape =
+    auto rnn_rtol_goe0_reshape_tnc =
+        std::make_shared<pattern::op::Skip>(rnn_rtol_goe0_reshape_ntc, reshape_pred);
+    auto rnn_ltor_goe0_reshape_ntc =
         std::make_shared<pattern::op::Skip>(rnn_left_to_right_goe0, reshape_pred);
+    auto rnn_ltor_goe0_reshape_tnc =
+        std::make_shared<pattern::op::Skip>(rnn_ltor_goe0_reshape_ntc, reshape_pred);
 
-    auto sequence_len_node = std::make_shared<pattern::op::Label>(element::f32, Shape{1});
-    auto reverse_seq =
-        std::make_shared<op::ReverseSequence>(rnn_rtol_goe0_reshape, sequence_len_node, 0, 0);
-    auto concat = std::make_shared<op::Concat>(NodeVector{rnn_ltor_goe0_reshape, reverse_seq}, 0);
+    auto reverse_seq_predicate = [](std::shared_ptr<Node> node) {
+        return pattern::has_class<op::ReverseSequence>()(node) ||
+               pattern::has_class<op::Reverse>()(node);
+    };
+    auto skip_reverse_seq =
+        std::make_shared<pattern::op::Skip>(rnn_rtol_goe0_reshape_tnc, reverse_seq_predicate);
+    auto concat =
+        std::make_shared<op::Concat>(NodeVector{rnn_ltor_goe0_reshape_tnc, skip_reverse_seq}, 0);
 
     // Define a call back that needs to called once the DFG matches the pattern
     ngraph::pattern::graph_rewrite_callback callback = [rnn_left_to_right,
@@ -849,7 +858,11 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
                                              num_fused_rnn_layers);
 
         auto layer_rnn_ht = std::make_shared<op::GetOutputElement>(rnn, 0);
-        ngraph::replace_node(m.get_match_root(), layer_rnn_ht);
+        size_t batch_size = layer_rnn_ht->get_shape()[0] / num_time_steps;
+        size_t feature_size = layer_rnn_ht->get_shape()[1];
+        auto layer_rnn_ht_reshape = std::make_shared<op::Reshape>(
+            layer_rnn_ht, AxisVector{0, 1}, Shape{num_time_steps, batch_size, feature_size});
+        ngraph::replace_node(m.get_match_root(), layer_rnn_ht_reshape);
         return true;
     };
 
