@@ -32,6 +32,7 @@ ngraph::Distributed::Distributed()
     if (!MLSL::Environment::GetEnv().IsInitialized())
     {
         MLSL::Environment::GetEnv().Init(nullptr, nullptr);
+        this_init_mpi = true;
     }
 #else
     int flag = 0;
@@ -39,8 +40,18 @@ ngraph::Distributed::Distributed()
     if (!flag)
     {
         MPI_Init(NULL, NULL);
+        this_init_mpi = true;
     }
 #endif
+}
+
+ngraph::Distributed::~Distributed()
+{
+    if (!this_init_mpi)
+    {
+        return;
+    }
+    finalize();
 }
 
 void ngraph::Distributed::finalize()
