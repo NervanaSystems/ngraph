@@ -54,10 +54,18 @@ namespace ngraph
                 auto& dst_iter_tensor = external_function->get_tensor_data(out[1].get_name());
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                auto lstm_index = mkldnn_emitter->build_rnn<ngraph::op::Lstm>(node, args, out);
+                auto lstm_desc =
+                    mkldnn_emitter->get_rnn_forward_desc<ngraph::op::Lstm>(node, args, out);
+                auto lstm_index = mkldnn_emitter->primitive_init(9, true);
                 auto& deps = mkldnn_emitter->get_primitive_deps(lstm_index);
 
-                auto functor = [&, lstm_index](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                auto functor = [&, lstm_desc, lstm_index](CPURuntimeContext* ctx,
+                                                          CPUExecutionContext* ectx) {
+                    if (ctx->first_iteration)
+                    {
+                        mkldnn_emitter->rnn_forward(lstm_desc, lstm_index);
+                        ctx->mkldnn_workspaces = mkldnn_emitter->get_mkldnn_workspaces().data();
+                    }
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], src_layer_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], src_iter_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], weights_layer_tensor);

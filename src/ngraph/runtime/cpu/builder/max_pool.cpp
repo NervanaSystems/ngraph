@@ -185,6 +185,7 @@ namespace ngraph
                                                                  padding_above,
                                                                  fwd_pool_index,
                                                                  bwd_pool_index);
+                            ctx->mkldnn_workspaces = mkldnn_emitter->get_mkldnn_workspaces().data();
                         }
                         functor_fprop(ctx, ectx);
                         functor_bprop(ctx, ectx);
