@@ -34,7 +34,7 @@ if (${CMAKE_VERSION} VERSION_LESS 3.2)
         INSTALL_COMMAND ""
         UPDATE_COMMAND ""
         PATCH_COMMAND ""
-        CONFIGURE_COMMAND ./autogen.sh && CXX=${CMAKE_CXX_COMPILER} ./configure --disable-shared CXXFLAGS=-fPIC
+        CONFIGURE_COMMAND ./autogen.sh COMMAND ./configure --disable-shared CXX=${CMAKE_CXX_COMPILER} CXXFLAGS=-fPIC
         BUILD_COMMAND ${MAKE}
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/stamp"
@@ -54,7 +54,7 @@ else()
             INSTALL_COMMAND ""
             UPDATE_COMMAND ""
             PATCH_COMMAND ""
-            CONFIGURE_COMMAND ./autogen.sh && CXX=${CMAKE_CXX_COMPILER} ./configure --disable-shared CXXFLAGS=-fPIC
+            CONFIGURE_COMMAND ./autogen.sh COMMAND ./configure --disable-shared CXX=${CMAKE_CXX_COMPILER} CXXFLAGS=-fPIC
             BUILD_COMMAND ${MAKE}
             TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/tmp"
             STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/stamp"
@@ -76,7 +76,7 @@ else()
             INSTALL_COMMAND ""
             UPDATE_COMMAND ""
             PATCH_COMMAND ""
-            CONFIGURE_COMMAND ./autogen.sh && CXX=${CMAKE_CXX_COMPILER} ./configure --disable-shared CXXFLAGS=-fPIC
+            CONFIGURE_COMMAND ./autogen.sh COMMAND ./configure --disable-shared CXX=${CMAKE_CXX_COMPILER} CXXFLAGS=-fPIC
             BUILD_COMMAND ${MAKE}
             TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/tmp"
             STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/stamp"

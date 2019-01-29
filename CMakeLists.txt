@@ -66,7 +66,7 @@ if (APPLE)
     endif()
 endif()
 
-project (ngraph)
+project (ngraph LANGUAGES C CXX)
 
 if (UNIX AND NOT APPLE)
     set(LINUX TRUE)

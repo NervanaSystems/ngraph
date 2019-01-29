@@ -18,7 +18,7 @@ set -e
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-CC=clang CXX=clang++ CXXFLAGS="-std=c++11" cmake -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DNGRAPH_MANYLINUX_ENABLE=TRUE ${SCRIPT_DIR}/../..
+cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DNGRAPH_MANYLINUX_ENABLE=TRUE ${SCRIPT_DIR}/../..
 lcores=$(grep processor /proc/cpuinfo | wc -l)
 make -j$lcores
 NGRAPH_CODEGEN=1 ./test/unit-test

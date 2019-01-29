@@ -135,8 +135,30 @@ endif()
 
 if (NGRAPH_TBB_ENABLE AND NOT WIN32)
     include(${TBB_ROOT}/cmake/TBBBuild.cmake)
-    tbb_build(TBB_ROOT ${TBB_ROOT} MAKE_ARGS tbb_build_dir=${CMAKE_CURRENT_BINARY_DIR}/tbb_build
-                tbb_build_prefix=tbb CONFIG_DIR TBB_DIR)
+    # Workaround:
+    # TBB does not understand that /usr/bin/c++ and /usr/bin/g++ is the same on linux.
+    # TBB asks for C Compiler not C++ compiler.
+    if(CMAKE_CXX_COMPILER STREQUAL "/usr/bin/c++")
+        set(TBB_COMPILER "/usr/bin/gcc")
+    else()
+        set(TBB_COMPILER ${CMAKE_C_COMPILER})
+    endif()
+    if(CMAKE_OSX_SYSROOT)
+        tbb_build(TBB_ROOT ${TBB_ROOT}
+                  MAKE_ARGS tbb_build_dir=${CMAKE_CURRENT_BINARY_DIR}/tbb_build
+                            tbb_build_prefix=tbb
+                            compiler=${TBB_COMPILER}
+                            stdver=c++11
+                            SDKROOT=${CMAKE_OSX_SYSROOT}
+                  CONFIG_DIR TBB_DIR)
+    else()
+        tbb_build(TBB_ROOT ${TBB_ROOT}
+                  MAKE_ARGS tbb_build_dir=${CMAKE_CURRENT_BINARY_DIR}/tbb_build
+                            tbb_build_prefix=tbb
+                            compiler=${TBB_COMPILER}
+                            stdver=c++11
+                  CONFIG_DIR TBB_DIR)
+    endif()
     find_package(TBB REQUIRED tbb)
     if (NOT TBB_FOUND)
         message(FATAL_ERROR "TBB is needed by the CPU backend and was not found")
