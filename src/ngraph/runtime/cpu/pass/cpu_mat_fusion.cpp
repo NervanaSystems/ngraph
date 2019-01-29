@@ -306,6 +306,18 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
             NodeVector params = p.first;
             NodeVector& op_nodes = p.second;
 
+            // validate if the captured data slices share the same weights to perform D'=[x*y, z]
+            // else we will return;
+            auto shared_weight = op_seg_map.at(op_nodes.at(0)).at(Type::WEIGHTS);
+            for (auto& op : op_nodes)
+            {
+                if (shared_weight != op_seg_map.at(op).at(Type::WEIGHTS))
+                {
+                    modify_graph = false;
+                    return;
+                }
+            }
+
             auto data_node = params.at(Type::DATA);
             auto weights_node = params.at(Type::WEIGHTS);
             auto bias_node = params.at(Type::BIAS);
