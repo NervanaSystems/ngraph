@@ -428,7 +428,17 @@ void codegen::CompilerCore::configure_search_path()
     add_header_search_path("/Library/Developer/CommandLineTools/usr/include/c++/v1");
     add_header_search_path("/usr/local/include");
     add_header_search_path(CLANG_BUILTIN_HEADERS_PATH);
-    add_header_search_path("/usr/include");
+    std::string mojave_isysroot = file_util::path_join(
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs",
+        "MacOSX10.14.sdk");
+    if (file_util.exists(mojave_isysroot))
+    {
+        add_header_search_path(file_util::path_join(mojave_isysroot, "usr/include"));
+    }
+    else
+    {
+        add_header_search_path("/usr/include");
+    }
 #else
     // Add base toolchain-supplied header paths
     // Ideally one would use the Linux toolchain definition in clang/lib/Driver/ToolChains.h
