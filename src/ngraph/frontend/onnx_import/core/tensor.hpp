@@ -182,6 +182,34 @@ namespace ngraph
                 }
 
                 template <>
+                inline std::vector<int8_t> get_data(const onnx::TensorProto& tensor)
+                {
+                    if (tensor.has_raw_data())
+                    {
+                        return detail::__get_raw_data<int8_t>(tensor.raw_data());
+                    }
+                    if (tensor.data_type() == onnx::TensorProto_DataType_INT8)
+                    {
+                        return detail::__get_data<int8_t>(tensor.int32_data());
+                    }
+                    throw error::tensor::invalid_data_type{tensor.data_type()};
+                }
+
+                template <>
+                inline std::vector<int16_t> get_data(const onnx::TensorProto& tensor)
+                {
+                    if (tensor.has_raw_data())
+                    {
+                        return detail::__get_raw_data<int16_t>(tensor.raw_data());
+                    }
+                    if (tensor.data_type() == onnx::TensorProto_DataType_INT16)
+                    {
+                        return detail::__get_data<int16_t>(tensor.int32_data());
+                    }
+                    throw error::tensor::invalid_data_type{tensor.data_type()};
+                }
+
+                template <>
                 inline std::vector<int32_t> get_data(const onnx::TensorProto& tensor)
                 {
                     if (tensor.has_raw_data())
@@ -207,6 +235,48 @@ namespace ngraph
                         throw error::tensor::invalid_data_type{tensor.data_type()};
                     }
                     return detail::__get_data<int64_t>(tensor.int64_data());
+                }
+
+                template <>
+                inline std::vector<uint8_t> get_data(const onnx::TensorProto& tensor)
+                {
+                    if (tensor.has_raw_data())
+                    {
+                        return detail::__get_raw_data<uint8_t>(tensor.raw_data());
+                    }
+                    if (tensor.data_type() == onnx::TensorProto_DataType_UINT8)
+                    {
+                        return detail::__get_data<uint8_t>(tensor.int32_data());
+                    }
+                    throw error::tensor::invalid_data_type{tensor.data_type()};
+                }
+
+                template <>
+                inline std::vector<uint16_t> get_data(const onnx::TensorProto& tensor)
+                {
+                    if (tensor.has_raw_data())
+                    {
+                        return detail::__get_raw_data<uint16_t>(tensor.raw_data());
+                    }
+                    if (tensor.data_type() == onnx::TensorProto_DataType_UINT16)
+                    {
+                        return detail::__get_data<uint16_t>(tensor.int32_data());
+                    }
+                    throw error::tensor::invalid_data_type{tensor.data_type()};
+                }
+
+                template <>
+                inline std::vector<uint32_t> get_data(const onnx::TensorProto& tensor)
+                {
+                    if (tensor.has_raw_data())
+                    {
+                        return detail::__get_raw_data<uint32_t>(tensor.raw_data());
+                    }
+                    if (tensor.data_type() == onnx::TensorProto_DataType_UINT32)
+                    {
+                        return detail::__get_data<uint32_t>(tensor.uint64_data());
+                    }
+                    throw error::tensor::invalid_data_type{tensor.data_type()};
                 }
 
                 template <>
