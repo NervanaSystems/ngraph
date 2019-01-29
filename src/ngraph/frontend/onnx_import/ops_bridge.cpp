@@ -40,6 +40,7 @@
 #include "op/conv.hpp"
 #include "op/conv_transpose.hpp"
 #include "op/cos.hpp"
+#include "op/depth_to_space.hpp"
 #include "op/div.hpp"
 #include "op/elu.hpp"
 #include "op/equal.hpp"
@@ -84,6 +85,7 @@
 #include "op/softmax.hpp"
 #include "op/softplus.hpp"
 #include "op/softsign.hpp"
+#include "op/space_to_depth.hpp"
 #include "op/split.hpp"
 #include "op/sqrt.hpp"
 #include "op/squeeze.hpp"
@@ -211,6 +213,7 @@ namespace ngraph
             REGISTER_OPERATOR("Conv", 1, conv);
             REGISTER_OPERATOR("ConvTranspose", 1, conv_transpose);
             REGISTER_OPERATOR("Cos", 1, cos);
+            REGISTER_OPERATOR("DepthToSpace", 1, depth_to_space);
             REGISTER_OPERATOR("Div", 1, div);
             REGISTER_OPERATOR("Div", 7, div);
             REGISTER_OPERATOR("Dropout", 1, identity);
@@ -269,6 +272,7 @@ namespace ngraph
             REGISTER_OPERATOR("Softmax", 1, softmax);
             REGISTER_OPERATOR("Softplus", 1, softplus);
             REGISTER_OPERATOR("Softsign", 1, softsign);
+            REGISTER_OPERATOR("SpaceToDepth", 1, space_to_depth);
             REGISTER_OPERATOR("Split", 1, split);
             REGISTER_OPERATOR("Sqrt", 1, sqrt);
             REGISTER_OPERATOR("Squeeze", 1, squeeze);
