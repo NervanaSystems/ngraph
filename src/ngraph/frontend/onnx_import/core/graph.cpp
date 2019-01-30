@@ -46,11 +46,9 @@ namespace ngraph
             }
         } // namespace detail
 
-        Graph::Graph(const onnx::GraphProto& graph_proto,
-                     const Model& model,
-                     const Weights& weights)
+        Graph::Graph(const onnx::GraphProto& graph_proto, Model& model, const Weights& weights)
             : m_graph_proto{&graph_proto}
-            , m_model{const_cast<Model*>(&model)}
+            , m_model{&model}
         {
             for (const auto& tensor : m_graph_proto->initializer())
             {
