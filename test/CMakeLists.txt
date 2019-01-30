@@ -153,7 +153,7 @@ foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})
     # because the autodiff tests recompile with each iteration. That behavior
     # can be changed, but it's a bit involved, so for the time being we just
     # reduce the number of test iterations on non-INTERPRETER backends.
-    if(${BACKEND_NAME} MATCHES ^INTERPRETER$)
+    if(BACKEND_NAME MATCHES "^INTERPRETER$")
         set(TEST_LOOPS 100)
     else()
         set(TEST_LOOPS 2)
@@ -195,7 +195,7 @@ if(NOT WIN32)
 endif()
 target_link_libraries(unit-test PRIVATE ${CMAKE_DL_LIBS})
 
-if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
+if (CMAKE_CXX_COMPILER_ID MATCHES "^(Apple)?Clang$")
     target_compile_options(unit-test PRIVATE -Wno-undef -Wno-reserved-id-macro)
 endif()
 
