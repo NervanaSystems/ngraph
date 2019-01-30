@@ -19,11 +19,11 @@ cmake_minimum_required (VERSION 3.1)
 # set directory where the custom finders live
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
-if(CMAKE_SOURCE_DIR STREQUAL "${CMAKE_BINARY_DIR}")
+if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
     message(FATAL_ERROR "In-source builds are not allowed.")
 endif()
 
-if(CMAKE_GENERATOR STREQUAL "Ninja")
+if("${CMAKE_GENERATOR}" STREQUAL "Ninja")
     message(FATAL_ERROR "Ninja generator not supported.")
 endif()
 
@@ -72,7 +72,7 @@ if (UNIX AND NOT APPLE)
     set(LINUX TRUE)
 endif()
 
-if (CMAKE_GENERATOR MATCHES "^Visual Studio.*$")
+if ("${CMAKE_GENERATOR}" MATCHES "^Visual Studio.*$")
     set(MSVS TRUE)
 endif()
 
@@ -236,7 +236,7 @@ endif()
 #-----------------------------------------------------------------------------------------------
 
 # Compiler-specific logic...
-if (CMAKE_CXX_COMPILER_ID MATCHES "^(Apple)?Clang$")
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     message( STATUS "Setting clang flags...")
     include( cmake/clang_4_0_flags.cmake )
 endif()
@@ -277,7 +277,7 @@ if(NOT WIN32)
     set(NGRAPH_TARGET_ARCH native CACHE
         STRING "Target CPU architecture to build for. Defaults to the native CPU architecture")
 
-    if (NOT NGRAPH_TARGET_ARCH STREQUAL "native")
+    if (NOT "${NGRAPH_TARGET_ARCH}" STREQUAL "native")
         message(WARNING
             "Build target architecture was overridden. The resulting build might not work correctly on the host CPU.")
     endif()

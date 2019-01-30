@@ -21,7 +21,7 @@ macro(STYLE_CHECK_FILE PATH)
     execute_process(COMMAND ${CLANG_FORMAT} -style=file -output-replacements-xml ${PATH}
         OUTPUT_VARIABLE STYLE_CHECK_RESULT
     )
-    if(STYLE_CHECK_RESULT MATCHES ".*<replacement .*")
+    if("${STYLE_CHECK_RESULT}" MATCHES ".*<replacement .*")
         list(APPEND ERROR_LIST ${PATH})
     endif()
 endmacro()

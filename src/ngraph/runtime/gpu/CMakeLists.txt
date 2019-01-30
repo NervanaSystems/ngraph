@@ -89,14 +89,14 @@ if (NGRAPH_GPU_ENABLE)
 
     set (DO_CUDA_COMPILE FALSE)
     if (CUDA9_FOUND)
-        if ((CMAKE_CXX_COMPILER_ID STREQUAL "GNU"))
+        if (("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"))
             # CUDA 9 supports up to gcc 6.x
             if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7.0)
                 set (DO_CUDA_COMPILE TRUE)
             else()
                 message(STATUS "NVCC will not be used because CUDA 9 only supports up to gcc 6.x")
             endif()
-        elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
             # CUDA 9 supports up to clang 3.9
             if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.0)
                 set (DO_CUDA_COMPILE TRUE)
@@ -106,14 +106,14 @@ if (NGRAPH_GPU_ENABLE)
         endif()
     else()
         # CUDA 8 (minimum version of CUDA we support)
-        if ((CMAKE_CXX_COMPILER_ID STREQUAL "GNU"))
+        if (("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"))
             # Current release of CUDA 8 supports up to gcc 5.4
             if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.5)
                 set (DO_CUDA_COMPILE TRUE)
             else()
                 message(STATUS "NVCC will not be used because CUDA 8 only supports up to gcc 5.4")
             endif()
-        elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
             # CUDA 8 supports up to clang 3.8
             if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.9)
                 set (DO_CUDA_COMPILE TRUE)
@@ -124,7 +124,7 @@ if (NGRAPH_GPU_ENABLE)
     endif()
 
     if (DO_CUDA_COMPILE)
-        if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
             # CUDA_PROPAGATE_HOST_FLAGS is true by default, so disable
             # clang warnings that are known to flag CUDA code
             set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};

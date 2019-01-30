@@ -14,7 +14,7 @@
 # limitations under the License.
 # ******************************************************************************
 
-if(CMAKE_SOURCE_DIR STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
+if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
     message(FATAL_ERROR "Please call from nGraph !")
 endif()
 
