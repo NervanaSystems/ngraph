@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <functional>
 #include <set>
 
 #include "graph.hpp"
@@ -25,22 +26,23 @@ namespace ngraph
     {
         namespace detail
         {
-            std::string to_string(const std::set<std::string>& set)
+            std::string to_string(
+                const std::map<std::string, std::reference_wrapper<const onnx::NodeProto>>& map)
             {
                 std::string result;
-                for (auto it = std::begin(set); it != std::end(set); ++it)
+                for (auto it = std::begin(map); it != std::end(map); ++it)
                 {
-                    result += (it != std::begin(set) ? ", " : "") + *it;
+                    result += (it != std::begin(map) ? ", " : "") + it->first;
                 }
                 return result;
             }
 
-            inline std::string get_node_domain(const onnx::NodeProto& node_proto)
+            std::string get_node_domain(const onnx::NodeProto& node_proto)
             {
                 return (node_proto.domain().empty() ? "" : node_proto.domain());
             }
 
-            inline std::string to_string(const onnx::NodeProto& node_proto)
+            std::string to_string(const onnx::NodeProto& node_proto)
             {
                 return (get_node_domain(node_proto) + ".") + node_proto.op_type();
             }
@@ -72,21 +74,28 @@ namespace ngraph
             }
 
             // Verify that ONNX graph contains only nodes of available operator types
-            std::set<std::string> unknown_operator_types;
+            std::map<std::string, std::reference_wrapper<const onnx::NodeProto>> unknown_operators;
             for (const auto& node_proto : m_graph_proto->node())
             {
                 if (!m_model->is_operator_available(node_proto))
                 {
+                    unknown_operators.emplace(detail::to_string(node_proto), node_proto);
+                    // Try adding missing domain
                     m_model->enable_opset_domain(detail::get_node_domain(node_proto));
-                    if (!m_model->is_operator_available(node_proto))
-                    {
-                        unknown_operator_types.emplace(detail::to_string(node_proto));
-                    }
                 }
             }
 
-            NGRAPH_ASSERT(unknown_operator_types.empty())
-                << "unknown operations: " << detail::to_string(unknown_operator_types);
+            // Reverify wheter we still have any unavailable operators.
+            for (const auto& pair : unknown_operators)
+            {
+                if (m_model->is_operator_available(pair.second))
+                {
+                    unknown_operators.erase(detail::to_string(pair.second));
+                }
+            }
+
+            NGRAPH_ASSERT(unknown_operators.empty()) << "unknown operations: "
+                                                     << detail::to_string(unknown_operators);
 
             // Process ONNX graph nodes, convert to nGraph nodes
             for (const auto& node_proto : m_graph_proto->node())
