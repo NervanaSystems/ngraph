@@ -33,14 +33,14 @@ namespace ngraph
             {
                 m_opset.emplace(id.domain(),
                                 OperatorsBridge::get_operator_set(
-                                    id.version(), (id.domain() == "ai.onnx" ? "" : id.domain())));
+                                    (id.domain() == "ai.onnx" ? "" : id.domain()), id.version()));
             }
             // onnx.proto(.3): the empty string ("") for domain or absence of opset_import field
             // implies the operator set that is defined as part of the ONNX specification.
             const auto dm = m_opset.find("");
             if (dm == std::end(m_opset))
             {
-                m_opset.emplace("", OperatorsBridge::get_operator_set(ONNX_OPSET_VERSION, ""));
+                m_opset.emplace("", OperatorsBridge::get_operator_set("", ONNX_OPSET_VERSION));
             }
         }
 
