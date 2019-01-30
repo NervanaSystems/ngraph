@@ -94,6 +94,7 @@
 #include "op/tan.hpp"
 #include "op/tanh.hpp"
 #include "op/thresholded_relu.hpp"
+#include "op/topk.hpp"
 #include "op/transpose.hpp"
 #include "op/unsqueeze.hpp"
 #include "op/xor.hpp"
@@ -288,6 +289,7 @@ namespace ngraph
             REGISTER_OPERATOR("Tan", 1, tan);
             REGISTER_OPERATOR("Tanh", 1, tanh);
             REGISTER_OPERATOR("ThresholdedRelu", 1, thresholded_relu);
+            REGISTER_OPERATOR("TopK", 1, topk);
             REGISTER_OPERATOR("Transpose", 1, transpose);
             REGISTER_OPERATOR("Unsqueeze", 1, unsqueeze);
             REGISTER_OPERATOR("Xor", 1, logical_xor);
