@@ -17,6 +17,7 @@
 #include <onnx-ml.pb.h>
 
 #include "model.hpp"
+#include "ngraph/log.hpp"
 #include "ops_bridge.hpp"
 
 namespace ngraph
@@ -73,7 +74,15 @@ namespace ngraph
 
         void Model::enable_opset_domain(const std::string& domain)
         {
-            m_opset.emplace(domain, OperatorsBridge::get_operator_set(domain));
+            OperatorSet opset{OperatorsBridge::get_operator_set(domain)};
+            if (opset.empty())
+            {
+                NGRAPH_WARN << "Couldn't enable domain: " << domain
+                            << " since it hasn't any registered operators.";
+
+                return;
+            }
+            m_opset.emplace(domain, opset);
         }
 
     } // namespace onnx_import
