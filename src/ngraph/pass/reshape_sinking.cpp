@@ -529,8 +529,11 @@ bool ngraph::pass::ReshapeSinking::run_on_function(std::shared_ptr<ngraph::Funct
             // scenarios and marks some reshapes as too "toxic" to sink
             // For now, this heuristic works really well.
             // Note, get_users(*true*) which means we only care about
-            // live users of Reshape
-            if (slice->get_argument(0)->get_users(true).size() == 1)
+            // live users of Reshape. However get_users(*true*) cause
+            // significant time increase on graphs with many slice ops,
+            // so for now we are removing "true" check and let backend
+            // handle reshape sinking for slice operation.
+            if (slice->get_argument(0)->get_users().size() == 1)
             {
                 sink_slice(slice, reorders, reshapes_to_delete);
             }
