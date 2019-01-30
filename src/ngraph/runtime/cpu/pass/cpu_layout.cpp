@@ -193,8 +193,11 @@ static void set_native_layouts(runtime::cpu::CPU_ExternalFunction* external_func
         {
             auto native_md =
                 mkldnn_utils::create_blocked_mkldnn_md(shape, cpu_tvl->get_strides(), et);
-            if (!mkldnn_utils::compare_mkldnn_mds(cpu_tvl->get_mkldnn_md(), native_md))
+            if (!mkldnn_utils::compare_mkldnn_mds(cpu_tvl->get_mkldnn_md(), native_md) && shape_size(shape) != 1)
             {
+                // TODO (jbobba) : size 1 tensors shouldn't need layout conversions unless we 
+                // are dealing with padded layouts. Add asserts and figure out why we are hitting
+                // this condition
                 auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
                 layout->set_mkldnn_md(native_md);
                 auto new_node = std::shared_ptr<Node>(new runtime::cpu::op::ConvertLayout(
