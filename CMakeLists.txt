@@ -85,9 +85,16 @@ if (APPLE AND (NOT CMAKE_OSX_SYSROOT))
         OSX_SHORT_VERSION "${OSX_FULL_VERSION}")
 
     if(NOT (OSX_SHORT_VERSION VERSION_LESS 10.14))
+        # Xcode is installed
         set(XCODE_ISYSROOT /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX${OSX_SHORT_VERSION}.sdk)
+        message(STATUS "Trying Xcode sdk at ${XCODE_ISYSROOT}.")
         if(NOT EXISTS ${XCODE_ISYSROOT})
-            message(FATAL_ERROR "Cannot find sdk at ${XCODE_ISYSROOT}")
+            # Command line tools only
+            set(XCODE_ISYSROOT /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk)
+            message(STATUS "Trying command line tool sdk at ${XCODE_ISYSROOT}.")
+            if(NOT EXISTS ${XCODE_ISYSROOT})
+                message(FATAL_ERROR "Cannot find macos sdk.")
+            endif()
         endif()
         message(STATUS "Setting CMAKE_OSX_SYSROOT for macos ${OSX_SHORT_VERSION} to ${XCODE_ISYSROOT}")
         set(CMAKE_OSX_SYSROOT ${XCODE_ISYSROOT})
