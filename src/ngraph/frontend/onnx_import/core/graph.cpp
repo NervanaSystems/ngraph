@@ -52,7 +52,7 @@ namespace ngraph
             ///
             /// \return     The unique identificator.
             ///
-            static std::string get_op_uid(const onnx::NodeProto& node_proto)
+            static std::string get_op_domain_and_name(const onnx::NodeProto& node_proto)
             {
                 std::string domain = get_node_domain(node_proto);
                 return (domain.empty() ? "" : domain + ".") + node_proto.op_type();
@@ -90,7 +90,8 @@ namespace ngraph
             {
                 if (!m_model->is_operator_available(node_proto))
                 {
-                    unknown_operators.emplace(detail::get_op_uid(node_proto), node_proto);
+                    unknown_operators.emplace(detail::get_op_domain_and_name(node_proto),
+                                              node_proto);
                     // Try adding missing domain
                     m_model->enable_opset_domain(detail::get_node_domain(node_proto));
                 }
@@ -101,7 +102,7 @@ namespace ngraph
             {
                 if (m_model->is_operator_available(pair.second))
                 {
-                    unknown_operators.erase(detail::get_op_uid(pair.second));
+                    unknown_operators.erase(detail::get_op_domain_and_name(pair.second));
                 }
             }
 
