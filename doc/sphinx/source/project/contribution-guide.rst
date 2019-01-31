@@ -1,8 +1,8 @@
-.. code-contributor-README:
+.. contribution-guide:
 
-######################
-Code Contributor Guide
-######################
+##################
+Contribution Guide
+##################
 
 License
 =======
@@ -11,6 +11,7 @@ All contributed code must be compatible with the `Apache 2`_ license,
 preferably by being contributed under the Apache 2 license. Code
 contributed with another license will need the license reviewed by
 Intel before it can be accepted.
+
 
 Code formatting
 ===============
@@ -257,6 +258,9 @@ it is automatically enforced and reduces merge conflicts.
        int x;
        int y;
        int* z;
+
+
+To contribute documentation for your code, please see the :doc:`doc-contributor-README`. 
 
 
 .. _Apache 2: https://www.apache.org/licenses/LICENSE-2.0

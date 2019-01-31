@@ -1,11 +1,8 @@
-.. graph-basics:
 
-#############
+.. _graph-basics:
+
 Graph Basics
-#############
-
-Overview
-========
+============
 
 This section provides a brief overview of some concepts used in the nGraph 
 Library. It also introduces new ideas regarding our unique departure from the 
@@ -62,6 +59,7 @@ being "specialized" and "adaptable" (the trade-off between training and inferenc
 nGraph Library permits algorithms implemented in a DNN to be both specialized 
 and adaptable. The new generation of software design in and around AI ecosystems 
 can and should be much more flexible.   
+
 
 
 * :ref:`framework_bridges`
@@ -268,3 +266,6 @@ that are arguments.
 
 
 .. _SIMT-friendly: https://en.wikipedia.org/wiki/Single_instruction,_multiple_threads
+
+
+

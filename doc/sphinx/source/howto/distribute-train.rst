@@ -6,11 +6,11 @@ Train using multiple nGraph CPU backends with data parallel
 
 In the :doc:`previous section <../howto/derive-for-training>`, we described the 
 steps needed to create a "trainable" nGraph model. Here we demonstrate how to 
-train a data parallel model by distributing the graph across devices.
+train a data parallel model by distributing the graph to more than one device.
 
+As of release version 0.12, the default build is with OpenMPI.  To use the 
+`Intel MLSL`_ library, set the following compilation flag at build time: 
 
-
-To use this mode of training, create an nGraph build with the cmake flag 
 ``-DNGRAPH_DISTRIBUTED_ENABLE=TRUE``.
 
 To deploy data-parallel training on backends supported by nGraph API, the 

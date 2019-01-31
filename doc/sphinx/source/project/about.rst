@@ -1,6 +1,5 @@
 .. about: 
 
-
 Architecture, Features, FAQs
 ############################
 

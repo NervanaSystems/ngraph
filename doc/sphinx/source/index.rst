@@ -17,33 +17,72 @@
 .. This documentation is available online at
 .. https://ngraph.nervanasys.com/docs/latest
 
+######################
+nGraph Compiler stack 
+######################
 
-Documentation 
-=============
 
 .. toctree::
    :maxdepth: 1
-   :caption: Core Documentation
+   :caption: Introduction 
 
-   introduction.rst
-   buildlb.rst
+   project/introduction.rst
+   project/graph-basics.rst
+   project/other-efforts.rst
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Framework support
+
    framework-integration-guides.rst
    frameworks/validation.rst
    frameworks/index.rst
-   graph-basics.rst
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: nGraph Core
+
+   buildlb.rst
    howto/index.rst
    ops/about.rst
    ops/index.rst
    fusion/index.rst
-   programmable/index.rst
-   distr/index.rst
+   python_api/index.rst
+
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
+   :caption: Backend support
+
+   programmable/index.rst
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Distributed training
+
+   distr/index.rst
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Diagnostics and visualization
+
+   diagnostics/nbench.rst
+   diagnostics/performance-profile.rst
+   diagnostics/visualize.rst
+   diagnostics/debug.rst 
+
+
+.. toctree::
+   :maxdepth: 1
    :caption: Project Metadata
 
-   project/index.rst
+   project/contribution-guide.rst
+   project/about.rst 
    glossary.rst
+
 
 
 Indices and tables

@@ -1,4 +1,4 @@
-.. project/index.rst
+.. project/index:
 
 #################
 More about nGraph
@@ -7,9 +7,8 @@ More about nGraph
 This section contains documentation about the project and how to contribute.
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
-   about.rst
    release-notes.rst
-   code-contributor-README.rst
+   contribution-guide.rst
    doc-contributor-README.rst
