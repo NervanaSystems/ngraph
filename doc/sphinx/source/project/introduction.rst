@@ -28,7 +28,7 @@ Illustrated below is a simplified DL stack, showing relative complexity of each:
 
 .. _figure-1:
 
-.. figure:: graphics/nGraph-Simplified-DL-Stack.png
+.. figure:: graphics/components-dl-stack.png
    :width: 650px
    :alt: A simplified DL stack
 
@@ -39,7 +39,7 @@ user bases.
 
 .. _figure-2:
 
-.. figure:: graphics/nGraph-common-stack.png
+.. figure:: graphics/a-common-stack.png
    :width: 650px
    :alt: A common implementation
 
