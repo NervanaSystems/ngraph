@@ -55,7 +55,7 @@ elseif(APPLE)
     )
 
     add_custom_command(TARGET ext_tbb POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${SOURCE_DIR}/lib ${NGRAPH_BUILD_DIR}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SOURCE_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX} ${NGRAPH_BUILD_DIR}
         COMMENT "Move tbb libraries to ngraph build directory"
     )
 endif()
