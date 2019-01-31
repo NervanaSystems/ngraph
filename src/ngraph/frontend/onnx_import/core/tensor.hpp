@@ -195,20 +195,6 @@ namespace ngraph
                     throw error::tensor::invalid_data_type{tensor.data_type()};
                 }
 
-                /*template <>
-                inline std::vector<int8_t> get_data(const onnx::TensorProto& tensor)
-                {
-                    if (tensor.has_raw_data())
-                    {
-                        return detail::__get_raw_data<int8_t>(tensor.raw_data());
-                    }
-                    if (tensor.data_type() == onnx::TensorProto_DataType_INT8)
-                    {
-                        return detail::__get_data<int8_t>(tensor.int32_data());
-                    }
-                    throw error::tensor::invalid_data_type{tensor.data_type()};
-                }*/
-
                 template <>
                 inline std::vector<int16_t> get_data(const onnx::TensorProto& tensor)
                 {

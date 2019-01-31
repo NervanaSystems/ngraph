@@ -32,6 +32,7 @@ set(SRC
     control_dependencies.cpp
     coordinate.cpp
     copy.cpp
+    core.cpp
     cpio.cpp
     cse.cpp
     element_type.cpp
@@ -66,7 +67,8 @@ if (NGRAPH_INTERPRETER_ENABLE)
     list(APPEND SRC
         backend_debug_api.cpp
         builder.cpp
-        backend_api.cpp)
+        backend_api.cpp
+        hybrid_backend.cpp)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTERPRETER)
 endif()
 
@@ -224,7 +226,7 @@ endif()
 
 if (NGRAPH_INTERPRETER_ENABLE)
     target_compile_definitions(unit-test PRIVATE NGRAPH_INTERPRETER_ENABLE)
-    target_link_libraries(unit-test PRIVATE interpreter_backend)
+    target_link_libraries(unit-test PRIVATE interpreter_backend hybrid_base)
 endif()
 
 if (NGRAPH_GPU_ENABLE)
