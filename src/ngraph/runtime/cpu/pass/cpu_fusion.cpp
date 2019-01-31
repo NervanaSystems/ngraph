@@ -1022,8 +1022,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_qconv_bias_dq_relu_q()
 
         auto qconv = std::static_pointer_cast<op::QuantizedConvolutionBias>(
             m.get_match_root()->get_argument(0)->get_argument(0)->get_argument(0));
-        auto output_scale = qconv->get_argument(4);
         auto two = op::Constant::create(element::f32, Shape{}, {2.0f});
+        auto requant_scale = two * qconv->get_argument(3);
+        auto output_scale = qconv->get_argument(4);
 
         if (qconv->get_users().size() > 1)
         {
@@ -1042,7 +1043,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_qconv_bias_dq_relu_q()
                                                            qconv->get_padding_below(),
                                                            qconv->get_padding_above(),
                                                            qconv->get_data_dilation_strides(),
-                                                           qconv->get_argument(3),
+                                                           requant_scale,
                                                            true,
                                                            output_scale);
         ngraph::replace_node(m.get_match_root(), qconv_bias_relu);
@@ -1128,20 +1129,20 @@ void ngraph::runtime::cpu::pass::CPUFusionQuantSum::construct_qconv_bias_dq_sign
         pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_qconv_bias_dq_add_relu against "
                      << m.get_match_root()->get_name();
-
         //std::cout << "IN PATTERN SIGNED SUM " << std::endl;
         auto add_m = std::dynamic_pointer_cast<op::Add>(m.get_match_root()->get_argument(0));
         auto pattern_map = m.get_pattern_map();
         auto inplace_input = pattern_map[add_input];
         auto qconv =
             std::static_pointer_cast<op::QuantizedConvolutionBias>(pattern_map[qconv_bias_label]);
+        auto two = op::Constant::create(element::f32, Shape{}, {2.0f});
+        auto requant_scale = two * qconv->get_argument(3);
         auto output_scale = qconv->get_argument(4);
         auto dq1 = std::dynamic_pointer_cast<op::Dequantize>(pattern_map[dq_label]);
         auto dq2 = std::dynamic_pointer_cast<op::Dequantize>(pattern_map[dq_r_label]);
-        auto two = op::Constant::create(element::f32, Shape{}, {2.0f});
         auto dq1_scale = dq1->get_argument(1);
         auto dq2_scale = dq2->get_argument(1);
-        auto sum_scale = two * (dq2_scale / dq1_scale);
+        auto sum_scale = (dq2_scale / dq1_scale);
 
         if (get_user_count(qconv.get()) > 1)
         {
@@ -1177,7 +1178,7 @@ void ngraph::runtime::cpu::pass::CPUFusionQuantSum::construct_qconv_bias_dq_sign
             qconv->get_padding_below(),
             qconv->get_padding_above(),
             qconv->get_data_dilation_strides(),
-            qconv->get_argument(3),
+            requant_scale,
             sum_scale,
             true);
         auto convert = std::make_shared<op::Convert>(qconv_bias_add_relu, element::u8);
@@ -1249,8 +1250,9 @@ void ngraph::runtime::cpu::pass::CPUFusionQuantSum::construct_qconv_bias_dq_unsi
         auto inplace_input = pattern_map[add_input];
         auto qconv =
             std::static_pointer_cast<op::QuantizedConvolutionBias>(pattern_map[qconv_bias_label]);
-        auto output_scale = qconv->get_argument(4);
         auto two = op::Constant::create(element::f32, Shape{}, {2.0f});
+        auto requant_scale = two * qconv->get_argument(3);
+        auto output_scale = qconv->get_argument(4);
         auto dq1 = std::dynamic_pointer_cast<op::Dequantize>(pattern_map[dq_label]);
         auto dq2 = std::dynamic_pointer_cast<op::Dequantize>(pattern_map[dq_r_label]);
         auto dq1_scale = dq1->get_argument(1);
@@ -1291,7 +1293,7 @@ void ngraph::runtime::cpu::pass::CPUFusionQuantSum::construct_qconv_bias_dq_unsi
                                                               qconv->get_padding_below(),
                                                               qconv->get_padding_above(),
                                                               qconv->get_data_dilation_strides(),
-                                                              qconv->get_argument(3),
+                                                              requant_scale,
                                                               sum_scale,
                                                               true);
         auto zero_point = op::Constant::create(element::u8, Shape{}, {0});
