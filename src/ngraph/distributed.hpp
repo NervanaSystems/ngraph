@@ -30,6 +30,6 @@ namespace ngraph
 
     private:
         void finalize();
-        bool this_init_mpi;
+        bool this_init_comm;
     };
 }
