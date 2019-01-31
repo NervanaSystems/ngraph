@@ -52,7 +52,8 @@ namespace ngraph
             {
                 // TODO: need to handle the case where offset is provided (assuming 0)
                 // TODO: need to establish cross-nGraph view of scale (mult or div)
-                auto requantization_scale = (input_scale * filter_scale) / output_scale;
+                auto two = make_constant(element::f32, input_scale->get_shape(), 2);
+                auto requantization_scale = (input_scale * filter_scale) / (two * output_scale);
 
                 return make_shared<op::QuantizedConvolution>(input,
                                                              filter,
@@ -61,7 +62,10 @@ namespace ngraph
                                                              padding_below,
                                                              padding_above,
                                                              data_dilation_strides,
-                                                             requantization_scale);
+                                                             requantization_scale,
+                                                             input_scale,
+                                                             filter_scale,
+                                                             output_scale);
             }
 
             std::shared_ptr<Node>
@@ -82,7 +86,8 @@ namespace ngraph
             {
                 // TODO: need to handle the case where offset is provided (assuming 0)
                 // TODO: need to establish cross-nGraph view of scale (mult or div)
-                auto requantization_scale = (input_scale * filter_scale) / output_scale;
+                auto two = make_constant(element::f32, input_scale->get_shape(), 2);
+                auto requantization_scale = (input_scale * filter_scale) / (two * output_scale);
 
                 if (bias->get_element_type() != element::i32)
                 {
@@ -104,7 +109,9 @@ namespace ngraph
                                                                  padding_below,
                                                                  padding_above,
                                                                  data_dilation_strides,
-                                                                 requantization_scale);
+                                                                 requantization_scale,
+                                                                 false,
+                                                                 output_scale);
             }
         }
     }

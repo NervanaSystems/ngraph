@@ -40,7 +40,8 @@ namespace ngraph
                                      const CoordinateDiff& padding_above,
                                      const Strides& data_dilation_strides,
                                      const std::shared_ptr<Node> scale,
-                                     const bool with_relu = false);
+                                     const bool with_relu = false,
+                                     const std::shared_ptr<Node> output_scale = nullptr);
 
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
             const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }
