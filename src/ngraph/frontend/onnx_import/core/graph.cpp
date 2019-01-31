@@ -42,10 +42,20 @@ namespace ngraph
                 return (node_proto.domain().empty() ? "" : node_proto.domain());
             }
 
-            // The node
+            /// \brief      Gets the operator represented by provided node unique identificator.
+            ///
+            /// \param[in]  node_proto  The node protobuf representation object.
+            ///
+            /// \note       The operator is uniquely identified by the tuple (domain, op_type,
+            ///             since_version). The first two elements are stored in NodeProto object,
+            ///             thus we use only them.
+            ///
+            /// \return     The unique identificator.
+            ///
             static std::string get_op_uid(const onnx::NodeProto& node_proto)
             {
-                return get_node_domain(node_proto) + "." + node_proto.op_type();
+                std::string domain = get_node_domain(node_proto);
+                return (domain.empty() ? "" : domain + ".") + node_proto.op_type();
             }
         } // namespace detail
 
