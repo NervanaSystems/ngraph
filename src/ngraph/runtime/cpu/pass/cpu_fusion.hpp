@@ -27,6 +27,7 @@ namespace ngraph
             namespace pass
             {
                 class CPUFusion;
+                class CPUFusionQuantSum;
             }
         }
     }
@@ -70,6 +71,7 @@ public:
             construct_conv_add_relu();
             construct_update_slice();
             construct_fuse_lstm_recurrent_state();
+            construct_qconv_bias_dq_relu_q();
         }
     }
 
@@ -99,4 +101,25 @@ private:
     void construct_groupconv_batchnorm_global_stats_folding_relu();
     void construct_update_slice();
     void construct_fuse_lstm_recurrent_state();
+    void construct_qconv_bias_dq_relu_q();
+};
+
+class ngraph::runtime::cpu::pass::CPUFusionQuantSum : public ngraph::pass::GraphRewrite
+{
+public:
+    CPUFusionQuantSum(ngraph::pass::FusionType fusions = ngraph::pass::ALL_FUSIONS)
+        : GraphRewrite()
+    {
+        if (fusions & ngraph::pass::REGULAR_FUSIONS)
+        {
+            construct_qconv_bias_dq_signed_add_relu();
+            construct_qconv_bias_dq_unsigned_add_relu();
+            construct_dq_q();
+        }
+    }
+
+private:
+    void construct_dq_q();
+    void construct_qconv_bias_dq_signed_add_relu();
+    void construct_qconv_bias_dq_unsigned_add_relu();
 };

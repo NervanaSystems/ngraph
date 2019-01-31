@@ -33,7 +33,10 @@ namespace ngraph
                                  const CoordinateDiff& padding_below,
                                  const CoordinateDiff& padding_above,
                                  const Strides& data_dilation_strides,
-                                 const std::shared_ptr<Node> scale);
+                                 const std::shared_ptr<Node> scale,
+                                 const std::shared_ptr<Node> input_scale = nullptr,
+                                 const std::shared_ptr<Node> filter_scale = nullptr,
+                                 const std::shared_ptr<Node> output_scale = nullptr);
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
             const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }
             const CoordinateDiff& get_padding_below() const { return m_padding_below; }

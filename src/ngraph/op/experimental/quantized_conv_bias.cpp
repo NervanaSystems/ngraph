@@ -35,8 +35,10 @@ op::QuantizedConvolutionBias::QuantizedConvolutionBias(const shared_ptr<Node>& d
                                                        const CoordinateDiff& padding_above,
                                                        const Strides& data_dilation_strides,
                                                        const std::shared_ptr<Node> scale,
-                                                       const bool with_relu)
-    : Op("QuantizedConvolutionBias", check_single_output_args({data_batch, filters, bias, scale}))
+                                                       const bool with_relu,
+                                                       const std::shared_ptr<Node> output_scale)
+    : Op("QuantizedConvolutionBias",
+         check_single_output_args({data_batch, filters, bias, scale, output_scale}))
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
     , m_padding_below(padding_below)
@@ -74,7 +76,7 @@ op::QuantizedConvolutionBias::QuantizedConvolutionBias(const shared_ptr<Node>& d
 
 shared_ptr<Node> op::QuantizedConvolutionBias::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 4)
+    if (new_args.size() != 5)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
@@ -88,7 +90,8 @@ shared_ptr<Node> op::QuantizedConvolutionBias::copy_with_new_args(const NodeVect
                                                          get_padding_above(),
                                                          get_data_dilation_strides(),
                                                          new_args.at(3),
-                                                         m_with_relu));
+                                                         m_with_relu,
+                                                         new_args.at(4)));
 }
 
 op::QuantizedConvolutionBiasAdd::QuantizedConvolutionBiasAdd(const shared_ptr<Node>& data_batch,

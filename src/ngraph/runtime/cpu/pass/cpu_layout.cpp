@@ -193,8 +193,11 @@ static void set_native_layouts(runtime::cpu::CPU_ExternalFunction* external_func
         {
             auto native_md =
                 mkldnn_utils::create_blocked_mkldnn_md(shape, cpu_tvl->get_strides(), et);
-            if (!mkldnn_utils::compare_mkldnn_mds(cpu_tvl->get_mkldnn_md(), native_md))
+            if (!mkldnn_utils::compare_mkldnn_mds(cpu_tvl->get_mkldnn_md(), native_md) && shape_size(shape) != 1)
             {
+                // TODO (jbobba) : size 1 tensors shouldn't need layout conversions unless we 
+                // are dealing with padded layouts. Add asserts and figure out why we are hitting
+                // this condition
                 auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
                 layout->set_mkldnn_md(native_md);
                 auto new_node = std::shared_ptr<Node>(new runtime::cpu::op::ConvertLayout(
@@ -451,6 +454,8 @@ namespace ngraph
                 template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::QuantizedConvolution)
                 {
+                    auto qconvolution =
+                        static_cast<const ngraph::op::QuantizedConvolution*>(node.get());
                     if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
                         vector<memory::desc> i_mds;
@@ -462,6 +467,16 @@ namespace ngraph
                             node.get(), 2, false, memory::format::x);
 
                         i_mds.push_back(scale_input_md);
+
+                        if (qconvolution->get_argument(3) != nullptr)
+                        {
+                            auto input_scale_md = mkldnn_utils::create_default_mkldnn_md(
+                                node.get(), 3, false, memory::format::x);
+                            auto filter_scale_md = mkldnn_utils::create_default_mkldnn_md(
+                                node.get(), 4, false, memory::format::x);
+                            i_mds.push_back(input_scale_md);
+                            i_mds.push_back(filter_scale_md);
+                        }
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
                     }
@@ -546,6 +561,8 @@ namespace ngraph
                 template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::QuantizedConvolutionBias)
                 {
+                    auto qconvolution =
+                        static_cast<const ngraph::op::QuantizedConvolutionBias*>(node.get());
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
                         vector<memory::desc> i_mds;
@@ -557,6 +574,12 @@ namespace ngraph
                             node.get(), 3, false, memory::format::x);
 
                         i_mds.push_back(scale_input_md);
+                        if (qconvolution->get_argument(4) != nullptr)
+                        {
+                            auto output_scale_md = mkldnn_utils::create_default_mkldnn_md(
+                                node.get(), 4, false, memory::format::x);
+                            i_mds.push_back(output_scale_md);
+                        }
 
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);

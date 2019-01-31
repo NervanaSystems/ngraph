@@ -58,7 +58,10 @@ namespace ngraph
                                                              padding_below,
                                                              padding_above,
                                                              data_dilation_strides,
-                                                             requantization_scale);
+                                                             requantization_scale,
+                                                             input_scale,
+                                                             filter_scale,
+                                                             output_scale);
             }
 
             std::shared_ptr<Node>
@@ -90,7 +93,9 @@ namespace ngraph
                                                                  padding_below,
                                                                  padding_above,
                                                                  data_dilation_strides,
-                                                                 requantization_scale);
+                                                                 requantization_scale,
+                                                                 false,
+                                                                 output_scale);
             }
         }
     }
