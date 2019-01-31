@@ -431,7 +431,7 @@ void codegen::CompilerCore::configure_search_path()
     std::string mojave_isysroot = file_util::path_join(
         "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs",
         "MacOSX10.14.sdk");
-    if (file_util.exists(mojave_isysroot))
+    if (file_util::exists(mojave_isysroot))
     {
         add_header_search_path(file_util::path_join(mojave_isysroot, "usr/include"));
     }
