@@ -26,7 +26,7 @@ namespace ngraph
     {
         namespace detail
         {
-            std::string to_string(
+            static std::string to_string(
                 const std::map<std::string, std::reference_wrapper<const onnx::NodeProto>>& map)
             {
                 std::string result;
@@ -37,14 +37,15 @@ namespace ngraph
                 return result;
             }
 
-            std::string get_node_domain(const onnx::NodeProto& node_proto)
+            static std::string get_node_domain(const onnx::NodeProto& node_proto)
             {
                 return (node_proto.domain().empty() ? "" : node_proto.domain());
             }
 
-            std::string to_string(const onnx::NodeProto& node_proto)
+            // The node
+            static std::string get_op_uid(const onnx::NodeProto& node_proto)
             {
-                return (get_node_domain(node_proto) + ".") + node_proto.op_type();
+                return get_node_domain(node_proto) + "." + node_proto.op_type();
             }
         } // namespace detail
 
@@ -79,7 +80,7 @@ namespace ngraph
             {
                 if (!m_model->is_operator_available(node_proto))
                 {
-                    unknown_operators.emplace(detail::to_string(node_proto), node_proto);
+                    unknown_operators.emplace(detail::get_op_uid(node_proto), node_proto);
                     // Try adding missing domain
                     m_model->enable_opset_domain(detail::get_node_domain(node_proto));
                 }
@@ -90,7 +91,7 @@ namespace ngraph
             {
                 if (m_model->is_operator_available(pair.second))
                 {
-                    unknown_operators.erase(detail::to_string(pair.second));
+                    unknown_operators.erase(detail::get_op_uid(pair.second));
                 }
             }
 
