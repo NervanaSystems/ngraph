@@ -13,4 +13,5 @@ This section contains documentation about the project and how to contribute.
    about.rst
    other-efforts.rst
    contribution-guide.rst
+   governance.rst
    doc-contributor-README.rst
