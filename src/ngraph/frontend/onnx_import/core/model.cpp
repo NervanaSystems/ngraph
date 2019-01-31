@@ -74,15 +74,22 @@ namespace ngraph
 
         void Model::enable_opset_domain(const std::string& domain)
         {
-            OperatorSet opset{OperatorsBridge::get_operator_set(domain)};
-            if (opset.empty())
+            // There is no need to 'update' already enabled domain.
+            // Since this function may be called only during model import,
+            // (maybe multiple times) the registered domain opset won't differ
+            // between subsequent calls.
+            if (m_opset.find(domain) == std::end(m_opset))
             {
-                NGRAPH_WARN << "Couldn't enable domain: " << domain
-                            << " since it hasn't any registered operators.";
+                OperatorSet opset{OperatorsBridge::get_operator_set(domain)};
+                if (opset.empty())
+                {
+                    NGRAPH_WARN << "Couldn't enable domain: " << domain
+                                << " since it hasn't any registered operators.";
 
-                return;
+                    return;
+                }
+                m_opset.emplace(domain, opset);
             }
-            m_opset.emplace(domain, opset);
         }
 
     } // namespace onnx_import
