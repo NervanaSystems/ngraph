@@ -99,7 +99,7 @@ and the generated output will show readers of your helpful documentation
    :caption: "caption for a block of code that initializes tensors"
 
 Our documentation practices are designed around "write once, reuse" that we can 
-use to prevent code bloat.  See the :doc:`code-contributor-README` for our code 
+use to prevent code bloat.  See the :doc:`contribution-guide` for our code 
 style guide.       
 
 

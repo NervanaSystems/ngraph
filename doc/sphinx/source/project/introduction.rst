@@ -28,7 +28,7 @@ Illustrated below is a simplified DL stack, showing relative complexity of each:
 
 .. _figure-1:
 
-.. figure:: graphics/components-dl-stack.png
+.. figure:: ../graphics/components-dl-stack.png
    :width: 650px
    :alt: A simplified DL stack
 
@@ -39,7 +39,7 @@ user bases.
 
 .. _figure-2:
 
-.. figure:: graphics/a-common-stack.png
+.. figure:: ../graphics/a-common-stack.png
    :width: 650px
    :alt: A common implementation
 
@@ -59,7 +59,7 @@ if any component on either end changes.
 
 .. _figure-3:
 
-.. figure:: graphics/scalability-matters.png
+.. figure:: ../graphics/dl-current-state.png
    :width: 650px
    :alt: Scalability matters
 

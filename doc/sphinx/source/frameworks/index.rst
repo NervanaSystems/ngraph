@@ -1,8 +1,8 @@
 .. frameworks/index.rst: 
 
-#####################
-Connecting Frameworks   
-#####################
+#################
+Framework Support   
+#################
 
 While a :abbr:`Deep Learning (DL)` :term:`framework` is ultimately meant for 
 end use by data scientists, or for deployment in cloud container environments, 
@@ -17,12 +17,15 @@ design. Articles here are also useful if you are working on something
 built-from-scratch, or on an existing framework that is less widely-supported 
 than the popular frameworks like TensorFlow and PyTorch. 
 
-.. toctree::
-   :maxdepth: 1 
 
+.. toctree::
+   :maxdepth: 1
+
+   ../framework-integration-guides.rst
+   validation.rst
    generic-configs.rst
    testing-latency.rst
-   validation.rst
+
 
 
 Understanding users of frameworks

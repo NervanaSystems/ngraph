@@ -1,12 +1,12 @@
 .. index.rst
 
 
-#######################
-Interact with Backends 
-#######################
+###############
+Backend Support 
+###############
 
-Backend
-========
+What is a backend?
+==================
 
 Backends are responsible for function execution and value allocation. They 
 can be used to :doc:`carry out a programmed computation<../howto/execute>`
@@ -21,6 +21,10 @@ section on :ref:`plaidml_`.
    :width: 650px
 
 
+
+Backend
+=======
+
 .. doxygenclass:: ngraph::runtime::Backend
    :project: ngraph
    :members:
@@ -28,7 +32,7 @@ section on :ref:`plaidml_`.
 
 
 Tensor
-=======
+======
 
 .. doxygenclass:: ngraph::runtime::Tensor
    :project: ngraph
@@ -36,10 +40,22 @@ Tensor
 
 
 
+HostTensor
+==========
+
+.. doxygenclass:: ngraph::runtime::HostTensor
+   :project: ngraph
+   :members:
+
+
+
+
+
+
 .. _plaidml_:
 
 PlaidML
-========
+=======
 
 The nGraph ecosystem has recently added initial (experimental) support for `PlaidML`_,
 which is an advanced :abbr:`Machine Learning (ML)` library that can further

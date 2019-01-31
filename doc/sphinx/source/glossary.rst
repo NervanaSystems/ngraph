@@ -50,12 +50,13 @@ Glossary
       reuse, and monetary cost among other things. An ISA defines everything a 
       machine-language programmer needs to know in order to program a particular 
       backend device. What an ISA defines will differ among ISAs; in general, it
-      defines things like:  
-         * supported *data types*; 
-         * physical *states* available, such as the main memory and registers; 
-         * *semantics*, such as the memory consistency and addressing modes; 
-         * *low-level machine instructions* that comprise a machine language; 
-         * and the *input/output model*.
+      defines things like:
+
+         - supported *data types*; 
+         - physical *states* available, such as the main memory and registers; 
+         - *semantics*, such as the memory consistency and addressing modes; 
+         - *low-level machine instructions* that comprise a machine language; 
+         - and the *input/output model*.
 
       Be careful to not confuse ISAs with microarchitectures.    
 

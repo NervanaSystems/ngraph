@@ -23,33 +23,22 @@ nGraph Compiler stack
 
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Introduction 
+   :maxdepth: 1 
 
    project/introduction.rst
-   project/graph-basics.rst
-   project/other-efforts.rst
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Framework support
-
-   framework-integration-guides.rst
-   frameworks/validation.rst
    frameworks/index.rst
 
 
 .. toctree::
    :maxdepth: 1
    :caption: nGraph Core
-
+   
    buildlb.rst
+   fusion/index.rst
    howto/index.rst
    ops/about.rst
    ops/index.rst
-   fusion/index.rst
    python_api/index.rst
-
 
 .. toctree::
    :maxdepth: 1
@@ -80,7 +69,7 @@ nGraph Compiler stack
    :caption: Project Metadata
 
    project/contribution-guide.rst
-   project/about.rst 
+   project/index.rst 
    glossary.rst
 
 
