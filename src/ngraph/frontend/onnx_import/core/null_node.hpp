@@ -25,6 +25,7 @@ namespace ngraph
 {
     namespace onnx_import
     {
+        /// \brief Placeholder for expected but missing node in graph.
         class NullNode : public ngraph::Node
         {
         public:
