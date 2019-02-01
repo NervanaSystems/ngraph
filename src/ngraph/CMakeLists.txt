@@ -198,6 +198,7 @@ endif()
 
 add_subdirectory(codegen)
 add_subdirectory(runtime)
+add_subdirectory(aot)
 
 target_compile_definitions(ngraph
     PRIVATE
