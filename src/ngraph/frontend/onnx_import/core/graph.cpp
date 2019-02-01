@@ -27,7 +27,8 @@ namespace ngraph
         namespace detail
         {
             static std::string to_string(
-                const std::map<std::string, std::reference_wrapper<const onnx::NodeProto>>& map)
+                const std::unordered_map<std::string,
+                                         std::reference_wrapper<const onnx::NodeProto>>& map)
             {
                 std::string result;
                 for (auto it = std::begin(map); it != std::end(map); ++it)
@@ -85,7 +86,8 @@ namespace ngraph
             }
 
             // Verify that ONNX graph contains only nodes of available operator types
-            std::map<std::string, std::reference_wrapper<const onnx::NodeProto>> unknown_operators;
+            std::unordered_map<std::string, std::reference_wrapper<const onnx::NodeProto>>
+                unknown_operators;
             for (const auto& node_proto : m_graph_proto->node())
             {
                 if (!m_model->is_operator_available(node_proto))
