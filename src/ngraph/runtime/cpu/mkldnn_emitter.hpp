@@ -40,6 +40,7 @@
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
 #include "ngraph/type/element_type.hpp"
+#include "ngraph/util.hpp"
 
 #define MKLDNN_DIMS(X) mkldnn::memory::dims(X.begin(), X.end())
 
@@ -55,8 +56,8 @@ namespace ngraph
             class MKLDNNWorkspace
             {
             public:
-                MKLDNNWorkspace(size_t size) { buf = reinterpret_cast<char*>(malloc(size)); }
-                ~MKLDNNWorkspace() { free(buf); }
+                MKLDNNWorkspace(size_t size) { buf = reinterpret_cast<char*>(ngraph_malloc(size)); }
+                ~MKLDNNWorkspace() { ngraph_free(buf); }
                 char* buf;
 
                 MKLDNNWorkspace(const MKLDNNWorkspace&) = delete;

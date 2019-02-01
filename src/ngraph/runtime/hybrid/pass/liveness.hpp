@@ -16,30 +16,25 @@
 
 #pragma once
 
-#include "ngraph/node.hpp"
+#include "ngraph/descriptor/tensor.hpp"
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
-    namespace op
+    namespace runtime
     {
-        /// \brief %Function call operation.
-        class FunctionCall : public Node
+        namespace hybrid
         {
-        public:
-            /// \brief Constructs a function call operation.
-            ///
-            /// \param function The function to be called.
-            /// \param args The arguments for the function call.
-            FunctionCall(std::shared_ptr<Function> function, const NodeVector& args);
-
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-
-            /// \return A singleton vector containing the function to be called.
-            std::vector<std::shared_ptr<Function>> get_functions() const override;
-
-        protected:
-            std::shared_ptr<Function> m_function;
-        };
+            namespace pass
+            {
+                class Liveness;
+            }
+        }
     }
 }
+
+class ngraph::runtime::hybrid::pass::Liveness : public ngraph::pass::FunctionPass
+{
+public:
+    bool run_on_function(std::shared_ptr<ngraph::Function>) override;
+};

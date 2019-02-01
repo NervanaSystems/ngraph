@@ -16,8 +16,31 @@
 
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include <string>
 
-namespace py = pybind11;
+#include "ngraph/pass/pass.hpp"
 
-void regclass_pyngraph_op_Reduce(py::module m);
+namespace ngraph
+{
+    namespace runtime
+    {
+        namespace hybrid
+        {
+            namespace pass
+            {
+                class Dump;
+            }
+        }
+    }
+}
+
+class ngraph::runtime::hybrid::pass::Dump : public ngraph::pass::ModulePass
+{
+public:
+    Dump(const std::string& output_file);
+
+    virtual bool run_on_module(std::vector<std::shared_ptr<ngraph::Function>>&) override;
+
+private:
+    const std::string m_output_file;
+};

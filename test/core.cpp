@@ -14,18 +14,23 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include "gtest/gtest.h"
 
-#include "ngraph/pass/pass.hpp"
+#include "ngraph/file_util.hpp"
+#include "ngraph/ngraph.hpp"
+#include "ngraph/serializer.hpp"
 
-namespace ngraph
+using namespace ngraph;
+using namespace std;
+
+TEST(core, function_size)
 {
-    namespace pass
-    {
-        class AnyAllReplacement : public NodePass
-        {
-        public:
-            bool run_on_node(std::shared_ptr<ngraph::Node> node) override;
-        };
-    }
+    const string m1 = file_util::path_join(SERIALIZED_ZOO, "mxnet/mnist_mlp_forward.json");
+    const string m2 = file_util::path_join(SERIALIZED_ZOO, "mxnet/10_bucket_LSTM.json");
+
+    auto f1 = deserialize(m1);
+    auto f2 = deserialize(m2);
+    auto s1 = f1->get_graph_size();
+    auto s2 = f2->get_graph_size();
+    EXPECT_GT(s2, s1);
 }

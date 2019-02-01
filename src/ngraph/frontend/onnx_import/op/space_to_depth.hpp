@@ -16,18 +16,28 @@
 
 #pragma once
 
-#include "ngraph/pass/pass.hpp"
+#include "core/node.hpp"
+#include "ngraph/node_vector.hpp"
 
 namespace ngraph
 {
-    namespace pass
+    namespace onnx_import
     {
-        // Pass to convert Reduce ops into Any/All where possible. NOTE: this will disappear once
-        // the Reduce op is retired.
-        class AnyAllInsertion : public NodePass
+        namespace op
         {
-        public:
-            bool run_on_node(std::shared_ptr<ngraph::Node> node) override;
-        };
-    }
-}
+            namespace set_1
+            {
+                /// \brief      Permutes input tensor blocks of spatial data into depth.
+                ///
+                /// \param[in]  node  The ONNX input node describing operation.
+                ///
+                /// \return     NodeVector containing Tensor with shape:
+                ///             [N, C * blocksize * blocksize, H / blocksize, W / blocksize]
+                NodeVector space_to_depth(const Node& node);
+            } // namespace set_1
+
+        } //namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

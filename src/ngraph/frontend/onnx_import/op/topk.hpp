@@ -14,19 +14,30 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#pragma once
 
-#include "ngraph/function.hpp"
-#include "ngraph/op/function_call.hpp"
-#include "pyngraph/ops/function_call.hpp"
+#include "core/node.hpp"
+#include "ngraph/node_vector.hpp"
 
-namespace py = pybind11;
-
-void regclass_pyngraph_op_FunctionCall(py::module m)
+namespace ngraph
 {
-    py::class_<ngraph::op::FunctionCall, std::shared_ptr<ngraph::op::FunctionCall>, ngraph::Node>
-        function_call(m, "FunctionCall");
-    function_call.doc() = "ngraph.impl.op.FunctionCall wraps ngraph::op::FunctionCall";
-    function_call.def(py::init<std::shared_ptr<ngraph::Function>, const ngraph::NodeVector&>());
-}
+    namespace onnx_import
+    {
+        namespace op
+        {
+            namespace set_1
+            {
+                /// \brief Performs ONNX TopK operation.
+                ///
+                /// \param node The ONNX node object representing this operation.
+                /// \return The vector containing Ngraph nodes producing output of ONNX TopK
+                ///         operation(both values and indices).
+                NodeVector topk(const Node& node);
+
+            } // namespace set_1
+
+        } //namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph
