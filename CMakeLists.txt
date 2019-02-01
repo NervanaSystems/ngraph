@@ -336,7 +336,7 @@ else()
     include(cmake/external_llvm.cmake)
 endif()
 
-if (WIN32)
+if (WIN32 OR APPLE)
     include(cmake/external_tbb_prebuilt.cmake)
 else()
     include(cmake/external_tbb.cmake)
