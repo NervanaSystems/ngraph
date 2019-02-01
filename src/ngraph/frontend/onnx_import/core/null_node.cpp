@@ -28,7 +28,6 @@ namespace ngraph
             m_name = "NullNode";
         }
 
-        void NullNode::validate_and_infer_types() {}
         std::shared_ptr<Node> NullNode::copy_with_new_args(const NodeVector& new_args) const
         {
             check_new_args_count(this, new_args);
