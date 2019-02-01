@@ -168,12 +168,6 @@ namespace ngraph
             return result;
         }
 
-        OperatorSet OperatorsBridge::_get_operator_set(const std::string& domain)
-        {
-            std::int64_t version = 10;
-            return _get_operator_set(version, domain);
-        }
-
         bool OperatorsBridge::_is_operator_registered(const std::string& name,
                                                       std::int64_t version,
                                                       const std::string& domain)
