@@ -26,27 +26,39 @@ namespace ngraph
 {
     namespace op
     {
-        /// An op directly representing PlaidML Tile code.
+        /// An op directly representing backend-specific code.
         ///
-        /// N.B. Not all backends support Tile operations.
-        class Tile;
+        /// N.B. Not all backends support all operation languages; a
+        /// given backend might only support a given passthrough
+        /// operation language in certain modes.
+        class Passthrough;
     }
 }
 
-class ngraph::op::Tile final : public Node
+class ngraph::op::Passthrough final : public Op
 {
 public:
-    Tile(const std::string& node_type,
-         const std::string& function,
-         const NodeVector& args,
-         std::vector<std::tuple<element::Type, PartialShape>> outputs);
+    Passthrough(const std::string& logical_type, // aka "What this operation is doing"
+                const std::string& language,     // The language the implementation is written in
+                const std::string& function,     // The operation implementation
+                const NodeVector& args,
+                std::vector<std::tuple<element::Type, PartialShape>> outputs);
 
     void validate_and_infer_types() final;
 
     std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const final;
 
-    const std::string& func() const { return m_function; }
+    const std::string& logical_type() const { return m_logical_type; }
+    const std::string& language() const { return m_language; }
+    const std::string& function() const { return m_function; }
+    const std::vector<std::tuple<element::Type, PartialShape>>& output_shapes() const
+    {
+        return m_output_shapes;
+    }
+
 private:
+    std::string m_logical_type;
+    std::string m_language;
     std::string m_function;
     std::vector<std::tuple<element::Type, PartialShape>> m_output_shapes;
 };

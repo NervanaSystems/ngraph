@@ -17,10 +17,13 @@
 #include <fstream>
 #include <sstream>
 
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
 #include "ngraph/file_util.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/passthrough.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
@@ -29,6 +32,10 @@
 using namespace std;
 using namespace ngraph;
 using json = nlohmann::json;
+
+using ::testing::ElementsAre;
+using ::testing::NotNull;
+using ::testing::StrEq;
 
 template <typename T>
 T get_or_default(nlohmann::json& j, const std::string& key, const T& default_value)
@@ -153,4 +160,49 @@ TEST(benchmark, serialize)
     shared_ptr<Function> f = ngraph::deserialize(json_string);
     timer.stop();
     cout << "deserialize took " << timer.get_milliseconds() << "ms\n";
+}
+
+MATCHER_P2(IsOutputShape, type, shape, "")
+{
+    return std::get<0>(arg) == type && std::get<1>(arg).to_shape() == shape;
+}
+
+TEST(serialize, passthrough)
+{
+    const string tmp_file = "serialize_passthrough.json";
+
+    Shape shape{2, 2, 2};
+    auto p = make_shared<op::Passthrough>(
+        "SerializationTest",
+        "Plain",
+        "Hello, world!",
+        NodeVector{},
+        std::vector<std::tuple<element::Type, PartialShape>>{{element::f32, PartialShape{2, 3}},
+                                                             {element::i8, PartialShape{4, 5}}});
+    auto f = make_shared<Function>(NodeVector{std::make_shared<op::GetOutputElement>(p, 0),
+                                              std::make_shared<op::GetOutputElement>(p, 1)},
+                                   ParameterVector{});
+    serialize(tmp_file, f);
+
+    auto g = deserialize(tmp_file);
+    file_util::remove_file(tmp_file);
+    ASSERT_THAT(g, NotNull());
+
+    std::shared_ptr<op::Passthrough> pt;
+    for (const auto& op : g->get_ops())
+    {
+        pt = dynamic_pointer_cast<op::Passthrough>(op);
+        if (pt)
+        {
+            break;
+        }
+    }
+    ASSERT_THAT(pt.get(), NotNull());
+
+    EXPECT_THAT(pt->logical_type(), StrEq("SerializationTest"));
+    EXPECT_THAT(pt->language(), StrEq("Plain"));
+    EXPECT_THAT(pt->function(), StrEq("Hello, world!"));
+    EXPECT_THAT(pt->output_shapes(),
+                ElementsAre(IsOutputShape(element::f32, Shape{2, 3}),
+                            IsOutputShape(element::i8, Shape{4, 5})));
 }

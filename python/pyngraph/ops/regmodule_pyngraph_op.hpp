@@ -61,6 +61,7 @@
 #include "pyngraph/ops/or.hpp"
 #include "pyngraph/ops/pad.hpp"
 #include "pyngraph/ops/parameter.hpp"
+#include "pyngraph/ops/passthrough.hpp"
 #include "pyngraph/ops/power.hpp"
 #include "pyngraph/ops/product.hpp"
 #include "pyngraph/ops/relu.hpp"
@@ -79,7 +80,6 @@
 #include "pyngraph/ops/sum.hpp"
 #include "pyngraph/ops/tan.hpp"
 #include "pyngraph/ops/tanh.hpp"
-#include "pyngraph/ops/tile.hpp"
 #include "pyngraph/ops/topk.hpp"
 
 namespace py = pybind11;

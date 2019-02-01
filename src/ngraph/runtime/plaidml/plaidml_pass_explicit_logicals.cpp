@@ -26,7 +26,7 @@
 #include "ngraph/op/not.hpp"
 #include "ngraph/op/not_equal.hpp"
 #include "ngraph/op/or.hpp"
-#include "ngraph/op/tile.hpp"
+#include "ngraph/op/passthrough.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/any_of.hpp"
@@ -79,8 +79,9 @@ void ngraph::runtime::plaidml::pass::ExplicitLogicals::construct_logical_to_data
         ngraph::insert_new_node_between(
             producer,
             consumer,
-            std::make_shared<op::Tile>(
+            std::make_shared<op::Passthrough>(
                 "ConvertLogicalToData",
+                "Tile",
                 "function (I) -> (O) { O = as_int(I ? 1 : 0, 8);}",
                 NodeVector{producer},
                 std::vector<std::tuple<element::Type, PartialShape>>{

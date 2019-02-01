@@ -94,6 +94,7 @@ set (SRC
     op/or.cpp
     op/pad.cpp
     op/parameter.cpp
+    op/passthrough.cpp
     op/power.cpp
     op/product.cpp
     op/quantize.cpp
@@ -116,7 +117,6 @@ set (SRC
     op/sum.cpp
     op/tan.cpp
     op/tanh.cpp
-    op/tile.cpp
     op/topk.cpp
     op/util/arithmetic_reduction.cpp
     op/util/binary_elementwise_arithmetic.cpp

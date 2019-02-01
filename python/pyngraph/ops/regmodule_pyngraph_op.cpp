@@ -72,6 +72,7 @@ void regmodule_pyngraph_op(py::module m_op)
     regclass_pyngraph_op_Or(m_op);
     regclass_pyngraph_op_Pad(m_op);
     regclass_pyngraph_op_Parameter(m_op);
+    regclass_pyngraph_op_Passthrough(m_op);
     regclass_pyngraph_op_Power(m_op);
     regclass_pyngraph_op_Product(m_op);
     regclass_pyngraph_op_Relu(m_op);
@@ -90,7 +91,6 @@ void regmodule_pyngraph_op(py::module m_op)
     regclass_pyngraph_op_Sum(m_op);
     regclass_pyngraph_op_Tan(m_op);
     regclass_pyngraph_op_Tanh(m_op);
-    regclass_pyngraph_op_Tile(m_op);
     regclass_pyngraph_op_TopK(m_op);
     regclass_pyngraph_op_Result(m_op);
 }

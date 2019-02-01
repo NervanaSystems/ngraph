@@ -17,16 +17,17 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/op/tile.hpp"
-#include "pyngraph/ops/tile.hpp"
+#include "ngraph/op/passthrough.hpp"
+#include "pyngraph/ops/passthrough.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_Tile(py::module m)
+void regclass_pyngraph_op_Passthrough(py::module m)
 {
-    py::class_<ngraph::op::Tile, std::shared_ptr<ngraph::op::Tile>, ngraph::Node> tile(m, "Tile");
-    tile.doc() = "ngraph.impl.op.Tile wraps ngraph::op::Tile";
-    tile.def(py::init<const std::string&,
+    py::class_<ngraph::op::Passthrough, std::shared_ptr<ngraph::op::Passthrough>, ngraph::Node> pass{m, "Passthrough"};
+    pass.doc() = "ngraph.impl.op.Passthrough wraps ngraph::op::Passthrough";
+    pass.def(py::init<const std::string&,
+                      const std::string&,
                       const std::string&,
                       const ngraph::NodeVector&,
                       std::vector<std::tuple<ngraph::element::Type, ngraph::PartialShape>>>());

@@ -16,7 +16,8 @@
 
 #include <utility>
 
-#include "ngraph/op/tile.hpp"
+#include "ngraph/except.hpp"
+#include "ngraph/op/passthrough.hpp"
 #include "ngraph/runtime/plaidml/plaidml_impl.hpp"
 
 namespace vp = vertexai::plaidml;
@@ -27,13 +28,18 @@ namespace ngraph
     {
         namespace plaidml
         {
-            NGRAPH_PLAIDML_OP_CLASS(ImplTile, OpImpl<op::Tile>);
+            NGRAPH_PLAIDML_OP_CLASS(ImplPassthrough, OpImpl<op::Passthrough>);
         }
     }
 }
 
-void ngraph::runtime::plaidml::ImplTile::Apply()
+void ngraph::runtime::plaidml::ImplPassthrough::Apply()
 {
+    if (op().language() != "Tile")
+    {
+        throw unsupported_op{"Unsupported operation language: " + op().language()};
+    }
+
     vertexai::plaidml::function::positional_t inputs;
 
     for (std::size_t idx = 0; idx < op().get_input_size(); ++idx)
@@ -41,7 +47,7 @@ void ngraph::runtime::plaidml::ImplTile::Apply()
         inputs.emplace_back(op_input(idx));
     }
 
-    auto app = vp::function{op().func()}.apply(inputs);
+    auto app = vp::function{op().function()}.apply(inputs);
 
     for (std::size_t idx = 0; idx < op().get_output_size(); ++idx)
     {
