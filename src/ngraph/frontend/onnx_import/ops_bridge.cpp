@@ -115,6 +115,11 @@ namespace ngraph
                 find(std::int64_t version, const std::map<std::int64_t, Operator>& map)
             {
                 std::map<std::int64_t, Operator>::const_iterator it{};
+                // Get the latest version.
+                if (version == -1)
+                {
+                    return map.empty() ? std::end(map) : --std::end(map);
+                }
                 while (version > 0)
                 {
                     it = map.find(version--);
@@ -132,23 +137,29 @@ namespace ngraph
                                                  const std::string& domain,
                                                  Operator fn)
         {
-            m_map[domain][name].emplace(version, std::move(fn));
+            auto result = m_map[domain][name].emplace(version, std::move(fn));
+            if (result.second)
+            {
+                NGRAPH_WARN << "Overwriting existing operator: "
+                            << domain + "." + name + ":" + std::to_string(version);
+            }
         }
 
-        OperatorSet OperatorsBridge::_get_operator_set(std::int64_t version,
-                                                       const std::string& domain)
+        OperatorSet OperatorsBridge::_get_operator_set(const std::string& domain,
+                                                       std::int64_t version)
         {
             OperatorSet result;
+
             auto dm = m_map.find(domain);
             if (dm == std::end(m_map))
             {
                 throw error::UnknownDomain{domain};
             }
-            if (version > OperatorsBridge::LATEST_SUPPORTED_OPSET_VERSION)
+            if (domain == "" && version > OperatorsBridge::LATEST_SUPPORTED_ONNX_OPSET_VERSION)
             {
-                NGRAPH_WARN << "Currently operator set version: " << version << " is unsupported."
-                            << " Falling back to: "
-                            << OperatorsBridge::LATEST_SUPPORTED_OPSET_VERSION;
+                NGRAPH_WARN << "Currently ONNX operator set version: " << version
+                            << " is unsupported. Falling back to: "
+                            << OperatorsBridge::LATEST_SUPPORTED_ONNX_OPSET_VERSION;
             }
             for (const auto& op : dm->second)
             {
