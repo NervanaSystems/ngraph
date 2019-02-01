@@ -34,7 +34,7 @@ if ((NGRAPH_GPU_ENABLE OR NGRAPH_CPU_ENABLE) AND NOT NGRAPH_DEX_ONLY)
     get_target_property(LLVM_INCLUDE_DIR libllvm INTERFACE_INCLUDE_DIRECTORIES)
 
     # find_file(HEADER_1 cmath HINTS /usr/include/c++/7)
-    get_filename_component(CLANG_INCLUDE_DIR ${LLVM_INCLUDE_DIR}/../lib/clang/5.0.2/include ABSOLUTE)
+    get_filename_component(CLANG_INCLUDE_DIR ${LLVM_INCLUDE_DIR}/../lib/clang/7.0.1/include ABSOLUTE)
     get_filename_component(LIBCPP_INCLUDE_DIR ${LLVM_INCLUDE_DIR}/c++/v1 ABSOLUTE)
 
     if(NGRAPH_CPU_ENABLE)

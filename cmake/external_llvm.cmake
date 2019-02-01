@@ -24,8 +24,12 @@ endif()
 
 ExternalProject_Add(
     ext_clang
-    URL http://releases.llvm.org/5.0.2/cfe-5.0.2.src.tar.xz
-    URL_HASH SHA1=6581765ec52f8a6354ab56a8e55a8cac1aa5e388
+    #URL http://releases.llvm.org/5.0.2/cfe-5.0.2.src.tar.xz
+    #URL_HASH SHA1=6581765ec52f8a6354ab56a8e55a8cac1aa5e388
+    #URL http://prereleases.llvm.org/8.0.0/rc1/cfe-8.0.0rc1.src.tar.xz
+    #URL_HASH SHA1=f382305129b858549f72b2d14a57c931592f6dca
+    URL http://releases.llvm.org/7.0.1//cfe-7.0.1.src.tar.xz
+    URL_HASH SHA1=427e12762836d808583fb4149c033d02de0a8db2
     DOWNLOAD_NO_PROGRESS TRUE
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
@@ -39,8 +43,12 @@ set(CLANG_SOURCE_DIR ${SOURCE_DIR})
 
 ExternalProject_Add(
     ext_openmp
-    URL http://releases.llvm.org/5.0.2/openmp-5.0.2.src.tar.xz
-    URL_HASH SHA1=0e78a7646b63e074e31b6a65e15446af0bdf3c07
+    #URL http://releases.llvm.org/5.0.2/openmp-5.0.2.src.tar.xz
+    #URL_HASH SHA1=0e78a7646b63e074e31b6a65e15446af0bdf3c07
+    #URL http://prereleases.llvm.org/8.0.0/rc1/openmp-8.0.0rc1.src.tar.xz
+    #URL_HASH SHA1=26b973303cbfa40a29a2785ae6244aedaf8eccf1
+    URL http://releases.llvm.org/7.0.1/openmp-7.0.1.src.tar.xz
+    URL_HASH SHA1=3b931dcafbe6e621c9d99617235fd63f222c2ba2
     DOWNLOAD_NO_PROGRESS TRUE
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
@@ -61,8 +69,12 @@ endif()
 ExternalProject_Add(
     ext_llvm
     DEPENDS ext_clang ext_openmp
-    URL http://releases.llvm.org/5.0.2/llvm-5.0.2.src.tar.xz
-    URL_HASH SHA1=576d005305335049b89608d897d7ec184d99c6e1
+    #URL http://releases.llvm.org/5.0.2/llvm-5.0.2.src.tar.xz
+    #URL_HASH SHA1=576d005305335049b89608d897d7ec184d99c6e1
+    #URL http://prereleases.llvm.org/8.0.0/rc1/llvm-8.0.0rc1.src.tar.xz
+    #URL_HASH SHA1=9dbe169eefa295a0c8b031d0ecdd8d81f6e44fa8
+    URL http://releases.llvm.org/7.0.1/llvm-7.0.1.src.tar.xz
+    URL_HASH SHA1=f97632fcc3186eb0d396492ef8acfc807648580f
     DOWNLOAD_NO_PROGRESS TRUE
     CMAKE_GENERATOR ${CMAKE_GENERATOR}
     CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
@@ -71,13 +83,23 @@ ExternalProject_Add(
                 -DCMAKE_ASM_COMPILER=${LLVM_CMAKE_ASM_COMPILER}
                 -DCMAKE_CXX_FLAGS=${COMPILE_FLAGS}
                 -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/llvm
-                -DLLVM_ENABLE_ASSERTIONS=OFF
+                -DLLVM_INCLUDE_DOCS=OFF
                 -DLLVM_INCLUDE_TESTS=OFF
+                -DLLVM_INCLUDE_GO_TESTS=OFF
                 -DLLVM_INCLUDE_EXAMPLES=OFF
-                -DLLVM_BUILD_TOOLS=ON
+                -DLLVM_INCLUDE_BENCHMARKS=OFF
+                -DLLVM_BUILD_TOOLS=OFF
+                -DLLVM_BUILD_UTILS=OFF
+                -DLLVM_BUILD_RUNTIMES=OFF
+                -DLLVM_BUILD_RUNTIME=OFF
                 -DLLVM_TARGETS_TO_BUILD=X86
+                -DLLVM_ENABLE_BINDINGS=OFF
                 -DLLVM_ENABLE_TERMINFO=OFF
                 -DLLVM_ENABLE_ZLIB=OFF
+                -DLIBOMP_OMPT_SUPPORT=OFF
+                -DCLANG_BUILD_TOOLS=OFF
+                -DCLANG_ENABLE_ARCMT=OFF
+                -DCLANG_ENABLE_STATIC_ANALYZER=OFF
                 -DLLVM_EXTERNAL_CLANG_SOURCE_DIR=${CLANG_SOURCE_DIR}
                 -DLLVM_EXTERNAL_OPENMP_SOURCE_DIR=${OPENMP_SOURCE_DIR}
     UPDATE_COMMAND ""
@@ -85,21 +107,41 @@ ExternalProject_Add(
 )
 
 ExternalProject_Get_Property(ext_llvm INSTALL_DIR)
-
 set(LLVM_LINK_LIBS
+    #[[
+    # 5.0.2 does not have
+    # clangCrossTU
+    # 5.0.2 does not have, only used for building some clang tools
+    # clangHandleCXX
+    # clangHandleLLVM
+    # 5.0.2 does not have
+    # clangToolingInclusions
+    # 5.0.2 does not have
+    # LLVMAggressiveInstCombine
+    # LLVMFuzzMutate
+    # LLVMMCA
+    # LLVMOptRemarks
+    # LLVMTextAPI
+    # LLVMWindowsManifest
+    ]]
+    # Do not change order of libraries !!!
     ${EXTERNAL_PROJECTS_ROOT}/llvm/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangTooling${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${EXTERNAL_PROJECTS_ROOT}/llvm/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangCodeGen${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${EXTERNAL_PROJECTS_ROOT}/llvm/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangFrontendTool${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${EXTERNAL_PROJECTS_ROOT}/llvm/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangFrontend${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${EXTERNAL_PROJECTS_ROOT}/llvm/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangDriver${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${EXTERNAL_PROJECTS_ROOT}/llvm/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangSerialization${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${EXTERNAL_PROJECTS_ROOT}/llvm/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangCodeGen${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${EXTERNAL_PROJECTS_ROOT}/llvm/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangParse${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${EXTERNAL_PROJECTS_ROOT}/llvm/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangSema${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${EXTERNAL_PROJECTS_ROOT}/llvm/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangStaticAnalyzerFrontend${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${EXTERNAL_PROJECTS_ROOT}/llvm/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangStaticAnalyzerCheckers${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${EXTERNAL_PROJECTS_ROOT}/llvm/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangStaticAnalyzerCore${CMAKE_STATIC_LIBRARY_SUFFIX}
+    # Disable static analyzer
+    #${EXTERNAL_PROJECTS_ROOT}/llvm/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangStaticAnalyzerFrontend${CMAKE_STATIC_LIBRARY_SUFFIX}
+    #${EXTERNAL_PROJECTS_ROOT}/llvm/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangStaticAnalyzerCheckers${CMAKE_STATIC_LIBRARY_SUFFIX}
+    #${EXTERNAL_PROJECTS_ROOT}/llvm/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangStaticAnalyzerCore${CMAKE_STATIC_LIBRARY_SUFFIX}
+    # 5.0.2 does not have
+    ${EXTERNAL_PROJECTS_ROOT}/llvm/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangCrossTU${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${EXTERNAL_PROJECTS_ROOT}/llvm/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangAnalysis${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${EXTERNAL_PROJECTS_ROOT}/llvm/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangARCMigrate${CMAKE_STATIC_LIBRARY_SUFFIX}
+    # Disabled arc migrate
+    #${EXTERNAL_PROJECTS_ROOT}/llvm/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangARCMigrate${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${EXTERNAL_PROJECTS_ROOT}/llvm/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangRewriteFrontend${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${EXTERNAL_PROJECTS_ROOT}/llvm/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangEdit${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${EXTERNAL_PROJECTS_ROOT}/llvm/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangAST${CMAKE_STATIC_LIBRARY_SUFFIX}
@@ -141,6 +183,8 @@ set(LLVM_LINK_LIBS
     ${EXTERNAL_PROJECTS_ROOT}/llvm/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMTarget${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${EXTERNAL_PROJECTS_ROOT}/llvm/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMCoroutines${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${EXTERNAL_PROJECTS_ROOT}/llvm/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMipo${CMAKE_STATIC_LIBRARY_SUFFIX}
+    # 5.0.2 does not have
+    ${EXTERNAL_PROJECTS_ROOT}/llvm/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMAggressiveInstCombine${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${EXTERNAL_PROJECTS_ROOT}/llvm/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMInstrumentation${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${EXTERNAL_PROJECTS_ROOT}/llvm/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMVectorize${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${EXTERNAL_PROJECTS_ROOT}/llvm/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMScalarOpts${CMAKE_STATIC_LIBRARY_SUFFIX}
