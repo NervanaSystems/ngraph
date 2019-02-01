@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include "ngraph/node.hpp"
 #include "ngraph/node_vector.hpp"
 
