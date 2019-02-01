@@ -98,7 +98,8 @@ namespace ngraph
             }
 
             // Reverify wheter we still have any unavailable operators.
-            for (auto it = std::begin(unknown_operators); it != std::end(unknown_operators);)
+            auto it = std::begin(unknown_operators);
+            while (it != std::end(unknown_operators))
             {
                 if (m_model->is_operator_available(it->second))
                 {
