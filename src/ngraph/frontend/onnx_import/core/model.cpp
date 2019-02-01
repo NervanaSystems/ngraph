@@ -17,6 +17,7 @@
 #include <onnx-ml.pb.h>
 
 #include "model.hpp"
+#include "ngraph/log.hpp"
 #include "ops_bridge.hpp"
 
 namespace ngraph
@@ -33,14 +34,14 @@ namespace ngraph
             {
                 m_opset.emplace(id.domain(),
                                 OperatorsBridge::get_operator_set(
-                                    id.version(), (id.domain() == "ai.onnx" ? "" : id.domain())));
+                                    (id.domain() == "ai.onnx" ? "" : id.domain()), id.version()));
             }
             // onnx.proto(.3): the empty string ("") for domain or absence of opset_import field
             // implies the operator set that is defined as part of the ONNX specification.
             const auto dm = m_opset.find("");
             if (dm == std::end(m_opset))
             {
-                m_opset.emplace("", OperatorsBridge::get_operator_set(ONNX_OPSET_VERSION, ""));
+                m_opset.emplace("", OperatorsBridge::get_operator_set("", ONNX_OPSET_VERSION));
             }
         }
 
@@ -73,7 +74,22 @@ namespace ngraph
 
         void Model::enable_opset_domain(const std::string& domain)
         {
-            m_opset.emplace(domain, OperatorsBridge::get_operator_set(domain));
+            // There is no need to 'update' already enabled domain.
+            // Since this function may be called only during model import,
+            // (maybe multiple times) the registered domain opset won't differ
+            // between subsequent calls.
+            if (m_opset.find(domain) == std::end(m_opset))
+            {
+                OperatorSet opset{OperatorsBridge::get_operator_set(domain)};
+                if (opset.empty())
+                {
+                    NGRAPH_WARN << "Couldn't enable domain: " << domain
+                                << " since it hasn't any registered operators.";
+
+                    return;
+                }
+                m_opset.emplace(domain, opset);
+            }
         }
 
     } // namespace onnx_import
