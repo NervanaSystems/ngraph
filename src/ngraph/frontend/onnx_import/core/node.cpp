@@ -129,7 +129,7 @@ namespace ngraph
                 }
                 else
                 {
-                    result.push_back(std::make_shared<null_node>());
+                    result.push_back(std::make_shared<NullNode>());
                 }
             }
             return result;

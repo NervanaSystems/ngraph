@@ -23,10 +23,10 @@ namespace ngraph
 {
     namespace onnx_import
     {
-        class null_node : public ngraph::Node
+        class NullNode : public ngraph::Node
         {
         public:
-            null_node(const std::shared_ptr<Node>& arg = nullptr);
+            NullNode(const std::shared_ptr<Node>& arg = nullptr);
 
             void validate_and_infer_types() override;
 

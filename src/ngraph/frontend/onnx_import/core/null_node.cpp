@@ -22,17 +22,17 @@ namespace ngraph
 {
     namespace onnx_import
     {
-        null_node::null_node(const std::shared_ptr<Node>& arg)
+        NullNode::NullNode(const std::shared_ptr<Node>& arg)
             : ngraph::Node("Missing input", {}, 0)
         {
             m_name = "NullNode";
         }
 
-        void null_node::validate_and_infer_types() {}
-        std::shared_ptr<Node> null_node::copy_with_new_args(const NodeVector& new_args) const
+        void NullNode::validate_and_infer_types() {}
+        std::shared_ptr<Node> NullNode::copy_with_new_args(const NodeVector& new_args) const
         {
             check_new_args_count(this, new_args);
-            return std::make_shared<null_node>(new_args.at(0));
+            return std::make_shared<NullNode>(new_args.at(0));
         }
     } // namespace onnx_import
 } // namespace ngraph
