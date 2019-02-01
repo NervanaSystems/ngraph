@@ -47,7 +47,7 @@
 
 #ifndef NGRAPH_OP
 #error "NGRAPH_OP not defined"
-#define NGRAPH_OP(x, y) x
+#define NGRAPH_OP(x, y)
 #endif
 
 NGRAPH_OP(Abs, ngraph::op)

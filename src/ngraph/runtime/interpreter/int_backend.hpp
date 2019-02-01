@@ -1024,10 +1024,8 @@ private:
         case OP_TYPEID::QuantizedConvolution:
         case OP_TYPEID::QuantizedMaxPool:
         {
-            std::stringstream ss;
-            ss << "Unsupported quantization op. Should not get here.";
-            throw std::runtime_error(ss.str());
-            break;
+            throw unsupported_op("Unsupported op '" + node.description() +
+                                 "' in Interpreter back end.");
         }
         case OP_TYPEID::Relu:
         {
