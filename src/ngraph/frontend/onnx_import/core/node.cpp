@@ -123,7 +123,7 @@ namespace ngraph
             NodeVector result;
             for (const auto& name : m_node_proto->input())
             {
-                if (name != "")
+                if (!name.empty())
                 {
                     result.push_back(m_graph->get_ng_node_from_cache(name));
                 }
