@@ -18,6 +18,16 @@ built-from-scratch, or on an existing framework that is less widely-supported
 than the popular frameworks like TensorFlow and PyTorch. 
 
 
+.. _figure-4:
+
+.. figure:: ../graphics/translation-flow-to-ng-fofx.png
+   :width: 725px
+   :alt: Translation flow to nGraph function graph
+
+   Figure 4: Components of a DL stack, simplified for illustrative purposes.
+
+
+
 .. toctree::
    :maxdepth: 1
 

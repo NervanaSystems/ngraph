@@ -1,8 +1,8 @@
 .. framework-integration-guides:
 
-###############################
-Integrate Supported Frameworks
-###############################
+#############################
+Current Framework Integration
+#############################
 
 * :ref:`mxnet_intg`
 * :ref:`tensorflow_intg`

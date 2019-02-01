@@ -33,25 +33,25 @@ terms have been simplified for illustrative purposes.
 .. _figure-1:
 
 .. figure:: ../graphics/components-dl-stack.png
-   :width: 650px
+   :width: 700px
    :alt: A simplified DL stack
 
    Figure 1: Components of a DL stack, simplified for illustrative purposes.
 
 There are many deep learning frameworks, each with its own strengths and 
-user bases.
+user bases. A setup that is common to many DL practicioners is shown below.
 
 .. _figure-2:
 
 .. figure:: ../graphics/a-common-stack.png
-   :width: 650px
+   :width: 700px
    :alt: A common implementation
 
-   Figure 2: A commonly-implemented stack uses TensorFlow as the frontend. A 
-   resultant TF Model is either optimized by XLA via Grappler, or executed 
+   Figure 2: A commonly-implemented stack uses TensorFlow\* as the frontend. 
+   The input is either optimized via Grappler, or executed 
    directly via TensorFlow. In either case, when targeting an Nvidia\* GPU, 
    cuDNN is called to select an optimal kernel for the operation; cuDNN then 
-   relies on CUDA\* or direct access to run code on the target, in this case 
+   relies on CUDA\* or direct access to run code on the target; in this example, 
    a V100.
 
 The natural result of this approach is that the framework-level integration of 
@@ -59,8 +59,11 @@ kernel libraries does not scale. Rather, each individual framework must be
 manually integrated with each hardware-specific kernel library. Each integration 
 is unique to the framework and its set of deep learning operators, its view on 
 memory layout, its feature set, etc. Each of these connections, then, represents 
-significant work for what will ultimately be a brittle setup in the long term, 
-if any component on either end changes.
+significant work for what will ultimately be a brittle setup that is enormously 
+expensive to maintain.    
+
+So what is anyone who is truly interested in finding an efficient solution 
+for applications  
 
 
 .. _figure-3:
