@@ -27,8 +27,7 @@ namespace ngraph
         namespace detail
         {
             static std::string to_string(
-                const std::unordered_map<std::string,
-                                         std::reference_wrapper<const onnx::NodeProto>>& map)
+                const std::map<std::string, std::reference_wrapper<const onnx::NodeProto>>& map)
             {
                 std::string result;
                 for (auto it = std::begin(map); it != std::end(map); ++it)
@@ -86,8 +85,7 @@ namespace ngraph
             }
 
             // Verify that ONNX graph contains only nodes of available operator types
-            std::unordered_map<std::string, std::reference_wrapper<const onnx::NodeProto>>
-                unknown_operators;
+            std::map<std::string, std::reference_wrapper<const onnx::NodeProto>> unknown_operators;
             for (const auto& node_proto : m_graph_proto->node())
             {
                 if (!m_model->is_operator_available(node_proto))
@@ -100,11 +98,15 @@ namespace ngraph
             }
 
             // Reverify wheter we still have any unavailable operators.
-            for (const auto& pair : unknown_operators)
+            for (auto it = std::begin(unknown_operators); it != std::end(unknown_operators);)
             {
-                if (m_model->is_operator_available(pair.second))
+                if (m_model->is_operator_available(it->second))
                 {
-                    unknown_operators.erase(detail::get_op_domain_and_name(pair.second));
+                    it = unknown_operators.erase(it);
+                }
+                else
+                {
+                    it++;
                 }
             }
 
