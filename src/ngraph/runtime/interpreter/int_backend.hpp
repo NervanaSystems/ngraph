@@ -144,8 +144,8 @@ namespace ngraph
         {
             class INTBackend;
         }
-    }
-}
+    } // namespace runtime
+} // namespace ngraph
 
 class ngraph::runtime::interpreter::INTBackend : public Backend
 {
@@ -1015,6 +1015,17 @@ private:
             }
 
             break;
+        }
+        case OP_TYPEID::QuantizedAvgPool:
+        case OP_TYPEID::QuantizedConvolutionBias:
+        case OP_TYPEID::QuantizedConvolutionBiasAdd:
+        case OP_TYPEID::QuantizedConvolutionBiasSignedAdd:
+        case OP_TYPEID::QuantizedConvolutionRelu:
+        case OP_TYPEID::QuantizedConvolution:
+        case OP_TYPEID::QuantizedMaxPool:
+        {
+            throw unsupported_op("Unsupported op '" + node.description() +
+                                 "' in Interpreter back end.");
         }
         case OP_TYPEID::Relu:
         {
