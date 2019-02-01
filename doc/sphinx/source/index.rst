@@ -26,6 +26,11 @@ nGraph Compiler stack
    :maxdepth: 1 
 
    project/introduction.rst
+
+
+.. toctree::
+   :maxdepth: 2
+   
    frameworks/index.rst
 
 
