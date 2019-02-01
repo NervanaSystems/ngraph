@@ -885,6 +885,41 @@ std::string runtime::gpu::GPU_Emitter::emit_Quantize(EMIT_ARGS)
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
+std::string runtime::gpu::GPU_Emitter::emit_QuantizedAvgPool(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_QuantizedConvolution(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_QuantizedConvolutionBias(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_QuantizedConvolutionBiasAdd(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_QuantizedConvolutionBiasSignedAdd(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_QuantizedConvolutionRelu(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_QuantizedMaxPool(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
 std::string runtime::gpu::GPU_Emitter::emit_Relu(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Relu>(compiled_function, function_name, node, args, out);
