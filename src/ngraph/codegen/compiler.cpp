@@ -238,7 +238,7 @@ void codegen::CompilerCore::initialize()
     // CodeGen options
     auto& CGO = m_compiler->getInvocation().getCodeGenOpts();
     CGO.OptimizationLevel = 3;
-    CGO.RelocationModel = "static";
+    CGO.RelocationModel = llvm::Reloc::Model::Static;
     // CGO.CodeModel = "medium";
     CGO.ThreadModel = "posix";
     CGO.FloatABI = "hard";

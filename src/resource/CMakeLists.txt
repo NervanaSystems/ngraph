@@ -21,7 +21,7 @@ set (SRC
     header_rewrite.cpp
 )
 
-set(LLVM_LIB_DIR ${LLVM_INCLUDE_DIR}/../lib/clang/5.0.2/include)
+set(LLVM_LIB_DIR ${LLVM_INCLUDE_DIR}/../lib/clang/7.0.01include)
 get_filename_component(LLVM_LIB_DIR ${LLVM_LIB_DIR} ABSOLUTE)
 
 list(APPEND HEADER_SEARCH_DEFINES CLANG_BUILTIN_HEADERS_PATH="${LLVM_LIB_DIR}")
