@@ -22,7 +22,7 @@ namespace ngraph
 {
     namespace onnx_import
     {
-        NullNode::NullNode(const std::shared_ptr<Node>& arg)
+        NullNode::NullNode()
             : ngraph::Node("Missing input", {}, 0)
         {
             m_name = "NullNode";
@@ -30,8 +30,7 @@ namespace ngraph
 
         std::shared_ptr<Node> NullNode::copy_with_new_args(const NodeVector& new_args) const
         {
-            check_new_args_count(this, new_args);
-            return std::make_shared<NullNode>(new_args.at(0));
+            return std::make_shared<NullNode>();
         }
     } // namespace onnx_import
 } // namespace ngraph

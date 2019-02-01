@@ -28,7 +28,7 @@ namespace ngraph
         class NullNode : public ngraph::Node
         {
         public:
-            NullNode(const std::shared_ptr<Node>& arg = nullptr);
+            NullNode();
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
