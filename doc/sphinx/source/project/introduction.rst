@@ -15,16 +15,20 @@ or production environment, where both hardware owners and software developers
 are concerned with **efficiency per-watt**, to keep costs in check.
 
 A typical network is constructed using some kind of language-based API, which 
-translates the network -- either statically or dynamically -- into serialized 
-graphs that can be used for interchange. Those graphs can then passed through  
-a compilation process which performs various graph-level optimizations, like 
-constant folding or fusion. Most often this graph compilation process works 
-on top of some kind of vendor-provided kernel library, which communicates with 
-a driver (possibly through OpenCL\*, CUDA\*, or SYCL\*), to compile and execute 
-an implementation (kernel) for a specific :abbr:`Instruction Set Architecture (ISA)`,
-or :term:`ISA`.
+translates the network or DL model -- either statically or dynamically -- into 
+serialized graphs that can be used for interchange. Those graphs can then passed 
+through  a compilation process (the *Graph optimizer or compilation* step in 
+*Figure 1*), which performs various graph-level optimizations, like constant 
+folding or fusion. These processes most often require some kind of vendor-provided 
+kernel library, which communicates with a driver (possibly through OpenCL\*, 
+CUDA\*, or SYCL\*), to compile and execute an implementation (kernel) for a 
+specific :abbr:`Instruction Set Architecture (ISA)`, or :term:`ISA`.
 
-Illustrated below is a simplified DL stack, showing relative complexity of each:
+Illustrated below is a simplified DL stack, showing relative complexity of 
+each component around the graph compilation phase or process. Note that each 
+component also requires specialists unique to that component (that is: data 
+scientists or people working with a frontend API often don't know or care 
+what is happening at the kernel level or "under the hood".)
 
 .. _figure-1:
 
@@ -32,7 +36,7 @@ Illustrated below is a simplified DL stack, showing relative complexity of each:
    :width: 650px
    :alt: A simplified DL stack
 
-   Components of a DL stack, simplified for illustrative purposes.
+   Figure 1: Components of a DL stack, simplified for illustrative purposes.
 
 There are many deep learning frameworks, each with its own strengths and 
 user bases.
@@ -43,11 +47,12 @@ user bases.
    :width: 650px
    :alt: A common implementation
 
-   A commonly-implemented stack uses TensorFlow as the frontend. A resultant TF 
-   Model is either optimized by XLA, or executed directly via TensorFlow. In either 
-   case, when targeting an Nvidia\* GPU, cuDNN is called to select an optimal 
-   kernel for the operation; cuDNN then relies on CUDA\* or direct access to run 
-   code on the target, in this case a V100.
+   Figure 2: A commonly-implemented stack uses TensorFlow as the frontend. A 
+   resultant TF Model is either optimized by XLA via Grappler, or executed 
+   directly via TensorFlow. In either case, when targeting an Nvidia\* GPU, 
+   cuDNN is called to select an optimal kernel for the operation; cuDNN then 
+   relies on CUDA\* or direct access to run code on the target, in this case 
+   a V100.
 
 The natural result of this approach is that the framework-level integration of 
 kernel libraries does not scale. Rather, each individual framework must be 
