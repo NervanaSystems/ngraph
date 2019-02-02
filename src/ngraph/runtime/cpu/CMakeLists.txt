@@ -133,7 +133,7 @@ if (NGRAPH_HALIDE)
         )
 endif()
 
-if (NGRAPH_TBB_ENABLE AND NOT WIN32)
+if (NGRAPH_TBB_ENABLE AND NOT (WIN32 OR APPLE))
     include(${TBB_ROOT}/cmake/TBBBuild.cmake)
     tbb_build(TBB_ROOT ${TBB_ROOT} MAKE_ARGS tbb_build_dir=${CMAKE_CURRENT_BINARY_DIR}/tbb_build
                 tbb_build_prefix=tbb CONFIG_DIR TBB_DIR)
