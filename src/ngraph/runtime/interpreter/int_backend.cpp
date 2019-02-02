@@ -225,11 +225,12 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
     return true;
 }
 
-void runtime::interpreter::INTExecutable::generate_calls(const element::Type& type,
-                                                         const NodeWrapper& op,
-                                                         const vector<shared_ptr<HostTensor>>& outputs,
-                                                         const vector<shared_ptr<HostTensor>>& inputs,
-                                                         FunctionInstance& instance)
+void runtime::interpreter::INTExecutable::generate_calls(
+    const element::Type& type,
+    const NodeWrapper& op,
+    const vector<shared_ptr<HostTensor>>& outputs,
+    const vector<shared_ptr<HostTensor>>& inputs,
+    FunctionInstance& instance)
 {
     vector<void*> out;
     vector<const void*> in;
