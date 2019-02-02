@@ -18,12 +18,13 @@
 #include <cinttypes>
 #include <cmath>
 #include <cstdlib>
-#include <string>
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <string>
 
 #include "gtest/gtest.h"
 #include "ngraph/builder/quantization.hpp"
+#include "ngraph/builder/quantization_util.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/pass/constant_folding.hpp"
@@ -1017,8 +1018,8 @@ TEST(builder, dynamic_scaled_QC_fusion)
     vector<uint8_t> a_data = {0,   0, 0,   0,   0,  0, 0,   0, 167, 205, 107, 56, 220, 0,  0, 129,
                               202, 0, 0,   0,   0,  0, 245, 0, 0,   0,   16,  54, 250, 84, 0, 0,
                               36,  0, 221, 212, 85, 0, 171, 9, 0,   51,  0,   83, 0,   0,  3, 0};
-    vector<float> b_data = {0.149359, -0.926538, 0.0542385};
-    vector<float> c_data = {0.0};
+    vector<float> b_data = {47.2315, -292.997, 17.1517};
+    vector<float> c_data = {1.0};
     auto A = make_shared<op::Parameter>(element::u8, shape_a);
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     auto Bias = make_shared<op::Parameter>(element::f32, Shape{1});
@@ -1066,25 +1067,79 @@ TEST(builder, dynamic_scaled_QC_fusion)
     copy_data(g, vector<float>{0.0f});
     auto result = backend->create_tensor(element::u8, shape_r);
     backend->call_with_validate(backend->compile(f), {result}, {a, b, c, d, e, e_a, g});
-    EXPECT_EQ((vector<uint8_t>{0, 0, 1, 1, 2, 1, 0, 1, 1, 2, 0, 0, 0, 0, 0, 1}),
+    EXPECT_EQ((vector<uint8_t>{0, 15, 217, 209, 92, 15, 0, 23, 255, 255, 29, 0, 0, 0, 17, 255}),
               read_vector<uint8_t>(result));
+}
+TEST(builder, dynamic_scaled_QC_fusion1)
+{
+    Shape shape_a{1, 3, 4, 4}; // input shape
+    Shape shape_b{1, 3, 1, 1}; // filter shape
+    vector<uint8_t> a_data = {0,   0, 0,   0,   0,  0, 0,   0, 167, 205, 107, 56, 220, 0,  0, 129,
+                              202, 0, 0,   0,   0,  0, 245, 0, 0,   0,   16,  54, 250, 84, 0, 0,
+                              36,  0, 221, 212, 85, 0, 171, 9, 0,   51,  0,   83, 0,   0,  3, 0};
+    vector<float> b_data = {47.2315, -292.997, 17.1517};
+    vector<float> c_data = {1.0};
+    auto A = make_shared<op::Parameter>(element::u8, shape_a);
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto Bias = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto C = make_shared<op::Parameter>(element::f32, Shape{});
+    auto D = make_shared<op::Parameter>(element::f32, Shape{});
+    auto E = make_shared<op::Parameter>(element::f32, Shape{});
+    auto F = make_shared<op::Parameter>(element::f32, Shape{});
+    auto backend = runtime::Backend::create("CPU");
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::u8, shape_a);
+    copy_data(a, a_data);
+    auto b = backend->create_tensor(element::f32, shape_b);
+    copy_data(b, b_data);
+    auto c = backend->create_tensor(element::f32, Shape{1});
+    copy_data(c, c_data);
+    auto d = backend->create_tensor(element::f32, Shape{});
+    copy_data(d, vector<float>{0.0f});
+    auto e = backend->create_tensor(element::f32, Shape{});
+    copy_data(e, vector<float>{1.0f});
+    auto e_a = backend->create_tensor(element::f32, Shape{});
+    copy_data(e_a, vector<float>{17.618633f});
+    auto g = backend->create_tensor(element::f32, Shape{});
+    copy_data(g, vector<float>{0.0f});
+
+    auto min_filter = std::make_shared<op::Min>(B, AxisSet{1, 2, 3});
+    auto max_filter = std::make_shared<op::Max>(B, AxisSet{1, 2, 3});
+    auto q_shape = min_filter->get_shape();
+    auto min_input = std::make_shared<op::Broadcast>(C, q_shape, AxisSet{0});
+    auto max_input = std::make_shared<op::Broadcast>(D, q_shape, AxisSet{0});
+    auto min_freezed_output = std::make_shared<op::Broadcast>(E, q_shape, AxisSet{0});
+    auto max_freezed_output = std::make_shared<op::Broadcast>(F, q_shape, AxisSet{0});
+
+    auto Q = ngraph::builder::quantization_util::get_scale(min_input, max_input, element::u8);
+    Q = Q / ngraph::builder::quantization_util::get_scale(
+                min_freezed_output, max_freezed_output, element::u8);
+    Q = Q * ngraph::builder::quantization_util::get_scale(min_filter, max_filter, element::i8);
+    /* auto P = ngraph::builder::quantization_util::get_scale(min_filter, max_filter, element::i8); */
+    auto f = make_shared<Function>(NodeVector{Q}, ParameterVector{C, D, E, F, B});
+    /* auto f = make_shared<Function>(NodeVector{P}, ParameterVector{B}); */
+
+    auto result = backend->create_tensor(element::f32, Shape{1});
+    backend->call_with_validate(backend->compile(f), {result}, {d, e, e_a, g, b});
+    /* backend->call_with_validate(backend->compile(f), {result}, {b}); */
+    EXPECT_EQ((vector<float>{0.130945}), read_vector<float>(result));
 }
 TEST(builder, dynamic_scaled_QC_fusion_channelwise)
 {
-    Shape shape_a{1, 64, 4, 4}; // input shape
+    Shape shape_a{1, 64, 4, 4};  // input shape
     Shape shape_b{64, 64, 1, 1}; // filter shape
-    Shape shape_r{1, 64, 4, 4}; // output shape
+    Shape shape_r{1, 64, 4, 4};  // output shape
     vector<uint8_t> a_data(shape_size(shape_a));
     std::ifstream ifs("./files/dynamic_scaled_QC_fusion_channelwise.1");
-    ifs.read(reinterpret_cast<char *>(&a_data[0]), shape_size(shape_a) * sizeof(uint8_t));
+    ifs.read(reinterpret_cast<char*>(&a_data[0]), shape_size(shape_a) * sizeof(uint8_t));
     ifs.close();
     vector<uint8_t> r_data(shape_size(shape_r));
     std::ifstream ifsr("./files/dynamic_scaled_QC_fusion_channelwise.3");
-    ifsr.read(reinterpret_cast<char *>(&r_data[0]), shape_size(shape_r) * sizeof(uint8_t));
+    ifsr.read(reinterpret_cast<char*>(&r_data[0]), shape_size(shape_r) * sizeof(uint8_t));
     ifsr.close();
     vector<float> b_data(shape_size(shape_b));
     std::ifstream ifs2("./files/dynamic_scaled_QC_fusion_channelwise.2");
-    ifs2.read(reinterpret_cast<char *>(&b_data[0]), shape_size(shape_b) * sizeof(float));
+    ifs2.read(reinterpret_cast<char*>(&b_data[0]), shape_size(shape_b) * sizeof(float));
     ifs2.close();
     vector<float> c_data(64);
     auto A = make_shared<op::Parameter>(element::u8, shape_a);
@@ -1134,6 +1189,214 @@ TEST(builder, dynamic_scaled_QC_fusion_channelwise)
     copy_data(g, vector<float>{0.0f});
     auto result = backend->create_tensor(element::u8, shape_r);
     backend->call_with_validate(backend->compile(f), {result}, {a, b, c, d, e, e_a, g});
-    EXPECT_EQ(r_data,
-              read_vector<uint8_t>(result));
+    EXPECT_EQ(r_data, read_vector<uint8_t>(result));
+}
+TEST(builder, dynamic_scaled_QC_fusion_channelwise1)
+{
+    Shape shape_a{1, 3, 4, 4}; // input shape
+    Shape shape_b{3, 3, 1, 1}; // filter shape
+    Shape shape_r{1, 3, 4, 4}; // output shape
+    vector<uint8_t> a_data = {249, 162, 79,  51,  73,  199, 58,  221, 227, 71,  75,  246,
+                              140, 110, 54,  57,  251, 54,  138, 215, 209, 173, 207, 168,
+                              88,  73,  96,  232, 79,  53,  178, 174, 113, 66,  220, 188,
+                              169, 67,  203, 222, 72,  181, 198, 61,  119, 192, 66,  215};
+    vector<float> b_data = {
+        0.302429, 0.850178, 0.266454, 0.655482, 0.200032, 0.876555, 0.665412, 0.941476, 0.0705883};
+    vector<float> c_data = {0.33351, 0.710013, 0.657354};
+    vector<uint8_t> r_data = {7,  4, 6,  7, 7, 6, 7,  7,  5, 5, 5, 7,  5, 5, 6, 6,
+                              11, 8, 10, 9, 9, 9, 10, 12, 9, 9, 9, 10, 9, 9, 7, 10,
+                              9,  8, 8,  9, 9, 9, 9,  9,  9, 7, 7, 9,  8, 7, 8, 9};
+    auto A = make_shared<op::Parameter>(element::u8, shape_a);
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto Bias = make_shared<op::Parameter>(element::f32, Shape{3});
+    auto C = make_shared<op::Parameter>(element::f32, Shape{});
+    auto D = make_shared<op::Parameter>(element::f32, Shape{});
+    auto E = make_shared<op::Parameter>(element::f32, Shape{});
+    auto F = make_shared<op::Parameter>(element::f32, Shape{});
+    auto CV = ngraph::builder::ScaledQuantizedConvolutionFusion(A,
+                                                                B,
+                                                                Bias,
+                                                                nullptr,
+                                                                nullptr,
+                                                                nullptr,
+                                                                nullptr,
+                                                                nullptr,
+                                                                C,
+                                                                D,
+                                                                nullptr,
+                                                                nullptr,
+                                                                E,
+                                                                F,
+                                                                Strides{1, 1}, // move_strides
+                                                                Strides{1, 1}, // filter_dilation
+                                                                CoordinateDiff{0, 0}, // below_pads
+                                                                CoordinateDiff{0, 0}, // above_pads
+                                                                Strides{1, 1}, // data_dilation
+                                                                true,
+                                                                false);
+    auto f = make_shared<Function>(NodeVector{CV}, ParameterVector{A, B, Bias, C, D, E, F});
+    auto backend = runtime::Backend::create("CPU");
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::u8, shape_a);
+    copy_data(a, a_data);
+    auto b = backend->create_tensor(element::f32, shape_b);
+    copy_data(b, b_data);
+    auto c = backend->create_tensor(element::f32, Shape{3});
+    copy_data(c, c_data);
+    auto d = backend->create_tensor(element::f32, Shape{});
+    copy_data(d, vector<float>{0.2f});
+    auto e = backend->create_tensor(element::f32, Shape{});
+    copy_data(e, vector<float>{0.7f});
+    auto e_a = backend->create_tensor(element::f32, Shape{});
+    copy_data(e_a, vector<float>{2.23675f});
+    auto g = backend->create_tensor(element::f32, Shape{});
+    copy_data(g, vector<float>{37.6186f});
+    auto result = backend->create_tensor(element::u8, shape_r);
+    backend->call_with_validate(backend->compile(f), {result}, {a, b, c, d, e, e_a, g});
+    EXPECT_EQ(r_data, read_vector<uint8_t>(result));
+}
+TEST(builder, dynamic_scaled_QC_fusion_channelwise2)
+{
+    Shape shape_a{1, 3, 4, 4}; // input shape
+    Shape shape_b{3, 3, 1, 1}; // filter shape
+    Shape shape_r{1, 3, 4, 4}; // output shape
+    vector<uint8_t> a_data = {249, 162, 79,  51,  73,  199, 58,  221, 227, 71,  75,  246,
+                              140, 110, 54,  57,  251, 54,  138, 215, 209, 173, 207, 168,
+                              88,  73,  96,  232, 79,  53,  178, 174, 113, 66,  220, 188,
+                              169, 67,  203, 222, 72,  181, 198, 61,  119, 192, 66,  215};
+    vector<float> b_data = {
+        0.302429, 0.850178, 0.266454, 0.655482, 0.200032, 0.876555, 0.665412, 0.941476, 0.0705883};
+    vector<float> c_data = {0.33351, 0.710013, 0.657354};
+    vector<uint8_t> r_data = {7,  4, 6,  7, 7, 6, 7,  7,  5, 5, 5, 7,  5, 5, 6, 6,
+                              11, 8, 10, 9, 9, 9, 10, 12, 9, 9, 9, 10, 9, 9, 7, 10,
+                              9,  8, 8,  9, 9, 9, 9,  9,  9, 7, 7, 9,  8, 7, 8, 9};
+    auto A = make_shared<op::Parameter>(element::u8, shape_a);
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto Bias = make_shared<op::Parameter>(element::f32, Shape{3});
+    auto C = make_shared<op::Parameter>(element::f32, Shape{});
+    auto D = make_shared<op::Parameter>(element::f32, Shape{});
+    auto E = make_shared<op::Parameter>(element::f32, Shape{});
+    auto F = make_shared<op::Parameter>(element::f32, Shape{});
+    auto CV = ngraph::builder::ScaledQuantizedConvolutionFusion(A,
+                                                                B,
+                                                                Bias,
+                                                                nullptr,
+                                                                nullptr,
+                                                                nullptr,
+                                                                nullptr,
+                                                                nullptr,
+                                                                C,
+                                                                D,
+                                                                nullptr,
+                                                                nullptr,
+                                                                E,
+                                                                F,
+                                                                Strides{1, 1}, // move_strides
+                                                                Strides{1, 1}, // filter_dilation
+                                                                CoordinateDiff{0, 0}, // below_pads
+                                                                CoordinateDiff{0, 0}, // above_pads
+                                                                Strides{1, 1}, // data_dilation
+                                                                true,
+                                                                false);
+    auto f = make_shared<Function>(NodeVector{CV}, ParameterVector{A, B, Bias, C, D, E, F});
+    auto backend = runtime::Backend::create("CPU");
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::u8, shape_a);
+    copy_data(a, a_data);
+    auto b = backend->create_tensor(element::f32, shape_b);
+    copy_data(b, b_data);
+    auto c = backend->create_tensor(element::f32, Shape{3});
+    copy_data(c, c_data);
+    auto d = backend->create_tensor(element::f32, Shape{});
+    copy_data(d, vector<float>{0.2f});
+    auto e = backend->create_tensor(element::f32, Shape{});
+    copy_data(e, vector<float>{0.7f});
+    auto e_a = backend->create_tensor(element::f32, Shape{});
+    copy_data(e_a, vector<float>{2.23675f});
+    auto g = backend->create_tensor(element::f32, Shape{});
+    copy_data(g, vector<float>{37.6186f});
+    /* auto result = backend->create_tensor(element::u8, shape_r); */
+    /* backend->call_with_validate(backend->compile(f), {result}, {a, b, c, d, e, e_a, g}); */
+    /* EXPECT_EQ(r_data, read_vector<uint8_t>(result)); */
+    auto min_filter = std::make_shared<op::Min>(B, AxisSet{1, 2, 3});
+    auto max_filter = std::make_shared<op::Max>(B, AxisSet{1, 2, 3});
+    auto q_shape = min_filter->get_shape();
+    auto min_input = std::make_shared<op::Broadcast>(C, q_shape, AxisSet{0});
+    auto max_input = std::make_shared<op::Broadcast>(D, q_shape, AxisSet{0});
+    auto min_freezed_output = std::make_shared<op::Broadcast>(E, q_shape, AxisSet{0});
+    auto max_freezed_output = std::make_shared<op::Broadcast>(F, q_shape, AxisSet{0});
+
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+    auto weight_scale =
+        ngraph::builder::quantization_util::get_scale(min_filter, max_filter, element::i8);
+    auto data_scale =
+        ngraph::builder::quantization_util::get_scale(min_input, max_input, element::u8);
+    auto out_scale = ngraph::builder::quantization_util::get_scale(
+        min_freezed_output, max_freezed_output, element::u8);
+    auto prn = [](vector<float>&& v) {
+        std::cout << "vec: ";
+        bool init = false;
+        for (auto&& x : v)
+        {
+            if (init)
+                std::cout << ",";
+            else
+                init = true;
+            std::cout << x;
+        }
+
+        std::cout << "\n";
+    };
+    auto r1 = backend->create_tensor(element::i32, {3});
+    auto fn = make_shared<Function>(NodeVector{out_scale}, ParameterVector{E, F});
+    /* backend->call_with_validate(backend->compile(fn), {r1}, {e_a, g}); */
+    /* prn(read_vector<float>(r1)); */
+    /* EXPECT_EQ(vector<float>{0}, read_vector<float>(r1)); */
+
+    fn = make_shared<Function>(NodeVector{data_scale}, ParameterVector{C, D});
+    /* backend->call_with_validate(backend->compile(fn), {r1}, {d, e}); */
+    /* prn(read_vector<float>(r1)); */
+    /* EXPECT_EQ(vector<float>{0}, read_vector<float>(r1)); */
+
+    fn = make_shared<Function>(NodeVector{weight_scale}, ParameterVector{B});
+    /* backend->call_with_validate(backend->compile(fn), {r1}, {b}); */
+    /* prn(read_vector<float>(r1)); */
+
+    /* auto fin = Bias / (data_scale * weight_scale); */
+    auto fin = data_scale * weight_scale;
+    auto zero = ngraph::make_constant_from_string("0", element::i32, min_input->get_shape());
+    auto new_bias =
+        make_shared<op::Quantize>(Bias, fin, zero, element::i32, AxisSet{0}, round_mode);
+    /* fin = make_shared<op::Convert>(fin, element::i32); */
+    /* fn = make_shared<Function>(NodeVector{fin}, ParameterVector{Bias, C,D,B}); */
+    fn = make_shared<Function>(NodeVector{new_bias}, ParameterVector{Bias, C, D, B});
+    backend->call_with_validate(backend->compile(fn), {r1}, {c, d, e, b});
+    std::cout << vector_to_string(read_vector<int>(r1));
+    /* prn(read_vector<float>(r1)); */
+    /* EXPECT_EQ(vector<float>{0}, read_vector<float>(r1)); */
+}
+
+TEST(builder, dynamc)
+{
+    Shape shape_a{2, 2, 4};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_r{2, 2, 4};
+    auto r = make_shared<op::Slice>(A, Coordinate{0, 0, 0}, Coordinate{1, 2, 4});
+    auto r2 = make_shared<op::Reshape>(r, AxisVector{0,1,2}, Shape{2, 4});
+    auto r3 = make_shared<op::Slice>(A, Coordinate{1, 0, 0}, Coordinate{2, 2, 4});
+    auto r4 = make_shared<op::Reshape>(r3, AxisVector{0,1,2}, Shape{2, 4});
+    auto r5 = make_shared<op::Concat>(std::vector<std::shared_ptr<Node>>{r2,r4},0);
+    /* auto r = make_shared<op::Reshape( */
+    auto f = make_shared<Function>(r5, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a});
+    EXPECT_EQ((vector<float>{2, 3, 6, 7, 10, 11}), read_vector<float>(result));
 }

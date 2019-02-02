@@ -23,10 +23,10 @@
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/divide.hpp"
+#include "ngraph/op/floor.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/multiply.hpp"
-#include "ngraph/op/reshape.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "quantization_util.hpp"
@@ -369,6 +369,7 @@ namespace ngraph
                                              std::shared_ptr<ngraph::Node> beta,
                                              std::shared_ptr<ngraph::Node> mean,
                                              std::shared_ptr<ngraph::Node> variance,
+                                             std::shared_ptr<ngraph::Node> eps,
                                              std::shared_ptr<Node> sum_input,
                                              std::shared_ptr<Node> min_input,
                                              std::shared_ptr<Node> max_input,
@@ -388,10 +389,9 @@ namespace ngraph
             auto new_bias = bias;
             if (with_bn)
             {
-                auto bn_eps = op::Constant::create(element::f32, Shape{}, {0.001});
                 auto var_eps = std::make_shared<op::Add>(
                     variance,
-                    std::make_shared<op::Broadcast>(bn_eps, variance->get_shape(), AxisSet{0}));
+                    std::make_shared<op::Broadcast>(eps, variance->get_shape(), AxisSet{0}));
                 auto sqrt_var_eps = std::make_shared<op::Sqrt>(var_eps);
 
                 auto alpha = std::make_shared<op::Divide>(gamma, sqrt_var_eps);
@@ -416,90 +416,117 @@ namespace ngraph
 
             // quantize weights and bias
             auto output_et = with_relu ? element::u8 : element::i8;
-            auto min_filter = std::make_shared<op::Min>(filters, AxisSet{0, 1, 2, 3});
-            auto max_filter = std::make_shared<op::Max>(filters, AxisSet{0, 1, 2, 3});
-            min_input = std::make_shared<op::Reshape>(min_input, AxisVector{}, Shape{});
-            max_input = std::make_shared<op::Reshape>(max_input, AxisVector{}, Shape{});
-            min_freezed_output =
-                std::make_shared<op::Reshape>(min_freezed_output, AxisVector{}, Shape{});
-            max_freezed_output =
-                std::make_shared<op::Reshape>(max_freezed_output, AxisVector{}, Shape{});
-
-            op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
-            if (new_bias != nullptr)
+            if (filters->get_shape().size() != 4)
             {
-                auto zero = make_constant(element::i32, min_input->get_shape(), 0);
-                auto bias_scale =
-                    quantization_util::get_bias_scale(min_input, max_input, min_filter, max_filter);
-                new_bias = make_shared<op::Quantize>(
-                    new_bias, bias_scale, zero, element::i32, AxisSet{}, round_mode);
+                throw ngraph_error("ScaledQuantizedConvolutionFusion: incorrect weights shape");
             }
-            auto new_weights_i8 =
-                ScaledQuantize(filters, min_filter, max_filter, element::i8, AxisSet{}, round_mode);
+            auto min_filter = std::make_shared<op::Min>(filters, AxisSet{1, 2, 3});
+            auto max_filter = std::make_shared<op::Max>(filters, AxisSet{1, 2, 3});
+            auto q_shape = min_filter->get_shape();
+            min_input = std::make_shared<op::Broadcast>(min_input, q_shape, AxisSet{0});
+            max_input = std::make_shared<op::Broadcast>(max_input, q_shape, AxisSet{0});
+            min_freezed_output =
+                std::make_shared<op::Broadcast>(min_freezed_output, q_shape, AxisSet{0});
+            max_freezed_output =
+                std::make_shared<op::Broadcast>(max_freezed_output, q_shape, AxisSet{0});
 
-            // invoke quantized conv builder api
-            auto requantization_scale = quantization_util::get_scale(min_input,
-                                                                     max_input,
-                                                                     min_filter,
-                                                                     max_filter,
-                                                                     min_freezed_output,
-                                                                     max_freezed_output,
-                                                                     output_et);
+            auto weight_scale = quantization_util::get_scale(min_filter, max_filter, element::i8);
+            auto data_scale = quantization_util::get_scale(min_input, max_input, element::u8);
+            auto out_scale =
+                quantization_util::get_scale(min_freezed_output, max_freezed_output, element::u8);
+            if (bias != nullptr)
+            {
+                new_bias = make_shared<op::Convert>(
+                    make_shared<op::Floor>(new_bias / (data_scale * weight_scale)), element::i32);
+            }
+            auto new_weights_i8 = make_shared<op::Convert>(
+                make_shared<op::Floor>(filters / make_shared<op::Broadcast>(weight_scale,
+                                                                            filters->get_shape(),
+                                                                            AxisSet{1, 2, 3})),
+                element::i8);
 
-            if (new_bias == nullptr)
+            auto requantization_scale = data_scale * weight_scale / out_scale;
+            if (bias == nullptr)
             {
                 if (with_relu)
                 {
-                    return make_shared<op::QuantizedConvolutionRelu>(input,
-                                                                     new_weights_i8,
-                                                                     window_movement_strides,
-                                                                     window_dilation_strides,
-                                                                     padding_below,
-                                                                     padding_above,
-                                                                     data_dilation_strides,
-                                                                     requantization_scale);
+                    auto icr = make_shared<op::QuantizedConvolutionRelu>(input,
+                                                                         new_weights_i8,
+                                                                         window_movement_strides,
+                                                                         window_dilation_strides,
+                                                                         padding_below,
+                                                                         padding_above,
+                                                                         data_dilation_strides,
+                                                                         requantization_scale);
+                    return icr;
                 }
-                return make_shared<op::QuantizedConvolution>(input,
-                                                             new_weights_i8,
-                                                             window_movement_strides,
-                                                             window_dilation_strides,
-                                                             padding_below,
-                                                             padding_above,
-                                                             data_dilation_strides,
-                                                             requantization_scale);
+                auto ic = make_shared<op::QuantizedConvolution>(input,
+                                                                new_weights_i8,
+                                                                window_movement_strides,
+                                                                window_dilation_strides,
+                                                                padding_below,
+                                                                padding_above,
+                                                                data_dilation_strides,
+                                                                requantization_scale);
+                return ic;
             }
             // i8.conv -> sum -> relu
             if (sum_input != nullptr)
             {
+                sum_min_input = std::make_shared<op::Broadcast>(sum_min_input, q_shape, AxisSet{0});
+                sum_max_input = std::make_shared<op::Broadcast>(sum_max_input, q_shape, AxisSet{0});
                 auto sum_scale = builder::quantization_util::get_sum_scale(
                     min_freezed_output, max_freezed_output, sum_min_input, sum_max_input);
 
                 // TODO: check for signed or unsigned sum
-                return make_shared<op::QuantizedConvolutionBiasSignedAdd>(input,
-                                                                          new_weights_i8,
-                                                                          new_bias,
-                                                                          sum_input,
-                                                                          window_movement_strides,
-                                                                          window_dilation_strides,
-                                                                          padding_below,
-                                                                          padding_above,
-                                                                          data_dilation_strides,
-                                                                          requantization_scale,
-                                                                          sum_scale,
-                                                                          with_relu);
+                std::shared_ptr<Node> ica;
+                if (sum_input->get_element_type() == element::i8)
+                {
+                    ica =
+                        make_shared<op::QuantizedConvolutionBiasSignedAdd>(input,
+                                                                           new_weights_i8,
+                                                                           new_bias,
+                                                                           sum_input,
+                                                                           window_movement_strides,
+                                                                           window_dilation_strides,
+                                                                           padding_below,
+                                                                           padding_above,
+                                                                           data_dilation_strides,
+                                                                           requantization_scale,
+                                                                           sum_scale,
+                                                                           true);
+                    ica = make_shared<op::Convert>(ica, element::u8);
+                }
+                else
+                {
+                    ica = make_shared<op::QuantizedConvolutionBiasAdd>(input,
+                                                                       new_weights_i8,
+                                                                       new_bias,
+                                                                       sum_input,
+                                                                       window_movement_strides,
+                                                                       window_dilation_strides,
+                                                                       padding_below,
+                                                                       padding_above,
+                                                                       data_dilation_strides,
+                                                                       requantization_scale,
+                                                                       sum_scale,
+                                                                       true);
+                }
+                return ica;
             }
 
             // i8.conv_bias -> relu
-            return make_shared<op::QuantizedConvolutionBias>(input,
-                                                             new_weights_i8,
-                                                             new_bias,
-                                                             window_movement_strides,
-                                                             window_dilation_strides,
-                                                             padding_below,
-                                                             padding_above,
-                                                             data_dilation_strides,
-                                                             requantization_scale,
-                                                             with_relu);
+            auto icbr = make_shared<op::QuantizedConvolutionBias>(input,
+                                                                  new_weights_i8,
+                                                                  new_bias,
+                                                                  window_movement_strides,
+                                                                  window_dilation_strides,
+                                                                  padding_below,
+                                                                  padding_above,
+                                                                  data_dilation_strides,
+                                                                  requantization_scale,
+                                                                  with_relu);
+            return icbr;
         }
     }
 }

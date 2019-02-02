@@ -153,6 +153,7 @@ namespace ngraph
                                              std::shared_ptr<ngraph::Node> beta,
                                              std::shared_ptr<ngraph::Node> mean,
                                              std::shared_ptr<ngraph::Node> variance,
+                                             std::shared_ptr<ngraph::Node> eps,
                                              std::shared_ptr<Node> sum_input,
                                              std::shared_ptr<Node> min_input,
                                              std::shared_ptr<Node> max_input,
