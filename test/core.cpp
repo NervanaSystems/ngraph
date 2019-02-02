@@ -14,29 +14,23 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "attribute.hpp"
-#include "graph.hpp"
-#include "model.hpp"
+#include "gtest/gtest.h"
 
-namespace ngraph
+#include "ngraph/file_util.hpp"
+#include "ngraph/ngraph.hpp"
+#include "ngraph/serializer.hpp"
+
+using namespace ngraph;
+using namespace std;
+
+TEST(core, function_size)
 {
-    namespace onnx_import
-    {
-        std::vector<Graph> Attribute::get_graph_array(Model& model) const
-        {
-            std::vector<Graph> result;
-            for (const auto& graph : m_attribute_proto->graphs())
-            {
-                result.emplace_back(graph, model);
-            }
-            return result;
-        }
+    const string m1 = file_util::path_join(SERIALIZED_ZOO, "mxnet/mnist_mlp_forward.json");
+    const string m2 = file_util::path_join(SERIALIZED_ZOO, "mxnet/10_bucket_LSTM.json");
 
-        Graph Attribute::get_graph(Model& model) const
-        {
-            return Graph{m_attribute_proto->g(), model};
-        }
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+    auto f1 = deserialize(m1);
+    auto f2 = deserialize(m2);
+    auto s1 = f1->get_graph_size();
+    auto s2 = f2->get_graph_size();
+    EXPECT_GT(s2, s1);
+}

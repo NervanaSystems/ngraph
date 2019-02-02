@@ -32,6 +32,7 @@ set(SRC
     control_dependencies.cpp
     coordinate.cpp
     copy.cpp
+    core.cpp
     cpio.cpp
     cse.cpp
     element_type.cpp

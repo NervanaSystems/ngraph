@@ -90,7 +90,8 @@ namespace ngraph
         std::set<std::string> get_supported_operators(std::int64_t version,
                                                       const std::string& domain)
         {
-            OperatorSet op_set{OperatorsBridge::get_operator_set(version, domain)};
+            OperatorSet op_set{
+                OperatorsBridge::get_operator_set(domain == "ai.onnx" ? "" : domain, version)};
             std::set<std::string> op_list{};
             for (const auto& op : op_set)
             {
