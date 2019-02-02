@@ -1763,6 +1763,13 @@ runtime::Handle runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function>
         case OP_TYPEID::BroadcastLike:
         case OP_TYPEID::Dequantize:
         case OP_TYPEID::Quantize:
+        case OP_TYPEID::QuantizedAvgPool:
+        case OP_TYPEID::QuantizedConvolutionBias:
+        case OP_TYPEID::QuantizedConvolutionBiasAdd:
+        case OP_TYPEID::QuantizedConvolutionBiasSignedAdd:
+        case OP_TYPEID::QuantizedConvolutionRelu:
+        case OP_TYPEID::QuantizedConvolution:
+        case OP_TYPEID::QuantizedMaxPool:
         case OP_TYPEID::ReplaceSlice:
         case OP_TYPEID::GenerateMask:
         case OP_TYPEID::ReverseSequence:
