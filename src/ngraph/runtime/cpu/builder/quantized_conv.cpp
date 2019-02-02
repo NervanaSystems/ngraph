@@ -48,8 +48,7 @@ namespace ngraph
 
                     auto conv_desc =
                         mkldnn_emitter
-                            ->get_convolution_forward_desc<ngraph::op::QuantizedConvolution>(
-                                node, args, out);
+                            ->get_convolution_forward_desc<ngraph::op::QuantizedConvolution>(node);
                     auto conv_attr =
                         mkldnn_emitter
                             ->get_convolution_forward_attr<ngraph::op::QuantizedConvolution>(node);
@@ -99,7 +98,7 @@ namespace ngraph
                     auto conv_desc =
                         mkldnn_emitter
                             ->get_convolution_forward_desc<ngraph::op::QuantizedConvolutionRelu>(
-                                node, args, out);
+                                node);
                     auto conv_attr =
                         mkldnn_emitter
                             ->get_convolution_forward_attr<ngraph::op::QuantizedConvolutionRelu>(
@@ -150,7 +149,7 @@ namespace ngraph
                     auto conv_desc =
                         mkldnn_emitter
                             ->get_convolution_forward_desc<ngraph::op::QuantizedConvolutionBias>(
-                                node, args, out);
+                                node);
                     auto conv_attr =
                         mkldnn_emitter
                             ->get_convolution_forward_attr<ngraph::op::QuantizedConvolutionBias>(
@@ -204,7 +203,7 @@ namespace ngraph
                     auto conv_desc =
                         mkldnn_emitter
                             ->get_convolution_forward_desc<ngraph::op::QuantizedConvolutionBiasAdd>(
-                                node, args, out);
+                                node);
                     auto conv_attr =
                         mkldnn_emitter
                             ->get_convolution_forward_attr<ngraph::op::QuantizedConvolutionBiasAdd>(
@@ -278,7 +277,7 @@ namespace ngraph
                     auto sum_scales_size = shape_size(args[5].get_shape());
 
                     auto conv_desc = mkldnn_emitter->get_convolution_forward_desc<
-                        ngraph::op::QuantizedConvolutionBiasSignedAdd>(node, args, out);
+                        ngraph::op::QuantizedConvolutionBiasSignedAdd>(node);
                     auto conv_attr = mkldnn_emitter->get_convolution_forward_attr<
                         ngraph::op::QuantizedConvolutionBiasSignedAdd>(node);
                     size_t conv_index = mkldnn_emitter->convolution_forward_init(true);

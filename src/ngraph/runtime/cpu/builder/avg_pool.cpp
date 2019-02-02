@@ -52,35 +52,17 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-
+                    auto avg_pool_desc =
+                        mkldnn_emitter->get_avg_pooling_forward_desc<ngraph::op::AvgPool>(node,
+                                                                                          false);
                     size_t avg_pool_index = mkldnn_emitter->primitive_init(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(avg_pool_index);
 
-                    auto functor = [&,
-                                    include_padding_in_avg_computation,
-                                    input_desc,
-                                    result_desc,
-                                    window_movement_strides,
-                                    window_shape,
-                                    padding_below,
-                                    padding_above,
-                                    avg_pool_index](CPURuntimeContext* ctx,
-                                                    CPUExecutionContext* ectx) {
+                    auto functor = [&, avg_pool_desc, avg_pool_index](CPURuntimeContext* ctx,
+                                                                      CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->pooling_forward(
-                                (include_padding_in_avg_computation
-                                     ? mkldnn::algorithm::pooling_avg_include_padding
-                                     : mkldnn::algorithm::pooling_avg_exclude_padding),
-                                input_desc,
-                                result_desc,
-                                window_movement_strides,
-                                window_shape,
-                                padding_below,
-                                padding_above,
-                                avg_pool_index);
+                            mkldnn_emitter->pooling_forward(avg_pool_desc, avg_pool_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
@@ -142,35 +124,22 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto diff_dst_desc = runtime::cpu::mkldnn_utils::get_input_mkldnn_md(node, 0);
-                    auto diff_src_desc = runtime::cpu::mkldnn_utils::get_output_mkldnn_md(node, 0);
+                    auto avg_pool_fwd_desc =
+                        mkldnn_emitter->get_avg_pooling_forward_desc<ngraph::op::AvgPoolBackprop>(
+                            node, true);
+                    auto avg_pool_desc =
+                        mkldnn_emitter->get_avg_pooling_backward_desc<ngraph::op::AvgPoolBackprop>(
+                            node);
 
                     size_t avg_pool_index = mkldnn_emitter->primitive_init(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(avg_pool_index);
 
-                    auto functor = [&,
-                                    include_padding_in_avg_computation,
-                                    diff_dst_desc,
-                                    diff_src_desc,
-                                    window_movement_strides,
-                                    window_shape,
-                                    padding_below,
-                                    padding_above,
-                                    avg_pool_index](CPURuntimeContext* ctx,
-                                                    CPUExecutionContext* ectx) {
+                    auto functor = [&, avg_pool_desc, avg_pool_fwd_desc, avg_pool_index](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->pooling_backward(
-                                (include_padding_in_avg_computation
-                                     ? mkldnn::algorithm::pooling_avg_include_padding
-                                     : mkldnn::algorithm::pooling_avg_exclude_padding),
-                                diff_dst_desc,
-                                diff_src_desc,
-                                window_movement_strides,
-                                window_shape,
-                                padding_below,
-                                padding_above,
-                                avg_pool_index);
+                                avg_pool_desc, avg_pool_fwd_desc, avg_pool_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], delta_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);

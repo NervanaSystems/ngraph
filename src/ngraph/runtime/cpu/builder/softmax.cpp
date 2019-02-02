@@ -46,25 +46,16 @@ namespace ngraph
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    if (axes.size() != 1)
-                    {
-                        throw ngraph_error("MKLDNN supports softmax only across single axis");
-                    }
-
-                    int softmax_axis = static_cast<int>(*(axes.begin()));
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-
+                    auto softmax_desc = mkldnn_emitter->get_softmax_forward_desc(node);
                     size_t softmax_index = mkldnn_emitter->primitive_init(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(softmax_index);
 
-                    auto functor = [&, input_desc, result_desc, softmax_axis, softmax_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    auto functor = [&, softmax_desc, softmax_index](CPURuntimeContext* ctx,
+                                                                    CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->softmax_forward(
-                                input_desc, result_desc, softmax_axis, softmax_index);
+                            mkldnn_emitter->softmax_forward(softmax_desc, softmax_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);

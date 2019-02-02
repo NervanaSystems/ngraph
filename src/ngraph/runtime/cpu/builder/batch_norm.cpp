@@ -80,25 +80,19 @@ namespace ngraph
                     auto& out2_tensor = external_function->get_tensor_data(out[2].get_name());
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
+                    auto batchnorm_desc =
+                        mkldnn_emitter->get_batchnorm_forward_desc<OP>(node, true);
+
                     auto weights_shape = Shape{2, args[0].get_size()};
                     auto weights_desc = mkldnn_emitter->build_memory_descriptor(
                         weights_shape, args[0].get_element_type(), mkldnn::memory::format::nc);
-                    auto results_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    auto mean_desc = mkldnn_utils::get_output_mkldnn_md(node, 1);
-                    auto variance_desc = mkldnn_utils::get_output_mkldnn_md(node, 2);
-                    auto eps = batchnorm->get_eps_value();
 
                     auto batchnorm_index = mkldnn_emitter->primitive_init(6);
                     auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
 
                     auto functor = [&,
-                                    input_desc,
+                                    batchnorm_desc,
                                     weights_desc,
-                                    results_desc,
-                                    mean_desc,
-                                    variance_desc,
-                                    eps,
                                     training,
                                     ops,
                                     batchnorm_index,
@@ -107,16 +101,8 @@ namespace ngraph
                                                   CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->batchnorm_forward(input_desc,
-                                                              weights_desc,
-                                                              results_desc,
-                                                              mean_desc,
-                                                              variance_desc,
-                                                              eps,
-                                                              false,
-                                                              training,
-                                                              batchnorm_index,
-                                                              ops);
+                            mkldnn_emitter->batchnorm_forward(
+                                batchnorm_desc, weights_desc, training, batchnorm_index, ops);
                         }
                         memcpy(stacked_weights.get(), arg0_tensor, weight_sizes[0]);
                         memcpy(
@@ -138,25 +124,19 @@ namespace ngraph
                     auto& arg4_tensor = external_function->get_tensor_data(args[4].get_name());
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto batchnorm_desc =
+                        mkldnn_emitter->get_batchnorm_forward_desc<OP>(node, false);
+
                     auto weights_shape = Shape{2, args[0].get_size()};
-                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
                     auto weights_desc = mkldnn_emitter->build_memory_descriptor(
                         weights_shape, args[0].get_element_type(), mkldnn::memory::format::nc);
-                    auto mean_desc = mkldnn_utils::get_input_mkldnn_md(node, 3);
-                    auto variance_desc = mkldnn_utils::get_input_mkldnn_md(node, 4);
-                    auto results_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    auto eps = batchnorm->get_eps_value();
 
                     auto batchnorm_index = mkldnn_emitter->primitive_init(6);
                     auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
 
                     auto functor = [&,
-                                    input_desc,
+                                    batchnorm_desc,
                                     weights_desc,
-                                    results_desc,
-                                    mean_desc,
-                                    variance_desc,
-                                    eps,
                                     training,
                                     ops,
                                     batchnorm_index,
@@ -165,16 +145,8 @@ namespace ngraph
                                                   CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->batchnorm_forward(input_desc,
-                                                              weights_desc,
-                                                              results_desc,
-                                                              mean_desc,
-                                                              variance_desc,
-                                                              eps,
-                                                              true,
-                                                              training,
-                                                              batchnorm_index,
-                                                              ops);
+                            mkldnn_emitter->batchnorm_forward(
+                                batchnorm_desc, weights_desc, training, batchnorm_index, ops);
                         }
                         memcpy(stacked_weights.get(), arg0_tensor, weight_sizes[0]);
                         memcpy(
@@ -357,6 +329,7 @@ namespace ngraph
                                                      std::default_delete<uint8_t[]>());
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                auto batchnorm_desc = mkldnn_emitter->get_batchnorm_backward_desc(node);
                 auto weights_shape = Shape{2, args[0].get_size()};
                 auto weights_desc = mkldnn_emitter->build_memory_descriptor(
                     weights_shape, args[0].get_element_type(), mkldnn::memory::format::nc);
@@ -373,29 +346,17 @@ namespace ngraph
                 auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
 
                 auto functor = [&,
+                                batchnorm_desc,
                                 weights_desc,
-                                input_desc,
-                                mean_desc,
-                                variance_desc,
-                                delta_desc,
-                                dinput_desc,
                                 dweights_desc,
-                                eps,
                                 batchnorm_index,
                                 stacked_weights,
                                 stacked_dweights,
                                 weight_sizes](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                     if (ctx->first_iteration)
                     {
-                        mkldnn_emitter->batchnorm_backward(weights_desc,
-                                                           input_desc,
-                                                           mean_desc,
-                                                           variance_desc,
-                                                           delta_desc,
-                                                           dinput_desc,
-                                                           dweights_desc,
-                                                           eps,
-                                                           batchnorm_index);
+                        mkldnn_emitter->batchnorm_backward(
+                            batchnorm_desc, weights_desc, dweights_desc, batchnorm_index);
                     }
                     memcpy(stacked_weights.get(), arg0_tensor, weight_sizes[0]);
                     memcpy(stacked_weights.get() + weight_sizes[0], arg1_tensor, weight_sizes[1]);

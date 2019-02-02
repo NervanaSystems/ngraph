@@ -40,17 +40,15 @@ namespace ngraph
                     auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-
+                    auto relu_desc = mkldnn_emitter->get_relu_forward_desc(node);
                     size_t relu_index = mkldnn_emitter->primitive_init(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(relu_index);
 
-                    auto functor = [&, input_desc, result_desc, relu_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    auto functor = [&, relu_desc, relu_index](CPURuntimeContext* ctx,
+                                                              CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->relu_forward(input_desc, result_desc, relu_index);
+                            mkldnn_emitter->relu_forward(relu_desc, relu_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
@@ -77,19 +75,16 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                    auto delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
-                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-
+                    auto bwd_desc = mkldnn_emitter->get_relu_backward_desc(node);
+                    auto fwd_desc = mkldnn_emitter->get_relu_forward_desc(node);
                     size_t relu_index = mkldnn_emitter->primitive_init(4);
                     auto& deps = mkldnn_emitter->get_primitive_deps(relu_index);
 
-                    auto functor = [&, input_desc, delta_desc, result_desc, relu_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    auto functor = [&, bwd_desc, fwd_desc, relu_index](CPURuntimeContext* ctx,
+                                                                       CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->relu_backward(
-                                input_desc, delta_desc, result_desc, relu_index);
+                            mkldnn_emitter->relu_backward(bwd_desc, fwd_desc, relu_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg_fwd_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], delta_tensor);

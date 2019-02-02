@@ -53,8 +53,7 @@ namespace ngraph
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto conv_desc =
-                        mkldnn_emitter->get_convolution_forward_desc<ngraph::op::Convolution>(
-                            node, args, out);
+                        mkldnn_emitter->get_convolution_forward_desc<ngraph::op::Convolution>(node);
                     auto conv_attr =
                         mkldnn_emitter->get_convolution_forward_attr<ngraph::op::Convolution>(node);
                     size_t conv_index = mkldnn_emitter->convolution_forward_init();
@@ -135,7 +134,7 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto conv_desc =
                         mkldnn_emitter->get_convolution_forward_desc<ngraph::op::ConvolutionRelu>(
-                            node, args, out);
+                            node);
                     auto conv_attr =
                         mkldnn_emitter->get_convolution_forward_attr<ngraph::op::ConvolutionRelu>(
                             node);
@@ -177,7 +176,7 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto conv_desc =
                         mkldnn_emitter->get_convolution_forward_desc<ngraph::op::ConvolutionBias>(
-                            node, args, out);
+                            node);
                     auto conv_attr =
                         mkldnn_emitter->get_convolution_forward_attr<ngraph::op::ConvolutionBias>(
                             node);
@@ -220,8 +219,7 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto conv_desc =
                         mkldnn_emitter
-                            ->get_convolution_forward_desc<ngraph::op::ConvolutionBiasAdd>(
-                                node, args, out);
+                            ->get_convolution_forward_desc<ngraph::op::ConvolutionBiasAdd>(node);
                     auto conv_attr =
                         mkldnn_emitter
                             ->get_convolution_forward_attr<ngraph::op::ConvolutionBiasAdd>(node);
@@ -263,7 +261,7 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto conv_desc =
                         mkldnn_emitter->get_convolution_forward_desc<ngraph::op::ConvolutionAdd>(
-                            node, args, out);
+                            node);
                     auto conv_attr =
                         mkldnn_emitter->get_convolution_forward_attr<ngraph::op::ConvolutionAdd>(
                             node);
@@ -612,7 +610,7 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto conv_desc =
                         mkldnn_emitter->get_convolution_forward_desc<ngraph::op::GroupConvolution>(
-                            node, args, out);
+                            node);
                     auto conv_attr =
                         mkldnn_emitter->get_convolution_forward_attr<ngraph::op::GroupConvolution>(
                             node);
@@ -656,8 +654,7 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto conv_desc =
                         mkldnn_emitter
-                            ->get_convolution_forward_desc<ngraph::op::GroupConvolutionBias>(
-                                node, args, out);
+                            ->get_convolution_forward_desc<ngraph::op::GroupConvolutionBias>(node);
                     auto conv_attr =
                         mkldnn_emitter
                             ->get_convolution_forward_attr<ngraph::op::GroupConvolutionBias>(node);
