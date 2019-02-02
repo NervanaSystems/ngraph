@@ -195,9 +195,6 @@ private:
         std::unordered_map<const Node*, stopwatch> m_timer_map;
         std::vector<NodeWrapper> m_wrapped_nodes;
         std::unordered_map<const Node*, std::shared_ptr<RNGState>> m_states;
-        std::shared_ptr<AlignedBuffer> m_temporary_memory;
-
-        void* get_temporary_pointer(size_t offset) { return m_temporary_memory->get_ptr(offset); }
     } m_function_instance;
     std::set<std::string> m_unsupported_op_name_list;
 
@@ -206,8 +203,8 @@ private:
 
     void generate_calls(const element::Type& type,
                         const NodeWrapper& op,
-                        const std::vector<void*>& outputs,
-                        const std::vector<const void*>& inputs,
+                        const std::vector<std::shared_ptr<HostTensor>>& outputs,
+                        const std::vector<std::shared_ptr<HostTensor>>& inputs,
                         FunctionInstance& instance);
 
     template <typename T>
@@ -495,7 +492,9 @@ private:
         }
         case OP_TYPEID::Constant:
         {
-            // Constant is handled in the main loop
+            const op::Constant* c = static_cast<const op::Constant*>(&node);
+            size_t element_count = shape_size(node.get_output_shape(0));
+            reference::constant<T>(c->get_data_ptr<T>(), static_cast<T*>(out[0]), element_count);
             break;
         }
         case OP_TYPEID::ScalarConstantLike: break;
