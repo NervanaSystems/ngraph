@@ -61,6 +61,15 @@ namespace ngraph
             /// \return `true` if the operator is available, otherwise it returns `false`.
             bool is_operator_available(const onnx::NodeProto& node_proto) const;
 
+            /// \brief      Enable operators from provided domain to use by this model.
+            ///
+            /// \note       This function makes visible all currently registered in provided domain
+            ///             operators for use in this model.
+            ///
+            /// \param[in]  domain  The domain name.
+            ///
+            void enable_opset_domain(const std::string& domain);
+
         private:
             const onnx::ModelProto* m_model_proto;
             std::unordered_map<std::string, OperatorSet> m_opset;
