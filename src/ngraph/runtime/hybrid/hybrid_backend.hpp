@@ -56,6 +56,7 @@ public:
 
     bool is_supported(const ngraph::Node& node) const override;
 
+    void set_debug_enabled(bool flag) { m_debug_enabled = flag; }
 private:
     class FunctionInstance
     {
@@ -69,8 +70,7 @@ private:
 
     std::map<std::shared_ptr<ngraph::Function>, FunctionInstance> m_function_map;
     std::vector<std::shared_ptr<runtime::Backend>> m_backend_list;
+    bool m_debug_enabled = false;
 
-    std::string get_placement_name(const runtime::Tensor* t);
-    std::string get_placement_name(const runtime::Backend* t);
     size_t get_placement(const runtime::Tensor* t);
 };

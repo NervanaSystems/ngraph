@@ -166,7 +166,7 @@ namespace ngraph
                 {
                     Impl impl;
                     impl.set_build(build);
-                    impl.set_op(dynamic_cast<const typename Impl::Op*>(op));
+                    impl.set_op(static_cast<const typename Impl::Op*>(op));
                     impl.Apply();
                 }
             };
@@ -187,7 +187,7 @@ namespace ngraph
                 OpImplRegistration()
                 {
                     GlobalOpImplMap()->emplace(std::type_index{typeid(typename OID::Impl::Op)},
-                                               new OID());
+                                               std::unique_ptr<OpImplDescriptorBase>{new OID()});
                 }
             };
         }

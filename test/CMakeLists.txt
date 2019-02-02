@@ -25,8 +25,6 @@ endif()
 set(SRC
     algebraic_simplification.cpp
     all_close_f.cpp
-    any_all_insertion.cpp
-    any_all_replacement.cpp
     assertion.cpp
     build_graph.cpp
     builder_autobroadcast.cpp
@@ -34,13 +32,13 @@ set(SRC
     control_dependencies.cpp
     coordinate.cpp
     copy.cpp
+    core.cpp
     cpio.cpp
     cse.cpp
     element_type.cpp
     file_util.cpp
     graph_partition.cpp
     includes.cpp
-    inliner.cpp
     input_output_assign.cpp
     main.cpp
     nop_elimination.cpp
@@ -65,18 +63,12 @@ set(SRC
 set_source_files_properties(includes.cpp PROPERTIES COMPILE_DEFINITIONS
     NGRAPH_INCLUDES="${PROJECT_SOURCE_DIR}/src/ngraph")
 
-if (NGRAPH_ONNX_IMPORT_ENABLE)
-    list(APPEND SRC onnx_import.cpp)
-    if (NGRAPH_ONNXIFI_ENABLE)
-        list(APPEND SRC onnxifi.cpp onnxifi_span.cpp)
-    endif()
-endif()
-
 if (NGRAPH_INTERPRETER_ENABLE)
     list(APPEND SRC
         backend_debug_api.cpp
         builder.cpp
-        backend_api.cpp)
+        backend_api.cpp
+        hybrid_backend.cpp)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTERPRETER)
 endif()
 
@@ -106,6 +98,10 @@ if (NGRAPH_PLAIDML_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} PlaidML)
 endif()
 
+if (NGRAPH_GENERIC_CPU_ENABLE)
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GCPU)
+endif()
+
 add_subdirectory(models)
 add_subdirectory(files)
 add_subdirectory(util)
@@ -127,7 +123,6 @@ set(MULTI_TEST_SRC
     backend_embedding_lookup.in.cpp
     backend_one_hot.in.cpp
     backend_pool.in.cpp
-    backend_reduce.in.cpp
     backend_reshape.in.cpp
     backend_sum.in.cpp
     backend_topk.in.cpp
@@ -136,11 +131,20 @@ set(MULTI_TEST_SRC
     backend_unary_elementwise.in.cpp
     convolution_test.in.cpp
 )
+
 if(NGRAPH_DISTRIBUTED_ENABLE)
     list(APPEND MULTI_TEST_SRC distributed.in.cpp)
 endif()
+
 if (NGRAPH_CPU_ENABLE)
     list(APPEND MULTI_TEST_SRC backend_graph_comparison.in.cpp)
+endif()
+
+if (NGRAPH_ONNX_IMPORT_ENABLE)
+    list(APPEND MULTI_TEST_SRC onnx_import.in.cpp)
+    if (NGRAPH_ONNXIFI_ENABLE)
+        list(APPEND SRC onnxifi.cpp onnxifi_span.cpp)
+    endif()
 endif()
 
 foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})
@@ -222,7 +226,7 @@ endif()
 
 if (NGRAPH_INTERPRETER_ENABLE)
     target_compile_definitions(unit-test PRIVATE NGRAPH_INTERPRETER_ENABLE)
-    target_link_libraries(unit-test PRIVATE interpreter_backend)
+    target_link_libraries(unit-test PRIVATE interpreter_backend hybrid_base)
 endif()
 
 if (NGRAPH_GPU_ENABLE)

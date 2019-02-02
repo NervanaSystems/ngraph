@@ -145,3 +145,18 @@ vector<runtime::PerformanceCounter>
     }
     return rc;
 }
+
+bool runtime::cpu::CPU_Backend::is_supported(const Node& op) const
+{
+    return true;
+}
+
+bool runtime::cpu::CPU_Backend::is_supported_property(const Property prop) const
+{
+    if (prop == Property::memory_attach)
+    {
+        return true;
+    }
+
+    return false;
+}

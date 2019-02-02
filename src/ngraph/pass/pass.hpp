@@ -34,6 +34,14 @@ namespace ngraph
         class NodePass;
         class CallGraphPass;
         class Manager;
+        enum FusionType
+        {
+            //`DIFFERENTIABLE_FUSIONS` produce ops that support autodiff
+            // i.e. implement `generate_adjoints`
+            DIFFERENTIABLE_FUSIONS = 0x1,
+            REGULAR_FUSIONS = 0x2,
+            ALL_FUSIONS = 0xFFFFFFFF
+        };
     }
 }
 
