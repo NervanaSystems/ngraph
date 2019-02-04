@@ -48,8 +48,6 @@ namespace ngraph
                 auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
                 auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
 
-                const OP* batchnorm = static_cast<const OP*>(node);
-
 // Kill clang diagnostics bug
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-braces"
@@ -298,9 +296,6 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::BatchNormTrainingBackprop)
             {
-                const ngraph::op::BatchNormTrainingBackprop* batchnorm =
-                    static_cast<const ngraph::op::BatchNormTrainingBackprop*>(node);
-
                 auto& functors = external_function->get_functors();
 
                 auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
@@ -333,14 +328,8 @@ namespace ngraph
                 auto weights_shape = Shape{2, args[0].get_size()};
                 auto weights_desc = mkldnn_emitter->build_memory_descriptor(
                     weights_shape, args[0].get_element_type(), mkldnn::memory::format::nc);
-                auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
-                auto mean_desc = mkldnn_utils::get_input_mkldnn_md(node, 3);
-                auto variance_desc = mkldnn_utils::get_input_mkldnn_md(node, 4);
-                auto delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 5);
-                auto dinput_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
                 auto dweights_desc = mkldnn_emitter->build_memory_descriptor(
                     weights_shape, args[0].get_element_type(), mkldnn::memory::format::nc);
-                auto eps = batchnorm->get_eps_value();
 
                 auto batchnorm_index = mkldnn_emitter->primitive_init(8);
                 auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
