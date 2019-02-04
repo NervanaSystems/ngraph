@@ -145,9 +145,11 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
     }
 
 #if defined NGRAPH_DISTRIBUTED_ENABLE && defined NGRAPH_DISTRIBUTED_MLSL_ENABLE
-    NGRAPH_ASSERT(MLSL::Environment::GetEnv().IsInitialized());
-    ctx->mlsl_env = &MLSL::Environment::GetEnv();
-    ctx->mlsl_dist = ctx->mlsl_env->CreateDistribution(ctx->mlsl_env->GetProcessCount(), 1);
+    if (MLSL::Environment::GetEnv().IsInitialized())
+    {
+        ctx->mlsl_env = &MLSL::Environment::GetEnv();
+        ctx->mlsl_dist = ctx->mlsl_env->CreateDistribution(ctx->mlsl_env->GetProcessCount(), 1);
+    }
 #endif
 }
 
