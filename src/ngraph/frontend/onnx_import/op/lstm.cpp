@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -29,7 +30,10 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/concat.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/maximum.hpp"
+#include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/sigmoid.hpp"
@@ -60,6 +64,30 @@ namespace ngraph
                 {
                     auto args = numpy_style_broadcast_for_binary_operation(lhs, rhs);
                     return {std::make_shared<ngraph::op::Multiply>(args.at(0), args.at(1))};
+                }
+
+                std::shared_ptr<ngraph::Node> clip(const std::shared_ptr<ngraph::Node>& data,
+                                                   float threshold)
+                {
+                    if (threshold == 0.f)
+                    {
+                        return data;
+                    }
+
+                    float min_val = -threshold;
+                    float max_val = threshold;
+                    std::size_t size = ngraph::shape_size(data->get_shape());
+                    const std::shared_ptr<ngraph::Node> min_val_node =
+                        ngraph::op::Constant::create(data->get_element_type(),
+                                                     data->get_shape(),
+                                                     std::vector<float>(size, min_val));
+                    const std::shared_ptr<ngraph::Node> max_val_node =
+                        ngraph::op::Constant::create(data->get_element_type(),
+                                                     data->get_shape(),
+                                                     std::vector<float>(size, max_val));
+
+                    return std::make_shared<ngraph::op::Minimum>(
+                        max_val_node, std::make_shared<ngraph::op::Maximum>(data, min_val_node));
                 }
 
                 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ACTIVATION FUNCTIONS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -216,12 +244,15 @@ namespace ngraph
                     explicit LSTMAttributes(const Node& node)
                         : m_direction{LSTMDirection::LSTM_DIRECTION_FORWARD}
                         , m_hidden_size{node.get_attribute_value<std::int64_t>("hidden_size")}
+                        , m_clip_threshold{node.get_attribute_value<float>("clip", 0.f)}
                     {
+                        m_clip_threshold = std::abs(m_clip_threshold);
                     }
 
                     // Currently only LSTM_DIRECTION_FORWARD is supported.
                     LSTMDirection m_direction;
                     std::int64_t m_hidden_size;
+                    float m_clip_threshold;
                 };
 
             } // anonymous namespace
@@ -250,6 +281,8 @@ namespace ngraph
                         }
                     }
 
+                    // For clipping cell input in the range [-clip_threshold, clip_threshold]
+                    float clip_threshold = attributes.m_clip_threshold;
                     // ------ VARIABLE'S NAMES AND ACRONYM DEFINITIONS ------
                     // The names used below are analogous to the one used in ONNX documentation.
                     //
@@ -324,13 +357,13 @@ namespace ngraph
                         auto c = split_gates.at(3);
 
                         // f(Xt*(Wi^T) + Ht-1*(Ri^T) + Pi (.) Ct-1 + Wbi + Rbi)
-                        i = sigmoid(add(i, mul(p_i, C_t)));
+                        i = sigmoid(clip(add(i, mul(p_i, C_t)), clip_threshold));
                         // f(Xt*(Wf^T) + Ht-1*(Rf^T) + Pf (.) Ct-1 + Wbf + Rbf)
-                        f = sigmoid(add(f, mul(p_f, C_t)));
+                        f = sigmoid(clip(add(f, mul(p_f, C_t)), clip_threshold));
                         // ft (.) Ct-1 + it (.) ct
-                        auto C = add(mul(f, C_t), mul(i, tanh(c)));
+                        auto C = add(mul(f, C_t), mul(i, tanh(clip(c, clip_threshold))));
                         // f(Xt*(Wo^T) + Ht-1*(Ro^T) + Po (.) Ct + Wbo + Rbo)
-                        o = sigmoid(add(o, mul(p_o, C)));
+                        o = sigmoid(clip(add(o, mul(p_o, C)), clip_threshold));
                         // ot (.) h(Ct)
                         auto H = mul(o, tanh(C));
                         h_list.push_back(H);
@@ -357,7 +390,7 @@ namespace ngraph
                         Y = std::make_shared<ngraph::op::Reshape>(
                             Y, reshape::get_default_axis_vector(Y->get_shape().size()), shape);
                     }
-                    return {Y, exp_h_list.back()};
+                    return {Y, exp_h_list.back(), C_t};
                 }
             } // namespace set_1
 
