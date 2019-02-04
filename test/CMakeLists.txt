@@ -37,7 +37,6 @@ set(SRC
     cse.cpp
     element_type.cpp
     file_util.cpp
-    graph_partition.cpp
     includes.cpp
     input_output_assign.cpp
     main.cpp
@@ -200,7 +199,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
 endif()
 
 if (NGRAPH_CPU_ENABLE)
-    # The INTERPRETER backend is required for graph_partition, convolution, and backwards unit tests
+    # The INTERPRETER backend is required for convolution, and backwards unit tests
     target_link_libraries(unit-test PRIVATE cpu_backend interpreter_backend)
     target_link_libraries(unit-test PRIVATE libmkldnn)
 endif()
