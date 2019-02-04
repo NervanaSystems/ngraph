@@ -14,29 +14,33 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "attribute.hpp"
-#include "graph.hpp"
-#include "model.hpp"
+#pragma once
+
+#include <string>
+
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
-    namespace onnx_import
+    namespace runtime
     {
-        std::vector<Graph> Attribute::get_graph_array(Model& model) const
+        namespace hybrid
         {
-            std::vector<Graph> result;
-            for (const auto& graph : m_attribute_proto->graphs())
+            namespace pass
             {
-                result.emplace_back(graph, model);
+                class Dump;
             }
-            return result;
         }
+    }
+}
 
-        Graph Attribute::get_graph(Model& model) const
-        {
-            return Graph{m_attribute_proto->g(), model};
-        }
+class ngraph::runtime::hybrid::pass::Dump : public ngraph::pass::ModulePass
+{
+public:
+    Dump(const std::string& output_file);
 
-    } // namespace onnx_import
+    virtual bool run_on_module(std::vector<std::shared_ptr<ngraph::Function>>&) override;
 
-} // namespace ngraph
+private:
+    const std::string m_output_file;
+};

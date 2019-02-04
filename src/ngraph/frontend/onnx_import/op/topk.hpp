@@ -14,28 +14,29 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "attribute.hpp"
-#include "graph.hpp"
-#include "model.hpp"
+#pragma once
+
+#include "core/node.hpp"
+#include "ngraph/node_vector.hpp"
 
 namespace ngraph
 {
     namespace onnx_import
     {
-        std::vector<Graph> Attribute::get_graph_array(Model& model) const
+        namespace op
         {
-            std::vector<Graph> result;
-            for (const auto& graph : m_attribute_proto->graphs())
+            namespace set_1
             {
-                result.emplace_back(graph, model);
-            }
-            return result;
-        }
+                /// \brief Performs ONNX TopK operation.
+                ///
+                /// \param node The ONNX node object representing this operation.
+                /// \return The vector containing Ngraph nodes producing output of ONNX TopK
+                ///         operation(both values and indices).
+                NodeVector topk(const Node& node);
 
-        Graph Attribute::get_graph(Model& model) const
-        {
-            return Graph{m_attribute_proto->g(), model};
-        }
+            } // namespace set_1
+
+        } //namespace op
 
     } // namespace onnx_import
 
