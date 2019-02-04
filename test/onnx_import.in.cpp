@@ -1863,3 +1863,98 @@ TEST(onnx_${BACKEND_NAME}, model_top_k)
     EXPECT_TRUE(test::all_close_f(expected_values_output, values_output));
     EXPECT_TRUE(test::all_close(expected_indices_output, indices_output));
 }
+
+TEST(onnx_${BACKEND_NAME}, model_lstm_fwd_with_clip)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/lstm_fwd_with_clip.onnx"));
+
+    std::vector<float> X{-0.455351, -0.276391, -0.185934, -0.269585};
+
+    std::vector<float> W{-0.494659f, 0.0453352f, -0.487793f, 0.417264f, -0.0175329f, 0.489074f,
+              -0.446013f, 0.414029f, -0.0091708f, -0.255364f, -0.106952f, -0.266717f, -0.0888852f,
+              -0.428709f, -0.283349f, 0.208792f};
+
+    std::vector<float> R{0.146626f, -0.0620289f, -0.0815302f, 0.100482f, -0.219535f, -0.306635f,
+              -0.28515f, -0.314112f, -0.228172f, 0.405972f, 0.31576f, 0.281487f, -0.394864f,
+               0.42111f, -0.386624f, -0.390225f};
+
+    std::vector<float> B{0.381619f, 0.0323954f, -0.14449f, 0.420804f, -0.258721f, 0.45056f,
+        -0.250755f, 0.0967895f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+
+    std::vector<int> sequence_lens{1};
+
+    int hidden_size{2};
+    int batch_size{1};
+
+    std::vector<float> initial_h(batch_size * hidden_size, 0.f);
+    std::vector<float> initial_c(batch_size * hidden_size, 0.f);
+    std::vector<float> P{0.2345f, 0.5235f, 0.4378f, 0.3475f, 0.8927f, 0.3456f};
+
+    std::size_t n_inputs = 8;
+
+    Outputs expected_output;
+
+    // Y_data
+    expected_output.emplace_back(std::vector<float>{-0.02280854f, 0.02744377f, -0.03516197f, 0.03875681f});
+    // Y_h_data
+    expected_output.emplace_back(std::vector<float>{-0.03516197f, 0.03875681f});
+    // Y_c_data
+    expected_output.emplace_back(std::vector<float>{-0.07415761f, 0.07395997f});
+
+    auto backend = ngraph::runtime::Backend::create("${BACKEND_NAME}");
+    auto params = function->get_parameters();
+
+    if (params.size() != n_inputs)
+    {
+        throw ngraph::ngraph_error("number of parameters and arguments don't match");
+    }
+
+    std::size_t i = 0;
+    auto X_t = backend->create_tensor(params.at(i)->get_element_type(), params.at(i++)->get_shape());
+    auto W_t = backend->create_tensor(params.at(i)->get_element_type(), params.at(i++)->get_shape());
+    auto R_t = backend->create_tensor(params.at(i)->get_element_type(), params.at(i++)->get_shape());
+    auto B_t = backend->create_tensor(params.at(i)->get_element_type(), params.at(i++)->get_shape());
+    auto seq_lens_t = backend->create_tensor(params.at(i)->get_element_type(),
+                                             params.at(i++)->get_shape());
+    auto initial_h_t = backend->create_tensor(params.at(i)->get_element_type(),
+                                             params.at(i++)->get_shape());
+    auto initial_c_t = backend->create_tensor(params.at(i)->get_element_type(),
+                                             params.at(i++)->get_shape());
+    auto P_t = backend->create_tensor(params.at(i)->get_element_type(), params.at(i)->get_shape());
+
+    copy_data(X_t, X);
+    copy_data(W_t, W);
+    copy_data(R_t, R);
+    copy_data(B_t, B);
+    copy_data(seq_lens_t, sequence_lens);
+    copy_data(initial_h_t, initial_h);
+    copy_data(initial_c_t, initial_c);
+    copy_data(P_t, P);
+
+    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> arg_tensors{
+        X_t, W_t, R_t, B_t, seq_lens_t, initial_h_t, initial_c_t, P_t};
+
+    auto results = function->get_results();
+    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> result_tensors(results.size());
+    for (std::size_t i{0}; i < results.size(); ++i)
+    {
+        result_tensors.at(i) =
+            backend->create_tensor(results.at(i)->get_element_type(), results.at(i)->get_shape());
+    }
+
+    auto handle = backend->compile(function);
+    backend->call_with_validate(handle, result_tensors, arg_tensors);
+    std::vector<std::vector<float>> result_vectors;
+    for (auto rt : result_tensors)
+    {
+        result_vectors.push_back(read_vector<float>(rt));
+    }
+    Outputs outputs{result_vectors};
+
+    EXPECT_TRUE(outputs.size() == expected_output.size());
+    for (std::size_t i{0}; i < expected_output.size(); ++i)
+    {
+        EXPECT_TRUE(test::all_close_f(expected_output.at(i), outputs.at(i)));
+    }
+}
