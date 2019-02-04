@@ -127,8 +127,6 @@ namespace ngraph
                         mkldnn_emitter->get_max_pooling_backward_desc<ngraph::op::MaxPoolBackprop>(
                             node);
                     auto fprop_src_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                    auto diff_dst_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
-                    auto diff_src_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
                     size_t fwd_pool_index = mkldnn_emitter->primitive_init(4, true);
                     auto& fdeps = mkldnn_emitter->get_primitive_deps(fwd_pool_index);
@@ -214,8 +212,6 @@ namespace ngraph
                     throw ngraph_error("MaxPoolWithIndices isn't supported");
                 }
 
-                auto max_pool = static_cast<const ngraph::op::MaxPoolWithIndices*>(node);
-
                 auto& functors = external_function->get_functors();
 
                 auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
@@ -252,8 +248,6 @@ namespace ngraph
                 {
                     throw ngraph_error("MaxPoolWithIndicesBackprop isn't supported");
                 }
-
-                auto mpb = static_cast<const ngraph::op::MaxPoolWithIndicesBackprop*>(node);
 
                 auto& functors = external_function->get_functors();
 
