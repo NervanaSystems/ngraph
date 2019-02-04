@@ -145,7 +145,7 @@ namespace ngraph
                 }
 
                 template <typename ElementType>
-                void reshape(const void* arg,
+                void reshape_ref(const void* arg,
                              void* out,
                              const Shape& in_shape,
                              const AxisVector& in_axis_order,

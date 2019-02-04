@@ -168,7 +168,7 @@ namespace ngraph
                 }
 
                 template <typename ElementType>
-                void dot(void* arg0,
+                void dot_ref(void* arg0,
                          void* arg1,
                          void* out,
                          const Shape& arg0_shape,
