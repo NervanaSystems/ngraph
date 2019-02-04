@@ -30,6 +30,7 @@ nGraph Compiler stack
 
 .. toctree::
    :maxdepth: 2
+   :caption: Framework Support
    
    frameworks/index.rst
 

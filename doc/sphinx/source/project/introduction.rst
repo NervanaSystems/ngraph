@@ -6,13 +6,14 @@ Introduction
 
 The nGraph Compiler stack provides an industry-standard reference for working
 with various :abbr:`Deep Learning (DL)` (DL) models and optimizing an 
-:abbr:`Artificial Neural Network`, or :term:`ANN` to run a particular DL model 
-for testing, training, or inference. Having such a standard simplifies what 
-would otherwise be an enormously complex and difficult-to-scale pipeline 
-(:ref:`Figure 1 <figure-1>`) from "training with your favorite framework on GPU" 
-(:ref:`Figure 2 <figure-2>`), to deploying that pre-trained model in a datacenter 
-or production environment, where both hardware owners and software developers 
-are concerned with **efficiency per-watt**, to keep costs in check.
+:abbr:`Artificial Neural Network`, or :term:`ANN` to run them for testing, 
+training, or inference. Having such a standard simplifies what would otherwise 
+be an enormously complex and difficult-to-scale pipeline 
+(:ref:`Figure 1 <figure-1>`) from "training with a framework on GPU" 
+(:ref:`Figure 2 <figure-2>`), to deploying that pre-trained model in a 
+datacenter or production environment, where hardware owners or software 
+developers renting anything in a datacenter ought to be concerned with 
+**efficiency per-watt**, to keep costs in check.
 
 A typical network is constructed using some kind of language-based API, which 
 translates the network or :abbr:`DL (Deep Learning)` model (statically or 
@@ -39,7 +40,7 @@ terms have been simplified for illustrative purposes.
    Figure 1: Components of a DL stack, simplified for illustrative purposes.
 
 There are many deep learning frameworks, each with its own strengths and 
-user bases. A setup that is common to many DL practicioners is shown below.
+user bases. A setup that is common to many DL practitioners is shown below.
 
 .. _figure-2:
 

@@ -1,50 +1,5 @@
 .. frameworks/generic-configs.rst:
 
-
-Configurations available to any framework
-#########################################
-
-
-Enabling Deep Learning paradigms  
-================================
-
-Framework architects or engineers who can't quite find what they need among 
-the existing DL tools may need to build something new off a "stock" framework, 
-or someting entirely from scratch. For this category of developer, we have 
-:doc:`documented several ways <../howto/index>` you can incorporate built-in 
-compiler support for users of your framework; this includes out-of-box support 
-for things like Intel® MKL-DNN and PlaidML when your framework supports nGraph 
-as a "backend" or engine. 
-
-   .. important:: nGraph does not provide an interface for "users" of frameworks 
-      (for example, we cannot dictate or control how Tensorflow* or MXNet* presents 
-      interfaces to users). Please keep in mind that designing and documenting 
-      the :abbr:`User Interface (UI)` of step 3 above is entirely in the realm 
-      of the framework owner or developer and beyond the scope of the nGraph 
-      Compiler stack. However, any framework can be designed to make direct use 
-      of nGraph Compiler stack-based features and then expose an accompanying UI, 
-      output message, or other detail to a user.
- 
-The nGraph :abbr:`IR Intermediate Representation` is format that can understand 
-inputs from a framework. Today, there are two primary tasks that can be accomplished 
-in the “bridge code” space of the nGraph IR: 
-
-#. Compiling a dataflow graph 
-#. Executing a pre-compiled graph. 
-
-See the :doc:`../framework-integration-guides` for how we built bridges with our 
-initially-supported frameworks. For more in-depth help in writing things like 
-graph optimizations and bridge code, we provide articles on how to 
-:doc:`../fusion/index`, and programmatically :doc:`../howto/execute` that can 
-target various compute resources using nGraph when a framework provides some 
-inputs to be computed.
-
-.. note:: Configuration options can be added manually on the command line or via 
-   scripting. Please keep in mind that fine-tuning of parameters is as much of 
-   an art as it is a science; there are virtually limitless ways to do so and 
-   our documentation provides only a sampling.  
-
-
 Integrating nGraph with new frameworks
 ======================================
 
