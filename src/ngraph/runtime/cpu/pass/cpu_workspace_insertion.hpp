@@ -18,6 +18,7 @@
 #include "ngraph/node_vector.hpp"
 #include "ngraph/pass/pass.hpp"
 #include "ngraph/pattern/matcher.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 
 namespace ngraph
 {
@@ -33,7 +34,8 @@ namespace ngraph
     }
 }
 
-class ngraph::runtime::cpu::pass::CPUWorkspaceInsertion : public ngraph::pass::FunctionPass
+class CPU_BACKEND_API ngraph::runtime::cpu::pass::CPUWorkspaceInsertion
+    : public ngraph::pass::FunctionPass
 {
 public:
     CPUWorkspaceInsertion(ngraph::NodeVector& indices_list, bool return_indices = true)

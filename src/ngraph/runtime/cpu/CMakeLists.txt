@@ -194,6 +194,13 @@ if (NGRAPH_CPU_ENABLE)
          message(WARNING "The build toolset doesn't support OpenMP. This will impact performance and lead to slowdowns.")
     endif()
 
+    if (MSVS)
+        target_compile_definitions(cpu_backend PRIVATE EIGEN_HAS_CONSTEXPR)
+        # under debug mode, more files besides builder/dot.cpp rises the error
+        target_compile_options(cpu_backend PRIVATE "/bigobj" )
+    endif()
+    target_compile_definitions(cpu_backend PRIVATE CPU_BACKEND_DLL_EXPORTS)
+
     if(NGRAPH_DISTRIBUTED_ENABLE)
         target_compile_definitions(cpu_backend PRIVATE NGRAPH_DISTRIBUTED)
         target_include_directories(cpu_backend SYSTEM PRIVATE libmlsl)
@@ -207,7 +214,7 @@ if (NGRAPH_CPU_ENABLE)
     endif()
     target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)
     set_target_properties(cpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
-    if (NOT APPLE)
+    if (NOT APPLE AND NOT MSVS)
         # CPU backend uses third-party libraries like Eigen that might be linked in and
         # exported by other DSOs as well. In the absence of versioning, this could lead to the
         # CPU backend picking up the wrong version or even multiple versions of the
