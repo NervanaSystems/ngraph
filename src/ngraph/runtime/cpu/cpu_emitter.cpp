@@ -2410,6 +2410,11 @@ namespace ngraph
                             node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(qconv_index);
 
+                    writer << "if (" << out[0].get_name() << " != " << args[3].get_name() << ")\n";
+                    writer.block_begin();
+                    writer << "memcpy(" << out[0].get_name() << ", " << args[3].get_name() << ", "
+                           << args[3].get_size() * args[3].get_element_type().size() << ");\n";
+                    writer.block_end();
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
                            << ", " << args[0].get_name() << ");\n";
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
@@ -2441,6 +2446,11 @@ namespace ngraph
                                 node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(qconv_index);
 
+                    writer << "if (" << out[0].get_name() << " != " << args[3].get_name() << ")\n";
+                    writer.block_begin();
+                    writer << "memcpy(" << out[0].get_name() << ", " << args[3].get_name() << ", "
+                           << args[3].get_size() * args[3].get_element_type().size() << ");\n";
+                    writer.block_end();
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
                            << ", " << args[0].get_name() << ");\n";
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
@@ -2500,6 +2510,11 @@ namespace ngraph
                             node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
+                    writer << "if (" << out[0].get_name() << " != " << args[3].get_name() << ")\n";
+                    writer.block_begin();
+                    writer << "memcpy(" << out[0].get_name() << ", " << args[3].get_name() << ", "
+                           << args[3].get_size() * args[3].get_element_type().size() << ");\n";
+                    writer.block_end();
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
                            << ", " << args[0].get_name() << ");\n";
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
@@ -2527,6 +2542,11 @@ namespace ngraph
                         node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
+                    writer << "if (" << out[0].get_name() << " != " << args[2].get_name() << ")\n";
+                    writer.block_begin();
+                    writer << "memcpy(" << out[0].get_name() << ", " << args[2].get_name() << ", "
+                           << args[2].get_size() * args[2].get_element_type().size() << ");\n";
+                    writer.block_end();
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
                            << ", " << args[0].get_name() << ");\n";
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])

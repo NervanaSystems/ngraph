@@ -194,14 +194,15 @@ namespace ngraph
                     auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
                     auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
                     auto& arg3_tensor = external_function->get_tensor_data(args[3].get_name());
-                    size_t arg3_size = args[3].get_size();
                     auto& arg4_tensor = external_function->get_tensor_data(args[4].get_name());
                     auto& arg5_tensor = external_function->get_tensor_data(args[5].get_name());
                     auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
 
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    size_t arg3_size = args[3].get_size();
                     auto scales_size = shape_size(args[4].get_shape());
                     auto sum_scales_size = shape_size(args[5].get_shape());
+
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
 
                     auto conv_desc =
                         mkldnn_emitter
@@ -285,14 +286,15 @@ namespace ngraph
                     auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
                     auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
                     auto& arg3_tensor = external_function->get_tensor_data(args[3].get_name());
-                    size_t arg3_size = args[3].get_size();
                     auto& arg4_tensor = external_function->get_tensor_data(args[4].get_name());
                     auto& arg5_tensor = external_function->get_tensor_data(args[5].get_name());
                     auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
 
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    size_t arg3_size = args[3].get_size();
                     auto scales_size = shape_size(args[4].get_shape());
                     auto sum_scales_size = shape_size(args[5].get_shape());
+
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
 
                     auto conv_desc = mkldnn_emitter->get_convolution_forward_desc<
                         ngraph::op::QuantizedConvolutionBiasSignedAdd>(node, args, out);
