@@ -60,8 +60,9 @@ elseif(APPLE)
     )
 endif()
 
+set(TBB_ROOT ${SOURCE_DIR})
 
 add_library(libtbb INTERFACE)
 add_dependencies(libtbb ext_tbb)
-target_include_directories(libtbb SYSTEM INTERFACE ${SOURCE_DIR}/include)
+target_include_directories(libtbb SYSTEM INTERFACE ${TBB_ROOT}/include)
 target_link_libraries(libtbb INTERFACE ${TBB_LINK_LIBS})
