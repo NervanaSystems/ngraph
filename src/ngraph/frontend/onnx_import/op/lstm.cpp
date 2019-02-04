@@ -61,6 +61,13 @@ namespace ngraph
                     return {std::make_shared<ngraph::op::Add>(args.at(0), args.at(1))};
                 }
 
+                std::shared_ptr<ngraph::Node> sub(const std::shared_ptr<ngraph::Node>& lhs,
+                                                  const std::shared_ptr<ngraph::Node>& rhs)
+                {
+                    auto args = numpy_style_broadcast_for_binary_operation(lhs, rhs);
+                    return {std::make_shared<ngraph::op::Subtract>(args.at(0), args.at(1))};
+                }
+
                 std::shared_ptr<ngraph::Node> mul(const std::shared_ptr<ngraph::Node>& lhs,
                                                   const std::shared_ptr<ngraph::Node>& rhs)
                 {
@@ -237,6 +244,8 @@ namespace ngraph
                         , m_clip_threshold{node.get_attribute_value<float>("clip", 0.f)}
                         , m_activations{node.get_attribute_value<std::vector<std::string>>(
                               "activations", {"sigmoid", "tanh", "tanh"})}
+                        , m_input_forget{static_cast<bool>(
+                              node.get_attribute_value<std::int64_t>("input_forget", 0))}
                     {
                         m_clip_threshold = std::abs(m_clip_threshold);
                     }
@@ -246,6 +255,7 @@ namespace ngraph
                     std::int64_t m_hidden_size;
                     float m_clip_threshold;
                     std::vector<std::string> m_activations;
+                    bool m_input_forget;
                 };
 
             } // anonymous namespace
@@ -359,7 +369,19 @@ namespace ngraph
 
                         // f(Xt*(Wi^T) + Ht-1*(Ri^T) + Pi (.) Ct-1 + Wbi + Rbi)
                         i = activation_f(clip(add(i, mul(p_i, C_t)), clip_threshold));
-                        f = activation_f(clip(add(f, mul(p_f, C_t)), clip_threshold));
+                        if (attributes.m_input_forget)
+                        {
+                            f = sub(ngraph::op::Constant::create(
+                                        i->get_element_type(),
+                                        i->get_shape(),
+                                        std::vector<float>(shape_size(i->get_shape()), 0.f)),
+                                    i);
+                        }
+                        else
+                        {
+                            // f(Xt*(Wf^T) + Ht-1*(Rf^T) + Pf (.) Ct-1 + Wbf + Rbf)
+                            f = activation_f(clip(add(f, mul(p_f, C_t)), clip_threshold));
+                        }
                         // ft (.) Ct-1 + it (.) ct
                         auto C = add(mul(f, C_t), mul(i, activation_g(clip(c, clip_threshold))));
                         // f(Xt*(Wo^T) + Ht-1*(Ro^T) + Po (.) Ct + Wbo + Rbo)
