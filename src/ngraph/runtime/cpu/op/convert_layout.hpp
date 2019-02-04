@@ -32,7 +32,7 @@ namespace ngraph
                 /// \brief Layout Conversion
                 ///
                 /// Converts an input tensor to a tensor with the given layout descriptor
-                class  ConvertLayout : public ngraph::op::Op
+                class ConvertLayout : public ngraph::op::Op
                 {
                 public:
                     CPU_BACKEND_API ConvertLayout(

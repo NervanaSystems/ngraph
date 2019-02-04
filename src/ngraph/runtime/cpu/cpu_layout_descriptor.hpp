@@ -23,9 +23,9 @@
 
 #include <mkldnn.hpp>
 
+#include "cpu_backend_visibility.h"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/shape.hpp"
-#include "cpu_backend_visibility.h"
 
 namespace ngraph
 {

@@ -115,7 +115,8 @@ namespace ngraph
                 {
                     std::function<decltype(runtime::cpu::kernel::reshape_ref<float>)> ref_kernel;
 
-                    SELECT_KERNEL(ref_kernel, result_element_type, runtime::cpu::kernel::reshape_ref);
+                    SELECT_KERNEL(
+                        ref_kernel, result_element_type, runtime::cpu::kernel::reshape_ref);
 
                     auto functor = [&, ref_kernel, arg_shape, input_order, result_shape](
                         CPURuntimeContext* ctx, CPUExecutionContext* ectx) {

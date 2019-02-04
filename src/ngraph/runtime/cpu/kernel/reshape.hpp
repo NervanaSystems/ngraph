@@ -146,11 +146,11 @@ namespace ngraph
 
                 template <typename ElementType>
                 void reshape_ref(const void* arg,
-                             void* out,
-                             const Shape& in_shape,
-                             const AxisVector& in_axis_order,
-                             const Shape& out_shape,
-                             int arena)
+                                 void* out,
+                                 const Shape& in_shape,
+                                 const AxisVector& in_axis_order,
+                                 const Shape& out_shape,
+                                 int arena)
                 {
                     reference::reshape(static_cast<const ElementType*>(arg),
                                        static_cast<ElementType*>(out),

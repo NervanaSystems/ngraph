@@ -34,7 +34,8 @@ namespace ngraph
     }
 }
 
-class CPU_BACKEND_API ngraph::runtime::cpu::pass::CPUWorkspaceInsertion : public ngraph::pass::FunctionPass
+class CPU_BACKEND_API ngraph::runtime::cpu::pass::CPUWorkspaceInsertion
+    : public ngraph::pass::FunctionPass
 {
 public:
     CPUWorkspaceInsertion(ngraph::NodeVector& indices_list, bool return_indices = true)

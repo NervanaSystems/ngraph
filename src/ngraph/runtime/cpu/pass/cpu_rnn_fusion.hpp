@@ -17,8 +17,8 @@
 #pragma once
 
 #include "ngraph/pass/graph_rewrite.hpp"
-#include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/cpu_backend_visibility.h"
+#include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 
 namespace ngraph
 {
@@ -51,7 +51,8 @@ private:
     void construct_lstm_fprop();
 };
 
-class CPU_BACKEND_API ngraph::runtime::cpu::pass::RNNFusion : public ngraph::pass::RecurrentGraphRewrite
+class CPU_BACKEND_API ngraph::runtime::cpu::pass::RNNFusion
+    : public ngraph::pass::RecurrentGraphRewrite
 {
 public:
     RNNFusion()

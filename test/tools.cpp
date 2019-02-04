@@ -17,10 +17,10 @@
 #include <gtest/gtest.h>
 #include <sstream>
 
+#include "misc.hpp"
 #include "ngraph/cpio.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/log.hpp"
-#include "misc.hpp"
 
 using namespace ngraph;
 using namespace std;

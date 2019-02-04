@@ -17,8 +17,8 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
-#include "ngraph/util.hpp"
 #include "ngraph/runtime/cpu/cpu_backend_visibility.h"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -48,16 +48,16 @@ namespace ngraph
         {
         public:
             CPU_BACKEND_API Rnn(std::shared_ptr<Node> src_layer,
-                std::shared_ptr<Node> src_iter,
-                std::shared_ptr<Node> weights_layer,
-                std::shared_ptr<Node> weights_iter,
-                std::shared_ptr<Node> bias,
-                size_t num_timesteps,
-                size_t num_gates_per_cell,
-                size_t src_sequence_length,
-                size_t num_cell_states,
-                size_t direction,
-                size_t num_fused_layers);
+                                std::shared_ptr<Node> src_iter,
+                                std::shared_ptr<Node> weights_layer,
+                                std::shared_ptr<Node> weights_iter,
+                                std::shared_ptr<Node> bias,
+                                size_t num_timesteps,
+                                size_t num_gates_per_cell,
+                                size_t src_sequence_length,
+                                size_t num_cell_states,
+                                size_t direction,
+                                size_t num_fused_layers);
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
             size_t get_num_timesteps() const { return m_num_timesteps; }

@@ -28,13 +28,13 @@ namespace ngraph
         {
         public:
             CPU_BACKEND_API MatmulBias(std::shared_ptr<Node> W,
-                       std::shared_ptr<Node> x,
-                       std::shared_ptr<Node> b,
-                       Shape shape_w,
-                       Shape shape_x,
-                       bool transpose_w,
-                       bool transpose_x,
-                       AxisSet axes = AxisSet{});
+                                       std::shared_ptr<Node> x,
+                                       std::shared_ptr<Node> b,
+                                       Shape shape_w,
+                                       Shape shape_x,
+                                       bool transpose_w,
+                                       bool transpose_x,
+                                       AxisSet axes = AxisSet{});
 
             void validate_and_infer_types() override;
 

@@ -24,12 +24,12 @@
 #include <tuple>
 #include <vector>
 
+#include "cpu_backend_visibility.h"
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
 #include "ngraph/runtime/tensor.hpp"
-#include "cpu_backend_visibility.h"
 
 namespace ngraph
 {

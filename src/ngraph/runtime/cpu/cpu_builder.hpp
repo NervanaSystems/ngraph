@@ -247,8 +247,9 @@
     {                                                                                              \
         __register_##OP##_builder()                                                                \
         {                                                                                          \
-            GetGlobalBuildDispatcher().insert({type_index(typeid(ngraph::runtime::cpu::op::OP)),   \
-                                 &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::OP>});    \
+            GetGlobalBuildDispatcher().insert(                                                     \
+                {type_index(typeid(ngraph::runtime::cpu::op::OP)),                                 \
+                 &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::OP>});                    \
         }                                                                                          \
     } __register_##OP##_builder_instance;
 

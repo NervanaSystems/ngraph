@@ -16,6 +16,7 @@
 
 #include <tbb/tbb_stddef.h>
 
+#include "cpu_backend_visibility.h"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
@@ -23,7 +24,6 @@
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/util.hpp"
-#include "cpu_backend_visibility.h"
 
 using namespace ngraph;
 using namespace std;

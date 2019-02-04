@@ -19,8 +19,8 @@
 #include <map>
 #include <memory>
 
-#include "ngraph/runtime/backend.hpp"
 #include "cpu_backend_visibility.h"
+#include "ngraph/runtime/backend.hpp"
 
 namespace ngraph
 {

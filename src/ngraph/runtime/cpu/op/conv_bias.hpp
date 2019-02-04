@@ -29,18 +29,18 @@ namespace ngraph
         {
         public:
             CPU_BACKEND_API ConvolutionBias(const std::shared_ptr<op::Convolution>& conv,
-                            const std::shared_ptr<Node>& bias,
-                            const bool with_relu = false);
+                                            const std::shared_ptr<Node>& bias,
+                                            const bool with_relu = false);
 
             CPU_BACKEND_API ConvolutionBias(const std::shared_ptr<Node>& data_batch,
-                            const std::shared_ptr<Node>& filters,
-                            const std::shared_ptr<Node>& bias,
-                            const Strides& window_movement_strides,
-                            const Strides& window_dilation_strides,
-                            const CoordinateDiff& padding_below,
-                            const CoordinateDiff& padding_above,
-                            const Strides& data_dilation_strides,
-                            const bool with_relu = false);
+                                            const std::shared_ptr<Node>& filters,
+                                            const std::shared_ptr<Node>& bias,
+                                            const Strides& window_movement_strides,
+                                            const Strides& window_dilation_strides,
+                                            const CoordinateDiff& padding_below,
+                                            const CoordinateDiff& padding_above,
+                                            const Strides& data_dilation_strides,
+                                            const bool with_relu = false);
 
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
             const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }
