@@ -61,7 +61,7 @@ endif()
 
 # This section sets up MKL as an external project to be used later by MKLDNN
 
-set(MKLURLROOT "https://github.com/intel/mkl-dnn/releases/download/v0.17/")
+set(MKLURLROOT "https://github.com/intel/mkl-dnn/releases/download/v0.17.2/")
 set(MKLVERSION "2019.0.1.20180928")
 
 if (LINUX)
@@ -133,7 +133,7 @@ add_dependencies(libmkl ext_mkl)
 target_link_libraries(libmkl INTERFACE ${NGRAPH_BUILD_DIR}/${MKLML_LIB} ${NGRAPH_BUILD_DIR}/${OMP_LIB})
 
 set(MKLDNN_GIT_REPO_URL https://github.com/intel/mkl-dnn)
-set(MKLDNN_GIT_TAG "830a100")
+set(MKLDNN_GIT_TAG "b9ce57a")
 if(NGRAPH_LIB_VERSIONING_ENABLE)
     set(MKLDNN_PATCH_FILE mkldnn.patch)
 else()
