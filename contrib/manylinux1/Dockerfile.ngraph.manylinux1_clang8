@@ -18,9 +18,10 @@
 
 FROM quay.io/pypa/manylinux1_x86_64
 
-RUN curl -O https://cmake.org/files/v3.5/cmake-3.5.2-Linux-x86_64.tar.gz
-RUN tar -xf cmake-3.5.2-Linux-x86_64.tar.gz
-RUN ln -s /cmake-3.5.2-Linux-x86_64/bin/cmake /usr/local/bin/cmake
+RUN curl -O https://cmake.org/files/v3.6/cmake-3.6.3-Linux-x86_64.sh && \
+  chmod +x ./cmake-3.6.3-Linux-x86_64.sh && \
+  ./cmake-3.6.3-Linux-x86_64.sh --prefix=/usr/local --skip-license && \
+  rm ./cmake-3.6.3-Linux-x86_64.sh
 RUN /opt/python/cp27-cp27mu/bin/pip install virtualenv
 RUN ln -s /opt/python/cp27-cp27mu/bin/python /usr/local/bin/python
 RUN ln -s /opt/python/cp27-cp27mu/bin/python2 /usr/local/bin/python2
