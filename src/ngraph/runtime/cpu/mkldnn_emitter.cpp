@@ -1112,7 +1112,6 @@ mkldnn::eltwise_forward::desc MKLDNNEmitter::get_relu_forward_desc(const ngraph:
     const float negative_slope = 0.0f;
 
     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
     return mkldnn::eltwise_forward::desc(
         mkldnn::prop_kind::forward, mkldnn::algorithm::eltwise_relu, input_desc, negative_slope);
@@ -1905,7 +1904,6 @@ mkldnn::eltwise_forward::desc MKLDNNEmitter::get_leaky_relu_desc(const ngraph::N
     auto alpha = static_cast<const op::LeakyRelu*>(node)->get_alpha();
 
     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
     return mkldnn::eltwise_forward::desc(mkldnn::prop_kind::forward_training,
                                          mkldnn::algorithm::eltwise_relu,
@@ -1954,7 +1952,6 @@ mkldnn::eltwise_forward::desc MKLDNNEmitter::get_bounded_relu_desc(const ngraph:
     auto alpha = static_cast<const op::BoundedRelu*>(node)->get_alpha();
 
     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
     return mkldnn::eltwise_forward::desc(mkldnn::prop_kind::forward_training,
                                          mkldnn::algorithm::eltwise_bounded_relu,
