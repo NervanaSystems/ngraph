@@ -37,12 +37,14 @@
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/sigmoid.hpp"
+#include "ngraph/op/subtract.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "utils/broadcasting.hpp"
 #include "utils/common.hpp"
 #include "utils/reshape.hpp"
+#include "utils/rnn/activation_functions.hpp"
 
 namespace ngraph
 {
@@ -88,18 +90,6 @@ namespace ngraph
 
                     return std::make_shared<ngraph::op::Minimum>(
                         max_val_node, std::make_shared<ngraph::op::Maximum>(data, min_val_node));
-                }
-
-                // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ACTIVATION FUNCTIONS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-                std::shared_ptr<ngraph::Node> sigmoid(const std::shared_ptr<ngraph::Node>& arg)
-                {
-                    return std::make_shared<ngraph::op::Sigmoid>(arg);
-                }
-
-                std::shared_ptr<ngraph::Node> tanh(const std::shared_ptr<ngraph::Node>& arg)
-                {
-                    return std::make_shared<ngraph::op::Tanh>(arg);
                 }
 
                 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ INPUT NODES PARSING ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -245,6 +235,8 @@ namespace ngraph
                         : m_direction{LSTMDirection::LSTM_DIRECTION_FORWARD}
                         , m_hidden_size{node.get_attribute_value<std::int64_t>("hidden_size")}
                         , m_clip_threshold{node.get_attribute_value<float>("clip", 0.f)}
+                        , m_activations{node.get_attribute_value<std::vector<std::string>>(
+                              "activations", {"sigmoid", "tanh", "tanh"})}
                     {
                         m_clip_threshold = std::abs(m_clip_threshold);
                     }
@@ -253,6 +245,7 @@ namespace ngraph
                     LSTMDirection m_direction;
                     std::int64_t m_hidden_size;
                     float m_clip_threshold;
+                    std::vector<std::string> m_activations;
                 };
 
             } // anonymous namespace
@@ -283,6 +276,14 @@ namespace ngraph
 
                     // For clipping cell input in the range [-clip_threshold, clip_threshold]
                     float clip_threshold = attributes.m_clip_threshold;
+
+                    rnn::ActivationFunction activation_f =
+                        rnn::get_activation_func_by_name(attributes.m_activations.at(0));
+                    rnn::ActivationFunction activation_g =
+                        rnn::get_activation_func_by_name(attributes.m_activations.at(1));
+                    rnn::ActivationFunction activation_h =
+                        rnn::get_activation_func_by_name(attributes.m_activations.at(2));
+
                     // ------ VARIABLE'S NAMES AND ACRONYM DEFINITIONS ------
                     // The names used below are analogous to the one used in ONNX documentation.
                     //
@@ -357,15 +358,14 @@ namespace ngraph
                         auto c = split_gates.at(3);
 
                         // f(Xt*(Wi^T) + Ht-1*(Ri^T) + Pi (.) Ct-1 + Wbi + Rbi)
-                        i = sigmoid(clip(add(i, mul(p_i, C_t)), clip_threshold));
-                        // f(Xt*(Wf^T) + Ht-1*(Rf^T) + Pf (.) Ct-1 + Wbf + Rbf)
-                        f = sigmoid(clip(add(f, mul(p_f, C_t)), clip_threshold));
+                        i = activation_f(clip(add(i, mul(p_i, C_t)), clip_threshold));
+                        f = activation_f(clip(add(f, mul(p_f, C_t)), clip_threshold));
                         // ft (.) Ct-1 + it (.) ct
-                        auto C = add(mul(f, C_t), mul(i, tanh(clip(c, clip_threshold))));
+                        auto C = add(mul(f, C_t), mul(i, activation_g(clip(c, clip_threshold))));
                         // f(Xt*(Wo^T) + Ht-1*(Ro^T) + Po (.) Ct + Wbo + Rbo)
-                        o = sigmoid(clip(add(o, mul(p_o, C)), clip_threshold));
+                        o = activation_f(clip(add(o, mul(p_o, C)), clip_threshold));
                         // ot (.) h(Ct)
-                        auto H = mul(o, tanh(C));
+                        auto H = mul(o, activation_h(C));
                         h_list.push_back(H);
                         H_t = H;
                         C_t = C;
