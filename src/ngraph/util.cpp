@@ -180,6 +180,25 @@ void ngraph::aligned_free(void* p)
 #endif
 }
 
+void* ngraph::ngraph_malloc(size_t size)
+{
+    auto ptr = malloc(size);
+    if (size != 0 && !ptr)
+    {
+        NGRAPH_ERR << "malloc failed to allocate memory of size " << size;
+        throw std::bad_alloc();
+    }
+    return ptr;
+}
+
+void ngraph::ngraph_free(void* ptr)
+{
+    if (ptr)
+    {
+        free(ptr);
+    }
+}
+
 size_t ngraph::round_up(size_t size, size_t alignment)
 {
     if (alignment == 0)
@@ -440,7 +459,7 @@ void ngraph::check_fp_values_isnan(const char* name, const float* array, size_t 
 {
     for (size_t i = 0; i < n; i++)
     {
-        if (std::isinf(array[i]))
+        if (std::isnan(array[i]))
         {
             throw std::runtime_error("Discovered NaN in '" + string(name) + "'");
         }
@@ -451,7 +470,7 @@ void ngraph::check_fp_values_isnan(const char* name, const double* array, size_t
 {
     for (size_t i = 0; i < n; i++)
     {
-        if (std::isinf(array[i]))
+        if (std::isnan(array[i]))
         {
             throw std::runtime_error("Discovered NaN in '" + string(name) + "'");
         }

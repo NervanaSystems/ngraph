@@ -187,7 +187,7 @@ namespace ngraph
                 OpImplRegistration()
                 {
                     GlobalOpImplMap()->emplace(std::type_index{typeid(typename OID::Impl::Op)},
-                                               new OID());
+                                               std::unique_ptr<OpImplDescriptorBase>{new OID()});
                 }
             };
         }
