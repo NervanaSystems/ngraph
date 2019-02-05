@@ -34,7 +34,7 @@ namespace ngraph
         {
         public:
             Graph(const onnx::GraphProto& proto,
-                  const Model& model,
+                  Model& model,
                   const Weights& weights = Weights{});
 
             const std::vector<Node>& get_nodes() const { return m_nodes; }
