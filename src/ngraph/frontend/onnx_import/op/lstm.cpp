@@ -398,7 +398,7 @@ namespace ngraph
                     for (const auto& ht : h_list)
                     {
                         // Expand tensors with empty outermost dim, so we can later concatenate them.
-                        exp_h_list.push_back(reshape::add_empty_axes(ht));
+                        exp_h_list.push_back(reshape::expand_dims(ht));
                     }
                     std::shared_ptr<ngraph::Node> Y{
                         std::make_shared<ngraph::op::Concat>(exp_h_list, 0)};
@@ -407,10 +407,7 @@ namespace ngraph
                     // [seq_length, num_directions, batch_size, hidden_size]
                     if (attributes.m_direction == LSTMDirection::LSTM_DIRECTION_FORWARD)
                     {
-                        Shape shape{Y->get_shape()};
-                        shape.insert(std::next(std::begin(shape)), 1);
-                        Y = std::make_shared<ngraph::op::Reshape>(
-                            Y, reshape::get_default_axis_vector(Y->get_shape().size()), shape);
+                        Y = reshape::expand_dims(Y, 1);
                     }
                     return {Y, exp_h_list.back(), C_t};
                 }
