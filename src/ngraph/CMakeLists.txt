@@ -176,6 +176,8 @@ configure_file(version.in.hpp version.hpp)
 
 add_library(ngraph SHARED ${SRC})
 
+set_target_properties(ngraph PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+
 if(NGRAPH_DISTRIBUTED_ENABLE)
     target_sources(ngraph PRIVATE distributed.cpp)
     target_compile_definitions(ngraph PRIVATE NGRAPH_DISTRIBUTED)
