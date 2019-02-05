@@ -29,28 +29,34 @@ nGraph Compiler stack
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Framework Support
    
    frameworks/index.rst
+   frameworks/validated/list.rst
+   frameworks/generic-configs.rst
 
 
 .. toctree::
    :maxdepth: 1
    :caption: nGraph Core
-   
-   buildlb.rst
-   fusion/index.rst
-   howto/index.rst
-   ops/about.rst
-   ops/index.rst
-   python_api/index.rst
 
+   core/overview.rst
+   Pattern matcher <fusion/index.rst>
+   nGraph ops <ops/about.rst>
+   Graph construction <howto/index.rst>
+   Using C++ API <ops/index.rst>
+   Using Python API <python_api/index.rst>
+   Compiler passes  <fusion/graph-rewrite.rst>
+   buildlb.rst
+   
+   
 .. toctree::
    :maxdepth: 1
    :caption: Backend support
 
-   programmable/index.rst
+   backend-support/index.rst
+   backend-support/cpp-api.rst
 
 
 .. toctree::

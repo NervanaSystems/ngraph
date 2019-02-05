@@ -1,7 +1,7 @@
 .. frameworks/generic-configs.rst:
 
-Integrating nGraph with new frameworks
-======================================
+Integrating new frameworks
+==========================
 
 This section details some of the *configuration options* and some of the 
 *environment variables* that can be used to tune for optimal performance when 
@@ -33,7 +33,7 @@ something like:
 
 
 FMV
-===
+---
 
 FMV stands for :abbr:`Function Multi-Versioning`, and it can also provide a 
 number of generic ways to patch or bring architecture-based optimizations to 
@@ -45,9 +45,8 @@ for Intel® Architecture, and it includes at least one older CPU, the
 `following article may be helpful`_.
 
 
-
 Training Deep Neural Networks
-==============================
+-----------------------------
 
 Before tweaking various environment variables, be aware that how the computation 
 gets executed depends upon the ordering of the data format that the model is 
@@ -62,6 +61,7 @@ For CPU (and most cuDNN) backends, the preferred layout is currently ``NCHW``.
   for grayscale)
 * **H** -- Height of the image
 * **W** -- Width of the image
+
 
 Intel® Math Kernel Library for Deep Neural Networks 
 ---------------------------------------------------
@@ -82,7 +82,7 @@ additional component to be able to use these configuration settings.
 
 
 nGraph-enabled Intel® Xeon® 
-============================
+---------------------------
 
 The list below includes recommendations on data layout, parameters, and 
 application configuration to achieve best performance running DNN workloads on 

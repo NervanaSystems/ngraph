@@ -1,4 +1,4 @@
-.. frameworks/validation.rst: 
+.. frameworks/validated/list.rst: 
 
 #################################
 Validated workloads by framework
@@ -6,6 +6,13 @@ Validated workloads by framework
 
 We validated performance [#f1]_ for the following TensorFlow\* and MXNet\* workloads:
 
+* :ref:`tensorflow_valid`
+* :ref:`mxnet_valid`
+* :ref:`onnx_valid`
+* :doc:`testing-latency`
+
+
+.. _tensoflow_valid:
 
 TensorFlow 
 ==========
@@ -36,6 +43,9 @@ TensorFlow
    DRAW, Image generation
    A3C, Reinforcement learning
 
+
+.. _mxnet_valid:
+
 MXNet
 =====
 
@@ -63,8 +73,11 @@ MXNet
    DCGAN, Generative adversarial network
    A3C, Reinforcement learning
 
+
+.. _onnx_valid:
+
 ONNX
-=====
+====
 
 Additionally, we validated the following workloads are functional through 
 `nGraph ONNX importer`_: 
