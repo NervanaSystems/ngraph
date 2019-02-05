@@ -43,6 +43,7 @@ namespace ngraph
 
             static void release_event(::onnxEvent event) { instance()._release_event(event); }
             static void signal_event(::onnxEvent event) { instance()._from_handle(event).signal(); }
+            static void wait_event(::onnxEvent event) { instance()._from_handle(event).wait(); }
         private:
             mutable std::mutex m_mutex{};
             std::map<::onnxEvent, std::unique_ptr<Event>> m_registered_events{};

@@ -16,6 +16,7 @@
 
 #include <cstring>
 #include <fstream>
+#include <thread>
 #include <vector>
 
 #include <gtest/gtest.h>
@@ -696,6 +697,22 @@ namespace
 
     using InitializedBackends = Basic_InitializedBackends<false>;
     using InitializedBackends_IgnoreNOP = Basic_InitializedBackends<true>;
+
+    std::vector<char> load_model(const std::string& name)
+    {
+        std::ifstream sin{SERIALIZED_ZOO "/onnx/" + name, std::ios::ate | std::ios::binary};
+        if (!sin.is_open())
+        {
+            throw std::runtime_error{"unable to load the model"};
+        }
+        std::ifstream::pos_type size{sin.tellg()};
+        std::vector<char> model(size);
+        sin.seekg(0, std::ios::beg);
+        sin.read(model.data(), size);
+        return model;
+    }
+
+    std::vector<char> load_model() { return load_model("add_abc.onnx"); }
 }
 
 TEST(onnxifi, release_backend)
@@ -791,6 +808,62 @@ TEST(onnxifi, signal_event_invalid_state)
         status = ::onnxSignalEvent(event);
         EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_STATE);
         status = ::onnxReleaseEvent(event);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+// ====================================================[ onnxWaitEvent ]========
+
+TEST(onnxifi, wait_event_invalid_event)
+{
+    ::onnxStatus status{::onnxWaitEvent(nullptr)};
+    EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_EVENT);
+}
+
+TEST(onnxifi, wait_event)
+{
+    InitializedBackends backends{};
+    auto model = load_model();
+    for (const auto& backend : backends)
+    {
+        ::onnxEvent input_event;
+        ::onnxStatus status{::onnxInitEvent(backend, &input_event)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+
+        ::onnxEvent output_event;
+        status = ::onnxInitEvent(backend, &output_event);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+
+        std::size_t value{0};
+
+        std::thread thread{[&] {
+            ::onnxStatus local_status{::onnxWaitEvent(input_event)};
+            if (local_status != ONNXIFI_STATUS_SUCCESS)
+            {
+                throw error::status{local_status};
+            }
+            value += 100;
+            local_status = ::onnxSignalEvent(output_event);
+            if (local_status != ONNXIFI_STATUS_SUCCESS)
+            {
+                throw error::status{local_status};
+            }
+        }};
+
+        value += 100;
+        status = ::onnxSignalEvent(input_event);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+
+        status = ::onnxWaitEvent(output_event);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+
+        EXPECT_TRUE(value == 200);
+        thread.join();
+
+        status = ::onnxReleaseEvent(input_event);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+
+        status = ::onnxReleaseEvent(output_event);
         EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
     }
 }
