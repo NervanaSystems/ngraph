@@ -19,6 +19,9 @@ add_library(onnxifi-ngraph SHARED
     backend.hpp
     backend_manager.hpp
     backend_manager.cpp
+    event.hpp
+    event_manager.hpp
+    event_manager.cpp
     exceptions.hpp
     span.hpp
     tensor.hpp
