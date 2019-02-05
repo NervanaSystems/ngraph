@@ -16,11 +16,17 @@
 
 #pragma once
 
-#include <map>   // std::map
-#include <mutex> // std::mutex
+#include <functional> // std::reference_wrapper
+#include <map>        // std::map
+#include <mutex>      // std::mutex
+#include <thread>     // std::thread
+
+#include <onnxifi.h>
 
 #include "backend.hpp"
+#include "event.hpp"
 #include "graph.hpp"
+#include "queue.hpp"
 #include "span.hpp"
 
 namespace ngraph
@@ -44,6 +50,13 @@ namespace ngraph
                 instance()._init_graph(backend, model, weights, graph);
             }
 
+            static void run_graph(::onnxGraph graph,
+                                  const ::onnxMemoryFenceV1* input_fence,
+                                  ::onnxMemoryFenceV1* output_fence)
+            {
+                instance()._run_graph(graph, input_fence, output_fence);
+            }
+
             static void release_graph(::onnxGraph graph) { instance()._release_graph(graph); }
             static void set_graph_io(::onnxGraph graph,
                                      const Span<::onnxTensorDescriptorV1>& inputs,
@@ -55,14 +68,54 @@ namespace ngraph
         private:
             std::mutex m_mutex{};
             std::map<::onnxGraph, std::unique_ptr<Graph>> m_graphs{};
+            Queue<std::reference_wrapper<Graph>> m_task_queue;
+            std::atomic_bool m_quit{false};
+            EventAuto m_event{};
+            std::thread m_thread{[&] {
+                while (true)
+                {
+                    while (m_task_queue.empty())
+                    {
+                        m_event.wait_for(std::chrono::milliseconds{100});
+                        if (m_quit)
+                        {
+                            break;
+                        }
+                    }
+                    if (m_quit)
+                    {
+                        break;
+                    }
+                    Graph& graph = m_task_queue.front();
+                    m_task_queue.pop();
+                    if (!graph.run_graph())
+                    {
+                        // todo: log failure running computation on graph
+                    }
+                }
+            }};
 
             GraphManager() = default;
 
+            ~GraphManager() { _terminate(); }
             static GraphManager& instance()
             {
                 static GraphManager graph_manager{};
                 return graph_manager;
             }
+
+            void _terminate()
+            {
+                m_quit.store(true);
+                if (m_thread.joinable())
+                {
+                    m_thread.join();
+                }
+            }
+
+            void _run_graph(::onnxGraph handle,
+                            const ::onnxMemoryFenceV1* input_fence,
+                            ::onnxMemoryFenceV1* output_fence);
 
             void _set_graph_io(::onnxGraph handle,
                                const Span<::onnxTensorDescriptorV1>& outputs,

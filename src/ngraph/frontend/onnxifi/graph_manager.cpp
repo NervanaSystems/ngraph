@@ -138,6 +138,17 @@ namespace ngraph
             graph->set_outputs(outputs);
         }
 
+        void GraphManager::_run_graph(::onnxGraph handle,
+                                      const ::onnxMemoryFenceV1* input_fence,
+                                      ::onnxMemoryFenceV1* output_fence)
+        {
+            std::lock_guard<std::mutex> lock{m_mutex};
+            auto& graph = *m_graphs.at(handle);
+            graph.configure_memory_fences(input_fence, output_fence);
+            m_task_queue.emplace(graph);
+            m_event.signal();
+        }
+
     } // namespace onnxifi
 
 } // namespace ngraph

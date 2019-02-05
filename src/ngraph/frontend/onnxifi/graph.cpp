@@ -25,6 +25,73 @@ namespace ngraph
     namespace onnxifi
     {
         Graph::~Graph() { m_backend->remove_compiled_function(m_handle); }
+        bool Graph::run_graph()
+        {
+            ::onnxStatus status{::onnxWaitEvent(m_input_fence->event)};
+            if (status != ONNXIFI_STATUS_SUCCESS)
+            {
+                throw status::runtime{status};
+            }
+            bool result{m_backend->call(m_handle, m_ng_inputs, m_ng_outputs)};
+            from_ng_outputs(m_ng_outputs, m_outputs);
+            status = ::onnxSignalEvent(m_output_fence->event);
+            if (status != ONNXIFI_STATUS_SUCCESS)
+            {
+                throw status::runtime{status};
+            }
+            return result;
+        }
+
+        void Graph::configure_memory_fences(const ::onnxMemoryFenceV1* input_fence,
+                                            ::onnxMemoryFenceV1* output_fence)
+        {
+            if ((input_fence == nullptr) || (output_fence == nullptr))
+            {
+                throw status::null_pointer{};
+            }
+            if ((input_fence->tag != ONNXIFI_TAG_MEMORY_FENCE_V1) ||
+                (output_fence->tag != ONNXIFI_TAG_MEMORY_FENCE_V1))
+            {
+                throw status::unsupported_tag{};
+            }
+            if ((input_fence->type == ONNXIFI_SYNCHRONIZATION_IMPLICIT) ||
+                (output_fence->type == ONNXIFI_SYNCHRONIZATION_IMPLICIT))
+            {
+                throw status::unsupported_fence_type{};
+            }
+            if ((input_fence->type != ONNXIFI_SYNCHRONIZATION_EVENT) ||
+                (output_fence->type != ONNXIFI_SYNCHRONIZATION_EVENT))
+            {
+                throw status::invalid_fence_type{};
+            }
+            ::onnxEventState state;
+            ::onnxStatus status{::onnxGetEventState(output_fence->event, &state)};
+            if (status == ONNXIFI_STATUS_INVALID_EVENT)
+            {
+                status = ::onnxInitEvent(m_backend->get_handle(), &output_fence->event);
+                if (status != ONNXIFI_STATUS_SUCCESS)
+                {
+                    throw status::runtime{status};
+                }
+                status = ::onnxGetEventState(output_fence->event, &state);
+            }
+            if (status != ONNXIFI_STATUS_SUCCESS)
+            {
+                throw status::runtime{status};
+            }
+            if (state != ONNXIFI_EVENT_STATE_NONSIGNALLED)
+            {
+                throw status::invalid_state{};
+            }
+            status = ::onnxGetEventState(input_fence->event, &state);
+            if (status != ONNXIFI_STATUS_SUCCESS)
+            {
+                throw status::runtime{status};
+            }
+            m_input_fence = input_fence;
+            m_output_fence = output_fence;
+        }
+
         void Graph::load(std::istream& sin,
                          const Span<::onnxTensorDescriptorV1>& weight_descriptors)
         {

@@ -337,7 +337,27 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxRunGraph(
     onnxGraph graph, const onnxMemoryFenceV1* inputFence, onnxMemoryFenceV1* outputFence)
 {
-    return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
+    try
+    {
+        GraphManager::run_graph(graph, inputFence, outputFence);
+        return ONNXIFI_STATUS_SUCCESS;
+    }
+    catch (const status::runtime& e)
+    {
+        return e.get_status();
+    }
+    catch (const std::out_of_range&)
+    {
+        return ONNXIFI_STATUS_INVALID_GRAPH;
+    }
+    catch (const std::bad_alloc&)
+    {
+        return ONNXIFI_STATUS_NO_SYSTEM_MEMORY;
+    }
+    catch (...)
+    {
+        return ONNXIFI_STATUS_INTERNAL_ERROR;
+    }
 }
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxReleaseGraph(onnxGraph graph)

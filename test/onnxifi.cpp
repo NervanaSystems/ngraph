@@ -1347,3 +1347,206 @@ TEST(onnxifi, set_graph_io_mismatching_datatype)
     //        inputDescriptors or outputDescriptors argument are inconsistent with the
     //        data types specified in the ONNX model graph.
 }
+
+// ====================================================[ onnxRunGraph ]========
+
+namespace
+{
+    template <bool InitializeEvent = true>
+    struct MemoryFence_Template : ::onnxMemoryFenceV1
+    {
+        MemoryFence_Template(const MemoryFence_Template&) = delete;
+        MemoryFence_Template& operator=(const MemoryFence_Template&) = delete;
+
+        MemoryFence_Template() = delete;
+
+        MemoryFence_Template(MemoryFence_Template&&) noexcept = default;
+        MemoryFence_Template& operator=(MemoryFence_Template&&) noexcept = default;
+
+        MemoryFence_Template(::onnxBackend backend, int32_t tag, ::onnxEnum type)
+            : ::onnxMemoryFenceV1{tag, type, {nullptr}}
+        {
+            if (InitializeEvent)
+            {
+                ::onnxStatus status{::onnxInitEvent(backend, &event)};
+                if (status != ONNXIFI_STATUS_SUCCESS)
+                {
+                    throw error::status{status};
+                }
+            }
+        }
+
+        explicit MemoryFence_Template(::onnxBackend backend)
+            : MemoryFence_Template{
+                  backend, ONNXIFI_TAG_MEMORY_FENCE_V1, ONNXIFI_SYNCHRONIZATION_EVENT}
+        {
+        }
+
+        MemoryFence_Template(::onnxBackend backend, int32_t tag)
+            : MemoryFence_Template{backend, tag, ONNXIFI_SYNCHRONIZATION_EVENT}
+        {
+        }
+
+        MemoryFence_Template(::onnxBackend backend, ::onnxEnum type)
+            : MemoryFence_Template{backend, ONNXIFI_TAG_MEMORY_FENCE_V1, type}
+        {
+        }
+
+        MemoryFence_Template(::onnxBackend backend, ::onnxEvent event)
+            : ::onnxMemoryFenceV1{
+                  ONNXIFI_TAG_MEMORY_FENCE_V1, ONNXIFI_SYNCHRONIZATION_EVENT, {event}}
+        {
+        }
+
+        ~MemoryFence_Template()
+        {
+            // Read the status code, but ignore it. Here we may get
+            // invalid event handle status because the test might want to try some.
+            ::onnxStatus(status) = ::onnxReleaseEvent(event);
+        }
+    };
+
+    using MemoryFence = MemoryFence_Template<true>;
+    using MemoryFence_OneShot = MemoryFence_Template<false>;
+
+} // namespace  anonymous
+
+TEST(onnxifi, run_graph_invalid_pointer)
+{
+    InitializedBackends backends{};
+    auto model = load_model();
+    for (const auto& backend : backends)
+    {
+        ::onnxGraph graph;
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+
+        MemoryFence input_fence{backend}, output_fence{backend};
+
+        status = ::onnxRunGraph(graph, &input_fence, nullptr);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_POINTER);
+
+        status = ::onnxRunGraph(graph, nullptr, &output_fence);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_POINTER);
+
+        status = ::onnxReleaseGraph(graph);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+TEST(onnxifi, run_graph_invalid_graph)
+{
+    InitializedBackends backends{};
+    auto model = load_model();
+    for (const auto& backend : backends)
+    {
+        MemoryFence input_fence{backend}, output_fence{backend};
+        ::onnxStatus status{::onnxRunGraph(nullptr, &input_fence, &output_fence)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_GRAPH);
+    }
+}
+
+TEST(onnxifi, run_graph_invalid_fence_type)
+{
+    InitializedBackends backends{};
+    auto model = load_model();
+    for (const auto& backend : backends)
+    {
+        ::onnxGraph graph;
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+
+        // According to specification type of memory synchronization primitive
+        // can accept either ONNXIFI_SYNCHRONIZATION_EVENT or ONNXIFI_SYNCHRONIZATION_IMPLICIT.
+        // ONNXIFI_SYNCHRONIZATION_IMPLICIT is not used by nGraph ONNXIFI backend.
+        MemoryFence invalid_fence_type{backend, 0xFFFFFFFFFFFFFFFFUL};
+        MemoryFence input_fence{backend}, output_fence{backend};
+
+        status = ::onnxRunGraph(graph, &invalid_fence_type, &output_fence);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_FENCE_TYPE);
+        status = ::onnxRunGraph(graph, &input_fence, &invalid_fence_type);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_FENCE_TYPE);
+
+        status = ::onnxReleaseGraph(graph);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+TEST(onnxifi, run_graph_invalid_event)
+{
+    InitializedBackends backends{};
+    auto model = load_model();
+    for (const auto& backend : backends)
+    {
+        ::onnxGraph graph;
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+
+        MemoryFence invalid_event{backend, nullptr};
+        MemoryFence output_fence{backend};
+
+        // We only check input_event, because in case of 'one shot' scenario
+        // the 'output_fence' event may be nullptr, therefor it shall be
+        // allocated by an ONNXIFI backend.
+
+        status = ::onnxRunGraph(graph, &invalid_event, &output_fence);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_EVENT);
+
+        status = ::onnxReleaseGraph(graph);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+TEST(onnxifi, run_graph_invalid_tag)
+{
+    InitializedBackends backends{};
+    auto model = load_model();
+    for (const auto& backend : backends)
+    {
+        ::onnxGraph graph;
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+
+        MemoryFence invalid_tag{backend, 0};
+        MemoryFence input_fence{backend}, output_fence{backend};
+
+        status = ::onnxRunGraph(graph, &invalid_tag, &output_fence);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_UNSUPPORTED_TAG);
+
+        status = ::onnxRunGraph(graph, &input_fence, &invalid_tag);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_UNSUPPORTED_TAG);
+
+        status = ::onnxReleaseGraph(graph);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+TEST(onnxifi, run_graph_unsupported_fence_type)
+{
+    InitializedBackends backends{};
+    auto model = load_model();
+    for (const auto& backend : backends)
+    {
+        ::onnxGraph graph;
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+
+        MemoryFence unsupported_fence_type{
+            backend, static_cast<::onnxEnum>(ONNXIFI_SYNCHRONIZATION_IMPLICIT)};
+        MemoryFence input_fence{backend}, output_fence{backend};
+
+        status = ::onnxRunGraph(graph, &unsupported_fence_type, &output_fence);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_UNSUPPORTED_FENCE_TYPE);
+
+        status = ::onnxRunGraph(graph, &input_fence, &unsupported_fence_type);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_UNSUPPORTED_FENCE_TYPE);
+
+        status = ::onnxReleaseGraph(graph);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+    }
+}
