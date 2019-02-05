@@ -42,6 +42,7 @@ namespace ngraph
             static void init_event(::onnxBackend handle, ::onnxEvent* event);
 
             static void release_event(::onnxEvent event) { instance()._release_event(event); }
+            static void signal_event(::onnxEvent event) { instance()._from_handle(event).signal(); }
         private:
             mutable std::mutex m_mutex{};
             std::map<::onnxEvent, std::unique_ptr<Event>> m_registered_events{};
@@ -53,6 +54,8 @@ namespace ngraph
                 static EventManager event_manager;
                 return event_manager;
             }
+
+            Event& _from_handle(::onnxEvent event) const;
 
             ::onnxEvent _init_event(const Backend& backend);
             void _release_event(::onnxEvent event);

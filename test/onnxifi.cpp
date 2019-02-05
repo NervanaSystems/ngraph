@@ -754,3 +754,43 @@ TEST(onnxifi, release_event_invalid_event)
     ::onnxStatus status{::onnxReleaseEvent(nullptr)};
     EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
 }
+
+// ==================================================[ onnxSignalEvent ]=======
+
+TEST(onnxifi, signal_event)
+{
+    InitializedBackends backends{};
+    for (const auto& backend : backends)
+    {
+        ::onnxEvent event;
+        ::onnxStatus status{::onnxInitEvent(backend, &event)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+        status = ::onnxSignalEvent(event);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+        status = ::onnxReleaseEvent(event);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+TEST(onnxifi, signal_event_invalid_event)
+{
+    ::onnxStatus status{::onnxSignalEvent(nullptr)};
+    EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_EVENT);
+}
+
+TEST(onnxifi, signal_event_invalid_state)
+{
+    InitializedBackends backends{};
+    for (const auto& backend : backends)
+    {
+        ::onnxEvent event;
+        ::onnxStatus status{::onnxInitEvent(backend, &event)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+        status = ::onnxSignalEvent(event);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+        status = ::onnxSignalEvent(event);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_STATE);
+        status = ::onnxReleaseEvent(event);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+    }
+}

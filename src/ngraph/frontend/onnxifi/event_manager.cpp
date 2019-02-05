@@ -56,6 +56,12 @@ namespace ngraph
             m_registered_events.erase(event);
         }
 
+        Event& EventManager::_from_handle(::onnxEvent event) const
+        {
+            std::lock_guard<std::mutex> lock{m_mutex};
+            return *m_registered_events.at(event);
+        }
+
     } // namespace onnxifi
 
 } // namespace ngraph
