@@ -171,6 +171,15 @@ namespace ngraph
             }
         }
 
+        void BackendManager::init_backend(::onnxBackendID backend_id, ::onnxBackend* backend)
+        {
+            if (backend == nullptr)
+            {
+                throw status::null_pointer{};
+            }
+            *backend = instance()._from_id(backend_id).init_handle();
+        }
+
     } // namespace onnxifi
 
 } // namespace ngraph

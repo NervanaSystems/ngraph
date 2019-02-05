@@ -47,6 +47,7 @@ namespace ngraph
                                          void* info_value,
                                          std::size_t* info_value_size);
 
+            static void init_backend(::onnxBackendID backend_id, ::onnxBackend* backend);
             static Backend& get_backend(::onnxBackend backend);
 
         private:
