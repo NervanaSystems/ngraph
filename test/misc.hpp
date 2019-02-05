@@ -13,9 +13,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-#include "cpu_backend_visibility.h"
 
-extern "C" CPU_BACKEND_API const char* get_ngraph_version_string()
-{
-    return NGRAPH_VERSION;
-}
+#pragma once
+#include <stdio.h>
+#include <stdlib.h>
+
+FILE* port_open(const char* command, const char* type);
+int port_close(FILE* stream);
+int set_environment(const char* name, const char* value, int overwrite);
+int unset_environment(const char* name);

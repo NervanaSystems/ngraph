@@ -392,7 +392,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sqrt)
 
     auto handle = backend->compile(f);
     backend->call_with_validate(handle, {result}, {a});
-    EXPECT_EQ((vector<float>{4, 2, 9, 10, 100, 0}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(vector<float>{4, 2, 9, 10, 100, 0}, read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, tan)
