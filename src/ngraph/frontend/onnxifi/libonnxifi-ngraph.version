@@ -1,0 +1,4 @@
+onnxifi_1.0 {
+    global: onnxGetBackendCompatibility; onnxGetBackendIDs; onnxGetBackendInfo; onnxGetEventState; onnxInitBackend; onnxInitEvent; onnxInitGraph; onnxReleaseBackend; onnxReleaseBackendID; onnxReleaseEvent; onnxReleaseGraph; onnxRunGraph; onnxSetGraphIO; onnxSignalEvent; onnxWaitEvent;
+    local: *;
+};
