@@ -37,7 +37,6 @@ namespace ngraph
             Tensor& operator=(Tensor&&) = default;
 
             Tensor() = delete;
-            virtual ~Tensor() = default;
 
             explicit Tensor(const ::onnxTensorDescriptorV1& tensor);
 

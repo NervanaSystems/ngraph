@@ -35,7 +35,6 @@ namespace ngraph
             }
             switch (tensor.dataType)
             {
-            case ONNXIFI_DATATYPE_FLOAT16:
             case ONNXIFI_DATATYPE_FLOAT32:
             case ONNXIFI_DATATYPE_FLOAT64:
             case ONNXIFI_DATATYPE_INT8:
@@ -46,6 +45,7 @@ namespace ngraph
             case ONNXIFI_DATATYPE_UINT16:
             case ONNXIFI_DATATYPE_UINT32:
             case ONNXIFI_DATATYPE_UINT64: break;
+            case ONNXIFI_DATATYPE_FLOAT16:
             case ONNXIFI_DATATYPE_COMPLEX64:
             case ONNXIFI_DATATYPE_COMPLEX128: throw status::invalid_datatype{};
             default: throw status::unsupported_datatype{};
@@ -95,7 +95,6 @@ namespace ngraph
             std::shared_ptr<runtime::Tensor> tensor;
             switch (m_tensor->dataType)
             {
-            case ONNXIFI_DATATYPE_FLOAT16:
             case ONNXIFI_DATATYPE_FLOAT32:
                 tensor = backend.create_tensor(element::f32, m_shape);
                 tensor->write(data(), 0, sizeof(float) * size());
@@ -146,7 +145,6 @@ namespace ngraph
             std::size_t readSize{tensor.get_element_count()};
             switch (m_tensor->dataType)
             {
-            case ONNXIFI_DATATYPE_FLOAT16:
             case ONNXIFI_DATATYPE_FLOAT32: readSize *= sizeof(float); break;
             case ONNXIFI_DATATYPE_FLOAT64: readSize *= sizeof(double); break;
             case ONNXIFI_DATATYPE_INT8: readSize *= sizeof(int8_t); break;
