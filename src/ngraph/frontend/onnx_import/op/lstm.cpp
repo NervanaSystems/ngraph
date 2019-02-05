@@ -409,7 +409,10 @@ namespace ngraph
                     {
                         Y = reshape::expand_dims(Y, 1);
                     }
-                    return {Y, exp_h_list.back(), C_t};
+
+                    // expand C_t so that it has expected shape: [num_directions, batch_size, hidden_size]
+                    auto Y_c = reshape::expand_dims(C_t);
+                    return {Y, exp_h_list.back(), Y_c};
                 }
             } // namespace set_1
 
