@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -98,6 +99,26 @@ namespace ngraph
                     return std::make_shared<ngraph::op::Minimum>(
                         max_val_node, std::make_shared<ngraph::op::Maximum>(data, min_val_node));
                 }
+
+                std::string& to_lower_case(std::string&& s)
+                {
+                    std::transform(std::begin(s), std::end(s), std::begin(s), ::tolower);
+                    return s;
+                }
+
+                std::string& to_lower_case(std::string& s)
+                {
+                    std::transform(std::begin(s), std::end(s), std::begin(s), ::tolower);
+                    return s;
+                }
+
+                std::vector<std::string>& to_lower_case(std::vector<std::string>&& vs)
+                {
+                    std::transform(std::begin(vs), std::end(vs), std::begin(vs),
+                        [](std::string& s) { return to_lower_case(s); });
+                    return vs;
+                }
+
 
                 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ INPUT NODES PARSING ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -233,21 +254,37 @@ namespace ngraph
                 {
                     LSTM_DIRECTION_FORWARD,
                     LSTM_DIRECTION_REVERSE,
-                    LSTM_DIRECTION_BIDIRECTIONAL
+                    LSTM_DIRECTION_BIDIRECTIONAL,
+                    LSTM_DIRECTION_UNKNOWN,
                 };
+
+                LSTMDirection getLSTMDirection(const std::string& s)
+                {
+                    if (s == "forward") { return LSTMDirection::LSTM_DIRECTION_FORWARD; }
+                    if (s == "reverse") { return LSTMDirection::LSTM_DIRECTION_REVERSE; }
+                    if (s == "bidirectional") { return LSTMDirection::LSTM_DIRECTION_BIDIRECTIONAL; }
+                    return LSTMDirection::LSTM_DIRECTION_UNKNOWN;
+                }
 
                 struct LSTMAttributes
                 {
                     explicit LSTMAttributes(const Node& node)
-                        : m_direction{LSTMDirection::LSTM_DIRECTION_FORWARD}
-                        , m_hidden_size{node.get_attribute_value<std::int64_t>("hidden_size")}
+                        : m_hidden_size{node.get_attribute_value<std::int64_t>("hidden_size")}
                         , m_clip_threshold{node.get_attribute_value<float>("clip", 0.f)}
-                        , m_activations{node.get_attribute_value<std::vector<std::string>>(
-                              "activations", {"sigmoid", "tanh", "tanh"})}
+                        , m_activations{to_lower_case(
+                                node.get_attribute_value<std::vector<std::string>>(
+                                    "activations", {"sigmoid", "tanh", "tanh"}))}
                         , m_input_forget{static_cast<bool>(
                               node.get_attribute_value<std::int64_t>("input_forget", 0))}
                     {
                         m_clip_threshold = std::abs(m_clip_threshold);
+                        std::string direction{to_lower_case(
+                            node.get_attribute_value<std::string>("direction", {"forward"}))};
+
+                        ASSERT_VALID_ARGUMENT(node,
+                            getLSTMDirection(direction) != LSTMDirection::LSTM_DIRECTION_UNKNOWN)
+                            << "Provided attribute \"direction\" value is incorrect: " << direction;
+                        m_direction = getLSTMDirection(direction);
                     }
 
                     // Currently only LSTM_DIRECTION_FORWARD is supported.
