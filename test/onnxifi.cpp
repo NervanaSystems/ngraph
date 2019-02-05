@@ -733,3 +733,24 @@ TEST(onnxifi, init_event_invalid_pointer)
         EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_POINTER);
     }
 }
+
+// =================================================[ onnxReleaseEvent ]=======
+
+TEST(onnxifi, release_event)
+{
+    InitializedBackends backends{};
+    for (const auto& backend : backends)
+    {
+        ::onnxEvent event;
+        ::onnxStatus status{::onnxInitEvent(backend, &event)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+        status = ::onnxReleaseEvent(event);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+TEST(onnxifi, release_event_invalid_event)
+{
+    ::onnxStatus status{::onnxReleaseEvent(nullptr)};
+    EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+}

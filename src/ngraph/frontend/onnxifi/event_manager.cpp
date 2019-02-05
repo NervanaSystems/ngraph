@@ -50,6 +50,12 @@ namespace ngraph
             return (pair.first)->first;
         }
 
+        void EventManager::_release_event(::onnxEvent event)
+        {
+            std::lock_guard<std::mutex> lock{m_mutex};
+            m_registered_events.erase(event);
+        }
+
     } // namespace onnxifi
 
 } // namespace ngraph
