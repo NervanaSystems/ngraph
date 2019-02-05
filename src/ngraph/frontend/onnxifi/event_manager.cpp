@@ -14,4 +14,42 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <mutex>
+
+#include <onnxifi.h>
+
+#include "event.hpp"
 #include "event_manager.hpp"
+
+#include "exceptions.hpp"
+
+namespace ngraph
+{
+    namespace onnxifi
+    {
+        void EventManager::init_event(::onnxBackend handle, ::onnxEvent* event)
+        {
+            if (event == nullptr)
+            {
+                throw status::null_pointer{};
+            }
+            auto& backend = BackendManager::get_backend(handle);
+            *event = instance()._init_event(backend);
+        }
+
+        ::onnxEvent EventManager::_init_event(const Backend&)
+        {
+            std::lock_guard<std::mutex> lock{m_mutex};
+            std::unique_ptr<Event> event{new Event};
+            auto pair = m_registered_events.emplace(reinterpret_cast<::onnxEvent>(event.get()),
+                                                    std::move(event));
+            if (!pair.second)
+            {
+                throw status::no_system_resources{};
+            }
+            return (pair.first)->first;
+        }
+
+    } // namespace onnxifi
+
+} // namespace ngraph

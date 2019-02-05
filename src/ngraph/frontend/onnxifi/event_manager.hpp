@@ -16,6 +16,15 @@
 
 #pragma once
 
+#include <map>
+#include <mutex>
+
+#include <onnxifi.h>
+
+#include "backend_manager.hpp"
+#include "event.hpp"
+#include "exceptions.hpp"
+
 namespace ngraph
 {
     namespace onnxifi
@@ -30,7 +39,12 @@ namespace ngraph
             EventManager(EventManager&& other) noexcept = delete;
             EventManager& operator=(EventManager&& other) noexcept = delete;
 
+            static void init_event(::onnxBackend handle, ::onnxEvent* event);
+
         private:
+            mutable std::mutex m_mutex{};
+            std::map<::onnxEvent, std::unique_ptr<Event>> m_registered_events{};
+
             EventManager() = default;
 
             static EventManager& instance()
@@ -38,6 +52,8 @@ namespace ngraph
                 static EventManager event_manager;
                 return event_manager;
             }
+
+            ::onnxEvent _init_event(const Backend& backend);
         };
 
     } // namespace onnxifi
