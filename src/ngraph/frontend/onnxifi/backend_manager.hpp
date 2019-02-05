@@ -41,6 +41,7 @@ namespace ngraph
             BackendManager& operator=(BackendManager&&) = delete;
 
             static void get_backend_ids(::onnxBackendID* backend_ids, std::size_t* count);
+            static void release_backend_id(::onnxBackendID backend_id);
             static Backend& get_backend(::onnxBackend backend);
 
         private:
@@ -56,6 +57,7 @@ namespace ngraph
             }
 
             void _get_backend_ids(::onnxBackendID* backend_ids, std::size_t* count) const;
+            void _release_backend_id(::onnxBackendID id);
 
             Backend& _from_handle(::onnxBackend handle);
             Backend& _from_id(::onnxBackendID id);

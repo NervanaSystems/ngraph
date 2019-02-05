@@ -51,7 +51,19 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
     onnxReleaseBackendID(onnxBackendID backendID)
 {
-    return ONNXIFI_STATUS_INTERNAL_ERROR;
+    try
+    {
+        BackendManager::release_backend_id(backendID);
+        return ONNXIFI_STATUS_SUCCESS;
+    }
+    catch (const status::runtime& e)
+    {
+        return e.get_status();
+    }
+    catch (...)
+    {
+        return ONNXIFI_STATUS_INTERNAL_ERROR;
+    }
 }
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxGetBackendInfo(

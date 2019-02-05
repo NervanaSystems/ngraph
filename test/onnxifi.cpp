@@ -68,3 +68,112 @@ TEST(onnxifi, get_backend_ids_consistency_check)
     EXPECT_TRUE(first_count == second_count);
     EXPECT_TRUE(std::memcmp(first_ids, second_ids, first_count) == 0);
 }
+
+// ============================================================================
+
+namespace
+{
+    namespace status
+    {
+        std::string to_string(::onnxStatus status)
+        {
+#define ONNXIFI_STATUS_(value__)                                                                   \
+    case ONNXIFI_STATUS_##value__: return "ONNXIFI_STATUS_" #value__;
+
+            switch (status)
+            {
+                ONNXIFI_STATUS_(SUCCESS);
+                ONNXIFI_STATUS_(FALLBACK);
+                ONNXIFI_STATUS_(INVALID_ID);
+                ONNXIFI_STATUS_(INVALID_SIZE);
+                ONNXIFI_STATUS_(INVALID_POINTER);
+                ONNXIFI_STATUS_(INVALID_PROTOBUF);
+                ONNXIFI_STATUS_(INVALID_MODEL);
+                ONNXIFI_STATUS_(INVALID_BACKEND);
+                ONNXIFI_STATUS_(INVALID_GRAPH);
+                ONNXIFI_STATUS_(INVALID_EVENT);
+                ONNXIFI_STATUS_(INVALID_STATE);
+                ONNXIFI_STATUS_(INVALID_NAME);
+                ONNXIFI_STATUS_(INVALID_SHAPE);
+                ONNXIFI_STATUS_(INVALID_DATATYPE);
+                ONNXIFI_STATUS_(INVALID_MEMORY_TYPE);
+                ONNXIFI_STATUS_(INVALID_MEMORY_LOCATION);
+                ONNXIFI_STATUS_(INVALID_FENCE_TYPE);
+                ONNXIFI_STATUS_(INVALID_PROPERTY);
+                ONNXIFI_STATUS_(UNSUPPORTED_TAG);
+                ONNXIFI_STATUS_(UNSUPPORTED_VERSION);
+                ONNXIFI_STATUS_(UNSUPPORTED_OPERATOR);
+                ONNXIFI_STATUS_(UNSUPPORTED_ATTRIBUTE);
+                ONNXIFI_STATUS_(UNSUPPORTED_SHAPE);
+                ONNXIFI_STATUS_(UNSUPPORTED_DATATYPE);
+                ONNXIFI_STATUS_(NO_SYSTEM_MEMORY);
+                ONNXIFI_STATUS_(NO_DEVICE_MEMORY);
+                ONNXIFI_STATUS_(NO_SYSTEM_RESOURCES);
+                ONNXIFI_STATUS_(NO_DEVICE_RESOURCES);
+                ONNXIFI_STATUS_(BACKEND_UNAVAILABLE);
+                ONNXIFI_STATUS_(INTERNAL_ERROR);
+            default: return "UNKNOWN (" + std::to_string(status) + ")";
+            }
+        }
+
+    } // namespace status
+
+    namespace error
+    {
+        struct status : std::runtime_error
+        {
+            explicit status(::onnxStatus status, ::onnxStatus expected = ONNXIFI_STATUS_SUCCESS)
+                : std::runtime_error{::status::to_string(status) +
+                                     ": unexpected status; expected " +
+                                     ::status::to_string(expected)}
+            {
+            }
+        };
+
+    } // namespace error
+
+    std::vector<::onnxBackendID> get_backend_ids()
+    {
+        std::size_t count{g_default_backend_ids_count};
+        ::onnxStatus status{::onnxGetBackendIDs(nullptr, &count)};
+        if (status != ONNXIFI_STATUS_FALLBACK)
+        {
+            throw error::status{status, ONNXIFI_STATUS_FALLBACK};
+        }
+        std::vector<::onnxBackendID> backend_ids(count);
+        status = ::onnxGetBackendIDs(backend_ids.data(), &count);
+        if (status == ONNXIFI_STATUS_FALLBACK)
+        {
+            backend_ids.resize(count);
+            status = ::onnxGetBackendIDs(backend_ids.data(), &count);
+        }
+        if (status != ONNXIFI_STATUS_SUCCESS)
+        {
+            throw error::status{status};
+        }
+        if (backend_ids.empty())
+        {
+            throw std::runtime_error{"no backends registered"};
+        }
+        return backend_ids;
+    }
+
+} // namespace <anonymous>
+
+// =============================================[ onnxReleaseBackendID ]=======
+
+TEST(onnxifi, release_backend_id)
+{
+    auto backend_ids = get_backend_ids();
+    for (auto& backend_id : backend_ids)
+    {
+        ::onnxStatus status{::onnxReleaseBackendID(backend_id)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+TEST(onnxifi, release_backend_id_invalid_id)
+{
+    ::onnxStatus status{::onnxReleaseBackendID(nullptr)};
+    EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_ID);
+}

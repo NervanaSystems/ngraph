@@ -51,6 +51,11 @@ namespace ngraph
             instance()._get_backend_ids(backend_ids, count);
         }
 
+        void BackendManager::release_backend_id(::onnxBackendID backend_id)
+        {
+            instance()._release_backend_id(backend_id);
+        }
+
         Backend& BackendManager::get_backend(::onnxBackend backend)
         {
             return instance()._from_handle(backend);
@@ -100,6 +105,15 @@ namespace ngraph
                 }
             }
             throw status::invalid_backend{};
+        }
+
+        void BackendManager::_release_backend_id(::onnxBackendID id)
+        {
+            if (m_registered_backends.find(id) == std::end(m_registered_backends))
+            {
+                throw status::invalid_id{};
+            }
+            // nGraph ONNXIFI backend does not release backend ids
         }
 
     } // namespace onnxifi
