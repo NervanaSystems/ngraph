@@ -80,6 +80,7 @@
 #include "op/shape.hpp"
 #include "op/sigmoid.hpp"
 #include "op/sin.hpp"
+#include "op/sinh.hpp"
 #include "op/size.hpp"
 #include "op/slice.hpp"
 #include "op/softmax.hpp"
@@ -273,6 +274,7 @@ namespace ngraph
             REGISTER_OPERATOR("Shape", 1, shape);
             REGISTER_OPERATOR("Sigmoid", 1, sigmoid);
             REGISTER_OPERATOR("Sin", 1, sin);
+            REGISTER_OPERATOR("Sinh", 9, sinh);
             REGISTER_OPERATOR("Size", 1, size);
             REGISTER_OPERATOR("Slice", 1, slice);
             REGISTER_OPERATOR("Softmax", 1, softmax);

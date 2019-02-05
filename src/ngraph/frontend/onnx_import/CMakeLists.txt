@@ -122,6 +122,7 @@ add_library(onnx_import STATIC
         op/shape.cpp
         op/sigmoid.hpp
         op/sin.hpp
+        op/sinh.hpp
         op/size.cpp
         op/size.hpp
         op/slice.cpp
