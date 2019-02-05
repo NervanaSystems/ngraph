@@ -21,8 +21,10 @@
 #include <mutex>   // std::mutex
 #include <onnxifi.h>
 
-#include "backend.hpp"
 #include "ngraph/runtime/backend.hpp"
+
+#include "backend.hpp"
+#include "exceptions.hpp"
 
 namespace ngraph
 {
@@ -38,24 +40,12 @@ namespace ngraph
             BackendManager(BackendManager&&) = delete;
             BackendManager& operator=(BackendManager&&) = delete;
 
-            static void get_backend_ids(::onnxBackendID* backend_ids, std::size_t* count)
-            {
-                instance().get_registered_ids(backend_ids, count);
-            }
-
-            static void unregister(::onnxBackendID backend_id)
-            {
-                instance().unregister_backend(backend_id);
-            }
-
-            static const Backend& get(::onnxBackendID backend_id)
-            {
-                return instance().get_backend(backend_id);
-            }
+            static void get_backend_ids(::onnxBackendID* backend_ids, std::size_t* count);
+            static Backend& get_backend(::onnxBackend backend);
 
         private:
             mutable std::mutex m_mutex{};
-            std::map<std::uintptr_t, Backend> m_registered_backends{};
+            std::map<::onnxBackendID, Backend> m_registered_backends{};
 
             BackendManager();
 
@@ -65,29 +55,10 @@ namespace ngraph
                 return backend_manager;
             }
 
-            void unregister_backend(std::uintptr_t id)
-            {
-                std::lock_guard<decltype(m_mutex)> lock{m_mutex};
-                m_registered_backends.erase(id);
-            }
+            void _get_backend_ids(::onnxBackendID* backend_ids, std::size_t* count) const;
 
-            void unregister_backend(::onnxBackendID id)
-            {
-                return unregister_backend(reinterpret_cast<std::uintptr_t>(id));
-            }
-
-            void get_registered_ids(::onnxBackendID* backend_ids, std::size_t* count) const;
-
-            const Backend& get_backend(std::uintptr_t id) const
-            {
-                std::lock_guard<decltype(m_mutex)> lock{m_mutex};
-                return m_registered_backends.at(id);
-            }
-
-            const Backend& get_backend(::onnxBackendID id) const
-            {
-                return get_backend(reinterpret_cast<std::uintptr_t>(id));
-            }
+            Backend& _from_handle(::onnxBackend handle);
+            Backend& _from_id(::onnxBackendID id);
         };
 
     } // namespace onnxifi
