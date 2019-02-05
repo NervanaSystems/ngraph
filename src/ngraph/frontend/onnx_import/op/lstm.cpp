@@ -526,10 +526,35 @@ namespace ngraph
                     }
                     if (attributes.m_direction == LSTMDirection::LSTM_DIRECTION_BIDIRECTIONAL)
                     {
-                        // LSTMForward lstm_fwd();
-                        // LSTMForward lstm_reversed();
-                        // NodeVector fwd_results{lstm_fwd.run()};
-                        // NodeVector rev_results{lstm_fwd.run(true)};
+                        // In bidirectional mode weights are stacked together, so we must split them.
+                        NodeVector W{reshape::split(input_map.at(LSTMInput::LSTM_INPUT_W), 2)};
+                        NodeVector R{reshape::split(input_map.at(LSTMInput::LSTM_INPUT_R), 2)};
+                        NodeVector B{reshape::split(input_map.at(LSTMInput::LSTM_INPUT_B), 2)};
+                        NodeVector P{reshape::split(input_map.at(LSTMInput::LSTM_INPUT_P), 2)};
+                        NodeVector H{reshape::split(input_map.at(LSTMInput::LSTM_INPUT_INIT_H), 2)};
+                        NodeVector C{reshape::split(input_map.at(LSTMInput::LSTM_INPUT_INIT_C), 2)};
+
+                        LSTMForward lstm_fwd(input_map.at(LSTMInput::LSTM_INPUT_X), W.at(0),
+                            R.at(0), B.at(0), P.at(0), H.at(0), C.at(0), activation_f, activation_g,
+                            activation_h, attributes.m_input_forget, attributes.m_clip_threshold);
+                        LSTMForward lstm_reversed(input_map.at(LSTMInput::LSTM_INPUT_X), W.at(1),
+                            R.at(1), B.at(1), P.at(1), H.at(1), C.at(1), activation_f, activation_g,
+                            activation_h, attributes.m_input_forget, attributes.m_clip_threshold);
+
+                        NodeVector fwd_results{lstm_fwd.run()};
+                        NodeVector rev_results{lstm_fwd.run(true)};
+
+                        // Stack together respective outputs from both forward and reverse passess.
+                        std::shared_ptr<ngraph::Node> Y{
+                            std::make_shared<ngraph::op::Concat>(
+                                NodeVector{fwd_results.at(0), rev_results.at(0)}, 0)};
+                        std::shared_ptr<ngraph::Node> Y_h{
+                            std::make_shared<ngraph::op::Concat>(
+                                NodeVector{fwd_results.at(1), rev_results.at(1)}, 0)};
+                        std::shared_ptr<ngraph::Node> Y_c{
+                            std::make_shared<ngraph::op::Concat>(
+                                NodeVector{fwd_results.at(2), rev_results.at(2)}, 0)};
+                        results = NodeVector{Y, Y_h, Y_c};
                     }
 
                     return results;
