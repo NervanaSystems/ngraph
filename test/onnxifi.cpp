@@ -23,8 +23,10 @@
 #include <onnxifi.h>
 
 #include "ngraph/runtime/backend_manager.hpp"
+#include "util/all_close_f.hpp"
+#include "util/ndarray.hpp"
 
-// ===============================================[ onnxGetBackendIDs ] =======
+// ================================================[ onnxGetBackendIDs ]=======
 
 constexpr std::size_t g_default_backend_ids_count{10};
 
@@ -1549,4 +1551,275 @@ TEST(onnxifi, run_graph_unsupported_fence_type)
         status = ::onnxReleaseGraph(graph);
         EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
     }
+}
+
+// ======================================================[ functional ]========
+
+namespace
+{
+    namespace detail
+    {
+        void run(::onnxBackend backend,
+                 const std::vector<char>& model,
+                 const std::vector<TensorDescriptor>& inputs,
+                 std::vector<TensorDescriptor>& outputs)
+        {
+            ::onnxGraph graph;
+            ::onnxStatus status{
+                ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+            if (status != ONNXIFI_STATUS_SUCCESS)
+            {
+                throw error::status{status};
+            }
+
+            status = ::onnxSetGraphIO(graph,
+                                      static_cast<uint32_t>(inputs.size()),
+                                      inputs.data(),
+                                      static_cast<uint32_t>(outputs.size()),
+                                      outputs.data());
+            if (status != ONNXIFI_STATUS_SUCCESS)
+            {
+                throw error::status{status};
+            }
+
+            MemoryFence input_fence{backend}, output_fence{backend};
+
+            status = ::onnxRunGraph(graph, &input_fence, &output_fence);
+            if (status != ONNXIFI_STATUS_SUCCESS)
+            {
+                throw error::status{status};
+            }
+
+            status = ::onnxSignalEvent(input_fence.event);
+            if (status != ONNXIFI_STATUS_SUCCESS)
+            {
+                throw error::status{status};
+            }
+
+            status = ::onnxWaitEvent(output_fence.event);
+            if (status != ONNXIFI_STATUS_SUCCESS)
+            {
+                throw error::status{status};
+            }
+
+            status = ::onnxReleaseGraph(graph);
+            if (status != ONNXIFI_STATUS_SUCCESS)
+            {
+                throw error::status{status};
+            }
+        }
+    }
+
+    bool run_model(const std::string& name,
+                   const std::vector<float>& inputs,
+                   const std::vector<float>& expected_outputs)
+    {
+        InitializedBackends_IgnoreNOP backends{};
+        auto model = load_model(name);
+        for (const auto& backend : backends)
+        {
+            std::vector<TensorDescriptor> input_descriptors;
+            for (const auto& input : inputs)
+            {
+                input_descriptors.emplace_back("Input", &input);
+            }
+            std::vector<TensorDescriptor> output_descriptors;
+            std::vector<float> outputs(expected_outputs.size());
+            for (auto& output : outputs)
+            {
+                output_descriptors.emplace_back("Output", &output);
+            }
+
+            detail::run(backend, model, input_descriptors, output_descriptors);
+            if (!ngraph::test::all_close_f(expected_outputs, outputs))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    using Tensors = std::vector<std::vector<float>>;
+    using Shapes = std::vector<std::size_t>;
+
+    bool run_model(const std::string& name,
+                   const Tensors& inputs,
+                   const Shapes& input_shapes,
+                   const Tensors& expected_outputs,
+                   const Shapes& expected_shapes)
+    {
+        InitializedBackends_IgnoreNOP backends{};
+        auto model = load_model(name);
+        for (const auto& backend : backends)
+        {
+            std::vector<TensorDescriptor> input_descriptors;
+            for (std::size_t i{0}; i < inputs.size(); ++i)
+            {
+                input_descriptors.emplace_back(
+                    "Input", inputs[i].data(), input_shapes.size(), input_shapes.data());
+            }
+            std::vector<TensorDescriptor> output_descriptors;
+            std::vector<std::vector<float>> outputs(expected_outputs.size());
+            for (std::size_t i{0}; i < outputs.size(); ++i)
+            {
+                outputs[i].resize(expected_outputs[i].size(), -1.f);
+                output_descriptors.emplace_back(
+                    "Output", outputs[i].data(), expected_shapes.size(), expected_shapes.data());
+            }
+
+            detail::run(backend, model, input_descriptors, output_descriptors);
+            for (std::size_t i{0}; i < expected_outputs.size(); ++i)
+            {
+                if (!ngraph::test::all_close_f(expected_outputs[i], outputs[i]))
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    bool run_model(const std::string& name,
+                   const Tensors& inputs,
+                   const Tensors& expected_outputs,
+                   const Shapes& shapes)
+    {
+        return run_model(name, inputs, shapes, expected_outputs, shapes);
+    }
+
+} // namespace <anonymous>
+
+// If this test hangs it means onnxRunGraph() is not asynchronous.
+// THE FORM OF THIS TEST IS BY PURPOSE: it checks setting input parameters after call to onnxRunGraph
+TEST(onnxifi, model_add_abc)
+{
+    InitializedBackends_IgnoreNOP backends{};
+    auto model = load_model();
+    for (const auto& backend : backends)
+    {
+        ::onnxGraph graph;
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+
+        float values[] = {1.f, 2.f, 3.f};
+        std::vector<TensorDescriptor> inputs{
+            {"A", &values[0]}, {"B", &values[1]}, {"C", &values[2]}};
+
+        float output_placeholder{-1};
+        TensorDescriptor output{"Result", &output_placeholder};
+
+        status = ::onnxSetGraphIO(
+            graph, static_cast<uint32_t>(inputs.size()), inputs.data(), 1, &output);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+
+        MemoryFence input_fence{backend}, output_fence{backend};
+
+        status = ::onnxRunGraph(graph, &input_fence, &output_fence);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+
+        status = ::onnxSignalEvent(input_fence.event);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+
+        status = ::onnxWaitEvent(output_fence.event);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+
+        EXPECT_TRUE(output_placeholder == 6.f);
+
+        status = ::onnxReleaseGraph(graph);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+// If this test hangs it means onnxRunGraph() is not asynchronous.
+// THE FORM OF THIS TEST IS BY PURPOSE: it checks setting input parameters after call to onnxRunGraph,
+//                                      and the output fence event created by the ONNXIFI backend.
+TEST(onnxifi, model_add_abc_oneshot)
+{
+    InitializedBackends_IgnoreNOP backends{};
+    auto model = load_model();
+    for (const auto& backend : backends)
+    {
+        ::onnxGraph graph;
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+
+        float values[] = {1.f, 2.f, 3.f};
+        std::vector<TensorDescriptor> inputs{
+            {"A", &values[0]}, {"B", &values[1]}, {"C", &values[2]}};
+
+        float output_placeholder{-1};
+        TensorDescriptor output{"Result", &output_placeholder};
+
+        status = ::onnxSetGraphIO(
+            graph, static_cast<uint32_t>(inputs.size()), inputs.data(), 1, &output);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+
+        MemoryFence input_fence{backend};
+        MemoryFence_OneShot output_fence{backend};
+
+        status = ::onnxRunGraph(graph, &input_fence, &output_fence);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+
+        status = ::onnxSignalEvent(input_fence.event);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+
+        status = ::onnxWaitEvent(output_fence.event);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+
+        EXPECT_TRUE(output_placeholder == 6.f);
+
+        status = ::onnxReleaseGraph(graph);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+using namespace ngraph::test;
+
+TEST(onnxifi, model_add_abc_initializers)
+{
+    EXPECT_TRUE(run_model("add_abc_initializers.onnx", {{1, 2, 3, 4}}, {{3, 6, 9, 12}}, {2, 2}));
+}
+
+TEST(onnxifi, model_addmul_abc)
+{
+    Tensors inputs{NDArray<float, 3>{{{{9, 10}}, {{11, 12}}}}.get_vector(),
+                   NDArray<float, 3>{{{{5, 6}}, {{7, 8}}}}.get_vector(),
+                   NDArray<float, 3>{{{{1, 2}}, {{3, 4}}}}.get_vector()};
+
+    Tensors outputs{NDArray<float, 3>{{{{46, 62}}, {{80, 100}}}}.get_vector()};
+
+    EXPECT_TRUE(run_model("addmul_abc.onnx", inputs, outputs, {1, 2, 2}));
+}
+
+TEST(onnxifi, model_average_pool_2d)
+{
+    Tensors inputs{NDArray<float, 4>{{{{{0.f, 1.f, 2.f, 3.f},
+                                        {4.f, 5.f, 6.f, 7.f},
+                                        {8.f, 9.f, 10.f, 11.f},
+                                        {12.f, 13.f, 14.f, 15.f}}}}}
+                       .get_vector()};
+    Tensors outputs{NDArray<float, 4>({{{{2.5f, 4.5f}, {10.5f, 12.5f}}}}).get_vector()};
+    EXPECT_TRUE(run_model("average_pool_2d.onnx", inputs, {1, 1, 4, 4}, outputs, {1, 1, 2, 2}));
+}
+
+TEST(onnxifi, model_average_pool_2d_pads)
+{
+    Tensors inputs{NDArray<float, 4>{{{{{0.f, 1.f, 2.f, 3.f},
+                                        {4.f, 5.f, 6.f, 7.f},
+                                        {8.f, 9.f, 10.f, 11.f},
+                                        {12.f, 13.f, 14.f, 15.f}}}}}
+                       .get_vector()};
+    Tensors outputs{NDArray<float, 4>{{{{{0.f, 1.5f, 3.f}, {6.f, 7.5f, 9.f}, {12.f, 13.5f, 15.f}}}}}
+                        .get_vector()};
+    EXPECT_TRUE(
+        run_model("average_pool_2d_pads.onnx", inputs, {1, 1, 4, 4}, outputs, {1, 1, 3, 3}));
+}
+
+TEST(onnxifi, model_concat)
+{
+    Tensors inputs{NDArray<float, 1>{{1, 2}}.get_vector(), NDArray<float, 1>{{3, 4}}.get_vector()};
+    Tensors outputs{NDArray<float, 1>{{1, 2, 3, 4}}.get_vector()};
+    EXPECT_TRUE(run_model("concat.onnx", inputs, {2}, outputs, {4}));
 }
