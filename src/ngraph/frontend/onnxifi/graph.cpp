@@ -52,6 +52,42 @@ namespace ngraph
             m_handle = m_backend->compile(function);
         }
 
+        void Graph::set_inputs(const Span<::onnxTensorDescriptorV1>& inputs)
+        {
+            if ((inputs.data() != nullptr) && inputs.empty())
+            {
+                throw status::invalid_size{};
+            }
+            if (inputs.is_valid())
+            {
+                m_ng_inputs.clear();
+                for (const auto& descriptor : inputs)
+                {
+                    Tensor tensor{descriptor};
+                    m_ng_inputs.emplace_back(tensor.to_ng(m_backend->get_backend()));
+                }
+            }
+        }
+
+        void Graph::set_outputs(const Span<::onnxTensorDescriptorV1>& outputs)
+        {
+            if (outputs.data() == nullptr)
+            {
+                throw status::null_pointer{};
+            }
+            if (outputs.empty())
+            {
+                throw status::invalid_size{};
+            }
+            m_ng_outputs.clear();
+            m_outputs.clear();
+            for (const auto& descriptor : outputs)
+            {
+                m_outputs.emplace_back(descriptor);
+                m_ng_outputs.emplace_back(m_outputs.back().to_ng(m_backend->get_backend()));
+            }
+        }
+
     } // namespace onnxifi
 
 } // namespace ngraph

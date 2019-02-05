@@ -128,6 +128,16 @@ namespace ngraph
             }
         }
 
+        void GraphManager::_set_graph_io(::onnxGraph handle,
+                                         const Span<::onnxTensorDescriptorV1>& outputs,
+                                         const Span<::onnxTensorDescriptorV1>& inputs)
+        {
+            std::lock_guard<std::mutex> lock{m_mutex};
+            auto& graph = m_graphs.at(handle);
+            graph->set_inputs(inputs);
+            graph->set_outputs(outputs);
+        }
+
     } // namespace onnxifi
 
 } // namespace ngraph

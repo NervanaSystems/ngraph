@@ -310,7 +310,28 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
                    std::uint32_t outputsCount,
                    const onnxTensorDescriptorV1* outputDescriptors)
 {
-    return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
+    try
+    {
+        GraphManager::set_graph_io(
+            graph, {inputDescriptors, inputsCount}, {outputDescriptors, outputsCount});
+        return ONNXIFI_STATUS_SUCCESS;
+    }
+    catch (const status::runtime& e)
+    {
+        return e.get_status();
+    }
+    catch (const std::out_of_range&)
+    {
+        return ONNXIFI_STATUS_INVALID_GRAPH;
+    }
+    catch (const std::bad_alloc&)
+    {
+        return ONNXIFI_STATUS_NO_SYSTEM_MEMORY;
+    }
+    catch (...)
+    {
+        return ONNXIFI_STATUS_INTERNAL_ERROR;
+    }
 }
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxRunGraph(

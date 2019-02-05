@@ -1044,3 +1044,306 @@ TEST(onnxifi, release_graph_invalid_graph)
     ::onnxStatus status{::onnxReleaseGraph(nullptr)};
     EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_GRAPH);
 }
+
+// ==================================================[ onnxSetGraphIO ]========
+
+namespace
+{
+    template <int32_t Tag = ONNXIFI_TAG_TENSOR_DESCRIPTOR_V1,
+              ::onnxEnum Type = ONNXIFI_DATATYPE_FLOAT32,
+              ::onnxEnum MemoryType = ONNXIFI_MEMORY_TYPE_CPU>
+    struct TensorDescriptor_Template : ::onnxTensorDescriptorV1
+    {
+        TensorDescriptor_Template(const char* name,
+                                  const void* data,
+                                  uint32_t dimensions = 0,
+                                  const uint64_t* shape = nullptr)
+            : ::onnxTensorDescriptorV1{Tag,
+                                       name,
+                                       Type,
+                                       MemoryType,
+                                       dimensions,
+                                       shape,
+                                       reinterpret_cast<::onnxPointer>(data)}
+        {
+        }
+    };
+
+    using TensorDescriptor = TensorDescriptor_Template<>;
+    using TensorDescriptor_InvalidTag = TensorDescriptor_Template<-1>;
+    using TensorDescriptor_InvalidDataType =
+        TensorDescriptor_Template<ONNXIFI_TAG_TENSOR_DESCRIPTOR_V1, ONNXIFI_DATATYPE_COMPLEX128>;
+    using TensorDescriptor_UnsupportedDataType =
+        TensorDescriptor_Template<ONNXIFI_TAG_TENSOR_DESCRIPTOR_V1, static_cast<::onnxEnum>(-1)>;
+    using TensorDescriptor_InvalidMemoryType =
+        TensorDescriptor_Template<ONNXIFI_TAG_TENSOR_DESCRIPTOR_V1,
+                                  ONNXIFI_DATATYPE_FLOAT32,
+                                  ONNXIFI_MEMORY_TYPE_D3D_RESOURCE>;
+    using TensorDescriptor_UnsupportedMemoryType =
+        TensorDescriptor_Template<ONNXIFI_TAG_TENSOR_DESCRIPTOR_V1, ONNXIFI_DATATYPE_FLOAT32, 128>;
+
+} // namespace <anonymous>
+
+TEST(onnxifi, set_graph_io_invalid_graph)
+{
+    ::onnxTensorDescriptorV1 input, output;
+    ::onnxStatus status{::onnxSetGraphIO(nullptr, 1, &input, 1, &output)};
+    EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_GRAPH);
+}
+
+TEST(onnxifi, set_graph_io_invalid_pointer)
+{
+    InitializedBackends backends{};
+    auto model = load_model();
+    for (const auto& backend : backends)
+    {
+        ::onnxGraph graph;
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+
+        float data{0.f};
+        TensorDescriptor tensor{"A", &data};
+
+        // It is allowed not to specify inputs
+        status = ::onnxSetGraphIO(graph, 0, nullptr, 1, &tensor);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+
+        status = ::onnxSetGraphIO(graph, 1, &tensor, 1, nullptr);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_POINTER);
+
+        status = ::onnxReleaseGraph(graph);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+TEST(onnxifi, set_graph_io_invalid_name)
+{
+    // TODO: implement the test for ONNXIFI_STATUS_INVALID_NAME
+    //
+    //       The function call failed because one of the names in tensor descriptors doesn't
+    //       match blob name in ModelProto.graph.input or ModelProto.graph.output, or the
+    //       same name appears in more than one tensor descriptor.
+}
+
+TEST(onnxifi, set_graph_io_invalid_shape)
+{
+    InitializedBackends backends{};
+    auto model = load_model();
+    for (const auto& backend : backends)
+    {
+        ::onnxGraph graph;
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+
+        float input_data{0.f}, output_data{0.f};
+        std::uint64_t shape{0};
+        TensorDescriptor invalid_shape{"S", &input_data, 1, &shape};
+        TensorDescriptor input{"A", &input_data}, output{"C", &output_data};
+
+        status = ::onnxSetGraphIO(graph, 1, &invalid_shape, 1, &output);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_SHAPE);
+
+        status = ::onnxSetGraphIO(graph, 1, &input, 1, &invalid_shape);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_SHAPE);
+
+        status = ::onnxReleaseGraph(graph);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+TEST(onnxifi, set_graph_io_invalid_datatype)
+{
+    InitializedBackends backends{};
+    auto model = load_model();
+    for (const auto& backend : backends)
+    {
+        ::onnxGraph graph;
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+
+        float input_data{0.f}, output_data{0.f};
+        TensorDescriptor_InvalidDataType invalid_datatype{"A", &input_data};
+        TensorDescriptor input{"A", &input_data}, output{"C", &output_data};
+
+        status = ::onnxSetGraphIO(graph, 1, &invalid_datatype, 1, &output);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_DATATYPE);
+
+        status = ::onnxSetGraphIO(graph, 1, &input, 1, &invalid_datatype);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_DATATYPE);
+
+        status = ::onnxReleaseGraph(graph);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+TEST(onnxifi, set_graph_io_invalid_memory_type)
+{
+    InitializedBackends backends{};
+    auto model = load_model();
+    for (const auto& backend : backends)
+    {
+        ::onnxGraph graph;
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+
+        float input_data{0.f}, output_data{0.f};
+        TensorDescriptor_InvalidMemoryType invalid_datatype{"S", &input_data};
+        TensorDescriptor input{"A", &input_data}, output{"C", &output_data};
+
+        status = ::onnxSetGraphIO(graph, 1, &invalid_datatype, 1, &output);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_MEMORY_TYPE);
+
+        status = ::onnxSetGraphIO(graph, 1, &input, 1, &invalid_datatype);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_MEMORY_TYPE);
+
+        status = ::onnxReleaseGraph(graph);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+TEST(onnxifi, set_graph_io_invalid_memory_location)
+{
+    InitializedBackends backends{};
+    auto model = load_model();
+    for (const auto& backend : backends)
+    {
+        ::onnxGraph graph;
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+
+        float input_data{0.f}, output_data{0.f};
+        TensorDescriptor invalid_memory_location{"S", nullptr};
+        TensorDescriptor input{"A", &input_data}, output{"C", &output_data};
+
+        status = ::onnxSetGraphIO(graph, 1, &invalid_memory_location, 1, &output);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_MEMORY_LOCATION);
+
+        status = ::onnxSetGraphIO(graph, 1, &input, 1, &invalid_memory_location);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_MEMORY_LOCATION);
+
+        status = ::onnxReleaseGraph(graph);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+TEST(onnxifi, set_graph_io_unsupported_tag)
+{
+    InitializedBackends backends{};
+    auto model = load_model();
+    for (const auto& backend : backends)
+    {
+        ::onnxGraph graph;
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+
+        float input_data{0.f}, output_data{0.f};
+        TensorDescriptor_InvalidTag invalid_tag{"S", &input_data};
+        TensorDescriptor input{"A", &input_data}, output{"C", &output_data};
+
+        status = ::onnxSetGraphIO(graph, 1, &invalid_tag, 1, &output);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_UNSUPPORTED_TAG);
+
+        status = ::onnxSetGraphIO(graph, 1, &input, 1, &invalid_tag);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_UNSUPPORTED_TAG);
+
+        status = ::onnxReleaseGraph(graph);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+TEST(onnxifi, set_graph_io_unsupported_shape)
+{
+    // TODO: Implement the test for ONNXIFI_STATUS_UNSUPPORTED_SHAPE
+    //
+    //       The function call failed because the backend does not support
+    //       the tensor shape in an input or output of one of the operators.
+    //       The problematic tensor shape could be directly specified through
+    //       `inputDescriptors` or `outputDescriptors` argument, or inferred
+    //       from the inputs and outputs, and the problematic tenosr shape
+    //       was provided the ValueInfoProto as a symbolic variable.
+}
+
+TEST(onnxifi, set_graph_io_unsupported_memory_type)
+{
+    InitializedBackends backends{};
+    auto model = load_model();
+    for (const auto& backend : backends)
+    {
+        ::onnxGraph graph;
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+
+        float input_data{0.f}, output_data{0.f};
+        TensorDescriptor_UnsupportedMemoryType unsupported_memory_type{"S", &input_data};
+        TensorDescriptor input{"A", &input_data}, output{"C", &output_data};
+
+        status = ::onnxSetGraphIO(graph, 1, &unsupported_memory_type, 1, &output);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_UNSUPPORTED_MEMORY_TYPE);
+
+        status = ::onnxSetGraphIO(graph, 1, &input, 1, &unsupported_memory_type);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_UNSUPPORTED_MEMORY_TYPE);
+
+        status = ::onnxReleaseGraph(graph);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+TEST(onnxifi, set_graph_io_unsupported_datatype)
+{
+    InitializedBackends backends{};
+    auto model = load_model();
+    for (const auto& backend : backends)
+    {
+        ::onnxGraph graph;
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+
+        float input_data{0.f}, output_data{0.f};
+        TensorDescriptor_UnsupportedDataType invalid_datatype{"A", &input_data};
+        TensorDescriptor input{"A", &input_data}, output{"C", &output_data};
+
+        status = ::onnxSetGraphIO(graph, 1, &invalid_datatype, 1, &output);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_UNSUPPORTED_DATATYPE);
+
+        status = ::onnxSetGraphIO(graph, 1, &input, 1, &invalid_datatype);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_UNSUPPORTED_DATATYPE);
+
+        status = ::onnxReleaseGraph(graph);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+TEST(onnxifi, set_graph_io_unidentified_name)
+{
+    // TODO: Implement the test for ONNXIFI_STATUS_UNIDENTIFIED_NAME
+    //
+    //       The function call failed because one of the ValueInfoProto.name value in
+    //       ModelProto.graph.input or ModelProto.grapth.output doesn't have a match
+    //       in the inputDescriptors or outputDescriptors.
+}
+
+TEST(onnxifi, set_graph_io_mismatching_shape)
+{
+    // TODO: Implement the test for ONNXIFI_STATUS_MISMATCHING_SHAPE
+    //
+    //       The function call failed because the shapes specified through
+    //       inputDescriptors or outputDescriptions argument are inconsistent with the
+    //       shapes specified in the ONNX model graph.
+}
+
+TEST(onnxifi, set_graph_io_mismatching_datatype)
+{
+    // TODO: Implement the test for ONNXIFI_STATUS_MISMATCHING_DATATYPE
+    //
+    //        The function call failed because data types specified through
+    //        inputDescriptors or outputDescriptors argument are inconsistent with the
+    //        data types specified in the ONNX model graph.
+}

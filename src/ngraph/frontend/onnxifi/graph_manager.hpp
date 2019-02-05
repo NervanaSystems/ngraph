@@ -45,6 +45,13 @@ namespace ngraph
             }
 
             static void release_graph(::onnxGraph graph) { instance()._release_graph(graph); }
+            static void set_graph_io(::onnxGraph graph,
+                                     const Span<::onnxTensorDescriptorV1>& inputs,
+                                     const Span<::onnxTensorDescriptorV1>& outputs)
+            {
+                instance()._set_graph_io(graph, outputs, inputs);
+            }
+
         private:
             std::mutex m_mutex{};
             std::map<::onnxGraph, std::unique_ptr<Graph>> m_graphs{};
@@ -56,6 +63,10 @@ namespace ngraph
                 static GraphManager graph_manager{};
                 return graph_manager;
             }
+
+            void _set_graph_io(::onnxGraph handle,
+                               const Span<::onnxTensorDescriptorV1>& outputs,
+                               const Span<::onnxTensorDescriptorV1>& inputs);
 
             void _init_graph(const Backend& backend,
                              const Span<char>& onnx_model,

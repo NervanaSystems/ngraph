@@ -45,8 +45,23 @@ namespace ngraph
 
             void load(std::istream& sin, const Span<::onnxTensorDescriptorV1>& weights);
 
+            void set_inputs(const Span<::onnxTensorDescriptorV1>& inputs);
+            void set_outputs(const Span<::onnxTensorDescriptorV1>& outputs);
+
+            void from_ng_outputs(const std::vector<std::shared_ptr<runtime::Tensor>>& ng_outputs,
+                                 std::vector<Tensor>& output) const
+            {
+                for (std::size_t i{0}; i < ng_outputs.size(); ++i)
+                {
+                    output[i].from_ng(*ng_outputs[i]);
+                }
+            }
+
         private:
             runtime::Handle m_handle{nullptr};
+            std::vector<std::shared_ptr<runtime::Tensor>> m_ng_inputs{};
+            std::vector<Tensor> m_outputs{};
+            std::vector<std::shared_ptr<runtime::Tensor>> m_ng_outputs{};
             const Backend* m_backend;
         };
 
