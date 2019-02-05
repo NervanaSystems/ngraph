@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 #include <memory>
 
 #include "gtest/gtest.h"
+#include "misc.hpp"
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
@@ -124,7 +125,7 @@ TEST(cpu_test, abc_tbb)
     bool use_tbb = (getenv("NGRAPH_CPU_USE_TBB") != nullptr);
     if (!use_tbb)
     {
-        setenv("NGRAPH_CPU_USE_TBB", "1", 1);
+        set_environment("NGRAPH_CPU_USE_TBB", "1", 1);
     }
 
     Shape shape{2, 2};
@@ -145,21 +146,22 @@ TEST(cpu_test, abc_tbb)
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
-    backend->call_with_validate(backend->compile(f), {result}, {a, b, c});
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a, b, c});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
 
-    backend->call_with_validate(backend->compile(f), {result}, {b, a, c});
+    backend->call_with_validate(handle, {result}, {b, a, c});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
 
-    backend->call_with_validate(backend->compile(f), {result}, {a, c, b});
+    backend->call_with_validate(handle, {result}, {a, c, b});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
 
     if (!use_tbb)
     {
-        unsetenv("NGRAPH_CPU_USE_TBB");
+        unset_environment("NGRAPH_CPU_USE_TBB");
     }
 }
 #endif // NGRAPH_TBB_ENABLE
@@ -213,7 +215,8 @@ TEST(cpu_test, mkldnn_layouts)
         expected_result.push_back(16.0f);
     }
 
-    backend->call_with_validate(backend->compile(f), {result}, {a, b});
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a, b});
 
     EXPECT_EQ(vector<float>{expected_result}, rv);
 }

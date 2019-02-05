@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -156,7 +156,8 @@ TEST(cpu_fusion, gemm_cpu_broadcast_row)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a, b});
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a, b});
     vector<float> expected{11, 30, 38, 111};
     EXPECT_EQ(read_vector<float>(result), expected);
 }
@@ -187,7 +188,8 @@ TEST(cpu_fusion, gemm_cpu_broadcast_column)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a, b});
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a, b});
     vector<float> expected{11, 29, 39, 111};
     EXPECT_EQ(read_vector<float>(result), expected);
 }
@@ -222,7 +224,8 @@ TEST(cpu_fusion, gemm_cpu_broadcast_matrix)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a, b});
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a, b});
     vector<float> expected{10, 28, 37, 109};
     ASSERT_TRUE(read_vector<float>(result) == expected);
 }
@@ -254,7 +257,8 @@ TEST(cpu_fusion, gemm_cpu_no_bias)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a, b});
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a, b});
     vector<float> expected{9, 27, 36, 108};
     ASSERT_TRUE(read_vector<float>(result) == expected);
 }
@@ -274,8 +278,7 @@ TEST(cpu_fusion, cpu_fusion_pass_basic)
     auto add = dot + broadcast;
     auto graph = make_shared<op::Abs>(add);
     pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(
-        runtime::cpu::pass::CPUFusion::REGULAR_FUSIONS);
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::REGULAR_FUSIONS);
     auto func = make_shared<Function>(graph, ParameterVector{A, B, C});
     pass_manager.run_passes(func);
     ASSERT_NE(std::dynamic_pointer_cast<op::MatmulBias>(graph->get_argument(0)), nullptr);
@@ -296,8 +299,7 @@ TEST(cpu_fusion, commutative_matmul_bias)
     auto add = broadcast + dot;
     auto graph = make_shared<op::Abs>(add);
     pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(
-        runtime::cpu::pass::CPUFusion::REGULAR_FUSIONS);
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::REGULAR_FUSIONS);
     auto func = make_shared<Function>(graph, ParameterVector{A, B, C});
     pass_manager.run_passes(func);
     ASSERT_NE(std::dynamic_pointer_cast<op::MatmulBias>(graph->get_argument(0)), nullptr);
@@ -319,8 +321,7 @@ TEST(cpu_fusion, cpu_fusion_pass_matmul_bias)
 
     auto graph = make_shared<op::Abs>(add);
     pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(
-        runtime::cpu::pass::CPUFusion::REGULAR_FUSIONS);
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::REGULAR_FUSIONS);
     auto func = make_shared<Function>(graph, ParameterVector{W, x, b});
     pass_manager.run_passes(func);
     auto gmm = graph->get_argument(0);
@@ -341,8 +342,7 @@ TEST(cpu_fusion, cpu_fusion_pass_matmul_no_bias)
     auto graph = make_shared<op::Abs>(re_dot);
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(
-        runtime::cpu::pass::CPUFusion::REGULAR_FUSIONS);
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::REGULAR_FUSIONS);
     auto func = make_shared<Function>(graph, ParameterVector{W, x});
     pass_manager.run_passes(func);
     size_t mmb = count_ops_of_type<op::MatmulBias>(func);
@@ -356,8 +356,7 @@ TEST(cpu_fusion, gemm_mlp)
     stringstream ss(json_string);
     shared_ptr<Function> func = ngraph::deserialize(ss);
     pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(
-        runtime::cpu::pass::CPUFusion::REGULAR_FUSIONS);
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::REGULAR_FUSIONS);
     pass_manager.run_passes(func);
     auto mmbs = count_ops_of_type<op::MatmulBias>(func);
     ASSERT_EQ(mmbs, 3);
@@ -368,8 +367,7 @@ TEST(cpu_fusion, fuse_fprop_bn)
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::VisualizeTree>("bn_fprop_before_fusion.png");
     pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(
-        runtime::cpu::pass::CPUFusion::REGULAR_FUSIONS);
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::REGULAR_FUSIONS);
     pass_manager.register_pass<pass::VisualizeTree>("bn_fprop_after_fusion.png");
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/bn_fprop_b2c3h2w2.json");
     const string json_string = file_util::read_file_to_string(json_path);
@@ -499,8 +497,7 @@ TEST(cpu_fusion, fuse_conv_bias)
 {
     pass::Manager pass_manager;
     pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(
-        runtime::cpu::pass::CPUFusion::DIFFERENTIABLE_FUSIONS);
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::DIFFERENTIABLE_FUSIONS);
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "conv_bias.json");
     const string json_string = file_util::read_file_to_string(json_path);
     stringstream ss(json_string);
@@ -634,7 +631,8 @@ TEST(cpu_fusion, conv_bias_fprop_n1c1h3w3)
     auto f = make_shared<Function>(
         convolution_bias, ParameterVector{conv_test.data, conv_test.weights, conv_test.bias});
 
-    backend->call_with_validate(backend->compile(f),
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle,
                                 {conv_test.result_val},
                                 {conv_test.data_val, conv_test.weights_val, conv_test.bias_val});
     auto result_vec = read_vector<float>(conv_test.result_val);
@@ -768,7 +766,8 @@ TEST(cpu_fusion, batchnorm_fprop_relu_b1c2h2w2)
     auto result_mean_bnr = backend->create_tensor(element::f32, mean_shape);
     auto result_variance_bnr = backend->create_tensor(element::f32, var_shape);
 
-    backend->call_with_validate(backend->compile(f),
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle,
                                 {bn_output,
                                  result_mean,
                                  result_variance,
@@ -845,8 +844,7 @@ TEST(cpu_fusion, fuse_conv_relu)
     auto func = make_shared<Function>(abs_node, ParameterVector{A, weights});
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(
-        runtime::cpu::pass::CPUFusion::REGULAR_FUSIONS);
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::REGULAR_FUSIONS);
     pass_manager.run_passes(func);
     size_t cb = count_ops_of_type<op::ConvolutionRelu>(func);
     ASSERT_GT(cb, 0);
@@ -1274,8 +1272,7 @@ std::vector<shared_ptr<runtime::Tensor>> rnn_matrix_fusion_eval(const size_t tim
     {
         pass::Manager pass_manager;
         pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion>();
-        pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(
-            runtime::cpu::pass::CPUFusion::REGULAR_FUSIONS);
+        pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::REGULAR_FUSIONS);
         pass_manager.run_passes(func);
         // check all of our dot/add are converted to a single MatmulBias op.
         size_t count = count_ops_of_type<op::MatmulBias>(func);
@@ -1334,8 +1331,7 @@ TEST(cpu_fusion, rnn_fusion_from_json_model)
 {
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(
-        runtime::cpu::pass::CPUFusion::REGULAR_FUSIONS);
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::REGULAR_FUSIONS);
     const string json_path =
         file_util::path_join(SERIALIZED_ZOO, "mxnet/rnn-10-step-fusion-test.json");
     const string json_string = file_util::read_file_to_string(json_path);
@@ -1343,9 +1339,9 @@ TEST(cpu_fusion, rnn_fusion_from_json_model)
     shared_ptr<Function> func = ngraph::deserialize(ss);
     pass_manager.run_passes(func);
     const size_t NUM_STEPS = 10;
-    auto mmb_predicate = [](std::shared_ptr<Node> node) {
+    auto mmb_predicate = [=](std::shared_ptr<Node> node) {
         auto users = node->get_users();
-        return users.size() == NUM_STEPS &&
+        return (users.size() == NUM_STEPS) &&
                std::all_of(begin(users), end(users), [](std::shared_ptr<Node> n) {
                    return std::dynamic_pointer_cast<op::Slice>(n) != nullptr;
                });
@@ -1495,7 +1491,8 @@ TEST(cpu_fusion, backwards_maxpool_with_indices_n4_c1_hw4_2x2_max)
         pass_manager.run_passes(df);
     }
 
-    backend->call_with_validate(backend->compile(df), {output}, {input, ep});
+    auto handle = backend->compile(df);
+    backend->call_with_validate(handle, {output}, {input, ep});
     ASSERT_TRUE(read_vector<float>(output) == expected);
 }
 
@@ -1519,7 +1516,8 @@ TEST(cpu_fusion, loop_kernel_one_input_one_output_halide)
     copy_data(a, dataA);
     vector<float> expected{0, 4, 0, 4};
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a});
 
     EXPECT_TRUE(test::all_close(read_vector<float>(result), expected));
 }
@@ -1579,7 +1577,8 @@ TEST(cpu_fusion, loop_kernel_embedded_graph_halide)
     vector<float> dataB{1, 2, 3, 4};
     copy_data(b, dataB);
     vector<float> expected{-2, -6, -4, -8};
-    backend->call_with_validate(backend->compile(f), {result}, {a, b});
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a, b});
     EXPECT_EQ(read_vector<float>(result), expected);
 }
 
@@ -1604,7 +1603,8 @@ TEST(cpu_fusion, loop_kernel_two_inputs_one_output_halide)
     copy_data(b, dataB);
     vector<float> expected{2, 6, 4, 8};
 
-    backend->call_with_validate(backend->compile(f), {result}, {a, b});
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a, b});
 
     EXPECT_EQ(read_vector<float>(result), expected);
 }
@@ -1656,7 +1656,8 @@ TEST(cpu_fusion, loop_kernel_multiple_outputs_halide)
     copy_data(c, dataC);
     copy_data(d, dataD);
 
-    backend->call_with_validate(backend->compile(f), {r1, r2, r3}, {a, b, c, d});
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {r1, r2, r3}, {a, b, c, d});
 
     vector<float> expected1{5, 11, 5, 17};
     vector<float> expected2{2, 7, 5, 14};
@@ -1718,7 +1719,8 @@ TEST(cpu_fusion, loop_kernel_copy_with_new_args)
     copy_data(c, dataC);
     copy_data(d, dataD);
 
-    backend->call_with_validate(backend->compile(f), {r1, r2, r3}, {a, b, c, d});
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {r1, r2, r3}, {a, b, c, d});
     backend->call_with_validate(
         backend->compile(copy_f), {copy_r1, copy_r2, copy_r3}, {a, b, c, d});
 
@@ -2289,20 +2291,11 @@ TEST(cpu_fusion, fuse_1_layer_rnn)
     }
 }
 
-static std::shared_ptr<Function> make_function(const std::string& file_name)
-{
-    const string json_path = file_util::path_join(SERIALIZED_ZOO, file_name);
-    const string json_string = file_util::read_file_to_string(json_path);
-    stringstream ss(json_string);
-    shared_ptr<Function> func = ngraph::deserialize(ss);
-    return func;
-}
-
 TEST(cpu_fusion, rnn_fusion_1lstm_cell)
 {
     const std::string file_name("mxnet/1_lstm_cell_forward.json");
-    auto cpu_f = make_function(file_name);
-    auto int_f = make_function(file_name);
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
     test::Uniform<float> rng(-1.0f, 1.0f);
     vector<vector<float>> args;
 
@@ -2323,8 +2316,8 @@ TEST(cpu_fusion, rnn_fusion_1lstm_cell)
 TEST(cpu_fusion, rnn_fusion_1rnn_layer_3lstm_cell)
 {
     const std::string file_name("mxnet/1rnn_layer_3lstm_cell.json");
-    auto cpu_f = make_function(file_name);
-    auto int_f = make_function(file_name);
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
     test::Uniform<float> rng(-1.0f, 1.0f);
     vector<vector<float>> args;
 
@@ -2345,8 +2338,8 @@ TEST(cpu_fusion, rnn_fusion_1rnn_layer_3lstm_cell)
 TEST(cpu_fusion, rnn_fusion_2rnn_layer_3lstm_cell)
 {
     const std::string file_name("mxnet/2rnn_layer_3lstm_cell.json");
-    auto cpu_f = make_function(file_name);
-    auto int_f = make_function(file_name);
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
     test::Uniform<float> rng(-1.0f, 1.0f);
     vector<vector<float>> args;
 
@@ -2594,7 +2587,8 @@ void sigmoid_multiply_fusion_forward_compute(runtime::Backend* backend,
 
     auto mul_node = input_0_node * input_1_node;
     auto func = make_shared<Function>(mul_node, input_params);
-    backend->call_with_validate(backend->compile(func), {result_tensor}, input_tensors);
+    auto handle = backend->compile(func);
+    backend->call_with_validate(handle, {result_tensor}, input_tensors);
     EXPECT_TRUE(test::all_close(read_vector<float>(result_tensor), expected));
 }
 
@@ -3003,8 +2997,8 @@ TEST(cpu_fusion, fuse_batch_dot_forward)
     pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
 
     const std::string file_name("mxnet/batch_dot_3.json");
-    auto cpu_f = make_function(file_name);
-    auto int_f = make_function(file_name);
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
     pass_manager.run_passes(cpu_f);
     test::Uniform<float> rng(0.0f, 1.0f);
     vector<vector<float>> args;
@@ -3023,11 +3017,42 @@ TEST(cpu_fusion, fuse_batch_dot_forward)
     }
 }
 
+TEST(cpu_fusion, fuse_batch_dot_backward)
+{
+    const std::string file_name("mxnet/batch_dot_3.json");
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
+    pass_manager.run_passes(cpu_f);
+
+    auto int_df = autodiff::backprop_function(int_f);
+    auto cpu_df = autodiff::backprop_function(cpu_f);
+
+    test::Uniform<float> rng(-1.0f, 1.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_df->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    auto int_results = execute(int_df, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_df, args, "CPU");
+
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+    }
+}
+
 TEST(cpu_fusion, fuse_rnn_across_layer_2layer_3timestep)
 {
     const std::string file_name("mxnet/2layer_3timestep_ic100oc100.json");
-    auto cpu_f = make_function(file_name);
-    auto int_f = make_function(file_name);
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
     test::Uniform<float> rng(-1.0f, 1.0f);
     vector<vector<float>> args;
 
@@ -3408,6 +3433,29 @@ TEST(cpu_fusion, rnn_input_fusion_inter_vs_cpu)
 {
     shared_ptr<Function> cpu_func = create_rnn_input_linear_transformation_function(10);
     shared_ptr<Function> int_func = create_rnn_input_linear_transformation_function(10);
+
+    test::Uniform<float> rng(-10.0f, 10.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : int_func->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    auto int_results = execute(int_func, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_func, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+    }
+}
+
+TEST(cpu_fusion, validate_fuse_gru_inputs)
+{
+    const std::string file_name("mxnet/gru_debug.json");
+    auto cpu_func = make_function_from_file(file_name);
+    auto int_func = make_function_from_file(file_name);
 
     test::Uniform<float> rng(-10.0f, 10.0f);
     vector<vector<float>> args;

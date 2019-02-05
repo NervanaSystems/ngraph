@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 
 namespace ngraph
 {
@@ -32,30 +33,19 @@ namespace ngraph
     }
 }
 
-class ngraph::runtime::cpu::pass::CPUFusion : public ngraph::pass::GraphRewrite
+class CPU_BACKEND_API ngraph::runtime::cpu::pass::CPUFusion : public ngraph::pass::GraphRewrite
 {
 public:
-    // 30 different fusion groups that we can nest/mix&match/etc
-    // should be good enough for quite a while
-    enum fusions
-    {
-        //`DIFFERENTIABLE_FUSIONS` produce ops that support autodiff
-        // i.e. implement `generate_adjoints`
-        DIFFERENTIABLE_FUSIONS = 0x1,
-        REGULAR_FUSIONS = 0x2,
-        ALL = 0xFFFFFFFF
-    };
-
-    CPUFusion(int fusions = ALL)
+    CPUFusion(ngraph::pass::FusionType fusions = ngraph::pass::ALL_FUSIONS)
         : GraphRewrite()
     {
-        if (fusions & DIFFERENTIABLE_FUSIONS)
+        if (fusions & ngraph::pass::DIFFERENTIABLE_FUSIONS)
         {
             construct_conv_bias();
             construct_sigmoid_multiply();
         }
 
-        if (fusions & REGULAR_FUSIONS)
+        if (fusions & ngraph::pass::REGULAR_FUSIONS)
         {
             construct_matmul();
             construct_matmulbias();

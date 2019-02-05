@@ -347,11 +347,6 @@ big, small {
   clear: both;
 }
 
-@font-face {
-  font-family: 'Faustina ';
-  src: url("../fonts/Faustina); src: url("../fonts/Faustina) format("ttf","svg"), webformat(".svg");
-  font-weight: normal;
-  font-style: normal;
 
 /*!                               */
 /*  NeoSansIntel FONT             */
@@ -579,7 +574,7 @@ a .fa, a .rst-content .admonition-title, .rst-content a .admonition-title, a .rs
   color: #fff;
   background: #638470;
   margin: -5px;
-  font-family: "Faustina", sans;
+  font-family: "NeoSansIntel", sans;
   font-weight: bold;
   padding: 0.33em 0.74em;
   margin-bottom: 0.33em;
@@ -1228,7 +1223,7 @@ textarea {
   overflow: auto;
   vertical-align: top;
   width: 100%;
-  font-family: "Faustina", "NanumGothicCoding", Arial, sans;
+  font-family: "NeoSansIntel", "NanumGothicCoding", Arial, sans;
 }
 
 select, textarea {
@@ -1632,7 +1627,7 @@ html {
 }
 
 body {
-  font-family: "Faustina", "NanumGothicCoding", Arial, sans;
+  font-family: "NeoSansIntel", "NanumGothicCoding", Arial, sans;
   font-weight: normal;
   color: #404040;
   min-height: 100%;
@@ -1712,7 +1707,7 @@ a.wy-text-neutral:hover {
 h1, h2, .rst-content .toctree-wrapper p.caption, h3, h4, h5, h6, legend {
   margin-top: 0;
   font-weight: 700;
-  font-family: "NeoSansIntel", "Faustina", Arial, sans;
+  font-family: "NeoSansIntel", "NeoSansIntel", Arial, sans;
 }
 
 p {
@@ -1856,7 +1851,7 @@ code, p.caption {
 
 
 caption-text {
-  font-family: 'Faustina', Lato, monospace;
+  font-family: 'NeoSansIntel', Lato, monospace;
 }
 
 
@@ -2223,7 +2218,7 @@ div[class^='highlight'] pre {
   color: #fcfcfc;
   background: #1f1d1d;
   border-top: solid 10px #5f5f5f;
-  font-family: "NeoSansIntel", "Faustina", "Helvetica Neue", Arial, sans;
+  font-family: "NeoSansIntel", "NeoSansIntel", "Helvetica Neue", Arial, sans;
   z-index: 400;
 }
 .rst-versions a {
@@ -2539,7 +2534,7 @@ div[class^='highlight'] pre {
     font-family: monospace;
   line-height: normal;
   background: white;
-  color: #84aead;
+  color: #0071c5;
   border-top: solid 0.31em #cad8a5;
   padding: 6px;
   position: relative;
@@ -2704,13 +2699,13 @@ span[id*='MathJax-Span'] {
   font-family: "Roboto Slab";
   font-style: normal;
   font-weight: 400;
-  src: local("Roboto Slab Regular"), local("Faustina-Regular"), url(../fonts/Faustina-Regular.ttf) format("truetype");
+  src: local("Roboto Slab Regular"), local("NeoSansIntel-Regular"), url(../fonts/NeoSansIntel-Regular.ttf) format("truetype");
 }
 @font-face {
   font-family: "Roboto Slab";
   font-style: normal;
   font-weight: 700;
-  src: local("Roboto Slab Bold"), local("Faustina-Bold"), url(../fonts/Faustina-Bold.ttf) format("truetype");
+  src: local("Roboto Slab Bold"), local("NeoSansIntel-Bold"), url(../fonts/NeoSansIntel-Bold.ttf) format("truetype");
 }
 .wy-affix {
   position: fixed;
@@ -2967,7 +2962,7 @@ span[id*='MathJax-Span'] {
 }
 
 .wy-nav .wy-menu-vertical header {
-  color: #84aead;
+  color: #0071c5;
 }
 .wy-nav .wy-menu-vertical a {
   color: #dadada;
@@ -3038,13 +3033,14 @@ span[id*='MathJax-Span'] {
 
 .wy-nav-top {
   display: none;
-  background: #84aead;
+  background: #0071c5;
   color: #fff;
   padding: 0.4045em 0.809em;
   position: relative;
   line-height: 50px;
   text-align: center;
   font-size: 100%;
+  font-family: 'NeoSansIntel';
   *zoom: 1;
 }
 .wy-nav-top:before, .wy-nav-top:after {
@@ -3062,7 +3058,7 @@ span[id*='MathJax-Span'] {
   margin-right: 12px;
   height: 45px;
   width: 45px;
-  background-color: #84aead;
+  background-color: #0071c5;
   padding: 5px;
   border-radius: 100%;
 }

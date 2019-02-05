@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 
 namespace ngraph
@@ -35,7 +36,7 @@ namespace ngraph
     }
 }
 
-class ngraph::runtime::cpu::pass::LSTMFusion : public ngraph::pass::GraphRewrite
+class CPU_BACKEND_API ngraph::runtime::cpu::pass::LSTMFusion : public ngraph::pass::GraphRewrite
 {
 public:
     LSTMFusion()
@@ -50,7 +51,8 @@ private:
     void construct_lstm_fprop();
 };
 
-class ngraph::runtime::cpu::pass::RNNFusion : public ngraph::pass::RecurrentGraphRewrite
+class CPU_BACKEND_API ngraph::runtime::cpu::pass::RNNFusion
+    : public ngraph::pass::RecurrentGraphRewrite
 {
 public:
     RNNFusion()

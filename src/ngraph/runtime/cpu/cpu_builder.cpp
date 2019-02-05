@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -366,8 +366,6 @@ namespace ngraph
             {
                 static BuildOpMap build_dispatcher{
                     {TI(ngraph::op::Parameter), &runtime::cpu::Builder::nop},
-                    {TI(ngraph::runtime::cpu::op::ConvertLayout),
-                     &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::ConvertLayout>},
                     {TI(ngraph::runtime::cpu::op::LoopKernel),
                      &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::LoopKernel>},
                     {TI(ngraph::runtime::cpu::op::HalideOp),

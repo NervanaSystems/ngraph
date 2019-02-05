@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -239,6 +239,17 @@
         {                                                                                          \
             GetGlobalBuildDispatcher().insert({type_index(typeid(ngraph::op::OP)),                 \
                                                &runtime::cpu::Builder::build<ngraph::op::OP>});    \
+        }                                                                                          \
+    } __register_##OP##_builder_instance;
+
+#define REGISTER_CPU_OP_BUILDER(OP)                                                                \
+    static struct __register_##OP##_builder                                                        \
+    {                                                                                              \
+        __register_##OP##_builder()                                                                \
+        {                                                                                          \
+            GetGlobalBuildDispatcher().insert(                                                     \
+                {type_index(typeid(ngraph::runtime::cpu::op::OP)),                                 \
+                 &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::OP>});                    \
         }                                                                                          \
     } __register_##OP##_builder_instance;
 

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,13 +21,18 @@
 
 #include "gtest/gtest.h"
 
+// clang-format off
+#define AUTODIFF_BACKEND_${BACKEND_NAME}
+// clang-format on
+
 #include "ngraph/ngraph.hpp"
+#include "ngraph/pass/manager.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_mat_fusion.hpp"
 #include "ngraph/runtime/reference/avg_pool.hpp"
 #include "util/autodiff/backprop_function.hpp"
 #include "util/autodiff/numeric_compare.hpp"
 #include "util/random.hpp"
 #include "util/test_control.hpp"
-
 using namespace std;
 using namespace ngraph;
 
@@ -69,7 +74,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n4_c1_hw4_2x2_max)
 
     auto C = make_shared<op::Parameter>(element::i32, maxpool_shape);
     auto df = autodiff::backprop_function(f);
-    backend->call_with_validate(backend->compile(df), {output}, {input, ep});
+    auto handle = backend->compile(df);
+    backend->call_with_validate(handle, {output}, {input, ep});
     ASSERT_TRUE(read_vector<int>(output) == expected);
 }
 
@@ -107,7 +113,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n2_c1_hw5_3x3_str2_max)
 
     auto C = make_shared<op::Parameter>(element::i32, maxpool_shape);
     auto df = autodiff::backprop_function(f);
-    backend->call_with_validate(backend->compile(df), {output}, {input, ep});
+    auto handle = backend->compile(df);
+    backend->call_with_validate(handle, {output}, {input, ep});
     ASSERT_TRUE(read_vector<int>(output) == expected);
 }
 
@@ -148,7 +155,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n2_c1_hw5_3x3_str2_max_pad1x2_2x3
 
     auto C = make_shared<op::Parameter>(element::f32, maxpool_shape);
     auto df = autodiff::backprop_function(f);
-    backend->call_with_validate(backend->compile(df), {output}, {input, ep});
+    auto handle = backend->compile(df);
+    backend->call_with_validate(handle, {output}, {input, ep});
     EXPECT_EQ(expected, read_vector<float>(output));
 }
 
@@ -184,7 +192,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw2x2)
 
     auto C = make_shared<op::Parameter>(element::i32, avgpool_shape);
     auto df = autodiff::backprop_function(f);
-    backend->call_with_validate(backend->compile(df), {output}, {input, ep});
+    auto handle = backend->compile(df);
+    backend->call_with_validate(handle, {output}, {input, ep});
     ASSERT_TRUE(read_vector<int>(output) == dataEp);
 }
 
@@ -217,7 +226,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw4x4)
 
     auto C = make_shared<op::Parameter>(element::i32, avgpool_shape);
     auto df = autodiff::backprop_function(f);
-    backend->call_with_validate(backend->compile(df), {output}, {input, ep});
+    auto handle = backend->compile(df);
+    backend->call_with_validate(handle, {output}, {input, ep});
     ASSERT_TRUE(read_vector<int>(output) == expected);
 }
 
@@ -316,7 +326,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4)
 
     auto C = make_shared<op::Parameter>(element::i32, avgpool_shape);
     auto df = autodiff::backprop_function(f);
-    backend->call_with_validate(backend->compile(df), {output}, {input, ep});
+    auto handle = backend->compile(df);
+    backend->call_with_validate(handle, {output}, {input, ep});
     ASSERT_TRUE(read_vector<int>(output) == expected);
 }
 
@@ -840,6 +851,30 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_dot_tensor3_tensor3)
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1}, .01f, .01f));
 }
+
+#ifdef AUTODIFF_BACKEND_CPU
+NGRAPH_TEST(${BACKEND_NAME}, backwards_batchdot_tensor2_tensor2)
+{
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    std::string backend_name = "${BACKEND_NAME}";
+
+    const std::string file_name("mxnet/batch_dot_3.json");
+    auto f = make_function_from_file(file_name);
+
+    test::Uniform<float> rng(-1.0f, 1.0f);
+    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> args;
+    for (shared_ptr<op::Parameter> param : f->get_parameters())
+    {
+        args.push_back(rng.initialize(backend->create_tensor<float>(param->get_shape())));
+    }
+
+    auto g = make_function_from_file(file_name);
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
+    pass_manager.run_passes(g);
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), f, g, args, .01f, .01f));
+}
+#endif
 
 NGRAPH_TEST(${BACKEND_NAME}, backwards_exp)
 {
@@ -1583,7 +1618,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n4c1h4w4_kh2kw2_sh1sw1)
 
     auto C = make_shared<op::Parameter>(element::f32, maxpool_shape);
     auto df = autodiff::backprop_function(f);
-    backend->call_with_validate(backend->compile(df), {output}, {input, ep});
+    auto handle = backend->compile(df);
+    backend->call_with_validate(handle, {output}, {input, ep});
     ASSERT_TRUE(read_vector<float>(output) == expected);
 }
 
@@ -1620,7 +1656,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n2c1h5w5_kh3kw3_sh2sw2)
 
     auto C = make_shared<op::Parameter>(element::f32, maxpool_shape);
     auto df = autodiff::backprop_function(f);
-    backend->call_with_validate(backend->compile(df), {output}, {input, ep});
+    auto handle = backend->compile(df);
+    backend->call_with_validate(handle, {output}, {input, ep});
     ASSERT_TRUE(read_vector<float>(output) == expected);
 }
 
@@ -1697,7 +1734,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_reverse_sequence_n3_c2_h3)
 
     auto C = make_shared<op::Parameter>(element::i32, shape);
     auto df = autodiff::backprop_function(f);
-    backend->call_with_validate(backend->compile(df), {da, db}, {a, b, c});
+    auto handle = backend->compile(df);
+    backend->call_with_validate(handle, {da, db}, {a, b, c});
     ASSERT_EQ(read_vector<int>(da), expected);
 }
 
@@ -1747,6 +1785,13 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_reverse_sequence_n4d2c3h2w2)
 
     auto C = make_shared<op::Parameter>(element::i32, shape);
     auto df = autodiff::backprop_function(f);
-    backend->call_with_validate(backend->compile(df), {da, db}, {a, b, c});
+    auto handle = backend->compile(df);
+    backend->call_with_validate(handle, {da, db}, {a, b, c});
     ASSERT_EQ(read_vector<int>(da), expected);
 }
+
+// clang-format off
+#ifdef AUTODIFF_BACKEND_${BACKEND_NAME}
+#undef AUTODIFF_BACKEND_${BACKEND_NAME}
+#endif
+// clang-format on

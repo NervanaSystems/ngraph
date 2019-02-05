@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -53,8 +53,6 @@ namespace ngraph
         ///      (1 + 2) + (3 + 4) + (5 + 6) =
         ///      21~~~\text{(both dimensions (rows and columns) are eliminated)}
         /// \f]
-        ///
-        /// This is equivalent to Reduce where `arg_init` = 0 and `reduction_function` is \f$f(x,y) = x+y\f$.
         ///
         /// ## Parameters
         ///

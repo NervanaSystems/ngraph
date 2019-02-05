@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -311,7 +311,7 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_op(codegen::CodeWriter& writer
                                                      size_t reduce_rank)
 {
     auto stable_sum_lambda = [&]() {
-        writer << "input_i = __expf(input_i - r_max);\n";
+        writer << "input_i = exp(input_i - r_max);\n";
         writer << "y = input_i - c;\n";
         writer << "t = r_sum + y;\n";
         writer << "c = (t - r_sum) - y;\n";
@@ -321,7 +321,7 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_op(codegen::CodeWriter& writer
     auto max_lambda = [&]() { writer << "r_max = r_max > input_i ? r_max : input_i;\n"; };
 
     auto divide_lambda = [&]() {
-        writer << "input_i = __expf(input_i - r_max) / r_sum;\n";
+        writer << "input_i = exp(input_i - r_max) / r_sum;\n";
         writer << "out[reduce_idx] = input_i;\n";
     };
     writer << runtime::gpu::nvrtc::helpers();
@@ -537,7 +537,7 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(
     };
 
     auto stable_sum_lambda = [&]() {
-        writer << "input_i = __expf(input_i - r_max);\n";
+        writer << "input_i = exp(input_i - r_max);\n";
         writer << "y = input_i - c;\n";
         writer << "t = r_sum + y;\n";
         writer << "c = (t - r_sum) - y;\n";
@@ -547,7 +547,7 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(
     auto max_lambda = [&]() { writer << "r_max = r_max > input_i ? r_max : input_i;\n"; };
 
     auto divide_lambda = [&]() {
-        writer << "input_i = __expf(input_i - r_max) / r_sum;\n";
+        writer << "input_i = exp(input_i - r_max) / r_sum;\n";
         writer << "out[input_idx] = input_i;\n";
     };
 
@@ -1500,63 +1500,6 @@ void runtime::gpu::CudaKernelBuilder::get_reverse_op(codegen::CodeWriter& writer
             }
             writer.block_end();
             writer << "out[output_idx] = in[tid];\n";
-        }
-        writer.block_end();
-    }
-    writer.block_end();
-}
-
-void runtime::gpu::CudaKernelBuilder::get_reduce_window_op(
-    codegen::CodeWriter& writer,
-    const std::string& name,
-    const std::string& op,
-    const std::vector<std::string>& data_types,
-    const size_t rank)
-{
-    writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
-           << data_types[1] << "* out, int* input_strides, int* output_shape, int* "
-                               "reduce_window_shape, int* reduce_window_strides, size_t n)\n";
-    writer.block_begin();
-    {
-        writer << "const int tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
-        writer << "if (tid < n)\n";
-        writer.block_begin();
-        {
-            writer << "int output_idx = tid;\n";
-            writer << "int idx_init = 0; // result will be initial to in[idx_init]\n";
-            for (int i = static_cast<int>(rank) - 1; i >= 0; i--)
-            {
-                writer << "int output_idx_" << i << " = output_idx % output_shape[" << i << "];\n";
-                writer << "int input_idx_start_for_axis_" << i << " = output_idx_" << i
-                       << " * reduce_window_strides[" << i << "];\n";
-                writer << "int input_idx_end_for_axis_" << i << " = input_idx_start_for_axis_" << i
-                       << " + reduce_window_shape[" << i << "];\n";
-                writer << "idx_init += input_idx_start_for_axis_" << i << " * input_strides[" << i
-                       << "];\n";
-                writer << "output_idx /= output_shape[" << i << "];\n";
-            }
-
-            writer << data_types[1] << " result = in[idx_init];\n";
-
-            for (int i = 0; i < rank; i++)
-            {
-                writer << "for(int i_" << i << " = input_idx_start_for_axis_" << i << "; i_" << i
-                       << " < input_idx_end_for_axis_" << i << "; i_" << i << "++)\n";
-                writer.block_begin();
-            }
-
-            writer << "int input_idx = 0;\n";
-            for (int i = 0; i < rank; i++)
-            {
-                writer << "input_idx += i_" << i << " * input_strides[" << i << "];\n";
-            }
-            writer << "result = (input_idx == idx_init) ? result : " << op
-                   << "(result, in[input_idx]); // skip in[idx_init] in loop\n";
-            for (int i = 0; i < rank; i++)
-            {
-                writer.block_end();
-            }
-            writer << "out[tid] = result;\n";
         }
         writer.block_end();
     }

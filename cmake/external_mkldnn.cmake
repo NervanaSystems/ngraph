@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,6 +21,12 @@ include(ExternalProject)
 #------------------------------------------------------------------------------
 
 if(MKLDNN_INCLUDE_DIR AND MKLDNN_LIB_DIR)
+    if(NOT LINUX)
+        message(FATAL_ERROR "Unsupported platform for prebuilt mkl-dnn!")
+    endif()
+    if(NOT MKLML_LIB_DIR)
+        set(MKLML_LIB_DIR ${MKLDNN_LIB_DIR})
+    endif()
     ExternalProject_Add(
         ext_mkldnn
         DOWNLOAD_COMMAND ""
@@ -33,17 +39,17 @@ if(MKLDNN_INCLUDE_DIR AND MKLDNN_LIB_DIR)
     target_include_directories(libmkldnn SYSTEM INTERFACE ${MKLDNN_INCLUDE_DIR})
     target_link_libraries(libmkldnn INTERFACE
         ${MKLDNN_LIB_DIR}/libmkldnn.so
-        ${MKLDNN_LIB_DIR}/libmklml_intel.so
-        ${MKLDNN_LIB_DIR}/libiomp5.so
+        ${MKLML_LIB_DIR}/libmklml_intel.so
+        ${MKLML_LIB_DIR}/libiomp5.so
         )
 
-    install(DIRECTORY ${MKLDNN_LIB_DIR}/ DESTINATION ${NGRAPH_INSTALL_LIB})
+    install(FILES ${MKLDNN_LIB_DIR}/libmkldnn.so ${MKLML_LIB_DIR}/libmklml_intel.so ${MKLML_LIB_DIR}/libiomp5.so  DESTINATION ${NGRAPH_INSTALL_LIB})
     return()
 endif()
 
 # This section sets up MKL as an external project to be used later by MKLDNN
 
-set(MKLURLROOT "https://github.com/intel/mkl-dnn/releases/download/v0.17/")
+set(MKLURLROOT "https://github.com/intel/mkl-dnn/releases/download/v0.17.2/")
 set(MKLVERSION "2019.0.1.20180928")
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     set(MKLPACKAGE "mklml_lnx_${MKLVERSION}.tgz")
@@ -56,7 +62,7 @@ elseif (APPLE)
 elseif (WIN32)
     set(MKLPACKAGE "mklml_win_${MKLVERSION}.zip")
     set(MKL_SHA1_HASH 97f01ab854d8ee88cc0429f301df84844d7cce6b)
-    set(MKL_LIBS mklml.dll libiomp5md.dll)
+    set(MKL_LIBS mklml.lib libiomp5md.lib)
 endif()
 set(MKLURL ${MKLURLROOT}${MKLPACKAGE})
 
@@ -78,19 +84,25 @@ set(MKL_SOURCE_DIR ${source_dir})
 add_library(libmkl INTERFACE)
 add_dependencies(libmkl ext_mkl)
 foreach(LIB ${MKL_LIBS})
-    target_link_libraries(libmkl INTERFACE ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${LIB})
+    if (WIN32)
+        list(APPEND TMP_PATHS ${EXTERNAL_PROJECTS_ROOT}/mkl/src/ext_mkl/lib/${LIB})
+    else()
+        list(APPEND TMP_PATHS ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${LIB})
+    endif()
 endforeach()
+set(MKL_LIBS ${TMP_PATHS})
+target_link_libraries(libmkl INTERFACE ${MKL_LIBS})
 
 set(MKLDNN_GIT_REPO_URL https://github.com/intel/mkl-dnn)
-set(MKLDNN_GIT_TAG "830a100")
+set(MKLDNN_GIT_TAG "b9ce57a")
 if(NGRAPH_LIB_VERSIONING_ENABLE)
     set(MKLDNN_PATCH_FILE mkldnn.patch)
 else()
     set(MKLDNN_PATCH_FILE mkldnn_no_so_link.patch)
 endif()
+set(MKLDNN_LIBS ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libmkldnn${CMAKE_SHARED_LIBRARY_SUFFIX})
 
-# The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
-if(${CMAKE_VERSION} VERSION_LESS 3.2)
+if (WIN32)
     ExternalProject_Add(
         ext_mkldnn
         DEPENDS ext_mkl
@@ -106,16 +118,16 @@ if(${CMAKE_VERSION} VERSION_LESS 3.2)
         PATCH_COMMAND patch -p1 --forward --reject-file=- -i ${CMAKE_SOURCE_DIR}/cmake/${MKLDNN_PATCH_FILE} || exit 0
         # Uncomment below with any in-flight MKL-DNN patches
         # PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
+        CMAKE_GENERATOR ${CMAKE_GENERATOR}
+        CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
+        CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
         CMAKE_ARGS
+            ${NGRAPH_FORWARD_CMAKE_ARGS}
             -DWITH_TEST=FALSE
             -DWITH_EXAMPLE=FALSE
-            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-            -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-            -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
             -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/mkldnn
             -DMKLDNN_ENABLE_CONCURRENT_EXEC=ON
             -DMKLROOT=${MKL_ROOT}
-            "-DARCH_OPT_FLAGS=-march=${NGRAPH_TARGET_ARCH} -mtune=${NGRAPH_TARGET_ARCH}"
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/stamp"
         DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/download"
@@ -131,6 +143,7 @@ else()
         GIT_REPOSITORY ${MKLDNN_GIT_REPO_URL}
         GIT_TAG ${MKLDNN_GIT_TAG}
         UPDATE_COMMAND ""
+        CONFIGURE_COMMAND
         # Patch gets mad if it applied for a second time so:
         #    --forward tells patch to ignore if it has already been applied
         #    --reject-file tells patch to not right a reject file
@@ -139,12 +152,13 @@ else()
         PATCH_COMMAND patch -p1 --forward --reject-file=- -i ${CMAKE_SOURCE_DIR}/cmake/${MKLDNN_PATCH_FILE} || exit 0
         # Uncomment below with any in-flight MKL-DNN patches
         # PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
+        CMAKE_GENERATOR ${CMAKE_GENERATOR}
+        CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
+        CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
         CMAKE_ARGS
+            ${NGRAPH_FORWARD_CMAKE_ARGS}
             -DWITH_TEST=FALSE
             -DWITH_EXAMPLE=FALSE
-            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-            -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-            -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
             -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/mkldnn
             -DMKLDNN_ENABLE_CONCURRENT_EXEC=ON
             -DMKLROOT=${MKL_ROOT}
@@ -155,7 +169,6 @@ else()
         SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/src"
         BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/build"
         INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn"
-        BUILD_BYPRODUCTS "${EXTERNAL_PROJECTS_ROOT}/mkldnn/include/mkldnn.hpp"
         EXCLUDE_FROM_ALL TRUE
         )
 endif()
@@ -176,9 +189,15 @@ add_custom_command(TARGET ext_mkldnn POST_BUILD
 add_library(libmkldnn INTERFACE)
 add_dependencies(libmkldnn ext_mkldnn)
 target_include_directories(libmkldnn SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/mkldnn/include)
-target_link_libraries(libmkldnn INTERFACE
-    ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libmkldnn${CMAKE_SHARED_LIBRARY_SUFFIX}
+if (WIN32)
+    target_link_libraries(libmkldnn INTERFACE
+    ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/mkldnn.lib
     libmkl
     )
-
+else()
+    target_link_libraries(libmkldnn INTERFACE
+    ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${CMAKE_SHARED_LIBRARY_PREFIX}mkldnn${CMAKE_SHARED_LIBRARY_SUFFIX}
+    libmkl
+    )
+endif()
 install(DIRECTORY ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/ DESTINATION ${NGRAPH_INSTALL_LIB} OPTIONAL)

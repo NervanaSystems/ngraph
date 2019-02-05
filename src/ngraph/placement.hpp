@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,15 +26,6 @@
 
 namespace ngraph
 {
-    class Function;
-    class Node;
-
-    namespace op
-    {
-        class Parameter;
-        class Result;
-    }
-
     enum class Placement
     {
         DEFAULT,
@@ -46,9 +37,4 @@ namespace ngraph
     };
 
     std::string placement_to_string(Placement placement);
-
-    // Split function to function(s) with unique placement
-    std::pair<std::vector<std::shared_ptr<Function>>,
-              std::unordered_map<std::shared_ptr<op::Parameter>, std::shared_ptr<op::Result>>>
-        split_function_by_placement(const std::shared_ptr<Function>& f);
 }

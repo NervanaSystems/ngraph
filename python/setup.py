@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -106,7 +106,8 @@ def parallelCCompile(
         self._compile(obj, src, ext, cc_args, extra_postargs, pp_opts)
 
     # convert to list, imap is evaluated on-demand
-    list(multiprocessing.pool.ThreadPool().imap(_single_compile, objects))
+    pool = multiprocessing.pool.ThreadPool()
+    list(pool.imap(_single_compile, objects))
     return objects
 
 
@@ -152,6 +153,7 @@ sources = [
     'pyngraph/parameter_vector.cpp',
     'pyngraph/pyngraph.cpp',
     'pyngraph/util.cpp',
+    'pyngraph/result_vector.cpp',
     'pyngraph/ops/util/arithmetic_reduction.cpp',
     'pyngraph/ops/util/binary_elementwise_comparison.cpp',
     'pyngraph/ops/util/op_annotations.cpp',
@@ -203,7 +205,6 @@ sources = [
     'pyngraph/ops/pad.cpp',
     'pyngraph/ops/parameter.cpp',
     'pyngraph/ops/power.cpp',
-    'pyngraph/ops/reduce.cpp',
     'pyngraph/ops/regmodule_pyngraph_op.cpp',
     'pyngraph/ops/relu.cpp',
     'pyngraph/ops/replace_slice.cpp',
@@ -221,11 +222,11 @@ sources = [
     'pyngraph/ops/tanh.cpp',
     'pyngraph/ops/topk.cpp',
     'pyngraph/ops/allreduce.cpp',
-    'pyngraph/ops/function_call.cpp',
     'pyngraph/ops/get_output_element.cpp',
     'pyngraph/ops/min.cpp',
     'pyngraph/ops/batch_norm.cpp',
     'pyngraph/ops/softmax.cpp',
+    'pyngraph/ops/result.cpp',
     'pyngraph/runtime/backend.cpp',
     'pyngraph/runtime/regmodule_pyngraph_runtime.cpp',
     'pyngraph/runtime/tensor.cpp',

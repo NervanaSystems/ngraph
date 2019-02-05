@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 #include <map>
 #include <memory>
 
+#include "cpu_backend_visibility.h"
 #include "ngraph/runtime/backend.hpp"
 
 namespace ngraph
@@ -30,7 +31,7 @@ namespace ngraph
             class CPU_ExternalFunction;
             class CPU_CallFrame;
 
-            class CPU_Backend : public runtime::Backend
+            class CPU_BACKEND_API CPU_Backend : public runtime::Backend
             {
             public:
                 std::shared_ptr<CPU_CallFrame>
@@ -57,6 +58,9 @@ namespace ngraph
                 void enable_performance_data(std::shared_ptr<Function> func, bool enable) override;
                 std::vector<PerformanceCounter>
                     get_performance_data(std::shared_ptr<Function> func) const override;
+
+                bool is_supported(const Node& node) const override;
+                bool is_supported_property(const Property prop) const override;
 
             private:
                 class FunctionInstance

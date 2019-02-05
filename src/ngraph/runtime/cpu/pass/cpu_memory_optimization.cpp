@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -235,11 +235,30 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
             auto upper_bounds = slice->get_upper_bounds();
 
             auto arg = slice->get_argument(0);
-            if (std::dynamic_pointer_cast<op::Constant>(arg) ||
-                std::dynamic_pointer_cast<op::Parameter>(arg))
+
+            if (arg->is_constant())
             {
                 NGRAPH_DEBUG << "cpu_memory_optimization: " << arg->get_name()
-                             << ": constant or parameter, no in place slice";
+                             << ": constant, no in place slice";
+                continue;
+            }
+
+            bool no_in_place_slice = false;
+            if (arg->is_parameter())
+            {
+                for (auto user : slice->get_users())
+                {
+                    if (user->is_output())
+                    {
+                        NGRAPH_DEBUG << "cpu_memory_optimization: slice between function input and "
+                                        "output, no in place slice";
+                        no_in_place_slice = true;
+                        break;
+                    }
+                }
+            }
+            if (no_in_place_slice)
+            {
                 continue;
             }
 
@@ -279,6 +298,16 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
             {
                 NGRAPH_DEBUG << "cpu_memory_optimization: input format is different from "
                                 "output format, no in place slice";
+                continue;
+            }
+
+            const auto& dtype = slice->get_input_element_type(0);
+            if (runtime::cpu::mkldnn_utils::get_mkldnn_data_type(dtype) ==
+                mkldnn::memory::data_type::data_undef)
+            {
+                NGRAPH_DEBUG << "cpu_memory_optimization: "
+                             << slice->get_input_element_type(0).c_type_string()
+                             << " isn't supported, no in place slice";
                 continue;
             }
 

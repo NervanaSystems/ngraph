@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ public:
     std::shared_ptr<ngraph::runtime::Tensor> create_tensor(
         const ngraph::element::Type& element_type, const Shape& shape, void* memory_pointer) final;
 
-    bool compile(std::shared_ptr<Function> func) final;
+    std::shared_ptr<Function> compile(std::shared_ptr<Function> func) final;
 
     bool call(std::shared_ptr<Function> func,
               const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,

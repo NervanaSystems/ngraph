@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -60,15 +60,15 @@ namespace ngraph
                 }
 
                 template <typename ElementType>
-                void pad(const void* arg0,
-                         const void* arg1,
-                         void* out,
-                         const Shape& arg0_shape,
-                         const Shape& out_shape,
-                         const Shape& padding_below,
-                         const Shape& padding_above,
-                         const Shape& padding_interior,
-                         int arena)
+                void pad_ref(const void* arg0,
+                             const void* arg1,
+                             void* out,
+                             const Shape& arg0_shape,
+                             const Shape& out_shape,
+                             const Shape& padding_below,
+                             const Shape& padding_above,
+                             const Shape& padding_interior,
+                             int arena)
                 {
                     reference::pad(static_cast<const ElementType*>(arg0),
                                    static_cast<const ElementType*>(arg1),
