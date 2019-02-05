@@ -114,11 +114,12 @@ namespace ngraph
 
                 std::vector<std::string>& to_lower_case(std::vector<std::string>&& vs)
                 {
-                    std::transform(std::begin(vs), std::end(vs), std::begin(vs),
-                        [](std::string& s) { return to_lower_case(s); });
+                    std::transform(std::begin(vs),
+                                   std::end(vs),
+                                   std::begin(vs),
+                                   [](std::string& s) { return to_lower_case(s); });
                     return vs;
                 }
-
 
                 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ INPUT NODES PARSING ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -260,9 +261,18 @@ namespace ngraph
 
                 LSTMDirection getLSTMDirection(const std::string& s)
                 {
-                    if (s == "forward") { return LSTMDirection::LSTM_DIRECTION_FORWARD; }
-                    if (s == "reverse") { return LSTMDirection::LSTM_DIRECTION_REVERSE; }
-                    if (s == "bidirectional") { return LSTMDirection::LSTM_DIRECTION_BIDIRECTIONAL; }
+                    if (s == "forward")
+                    {
+                        return LSTMDirection::LSTM_DIRECTION_FORWARD;
+                    }
+                    if (s == "reverse")
+                    {
+                        return LSTMDirection::LSTM_DIRECTION_REVERSE;
+                    }
+                    if (s == "bidirectional")
+                    {
+                        return LSTMDirection::LSTM_DIRECTION_BIDIRECTIONAL;
+                    }
                     return LSTMDirection::LSTM_DIRECTION_UNKNOWN;
                 }
 
@@ -272,8 +282,8 @@ namespace ngraph
                         : m_hidden_size{node.get_attribute_value<std::int64_t>("hidden_size")}
                         , m_clip_threshold{node.get_attribute_value<float>("clip", 0.f)}
                         , m_activations{to_lower_case(
-                                node.get_attribute_value<std::vector<std::string>>(
-                                    "activations", {"sigmoid", "tanh", "tanh"}))}
+                              node.get_attribute_value<std::vector<std::string>>(
+                                  "activations", {"sigmoid", "tanh", "tanh"}))}
                         , m_input_forget{static_cast<bool>(
                               node.get_attribute_value<std::int64_t>("input_forget", 0))}
                     {
@@ -282,7 +292,8 @@ namespace ngraph
                             node.get_attribute_value<std::string>("direction", {"forward"}))};
 
                         ASSERT_VALID_ARGUMENT(node,
-                            getLSTMDirection(direction) != LSTMDirection::LSTM_DIRECTION_UNKNOWN)
+                                              getLSTMDirection(direction) !=
+                                                  LSTMDirection::LSTM_DIRECTION_UNKNOWN)
                             << "Provided attribute \"direction\" value is incorrect: " << direction;
                         m_direction = getLSTMDirection(direction);
                     }
@@ -295,6 +306,176 @@ namespace ngraph
                     bool m_input_forget;
                 };
 
+                class LSTMForward
+                {
+                public:
+                    explicit LSTMForward(std::shared_ptr<ngraph::Node> X,
+                                         std::shared_ptr<ngraph::Node> W,
+                                         std::shared_ptr<ngraph::Node> R,
+                                         std::shared_ptr<ngraph::Node> B,
+                                         std::shared_ptr<ngraph::Node> P,
+                                         std::shared_ptr<ngraph::Node> initial_h,
+                                         std::shared_ptr<ngraph::Node> initial_c,
+                                         rnn::ActivationFunction activation_f,
+                                         rnn::ActivationFunction activation_g,
+                                         rnn::ActivationFunction activation_h,
+                                         bool input_forget = false,
+                                         float clip_threshold = 0.f)
+                        : m_X{X}
+                        // Since we have forward LSTM we can squeeze `num_directions` axis from inputs.
+                        , m_W{reshape::squeeze(W)}
+                        , m_R{reshape::squeeze(R)}
+                        , m_B{reshape::squeeze(B)}
+                        , m_P{reshape::squeeze(P)}
+                        , m_initial_h{reshape::squeeze(initial_h)}
+                        , m_initial_c{reshape::squeeze(initial_c)}
+                        , m_activation_f{activation_f}
+                        , m_activation_g{activation_g}
+                        , m_activation_h{activation_h}
+                        , m_input_forget{input_forget}
+                        , m_clip_threshold{clip_threshold}
+                    {
+                    }
+
+                    NodeVector run()
+                    {
+                        // ------ VARIABLE'S NAMES AND ACRONYM DEFINITIONS ------
+                        // The names used below are analogous to the one used in ONNX documentation.
+                        //
+                        // ------ INPUTS ------
+                        // X - The input tensor. [seq_length, batch_size, input_size]
+                        // W - The weight tensor. [num_directions, 4*hidden_size, input_size]
+                        // R - The recurrence weight tensor. [num_directions, 4*hidden_size, hidden_size]
+                        // B - The bias tensor for input gate. [num_directions, 8*hidden_size]
+                        // P - The weight tensor forr peepholes. [num_directions, 3*hidde_size]
+                        // ------ ACRONYMS ------
+                        // i - input gate
+                        // o - output gate
+                        // f - forget gate
+                        // c - cell gate
+                        // t - time step (t-1 means previous time step)
+                        // ------ VARIABLE NAMES ------
+                        // W       - W parameter weight matrix for input, output, forget, and
+                        //           cell gates.
+                        // R       - R recurrence weight matrix for input, output, forget, and
+                        //           cell gates.
+                        // Wb      - W bias vectors for input, output, forget, and cell gates.
+                        // Rb      - R bias vectors for input, output, forget, and cell gates.
+                        // b_W_R   - Bias vectors for input, output, forget, and cell gates.
+                        //           Concatenation of `[Wb, Rb]`.
+                        // p_[iof] - P peephole weight vector for respectively: input, output,
+                        //           and forget gates.
+                        // H_t     - Hidden state vector at current time step.
+                        // C_t     - Cell state vector at current time step.
+                        // h_list  - The list of hidden states at all processed time steps.
+                        //
+                        // Xt_W    - Input sequence multiplied by weights tensor at current time
+                        //           step.
+                        // Ht_R    - Hidden state multiplied by weights tensor at current time step.
+
+                        NodeVector p_iof = reshape::split(m_P, 3);
+                        const auto& p_i = p_iof.at(0);
+                        const auto& p_o = p_iof.at(1);
+                        const auto& p_f = p_iof.at(2);
+                        NodeVector h_list;
+
+                        NodeVector b_W_R = reshape::split(m_B, 2);
+                        std::shared_ptr<ngraph::Node> bias = b_W_R.at(0) + b_W_R.at(1);
+                        std::shared_ptr<ngraph::Node> H_t = m_initial_h;
+                        std::shared_ptr<ngraph::Node> C_t = m_initial_c;
+
+                        NodeVector in_seqs = reshape::split(m_X, m_X->get_shape().at(0));
+
+                        for (auto& in_x : in_seqs)
+                        {
+                            // remove first empty dim, after above split.
+                            in_x = reshape::squeeze(in_x);
+                        }
+
+                        for (const auto& in_x : in_seqs)
+                        {
+                            // (.) - Denotes element-wise multiplication.
+                            // *   - Denotes dot product.
+
+                            // Xt*(W^T) -- for [iofc] gates.
+                            auto Xt_W =
+                                std::make_shared<ngraph::op::Dot>(in_x, reshape::transpose(m_W));
+                            // Ht-1*(R^T)  -- for [iofc] gates.
+                            auto Ht_R =
+                                std::make_shared<ngraph::op::Dot>(H_t, reshape::transpose(m_R));
+                            // Xt*(W^T) + Ht-1*(R^T) + Wb + Rb  -- for [iofc] gates.
+                            auto gates = add(Xt_W, add(Ht_R, bias));
+
+                            NodeVector split_gates = reshape::split(gates, 4, -1);
+                            auto i = split_gates.at(0);
+                            auto o = split_gates.at(1);
+                            auto f = split_gates.at(2);
+                            auto c = split_gates.at(3);
+
+                            // f(Xt*(Wi^T) + Ht-1*(Ri^T) + Pi (.) Ct-1 + Wbi + Rbi)
+                            i = m_activation_f(clip(add(i, mul(p_i, C_t)), m_clip_threshold));
+                            if (m_input_forget)
+                            {
+                                f = sub(ngraph::op::Constant::create(
+                                            i->get_element_type(),
+                                            i->get_shape(),
+                                            std::vector<float>(shape_size(i->get_shape()), 0.f)),
+                                        i);
+                            }
+                            else
+                            {
+                                // f(Xt*(Wf^T) + Ht-1*(Rf^T) + Pf (.) Ct-1 + Wbf + Rbf)
+                                f = m_activation_f(clip(add(f, mul(p_f, C_t)), m_clip_threshold));
+                            }
+                            // ft (.) Ct-1 + it (.) ct
+                            auto C =
+                                add(mul(f, C_t), mul(i, m_activation_g(clip(c, m_clip_threshold))));
+                            // f(Xt*(Wo^T) + Ht-1*(Ro^T) + Po (.) Ct + Wbo + Rbo)
+                            o = m_activation_f(clip(add(o, mul(p_o, C)), m_clip_threshold));
+                            // ot (.) h(Ct)
+                            auto H = mul(o, m_activation_h(C));
+                            h_list.push_back(H);
+                            H_t = H;
+                            C_t = C;
+                        }
+                        // The tensor that concats all the intermediate output values of the hidden.
+                        // It has shape [seq_length, batch_size, hidden_size]
+                        NodeVector exp_h_list;
+                        for (const auto& ht : h_list)
+                        {
+                            // Expand tensors with empty outermost dim, so we can later concatenate them.
+                            exp_h_list.push_back(reshape::expand_dims(ht));
+                        }
+                        std::shared_ptr<ngraph::Node> Y{
+                            std::make_shared<ngraph::op::Concat>(exp_h_list, 0)};
+
+                        // Expand Y so that it has expected shape:
+                        // [seq_length, num_directions, batch_size, hidden_size]
+                        Y = reshape::expand_dims(Y, 1);
+
+                        // expand C_t so that it has expected shape:
+                        // [num_directions, batch_size, hidden_size]
+                        auto Y_c = reshape::expand_dims(C_t);
+                        return {Y, exp_h_list.back(), Y_c};
+                    }
+
+                private:
+                    std::shared_ptr<ngraph::Node> m_X;
+                    std::shared_ptr<ngraph::Node> m_W;
+                    std::shared_ptr<ngraph::Node> m_R;
+                    std::shared_ptr<ngraph::Node> m_B;
+                    std::shared_ptr<ngraph::Node> m_P;
+                    std::shared_ptr<ngraph::Node> m_initial_h;
+                    std::shared_ptr<ngraph::Node> m_initial_c;
+                    rnn::ActivationFunction m_activation_f;
+                    rnn::ActivationFunction m_activation_g;
+                    rnn::ActivationFunction m_activation_h;
+                    // For coupling input and forget gates.
+                    bool m_input_forget;
+                    // For clipping cell input in the range [-clip_threshold, clip_threshold].
+                    float m_clip_threshold;
+                };
+
             } // anonymous namespace
 
             namespace set_1
@@ -304,26 +485,6 @@ namespace ngraph
                     LSTMNgInputMap input_map{node};
                     LSTMAttributes attributes{node};
 
-                    if (attributes.m_direction == LSTMDirection::LSTM_DIRECTION_FORWARD)
-                    {
-                        // Since we have forward LSTM we can squeeze `num_directions` axis from inputs.
-                        for (auto& ng_in : input_map)
-                        {
-                            if (ng_in.first != LSTMInput::LSTM_INPUT_X &&
-                                ng_in.first != LSTMInput::LSTM_INPUT_SEQ_LENGTHS)
-                            {
-                                ASSERT_VALID_ARGUMENT(node, ng_in.second->get_shape().at(0) == 1)
-                                    << "Input: { " << to_str(ng_in.first)
-                                    << " } first axis has size different "
-                                       "from 1, while direction attribute set to 'forward'.";
-                                ng_in.second = reshape::squeeze(ng_in.second);
-                            }
-                        }
-                    }
-
-                    // For clipping cell input in the range [-clip_threshold, clip_threshold]
-                    float clip_threshold = attributes.m_clip_threshold;
-
                     rnn::ActivationFunction activation_f =
                         rnn::get_activation_func_by_name(attributes.m_activations.at(0));
                     rnn::ActivationFunction activation_g =
@@ -331,125 +492,38 @@ namespace ngraph
                     rnn::ActivationFunction activation_h =
                         rnn::get_activation_func_by_name(attributes.m_activations.at(2));
 
-                    // ------ VARIABLE'S NAMES AND ACRONYM DEFINITIONS ------
-                    // The names used below are analogous to the one used in ONNX documentation.
-                    //
-                    // ------ INPUTS ------
-                    // X - The input tensor. [seq_length, batch_size, input_size]
-                    // W - The weight tensor. [num_directions, 4*hidden_size, input_size]
-                    // R - The recurrence weight tensor. [num_directions, 4*hidden_size, hidden_size]
-                    // B - The bias tensor for input gate. [num_directions, 8*hidden_size]
-                    // P - The weight tensor forr peepholes. [num_directions, 3*hidde_size]
-                    // ------ ACRONYMS ------
-                    // i - input gate
-                    // o - output gate
-                    // f - forget gate
-                    // c - cell gate
-                    // t - time step (t-1 means previous time step)
-                    // ------ VARIABLE NAMES ------
-                    // W       - W parameter weight matrix for input, output, forget, and
-                    //           cell gates.
-                    // R       - R recurrence weight matrix for input, output, forget, and
-                    //           cell gates.
-                    // Wb      - W bias vectors for input, output, forget, and cell gates.
-                    // Rb      - R bias vectors for input, output, forget, and cell gates.
-                    // b_W_R   - Bias vectors for input, output, forget, and cell gates.
-                    //           Concatenation of `[Wb, Rb]`.
-                    // p_[iof] - P peephole weight vector for respectively: input, output,
-                    //           and forget gates.
-                    // H_t     - Hidden state vector at current time step.
-                    // C_t     - Cell state vector at current time step.
-                    // h_list  - The list of hidden states at all processed time steps.
-                    //
-                    // Xt_W    - Input sequence multiplied by weights tensor at current time
-                    //           step.
-                    // Ht_R    - Hidden state multiplied by weights tensor at current time step.
+                    NodeVector results;
 
-                    NodeVector p_iof = reshape::split(input_map.at(LSTMInput::LSTM_INPUT_P), 3);
-                    const auto& p_i = p_iof.at(0);
-                    const auto& p_o = p_iof.at(1);
-                    const auto& p_f = p_iof.at(2);
-                    std::shared_ptr<ngraph::Node> H_t{input_map.at(LSTMInput::LSTM_INPUT_INIT_H)};
-                    std::shared_ptr<ngraph::Node> C_t{input_map.at(LSTMInput::LSTM_INPUT_INIT_C)};
-                    NodeVector h_list;
-
-                    NodeVector b_W_R = reshape::split(input_map.at(LSTMInput::LSTM_INPUT_B), 2);
-                    std::shared_ptr<ngraph::Node> bias = b_W_R.at(0) + b_W_R.at(1);
-                    NodeVector in_seqs =
-                        reshape::split(input_map.at(LSTMInput::LSTM_INPUT_X),
-                                       input_map.at(LSTMInput::LSTM_INPUT_X)->get_shape().at(0));
-                    for (auto& in_x : in_seqs)
-                    {
-                        // remove first empty dim, after above split.
-                        in_x = reshape::squeeze(in_x);
-                    }
-
-                    for (const auto& in_x : in_seqs)
-                    {
-                        // (.) - Denotes element-wise multiplication.
-                        // *   - Denotes dot product.
-
-                        // Xt*(W^T) -- for [iofc] gates.
-                        auto Xt_W = std::make_shared<ngraph::op::Dot>(
-                            in_x, reshape::transpose(input_map.at(LSTMInput::LSTM_INPUT_W)));
-                        // Ht-1*(R^T)  -- for [iofc] gates.
-                        auto Ht_R = std::make_shared<ngraph::op::Dot>(
-                            H_t, reshape::transpose(input_map.at(LSTMInput::LSTM_INPUT_R)));
-                        // Xt*(W^T) + Ht-1*(R^T) + Wb + Rb  -- for [iofc] gates.
-                        auto gates = add(Xt_W, add(Ht_R, bias));
-
-                        NodeVector split_gates = reshape::split(gates, 4, -1);
-                        auto i = split_gates.at(0);
-                        auto o = split_gates.at(1);
-                        auto f = split_gates.at(2);
-                        auto c = split_gates.at(3);
-
-                        // f(Xt*(Wi^T) + Ht-1*(Ri^T) + Pi (.) Ct-1 + Wbi + Rbi)
-                        i = activation_f(clip(add(i, mul(p_i, C_t)), clip_threshold));
-                        if (attributes.m_input_forget)
-                        {
-                            f = sub(ngraph::op::Constant::create(
-                                        i->get_element_type(),
-                                        i->get_shape(),
-                                        std::vector<float>(shape_size(i->get_shape()), 0.f)),
-                                    i);
-                        }
-                        else
-                        {
-                            // f(Xt*(Wf^T) + Ht-1*(Rf^T) + Pf (.) Ct-1 + Wbf + Rbf)
-                            f = activation_f(clip(add(f, mul(p_f, C_t)), clip_threshold));
-                        }
-                        // ft (.) Ct-1 + it (.) ct
-                        auto C = add(mul(f, C_t), mul(i, activation_g(clip(c, clip_threshold))));
-                        // f(Xt*(Wo^T) + Ht-1*(Ro^T) + Po (.) Ct + Wbo + Rbo)
-                        o = activation_f(clip(add(o, mul(p_o, C)), clip_threshold));
-                        // ot (.) h(Ct)
-                        auto H = mul(o, activation_h(C));
-                        h_list.push_back(H);
-                        H_t = H;
-                        C_t = C;
-                    }
-                    // The tensor that concats all the intermediate output values of the hidden.
-                    // It has shape [seq_length, batch_size, hidden_size]
-                    NodeVector exp_h_list;
-                    for (const auto& ht : h_list)
-                    {
-                        // Expand tensors with empty outermost dim, so we can later concatenate them.
-                        exp_h_list.push_back(reshape::expand_dims(ht));
-                    }
-                    std::shared_ptr<ngraph::Node> Y{
-                        std::make_shared<ngraph::op::Concat>(exp_h_list, 0)};
-
-                    // Expand Y so that it has expected shape:
-                    // [seq_length, num_directions, batch_size, hidden_size]
                     if (attributes.m_direction == LSTMDirection::LSTM_DIRECTION_FORWARD)
                     {
-                        Y = reshape::expand_dims(Y, 1);
+                        LSTMForward lstm_fwd(input_map.at(LSTMInput::LSTM_INPUT_X),
+                                             input_map.at(LSTMInput::LSTM_INPUT_W),
+                                             input_map.at(LSTMInput::LSTM_INPUT_R),
+                                             input_map.at(LSTMInput::LSTM_INPUT_B),
+                                             input_map.at(LSTMInput::LSTM_INPUT_P),
+                                             input_map.at(LSTMInput::LSTM_INPUT_INIT_H),
+                                             input_map.at(LSTMInput::LSTM_INPUT_INIT_C),
+                                             activation_f,
+                                             activation_g,
+                                             activation_h,
+                                             attributes.m_input_forget,
+                                             attributes.m_clip_threshold);
+                        results = lstm_fwd.run();
+                    }
+                    if (attributes.m_direction == LSTMDirection::LSTM_DIRECTION_REVERSE)
+                    {
+                        // LSTMForward lstm_reversed();
+                        // results = lstm_reversed.run();
+                    }
+                    if (attributes.m_direction == LSTMDirection::LSTM_DIRECTION_BIDIRECTIONAL)
+                    {
+                        // LSTMForward lstm_fwd();
+                        // LSTMForward lstm_reversed();
+                        // NodeVector fwd_results{lstm_fwd.run()};
+                        // NodeVector rev_results{lstm_fwd.run()};
                     }
 
-                    // expand C_t so that it has expected shape: [num_directions, batch_size, hidden_size]
-                    auto Y_c = reshape::expand_dims(C_t);
-                    return {Y, exp_h_list.back(), Y_c};
+                    return results;
                 }
             } // namespace set_1
 
