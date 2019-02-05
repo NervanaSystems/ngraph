@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include <cstring>
+#include <fstream>
 #include <vector>
 
 #include <gtest/gtest.h>
@@ -631,4 +632,84 @@ TEST(onnxifi, init_backend_invalid_pointer)
         ::onnxStatus status{::onnxInitBackend(id, nullptr, nullptr)};
         EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_POINTER);
     }
+}
+
+// ===============================================[ onnxReleaseBackend ]=======
+
+namespace
+{
+    std::string get_backend_name(::onnxBackendID id)
+    {
+        std::size_t info_value_size{g_default_info_value_size};
+        std::vector<char> info_value(g_default_info_value_size);
+        ::onnxStatus status{
+            ::onnxGetBackendInfo(id, ONNXIFI_BACKEND_NAME, info_value.data(), &info_value_size)};
+        if (status == ONNXIFI_STATUS_FALLBACK)
+        {
+            info_value.resize(info_value_size);
+            status =
+                ::onnxGetBackendInfo(id, ONNXIFI_BACKEND_NAME, info_value.data(), &info_value_size);
+        }
+        if (status != ONNXIFI_STATUS_SUCCESS)
+        {
+            throw error::status{status};
+        }
+        return {info_value.data()};
+    }
+
+    template <bool IgnoreNOP>
+    class Basic_InitializedBackends : public std::vector<::onnxBackend>
+    {
+    public:
+        Basic_InitializedBackends()
+        {
+            auto backend_ids = get_backend_ids();
+            for (const auto& backend_id : backend_ids)
+            {
+                if (IgnoreNOP)
+                {
+                    if (get_backend_name(backend_id) == "ngraph:NOP")
+                    {
+                        continue;
+                    }
+                }
+                ::onnxBackend backend;
+                ::onnxStatus status{::onnxInitBackend(backend_id, nullptr, &backend)};
+                if (status != ONNXIFI_STATUS_SUCCESS)
+                {
+                    throw error::status{status};
+                }
+                push_back(backend);
+            }
+        }
+
+        ~Basic_InitializedBackends()
+        {
+            for (const auto& backend : *this)
+            {
+                // Read the status, but ignore it. For some tests the backends
+                // might be already released.
+                ::onnxStatus(status) = ::onnxReleaseBackend(backend);
+            }
+        }
+    };
+
+    using InitializedBackends = Basic_InitializedBackends<false>;
+    using InitializedBackends_IgnoreNOP = Basic_InitializedBackends<true>;
+}
+
+TEST(onnxifi, release_backend)
+{
+    InitializedBackends backends{};
+    for (auto& backend : backends)
+    {
+        ::onnxStatus status{::onnxReleaseBackend(backend)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+TEST(onnxifi, release_backend_invalid_backend)
+{
+    ::onnxStatus status{::onnxReleaseBackend(nullptr)};
+    EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_BACKEND);
 }

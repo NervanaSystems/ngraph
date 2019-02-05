@@ -42,6 +42,8 @@ namespace ngraph
 
             static void get_backend_ids(::onnxBackendID* backend_ids, std::size_t* count);
             static void release_backend_id(::onnxBackendID backend_id);
+            static void release_backend(::onnxBackend backend);
+
             static void get_backend_info(::onnxBackendID backend_id,
                                          ::onnxBackendInfo info_type,
                                          void* info_value,
@@ -64,6 +66,7 @@ namespace ngraph
 
             void _get_backend_ids(::onnxBackendID* backend_ids, std::size_t* count) const;
             void _release_backend_id(::onnxBackendID id);
+            void _release_backend(::onnxBackend backend);
 
             Backend& _from_handle(::onnxBackend handle);
             Backend& _from_id(::onnxBackendID id);

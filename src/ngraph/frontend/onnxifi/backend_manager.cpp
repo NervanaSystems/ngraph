@@ -56,6 +56,11 @@ namespace ngraph
             instance()._release_backend_id(backend_id);
         }
 
+        void BackendManager::release_backend(::onnxBackend backend)
+        {
+            instance()._release_backend(backend);
+        }
+
         Backend& BackendManager::get_backend(::onnxBackend backend)
         {
             return instance()._from_handle(backend);
@@ -105,6 +110,31 @@ namespace ngraph
                 }
             }
             throw status::invalid_backend{};
+        }
+
+        void BackendManager::_release_backend(::onnxBackend backend)
+        {
+            std::lock_guard<std::mutex> lock{m_mutex};
+
+            if (backend == nullptr)
+            {
+                throw status::invalid_backend{};
+            }
+
+            auto it = std::begin(m_registered_backends);
+            for (; it != std::end(m_registered_backends); ++it)
+            {
+                if (it->second.get_handle() == backend)
+                {
+                    break;
+                }
+            }
+
+            if (it == std::end(m_registered_backends))
+            {
+                throw status::invalid_backend{};
+            }
+            /* TODO: deallocate the backend object, keep backend id */
         }
 
         void BackendManager::_release_backend_id(::onnxBackendID id)
