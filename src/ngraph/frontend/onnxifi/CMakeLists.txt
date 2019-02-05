@@ -17,6 +17,7 @@
 add_library(onnxifi-ngraph SHARED
     onnxifi.cpp
     backend.hpp
+    backend.cpp
     backend_manager.hpp
     backend_manager.cpp
     event.hpp
@@ -51,6 +52,10 @@ if(NGRAPH_LIB_VERSIONING_ENABLE)
         SOVERSION ${ONNXIFI_ABI_VERSION})
 endif()
 
+target_compile_definitions(onnxifi-ngraph PRIVATE
+    NGRAPH_VERSION="${NGRAPH_VERSION}" ONNX_VERSION="${ONNX_VERSION}"
+    ONNX_OPSET_VERSION="${ONNX_OPSET_VERSION}")
+    
 install(TARGETS onnxifi-ngraph DESTINATION ${NGRAPH_INSTALL_LIB})
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")

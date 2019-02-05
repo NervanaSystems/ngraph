@@ -42,6 +42,11 @@ namespace ngraph
 
             static void get_backend_ids(::onnxBackendID* backend_ids, std::size_t* count);
             static void release_backend_id(::onnxBackendID backend_id);
+            static void get_backend_info(::onnxBackendID backend_id,
+                                         ::onnxBackendInfo info_type,
+                                         void* info_value,
+                                         std::size_t* info_value_size);
+
             static Backend& get_backend(::onnxBackend backend);
 
         private:
