@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -99,17 +99,6 @@ namespace ngraph
         void validate_and_infer_elementwise_arithmetic();
         void validate_and_infer_elementwise_logical();
 
-        // Temporary hack while partial shape propagation is being implemented. If any input has
-        // dynamic shape or dynamic element type, sets all outputs to have a shape of dynamic
-        // rank and dynamic element type. Ops where we haven't yet implemented partial shape
-        // propagation can add this boilerplate at the top of their validate_and_infer_types():
-        //
-        //   if (validate_punt_if_dynamic())
-        //   {
-        //       return;
-        //   }
-        bool validate_punt_if_dynamic();
-
         Node(const std::string& node_type, const NodeVector& arguments, size_t output_size = 1);
 
         virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
@@ -140,6 +129,7 @@ namespace ngraph
         bool is_parameter() const;
         virtual bool is_output() const;
         virtual bool is_constant() const;
+        virtual bool is_op() const { return false; }
         virtual bool is_commutative() { return false; }
         size_t get_instance_id() const { return m_instance_id; }
         friend std::ostream& operator<<(std::ostream&, const Node&);
@@ -233,10 +223,10 @@ namespace ngraph
         void set_placement(Placement placement);
 
         /// Get device placement
-        size_t get_placement_size() const;
+        size_t get_placement_index() const;
 
         /// Set device placement
-        void set_placement(size_t placement);
+        void set_placement_index(size_t placement);
 
         /// Get input descriptor that is connected to src
         descriptor::Input* get_input_from(const std::shared_ptr<Node>& src);
@@ -250,6 +240,8 @@ namespace ngraph
         virtual std::shared_ptr<Node> get_default_value() const { return nullptr; }
         /// Use instance ids for comparison instead of memory addresses to improve determinism
         bool operator<(const Node& other) const { return m_instance_id < other.m_instance_id; }
+        static const size_t placement_invalid = -1;
+
     protected:
         std::set<std::shared_ptr<Node>> m_control_dependencies;
         void set_output_size(size_t n);
@@ -263,7 +255,7 @@ namespace ngraph
         std::deque<descriptor::Output> m_outputs;
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
         Placement m_placement = Placement::DEFAULT;
-        size_t m_placement_size = 0;
+        size_t m_placement_index = placement_invalid;
     };
 
     class NodeValidationError : public AssertionFailure

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2018 Intel Corporation
+// Copyright 2018-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/relu.hpp"
 
+#include "halide_generators.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/op/halide_op.hpp"
 
@@ -40,37 +41,13 @@ namespace ngraph
     {
         namespace cpu
         {
-            namespace halide
-            {
-                static const std::unordered_map<std::type_index,
-                                                std::function<Halide::Func(vector<Halide::Func>)>>
-                    generators{{TI(ngraph::op::Add),
-                                [](vector<Halide::Func> in) {
-                                    Halide::Var x;
-                                    Halide::Func func;
-                                    func(x) = in[0](x) + in[1](x);
-                                    return func;
-                                }},
-                               {TI(ngraph::op::Multiply),
-                                [](vector<Halide::Func> in) {
-                                    Halide::Var x;
-                                    Halide::Func func;
-                                    func(x) = in[0](x) * in[1](x);
-                                    return func;
-                                }},
-                               {TI(ngraph::op::Relu), [](vector<Halide::Func> in) {
-                                    Halide::Var x;
-                                    Halide::Func func;
-                                    func(x) = Halide::max(in[0](x), 0);
-                                    return func;
-                                }}};
-            }
-
             template <>
             void Builder::BUILDER_DECL(ngraph::runtime::cpu::op::HalideOp)
             {
                 const ngraph::runtime::cpu::op::HalideOp* hs =
                     static_cast<const ngraph::runtime::cpu::op::HalideOp*>(node);
+
+                const auto& generators = ngraph::runtime::cpu::halide::get_halide_generators();
 
                 auto& halide_functions = external_function->get_halide_functions();
                 auto& subgraph_params = external_function->get_subgraph_params();
@@ -79,7 +56,7 @@ namespace ngraph
 
                 for (const auto& op : hs->get_ops())
                 {
-                    if (!halide::generators.count(TI(*op)))
+                    if (!generators.count(TI(*op)))
                     {
                         throw ngraph_error("Invalid op in halide subgraph");
                     }
@@ -102,7 +79,7 @@ namespace ngraph
                         }
                     }
                     halide_functions[op->get_output_tensor_ptr()->get_name()] =
-                        halide::generators.at(TI(*op))(inputs);
+                        generators.at(TI(*op))(inputs);
                 }
 
                 auto out_tensor_name = hs->get_ops().back()->get_output_tensor_ptr()->get_name();

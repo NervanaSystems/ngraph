@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,29 +26,6 @@ namespace ngraph
         class Lstm : public Op
         {
         public:
-            // INPUTS:
-            // [0] - xt, input tensor of layout TNC, Shape{sequence length*batch_size, feature_size}
-            // [1] - initializer for the input weights matrix, used for the linear transformation of the inputs.
-            // [2] - ht_1, hidden state of shape (batch_size, feature_size)
-            // [3] - initializer for the recurrent weights matrix, used for the linear transformation of the recurrent state.
-            // [4] - Initializer for the bias vector w.r.to inputs.
-            // [5] - Initializer for the bias vector w.r.to hidden state
-            // [6] - ct_1, cell state of shape (batch_size, feature_size)
-
-            // OUTPUT VALUE: A tuple with the following structure:
-            //   [0] - ht, output tensor with shape (sequence_length*batch_size, num_hidden) .
-            //   [1] - ct, output recurrent state tensor with the same shape as cell state
-
-            // This version of the LSTM op is only used to simplify recurrent RNN cell(LSTM) fusion across
-            // horizontal time steps. This doesnt have mkldnn emitter code.
-            Lstm(std::shared_ptr<Node> input_xt_1,
-                 std::shared_ptr<Node> i2h_weights,
-                 std::shared_ptr<Node> hidden_state_ht_1,
-                 std::shared_ptr<Node> h2h_weights,
-                 std::shared_ptr<Node> i2h_bias,
-                 std::shared_ptr<Node> h2h_bias,
-                 std::shared_ptr<Node> cell_state_ct_1);
-
             // INPUTS:
             // [0] - {Xt} input tensor of layout TNC, Shape{sequence length*batch_size, feature_size}
             // [1] - recurrent state tensors {ht_1 | ct_1} of Shape{sequence length*batch_size, feature_size}
@@ -78,7 +55,6 @@ namespace ngraph
             size_t get_num_cell_states() const { return m_num_cell_states; }
             size_t get_direction() const { return m_direction; }
             size_t get_num_fused_layers() const { return m_num_fused_layers; }
-            size_t get_fused_inputs() const { return m_fused_inputs; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
@@ -94,7 +70,6 @@ namespace ngraph
             size_t m_num_cell_states;
             size_t m_direction;
             size_t m_num_fused_layers;
-            bool m_fused_inputs; // True if node gets fused inputs/weights
         };
     }
 }

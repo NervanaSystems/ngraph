@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ using namespace ngraph;
 
 void ngraph::default_logger_handler_func(const string& s)
 {
-    cout << s << endl;
+    cout << s + "\n";
 }
 
 LogHelper::LogHelper(LOG_TYPE type,

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,7 +52,8 @@ public:
     {
     }
 
-    void add_matcher(std::shared_ptr<pattern::Matcher> m) { m_matchers.push_back(m); }
+    bool is_enabled(std::shared_ptr<pattern::Matcher> m);
+    void add_matcher(std::shared_ptr<pattern::Matcher> m);
     virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
 
 private:

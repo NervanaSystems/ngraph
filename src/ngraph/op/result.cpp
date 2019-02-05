@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ void op::Result::validate_and_infer_types()
                                                         << " outputs (1 expected).";
 
     // always borrow the placement conf even the default one
-    set_placement(get_argument(0)->get_placement_size());
+    set_placement_index(get_argument(0)->get_placement_index());
     set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
 }
 

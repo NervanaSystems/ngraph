@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 #include <memory>
 
 #include "gtest/gtest.h"
+#include "misc.hpp"
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
@@ -57,7 +58,9 @@ public:
 static void compare_backends(std::shared_ptr<Function>& f1,
                              std::shared_ptr<Function>& f2,
                              const string backend1,
-                             const string backend2)
+                             const string backend2,
+                             float rtol = 1e-5,
+                             float atol = 1e-8)
 {
     test::Uniform<float> rng(-1.0f, 1.0f);
     vector<vector<float>> args;
@@ -72,7 +75,7 @@ static void compare_backends(std::shared_ptr<Function>& f1,
 
     for (size_t i = 0; i < f1_results.size(); i++)
     {
-        EXPECT_TRUE(test::all_close(f1_results.at(i), f2_results.at(i)));
+        EXPECT_TRUE(test::all_close(f1_results.at(i), f2_results.at(i), rtol, atol));
     }
 }
 
@@ -122,7 +125,7 @@ TEST(cpu_test, abc_tbb)
     bool use_tbb = (getenv("NGRAPH_CPU_USE_TBB") != nullptr);
     if (!use_tbb)
     {
-        setenv("NGRAPH_CPU_USE_TBB", "1", 1);
+        set_environment("NGRAPH_CPU_USE_TBB", "1", 1);
     }
 
     Shape shape{2, 2};
@@ -143,21 +146,22 @@ TEST(cpu_test, abc_tbb)
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
-    backend->call_with_validate(f, {result}, {a, b, c});
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a, b, c});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
 
-    backend->call_with_validate(f, {result}, {b, a, c});
+    backend->call_with_validate(handle, {result}, {b, a, c});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
 
-    backend->call_with_validate(f, {result}, {a, c, b});
+    backend->call_with_validate(handle, {result}, {a, c, b});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
 
     if (!use_tbb)
     {
-        unsetenv("NGRAPH_CPU_USE_TBB");
+        unset_environment("NGRAPH_CPU_USE_TBB");
     }
 }
 #endif // NGRAPH_TBB_ENABLE
@@ -211,7 +215,8 @@ TEST(cpu_test, mkldnn_layouts)
         expected_result.push_back(16.0f);
     }
 
-    backend->call_with_validate(f, {result}, {a, b});
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a, b});
 
     EXPECT_EQ(vector<float>{expected_result}, rv);
 }
@@ -639,4 +644,27 @@ TEST(cpu_test, mkldnn_layouts_eltwise)
     auto int_f = make_function();
     auto cpu_f = make_function();
     compare_backends(int_f, cpu_f, "INTERPRETER", "CPU");
+}
+
+TEST(cpu_test, convolution_large_padding)
+{
+    Shape input_shape{1, 1, 100, 100};
+    Shape filter_shape{1, 1, 3, 3};
+
+    auto make_function = [&]() {
+        auto input = std::make_shared<op::Parameter>(element::f32, input_shape);
+        auto filter = std::make_shared<op::Parameter>(element::f32, filter_shape);
+        auto conv = std::make_shared<op::Convolution>(input,
+                                                      filter,
+                                                      Strides{1, 1},
+                                                      Strides{9, 9},
+                                                      CoordinateDiff{9, 9},
+                                                      CoordinateDiff{9, 9});
+        auto f = make_shared<Function>(NodeVector{conv}, ParameterVector{input, filter});
+        return f;
+    };
+
+    auto int_f = make_function();
+    auto cpu_f = make_function();
+    compare_backends(int_f, cpu_f, "INTERPRETER", "CPU", 1e-4, 1e-4);
 }

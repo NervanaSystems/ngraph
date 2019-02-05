@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -39,8 +39,10 @@ set (SRC
     op/abs.cpp
     op/acos.cpp
     op/add.cpp
+    op/all.cpp
     op/allreduce.cpp
     op/and.cpp
+    op/any.cpp
     op/argmin.cpp
     op/argmax.cpp
     op/asin.cpp
@@ -58,6 +60,7 @@ set (SRC
     op/dequantize.cpp
     op/divide.cpp
     op/dot.cpp
+    op/embedding_lookup.cpp
     op/equal.cpp
     op/exp.cpp
     op/experimental/generate_mask.cpp
@@ -69,7 +72,6 @@ set (SRC
     op/experimental/quantized_concat.cpp
     op/experimental/shape_of.cpp
     op/floor.cpp
-    op/function_call.cpp
     op/get_output_element.cpp
     op/greater.cpp
     op/greater_eq.cpp
@@ -94,15 +96,12 @@ set (SRC
     op/power.cpp
     op/product.cpp
     op/quantize.cpp
-    op/reduce.cpp
-    op/reduce_window.cpp
     op/relu.cpp
     op/replace_slice.cpp
     op/reshape.cpp
     op/result.cpp
     op/reverse.cpp
     op/reverse_sequence.cpp
-    op/select_and_scatter.cpp
     op/select.cpp
     op/sigmoid.cpp
     op/sign.cpp
@@ -122,9 +121,9 @@ set (SRC
     op/util/binary_elementwise_comparison.cpp
     op/util/binary_elementwise_logical.cpp
     op/util/index_reduction.cpp
+    op/util/logical_reduction.cpp
     op/util/unary_elementwise_arithmetic.cpp
     partial_shape.cpp
-    pass/assign_placement.cpp
     pass/algebraic_simplification.cpp
     pass/common_function_collection.cpp
     pass/constant_folding.cpp
@@ -132,7 +131,6 @@ set (SRC
     pass/dump_sorted.cpp
     pass/get_output_element_elimination.cpp
     pass/graph_rewrite.cpp
-    pass/inliner.cpp
     pass/like_replacement.cpp
     pass/liveness.cpp
     pass/manager.cpp
@@ -142,8 +140,10 @@ set (SRC
     pass/nop_elimination.cpp
     pass/pass.cpp
     pass/pass_config.cpp
+    pass/prefix_reshape_elimination.cpp
     pass/propagate_cacheability.cpp
     pass/reshape_elimination.cpp
+    pass/reshape_sinking.cpp
     pass/zero_dim_tensor_elimination.cpp
     pass/validate_graph.cpp
     pass/visualize_tree.cpp
@@ -173,13 +173,15 @@ if(NGRAPH_DISTRIBUTED_ENABLE)
     list(APPEND SRC distributed.cpp)
 endif()
 
+configure_file(version.in.hpp version.hpp)
+
 add_library(ngraph SHARED ${SRC})
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
-    find_package(MPI REQUIRED)
+    target_sources(ngraph PRIVATE distributed.cpp)
     target_compile_definitions(ngraph PRIVATE NGRAPH_DISTRIBUTED)
-    target_include_directories(ngraph SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
-    target_link_libraries(ngraph PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+    target_include_directories(ngraph SYSTEM PRIVATE libmlsl)
+    target_link_libraries(ngraph PRIVATE libmlsl)
 endif()
 
 add_subdirectory(frontend)
@@ -197,7 +199,12 @@ endif()
 add_subdirectory(codegen)
 add_subdirectory(runtime)
 
-target_compile_definitions(ngraph PRIVATE SHARED_LIB_EXT="${CMAKE_SHARED_LIBRARY_SUFFIX}")
+target_compile_definitions(ngraph
+    PRIVATE
+        SHARED_LIB_PREFIX="${CMAKE_SHARED_LIBRARY_PREFIX}"
+        SHARED_LIB_SUFFIX="${CMAKE_SHARED_LIBRARY_SUFFIX}"
+        NGRAPH_DLL_EXPORTS
+)
 if(NGRAPH_LIB_VERSIONING_ENABLE)
     set_target_properties(ngraph PROPERTIES
         VERSION ${NGRAPH_VERSION}
@@ -206,7 +213,7 @@ endif()
 target_link_libraries(ngraph PRIVATE libjson)
 target_compile_definitions(ngraph PUBLIC NGRAPH_VERSION="${NGRAPH_VERSION}")
 
-if (NOT APPLE)
+if (LINUX)
     set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--rpath,$ORIGIN")
 
     # nGraph links against one or more libraries (ex. LLVM) but we don't want to
@@ -224,7 +231,7 @@ if (NOT APPLE)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--no-as-needed")
     endif()
-else()
+elseif(APPLE)
     set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,-rpath,@loader_path")
 endif()
 
@@ -249,8 +256,12 @@ install(TARGETS ngraph DESTINATION ${NGRAPH_INSTALL_LIB})  # libngraph.so
 install(DIRECTORY
     ${CMAKE_CURRENT_SOURCE_DIR}/
     DESTINATION "${NGRAPH_INSTALL_INCLUDE}/ngraph"
-    FILES_MATCHING PATTERN "*.hpp"
+    FILES_MATCHING
+        PATTERN "*.hpp"
+        PATTERN "*.h"
 )
+install(FILES ${CMAKE_BINARY_DIR}/src/ngraph/version.hpp
+    DESTINATION "${NGRAPH_INSTALL_INCLUDE}/ngraph")
 
 set(CPACK_GENERATOR "DEB")
 set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)

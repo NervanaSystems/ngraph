@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -66,7 +66,7 @@ int main(int argc, char** argv)
     ifstream f(input);
     if (f)
     {
-        shared_ptr<ngraph::Function> function = ngraph::onnx_import::import_onnx_function(input);
+        std::shared_ptr<ngraph::Function> function = ngraph::onnx_import::import_onnx_model(input);
 
         ngraph::stopwatch timer;
         timer.start();

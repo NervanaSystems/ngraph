@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -101,6 +101,34 @@ namespace ngraph
 
                         SELECT_RANK2(
                             kernel, double, int, in_shape.size(), runtime::cpu::kernel::argmin);
+
+                        functor = [&, kernel, in_shape, out_shape, axis](
+                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                            kernel(arg_tensor, out_tensor, in_shape, out_shape, axis, ectx->arena);
+                        };
+                    }
+                }
+                else if (element_type == element::i32)
+                {
+                    if (is_int64)
+                    {
+                        std::function<decltype(runtime::cpu::kernel::argmin<int, int64_t, 1>)>
+                            kernel;
+
+                        SELECT_RANK2(
+                            kernel, int, int64_t, in_shape.size(), runtime::cpu::kernel::argmin);
+
+                        functor = [&, kernel, in_shape, out_shape, axis](
+                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                            kernel(arg_tensor, out_tensor, in_shape, out_shape, axis, ectx->arena);
+                        };
+                    }
+                    else
+                    {
+                        std::function<decltype(runtime::cpu::kernel::argmin<int, int, 1>)> kernel;
+
+                        SELECT_RANK2(
+                            kernel, int, int, in_shape.size(), runtime::cpu::kernel::argmin);
 
                         functor = [&, kernel, in_shape, out_shape, axis](
                             CPURuntimeContext* ctx, CPUExecutionContext* ectx) {

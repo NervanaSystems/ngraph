@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,14 +33,12 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::TopK)
             {
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
-
                 const ngraph::op::TopK* topk = static_cast<const ngraph::op::TopK*>(node);
                 CPUKernelFunctor functor;
 
-                auto& arg_tensor = tensor_data[args[0].get_name()];
-                auto& out_indices_tensor = tensor_data[out[0].get_name()];
-                auto& out_values_tensor = tensor_data[out[1].get_name()];
+                auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& out_indices_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto& out_values_tensor = external_function->get_tensor_data(out[1].get_name());
                 if (out[0].get_element_type() != element::i64 &&
                     out[0].get_element_type() != element::i32)
                 {

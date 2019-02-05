@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 
 namespace ngraph
 {
@@ -27,19 +28,19 @@ namespace ngraph
         class ConvolutionBias : public Op
         {
         public:
-            ConvolutionBias(const std::shared_ptr<op::Convolution>& conv,
-                            const std::shared_ptr<Node>& bias,
-                            const bool with_relu = false);
+            CPU_BACKEND_API ConvolutionBias(const std::shared_ptr<op::Convolution>& conv,
+                                            const std::shared_ptr<Node>& bias,
+                                            const bool with_relu = false);
 
-            ConvolutionBias(const std::shared_ptr<Node>& data_batch,
-                            const std::shared_ptr<Node>& filters,
-                            const std::shared_ptr<Node>& bias,
-                            const Strides& window_movement_strides,
-                            const Strides& window_dilation_strides,
-                            const CoordinateDiff& padding_below,
-                            const CoordinateDiff& padding_above,
-                            const Strides& data_dilation_strides,
-                            const bool with_relu = false);
+            CPU_BACKEND_API ConvolutionBias(const std::shared_ptr<Node>& data_batch,
+                                            const std::shared_ptr<Node>& filters,
+                                            const std::shared_ptr<Node>& bias,
+                                            const Strides& window_movement_strides,
+                                            const Strides& window_dilation_strides,
+                                            const CoordinateDiff& padding_below,
+                                            const CoordinateDiff& padding_above,
+                                            const Strides& data_dilation_strides,
+                                            const bool with_relu = false);
 
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
             const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }
@@ -53,7 +54,8 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override;
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const NodeVector& deltas) override;
 
         protected:
             Strides m_window_movement_strides;

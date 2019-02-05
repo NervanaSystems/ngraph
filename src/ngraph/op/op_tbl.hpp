@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,11 +45,18 @@
 //
 // It's that easy. You can use this for fun and profit.
 
+#ifndef NGRAPH_OP
+#error "NGRAPH_OP not defined"
+#define NGRAPH_OP(x, y)
+#endif
+
 NGRAPH_OP(Abs, ngraph::op)
 NGRAPH_OP(Acos, ngraph::op)
 NGRAPH_OP(Add, ngraph::op)
+NGRAPH_OP(All, ngraph::op)
 NGRAPH_OP(AllReduce, ngraph::op)
 NGRAPH_OP(And, ngraph::op)
+NGRAPH_OP(Any, ngraph::op)
 NGRAPH_OP(ArgMax, ngraph::op)
 NGRAPH_OP(ArgMin, ngraph::op)
 NGRAPH_OP(Asin, ngraph::op)
@@ -60,6 +67,7 @@ NGRAPH_OP(BatchNormInference, ngraph::op)
 NGRAPH_OP(BatchNormTraining, ngraph::op)
 NGRAPH_OP(BatchNormTrainingBackprop, ngraph::op)
 NGRAPH_OP(Broadcast, ngraph::op)
+NGRAPH_OP(BroadcastLike, ngraph::op)
 NGRAPH_OP(Ceiling, ngraph::op)
 NGRAPH_OP(Concat, ngraph::op)
 NGRAPH_OP(Constant, ngraph::op)
@@ -75,7 +83,6 @@ NGRAPH_OP(Dot, ngraph::op)
 NGRAPH_OP(Equal, ngraph::op)
 NGRAPH_OP(Exp, ngraph::op)
 NGRAPH_OP(Floor, ngraph::op)
-NGRAPH_OP(FunctionCall, ngraph::op)
 NGRAPH_OP(GenerateMask, ngraph::op)
 NGRAPH_OP(GetOutputElement, ngraph::op)
 NGRAPH_OP(Greater, ngraph::op)
@@ -101,8 +108,13 @@ NGRAPH_OP(Parameter, ngraph::op)
 NGRAPH_OP(Power, ngraph::op)
 NGRAPH_OP(Product, ngraph::op)
 NGRAPH_OP(Quantize, ngraph::op)
-NGRAPH_OP(Reduce, ngraph::op)
-NGRAPH_OP(ReduceWindow, ngraph::op)
+NGRAPH_OP(QuantizedAvgPool, ngraph::op)
+NGRAPH_OP(QuantizedConvolutionBias, ngraph::op)
+NGRAPH_OP(QuantizedConvolutionBiasAdd, ngraph::op)
+NGRAPH_OP(QuantizedConvolutionBiasSignedAdd, ngraph::op)
+NGRAPH_OP(QuantizedConvolutionRelu, ngraph::op)
+NGRAPH_OP(QuantizedConvolution, ngraph::op)
+NGRAPH_OP(QuantizedMaxPool, ngraph::op)
 NGRAPH_OP(Relu, ngraph::op)
 NGRAPH_OP(ReluBackprop, ngraph::op)
 NGRAPH_OP(ReplaceSlice, ngraph::op)
@@ -110,8 +122,8 @@ NGRAPH_OP(Reshape, ngraph::op)
 NGRAPH_OP(Result, ngraph::op)
 NGRAPH_OP(Reverse, ngraph::op)
 NGRAPH_OP(ReverseSequence, ngraph::op)
+NGRAPH_OP(ScalarConstantLike, ngraph::op)
 NGRAPH_OP(Select, ngraph::op)
-NGRAPH_OP(SelectAndScatter, ngraph::op)
 NGRAPH_OP(ShapeOf, ngraph::op)
 NGRAPH_OP(Sigmoid, ngraph::op)
 NGRAPH_OP(SigmoidBackprop, ngraph::op)
@@ -127,3 +139,4 @@ NGRAPH_OP(Sum, ngraph::op)
 NGRAPH_OP(Tan, ngraph::op)
 NGRAPH_OP(Tanh, ngraph::op)
 NGRAPH_OP(TopK, ngraph::op)
+NGRAPH_OP(EmbeddingLookup, ngraph::op)

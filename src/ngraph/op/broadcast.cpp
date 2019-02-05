@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -84,9 +84,9 @@ void op::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVe
 
 op::BroadcastLike::BroadcastLike(const std::shared_ptr<Node>& arg,
                                  const std::shared_ptr<Node>& like_arg,
-                                 const AxisSet& broadcast_axes)
+                                 const AxisSet& initial_broadcast_axes)
     : Broadcast("BroadcastLike", {arg, like_arg}, {}, {})
-    , m_initial_broadcast_axes(broadcast_axes)
+    , m_initial_broadcast_axes(initial_broadcast_axes)
 {
     constructor_validate_and_infer_types();
 }

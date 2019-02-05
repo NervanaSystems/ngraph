@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/descriptor/tensor.hpp"
+#include "ngraph/runtime/backend.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -37,9 +38,11 @@ namespace ngraph
         class Tensor
         {
         protected:
-            Tensor(const std::shared_ptr<ngraph::descriptor::Tensor>& descriptor)
+            Tensor(const std::shared_ptr<ngraph::descriptor::Tensor>& descriptor,
+                   const Backend* parent)
                 : m_descriptor(descriptor)
                 , m_stale(true)
+                , m_parent(parent)
             {
             }
 
@@ -100,9 +103,15 @@ namespace ngraph
             /// \param n Number of bytes to read, must be integral number of elements.
             virtual void read(void* p, size_t offset, size_t n) const = 0;
 
+            /// \brief copy bytes directly from source to this tensor
+            /// \param source The source tensor
+            virtual void copy_from(const ngraph::runtime::Tensor& source);
+
+            const Backend* get_parent() const { return m_parent; }
         protected:
             std::shared_ptr<ngraph::descriptor::Tensor> m_descriptor;
             bool m_stale;
+            const Backend* m_parent;
         };
 
         using TensorViewPtrs = std::vector<std::shared_ptr<Tensor>>;

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -101,18 +101,6 @@ namespace ngraph
                     if (node->get_input_element_type(0) != element::f32)
                     {
                         return false;
-                    }
-                    // Temporarily disable MKLDNN for large paddings due to
-                    // a bug in v0.16 - MKFDNN-982
-                    for (auto s : convolution->get_padding_below())
-                    {
-                        if (s >= 7)
-                            return false;
-                    }
-                    for (auto s : convolution->get_padding_above())
-                    {
-                        if (s >= 7)
-                            return false;
                     }
 
                     return true;

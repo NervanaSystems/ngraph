@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,11 +16,14 @@
 
 #pragma once
 
+#include <initializer_list>
 #include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
 
+#include "ngraph/op/all.hpp"
+#include "ngraph/op/any.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/avg_pool.hpp"
@@ -31,6 +34,7 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -42,15 +46,11 @@
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
-#include "ngraph/op/reduce.hpp"
-#include "ngraph/op/reduce_window.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
-#include "ngraph/op/select_and_scatter.hpp"
-#include "ngraph/op/select_and_scatter.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
@@ -62,7 +62,9 @@
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/acos.hpp"
 #include "ngraph/runtime/reference/add.hpp"
+#include "ngraph/runtime/reference/all.hpp"
 #include "ngraph/runtime/reference/and.hpp"
+#include "ngraph/runtime/reference/any.hpp"
 #include "ngraph/runtime/reference/argmax.hpp"
 #include "ngraph/runtime/reference/argmin.hpp"
 #include "ngraph/runtime/reference/asin.hpp"
@@ -81,6 +83,7 @@
 #include "ngraph/runtime/reference/dequantize.hpp"
 #include "ngraph/runtime/reference/divide.hpp"
 #include "ngraph/runtime/reference/dot.hpp"
+#include "ngraph/runtime/reference/embedding_lookup.hpp"
 #include "ngraph/runtime/reference/equal.hpp"
 #include "ngraph/runtime/reference/exp.hpp"
 #include "ngraph/runtime/reference/floor.hpp"
@@ -106,8 +109,6 @@
 #include "ngraph/runtime/reference/power.hpp"
 #include "ngraph/runtime/reference/product.hpp"
 #include "ngraph/runtime/reference/quantize.hpp"
-#include "ngraph/runtime/reference/reduce.hpp"
-#include "ngraph/runtime/reference/reduce_window.hpp"
 #include "ngraph/runtime/reference/relu.hpp"
 #include "ngraph/runtime/reference/replace_slice.hpp"
 #include "ngraph/runtime/reference/reshape.hpp"
@@ -115,7 +116,6 @@
 #include "ngraph/runtime/reference/reverse.hpp"
 #include "ngraph/runtime/reference/reverse_sequence.hpp"
 #include "ngraph/runtime/reference/select.hpp"
-#include "ngraph/runtime/reference/select_and_scatter.hpp"
 #include "ngraph/runtime/reference/shape_of.hpp"
 #include "ngraph/runtime/reference/sigmoid.hpp"
 #include "ngraph/runtime/reference/sign.hpp"
@@ -144,18 +144,24 @@ namespace ngraph
         {
             class INTBackend;
         }
-    }
-}
+    } // namespace runtime
+} // namespace ngraph
 
 class ngraph::runtime::interpreter::INTBackend : public Backend
 {
 public:
+    INTBackend();
+    INTBackend(const std::vector<std::string>& unsupported_op_name_list);
+    INTBackend(const INTBackend&) = delete;
+    INTBackend(INTBackend&&) = delete;
+    INTBackend& operator=(const INTBackend&) = delete;
+
     std::shared_ptr<Tensor>
         create_tensor(const element::Type& type, const Shape& shape, void* memory_pointer) override;
 
     std::shared_ptr<Tensor> create_tensor(const element::Type& type, const Shape& shape) override;
 
-    bool compile(std::shared_ptr<Function> function) override;
+    Handle compile(std::shared_ptr<Function> function) override;
 
     bool call(std::shared_ptr<Function> function,
               const std::vector<std::shared_ptr<Tensor>>& outputs,
@@ -167,9 +173,10 @@ public:
     std::vector<PerformanceCounter>
         get_performance_data(std::shared_ptr<Function> func) const override;
 
-    bool is_supported(const Node& node) const override { return true; }
+    bool is_supported(const Node& node) const override;
+
 private:
-    static const int m_alignment;
+    int get_alignment() const { return 64; }
     class FunctionInstance
     {
     public:
@@ -178,20 +185,18 @@ private:
         bool m_performance_counters_enabled = false;
         std::unordered_map<const Node*, stopwatch> m_timer_map;
         std::vector<NodeWrapper> m_wrapped_nodes;
-        std::unordered_map<const Node*, std::unique_ptr<RNGState>> m_states;
-        std::unique_ptr<AlignedBuffer> m_temporary_memory;
-
-        void* get_temporary_pointer(size_t offset) { return m_temporary_memory->get_ptr(offset); }
+        std::unordered_map<const Node*, std::shared_ptr<RNGState>> m_states;
     };
     std::map<std::shared_ptr<Function>, FunctionInstance> m_function_map;
+    std::set<std::string> m_unsupported_op_name_list;
 
     static void perform_nan_check(const std::vector<std::shared_ptr<HostTensor>>&,
                                   const Node* op = nullptr);
 
     void generate_calls(const element::Type& type,
                         const NodeWrapper& op,
-                        const std::vector<void*>& outputs,
-                        const std::vector<const void*>& inputs,
+                        const std::vector<std::shared_ptr<HostTensor>>& outputs,
+                        const std::vector<std::shared_ptr<HostTensor>>& inputs,
                         FunctionInstance& instance);
 
     template <typename T>
@@ -235,9 +240,19 @@ private:
                               element_count);
             break;
         }
+        case OP_TYPEID::All:
+        {
+            const op::All* all = static_cast<const op::All*>(&node);
+            reference::all(static_cast<const char*>(args[0]),
+                           static_cast<char*>(out[0]),
+                           node.get_input_shape(0),
+                           node.get_output_shape(0),
+                           all->get_reduction_axes());
+            break;
+        }
         case OP_TYPEID::AllReduce: {
 #ifdef NGRAPH_DISTRIBUTED
-            reference::allreduce<T>(static_cast<const T*>(args[0]),
+            reference::allreduce<T>(static_cast<T*>(const_cast<void*>(args[0])),
                                     static_cast<T*>(out[0]),
                                     node.get_input_element_type(0),
                                     static_cast<int>(shape_size(node.get_input_shape(0))));
@@ -251,6 +266,16 @@ private:
                                    static_cast<const T*>(args[1]),
                                    static_cast<T*>(out[0]),
                                    element_count);
+            break;
+        }
+        case OP_TYPEID::Any:
+        {
+            const op::Any* any = static_cast<const op::Any*>(&node);
+            reference::any(static_cast<const char*>(args[0]),
+                           static_cast<char*>(out[0]),
+                           node.get_input_shape(0),
+                           node.get_output_shape(0),
+                           any->get_reduction_axes());
             break;
         }
         case OP_TYPEID::ArgMin:
@@ -432,6 +457,7 @@ private:
                                     broadcast_axes);
             break;
         }
+        case OP_TYPEID::BroadcastLike: break;
         case OP_TYPEID::Ceiling:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -458,72 +484,67 @@ private:
         }
         case OP_TYPEID::Constant:
         {
-            // Constant is handled in the main loop
+            const op::Constant* c = static_cast<const op::Constant*>(&node);
+            size_t element_count = shape_size(node.get_output_shape(0));
+            reference::constant<T>(c->get_data_ptr<T>(), static_cast<T*>(out[0]), element_count);
             break;
         }
+        case OP_TYPEID::ScalarConstantLike: break;
         case OP_TYPEID::Convert:
         {
             // const op::Convert* c = static_cast<const op::Convert*>(&node);
             element::Type type = node.get_element_type();
+            std::stringstream ss;
             size_t element_count = shape_size(node.get_output_shape(0));
-            if (type == element::boolean)
+            switch (type.get_type_enum())
             {
+            case element::Type_t::boolean:
                 reference::convert<T>(
                     static_cast<const T*>(args[0]), static_cast<char*>(out[0]), element_count);
-            }
-            else if (type == element::f32)
-            {
+                break;
+            case element::Type_t::f32:
                 reference::convert<T>(
                     static_cast<const T*>(args[0]), static_cast<float*>(out[0]), element_count);
-            }
-            else if (type == element::f64)
-            {
+                break;
+            case element::Type_t::f64:
                 reference::convert<T>(
                     static_cast<const T*>(args[0]), static_cast<double*>(out[0]), element_count);
-            }
-            else if (type == element::i8)
-            {
+                break;
+            case element::Type_t::i8:
                 reference::convert<T>(
                     static_cast<const T*>(args[0]), static_cast<int8_t*>(out[0]), element_count);
-            }
-            else if (type == element::i16)
-            {
+                break;
+            case element::Type_t::i16:
                 reference::convert<T>(
                     static_cast<const T*>(args[0]), static_cast<int16_t*>(out[0]), element_count);
-            }
-            else if (type == element::i32)
-            {
+                break;
+            case element::Type_t::i32:
                 reference::convert<T>(
                     static_cast<const T*>(args[0]), static_cast<int32_t*>(out[0]), element_count);
-            }
-            else if (type == element::i64)
-            {
+                break;
+            case element::Type_t::i64:
                 reference::convert<T>(
                     static_cast<const T*>(args[0]), static_cast<int64_t*>(out[0]), element_count);
-            }
-            else if (type == element::u8)
-            {
+                break;
+            case element::Type_t::u8:
                 reference::convert<T>(
                     static_cast<const T*>(args[0]), static_cast<uint8_t*>(out[0]), element_count);
-            }
-            else if (type == element::u16)
-            {
+                break;
+            case element::Type_t::u16:
                 reference::convert<T>(
                     static_cast<const T*>(args[0]), static_cast<uint16_t*>(out[0]), element_count);
-            }
-            else if (type == element::u32)
-            {
+                break;
+            case element::Type_t::u32:
                 reference::convert<T>(
                     static_cast<const T*>(args[0]), static_cast<uint32_t*>(out[0]), element_count);
-            }
-            else if (type == element::u64)
-            {
+                break;
+            case element::Type_t::u64:
                 reference::convert<T>(
                     static_cast<const T*>(args[0]), static_cast<uint64_t*>(out[0]), element_count);
-            }
-            else
-            {
-                std::stringstream ss;
+                break;
+            case element::Type_t::undefined:
+            case element::Type_t::dynamic:
+            case element::Type_t::bf16:
                 ss << "unsupported element type " << type << " op Convert";
                 throw std::runtime_error(ss.str());
             }
@@ -671,6 +692,51 @@ private:
                            dot->get_reduction_axes_count());
             break;
         }
+        case OP_TYPEID::EmbeddingLookup:
+        {
+            const op::EmbeddingLookup* embed = static_cast<const op::EmbeddingLookup*>(&node);
+            auto type = embed->get_argument(0)->get_element_type();
+            size_t element_count = shape_size(embed->get_argument(0)->get_shape());
+
+            if (type == element::f32)
+            {
+                reference::embedding<T, float>(static_cast<const float*>(args[0]),
+                                               static_cast<const T*>(args[1]),
+                                               static_cast<T*>(out[0]),
+                                               element_count,
+                                               embed->get_shape());
+            }
+            else if (type == element::f64)
+            {
+                reference::embedding<T, double>(static_cast<const double*>(args[0]),
+                                                static_cast<const T*>(args[1]),
+                                                static_cast<T*>(out[0]),
+                                                element_count,
+                                                embed->get_shape());
+            }
+            else if (type == element::i32)
+            {
+                reference::embedding<T, int>(static_cast<const int*>(args[0]),
+                                             static_cast<const T*>(args[1]),
+                                             static_cast<T*>(out[0]),
+                                             element_count,
+                                             embed->get_shape());
+            }
+            else if (type == element::i64)
+            {
+                reference::embedding<T, int64_t>(static_cast<const int64_t*>(args[0]),
+                                                 static_cast<const T*>(args[1]),
+                                                 static_cast<T*>(out[0]),
+                                                 element_count,
+                                                 embed->get_shape());
+            }
+            else
+            {
+                throw ngraph_error(std::string("Unsupported index type ") + type.c_type_string() +
+                                   std::string("in EmbeddingLookup"));
+            }
+            break;
+        }
         case OP_TYPEID::Equal:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -692,34 +758,6 @@ private:
             size_t element_count = shape_size(node.get_output_shape(0));
             reference::floor<T>(
                 static_cast<const T*>(args[0]), static_cast<T*>(out[0]), element_count);
-            break;
-        }
-        case OP_TYPEID::FunctionCall:
-        {
-            std::shared_ptr<Function> function = node.get_functions()[0];
-
-            std::vector<std::shared_ptr<runtime::Tensor>> outputs;
-            for (size_t i = 0; i < function->get_output_size(); i++)
-            {
-                element::Type et = function->get_output_element_type(i);
-                Shape shape = function->get_output_shape(i);
-                auto host_tensor = std::make_shared<HostTensor>(et, shape, out[i]);
-                outputs.push_back(std::static_pointer_cast<runtime::Tensor>(host_tensor));
-            }
-
-            std::vector<std::shared_ptr<runtime::Tensor>> inputs;
-            auto parameters = function->get_parameters();
-            for (size_t i = 0; i < parameters.size(); i++)
-            {
-                auto parameter = parameters[i];
-                element::Type et = parameter->get_element_type();
-                Shape shape = parameter->get_shape();
-                auto host_tensor =
-                    std::make_shared<HostTensor>(et, shape, const_cast<void*>(args[i]));
-                inputs.push_back(std::static_pointer_cast<runtime::Tensor>(host_tensor));
-            }
-
-            call(function, outputs, inputs);
             break;
         }
         case OP_TYPEID::Greater:
@@ -977,60 +1015,16 @@ private:
 
             break;
         }
-        case OP_TYPEID::Reduce:
+        case OP_TYPEID::QuantizedAvgPool:
+        case OP_TYPEID::QuantizedConvolutionBias:
+        case OP_TYPEID::QuantizedConvolutionBiasAdd:
+        case OP_TYPEID::QuantizedConvolutionBiasSignedAdd:
+        case OP_TYPEID::QuantizedConvolutionRelu:
+        case OP_TYPEID::QuantizedConvolution:
+        case OP_TYPEID::QuantizedMaxPool:
         {
-            const op::Reduce* reduce = static_cast<const op::Reduce*>(&node);
-            std::shared_ptr<Function> reduction_function = reduce->get_functions()[0];
-
-            std::function<T(T, T)> f = [this, &node, reduction_function](T x, T y) -> T {
-                auto tx = std::make_shared<HostTensor>(
-                    node.get_inputs().at(0).get_element_type(), Shape{}, &x, "reduce_temp_x");
-                auto ty = std::make_shared<HostTensor>(
-                    node.get_inputs().at(1).get_element_type(), Shape{}, &y, "reduce_temp_y");
-                auto tr = std::make_shared<HostTensor>(
-                    node.get_output_element_type(0), Shape{}, "reduce_temp_r");
-                call(reduction_function, {tr}, {tx, ty});
-                return *(tr->get_data_ptr<T>());
-            };
-
-            reference::reduce(static_cast<const T*>(args[0]),
-                              static_cast<const T*>(args[1]),
-                              static_cast<T*>(out[0]),
-                              node.get_inputs().at(0).get_shape(),
-                              node.get_output_shape(0),
-                              reduce->get_reduction_axes(),
-                              f);
-            break;
-        }
-        case OP_TYPEID::ReduceWindow:
-        {
-            const op::ReduceWindow* reduce_window = static_cast<const op::ReduceWindow*>(&node);
-            std::shared_ptr<Function> reduction_function = reduce_window->get_functions()[0];
-
-            std::function<T(T, T)> f = [this, &node, reduction_function](T x, T y) -> T {
-                auto tx = std::make_shared<HostTensor>(node.get_inputs().at(0).get_element_type(),
-                                                       Shape{},
-                                                       &x,
-                                                       "reduce_window_temp_x");
-                auto ty = std::make_shared<HostTensor>(node.get_inputs().at(1).get_element_type(),
-                                                       Shape{},
-                                                       &y,
-                                                       "reduce_window_temp_y");
-                auto tr = std::make_shared<HostTensor>(
-                    node.get_output_element_type(0), Shape{}, "reduce_window_temp_r");
-                call(reduction_function, {tr}, {tx, ty});
-                return *(tr->get_data_ptr<T>());
-            };
-
-            reference::reduce_window(static_cast<const T*>(args[0]),
-                                     static_cast<const T*>(args[1]),
-                                     static_cast<T*>(out[0]),
-                                     node.get_inputs().at(0).get_shape(),
-                                     node.get_output_shape(0),
-                                     f,
-                                     reduce_window->get_window_shape(),
-                                     reduce_window->get_window_movement_strides());
-            break;
+            throw unsupported_op("Unsupported op '" + node.description() +
+                                 "' in Interpreter back end.");
         }
         case OP_TYPEID::Relu:
         {
@@ -1116,51 +1110,6 @@ private:
                                  static_cast<const T*>(args[2]),
                                  static_cast<T*>(out[0]),
                                  element_count);
-            break;
-        }
-        case OP_TYPEID::SelectAndScatter:
-        {
-            const ngraph::op::SelectAndScatter* select_and_scatter =
-                static_cast<const ngraph::op::SelectAndScatter*>(&node);
-
-            std::shared_ptr<ngraph::Function> selection_function =
-                select_and_scatter->get_functions()[0];
-            std::function<bool(T, T)> f_selection = [this, &node, selection_function](T x,
-                                                                                      T y) -> bool {
-                auto tx = std::make_shared<runtime::HostTensor>(
-                    node.get_inputs().at(0).get_element_type(), Shape{}, &x, "selection_temp_x");
-                auto ty = std::make_shared<runtime::HostTensor>(
-                    node.get_inputs().at(1).get_element_type(), Shape{}, &y, "selection_temp_y");
-                auto tr = std::make_shared<runtime::HostTensor>(
-                    element::boolean, Shape{}, "selection_temp_r");
-                call(selection_function, {tr}, {tx, ty});
-                return *(tr->get_data_ptr<char>());
-            };
-
-            std::shared_ptr<ngraph::Function> scatter_function =
-                select_and_scatter->get_functions()[1];
-            std::function<T(T, T)> f_scatter = [this, &node, scatter_function](T x, T y) -> T {
-                auto tx = std::make_shared<runtime::HostTensor>(
-                    node.get_inputs().at(0).get_element_type(), Shape{}, &x, "scatter_temp_x");
-                auto ty = std::make_shared<runtime::HostTensor>(
-                    node.get_inputs().at(1).get_element_type(), Shape{}, &y, "scatter_temp_y");
-                auto tr = std::make_shared<runtime::HostTensor>(
-                    node.get_output_element_type(0), Shape{}, "scatter_temp_r");
-                call(scatter_function, {tr}, {tx, ty});
-                return *(tr->get_data_ptr<T>());
-            };
-
-            reference::select_and_scatter<T>(static_cast<const T*>(args[0]),
-                                             static_cast<const T*>(args[1]),
-                                             static_cast<const T*>(args[2]),
-                                             static_cast<T*>(out[0]),
-                                             node.get_input_shape(0),
-                                             node.get_input_shape(1),
-                                             node.get_output_shape(0),
-                                             f_selection,
-                                             f_scatter,
-                                             select_and_scatter->get_window_shape(),
-                                             select_and_scatter->get_window_movement_strides());
             break;
         }
         case OP_TYPEID::ShapeOf:

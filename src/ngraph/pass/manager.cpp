@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 //*****************************************************************************
 
 #include <algorithm>
-#ifdef WIN32
+#ifdef _WIN32
 #else
 #include <cxxabi.h>
 #endif
@@ -26,8 +26,6 @@
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/function_call.hpp"
-#include "ngraph/op/reduce.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/pass.hpp"
 #include "ngraph/pass/serialize.hpp"
@@ -156,7 +154,7 @@ void ngraph::pass::Manager::run_passes(shared_ptr<Function> func, bool transitiv
         {
             PassBase* p = pass.get();
             string name = typeid(*p).name();
-#ifndef WIN32
+#ifndef _WIN32
             int status;
             name = abi::__cxa_demangle(name.c_str(), nullptr, nullptr, &status);
 #endif

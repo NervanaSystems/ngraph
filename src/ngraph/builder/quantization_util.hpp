@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -174,7 +174,34 @@ namespace ngraph
                                            std::numeric_limits<uint8_t>::max() *
                                                std::numeric_limits<int8_t>::max());
 
-                return range / (max_abs_input_range * max_abs_filter_range);
+                // Inverting the scale calculation here as the Quantize op passes scale as 1/scale.
+                return (max_abs_input_range * max_abs_filter_range) / range;
+            }
+
+            std::shared_ptr<Node> get_sum_scale(std::shared_ptr<Node> min_freezed_output_conv_1,
+                                                std::shared_ptr<Node> max_freezed_output_conv_1,
+                                                std::shared_ptr<Node> min_freezed_output_conv_2,
+                                                std::shared_ptr<Node> max_freezed_output_conv_2)
+            {
+                auto type = min_freezed_output_conv_1->get_element_type();
+                if (type != max_freezed_output_conv_1->get_element_type() ||
+                    type != min_freezed_output_conv_2->get_element_type() ||
+                    type != max_freezed_output_conv_2->get_element_type())
+                {
+                    throw ngraph_error("get_sum_scale: min and max must have same type");
+                }
+
+                auto shape = min_freezed_output_conv_1->get_shape();
+                if (shape != max_freezed_output_conv_1->get_shape() ||
+                    shape != min_freezed_output_conv_2->get_shape() ||
+                    shape != max_freezed_output_conv_2->get_shape())
+                {
+                    throw ngraph_error("get_sum_scale: min and max must have same shape");
+                }
+
+                auto max_abs_conv_1 = max_abs(min_freezed_output_conv_1, max_freezed_output_conv_1);
+                auto max_abs_conv_2 = max_abs(min_freezed_output_conv_2, max_freezed_output_conv_2);
+                return max_abs_conv_2 / max_abs_conv_1;
             }
 
             std::shared_ptr<Node> get_scale(std::shared_ptr<Node> input_min_range,

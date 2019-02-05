@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,6 +25,11 @@ if (APPLE)
     set_property(TARGET nbench APPEND_STRING PROPERTY LINK_FLAGS " -Wl,-rpath,@loader_path/../lib")
 endif()
 target_link_libraries(nbench ngraph)
+# if (WIN32)
+#     set_target_properties(nbench
+#         PROPERTIES
+#             LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+# endif()
 if (NGRAPH_CPU_ENABLE)
     target_link_libraries(nbench cpu_backend)
 endif()
@@ -39,6 +44,14 @@ if (NGRAPH_INTERPRETER_ENABLE)
 endif()
 if (NGRAPH_PLAIDML_ENABLE)
     target_link_libraries(nbench plaidml_backend)
+endif()
+if (NGRAPH_GENERIC_CPU_ENABLE)
+    target_link_libraries(nbench gcpu_backend)
+endif()
+
+if (NGRAPH_DISTRIBUTED_ENABLE)
+    target_compile_definitions(nbench PRIVATE NGRAPH_DISTRIBUTED)
+    target_link_libraries(nbench libmlsl)
 endif()
 
 install(TARGETS nbench RUNTIME DESTINATION ${NGRAPH_INSTALL_BIN})

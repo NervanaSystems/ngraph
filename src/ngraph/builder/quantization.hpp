@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -111,5 +111,45 @@ namespace ngraph
                                                      const Shape& padding_above,
                                                      std::shared_ptr<Node> min,
                                                      std::shared_ptr<Node> max);
+
+        std::shared_ptr<Node>
+            ScaledQuantizedConvolutionBiasAdd(std::shared_ptr<Node> input,
+                                              std::shared_ptr<Node> filters,
+                                              std::shared_ptr<Node> bias,
+                                              std::shared_ptr<Node> sum_input,
+                                              const Strides& window_movement_strides,
+                                              const Strides& window_dilation_strides,
+                                              const CoordinateDiff& padding_below,
+                                              const CoordinateDiff& padding_above,
+                                              const Strides& data_dilation_strides,
+                                              std::shared_ptr<Node> min_input,
+                                              std::shared_ptr<Node> max_input,
+                                              std::shared_ptr<Node> min_filter,
+                                              std::shared_ptr<Node> max_filter,
+                                              std::shared_ptr<Node> min_freezed_output_conv_1,
+                                              std::shared_ptr<Node> max_freezed_output_conv_1,
+                                              std::shared_ptr<Node> min_freezed_output_conv_2,
+                                              std::shared_ptr<Node> max_freezed_output_conv_2,
+                                              const bool with_relu);
+
+        std::shared_ptr<Node>
+            ScaledQuantizedConvolutionBiasSignedAdd(std::shared_ptr<Node> input,
+                                                    std::shared_ptr<Node> filters,
+                                                    std::shared_ptr<Node> bias,
+                                                    std::shared_ptr<Node> sum_input,
+                                                    const Strides& window_movement_strides,
+                                                    const Strides& window_dilation_strides,
+                                                    const CoordinateDiff& padding_below,
+                                                    const CoordinateDiff& padding_above,
+                                                    const Strides& data_dilation_strides,
+                                                    std::shared_ptr<Node> min_input,
+                                                    std::shared_ptr<Node> max_input,
+                                                    std::shared_ptr<Node> min_filter,
+                                                    std::shared_ptr<Node> max_filter,
+                                                    std::shared_ptr<Node> min_freezed_output_conv_1,
+                                                    std::shared_ptr<Node> max_freezed_output_conv_1,
+                                                    std::shared_ptr<Node> min_freezed_output_conv_2,
+                                                    std::shared_ptr<Node> max_freezed_output_conv_2,
+                                                    const bool with_relu);
     }
 }

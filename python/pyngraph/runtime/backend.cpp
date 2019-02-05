@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,10 +35,11 @@ void regclass_pyngraph_runtime_Backend(py::module m)
                     const ngraph::element::Type&, const ngraph::Shape&)) &
                     ngraph::runtime::Backend::create_tensor);
     backend.def("compile",
-                (void (ngraph::runtime::Backend::*)(std::shared_ptr<ngraph::Function>)) &
+                (std::shared_ptr<ngraph::Function>(ngraph::runtime::Backend::*)(
+                    std::shared_ptr<ngraph::Function>)) &
                     ngraph::runtime::Backend::compile);
     backend.def("call",
-                (void (ngraph::runtime::Backend::*)(
+                (bool (ngraph::runtime::Backend::*)(
                     std::shared_ptr<ngraph::Function>,
                     const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>&,
                     const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>&)) &

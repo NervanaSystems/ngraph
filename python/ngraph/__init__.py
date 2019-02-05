@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2018 Intel Corporation
+# Copyright 2018-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,13 @@
 # limitations under the License.
 # ******************************************************************************
 """ngraph module namespace, exposing factory functions for all ops and other classes."""
+
+from pkg_resources import get_distribution, DistributionNotFound
+
+try:
+    __version__ = get_distribution('ngraph-core').version
+except DistributionNotFound:
+    __version__ = '0.0.0-dev'
 
 from ngraph.ops import absolute
 from ngraph.ops import absolute as abs
@@ -40,7 +47,6 @@ from ngraph.ops import divide
 from ngraph.ops import dot
 from ngraph.ops import equal
 from ngraph.ops import exp
-from ngraph.ops import function_call
 from ngraph.ops import floor
 from ngraph.ops import get_output_element
 from ngraph.ops import greater
@@ -67,7 +73,6 @@ from ngraph.ops import power
 from ngraph.ops import prod
 from ngraph.ops import relu
 from ngraph.ops import replace_slice
-from ngraph.ops import reduce
 from ngraph.ops import reshape
 from ngraph.ops import reverse
 from ngraph.ops import select

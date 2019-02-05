@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -176,20 +176,20 @@ namespace ngraph
                                 k,
                                 1.0f,
                                 static_cast<float*>(arg0_tensor),
-                                max(1UL, lda),
+                                max<size_t>(1UL, lda),
                                 static_cast<float*>(arg1_tensor),
-                                max(1UL, ldb),
+                                max<size_t>(1UL, ldb),
                                 beta,
                                 static_cast<float*>(out_tensor),
-                                max(1UL, result_shape[1]));
+                                max<size_t>(1UL, result_shape[1]));
                         };
                     functors.emplace_back(functor);
                     return;
                 }
 
-                std::function<decltype(runtime::cpu::kernel::dot<float>)> kernel;
+                std::function<decltype(runtime::cpu::kernel::dot_ref<float>)> kernel;
 
-                SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::dot);
+                SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_ref);
 
                 auto functor =
                     [&, kernel, arg0_shape, arg1_shape, result_shape, reduction_axes_count](

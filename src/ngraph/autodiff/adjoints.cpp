@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ using namespace ngraph;
 
 std::shared_ptr<Node> make_zero(const std::shared_ptr<Node>& node)
 {
-    std::shared_ptr<Node> zero = std::make_shared<op::ScalarConstantLike<double>>(node, 0.0);
+    std::shared_ptr<Node> zero = std::make_shared<op::ScalarConstantLike>(node, 0.0);
     std::shared_ptr<Node> bzero = std::make_shared<op::BroadcastLike>(zero, node, AxisSet{});
     return bzero;
 }

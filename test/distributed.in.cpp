@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 #include <fstream>
 #include <sstream>
 
-#include <mpi.h>
+#include <mlsl.hpp>
 
 #include "gtest/gtest.h"
 
@@ -36,9 +36,7 @@ TEST(distributed_${BACKEND_NAME}, allreduce)
     auto f = make_shared<Function>(make_shared<op::AllReduce>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
-    int comm_size;
-
-    MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+    auto comm_size = MLSL::Environment::GetEnv().GetProcessCount();
 
     auto v = vector<float>{1, 2, 3, 4};
     auto a = backend->create_tensor(element::f32, shape);
@@ -49,6 +47,7 @@ TEST(distributed_${BACKEND_NAME}, allreduce)
     std::transform(
         v.begin(), v.end(), v.begin(), std::bind1st(std::multiplies<float>(), comm_size));
 
-    backend->call_with_validate(f, {result}, {a});
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a});
     EXPECT_EQ(v, read_vector<float>(result));
 }

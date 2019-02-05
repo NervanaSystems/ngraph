@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,13 +15,12 @@
 # ******************************************************************************
 
 
-if (NGRAPH_GPU_ENABLE OR (NGRAPH_CPU_ENABLE AND NOT NGRAPH_DEX_ONLY))
+if ((NGRAPH_GPU_ENABLE OR NGRAPH_CPU_ENABLE) AND NOT NGRAPH_DEX_ONLY)
     if (DEFINED NGRAPH_USE_CXX_ABI AND NGRAPH_USE_PREBUILT_LLVM)
         message(FATAL_ERROR "Unable to use NGRAPH_USE_PREBUILT_LLVM with NGRAPH_USE_CXX_ABI")
     endif()
 
     set(SRC
-        code_writer.cpp
         compiler.cpp
         execution_engine.cpp
     )
@@ -48,9 +47,9 @@ if (NGRAPH_GPU_ENABLE OR (NGRAPH_CPU_ENABLE AND NOT NGRAPH_DEX_ONLY))
     list(APPEND HEADER_SEARCH_DEFINES NGRAPH_HEADERS_PATH="${NGRAPH_INCLUDE_PATH}")
 
     if(NGRAPH_DISTRIBUTED_ENABLE)
-        find_package(MPI REQUIRED)
-        target_compile_definitions(codegen PRIVATE NGRAPH_DISTRIBUTED)
-        add_definitions(-DMPI_HEADER_PATH="${MPI_PATH}")
+        get_target_property(MLSL_INCLUDE_DIR libmlsl INTERFACE_INCLUDE_DIRECTORIES)
+        list(APPEND HEADER_SEARCH_DEFINES MLSL_HEADER_PATH="${MLSL_INCLUDE_DIR}")
+        add_definitions(-DNGRAPH_DISTRIBUTED)
     endif()
 
     if(NGRAPH_GPU_ENABLE)
@@ -84,9 +83,11 @@ if (NGRAPH_GPU_ENABLE OR (NGRAPH_CPU_ENABLE AND NOT NGRAPH_DEX_ONLY))
     add_dependencies(codegen header_resource)
     if (NGRAPH_CPU_ENABLE)
         add_dependencies(codegen libmkldnn libeigen)
-        # --exclude-libs=ALL prevents symbols from statically-linked libraries (LLVM, in this case)
-        # from being automatically exported
-        set_property(TARGET codegen APPEND PROPERTY LINK_FLAGS "-Wl,--exclude-libs=ALL")
+        if(LINUX)
+            # --exclude-libs=ALL prevents symbols from statically-linked libraries (LLVM, in this case)
+            # from being automatically exported
+            set_property(TARGET codegen APPEND PROPERTY LINK_FLAGS "-Wl,--exclude-libs=ALL")
+        endif()
     endif()
     target_include_directories(codegen SYSTEM PRIVATE ${CMAKE_BINARY_DIR})
     target_link_libraries(codegen PRIVATE libllvm ngraph)

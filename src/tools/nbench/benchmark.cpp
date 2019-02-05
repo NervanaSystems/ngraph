@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,9 @@
 //*****************************************************************************
 
 #include <random>
+#if defined(__x86_64__) || defined(__amd64__)
 #include <xmmintrin.h>
+#endif
 
 #include "benchmark.hpp"
 #include "ngraph/file_util.hpp"
@@ -107,53 +109,20 @@ void init_real_tv(shared_ptr<runtime::Tensor> tv, T min, T max)
 static void random_init(shared_ptr<runtime::Tensor> tv)
 {
     element::Type et = tv->get_element_type();
-    if (et == element::boolean)
+    switch (et.get_type_enum())
     {
-        init_int_tv<char>(tv, 0, 1);
-    }
-    else if (et == element::f32)
-    {
-        init_real_tv<float>(tv, -1, 1);
-    }
-    else if (et == element::f64)
-    {
-        init_real_tv<double>(tv, -1, 1);
-    }
-    else if (et == element::i8)
-    {
-        init_int_tv<int8_t>(tv, -1, 1);
-    }
-    else if (et == element::i16)
-    {
-        init_int_tv<int16_t>(tv, -1, 1);
-    }
-    else if (et == element::i32)
-    {
-        init_int_tv<int32_t>(tv, 0, 1);
-    }
-    else if (et == element::i64)
-    {
-        init_int_tv<int64_t>(tv, -1, 1);
-    }
-    else if (et == element::u8)
-    {
-        init_int_tv<uint8_t>(tv, 0, 1);
-    }
-    else if (et == element::u16)
-    {
-        init_int_tv<uint16_t>(tv, 0, 1);
-    }
-    else if (et == element::u32)
-    {
-        init_int_tv<uint32_t>(tv, 0, 1);
-    }
-    else if (et == element::u64)
-    {
-        init_int_tv<uint64_t>(tv, 0, 1);
-    }
-    else
-    {
-        throw runtime_error("unsupported type");
+    case element::Type_t::boolean: init_int_tv<char>(tv, 0, 1); break;
+    case element::Type_t::f32: init_real_tv<float>(tv, -1, 1); break;
+    case element::Type_t::f64: init_real_tv<double>(tv, -1, 1); break;
+    case element::Type_t::i8: init_int_tv<int8_t>(tv, -1, 1); break;
+    case element::Type_t::i16: init_int_tv<int16_t>(tv, -1, 1); break;
+    case element::Type_t::i32: init_int_tv<int32_t>(tv, 0, 1); break;
+    case element::Type_t::i64: init_int_tv<int64_t>(tv, -1, 1); break;
+    case element::Type_t::u8: init_int_tv<uint8_t>(tv, 0, 1); break;
+    case element::Type_t::u16: init_int_tv<uint16_t>(tv, 0, 1); break;
+    case element::Type_t::u32: init_int_tv<uint32_t>(tv, 0, 1); break;
+    case element::Type_t::u64: init_int_tv<uint64_t>(tv, 0, 1); break;
+    default: throw runtime_error("unsupported type");
     }
 }
 
@@ -168,7 +137,7 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
     timer.start();
     auto backend = runtime::Backend::create(backend_name);
     backend->enable_performance_data(f, timing_detail);
-    backend->compile(f);
+    auto compiled_func = backend->compile(f);
     timer.stop();
     cout.imbue(locale(""));
     cout << "compile time: " << timer.get_milliseconds() << "ms" << endl;
@@ -214,7 +183,7 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
     {
         for (int i = 0; i < warmup_iterations; i++)
         {
-            backend->call(f, results, args);
+            backend->call(compiled_func, results, args);
         }
     }
 
@@ -236,7 +205,7 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
                 }
             }
         }
-        backend->call(f, results, args);
+        backend->call(compiled_func, results, args);
         if (copy_data)
         {
             for (size_t result_index = 0; result_index < results.size(); result_index++)

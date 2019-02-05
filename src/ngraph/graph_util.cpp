@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,7 +31,6 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
-#include "ngraph/placement.hpp"
 #include "ngraph/result_vector.hpp"
 #include "ngraph/util.hpp"
 
@@ -355,35 +354,6 @@ pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
     return make_pair(res_node, par_node);
 }
 
-// Suffix *_size  as a part of function name is temporary, this suffix
-//  will be removed when the backends move to the latest Hybrid backend
-pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
-    ngraph::insert_result_parameter_split_size(const shared_ptr<Node>& src_node,
-                                               const shared_ptr<Node>& dst_node)
-{
-    if (src_node->get_output_size() != 1)
-    {
-        throw ngraph_error("Multiple output per op not supported in graph partition yet.");
-    }
-
-    // Make parameter node
-    shared_ptr<op::Parameter> par_node = make_shared<op::Parameter>(
-        src_node->get_output_element_type(0), src_node->get_output_shape(0));
-    par_node->set_placement(dst_node->get_placement_size());
-
-    // Fix input / output among src, dst and par
-    descriptor::Input* dst_input = dst_node->get_input_from(src_node);
-    descriptor::Output* src_output = src_node->get_output_to(dst_node);
-    src_output->remove_input(dst_input);    // Remove [0]
-    dst_input->replace_output(par_node, 0); // Remove [0] (again), add [8], remove [1], add [9]
-
-    // Add res node
-    shared_ptr<op::Result> res_node = make_shared<op::Result>(src_node); // Add [4], [5], [6], [7]
-    res_node->set_placement(src_node->get_placement_size());
-
-    return make_pair(res_node, par_node);
-}
-
 // Insert unary node between two nodes like S->D => S->N->D
 // Before:                        |  After:
 // +-----+---+       +---+-----+  |  +-----+---+       +---+-----+---+       +---+-----+
@@ -433,54 +403,6 @@ void ngraph::insert_new_node_between(const shared_ptr<Node>& src_node,
     descriptor::Output* src_output = src_node->get_output_to(dst_node);
     src_output->remove_input(dst_input);    // Remove [0]
     dst_input->replace_output(new_node, 0); // Remove [0] (again), add [8], remove [1], add [9]
-}
-
-// Assert that nodes in the function is colocated and return that placement
-Placement ngraph::get_colocated_function_placement(shared_ptr<Function> func)
-{
-    Placement function_placement = Placement::DEFAULT;
-    traverse_nodes(func, [&](shared_ptr<Node> node) {
-        Placement node_placement = node->get_placement();
-        if (node_placement == Placement::DEFAULT)
-        {
-            throw ngraph_error("Node should have a device placement, not Placement::DEFAULT");
-        }
-        if (function_placement == Placement::DEFAULT)
-        {
-            // First time seeing a node
-            function_placement = node->get_placement();
-        }
-        else if (function_placement != node_placement)
-        {
-            throw ngraph_error("Function contains nodes of two different placements");
-        }
-    });
-    return function_placement;
-}
-
-// Suffix *_size  as a part of function name is temporary, this suffix
-//  will be removed when the backends move to the latest Hybrid backend
-// Assert that nodes in the function is colocated and return that placement
-size_t ngraph::get_colocated_function_placement_size(shared_ptr<Function> func)
-{
-    auto ops = func->get_ops();
-
-    //it's okay to not do Placement::DEFAULT check; the same node will be checked in the loop below
-    size_t function_placement = ops.front()->get_placement_size();
-    for (auto op : ops)
-    {
-        size_t node_placement = op->get_placement_size();
-        if (node_placement == 0)
-        {
-            throw ngraph_error("Node should have a device placement, not Placement::DEFAULT");
-        }
-        if (function_placement != node_placement)
-        {
-            throw ngraph_error("Function contains nodes of two different placements");
-        }
-    }
-
-    return function_placement;
 }
 
 std::shared_ptr<Node> ngraph::make_zero(const element::Type& element_type, const Shape& shape)
@@ -590,8 +512,9 @@ bool ngraph::possibly_overwritten(Node* node)
     {
         for (const descriptor::Input* input : output.get_inputs())
         {
-            if (auto op = std::dynamic_pointer_cast<ngraph::op::Op>(input->get_node()))
+            if (input->get_node()->is_op())
             {
+                auto op = std::static_pointer_cast<ngraph::op::Op>(input->get_node());
                 if (auto op_annotations = op->get_op_annotations())
                 {
                     for (auto oi_pair : op_annotations->get_in_place_oi_pairs())

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -188,6 +188,7 @@ void ngraph::runtime::cpu::pass::CPUHorizontalFusion::cpu_conv_horizontal_fusion
         return true;
     };
 
-    auto m = make_shared<pattern::Matcher>(conv_bias, callback);
+    auto m = make_shared<pattern::Matcher>(
+        conv_bias, callback, "CPUHorizontalFusion.CpuConvHorizontalFusion");
     this->add_matcher(m);
 }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,9 @@
 
 #include <algorithm>
 #include <iostream>
+#include <regex>
 #include <unordered_set>
+#include <vector>
 
 #include "graph_rewrite.hpp"
 #include "ngraph/log.hpp"
@@ -88,6 +90,48 @@ bool ngraph::pass::GraphRewrite::run_on_function(std::shared_ptr<ngraph::Functio
 
     m_matchers.assign(original_matchers.begin(), original_matchers.end());
     return (NUM_TRIES - tries) > 1; //this means a graph was transformed
+}
+
+static const std::vector<std::regex> initialize_fusion_regexes()
+{
+    const char* cnsf = std::getenv("NGRAPH_DISABLED_FUSIONS");
+    std::vector<std::regex> regexes;
+    if (cnsf)
+    {
+        const std::string nsf = cnsf;
+        const auto sregexes = ngraph::split(nsf, ';');
+
+        std::transform(sregexes.begin(),
+                       sregexes.end(),
+                       std::back_inserter(regexes),
+                       [](const std::string& c) -> std::regex { return std::regex(c); });
+    }
+    return regexes;
+}
+
+bool ngraph::pass::GraphRewrite::is_enabled(std::shared_ptr<pattern::Matcher> m)
+{
+    //note, regexes are static to avoid re-initialization
+    static const auto regexes = initialize_fusion_regexes();
+
+    for (const auto& regex : regexes)
+    {
+        if (std::regex_match(m->get_name(), regex))
+        {
+            NGRAPH_DEBUG << "Disabling matcher " << m->get_name();
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void ngraph::pass::GraphRewrite::add_matcher(std::shared_ptr<pattern::Matcher> m)
+{
+    if (is_enabled(m))
+    {
+        m_matchers.push_back(m);
+    }
 }
 
 bool ngraph::pass::RecurrentGraphRewrite::run_on_function(std::shared_ptr<ngraph::Function> f)

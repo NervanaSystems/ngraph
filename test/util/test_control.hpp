@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -120,7 +120,7 @@ namespace ngraph
                     ::testing::internal::CodeLocation(__FILE__, __LINE__))                         \
                 ->AddTestPattern(                                                                  \
                     #backend_name "/" #test_case_name,                                             \
-                    ::ngraph::prepend_disabled(#backend_name, #test_name, s_manifest).c_str(),     \
+                    ::ngraph::prepend_disabled(#test_case_name, #test_name, s_manifest).c_str(),   \
                     new ::testing::internal::TestMetaFactory<NGRAPH_GTEST_TEST_CLASS_NAME_(        \
                         backend_name, test_case_name, test_name)>());                              \
             return 0;                                                                              \
@@ -169,12 +169,12 @@ namespace ngraph
 // --gtest_filter=BACKENDNAME*.*
 // (rather than the BACKENDNAME.* that worked before the use of NGRAPH_TEST_P)
 #define NGRAPH_INSTANTIATE_TEST_CASE_P(backend_name, prefix, test_case_name, generator)            \
-    ::testing::internal::ParamGenerator<test_case_name::ParamType>                                 \
+    static ::testing::internal::ParamGenerator<test_case_name::ParamType>                          \
         gtest_##prefix##backend_name##test_case_name##_EvalGenerator_()                            \
     {                                                                                              \
         return generator;                                                                          \
     }                                                                                              \
-    ::std::string gtest_##prefix##backend_name##test_case_name##_EvalGenerateName_(                \
+    static ::std::string gtest_##prefix##backend_name##test_case_name##_EvalGenerateName_(         \
         const ::testing::TestParamInfo<test_case_name::ParamType>& info)                           \
     {                                                                                              \
         return ::testing::internal::GetParamNameGen<test_case_name::ParamType>()(info);            \

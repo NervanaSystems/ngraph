@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -72,9 +72,10 @@ namespace ngraph
                 {
                     auto padding_interior = pad->get_padding_interior();
 
-                    std::function<decltype(runtime::cpu::kernel::pad<float>)> kernel;
+                    std::function<decltype(runtime::cpu::kernel::pad_ref<float>)> kernel;
 
-                    SELECT_KERNEL(kernel, args[0].get_element_type(), runtime::cpu::kernel::pad);
+                    SELECT_KERNEL(
+                        kernel, args[0].get_element_type(), runtime::cpu::kernel::pad_ref);
 
                     auto functor = [&,
                                     kernel,

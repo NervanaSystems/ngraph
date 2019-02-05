@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -473,7 +473,7 @@ void codegen::CompilerCore::configure_search_path()
 #endif
 
 #ifdef NGRAPH_DISTRIBUTED
-    add_header_search_path(MPI_HEADER_PATH);
+    add_header_search_path(MLSL_HEADER_PATH);
 #endif
 }
 

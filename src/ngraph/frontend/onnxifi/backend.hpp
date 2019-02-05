@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ namespace ngraph
             }
 
             const std::string& get_type() const { return m_type; }
-            bool compile(const std::shared_ptr<Function>& function) const
+            runtime::Handle compile(const std::shared_ptr<Function>& function) const
             {
                 return get().compile(function);
             }

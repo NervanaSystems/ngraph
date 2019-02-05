@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@
 #include "ngraph/log.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/concat.hpp"
+#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -47,8 +48,9 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
         std::map<descriptor::Tensor*, descriptor::Tensor*> in_place_outputs;
         std::set<const descriptor::Tensor*> reused_inputs;
 
-        if (auto op = std::dynamic_pointer_cast<op::Op>(node))
+        if (node->is_op())
         {
+            auto op = std::static_pointer_cast<op::Op>(node);
             // concat and slice in_place_oi should be treated differently
             if (!std::dynamic_pointer_cast<op::Concat>(node) &&
                 !std::dynamic_pointer_cast<op::Slice>(node))
@@ -65,9 +67,14 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
                         // For destructive kernel, this should be the last use
                         // Non-destructive kernels can pass through if memory sharing is disabled
                         if ((node->liveness_free_list.count(input) != 0 ||
-                             (m_disable_memory_sharing && !oi_pair.destructive)) &&
+                             std::dynamic_pointer_cast<op::GetOutputElement>(node) ||
+                             (m_disable_memory_sharing && !oi_pair.destructive &&
+                              !input_node->is_parameter() && !input_node->is_constant())) &&
                             node->liveness_new_list.count(output) != 0)
+
                         {
+                            NGRAPH_DEBUG << "Reusing " << input->get_name() << " for "
+                                         << output->get_name();
                             in_place_outputs.insert({output, input});
                             reused_inputs.insert(input);
                         }

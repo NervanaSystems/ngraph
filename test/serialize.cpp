@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -55,25 +55,7 @@ TEST(serialize, main)
     auto C = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C}, "f");
 
-    // Now make "g(X,Y,Z) = f(X,Y,Z) + f(X,Y,Z)"
-    auto X = make_shared<op::Parameter>(element::f32, shape);
-    auto Y = make_shared<op::Parameter>(element::f32, shape);
-    auto Z = make_shared<op::Parameter>(element::f32, shape);
-    auto g = make_shared<Function>(make_shared<op::FunctionCall>(f, NodeVector{X, Y, Z}) +
-                                       make_shared<op::FunctionCall>(f, NodeVector{X, Y, Z}),
-                                   ParameterVector{X, Y, Z},
-                                   "g");
-
-    // Now make "h(X,Y,Z) = g(X,Y,Z) + g(X,Y,Z)"
-    auto X1 = make_shared<op::Parameter>(element::f32, shape);
-    auto Y1 = make_shared<op::Parameter>(element::f32, shape);
-    auto Z1 = make_shared<op::Parameter>(element::f32, shape);
-    auto h = make_shared<Function>(make_shared<op::FunctionCall>(g, NodeVector{X1, Y1, Z1}) +
-                                       make_shared<op::FunctionCall>(g, NodeVector{X1, Y1, Z1}),
-                                   ParameterVector{X1, Y1, Z1},
-                                   "h");
-
-    string js = serialize(h, 4);
+    string js = serialize(f, 4);
 
     {
         ofstream out("serialize_function.js");
@@ -82,9 +64,8 @@ TEST(serialize, main)
 
     istringstream in(js);
     shared_ptr<Function> sfunc = deserialize(in);
-
-    // Now call h on some test vectors.
     auto backend = runtime::Backend::create("INTERPRETER");
+    auto handle = backend->compile(sfunc);
 
     auto x = backend->create_tensor(element::f32, shape);
     copy_data(x, vector<float>{1, 2, 3, 4});
@@ -94,14 +75,14 @@ TEST(serialize, main)
     copy_data(z, vector<float>{9, 10, 11, 12});
     auto result = backend->create_tensor(element::f32, shape);
 
-    backend->call_with_validate(sfunc, {result}, {x, y, z});
-    EXPECT_EQ((vector<float>{216, 320, 440, 576}), read_vector<float>(result));
+    backend->call_with_validate(handle, {result}, {x, y, z});
+    EXPECT_EQ((vector<float>{54, 80, 110, 144}), read_vector<float>(result));
 
-    backend->call_with_validate(sfunc, {result}, {y, x, z});
-    EXPECT_EQ((vector<float>{216, 320, 440, 576}), read_vector<float>(result));
+    backend->call_with_validate(handle, {result}, {y, x, z});
+    EXPECT_EQ((vector<float>{54, 80, 110, 144}), read_vector<float>(result));
 
-    backend->call_with_validate(sfunc, {result}, {x, z, y});
-    EXPECT_EQ((vector<float>{200, 288, 392, 512}), read_vector<float>(result));
+    backend->call_with_validate(handle, {result}, {x, z, y});
+    EXPECT_EQ((vector<float>{50, 72, 98, 128}), read_vector<float>(result));
 }
 #endif
 

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -83,8 +83,8 @@ void MNistLoader::open()
     m_file = fopen(m_filename.c_str(), "rb");
     if (m_file == nullptr)
     {
-        throw std::runtime_error(std::string("File") + m_filename +
-                                 "couldn't be opened. Make sure the file "
+        throw std::runtime_error(std::string("File ") + m_filename +
+                                 " couldn't be opened. Make sure the file "
                                  "exists in the current directory");
     }
     read_header();

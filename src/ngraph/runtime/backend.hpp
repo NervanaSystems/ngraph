@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ namespace ngraph
         class ExternalFunction;
         class Tensor;
         class Backend;
+        using Handle = std::shared_ptr<Function>;
     }
 }
 
@@ -79,8 +80,8 @@ public:
 
     /// \brief Compiles a Function.
     /// \param func The function to compile
-    /// \returns true if compile is successful, false otherwise
-    virtual bool compile(std::shared_ptr<Function> func) = 0;
+    /// \returns compiled function or nullptr on failure
+    virtual Handle compile(std::shared_ptr<Function> func) = 0;
 
     /// \brief Executes a single iteration of a Function. If func is not compiled the call will
     ///     compile it.
@@ -98,7 +99,7 @@ public:
                             const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                             const std::vector<std::shared_ptr<runtime::Tensor>>& inputs)
     {
-        validate_call(func, outputs, inputs);
+        validate(func, outputs, inputs);
         return call(func, outputs, inputs);
     }
 
@@ -123,8 +124,17 @@ public:
     /// \returns true if the op is supported, false otherwise.
     virtual bool is_supported(const Node& node) const;
 
-protected:
-    void validate_call(std::shared_ptr<const Function> func,
-                       const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                       const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
+    /// \brief A set of properties supported by a backend
+    enum class Property
+    {
+        memory_attach /// New tensor can use attached memory
+    };
+
+    /// \brief Test if a backend particular property is supported
+    /// \param prop is the feature to test.
+    /// \returns true if the property is supported, false otherwise.
+    virtual bool is_supported_property(const Property prop) const { return false; }
+    void validate(std::shared_ptr<const Function> func,
+                  const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                  const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
 };

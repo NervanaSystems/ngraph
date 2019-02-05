@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/plaidml/plaidml_compiler.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/core_fusion.hpp"
@@ -24,8 +25,18 @@
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
+#include "ngraph/pass/prefix_reshape_elimination.hpp"
+#include "ngraph/pass/visualize_tree.hpp"
+#include "ngraph/pass/zero_dim_tensor_elimination.hpp"
 #include "ngraph/runtime/plaidml/plaidml_impl.hpp"
 #include "ngraph/runtime/plaidml/plaidml_logger.hpp"
+#include "ngraph/runtime/plaidml/plaidml_pass_concat_elision.hpp"
+#include "ngraph/runtime/plaidml/plaidml_pass_explicit_logicals.hpp"
+#include "ngraph/runtime/plaidml/plaidml_pass_implicit_broadcast.hpp"
+#include "ngraph/runtime/plaidml/plaidml_pass_lower_convolutions.hpp"
+#include "ngraph/runtime/plaidml/plaidml_pass_replicate_combination.hpp"
+#include "ngraph/runtime/plaidml/plaidml_pass_replicate_elision.hpp"
+#include "ngraph/runtime/plaidml/plaidml_pass_winograd.hpp"
 
 namespace
 {
@@ -76,15 +87,44 @@ std::shared_ptr<ngraph::runtime::plaidml::CompiledFunction>
     // We apply the same general-purposes passes as the CPU backend.
     pass_manager.register_pass<ngraph::pass::LikeReplacement>();
     pass_manager.register_pass<ngraph::pass::NopElimination>();
+    pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
     pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
     // N.B. We'd like to register ngraph::pass::GetOutputElementElimination, but it breaks BatchNorm
     // backprop
     pass_manager.register_pass<ngraph::pass::Liveness>();
+    pass_manager.register_pass<ngraph::runtime::plaidml::pass::ExplicitLogicals>();
+    pass_manager.register_pass<ngraph::runtime::plaidml::pass::ConcatElision>();
+    pass_manager.register_pass<ngraph::runtime::plaidml::pass::ReplicateElision>();
+    pass_manager.register_pass<ngraph::runtime::plaidml::pass::ReplicateCombination>();
+    pass_manager.register_pass<ngraph::runtime::plaidml::pass::ImplicitBroadcast>();
+    pass_manager.register_pass<ngraph::pass::PrefixReshapeElimination>();
+    pass_manager.register_pass<ngraph::runtime::plaidml::pass::LowerConvolutions>();
+    if (pass_manager.get_pass_config().get_pass_enable("Winograd"))
+    {
+        pass_manager.register_pass<ngraph::runtime::plaidml::pass::Winograd>();
+    }
+    if (!m_config->graphviz.empty())
+    {
+        pass_manager.register_pass<ngraph::pass::VisualizeTree>(m_config->graphviz);
+    }
 
+    // N.B. When we rewrite the graph, there are cases where we
+    // produce nodes that contain validation errors.  A good example
+    // is in the ImplicitBroadcast pass -- after this pass, there may
+    // be elementwise operations whose inputs are not all the same
+    // shape.
+    //
+    // The caller may wish to perform operations (e.g. clone) on their
+    // supplied function that will cause validation to occur.  So
+    // before we rewrite, we make our own copy of the function.
+    func = clone_function(*func);
+
+    // Apply passes.
     pass_manager.run_passes(func);
 
+    // Compile the resulting function.
     Build b;
     build(std::move(func), &b);
     return std::make_shared<CompiledFunction>(std::move(b));
@@ -96,7 +136,7 @@ void ngraph::runtime::plaidml::Compiler::build(std::shared_ptr<Function> func, B
     b->config = m_config;
     b->func = func;
 
-    const auto* op_map = OpImplMap();
+    const auto* op_map = GlobalOpImplMap();
 
     for (const auto& op_ptr : func->get_ordered_ops())
     {
@@ -112,6 +152,6 @@ void ngraph::runtime::plaidml::Compiler::build(std::shared_ptr<Function> func, B
                 std::string{"The PlaidML backend doesn't currently implement the '"} +
                 op->description() + "' operation"};
         }
-        it->second(b, *op);
+        it->second->Apply(b, op);
     }
 }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ namespace ngraph
         {
             static size_t alignment = 64;
 
-            class GPU_ExternalFunction;
+            class GPUCompiledFunction;
             class GPUPrimitiveEmitter;
             struct GPURuntimeContext;
             class CudaContextManager;
@@ -51,7 +51,7 @@ namespace ngraph
                     create_tensor(const ngraph::element::Type& element_type,
                                   const Shape& shape) override;
 
-                bool compile(std::shared_ptr<Function> func) override;
+                Handle compile(std::shared_ptr<Function> func) override;
 
                 bool call(std::shared_ptr<Function> func,
                           const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
@@ -70,6 +70,7 @@ namespace ngraph
                     BackendContext();
                     ~BackendContext();
                     void prepare_runtime_context();
+                    void bind_cuda_context_to_thread();
 
                     std::unique_ptr<GPURuntimeContext> m_runtime_context;
                     std::unique_ptr<GPUPrimitiveEmitter> m_primitive_emitter;
@@ -82,9 +83,9 @@ namespace ngraph
                 class FunctionInstance
                 {
                 public:
-                    std::shared_ptr<GPU_ExternalFunction> m_external_function;
+                    std::shared_ptr<GPUCompiledFunction> m_compiled_function;
                     bool m_performance_counters_enabled = false;
-                    EntryPoint m_compiled_function;
+                    EntryPoint m_runtime;
                     std::vector<void*> m_inputs;
                     std::vector<void*> m_outputs;
                 };
