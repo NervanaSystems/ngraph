@@ -22,7 +22,8 @@ add_library(onnxifi-ngraph SHARED
     exceptions.hpp
     span.hpp
     tensor.hpp
-    tensor.cpp)
+    tensor.cpp
+    weight.hpp)
 
 target_link_libraries(onnxifi-ngraph PRIVATE ngraph)
 
