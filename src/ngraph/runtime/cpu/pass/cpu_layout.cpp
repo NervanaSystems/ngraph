@@ -302,7 +302,7 @@ void set_layouts_binaryeltwise(ngraph::runtime::cpu::CPU_ExternalFunction* exter
         vector<memory::desc> i_mds;
         vector<memory::desc> o_mds;
         int select = 0;
-        char *ngraph_pass_cpu_layout_eltwise = std::getenv("NGRAPH_PASS_CPU_LAYOUT_ELTWISE");
+        char* ngraph_pass_cpu_layout_eltwise = std::getenv("NGRAPH_PASS_CPU_LAYOUT_ELTWISE");
         if (ngraph_pass_cpu_layout_eltwise != nullptr)
         {
             const int user_select = std::atoi(ngraph_pass_cpu_layout_eltwise);
