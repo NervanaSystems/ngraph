@@ -337,7 +337,7 @@ namespace ngraph
                     {
                     }
 
-                    NodeVector run()
+                    NodeVector run(bool reverse = false)
                     {
                         // ------ VARIABLE'S NAMES AND ACRONYM DEFINITIONS ------
                         // The names used below are analogous to the one used in ONNX documentation.
@@ -390,6 +390,11 @@ namespace ngraph
                         {
                             // remove first empty dim, after above split.
                             in_x = reshape::squeeze(in_x);
+                        }
+
+                        if (reverse)
+                        {
+                            std::reverse(std::begin(in_seqs), std::end(in_seqs));
                         }
 
                         for (const auto& in_x : in_seqs)
@@ -446,6 +451,13 @@ namespace ngraph
                             // Expand tensors with empty outermost dim, so we can later concatenate them.
                             exp_h_list.push_back(reshape::expand_dims(ht));
                         }
+
+                        // Get back the original order of the output data.
+                        if (reverse)
+                        {
+                            std::reverse(std::begin(exp_h_list), std::end(exp_h_list));
+                        }
+
                         std::shared_ptr<ngraph::Node> Y{
                             std::make_shared<ngraph::op::Concat>(exp_h_list, 0)};
 
@@ -494,7 +506,8 @@ namespace ngraph
 
                     NodeVector results;
 
-                    if (attributes.m_direction == LSTMDirection::LSTM_DIRECTION_FORWARD)
+                    if (attributes.m_direction == LSTMDirection::LSTM_DIRECTION_FORWARD ||
+                        attributes.m_direction == LSTMDirection::LSTM_DIRECTION_REVERSE)
                     {
                         LSTMForward lstm_fwd(input_map.at(LSTMInput::LSTM_INPUT_X),
                                              input_map.at(LSTMInput::LSTM_INPUT_W),
@@ -508,19 +521,15 @@ namespace ngraph
                                              activation_h,
                                              attributes.m_input_forget,
                                              attributes.m_clip_threshold);
-                        results = lstm_fwd.run();
-                    }
-                    if (attributes.m_direction == LSTMDirection::LSTM_DIRECTION_REVERSE)
-                    {
-                        // LSTMForward lstm_reversed();
-                        // results = lstm_reversed.run();
+                        results = lstm_fwd.run(
+                            (attributes.m_direction == LSTMDirection::LSTM_DIRECTION_REVERSE));
                     }
                     if (attributes.m_direction == LSTMDirection::LSTM_DIRECTION_BIDIRECTIONAL)
                     {
                         // LSTMForward lstm_fwd();
                         // LSTMForward lstm_reversed();
                         // NodeVector fwd_results{lstm_fwd.run()};
-                        // NodeVector rev_results{lstm_fwd.run()};
+                        // NodeVector rev_results{lstm_fwd.run(true)};
                     }
 
                     return results;
