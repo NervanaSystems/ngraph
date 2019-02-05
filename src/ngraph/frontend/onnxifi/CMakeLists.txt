@@ -23,6 +23,8 @@ add_library(onnxifi-ngraph SHARED
     event_manager.hpp
     event_manager.cpp
     exceptions.hpp
+    graph.hpp
+    graph_manager.hpp
     span.hpp
     tensor.hpp
     tensor.cpp
