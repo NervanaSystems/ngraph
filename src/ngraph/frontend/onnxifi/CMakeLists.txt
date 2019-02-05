@@ -23,6 +23,7 @@ add_library(onnxifi-ngraph SHARED
     span.hpp
     tensor.hpp
     tensor.cpp
+    queue.hpp
     weight.hpp)
 
 target_link_libraries(onnxifi-ngraph PRIVATE ngraph)
