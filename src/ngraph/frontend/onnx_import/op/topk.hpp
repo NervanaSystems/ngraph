@@ -14,23 +14,30 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/pass/assign_placement.hpp"
-#include "ngraph/log.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/placement.hpp"
-#include "ngraph/runtime/backend.hpp"
+#pragma once
 
-using namespace ngraph;
-using namespace std;
+#include "core/node.hpp"
+#include "ngraph/node_vector.hpp"
 
-pass::AssignPlacement::AssignPlacement(function<Placement(shared_ptr<Node>)> placement_policy)
-    : m_placement_policy(placement_policy)
+namespace ngraph
 {
-}
+    namespace onnx_import
+    {
+        namespace op
+        {
+            namespace set_1
+            {
+                /// \brief Performs ONNX TopK operation.
+                ///
+                /// \param node The ONNX node object representing this operation.
+                /// \return The vector containing Ngraph nodes producing output of ONNX TopK
+                ///         operation(both values and indices).
+                NodeVector topk(const Node& node);
 
-bool pass::AssignPlacement::run_on_node(shared_ptr<Node> node)
-{
-    node->set_placement(m_placement_policy(node));
+            } // namespace set_1
 
-    return false;
-}
+        } //namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

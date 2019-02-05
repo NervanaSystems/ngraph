@@ -16,7 +16,6 @@
 
 #include "ngraph/runtime/gpuh/gpuh_backend.hpp"
 #include "ngraph/graph_util.hpp"
-#include "ngraph/pass/assign_placement.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/runtime/interpreter/int_backend.hpp"

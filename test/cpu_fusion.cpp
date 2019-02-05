@@ -1339,9 +1339,9 @@ TEST(cpu_fusion, rnn_fusion_from_json_model)
     shared_ptr<Function> func = ngraph::deserialize(ss);
     pass_manager.run_passes(func);
     const size_t NUM_STEPS = 10;
-    auto mmb_predicate = [](std::shared_ptr<Node> node) {
+    auto mmb_predicate = [=](std::shared_ptr<Node> node) {
         auto users = node->get_users();
-        return users.size() == NUM_STEPS &&
+        return (users.size() == NUM_STEPS) &&
                std::all_of(begin(users), end(users), [](std::shared_ptr<Node> n) {
                    return std::dynamic_pointer_cast<op::Slice>(n) != nullptr;
                });
@@ -3433,6 +3433,29 @@ TEST(cpu_fusion, rnn_input_fusion_inter_vs_cpu)
 {
     shared_ptr<Function> cpu_func = create_rnn_input_linear_transformation_function(10);
     shared_ptr<Function> int_func = create_rnn_input_linear_transformation_function(10);
+
+    test::Uniform<float> rng(-10.0f, 10.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : int_func->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    auto int_results = execute(int_func, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_func, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+    }
+}
+
+TEST(cpu_fusion, validate_fuse_gru_inputs)
+{
+    const std::string file_name("mxnet/gru_debug.json");
+    auto cpu_func = make_function_from_file(file_name);
+    auto int_func = make_function_from_file(file_name);
 
     test::Uniform<float> rng(-10.0f, 10.0f);
     vector<vector<float>> args;

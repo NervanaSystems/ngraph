@@ -14,28 +14,23 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <deque>
-#include <sstream>
+#include "gtest/gtest.h"
 
-#include "ngraph/function.hpp"
-#include "ngraph/graph_util.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/placement.hpp"
-#include "ngraph/util.hpp"
+#include "ngraph/file_util.hpp"
+#include "ngraph/ngraph.hpp"
+#include "ngraph/serializer.hpp"
 
-using namespace std;
 using namespace ngraph;
+using namespace std;
 
-std::string ngraph::placement_to_string(Placement placement)
+TEST(core, function_size)
 {
-    switch (placement)
-    {
-    case Placement::DEFAULT: return "DEFAULT";
-    case Placement::INTERPRETER: return "INTERPRETER";
-    case Placement::CPU: return "CPU";
-    case Placement::GPU: return "GPU";
-    case Placement::NNP: return "NNP";
-    case Placement::PLAIDML: return "PlaidML";
-    }
-    throw runtime_error("unhandled placement type");
+    const string m1 = file_util::path_join(SERIALIZED_ZOO, "mxnet/mnist_mlp_forward.json");
+    const string m2 = file_util::path_join(SERIALIZED_ZOO, "mxnet/10_bucket_LSTM.json");
+
+    auto f1 = deserialize(m1);
+    auto f2 = deserialize(m2);
+    auto s1 = f1->get_graph_size();
+    auto s2 = f2->get_graph_size();
+    EXPECT_GT(s2, s1);
 }

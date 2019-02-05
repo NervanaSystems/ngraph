@@ -99,17 +99,6 @@ namespace ngraph
         void validate_and_infer_elementwise_arithmetic();
         void validate_and_infer_elementwise_logical();
 
-        // Temporary hack while partial shape propagation is being implemented. If any input has
-        // dynamic shape or dynamic element type, sets all outputs to have a shape of dynamic
-        // rank and dynamic element type. Ops where we haven't yet implemented partial shape
-        // propagation can add this boilerplate at the top of their validate_and_infer_types():
-        //
-        //   if (validate_punt_if_dynamic())
-        //   {
-        //       return;
-        //   }
-        bool validate_punt_if_dynamic();
-
         Node(const std::string& node_type, const NodeVector& arguments, size_t output_size = 1);
 
         virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
