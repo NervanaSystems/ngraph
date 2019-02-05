@@ -929,13 +929,10 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
     {TI(ngraph::op::Quantize), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Quantize>},
     {TI(ngraph::op::Dequantize),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Dequantize>},
-<<<<<<< HEAD
     {TI(ngraph::op::QuantizedConcat),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedConcat>},
-=======
     {TI(ngraph::op::GetOutputElement),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::GetOutputElement>},
->>>>>>> master
 };
 
 bool runtime::cpu::pass::CPUAssignment::run_on_call_graph(
