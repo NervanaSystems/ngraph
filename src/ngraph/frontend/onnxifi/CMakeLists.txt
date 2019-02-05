@@ -39,3 +39,9 @@ if(NGRAPH_LIB_VERSIONING_ENABLE)
 endif()
 
 install(TARGETS onnxifi-ngraph DESTINATION ${NGRAPH_INSTALL_LIB})
+
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
+    target_compile_options(onnxifi-ngraph PRIVATE -Wno-undef -Wno-reserved-id-macro -Wno-switch-enum
+            -Wno-shorten-64-to-32 -Wno-unused-macros -Wno-missing-variable-declarations
+            -Wno-unused-private-field -Wno-shadow -Wno-deprecated -Wno-unused-member-function)
+endif()
