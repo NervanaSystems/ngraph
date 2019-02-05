@@ -1021,3 +1021,26 @@ TEST(onnxifi, init_graph_invalid_protobuf)
         EXPECT_TRUE(graph == nullptr);
     }
 }
+
+// =================================================[ onnxReleaseGraph ]=======
+
+TEST(onnxifi, release_graph)
+{
+    InitializedBackends backends{};
+    auto model = load_model();
+    for (const auto& backend : backends)
+    {
+        ::onnxGraph graph;
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+        status = ::onnxReleaseGraph(graph);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+TEST(onnxifi, release_graph_invalid_graph)
+{
+    ::onnxStatus status{::onnxReleaseGraph(nullptr)};
+    EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_GRAPH);
+}

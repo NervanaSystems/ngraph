@@ -115,6 +115,19 @@ namespace ngraph
             *graph_handle = (it.first)->first;
         }
 
+        void GraphManager::_release_graph(::onnxGraph handle)
+        {
+            if (handle == nullptr)
+            {
+                throw status::invalid_graph{};
+            }
+            std::lock_guard<std::mutex> lock{m_mutex};
+            if (m_graphs.erase(handle) == 0)
+            {
+                throw status::invalid_graph{};
+            }
+        }
+
     } // namespace onnxifi
 
 } // namespace ngraph

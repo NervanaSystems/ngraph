@@ -44,6 +44,7 @@ namespace ngraph
                 instance()._init_graph(backend, model, weights, graph);
             }
 
+            static void release_graph(::onnxGraph graph) { instance()._release_graph(graph); }
         private:
             std::mutex m_mutex{};
             std::map<::onnxGraph, std::unique_ptr<Graph>> m_graphs{};
@@ -60,6 +61,8 @@ namespace ngraph
                              const Span<char>& onnx_model,
                              const Span<::onnxTensorDescriptorV1>& weights,
                              ::onnxGraph* graph_handle);
+
+            void _release_graph(::onnxGraph handle);
         };
 
     } // namespace onnxifi

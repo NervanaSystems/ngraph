@@ -321,7 +321,23 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxRunGraph(
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxReleaseGraph(onnxGraph graph)
 {
-    return ONNXIFI_STATUS_INTERNAL_ERROR;
+    try
+    {
+        GraphManager::release_graph(graph);
+        return ONNXIFI_STATUS_SUCCESS;
+    }
+    catch (const status::runtime& e)
+    {
+        return e.get_status();
+    }
+    catch (const std::out_of_range&)
+    {
+        return ONNXIFI_STATUS_INVALID_GRAPH;
+    }
+    catch (...)
+    {
+        return ONNXIFI_STATUS_INTERNAL_ERROR;
+    }
 }
 
 } /* extern "C" */
