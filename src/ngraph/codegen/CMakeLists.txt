@@ -69,7 +69,7 @@ if ((NGRAPH_GPU_ENABLE OR NGRAPH_CPU_ENABLE) AND NOT NGRAPH_DEX_ONLY)
     # Generate the resource file containing all headers used by the codegen compiler
     add_custom_target(header_resource
         resource_generator --output ${CMAKE_BINARY_DIR}/header_resource.hpp --base codegen
-        DEPENDS resource_generator ext_llvm
+        DEPENDS resource_generator
         BYPRODUCTS
     )
     if (NGRAPH_CPU_ENABLE)

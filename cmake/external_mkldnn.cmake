@@ -39,23 +39,17 @@ if(MKLDNN_INCLUDE_DIR AND MKLDNN_LIB_DIR)
     if(NOT MKLML_LIB_DIR)
         set(MKLML_LIB_DIR ${MKLDNN_LIB_DIR})
     endif()
-    ExternalProject_Add(
-        ext_mkldnn
-        DOWNLOAD_COMMAND ""
-        UPDATE_COMMAND ""
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND ""
-        INSTALL_COMMAND ""
-        )
+
+    add_library(libmkl INTERFACE)
+    target_link_libraries(libmkl INTERFACE ${MKLML_LIB_DIR}/${MKLML_LIB})
+
     add_library(libmkldnn INTERFACE)
     target_include_directories(libmkldnn SYSTEM INTERFACE ${MKLDNN_INCLUDE_DIR})
     target_link_libraries(libmkldnn INTERFACE
         ${MKLDNN_LIB_DIR}/${MKLDNN_LIB}
-        ${MKLDNN_LIB_DIR}/${MKLML_LIB}
-        ${MKLDNN_LIB_DIR}/${OMP_LIB}
         )
 
-    install(FILES ${MKLDNN_LIB_DIR}/libmkldnn.so ${MKLML_LIB_DIR}/libmklml_intel.so ${MKLML_LIB_DIR}/libiomp5.so  DESTINATION ${NGRAPH_INSTALL_LIB})
+    install(FILES ${MKLDNN_LIB_DIR}/${MKLDNN_LIB} ${MKLML_LIB_DIR}/${MKLML_LIB} ${MKLML_LIB_DIR}/${OMP_LIB}  DESTINATION ${NGRAPH_INSTALL_LIB})
     return()
 endif()
 
@@ -130,7 +124,7 @@ endif()
 
 add_library(libmkl INTERFACE)
 add_dependencies(libmkl ext_mkl)
-target_link_libraries(libmkl INTERFACE ${NGRAPH_BUILD_DIR}/${MKLML_LIB} ${NGRAPH_BUILD_DIR}/${OMP_LIB})
+target_link_libraries(libmkl INTERFACE ${NGRAPH_BUILD_DIR}/${MKLML_LIB})
 
 set(MKLDNN_GIT_REPO_URL https://github.com/intel/mkl-dnn)
 set(MKLDNN_GIT_TAG "b9ce57a")
@@ -234,7 +228,6 @@ add_dependencies(libmkldnn ext_mkldnn)
 target_include_directories(libmkldnn SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/mkldnn/include)
 target_link_libraries(libmkldnn INTERFACE
     ${NGRAPH_BUILD_DIR}/${MKLDNN_LIB}
-    libmkl
     )
 
 install(

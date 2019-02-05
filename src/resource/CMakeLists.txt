@@ -21,12 +21,15 @@ set (SRC
     header_rewrite.cpp
 )
 
+add_executable(resource_generator EXCLUDE_FROM_ALL ${SRC})
+add_dependencies(resource_generator libllvm)
 get_target_property(LLVM_INCLUDE_DIR libllvm INTERFACE_INCLUDE_DIRECTORIES)
 get_filename_component(CLANG_INCLUDE_DIR ${LLVM_INCLUDE_DIR}/../lib/clang/7.0.1/include ABSOLUTE)
 list(APPEND HEADER_SEARCH_DEFINES CLANG_BUILTIN_HEADERS_PATH="${CLANG_INCLUDE_DIR}")
 list(APPEND HEADER_SEARCH_DEFINES NGRAPH_HEADERS_PATH="${NGRAPH_INCLUDE_PATH}")
 
 if(NGRAPH_CPU_ENABLE)
+    add_dependencies(resource_generator libmkldnn libeigen)
     get_target_property(MKLDNN_INCLUDE_DIR libmkldnn INTERFACE_INCLUDE_DIRECTORIES)
     get_target_property(EIGEN_INCLUDE_DIR libeigen INTERFACE_INCLUDE_DIRECTORIES)
     list(APPEND HEADER_SEARCH_DEFINES EIGEN_HEADERS_PATH="${EIGEN_INCLUDE_DIR}")
@@ -34,13 +37,9 @@ if(NGRAPH_CPU_ENABLE)
 endif()
 
 if(NGRAPH_TBB_ENABLE)
-    list(APPEND HEADER_SEARCH_DEFINES TBB_HEADERS_PATH="${TBB_ROOT}/include")
-endif()
-
-add_executable(resource_generator EXCLUDE_FROM_ALL ${SRC})
-add_dependencies(resource_generator ext_llvm)
-if(NGRAPH_CPU_ENABLE)
-    add_dependencies(resource_generator ext_eigen ext_mkldnn)
+    add_dependencies(resource_generator libtbb)
+    get_target_property(TBB_INCLUDE_DIR libtbb INTERFACE_INCLUDE_DIRECTORIES)
+    list(APPEND HEADER_SEARCH_DEFINES TBB_HEADERS_PATH="${TBB_INCLUDE_DIR}")
 endif()
 
 set_source_files_properties(main.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES}")
