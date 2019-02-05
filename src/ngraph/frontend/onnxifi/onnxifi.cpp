@@ -198,6 +198,28 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxSignalEvent(onnxE
     }
 }
 
+ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxGetEventState(onnxEvent event,
+                                                                             onnxEventState* state)
+{
+    try
+    {
+        EventManager::get_event_state(event, state);
+        return ONNXIFI_STATUS_SUCCESS;
+    }
+    catch (const status::runtime& e)
+    {
+        return e.get_status();
+    }
+    catch (const std::out_of_range&)
+    {
+        return ONNXIFI_STATUS_INVALID_EVENT;
+    }
+    catch (...)
+    {
+        return ONNXIFI_STATUS_INTERNAL_ERROR;
+    }
+}
+
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxWaitEvent(onnxEvent event)
 {
     try

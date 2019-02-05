@@ -867,3 +867,62 @@ TEST(onnxifi, wait_event)
         EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
     }
 }
+
+// ================================================[ onnxGetEventState ]=======
+
+TEST(onnxifi, get_event_state_invalid_pointer)
+{
+    InitializedBackends backends{};
+    for (const auto& backend : backends)
+    {
+        ::onnxEvent event;
+        ::onnxStatus status{::onnxInitEvent(backend, &event)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+        status = ::onnxGetEventState(event, nullptr);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_POINTER);
+        status = ::onnxReleaseEvent(event);
+    }
+}
+
+TEST(onnxifi, get_event_state_invalid_event)
+{
+    ::onnxEventState state;
+    ::onnxStatus status{::onnxGetEventState(nullptr, &state)};
+    EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_EVENT);
+}
+
+TEST(onnxifi, get_event_state_nonsignaled)
+{
+    InitializedBackends backends{};
+    for (const auto& backend : backends)
+    {
+        ::onnxEvent event;
+        ::onnxStatus status{::onnxInitEvent(backend, &event)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+        ::onnxEventState state;
+        status = ::onnxGetEventState(event, &state);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+        EXPECT_TRUE(state == ONNXIFI_EVENT_STATE_NONSIGNALLED);
+        status = ::onnxReleaseEvent(event);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+    }
+}
+
+TEST(onnxifi, get_event_state_signaled)
+{
+    InitializedBackends backends{};
+    for (const auto& backend : backends)
+    {
+        ::onnxEvent event;
+        ::onnxStatus status{::onnxInitEvent(backend, &event)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+        status = ::onnxSignalEvent(event);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+        ::onnxEventState state;
+        status = ::onnxGetEventState(event, &state);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+        EXPECT_TRUE(state == ONNXIFI_EVENT_STATE_SIGNALLED);
+        status = ::onnxReleaseEvent(event);
+        EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
+    }
+}
