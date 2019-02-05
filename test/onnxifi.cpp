@@ -926,3 +926,98 @@ TEST(onnxifi, get_event_state_signaled)
         EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
     }
 }
+
+// ====================================================[ onnxInitGraph ]=======
+
+TEST(onnxifi, init_graph_invalid_pointer_weights)
+{
+    InitializedBackends backends{};
+    auto model = load_model();
+    for (const auto& backend : backends)
+    {
+        ::onnxGraph graph{reinterpret_cast<::onnxGraph>(100)};
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 100, nullptr, &graph)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_POINTER);
+        EXPECT_TRUE(graph == nullptr);
+    }
+}
+
+TEST(onnxifi, init_graph_invalid_backend)
+{
+    auto model = load_model();
+    ::onnxGraph graph{reinterpret_cast<::onnxGraph>(100)};
+    ::onnxStatus status{
+        ::onnxInitGraph(nullptr, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+    EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_BACKEND);
+    EXPECT_TRUE(graph == nullptr);
+}
+
+TEST(onnxifi, init_graph_invalid_pointer_graph)
+{
+    InitializedBackends backends{};
+    auto model = load_model();
+    for (const auto& backend : backends)
+    {
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, nullptr)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_POINTER);
+    }
+}
+
+TEST(onnxifi, init_graph_invalid_pointer_model)
+{
+    InitializedBackends backends{};
+    auto model = load_model();
+    for (const auto& backend : backends)
+    {
+        ::onnxGraph graph{reinterpret_cast<::onnxGraph>(100)};
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), nullptr, 0, nullptr, &graph)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_POINTER);
+        EXPECT_TRUE(graph == nullptr);
+    }
+}
+
+TEST(onnxifi, init_graph_invalid_size_model)
+{
+    InitializedBackends backends{};
+    auto model = load_model();
+    for (const auto& backend : backends)
+    {
+        ::onnxGraph graph{reinterpret_cast<::onnxGraph>(100)};
+        ::onnxStatus status{::onnxInitGraph(backend, nullptr, 0, model.data(), 0, nullptr, &graph)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_SIZE);
+        EXPECT_TRUE(graph == nullptr);
+    }
+}
+
+TEST(onnxifi, init_graph_invalid_size_weights)
+{
+    InitializedBackends backends{};
+    auto model = load_model();
+    ::onnxTensorDescriptorV1 weights;
+    for (const auto& backend : backends)
+    {
+        ::onnxGraph graph{reinterpret_cast<::onnxGraph>(100)};
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, &weights, &graph)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_SIZE);
+        EXPECT_TRUE(graph == nullptr);
+    }
+}
+
+TEST(onnxifi, init_graph_invalid_protobuf)
+{
+    InitializedBackends backends{};
+    std::string model{"invalid protobuf data"};
+
+    for (const auto& backend : backends)
+    {
+        ::onnxGraph graph{reinterpret_cast<::onnxGraph>(100)};
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_PROTOBUF);
+        EXPECT_TRUE(graph == nullptr);
+    }
+}

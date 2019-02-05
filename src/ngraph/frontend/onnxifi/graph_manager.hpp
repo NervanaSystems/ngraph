@@ -16,6 +16,13 @@
 
 #pragma once
 
+#include <map>   // std::map
+#include <mutex> // std::mutex
+
+#include "backend.hpp"
+#include "graph.hpp"
+#include "span.hpp"
+
 namespace ngraph
 {
     namespace onnxifi
@@ -29,7 +36,18 @@ namespace ngraph
             GraphManager(GraphManager&&) = delete;
             GraphManager& operator=(GraphManager&&) = delete;
 
+            static void init_graph(const Backend& backend,
+                                   const Span<char>& model,
+                                   const Span<::onnxTensorDescriptorV1>& weights,
+                                   ::onnxGraph* graph)
+            {
+                instance()._init_graph(backend, model, weights, graph);
+            }
+
         private:
+            std::mutex m_mutex{};
+            std::map<::onnxGraph, std::unique_ptr<Graph>> m_graphs{};
+
             GraphManager() = default;
 
             static GraphManager& instance()
@@ -37,6 +55,11 @@ namespace ngraph
                 static GraphManager graph_manager{};
                 return graph_manager;
             }
+
+            void _init_graph(const Backend& backend,
+                             const Span<char>& onnx_model,
+                             const Span<::onnxTensorDescriptorV1>& weights,
+                             ::onnxGraph* graph_handle);
         };
 
     } // namespace onnxifi

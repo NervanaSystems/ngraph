@@ -16,7 +16,10 @@
 
 #pragma once
 
+#include "ngraph/function.hpp"
+
 #include "backend.hpp"
+#include "span.hpp"
 
 namespace ngraph
 {
@@ -30,6 +33,7 @@ namespace ngraph
             Graph& operator=(const Graph&) = delete;
 
             Graph() = delete;
+            ~Graph();
 
             Graph(Graph&&) noexcept = default;
             Graph& operator=(Graph&&) noexcept = delete;
@@ -39,7 +43,10 @@ namespace ngraph
             {
             }
 
+            void load(std::istream& sin, const Span<::onnxTensorDescriptorV1>& weights);
+
         private:
+            runtime::Handle m_handle{nullptr};
             const Backend* m_backend;
         };
 

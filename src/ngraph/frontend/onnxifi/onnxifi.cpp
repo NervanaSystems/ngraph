@@ -22,6 +22,7 @@
 #include "backend_manager.hpp"
 #include "event_manager.hpp"
 #include "exceptions.hpp"
+#include "graph_manager.hpp"
 
 using namespace ngraph::onnxifi;
 
@@ -264,14 +265,42 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxReleaseEvent(onnx
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
     onnxInitGraph(onnxBackend backend,
-                  const uint64_t* auxPropertiesList,
+                  const uint64_t* /* auxPropertiesList */,
                   std::size_t onnxModelSize,
                   const void* onnxModel,
                   uint32_t weightsCount,
                   const onnxTensorDescriptorV1* weightDescriptors,
                   onnxGraph* graph)
 {
-    return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
+    try
+    {
+        if (graph != nullptr)
+        {
+            *graph = nullptr;
+        }
+        // The 'auxPropertiesList' is not used in this version of the nGraph ONNXIFI backend.
+        GraphManager::init_graph(BackendManager::get_backend(backend),
+                                 {onnxModel, onnxModelSize},
+                                 {weightDescriptors, weightsCount},
+                                 graph);
+        return ONNXIFI_STATUS_SUCCESS;
+    }
+    catch (const status::runtime& e)
+    {
+        return e.get_status();
+    }
+    catch (const std::bad_alloc&)
+    {
+        return ONNXIFI_STATUS_NO_SYSTEM_MEMORY;
+    }
+    catch (const std::runtime_error&)
+    {
+        return ONNXIFI_STATUS_INVALID_PROTOBUF;
+    }
+    catch (...)
+    {
+        return ONNXIFI_STATUS_INTERNAL_ERROR;
+    }
 }
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI

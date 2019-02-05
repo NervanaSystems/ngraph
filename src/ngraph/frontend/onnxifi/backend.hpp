@@ -91,6 +91,12 @@ namespace ngraph
                 return get().call(handle, outputs, inputs);
             }
 
+            void remove_compiled_function(runtime::Handle& handle) const
+            {
+                std::lock_guard<std::mutex> lock{m_mutex};
+                get().remove_compiled_function(handle);
+            }
+
             runtime::Backend& get_backend() const { return *m_backend; }
             void from_ng_outputs(const std::vector<std::shared_ptr<runtime::Tensor>>& ng_outputs,
                                  std::vector<Tensor>& output) const
