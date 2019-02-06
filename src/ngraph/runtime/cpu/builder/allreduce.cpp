@@ -17,7 +17,7 @@
 
 #ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
 #include <mlsl.hpp>
-#else
+#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
 #include <mpi.h>
 #endif
 
@@ -60,7 +60,7 @@ namespace ngraph
                         arg_tensor, out_tensor, count, data_type, MLSL::RT_SUM, MLSL::GT_DATA);
                     ctx->mlsl_env->Wait(req);
                 };
-#else
+#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
                 auto data_type = MPI_FLOAT;
 
                 if (args[0].get_element_type() == element::f32)
@@ -77,6 +77,8 @@ namespace ngraph
                     MPI_Allreduce(
                         arg_tensor, out_tensor, count, data_type, MPI_SUM, MPI_COMM_WORLD);
                 };
+#else
+                throw ngraph_error("Distributed Library not supported/mentioned");
 #endif
                 functors.emplace_back(functor);
             }

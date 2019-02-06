@@ -22,7 +22,7 @@
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
 
-#if defined NGRAPH_DISTRIBUTED_ENABLE && defined NGRAPH_DISTRIBUTED_MLSL_ENABLE
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
 #include <mlsl.hpp>
 #endif
 
@@ -144,7 +144,7 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
         ctx->c = new tbb::global_control(tbb::global_control::max_allowed_parallelism, parallelism);
     }
 
-#if defined NGRAPH_DISTRIBUTED_ENABLE && defined NGRAPH_DISTRIBUTED_MLSL_ENABLE
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
     if (MLSL::Environment::GetEnv().IsInitialized())
     {
         ctx->mlsl_env = &MLSL::Environment::GetEnv();
@@ -178,7 +178,7 @@ void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
         delete ctx->c;
     }
 
-#if defined NGRAPH_DISTRIBUTED_ENABLE && defined NGRAPH_DISTRIBUTED_MLSL_ENABLE
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
     if (MLSL::Environment::GetEnv().IsInitialized() && ctx->mlsl_dist != nullptr)
     {
         ctx->mlsl_env->DeleteDistribution(ctx->mlsl_dist);

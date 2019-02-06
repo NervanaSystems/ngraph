@@ -19,7 +19,7 @@
 #ifdef NGRAPH_DISTRIBUTED_ENABLE
 #ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
 #include <mlsl.hpp>
-#else
+#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
 #include <mpi.h>
 #endif
 #include "ngraph/type/element_type.hpp"
@@ -55,7 +55,7 @@ namespace ngraph
                     arg, out, count, data_type, MLSL::RT_SUM, MLSL::GT_DATA);
                 env.Wait(req);
                 env.DeleteDistribution(distribution);
-#else
+#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
                 auto data_type = MPI_FLOAT;
 
                 if (element_type == element::f32)
@@ -72,6 +72,8 @@ namespace ngraph
                 }
 
                 MPI_Allreduce(arg, out, count, data_type, MPI_SUM, MPI_COMM_WORLD);
+#else
+                throw ngraph_error("Distributed Library not supported/mentioned");
 #endif
             }
         }

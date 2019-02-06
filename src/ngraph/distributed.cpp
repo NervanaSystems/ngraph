@@ -18,7 +18,7 @@
 
 #ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
 #include <mlsl.hpp>
-#else
+#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
 #include <mpi.h>
 #endif
 
@@ -36,13 +36,15 @@ ngraph::Distributed::Distributed()
     {
         MLSL::Environment::GetEnv().Init(nullptr, nullptr);
     }
-#else
+#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
     int flag = 0;
     MPI_Initialized(&flag);
     if (!flag)
     {
         MPI_Init(NULL, NULL);
     }
+#else
+    throw ngraph_error("Distributed Library not supported/mentioned");
 #endif
     distributed_instance_counter += 1;
 }
@@ -78,13 +80,15 @@ void ngraph::Distributed::finalize()
         {
             MLSL::Environment::GetEnv().Finalize();
         }
-#else
+#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
         int flag = 0;
         MPI_Initialized(&flag);
         if (flag)
         {
             MPI_Finalize();
         }
+#else
+        throw ngraph_error("Distributed Library not supported/mentioned");
 #endif
     }
 }
@@ -93,10 +97,12 @@ int ngraph::Distributed::get_size() const
 {
 #ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
     return static_cast<int>(MLSL::Environment::GetEnv().GetProcessCount());
-#else
+#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
     int size;
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     return size;
+#else
+    throw ngraph_error("Distributed Library not supported/mentioned");
 #endif
 }
 
@@ -104,10 +110,12 @@ int ngraph::Distributed::get_rank() const
 {
 #ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
     return static_cast<int>(MLSL::Environment::GetEnv().GetProcessIdx());
-#else
+#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     return rank;
+#else
+    throw ngraph_error("Distributed Library not supported/mentioned");
 #endif
 }
 #endif

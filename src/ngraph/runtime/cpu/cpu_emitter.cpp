@@ -124,10 +124,9 @@
 #include "ngraph/util.hpp"
 
 #ifdef NGRAPH_DISTRIBUTED_ENABLE
-
 #ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
 #include <mlsl.hpp>
-#else
+#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
 #include <mpi.h>
 #endif
 #include "ngraph/op/allreduce.hpp"
@@ -223,7 +222,7 @@ namespace ngraph
                        << data_type << ", MLSL::RT_SUM, MLSL::GT_DATA);\n";
                 writer << "ctx->mlsl_env->Wait(req);\n";
                 writer.block_end();
-#else
+#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
                 auto data_type = "MPI_FLOAT";
 
                 if (element_type == element::f32)
@@ -240,6 +239,8 @@ namespace ngraph
                        << ", " << out[0].get_size() << ", " << data_type
                        << ", MPI_SUM, MPI_COMM_WORLD);\n";
                 writer.block_end();
+#else
+                throw ngraph_error("Distributed Library not supported/mentioned");
 #endif
             }
 #endif

@@ -26,7 +26,7 @@
 #include <tbb/global_control.h>
 #include <tbb/task_scheduler_init.h>
 
-#if defined NGRAPH_DISTRIBUTED_ENABLE && defined NGRAPH_DISTRIBUTED_MLSL_ENABLE
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
 #include <mlsl.hpp>
 #endif
 
@@ -69,7 +69,7 @@ namespace ngraph
                 State* const* states;
                 std::set<size_t> breakpoints;
                 size_t pc;
-#if defined NGRAPH_DISTRIBUTED_ENABLE && defined NGRAPH_DISTRIBUTED_MLSL_ENABLE
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
                 MLSL::Environment* mlsl_env;
                 MLSL::Distribution* mlsl_dist;
 #endif

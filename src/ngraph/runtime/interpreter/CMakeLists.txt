@@ -28,12 +28,14 @@ if (NGRAPH_INTERPRETER_ENABLE)
         if(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
             target_include_directories(interpreter_backend SYSTEM PRIVATE libmlsl)
             target_link_libraries(interpreter_backend PRIVATE libmlsl)
-        else()
+        elseif(NGRAPH_DISTRIBUTED_OMPI_ENABLE)
             find_package(MPI REQUIRED)
             target_include_directories(interpreter_backend
                 SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
             target_link_libraries(interpreter_backend
                 PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+        else()
+            message(FATAL_ERROR "Distributed Library not supported/mentioned")
         endif()
     endif()
 

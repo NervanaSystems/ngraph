@@ -472,10 +472,13 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     }
 
 #ifdef NGRAPH_DISTRIBUTED_ENABLE
+    writer << "#define NGRAPH_DISTRIBUTED_ENABLE\n";
 #ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
     writer << "#include <mlsl.hpp>\n";
-#else
-    writer << "#include <mpi.h>\n\n";
+    writer << "#define NGRAPH_DISTRIBUTED_MLSL_ENABLE\n";
+#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
+    writer << "#include <mpi.h>\n";
+    writer << "#define NGRAPH_DISTRIBUTED_OMPI_ENABLE\n";
 #endif
 #endif
 
