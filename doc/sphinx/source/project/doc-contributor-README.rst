@@ -127,7 +127,7 @@ To build documentation locally, run:
 
    .. code-block:: console
 
-      $ sudo apt-get install python3-sphinx
+      $ sudo apt-get install python3-sphinxcd
       $ pip3 install [-I] Sphinx==1.7.5 [--user] 
       $ pip3 install [-I] breathe numpy [--user]
       $ cd doc/sphinx/
@@ -165,3 +165,6 @@ stable reST documentation.
 .. _wiki: https://github.com/NervanaSystems/ngraph/wiki/
 .. _breathe: https://breathe.readthedocs.io/en/latest/
 .. _doxygen: http://www.doxygen.org/index.html
+
+
+.. 45555555555555555555555555555

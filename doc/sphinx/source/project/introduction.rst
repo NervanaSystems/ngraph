@@ -6,68 +6,100 @@ Introduction
 
 The nGraph Compiler stack provides an industry-standard reference for working
 with various :abbr:`Deep Learning (DL)` (DL) models and optimizing an 
-:abbr:`Artificial Neural Network`, or :term:`ANN` to run a particular DL model 
-for training and inference. Having such a standard simplifies what would 
-otherwise be an enormously complex and difficult-to-scale pipeline 
-(:ref:`Figure 1 <figure-1>`) from "training with your favorite framework on GPU" 
-(:ref:`Figure 2 <figure-2>`) to deploying that pre-trained model in a datacenter 
-or production environment, where both hardware owners and software developers 
-are concerned with **efficiency per-watt**, to keep costs in check.
+:abbr:`Artificial Neural Network`, or :term:`ANN` to run them for testing, 
+training, or inference on many kinds of common and novel hardware. Having such 
+a standard simplifies what would otherwise be an enormously complex and 
+difficult-to-scale pipeline (:ref:`Figure 1 <figure-1>`) from "training with a 
+framework on GPU" (:ref:`Figure 2 <figure-2>`), to deploying that pre-trained 
+model in a datacenter or production environment, where hardware owners or 
+software developers renting anything in a datacenter ought to be concerned with 
+**efficiency per-watt**, to keep costs in check.
 
 A typical network is constructed using some kind of language-based API, which 
-translates the network -- either statically or dynamically -- into serialized 
-graphs that can be used for interchange. Those graphs can then passed through  
-a compilation process which performs various graph-level optimizations, like 
-constant folding or fusion. Most often this graph compilation process works 
-on top of some kind of vendor-provided kernel library, which communicates with 
-a driver (possibly through OpenCL\*, CUDA\*, or SYCL\*), to compile and execute 
-an implementation (kernel) for a specific :abbr:`Instruction Set Architecture (ISA)`,
-or :term:`ISA`.
+translates the network or :abbr:`DL (Deep Learning)` model (statically or 
+dynamically) into serialized graphs. Those graphs can then passed through a 
+compilation process (the *Graph optimization or compilation* step in 
+*Figure 1*), where various graph-level optimizations, like constant folding 
+or fusion can happen. These processes most often require some kind of vendor-
+provided kernel library, which communicates with a driver (possibly through 
+OpenCL\*, CUDA\*, or SYCL\*), to compile and execute an implementation 
+(kernel) for a specific :abbr:`Instruction Set Architecture (ISA)`, or 
+:term:`ISA`.
 
-Illustrated below is a simplified DL stack, showing relative complexity of each:
+At a glance, the illustration below shows the various graph compilers and 
+tensor compiler tools available today. Graph compilers are indicated in blue, 
+and tensor compilers in green.
+
+Illustrated below is a simplified DL stack, showing relative complexity of 
+each component around the graph compilation phase or process. Note that each 
+component often requires specialists unique to that component, and that the
+terms have been simplified for illustrative purposes. 
 
 .. _figure-1:
 
 .. figure:: ../graphics/components-dl-stack.png
-   :width: 650px
+   :width: 700px
    :alt: A simplified DL stack
 
-   Components of a DL stack, simplified for illustrative purposes.
+   Figure 1: Components of a DL stack, simplified for illustrative purposes.
 
 There are many deep learning frameworks, each with its own strengths and 
-user bases.
+user bases. A setup that is common to many DL practitioners is shown below.
 
 .. _figure-2:
 
 .. figure:: ../graphics/a-common-stack.png
-   :width: 650px
+   :width: 700px
    :alt: A common implementation
 
-   A commonly-implemented stack uses TensorFlow as the frontend. A resultant TF 
-   Model is either optimized by XLA, or executed directly via TensorFlow. In either 
-   case, when targeting an Nvidia\* GPU, cuDNN is called to select an optimal 
-   kernel for the operation; cuDNN then relies on CUDA\* or direct access to run 
-   code on the target, in this case a V100.
+   Figure 2: A commonly-implemented stack uses TensorFlow\* as the frontend. 
+   The input is either optimized via Grappler, or executed 
+   directly via TensorFlow. In either case, when targeting an Nvidia\* GPU, 
+   cuDNN is called to select an optimal kernel for the operation; cuDNN then 
+   relies on CUDA\* or direct access to run code on the target; in this example, 
+   a V100.
 
 The natural result of this approach is that the framework-level integration of 
 kernel libraries does not scale. Rather, each individual framework must be 
 manually integrated with each hardware-specific kernel library. Each integration 
 is unique to the framework and its set of deep learning operators, its view on 
 memory layout, its feature set, etc. Each of these connections, then, represents 
-significant work for what will ultimately be a brittle setup in the long term, 
-if any component on either end changes.  
+significant work for what will ultimately be a brittle setup that is enormously 
+expensive to maintain.    
 
 .. _figure-3:
 
 .. figure:: ../graphics/dl-current-state.png
-   :width: 650px
+   :width: 700px
    :alt: Scalability matters
 
-   The number of kernels necessary to achieve optimal performance is bounded by 
-   the product of the number of chip designs one wishes to support, the number 
-   of data types supported, the number of operations, and the cardinality of 
-   each parameter for each operation.
+   Figure 3: The number of kernels necessary to achieve optimal performance is 
+   bounded by the product of the number of chip designs one wishes to support, 
+   the number of data types supported, the number of operations, and the 
+   cardinality of each parameter for each operation.
 
 In the past, this upper bound was quite limited; however, the industry is 
 shifting toward a more diverse future in terms of deep learning hardware, 
-meaning the number of distinct kernels is exploding and will continue to explode.
+meaning the number of distinct kernels is exploding and will continue to 
+explode.
+
+For example, consider the complexity of compilers available, and what each 
+can do: 
+
+.. _figure-4:
+
+.. figure:: ../graphics/graph-compilers-at-a-glance.png
+   :width: 700px
+   :alt: Overview of various graph and tensor compilers.
+
+   Figure 4: Overview of various graph and tensor compilers.
+
+
+.. _figure-5:
+
+.. figure:: ../graphics/tensor-compilers-at-a-glance.png
+   :width: 700px
+   :alt: A closer look at tensor compilers.
+
+   Figure 5: A closer look at tensor compilers.
+

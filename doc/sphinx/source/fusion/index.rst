@@ -1,5 +1,11 @@
-.. fusion/index.rst: 
+.. fusion/index.rst:
 
+:ref:`overview` 
+:ref:`passes_list` 
+:ref:`passes_examples` 
+
+
+.. _overview:
 
 Optimize Graphs 
 ===============
@@ -10,7 +16,7 @@ with nGraph Compiler fusions
 The nGraph Compiler is an optimizing compiler. As such, it provides a way to 
 capture a given :term:`function graph` and perform a series of optimization 
 passes over that graph. The result is a semantically-equivalent graph that, when 
-executed using any |InG| :doc:`backend <../programmable/index>`, has optimizations 
+executed using any :doc:`backend <../backend-support/index>`, has optimizations 
 inherent at the hardware level: superior runtime characteristics to increase 
 training performance or reduce inference latency.   
 
@@ -45,10 +51,21 @@ which `ops` can be automatically translated into :doc:`nGraph Core ops <../ops/i
 
 The ``Interpreter`` is simply a backend providing reference implementations of 
 ngraph ops in C++, with the focus on simplicity over performance.
- 
 
-Example
--------
+
+.. _passes_list:
+
+List of Passes
+==============
+
+
+
+
+.. _passes_examples:
+
+Examples of Passes
+==================
+
 
 Let us first consider a simple example. A user would like to execute a graph 
 that describes the following arithmetic expression:
