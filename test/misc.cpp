@@ -13,30 +13,40 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+#include "misc.hpp"
 
-#pragma once
-
-#include <exception>
-#include <functional>
-#include <sstream>
-
-#include "ngraph/pass/pass.hpp"
-#include "ngraph/placement.hpp"
-
-namespace ngraph
+FILE* port_open(const char* command, const char* type)
 {
-    namespace pass
-    {
-        class AssignPlacement : public NodePass
-        {
-        public:
-            // TODO: make policy a class
-            AssignPlacement(std::function<Placement(std::shared_ptr<Node>)> placement_policy);
+#ifdef _WIN32
+    return _popen(command, type);
+#elif defined(__linux) || defined(__APPLE__)
+    return popen(command, type);
+#endif
+}
 
-        private:
-            bool run_on_node(std::shared_ptr<Node> node) override;
+int port_close(FILE* stream)
+{
+#ifdef _WIN32
+    return _pclose(stream);
+#elif defined(__linux) || defined(__APPLE__)
+    return pclose(stream);
+#endif
+}
 
-            std::function<Placement(std::shared_ptr<Node>)> m_placement_policy;
-        };
-    }
+int set_environment(const char* name, const char* value, int overwrite)
+{
+#ifdef _WIN32
+    return _putenv_s(name, value);
+#elif defined(__linux) || defined(__APPLE__)
+    return setenv(name, value, overwrite);
+#endif
+}
+
+int unset_environment(const char* name)
+{
+#ifdef _WIN32
+    return _putenv_s(name, "");
+#elif defined(__linux) || defined(__APPLE__)
+    return unsetenv(name);
+#endif
 }

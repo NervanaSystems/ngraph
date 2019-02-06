@@ -18,6 +18,7 @@
 
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 
 namespace ngraph
 {
@@ -27,15 +28,15 @@ namespace ngraph
         class GroupConvolution : public Op
         {
         public:
-            GroupConvolution(const std::shared_ptr<Node>& data_batch,
-                             const std::shared_ptr<Node>& filters,
-                             const Strides& window_movement_strides,
-                             const Strides& window_dilation_strides,
-                             const CoordinateDiff& padding_below,
-                             const CoordinateDiff& padding_above,
-                             const Strides& data_dilation_strides,
-                             size_t groups,
-                             const Shape& output_shape);
+            CPU_BACKEND_API GroupConvolution(const std::shared_ptr<Node>& data_batch,
+                                             const std::shared_ptr<Node>& filters,
+                                             const Strides& window_movement_strides,
+                                             const Strides& window_dilation_strides,
+                                             const CoordinateDiff& padding_below,
+                                             const CoordinateDiff& padding_above,
+                                             const Strides& data_dilation_strides,
+                                             size_t groups,
+                                             const Shape& output_shape);
 
             Shape get_weights_dimensions() const;
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }

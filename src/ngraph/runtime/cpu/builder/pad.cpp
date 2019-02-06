@@ -72,9 +72,10 @@ namespace ngraph
                 {
                     auto padding_interior = pad->get_padding_interior();
 
-                    std::function<decltype(runtime::cpu::kernel::pad<float>)> kernel;
+                    std::function<decltype(runtime::cpu::kernel::pad_ref<float>)> kernel;
 
-                    SELECT_KERNEL(kernel, args[0].get_element_type(), runtime::cpu::kernel::pad);
+                    SELECT_KERNEL(
+                        kernel, args[0].get_element_type(), runtime::cpu::kernel::pad_ref);
 
                     auto functor = [&,
                                     kernel,
