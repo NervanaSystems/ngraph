@@ -43,11 +43,7 @@ ExternalProject_Add(
         CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
         CMAKE_ARGS ${NGRAPH_FORWARD_CMAKE_ARGS}
                    -DONNX_GEN_PB_TYPE_STUBS=OFF
-                   -DProtobuf_PROTOC_EXECUTABLE=${Protobuf_PROTOC_EXECUTABLE}
-                   -DProtobuf_INCLUDE_DIR=${Protobuf_INCLUDE_DIR}
-                   -DProtobuf_LIBRARY=${Protobuf_LIBRARY}
-                   -DPROTOBUF_INCLUDE_DIR=${Protobuf_INCLUDE_DIR}
-                   -DPROTOBUF_LIBRARY=${Protobuf_LIBRARY}
+                   -DCMAKE_PREFIX_PATH=${Protobuf_INSTALL_PREFIX}
                    -DONNX_ML=TRUE
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/stamp"

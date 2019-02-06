@@ -30,11 +30,9 @@ ExternalProject_Add(
     GIT_REPOSITORY ${PROTOBUF_GIT_REPO_URL}
     GIT_TAG ${PROTOBUF_GIT_BRANCH}
     ${NGRAPH_GIT_ARGS}
-    INSTALL_COMMAND ""
     UPDATE_COMMAND ""
     PATCH_COMMAND ""
-    CONFIGURE_COMMAND ./autogen.sh COMMAND ./configure --disable-shared CXX=${CMAKE_CXX_COMPILER} CXXFLAGS=-fPIC
-    BUILD_COMMAND ${MAKE}
+    CONFIGURE_COMMAND ./autogen.sh COMMAND ./configure --prefix=${EXTERNAL_PROJECTS_ROOT}/protobuf --disable-shared CXX=${CMAKE_CXX_COMPILER} CXXFLAGS=-fPIC
     TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/tmp"
     STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/stamp"
     DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/download"
@@ -44,19 +42,15 @@ ExternalProject_Add(
     EXCLUDE_FROM_ALL TRUE
     )
 
-# -----------------------------------------------------------------------------
-
-ExternalProject_Get_Property(ext_protobuf SOURCE_DIR BINARY_DIR)
 
 # -----------------------------------------------------------------------------
 # Use the interface of FindProtobuf.cmake
 # -----------------------------------------------------------------------------
 
-set(Protobuf_SRC_ROOT_FOLDER ${SOURCE_DIR})
-
-set(Protobuf_PROTOC_EXECUTABLE ${Protobuf_SRC_ROOT_FOLDER}/src/protoc)
-set(Protobuf_INCLUDE_DIR ${Protobuf_SRC_ROOT_FOLDER}/src)
-set(Protobuf_LIBRARY ${Protobuf_SRC_ROOT_FOLDER}/src/.libs/libprotobuf.a)
+set(Protobuf_INSTALL_PREFIX ${EXTERNAL_PROJECTS_ROOT}/protobuf)
+set(Protobuf_PROTOC_EXECUTABLE ${Protobuf_INSTALL_PREFIX}/bin/protoc)
+set(Protobuf_INCLUDE_DIR ${Protobuf_INSTALL_PREFIX}/include)
+set(Protobuf_LIBRARY ${Protobuf_INSTALL_PREFIX}/lib/libprotobuf.a)
 set(Protobuf_LIBRARIES ${Protobuf_LIBRARY})
 
 if (NOT TARGET protobuf::libprotobuf)
