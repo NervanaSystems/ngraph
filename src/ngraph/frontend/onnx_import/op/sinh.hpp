@@ -28,13 +28,13 @@ namespace ngraph
     {
         namespace op
         {
-            namespace set_9
+            namespace set_1
             {
                 inline NodeVector sinh(const Node& node)
                 {
                     return {std::make_shared<ngraph::op::Sinh>(node.get_ng_inputs().at(0))};
                 }
-            } // namespace set_9
+            } // namespace set_1
 
         } //namespace op
 
