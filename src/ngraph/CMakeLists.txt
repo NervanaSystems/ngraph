@@ -123,7 +123,6 @@ set (SRC
     op/util/logical_reduction.cpp
     op/util/unary_elementwise_arithmetic.cpp
     partial_shape.cpp
-    pass/assign_placement.cpp
     pass/algebraic_simplification.cpp
     pass/common_function_collection.cpp
     pass/constant_folding.cpp
@@ -139,8 +138,8 @@ set (SRC
     pass/memory_visualize.cpp
     pass/nop_elimination.cpp
     pass/pass.cpp
-    pass/pass_config.cpp 
-    pass/prefix_reshape_elimination.cpp 
+    pass/pass_config.cpp
+    pass/prefix_reshape_elimination.cpp
     pass/propagate_cacheability.cpp
     pass/reshape_elimination.cpp
     pass/reshape_sinking.cpp
