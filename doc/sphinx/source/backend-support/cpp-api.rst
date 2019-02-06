@@ -1,7 +1,7 @@
 .. backend-support/cpp-api.rst:
 
-C++ APIs for backends 
-#####################
+Runtime Backends 
+################
 
 .. figure:: ../graphics/backend-dgm.png
    :width: 650px

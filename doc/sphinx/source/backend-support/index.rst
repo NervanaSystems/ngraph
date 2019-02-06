@@ -1,15 +1,14 @@
 .. backend-support/index.rst
 
 
-###############
-Backend Support 
-###############
+Transformer, CPU, GPU, PlaidML
+###############################
 
 
-:ref:`hybrid_transformer`
-:ref:`cpu_backend`
-:ref:`plaidml_backend`
-:ref:`gpu_backend`
+* :ref:`hybrid_transformer`
+* :ref:`cpu_backend`
+* :ref:`plaidml_backend`
+* :ref:`gpu_backend`
 
 
 
