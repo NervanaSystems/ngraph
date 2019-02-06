@@ -44,6 +44,7 @@ ExternalProject_Add(
     DEPENDS ext_halide_llvm
     GIT_REPOSITORY ${HALIDE_GIT_REPO_URL}
     GIT_TAG ${HALIDE_GIT_TAG}
+    ${NGRAPH_GIT_ARGS}
     UPDATE_COMMAND ""
     PATCH_COMMAND patch -p1 --forward --reject-file=- -i ${CMAKE_SOURCE_DIR}/cmake/halide.patch || exit 0
     CMAKE_GENERATOR ${CMAKE_GENERATOR}

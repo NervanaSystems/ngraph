@@ -358,6 +358,11 @@ if(NGRAPH_DEBUG_ENABLE)
     add_definitions(-DNGRAPH_DEBUG_ENABLE)
 endif()
 
+if(NOT (${CMAKE_VERSION} VERSION_LESS 3.6))
+    set(NGRAPH_GIT_ARGS GIT_SHALLOW 1)
+    message(STATUS "nGraph using git shallow copy.")
+endif()
+
 #-----------------------------------------------------------------------------------------------
 # External projects install directory
 #-----------------------------------------------------------------------------------------------
