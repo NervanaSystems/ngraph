@@ -46,7 +46,7 @@ namespace ngraph
     {
         class Parameter;
         class Result;
-    }
+    } // namespace op
 
     void replace_node_users_arguments(std::shared_ptr<Node> target,
                                       std::shared_ptr<Node> replacement);
@@ -102,6 +102,7 @@ namespace ngraph
         Node(const std::string& node_type, const NodeVector& arguments, size_t output_size = 1);
 
         virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
+
     public:
         virtual ~Node();
         void revalidate_and_infer_types() { validate_and_infer_types(); }
@@ -129,6 +130,7 @@ namespace ngraph
         bool is_parameter() const;
         virtual bool is_output() const;
         virtual bool is_constant() const;
+        virtual bool is_null() const { return false; }
         virtual bool is_op() const { return false; }
         virtual bool is_commutative() { return false; }
         size_t get_instance_id() const { return m_instance_id; }
@@ -291,7 +293,7 @@ namespace ngraph
     };
 
     void check_new_args_count(const Node* node, const NodeVector& new_args);
-}
+} // namespace ngraph
 
 #define NODE_VALIDATION_ASSERT(node, cond)                                                         \
     NGRAPH_ASSERT_STREAM_WITH_LOC(                                                                 \
