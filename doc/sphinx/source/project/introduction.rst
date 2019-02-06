@@ -83,8 +83,15 @@ shifting toward a more diverse future in terms of deep learning hardware,
 meaning the number of distinct kernels is exploding and will continue to 
 explode.
 
-For example, consider the complexity of compilers available, and what each 
-can do: 
+Get the best of both worlds
+---------------------------
+
+Integrating a framework on nGraph can be an attractive option for hardware 
+companies trying to design their own deep learning hardware or network architecture. 
+Framework integration is non-trivial amount of work, and can do much of the 
+heavy lifting. Furthermore, PlaidML can provide a wide range of hardware coverage 
+and optimization automatically. Any hardware that supports LLVM, OpenCL, OpenGL, 
+CUDA or Metal can be supported automatically with PlaidML and nGraph.  
 
 .. _figure-4:
 
@@ -102,4 +109,7 @@ can do:
    :alt: A closer look at tensor compilers.
 
    Figure 5: A closer look at tensor compilers.
+
+
+
 
