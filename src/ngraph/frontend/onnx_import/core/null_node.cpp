@@ -23,7 +23,7 @@ namespace ngraph
     namespace onnx_import
     {
         NullNode::NullNode()
-            : ngraph::Node("Missing input", {}, 0)
+            : ngraph::Node("NullNode", {}, 0)
         {
             m_name = "NullNode";
         }
