@@ -22,6 +22,8 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     endif()
 endif()
 
+set(NGRAPH_LLVM_VERSION 7.0.1)
+
 ExternalProject_Add(
     ext_clang
     #URL http://releases.llvm.org/5.0.2/cfe-5.0.2.src.tar.xz
