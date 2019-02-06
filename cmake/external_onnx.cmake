@@ -46,6 +46,8 @@ ExternalProject_Add(
                    -DProtobuf_PROTOC_EXECUTABLE=${Protobuf_PROTOC_EXECUTABLE}
                    -DProtobuf_INCLUDE_DIR=${Protobuf_INCLUDE_DIR}
                    -DProtobuf_LIBRARY=${Protobuf_LIBRARY}
+                   -DPROTOBUF_INCLUDE_DIR=${Protobuf_INCLUDE_DIR}
+                   -DPROTOBUF_LIBRARY=${Protobuf_LIBRARY}
                    -DONNX_ML=TRUE
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/stamp"
