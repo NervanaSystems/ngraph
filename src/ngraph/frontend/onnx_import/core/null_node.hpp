@@ -25,7 +25,15 @@ namespace ngraph
 {
     namespace onnx_import
     {
-        /// \brief Placeholder for expected but missing node in graph.
+        /// \brief Represents a missing optional input or output of an ONNX node
+        ///
+        /// Some ONNX operators have inputs or outputs that are marked as optional,
+        /// which means that a referring node MAY forgo providing values for such inputs
+        /// or computing these outputs.
+        /// An empty string is used in place of a name of such input or output.
+        ///
+        /// More:
+        /// https://github.com/onnx/onnx/blob/master/docs/IR.md#optional-inputs-and-outputs
         class NullNode : public ngraph::Node
         {
         public:
