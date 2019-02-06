@@ -239,7 +239,7 @@ endif()
 # Defines macro in C++ to load backend plugin
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
 if (NOT WIN32)
-    target_link_libraries(ngraph PUBLIC dl pthread)
+    target_link_libraries(ngraph PUBLIC ${CMAKE_DL_LIBS} pthread)
 endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
