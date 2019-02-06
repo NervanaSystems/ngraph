@@ -231,7 +231,9 @@ namespace ngraph
                                     if (old_pops.kind(i) == mkldnn::primitive::kind::eltwise)
                                     {
                                         mkldnn::algorithm alg;
-                                        float scale, alpha, beta;
+                                        float scale = 0;
+                                        float alpha = 0;
+                                        float beta = 0;
                                         old_pops.get_params_eltwise(i, scale, alg, alpha, beta);
                                         new_pops.append_eltwise(scale, alg, alpha, beta);
                                     }
@@ -303,7 +305,9 @@ namespace ngraph
                                     if (old_pops.kind(i) == mkldnn::primitive::kind::eltwise)
                                     {
                                         mkldnn::algorithm alg;
-                                        float scale, alpha, beta;
+                                        float scale = 0;
+                                        float alpha = 0;
+                                        float beta = 0;
                                         old_pops.get_params_eltwise(i, scale, alg, alpha, beta);
                                         new_pops.append_eltwise(scale, alg, alpha, beta);
                                     }
