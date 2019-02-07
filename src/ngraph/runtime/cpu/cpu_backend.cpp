@@ -16,6 +16,7 @@
 
 #include <tbb/tbb_stddef.h>
 
+#include "cpu_backend_visibility.h"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
@@ -27,14 +28,14 @@
 using namespace ngraph;
 using namespace std;
 
-extern "C" runtime::Backend* new_backend(const char* configuration_string)
+extern "C" CPU_BACKEND_API runtime::Backend* new_backend(const char* configuration_string)
 {
     // Force TBB to link to the backend
     tbb::TBB_runtime_interface_version();
     return new runtime::cpu::CPU_Backend();
 }
 
-extern "C" void delete_backend(runtime::Backend* backend)
+extern "C" CPU_BACKEND_API void delete_backend(runtime::Backend* backend)
 {
     delete backend;
 }

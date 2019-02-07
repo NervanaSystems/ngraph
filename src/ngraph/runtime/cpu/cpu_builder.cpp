@@ -366,8 +366,6 @@ namespace ngraph
             {
                 static BuildOpMap build_dispatcher{
                     {TI(ngraph::op::Parameter), &runtime::cpu::Builder::nop},
-                    {TI(ngraph::runtime::cpu::op::ConvertLayout),
-                     &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::ConvertLayout>},
                     {TI(ngraph::runtime::cpu::op::LoopKernel),
                      &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::LoopKernel>},
                     {TI(ngraph::runtime::cpu::op::HalideOp),
