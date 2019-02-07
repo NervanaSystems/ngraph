@@ -32,7 +32,6 @@ namespace ngraph
     {
         namespace cpu
         {
-            class CPU_CallFrame;
             class CPU_ExternalFunction;
             class CPU_Debugger;
 
