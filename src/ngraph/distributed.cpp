@@ -27,7 +27,7 @@
 
 using namespace ngraph;
 
-int ngraph::Distributed::distributed_instance_counter = 0;
+
 
 ngraph::Distributed::Distributed()
 {
@@ -35,6 +35,7 @@ ngraph::Distributed::Distributed()
     if (!MLSL::Environment::GetEnv().IsInitialized())
     {
         MLSL::Environment::GetEnv().Init(nullptr, nullptr);
+        this_init_comm = true;
     }
 #elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
     int flag = 0;
@@ -42,39 +43,25 @@ ngraph::Distributed::Distributed()
     if (!flag)
     {
         MPI_Init(NULL, NULL);
+        this_init_comm = true;
     }
 #else
     throw ngraph_error("Distributed Library not supported/mentioned");
 #endif
-    distributed_instance_counter += 1;
 }
 
 ngraph::Distributed::~Distributed()
 {
-    //     distributed_instance_counter -= 1;
-    //     if (distributed_instance_counter == 0)
-    //     {
-    // #ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
-    //         if (MLSL::Environment::GetEnv().IsInitialized())
-    //         {
-    //             MLSL::Environment::GetEnv().Finalize();
-    //         }
-    // #else
-    //         int flag = 0;
-    //         MPI_Initialized(&flag);
-    //         if (flag)
-    //         {
-    //             MPI_Finalize();
-    //         }
-    // #endif
-    //     }
+    if (!this_init_comm)
+    {
+        return;
+    }
+    finalize();
 }
 
 void ngraph::Distributed::finalize()
 {
-    distributed_instance_counter -= 1;
-    if (distributed_instance_counter == 0)
-    {
+    
 #ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
         if (MLSL::Environment::GetEnv().IsInitialized())
         {
@@ -90,7 +77,6 @@ void ngraph::Distributed::finalize()
 #else
         throw ngraph_error("Distributed Library not supported/mentioned");
 #endif
-    }
 }
 
 int ngraph::Distributed::get_size() const

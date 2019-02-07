@@ -50,5 +50,4 @@ TEST(distributed_${BACKEND_NAME}, allreduce)
     auto handle = backend->compile(f);
     backend->call_with_validate(handle, {result}, {a});
     EXPECT_EQ(v, read_vector<float>(result));
-    // dist_instance.finalize();
 }

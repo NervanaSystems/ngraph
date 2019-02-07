@@ -28,9 +28,9 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
-    // #ifdef NGRAPH_DISTRIBUTED_ENABLE
-    //     ngraph::Distributed dist;
-    // #endif
+    #ifdef NGRAPH_DISTRIBUTED_ENABLE
+        ngraph::Distributed dist;
+    #endif
     const char* exclude = "--gtest_filter=-benchmark.*";
     vector<char*> argv_vector;
     argv_vector.push_back(argv[0]);
@@ -43,9 +43,5 @@ int main(int argc, char** argv)
 
     ::testing::InitGoogleTest(&argc, argv_vector.data());
     int rc = RUN_ALL_TESTS();
-
-    // #ifdef NGRAPH_DISTRIBUTED_ENABLE
-    //     dist.finalize();
-    // #endif
     return rc;
 }
