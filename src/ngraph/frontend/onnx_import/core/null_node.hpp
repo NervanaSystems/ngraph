@@ -39,7 +39,7 @@ namespace ngraph
         public:
             NullNode();
 
-            virtual bool is_null() const { return true; }
+            bool is_null() const final override { return true; }
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
