@@ -396,7 +396,7 @@ runtime::intelgpu::IntelGPUBackend::IntelGPUBackend()
                                                     true,
                                                     string(),
                                                     m_cldnn_dump_dir);
-    ocl_engine = make_shared<cldnn::engine>(cldnn_configuration);
+    cldnn_engine = make_shared<cldnn::engine>(cldnn_configuration);
 }
 
 shared_ptr<runtime::Tensor>
@@ -404,50 +404,36 @@ shared_ptr<runtime::Tensor>
                                                       const Shape& shape)
 {
     return make_shared<runtime::intelgpu::IntelGPUTensorView>(
-        element_type, shape, *ocl_engine, nullptr, this);
+        element_type, shape, *cldnn_engine, nullptr, this);
 }
 
 shared_ptr<runtime::Tensor> runtime::intelgpu::IntelGPUBackend::create_tensor(
     const element::Type& element_type, const Shape& shape, void* memory_pointer)
 {
     return make_shared<runtime::intelgpu::IntelGPUTensorView>(
-        element_type, shape, *ocl_engine, memory_pointer, this);
+        element_type, shape, *cldnn_engine, memory_pointer, this);
 }
 
 shared_ptr<runtime::Executable>
     runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func, bool enable_timing)
 {
     shared_ptr<runtime::Executable> rc;
-    auto it = ocl_networks.find(func);
-    if (it != ocl_networks.end())
-    {
-        rc = it->second;
-    }
-    else
-    {
-        rc = make_shared<IntelGPUExecutable>(func, enable_timing);
-        if (!m_function_cache_disabled)
-        {
-            ocl_networks.insert({func, rc});
-        }
-    }
-    return rc;
-}
 
-runtime::intelgpu::IntelGPUExecutable::IntelGPUExecutable(shared_ptr<Function> func,
-                                                          bool enable_timing)
-{
-    FunctionInstance& instance = m_function_instance;
-    instance.m_function = func;
+    auto it = cldnn_networks.find(func);
+    if (it != cldnn_networks.end())
+    {
+        return it->second;
+    }
 
     set<cldnn::primitive_id> func_output_names;
     cldnn::topology topology;
     stopwatch timer_compile;
-    double mem_before_compile = 0.0;
+    double consumed_memory = 0.0;
+    double compilation_time = 0.0;
 
     if (m_profile_enable)
     {
-        mem_before_compile = get_max_memory_rss();
+        consumed_memory = get_max_memory_rss();
         timer_compile.start();
     }
 
@@ -1441,7 +1427,8 @@ runtime::intelgpu::IntelGPUExecutable::IntelGPUExecutable(shared_ptr<Function> f
                     // Create a memory for mean as mutable_data to treat it as constant
                     const cldnn::layout mean_layout = IntelGPULayout::create_cldnn_layout(
                         get_output_type(op, 1), get_output_shape(op, 1));
-                    const cldnn::memory mean_mem(cldnn::memory::allocate(*ocl_engine, mean_layout));
+                    const cldnn::memory mean_mem(
+                        cldnn::memory::allocate(*cldnn_engine, mean_layout));
 
                     const cldnn::mutable_data mean_const(mean_name, mean_mem);
                     topology.add(mean_const);
@@ -1450,7 +1437,7 @@ runtime::intelgpu::IntelGPUExecutable::IntelGPUExecutable(shared_ptr<Function> f
                     const cldnn::layout variance_layout = IntelGPULayout::create_cldnn_layout(
                         get_output_type(op, 2), get_output_shape(op, 2));
                     const cldnn::memory variance_mem(
-                        cldnn::memory::allocate(*ocl_engine, variance_layout));
+                        cldnn::memory::allocate(*cldnn_engine, variance_layout));
 
                     const cldnn::mutable_data variance_const(variance_name, variance_mem);
                     topology.add(variance_const);
@@ -1819,15 +1806,48 @@ runtime::intelgpu::IntelGPUExecutable::IntelGPUExecutable(shared_ptr<Function> f
         network_build_options.set_option(cldnn::build_option::graph_dumps_dir(m_cldnn_dump_dir));
     }
 
-    instance.ocl_network =
-        make_shared<cldnn::network>(*ocl_engine, topology, network_build_options);
+    shared_ptr<cldnn::network> cldnn_network =
+        make_shared<cldnn::network>(*cldnn_engine, topology, network_build_options);
 
     if (m_profile_enable)
     {
         timer_compile.stop();
-        instance.m_compilation_time = timer_compile.get_milliseconds();
-        instance.m_consumed_memory = get_max_memory_rss() - mem_before_compile;
+        compilation_time = timer_compile.get_milliseconds();
+        consumed_memory = get_max_memory_rss() - consumed_memory;
     }
+
+    rc = make_shared<IntelGPUExecutable>(func,
+                                         cldnn_network,
+                                         enable_timing,
+                                         m_profile_enable,
+                                         compilation_time,
+                                         consumed_memory,
+                                         m_profile_lines_limit_count);
+    if (!m_function_cache_disabled)
+    {
+        cldnn_networks.insert({func, rc});
+    }
+
+    return rc;
+}
+
+runtime::intelgpu::IntelGPUExecutable::IntelGPUExecutable(shared_ptr<Function> func,
+                                                          shared_ptr<cldnn::network> network,
+                                                          bool enable_timing,
+                                                          bool enable_profile,
+                                                          double compilation_time,
+                                                          double consumed_memory,
+                                                          size_t profile_lines_limit_count)
+{
+    m_function = func;
+    m_cldnn_network = network;
+    m_performance_counters_enabled = enable_timing;
+    m_profile_enable = enable_profile;
+    m_compilation_time = compilation_time;
+    m_consumed_memory = consumed_memory;
+    m_profile_lines_limit_count = profile_lines_limit_count;
+
+    set_parameters_and_results(*func);
 }
 
 bool runtime::intelgpu::IntelGPUExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
@@ -1836,9 +1856,7 @@ bool runtime::intelgpu::IntelGPUExecutable::call(const vector<shared_ptr<runtime
     double mem_call_consumed = 0.0f;
     stopwatch timer_call;
 
-    FunctionInstance& instance = m_function_instance;
-    shared_ptr<Function> func = instance.m_function;
-    if (instance.ocl_network == nullptr)
+    if (m_cldnn_network == nullptr)
     {
         throw runtime_error("compile() must be called before call().");
     }
@@ -1849,8 +1867,6 @@ bool runtime::intelgpu::IntelGPUExecutable::call(const vector<shared_ptr<runtime
         timer_call.start();
     }
 
-    shared_ptr<cldnn::network> network = instance.ocl_network;
-
     // Process input parameters. Correctness of parameters was validated by validate_call.
     // Since we have no correlation between Function::m_parameters and inputs, there is
     // we try to match them by index number in vectors.
@@ -1860,18 +1876,18 @@ bool runtime::intelgpu::IntelGPUExecutable::call(const vector<shared_ptr<runtime
             static_pointer_cast<runtime::intelgpu::IntelGPUTensorView>(inputs[i]);
         const ParameterVector& input_params = get_parameters();
         const string& tensor_name = input_params[i]->get_output_tensor().get_name();
-        network->set_input_data(tensor_name, *tv->get_data_ptr());
+        m_cldnn_network->set_input_data(tensor_name, *tv->get_data_ptr());
     }
 
     // Execute network
-    map<cldnn::primitive_id, cldnn::network_output> result = network->execute();
+    map<cldnn::primitive_id, cldnn::network_output> result = m_cldnn_network->execute();
 
     // Process output parameters. Correctness of parameters was validated by validate_call.
     // Since we have no correlation between Function::m_results and outputs, there is
     // we try to match them by index number in vectors.
-    for (size_t i = 0; i < func->get_output_size(); i++)
+    for (size_t i = 0; i < m_function->get_output_size(); i++)
     {
-        const shared_ptr<Node>& dst_node = func->get_output_op(i);
+        const shared_ptr<Node>& dst_node = m_function->get_output_op(i);
         const size_t dst_shape_size = shape_size(dst_node->get_shape());
 
         // We should not touch destination memory if it is not existed
@@ -1885,7 +1901,7 @@ bool runtime::intelgpu::IntelGPUExecutable::call(const vector<shared_ptr<runtime
         const string& tensor_name = get_input_name(dst_node);
         auto result_memory = result.at(tensor_name).get_memory().pointer<char>();
 
-        memory_size_check(result_memory.size(), dst_node, func->get_name());
+        memory_size_check(result_memory.size(), dst_node, m_function->get_name());
 
         ngraph_res->write(result_memory.data(), 0, result_memory.size());
     }
@@ -1895,16 +1911,17 @@ bool runtime::intelgpu::IntelGPUExecutable::call(const vector<shared_ptr<runtime
         timer_call.stop();
         mem_call_consumed = get_max_memory_rss() - mem_call_consumed;
 
-        print_call_performance(network,
-                               func,
-                               instance.m_compilation_time,
+        print_call_performance(m_cldnn_network,
+                               m_function,
+                               m_compilation_time,
                                timer_call.get_milliseconds(),
-                               instance.m_consumed_memory,
+                               m_consumed_memory,
                                mem_call_consumed,
                                get_max_memory_rss());
 
         // Output compile time only once
-        instance.m_compilation_time = 0.0;
+        m_compilation_time = 0.0;
+        m_consumed_memory = 0.0;
     }
 
     return true;
@@ -1912,11 +1929,11 @@ bool runtime::intelgpu::IntelGPUExecutable::call(const vector<shared_ptr<runtime
 
 void runtime::intelgpu::IntelGPUBackend::remove_compiled_function(shared_ptr<Executable> exec)
 {
-    for (auto it = ocl_networks.begin(); it != ocl_networks.end(); ++it)
+    for (auto it = cldnn_networks.begin(); it != cldnn_networks.end(); ++it)
     {
         if (it->second == exec)
         {
-            ocl_networks.erase(it);
+            cldnn_networks.erase(it);
             break;
         }
     }
@@ -1949,17 +1966,15 @@ vector<runtime::PerformanceCounter>
     runtime::intelgpu::IntelGPUExecutable::get_performance_data() const
 {
     vector<runtime::PerformanceCounter> rc;
-    const shared_ptr<cldnn::network> network = m_function_instance.ocl_network;
-    shared_ptr<Function> func = m_function_instance.m_function;
 
-    if (network != nullptr && m_function_instance.m_performance_counters_enabled)
+    if (m_cldnn_network != nullptr && m_performance_counters_enabled)
     {
         const map<cldnn::primitive_id, cldnn::event>& primitives =
-            network->get_executed_primitives();
+            m_cldnn_network->get_executed_primitives();
         for (const auto& p : primitives)
         {
             // Let's generate the primitive name that matches to the name in Function
-            const string primitive_name = convert_cldnn_names(func, p.first);
+            const string primitive_name = convert_cldnn_names(m_function, p.first);
             size_t usec = 0;
             for (const auto& q : p.second.get_profiling_info())
             {
