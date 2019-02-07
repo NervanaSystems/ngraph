@@ -421,10 +421,11 @@ namespace ngraph
                             i = m_activation_f(clip(add(i, mul(p_i, C_t)), m_clip_threshold));
                             if (m_input_forget)
                             {
+                                // Couple input with forget gate: 1 - i
                                 f = sub(ngraph::op::Constant::create(
                                             i->get_element_type(),
                                             i->get_shape(),
-                                            std::vector<float>(shape_size(i->get_shape()), 0.f)),
+                                            std::vector<float>(shape_size(i->get_shape()), 1.f)),
                                         i);
                             }
                             else
