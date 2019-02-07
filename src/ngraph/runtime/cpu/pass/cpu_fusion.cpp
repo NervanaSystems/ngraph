@@ -1938,19 +1938,24 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconv_relu(bool with_
             return false;
         }
 
-        // Double the requantization multiplier to account for unsigned output
-        auto two = op::Constant::create(element::f32, Shape{}, {2.0f});
-        // new_requant_scale = 2 * old_requant_scale * dq_scale / q_scale;
+        if (!with_bias)
+        {
+            if (!runtime::cpu::mkldnn_utils::can_use_mkldnn_conv<op::QuantizedConvolution>(
+                    dq_m->get_argument(0).get()))
+            {
+                NGRAPH_DEBUG << "Quantized Convolution not supported by MKLDNN";
+                return false;
+            }
+        }
 
-        // QuantizedConvolutionBias created only if it can run with MKLDNN.
-        // No further checks needed.
         std::shared_ptr<ngraph::op::Op> qconv_n;
         if (with_bias)
         {
             auto qconv_m =
                 std::static_pointer_cast<op::QuantizedConvolutionBias>(dq_m->get_argument(0));
+            // Rescale to q_m's scales directly
             auto requant_scale =
-                two * qconv_m->get_argument(3) * dq_m->get_argument(1) / q_m->get_argument(1);
+                qconv_m->get_argument(3) * dq_m->get_argument(1) / q_m->get_argument(1);
             qconv_n = std::make_shared<op::QuantizedConvolutionBias>(
                 qconv_m->get_argument(0),
                 qconv_m->get_argument(1),
@@ -1967,9 +1972,10 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconv_relu(bool with_
         {
             auto qconv_m =
                 std::static_pointer_cast<op::QuantizedConvolution>(dq_m->get_argument(0));
+            // Rescale to q_m's scales directly
             auto requant_scale =
-                two * qconv_m->get_argument(2) * dq_m->get_argument(1) / q_m->get_argument(1);
-            auto qconv_n = std::make_shared<op::QuantizedConvolutionRelu>(
+                qconv_m->get_argument(2) * dq_m->get_argument(1) / q_m->get_argument(1);
+            qconv_n = std::make_shared<op::QuantizedConvolutionRelu>(
                 qconv_m->get_argument(0),
                 qconv_m->get_argument(1),
                 qconv_m->get_window_movement_strides(),
@@ -2028,7 +2034,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_dq_q()
             return false;
         }
 
-        if (ngraph::compare_constants(q_m->get_argument(1), dq_m->get_argument(1)))
+        if (!ngraph::compare_constants(q_m->get_argument(1), dq_m->get_argument(1)))
         {
             NGRAPH_DEBUG << "Scales dont match";
             return false;
@@ -2072,42 +2078,43 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconvb_add()
     auto qconvb_label = std::make_shared<pattern::op::Label>(qconvb, nullptr, NodeVector{qconvb});
     auto dq_l =
         std::make_shared<op::Dequantize>(qconvb_label, dq_scale1, dq_zp1, element::f32, AxisSet{});
-    auto dq1_label = std::make_shared<pattern::op::Label>(dq_l, nullptr, NodeVector{dq_l});
+    auto dq_l_label = std::make_shared<pattern::op::Label>(dq_l, nullptr, NodeVector{dq_l});
     auto reshape_a =
-        std::make_shared<op::Reshape>(dq1_label, AxisVector{0, 1, 2, 3}, Shape{2, 2, 1, 1});
+        std::make_shared<op::Reshape>(dq_l_label, AxisVector{0, 1, 2, 3}, Shape{2, 2, 1, 1});
     auto pbroadcast_a = std::make_shared<op::Broadcast>(reshape_a, shape, AxisSet{});
 
     //Right Graph
     auto summand = std::make_shared<pattern::op::Label>(element::i8, qconvb->get_shape());
     auto dq_r =
         std::make_shared<op::Dequantize>(summand, dq_scale2, dq_zp2, element::f32, AxisSet{});
-    auto dq2_label = std::make_shared<pattern::op::Label>(dq_r, nullptr, NodeVector{dq_r});
+    auto dq_r_label = std::make_shared<pattern::op::Label>(dq_r, nullptr, NodeVector{dq_r});
     auto reshape_a_r =
-        std::make_shared<op::Reshape>(dq2_label, AxisVector{0, 1, 2, 3}, Shape{2, 2, 1, 1});
+        std::make_shared<op::Reshape>(dq_r_label, AxisVector{0, 1, 2, 3}, Shape{2, 2, 1, 1});
     auto pbroadcast_a_r = std::make_shared<op::Broadcast>(reshape_a_r, shape, AxisSet{});
 
     //Add left + right
     auto add = std::make_shared<op::Add>(pbroadcast_a, pbroadcast_a_r);
     auto prelu = std::make_shared<op::Relu>(add);
 
-    pattern::graph_rewrite_callback callback = [dq1_label, dq2_label](pattern::Matcher& m) {
+    pattern::graph_rewrite_callback callback = [dq_l_label, dq_r_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_qconvb_dq_add_relu against "
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
         auto add_m = std::dynamic_pointer_cast<op::Add>(m.get_match_root()->get_argument(0));
-        auto dq1_m = std::dynamic_pointer_cast<op::Dequantize>(pattern_map[dq1_label]);
-        auto dq2_m = std::dynamic_pointer_cast<op::Dequantize>(pattern_map[dq2_label]);
-        auto qconv = std::static_pointer_cast<op::QuantizedConvolutionBias>(dq1_m->get_argument(0));
-        auto inplace_input = dq2_m->get_argument(0);
+        auto dq_l_m = std::dynamic_pointer_cast<op::Dequantize>(pattern_map[dq_l_label]);
+        auto dq_r_m = std::dynamic_pointer_cast<op::Dequantize>(pattern_map[dq_r_label]);
+        auto qconv =
+            std::static_pointer_cast<op::QuantizedConvolutionBias>(dq_l_m->get_argument(0));
+        auto inplace_input = dq_r_m->get_argument(0);
 
-        if (!(ngraph::is_zero(dq1_m->get_argument(2)) && ngraph::is_zero(dq2_m->get_argument(2))))
+        if (!(ngraph::is_zero(dq_l_m->get_argument(2)) && ngraph::is_zero(dq_r_m->get_argument(2))))
         {
             NGRAPH_DEBUG << "Non-zero zero points";
             return false;
         }
 
-        if (dq2_m->get_input_element_type(0) != element::i8 &&
-            dq2_m->get_input_element_type(0) != element::u8)
+        if (dq_r_m->get_input_element_type(0) != element::i8 &&
+            dq_r_m->get_input_element_type(0) != element::u8)
         {
             NGRAPH_DEBUG << "Non int8/uint8 summand";
             return false;
@@ -2119,6 +2126,8 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconvb_add()
             return false;
         }
 
+        // The next two checks are not required once we support fallbacks in dex/codegen
+        // for non in-place input
         if (!is_post_dominated(inplace_input.get(), add_m.get()))
         {
             NGRAPH_DEBUG << "Unsafe to use in-place kernel since add's in-place input has "
@@ -2134,13 +2143,15 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconvb_add()
         }
 
         auto two = op::Constant::create(element::f32, Shape{}, {2.0f});
-        auto requant_scale = two * qconv->get_argument(3);
-        auto dq1_scale = dq1_m->get_argument(1);
-        auto dq2_scale = dq2_m->get_argument(1);
-        auto sum_scale = (dq2_scale / dq1_scale);
+        // new_requant_scale = qconv->get_argument(3);
+        // auto requant_scale = two * qconv->get_argument(3);
+        auto requant_scale = qconv->get_argument(3);
+        auto dq_l_scale = dq_l_m->get_argument(1);
+        auto dq_r_scale = dq_r_m->get_argument(1);
+        auto sum_scale = (dq_r_scale / dq_l_scale);
 
         std::shared_ptr<ngraph::op::Op> qconvba;
-        if (dq2_m->get_input_element_type(2) == element::i8)
+        if (dq_r_m->get_input_element_type(2) == element::i8)
         {
             // TODO (jbobba): Investigate the need for Convert op
             qconvba = std::make_shared<op::Convert>(
@@ -2176,7 +2187,8 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconvb_add()
                 true);
         }
         auto zp = op::Constant::create(element::u8, Shape{}, {0});
-        auto DQ = std::make_shared<op::Dequantize>(qconvba, dq1_scale, zp, element::f32, AxisSet{});
+        auto DQ =
+            std::make_shared<op::Dequantize>(qconvba, dq_l_scale, zp, element::f32, AxisSet{});
         ngraph::replace_node(m.get_match_root(), DQ);
 
         return true;

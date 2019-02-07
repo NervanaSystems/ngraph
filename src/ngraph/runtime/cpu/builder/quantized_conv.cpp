@@ -309,7 +309,7 @@ namespace ngraph
                                     }
                                     if (old_pops.kind(i) == mkldnn::primitive::kind::sum)
                                     {
-                                        new_pops.append_sum(2 * dyn_post_op_scales[0]);
+                                        new_pops.append_sum(dyn_post_op_scales[0]);
                                     }
                                 }
                                 conv_attr.set_post_ops(new_pops);
