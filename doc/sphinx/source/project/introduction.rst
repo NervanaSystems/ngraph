@@ -4,16 +4,71 @@
 Introduction
 ############
 
-The nGraph Compiler stack provides an industry-standard reference for working
-with various :abbr:`Deep Learning (DL)` (DL) models and optimizing an 
-:abbr:`Artificial Neural Network`, or :term:`ANN` to run them for testing, 
-training, or inference on many kinds of common and novel hardware. Having such 
-a standard simplifies what would otherwise be an enormously complex and 
-difficult-to-scale pipeline (:ref:`Figure 1 <figure-1>`) from "training with a 
-framework on GPU" (:ref:`Figure 2 <figure-2>`), to deploying that pre-trained 
-model in a datacenter or production environment, where hardware owners or 
-software developers renting anything in a datacenter ought to be concerned with 
+The nGraph Compiler stack provides industry-standard reference and implementation 
+guidelines for working with various :abbr:`Deep Learning (DL)` (DL) models and 
+optimizing an :abbr:`Artificial Neural Network (ANN)` (often abbreviated :term:`NN`) 
+to run graph-based computations for training, inference, testing, or validation.  
+Today's NNs make use of many new and novel devices, ranging in complexity from a 
+simple FPGA to a custom hardware accelerators. Having such a standard simplifies 
+what would otherwise be an enormously complex and difficult-to-scale pipeline 
+(:ref:`Figure 1 <figure-1>`) from "training with your favorite framework 
+using GPUs" (:ref:`Figure 2 <figure-2>`), to deploying that now pre-trained 
+model in a datacenter or production environment, where infrastructure owners and  
+software developers renting anything in a datacenter are mutually concerned with 
 **efficiency per-watt**, to keep costs in check.
+
+So what exactly are the motivations behind the nGraph Compiler stack? 
+
+
+Kernel libraries do not support graph-level optimizations
+---------------------------------------------------------
+
+A framework designed for training using GPUs requires integration with a kernel 
+library unique to that vendor's hardware. For example, after integration, a 
+kernel library can run a "familar" graph optimally; however, the graph itself 
+on the larger :term:`NN` is not optimal.   
+
+.. _figure-0:
+
+.. figure:: ../graphics/framework-to-kernel-lib.png
+   :width: 555px
+   :alt: 
+
+   Figure 0: Lack of graph-level optimization makes framework-to-kernel library
+   integration enormously inefficient. The computation graph here represents 
+   "quantity A plus B times C".
+
+
+.. _figure-1:
+
+.. figure:: ../graphics/framework-to-graph-opt.png
+   :width: 555px
+   :alt: 
+
+   Figure 1: Lack of graph-level optimization makes framework-to-kernel library
+   integration enormously inefficient. The graph represents quantity A plus B 
+   times C
+
+.. _figure-2:
+
+.. figure:: ../graphics/ngraph-algebraic-simp.png
+   :width: 555px
+   :alt: 
+
+   Figure 2: Lack of graph-level optimization makes framework-to-kernel library
+   integration enormously inefficient. The graph represents quantity A plus B 
+   times C
+
+First, we notice that an operation on the constant B (in this case a broadcast) can be done at compile time.  This is constant folding.
+[[click]]
+
+Then, we notice that the constant has value zero thus the add is an identity operation and can be eliminated.  This is algebraic simplification.
+[[click]]
+
+Now we have an optimal graph.  A times C.
+Again, kernel ibraries do not support this type of optimization.
+
+
 
 A typical network is constructed using some kind of language-based API, which 
 translates the network or :abbr:`DL (Deep Learning)` model (statically or 
@@ -35,24 +90,24 @@ each component around the graph compilation phase or process. Note that each
 component often requires specialists unique to that component, and that the
 terms have been simplified for illustrative purposes. 
 
-.. _figure-1:
+.. _figure-3:
 
 .. figure:: ../graphics/components-dl-stack.png
    :width: 700px
    :alt: A simplified DL stack
 
-   Figure 1: Components of a DL stack, simplified for illustrative purposes.
+   Figure 3: Components of a DL stack, simplified for illustrative purposes.
 
 There are many deep learning frameworks, each with its own strengths and 
 user bases. A setup that is common to many DL practitioners is shown below.
 
-.. _figure-2:
+.. _figure-4:
 
 .. figure:: ../graphics/a-common-stack.png
    :width: 700px
    :alt: A common implementation
 
-   Figure 2: A commonly-implemented stack uses TensorFlow\* as the frontend. 
+   Figure 4: A commonly-implemented stack uses TensorFlow\* as the frontend. 
    The input is either optimized via Grappler, or executed 
    directly via TensorFlow. In either case, when targeting an Nvidia\* GPU, 
    cuDNN is called to select an optimal kernel for the operation; cuDNN then 
@@ -67,13 +122,13 @@ memory layout, its feature set, etc. Each of these connections, then, represents
 significant work for what will ultimately be a brittle setup that is enormously 
 expensive to maintain.    
 
-.. _figure-3:
+.. _figure-5:
 
 .. figure:: ../graphics/dl-current-state.png
    :width: 700px
    :alt: Scalability matters
 
-   Figure 3: The number of kernels necessary to achieve optimal performance is 
+   Figure 5: The number of kernels necessary to achieve optimal performance is 
    bounded by the product of the number of chip designs one wishes to support, 
    the number of data types supported, the number of operations, and the 
    cardinality of each parameter for each operation.
@@ -93,22 +148,22 @@ heavy lifting. Furthermore, PlaidML can provide a wide range of hardware coverag
 and optimization automatically. Any hardware that supports LLVM, OpenCL, OpenGL, 
 CUDA or Metal can be supported automatically with PlaidML and nGraph.  
 
-.. _figure-4:
+.. _figure-6:
 
 .. figure:: ../graphics/graph-compilers-at-a-glance.png
    :width: 700px
    :alt: Overview of various graph and tensor compilers.
 
-   Figure 4: Overview of various graph and tensor compilers.
+   Figure 6: Overview of various graph and tensor compilers.
 
 
-.. _figure-5:
+.. _figure-6:
 
 .. figure:: ../graphics/tensor-compilers-at-a-glance.png
    :width: 700px
    :alt: A closer look at tensor compilers.
 
-   Figure 5: A closer look at tensor compilers.
+   Figure 6: A closer look at tensor compilers.
 
 
 
