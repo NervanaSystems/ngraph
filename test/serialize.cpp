@@ -171,14 +171,16 @@ TEST(serialize, passthrough)
 {
     const string tmp_file = "serialize_passthrough.json";
 
+    using estuple = std::tuple<element::Type, PartialShape>;
+
     Shape shape{2, 2, 2};
     auto p = make_shared<op::Passthrough>(
         "SerializationTest",
         "Plain",
         "Hello, world!",
         NodeVector{},
-        std::vector<std::tuple<element::Type, PartialShape>>{{element::f32, PartialShape{2, 3}},
-                                                             {element::i8, PartialShape{4, 5}}});
+        std::vector<estuple>{estuple{element::f32, PartialShape{2, 3}},
+                             estuple{element::i8, PartialShape{4, 5}}});
     auto f = make_shared<Function>(NodeVector{std::make_shared<op::GetOutputElement>(p, 0),
                                               std::make_shared<op::GetOutputElement>(p, 1)},
                                    ParameterVector{});

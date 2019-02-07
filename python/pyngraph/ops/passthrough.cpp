@@ -24,7 +24,8 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_Passthrough(py::module m)
 {
-    py::class_<ngraph::op::Passthrough, std::shared_ptr<ngraph::op::Passthrough>, ngraph::Node> pass{m, "Passthrough"};
+    py::class_<ngraph::op::Passthrough, std::shared_ptr<ngraph::op::Passthrough>, ngraph::Node>
+        pass{m, "Passthrough"};
     pass.doc() = "ngraph.impl.op.Passthrough wraps ngraph::op::Passthrough";
     pass.def(py::init<const std::string&,
                       const std::string&,
