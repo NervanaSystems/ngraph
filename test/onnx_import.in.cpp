@@ -1866,13 +1866,13 @@ TEST(onnx_${BACKEND_NAME}, model_top_k)
 
 TEST(onnx_${BACKEND_NAME}, model_sinh)
 {
-auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/sinh.onnx"));
+    auto function =
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/sinh.onnx"));
 
-Inputs inputs{std::vector<float>{-1.0f, 0.0f, 1.0f}};
+    Inputs inputs{std::vector<float>{-1.0f, 0.0f, 1.0f}};
+    Outputs expected_outputs{std::vector<float>{-1.1752012f, 0.f, 1.1752012f}};
 
-Outputs expected_output{std::vector<float>{-1.1752012f, 0.f, 1.1752012f}};
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
 
-Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
