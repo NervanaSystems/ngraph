@@ -1291,7 +1291,10 @@ void runtime::intelgpu::do_custom_eltwise_operation(cldnn::topology& topology,
         }
         case CUSTOM_ELTWISE::Floor:
         {
-            writer << "floor";
+            if (input_type.is_real())
+            {
+                writer << "floor";
+            }
             break;
         }
         case CUSTOM_ELTWISE::Sign:
