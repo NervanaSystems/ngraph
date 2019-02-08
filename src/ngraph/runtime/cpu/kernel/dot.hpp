@@ -168,13 +168,13 @@ namespace ngraph
                 }
 
                 template <typename ElementType>
-                void dot(void* arg0,
-                         void* arg1,
-                         void* out,
-                         const Shape& arg0_shape,
-                         const Shape& arg1_shape,
-                         const Shape& out_shape,
-                         size_t reduction_axes_count)
+                void dot_ref(void* arg0,
+                             void* arg1,
+                             void* out,
+                             const Shape& arg0_shape,
+                             const Shape& arg1_shape,
+                             const Shape& out_shape,
+                             size_t reduction_axes_count)
                 {
                     reference::dot(static_cast<const ElementType*>(arg0),
                                    static_cast<const ElementType*>(arg1),
