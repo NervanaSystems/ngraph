@@ -300,11 +300,13 @@ OPTIONS
 
 #if defined NGRAPH_DISTRIBUTED_ENABLE
     auto dist = new ngraph::Distributed;
+    bool delete_instance = true;
     NGRAPH_INFO << "initialize instance in nbench test ";
     if (dist->get_size() == 1)
     {
         NGRAPH_INFO << "delete instance in nbench get_size()==1 ";
         delete dist;
+        delete_instance = false;
     }
 #endif
 
@@ -432,7 +434,10 @@ OPTIONS
 
 #if defined NGRAPH_DISTRIBUTED_ENABLE
     NGRAPH_INFO << "delete instance at end in nbench ";
-    delete dist;
+    if (delete_instance)
+    {
+        delete dist;
+    }
 #endif
 
     return rc;

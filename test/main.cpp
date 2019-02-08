@@ -30,11 +30,13 @@ int main(int argc, char** argv)
 {
 #ifdef NGRAPH_DISTRIBUTED_ENABLE
     auto dist = new ngraph::Distributed;
+    bool delete_instance = true;
     NGRAPH_INFO << "initialize instance in main() ";
     if (dist->get_size() == 1)
     {
         NGRAPH_INFO << "delete instance in main get_size()==1 ";
         delete dist;
+        delete_instance = false;
     }
 #endif
     const char* exclude = "--gtest_filter=-benchmark.*";
@@ -53,7 +55,10 @@ int main(int argc, char** argv)
 #ifdef NGRAPH_DISTRIBUTED_ENABLE
 
     NGRAPH_INFO << "delete instance in main end ";
-    delete dist;
+    if (delete_instance)
+    {
+        delete dist;
+    }
 #endif
     return rc;
 }
