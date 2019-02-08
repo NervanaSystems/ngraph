@@ -1,4 +1,4 @@
-.. frameworks/testing_latency:
+.. frameworks/validated/testing-latency.rst:
 
 
 Testing latency  
@@ -23,7 +23,7 @@ reasons outlined in our `features`_ documentation.
    the experimental backend if you already use the ngraph-mxnet Github repo 
 
 
-.. figure:: ../graphics/ngraph-mxnet-models.png
+.. figure:: ../../graphics/ngraph-mxnet-models.png
     :width: 533px
     :alt: Up to 45X faster 
 
@@ -85,14 +85,14 @@ into a static graph. Also note that any model with a saved checkpoint can be
 considered a "static graph" in nGraph. For this example, we'll presume that the 
 model is pre-trained.   
 
-.. literalinclude:: ../../../examples/subgraph_snippets/mxnet-gluon-example.py
+.. literalinclude:: ../../../../examples/subgraph_snippets/mxnet-gluon-example.py
    :language: python
    :lines: 17-32
 
 
 To load the model into nGraph, we simply bind the symbol into an Executor. 
 
-.. literalinclude:: ../../../examples/subgraph_snippets/mxnet-gluon-example.py
+.. literalinclude:: ../../../../examples/subgraph_snippets/mxnet-gluon-example.py
    :language: python
    :lines: 34-35
 
@@ -101,7 +101,7 @@ the graph, and in the case of Resnet, sends the entire graph to nGraph for
 compilation. This produces a single call to an NNVM ``NGraphSubgraphOp`` embedded 
 with the compiled model. At this point, we can test the model's performance.
 
-.. literalinclude:: ../../../examples/subgraph_snippets/mxnet-gluon-example.py
+.. literalinclude:: ../../../../examples/subgraph_snippets/mxnet-gluon-example.py
    :language: python
    :lines: 40-48
 
