@@ -682,7 +682,7 @@ TEST(builder, scaled_QC_with_bias_signed_add_and_relu)
 TEST(builder, scaled_QC_with_bias_signed_add_and_relu_nhwc)
 {
     Shape shape_a{1, 3, 4, 1}; // input shape
-    Shape shape_b{3, 3, 1, 1}; // filter shape
+    Shape shape_b{1, 3, 3, 1}; // filter shape
     Shape shape_r{1, 1, 3, 4}; // output shape
     vector<uint8_t> a_data = {1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4};
     vector<int8_t> b_data = {1, 2, 3, 4, 5, 0, 0, 1, 2};
@@ -691,7 +691,7 @@ TEST(builder, scaled_QC_with_bias_signed_add_and_relu_nhwc)
     auto A = make_shared<op::Parameter>(element::u8, shape_a);
     auto A_reshape = make_shared<op::Reshape>(A, AxisVector{0, 3, 1, 2}, Shape{1, 1, 3, 4});
     auto B = make_shared<op::Parameter>(element::i8, shape_b);
-    auto B_reshape = make_shared<op::Reshape>(B, AxisVector{3, 2, 0, 1}, Shape{1, 1, 3, 3});
+    auto B_reshape = make_shared<op::Reshape>(B, AxisVector{0, 3, 1, 2}, Shape{1, 1, 3, 3});
     auto Add = make_shared<op::Parameter>(element::i8, shape_a);
     auto Add_reshape = make_shared<op::Reshape>(Add, AxisVector{0, 3, 1, 2}, Shape{1, 1, 3, 4});
     auto Bias = make_shared<op::Parameter>(element::i32, Shape{1});
