@@ -15,28 +15,10 @@
 //*****************************************************************************
 
 #pragma once
+#include <stdio.h>
+#include <stdlib.h>
 
-#include <exception>
-#include <functional>
-#include <sstream>
-
-#include "ngraph/pass/pass.hpp"
-#include "ngraph/placement.hpp"
-
-namespace ngraph
-{
-    namespace pass
-    {
-        class AssignPlacement : public NodePass
-        {
-        public:
-            // TODO: make policy a class
-            AssignPlacement(std::function<Placement(std::shared_ptr<Node>)> placement_policy);
-
-        private:
-            bool run_on_node(std::shared_ptr<Node> node) override;
-
-            std::function<Placement(std::shared_ptr<Node>)> m_placement_policy;
-        };
-    }
-}
+FILE* port_open(const char* command, const char* type);
+int port_close(FILE* stream);
+int set_environment(const char* name, const char* value, int overwrite);
+int unset_environment(const char* name);

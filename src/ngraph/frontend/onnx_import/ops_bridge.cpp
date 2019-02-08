@@ -40,6 +40,7 @@
 #include "op/conv.hpp"
 #include "op/conv_transpose.hpp"
 #include "op/cos.hpp"
+#include "op/cosh.hpp"
 #include "op/depth_to_space.hpp"
 #include "op/div.hpp"
 #include "op/elu.hpp"
@@ -80,6 +81,7 @@
 #include "op/shape.hpp"
 #include "op/sigmoid.hpp"
 #include "op/sin.hpp"
+#include "op/sinh.hpp"
 #include "op/size.hpp"
 #include "op/slice.hpp"
 #include "op/softmax.hpp"
@@ -94,6 +96,7 @@
 #include "op/tan.hpp"
 #include "op/tanh.hpp"
 #include "op/thresholded_relu.hpp"
+#include "op/topk.hpp"
 #include "op/transpose.hpp"
 #include "op/unsqueeze.hpp"
 #include "op/xor.hpp"
@@ -109,6 +112,11 @@ namespace ngraph
                 find(std::int64_t version, const std::map<std::int64_t, Operator>& map)
             {
                 std::map<std::int64_t, Operator>::const_iterator it{};
+                // Get the latest version.
+                if (version == -1)
+                {
+                    return map.empty() ? std::end(map) : --std::end(map);
+                }
                 while (version > 0)
                 {
                     it = map.find(version--);
@@ -126,23 +134,29 @@ namespace ngraph
                                                  const std::string& domain,
                                                  Operator fn)
         {
-            m_map[domain][name].emplace(version, std::move(fn));
+            auto result = m_map[domain][name].emplace(version, std::move(fn));
+            if (result.second)
+            {
+                NGRAPH_WARN << "Overwriting existing operator: "
+                            << domain + "." + name + ":" + std::to_string(version);
+            }
         }
 
-        OperatorSet OperatorsBridge::_get_operator_set(std::int64_t version,
-                                                       const std::string& domain)
+        OperatorSet OperatorsBridge::_get_operator_set(const std::string& domain,
+                                                       std::int64_t version)
         {
             OperatorSet result;
+
             auto dm = m_map.find(domain);
             if (dm == std::end(m_map))
             {
                 throw error::UnknownDomain{domain};
             }
-            if (version > OperatorsBridge::LATEST_SUPPORTED_OPSET_VERSION)
+            if (domain == "" && version > OperatorsBridge::LATEST_SUPPORTED_ONNX_OPSET_VERSION)
             {
-                NGRAPH_WARN << "Currently operator set version: " << version << " is unsupported."
-                            << " Falling back to: "
-                            << OperatorsBridge::LATEST_SUPPORTED_OPSET_VERSION;
+                NGRAPH_WARN << "Currently ONNX operator set version: " << version
+                            << " is unsupported. Falling back to: "
+                            << OperatorsBridge::LATEST_SUPPORTED_ONNX_OPSET_VERSION;
             }
             for (const auto& op : dm->second)
             {
@@ -207,6 +221,7 @@ namespace ngraph
             REGISTER_OPERATOR("Conv", 1, conv);
             REGISTER_OPERATOR("ConvTranspose", 1, conv_transpose);
             REGISTER_OPERATOR("Cos", 1, cos);
+            REGISTER_OPERATOR("Cosh", 1, cosh);
             REGISTER_OPERATOR("DepthToSpace", 1, depth_to_space);
             REGISTER_OPERATOR("Div", 1, div);
             REGISTER_OPERATOR("Div", 7, div);
@@ -261,6 +276,7 @@ namespace ngraph
             REGISTER_OPERATOR("Shape", 1, shape);
             REGISTER_OPERATOR("Sigmoid", 1, sigmoid);
             REGISTER_OPERATOR("Sin", 1, sin);
+            REGISTER_OPERATOR("Sinh", 1, sinh);
             REGISTER_OPERATOR("Size", 1, size);
             REGISTER_OPERATOR("Slice", 1, slice);
             REGISTER_OPERATOR("Softmax", 1, softmax);
@@ -277,6 +293,7 @@ namespace ngraph
             REGISTER_OPERATOR("Tan", 1, tan);
             REGISTER_OPERATOR("Tanh", 1, tanh);
             REGISTER_OPERATOR("ThresholdedRelu", 1, thresholded_relu);
+            REGISTER_OPERATOR("TopK", 1, topk);
             REGISTER_OPERATOR("Transpose", 1, transpose);
             REGISTER_OPERATOR("Unsqueeze", 1, unsqueeze);
             REGISTER_OPERATOR("Xor", 1, logical_xor);

@@ -55,6 +55,7 @@ add_library(onnx_import STATIC
         op/clip.cpp
         op/clip.hpp
         op/cos.hpp
+        op/cosh.hpp
         op/concat.cpp
         op/concat.hpp
         op/constant.cpp
@@ -122,6 +123,7 @@ add_library(onnx_import STATIC
         op/shape.cpp
         op/sigmoid.hpp
         op/sin.hpp
+        op/sinh.hpp
         op/size.cpp
         op/size.hpp
         op/slice.cpp
@@ -145,6 +147,8 @@ add_library(onnx_import STATIC
         op/tanh.hpp
         op/thresholded_relu.cpp
         op/thresholded_relu.hpp
+        op/topk.cpp
+        op/topk.hpp
         op/transpose.cpp
         op/transpose.hpp
         op/unsqueeze.cpp

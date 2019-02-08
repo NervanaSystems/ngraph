@@ -33,7 +33,7 @@ namespace ngraph
         class Graph
         {
         public:
-            Graph(const onnx::GraphProto& proto, const Model& model, const Weights& weights = {});
+            Graph(const onnx::GraphProto& proto, Model& model, const Weights& weights = {});
 
             const std::vector<Node>& get_nodes() const { return m_nodes; }
             const std::vector<ValueInfo>& get_inputs() const { return m_inputs; }
@@ -59,7 +59,7 @@ namespace ngraph
             ParameterVector m_parameters;
             std::map<std::string, std::shared_ptr<ngraph::Node>> m_ng_node_cache;
             std::map<std::string, Tensor> m_initializers;
-            const Model* m_model;
+            Model* m_model;
         };
 
         inline std::ostream& operator<<(std::ostream& outs, const Graph& graph)

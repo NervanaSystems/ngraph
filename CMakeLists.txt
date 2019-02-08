@@ -84,16 +84,13 @@ set(NGRAPH_FORWARD_CMAKE_ARGS
 
 if (NOT MSVS)
     if(NOT CMAKE_BUILD_TYPE)
-        set(NGRAPH_FORWARD_CMAKE_ARGS
-                ${NGRAPH_FORWARD_CMAKE_ARGS}
-                -DCMAKE_BUILD_TYPE=Release
-                )
-    else()
-        set(NGRAPH_FORWARD_CMAKE_ARGS
-                ${NGRAPH_FORWARD_CMAKE_ARGS}
-                -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-                )
+        set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type" FORCE)
     endif()
+
+    set(NGRAPH_FORWARD_CMAKE_ARGS
+            ${NGRAPH_FORWARD_CMAKE_ARGS}
+            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+            )
 endif()
 message(STATUS "NGRAPH_FORWARD_CMAKE_ARGS ${NGRAPH_FORWARD_CMAKE_ARGS}")
 
@@ -335,11 +332,11 @@ include(cmake/external_cldnn.cmake)
 
 if (NGRAPH_USE_PREBUILT_LLVM OR DEFINED LLVM_TARBALL_URL)
     include(cmake/external_llvm_prebuilt.cmake)
-else()
+elseif (NOT NGRAPH_DEX_ONLY OR NOT MSVS)
     include(cmake/external_llvm.cmake)
 endif()
 
-if (WIN32)
+if (WIN32 OR APPLE)
     include(cmake/external_tbb_prebuilt.cmake)
 else()
     include(cmake/external_tbb.cmake)

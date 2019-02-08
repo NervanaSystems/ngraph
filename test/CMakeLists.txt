@@ -37,10 +37,10 @@ set(SRC
     cse.cpp
     element_type.cpp
     file_util.cpp
-    graph_partition.cpp
     includes.cpp
     input_output_assign.cpp
     main.cpp
+    misc.cpp
     nop_elimination.cpp
     op.cpp
     partial_shape.cpp
@@ -200,7 +200,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
 endif()
 
 if (NGRAPH_CPU_ENABLE)
-    # The INTERPRETER backend is required for graph_partition, convolution, and backwards unit tests
+    # The INTERPRETER backend is required for convolution, and backwards unit tests
     target_link_libraries(unit-test PRIVATE cpu_backend interpreter_backend)
     target_link_libraries(unit-test PRIVATE libmkldnn)
 endif()
@@ -246,10 +246,19 @@ if (NGRAPH_ONNXIFI_ENABLE)
     target_link_libraries(unit-test PRIVATE onnxifi-ngraph)
 endif()
 
-add_custom_target(unit-test-check
-    COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
-    DEPENDS unit-test
-)
+# If all the runtime libraries are installed into one location, that will make life easier.
+if (MSVS)
+    add_custom_target(unit-test-check
+        COMMAND set "PATH=${EXTERNAL_PROJECTS_ROOT}/src/ngraph/Release;${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/;${EXTERNAL_PROJECTS_ROOT}/mkl/src/ext_mkl/lib/;${EXTERNAL_PROJECTS_ROOT}/ext_tbb-prefix/src/ext_tbb/tbb2019_20181203oss/bin/intel64/vc14;%PATH%"
+        COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
+        DEPENDS unit-test
+    )
+else()
+    add_custom_target(unit-test-check
+        COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
+        DEPENDS unit-test
+    )
+endif()
 
 add_custom_target(check
     DEPENDS

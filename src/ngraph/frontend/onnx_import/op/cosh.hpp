@@ -14,28 +14,30 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <deque>
-#include <sstream>
+#pragma once
 
-#include "ngraph/function.hpp"
-#include "ngraph/graph_util.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/placement.hpp"
-#include "ngraph/util.hpp"
+#include <memory>
 
-using namespace std;
-using namespace ngraph;
+#include "core/node.hpp"
+#include "ngraph/node_vector.hpp"
+#include "ngraph/op/cosh.hpp"
 
-std::string ngraph::placement_to_string(Placement placement)
+namespace ngraph
 {
-    switch (placement)
+    namespace onnx_import
     {
-    case Placement::DEFAULT: return "DEFAULT";
-    case Placement::INTERPRETER: return "INTERPRETER";
-    case Placement::CPU: return "CPU";
-    case Placement::GPU: return "GPU";
-    case Placement::NNP: return "NNP";
-    case Placement::PLAIDML: return "PlaidML";
-    }
-    throw runtime_error("unhandled placement type");
-}
+        namespace op
+        {
+            namespace set_1
+            {
+                inline NodeVector cosh(const Node& node)
+                {
+                    return {std::make_shared<ngraph::op::Cosh>(node.get_ng_inputs().at(0))};
+                }
+            } // namespace set_1
+
+        } //namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

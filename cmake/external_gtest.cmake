@@ -72,9 +72,7 @@ ExternalProject_Get_Property(ext_gtest SOURCE_DIR BINARY_DIR)
 add_library(libgtest INTERFACE)
 add_dependencies(libgtest ext_gtest)
 target_include_directories(libgtest SYSTEM INTERFACE ${SOURCE_DIR}/googletest/include)
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(GTEST_LIB_NAME gtestd)
-else()
-    set(GTEST_LIB_NAME gtest)
-endif()
-target_link_libraries(libgtest INTERFACE ${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}${GTEST_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX})
+
+target_link_libraries(libgtest INTERFACE
+    debug ${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gtestd${CMAKE_STATIC_LIBRARY_SUFFIX}
+    optimized ${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX})
