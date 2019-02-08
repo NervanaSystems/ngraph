@@ -25,9 +25,8 @@ To deploy data-parallel training on backends supported by nGraph API, the
 We need to initialize and finalize distributed training with ``Distributed`` object;
 see the `full raw code`_. 
 
-Finally, to run the training using two nGraph devices, invoke :command:`mpirun` which is a distributed with 
-`Intel MLSL`_ library.
-This will launch two nGraph CPU backends.
+Finally, to run the training using two nGraph devices, invoke :command:`mpirun` which 
+is distributed with `Intel MLSL`_ library.  This will launch two nGraph CPU backends.
 
 
 .. code-block:: console 
