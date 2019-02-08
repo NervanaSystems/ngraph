@@ -29,8 +29,8 @@ void DistributedSetup::set_comm_rank(int comm_rank)
 int DistributedSetup::get_comm_size()
 {
     return ngraph_dist_setup::distributed_comm_size;
-};
+}
 int DistributedSetup::get_comm_rank()
 {
     return ngraph_dist_setup::distributed_comm_rank;
-};
+}

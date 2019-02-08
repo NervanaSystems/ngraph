@@ -31,7 +31,6 @@ using namespace ngraph;
 
 TEST(distributed_${BACKEND_NAME}, allreduce)
 {
-    Distributed dist_instance;
     DistributedSetup distsetup;
     auto comm_size = distsetup.get_comm_size();
     if (comm_size > 1)
@@ -42,7 +41,6 @@ TEST(distributed_${BACKEND_NAME}, allreduce)
         auto f = make_shared<Function>(make_shared<op::AllReduce>(A), ParameterVector{A});
 
         auto backend = runtime::Backend::create("${BACKEND_NAME}");
-        // auto comm_size = dist_instance.get_size();
 
         auto v = vector<float>{1, 2, 3, 4};
         auto a = backend->create_tensor(element::f32, shape);
