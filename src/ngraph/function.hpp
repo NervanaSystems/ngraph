@@ -89,7 +89,7 @@ namespace ngraph
         /// all constant data. This has little value beyond comparing the relative size of
         /// graphs and should not be considered the actual memory consumption of a graph.
         size_t get_graph_size() const;
-        
+
         size_t get_placement() const;
         void set_placement(size_t placement);
 
