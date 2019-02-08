@@ -69,8 +69,10 @@ namespace ngraph
                 if (initializer_tensor.has_name())
                 {
                     Tensor tensor = Tensor{initializer_tensor};
-                    m_ng_node_cache.emplace(initializer_tensor.name(), tensor.get_ng_constant());
                     m_initializers.emplace(initializer_tensor.name(), tensor);
+
+                    // For each initializer, create a Constant node and store in cache
+                    m_ng_node_cache.emplace(initializer_tensor.name(), tensor.get_ng_constant());
                 }
             }
 
@@ -78,6 +80,13 @@ namespace ngraph
             for (const auto& input : m_graph_proto->input())
             {
                 m_inputs.emplace_back(input);
+
+                // Check if a Constant node was already created from an initializer
+                if (m_ng_node_cache.count(input.name()) > 0)
+                {
+                    continue;
+                }
+
                 m_ng_node_cache[input.name()] =
                     m_inputs.back().get_ng_node(m_parameters, m_initializers, weights);
             }
