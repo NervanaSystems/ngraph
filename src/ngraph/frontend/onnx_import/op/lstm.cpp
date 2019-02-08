@@ -28,6 +28,7 @@
 
 #include "exceptions.hpp"
 #include "lstm.hpp"
+#include "ngraph/axis_set.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/concat.hpp"
@@ -37,6 +38,7 @@
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/reverse.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/tanh.hpp"
@@ -299,7 +301,6 @@ namespace ngraph
                         m_direction = getLSTMDirection(direction);
                     }
 
-                    // Currently only LSTM_DIRECTION_FORWARD is supported.
                     LSTMDirection m_direction;
                     std::int64_t m_hidden_size;
                     float m_clip_threshold;
@@ -387,6 +388,11 @@ namespace ngraph
                         std::shared_ptr<ngraph::Node> H_t = m_initial_h;
                         std::shared_ptr<ngraph::Node> C_t = m_initial_c;
 
+                        if (reverse)
+                        {
+                            m_X = std::make_shared<ngraph::op::Reverse>(m_X, AxisSet{0});
+                        }
+
                         NodeVector in_seqs{};
                         if (m_X->get_shape().at(0) != 1)
                         {
@@ -401,11 +407,6 @@ namespace ngraph
                         {
                             // remove first empty dim, after above split.
                             in_x = reshape::squeeze(in_x);
-                        }
-
-                        if (reverse)
-                        {
-                            std::reverse(std::begin(in_seqs), std::end(in_seqs));
                         }
 
                         for (const auto& in_x : in_seqs)
@@ -464,14 +465,14 @@ namespace ngraph
                             exp_h_list.push_back(reshape::expand_dims(ht));
                         }
 
+                        std::shared_ptr<ngraph::Node> Y{
+                            std::make_shared<ngraph::op::Concat>(exp_h_list, 0)};
+
                         // Get back the original order of the output data.
                         if (reverse)
                         {
-                            std::reverse(std::begin(exp_h_list), std::end(exp_h_list));
+                            Y = std::make_shared<ngraph::op::Reverse>(Y, AxisSet{0});
                         }
-
-                        std::shared_ptr<ngraph::Node> Y{
-                            std::make_shared<ngraph::op::Concat>(exp_h_list, 0)};
 
                         // Expand Y so that it has expected shape:
                         // [seq_length, num_directions, batch_size, hidden_size]
