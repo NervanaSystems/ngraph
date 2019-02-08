@@ -44,7 +44,7 @@
 /src/ngraph/runtime/cpu/            @jbobba
 /src/ngraph/runtime/cpu/builder/allreduce.*pp    @wenzhe-nrv @jbobba @avijit-nervana
 /src/ngraph/runtime/gpu/            @rkimballn1
-/src/ngraph/runtime/hybrid/         @sasadep
+/src/ngraph/runtime/hybrid/         @rkimballn1
 /src/ngraph/runtime/intelgpu/       @shssf
 /src/ngraph/runtime/interpreter/    @rkimballn1
 /src/ngraph/runtime/plaidml/        @earhart
