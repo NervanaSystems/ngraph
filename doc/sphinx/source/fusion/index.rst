@@ -3,14 +3,16 @@
 Pattern matcher
 ###############
 
-:ref:`overview` 
-:ref:`passes_list` 
-:ref:`passes_examples` 
+* :ref:`overview` 
+* :ref:`passes_list`
+* :ref:`more_detail` 
+* :ref:`passes_examples`
+* :doc:`optimize-graphs` 
 
 
 .. _overview:
 
-Generic Graph Optimizers: Optimization Passes
+Generic graph optimizers: Optimization passes
 =============================================
 
 The pass manager infrastructure in nGraph makes it easy to reuse and mix the 
@@ -39,11 +41,11 @@ Let’s take a look at some of these passes.
 List of Passes
 ==============
 
-:ref:`algebraic_simpl`
-:ref:`common_subex_elim`
-:ref:`constant_fold`
-:ref:`reshape_transpose_elim`
-:ref:`reshape_transpose_sink`
+* :ref:`algebraic_simpl`
+* :ref:`common_subex_elim`
+* :ref:`constant_fold`
+* :ref:`reshape_transpose_elim`
+* :ref:`reshape_transpose_sink`
 
 
 .. _algebraic_simpl: 
@@ -132,30 +134,9 @@ them both out of the graph.
 
 
 
-.. _passes_examples:
 
-Examples of Passes
-==================
 
-This is all a little more striking to look at in terms of an actual input graph 
-we get from the framework bridge.
-
-Here’s an excerpt from MobileNet v1, a topology which makes heavy use of group 
-convolution.
-
-It’s a little hard to see the details, so don’t worry about that, but the main 
-point is that each of these group convolution complexes---see these big red 
-rectangles on the left?---is very very wide… way too wide to fit!
-
-The group convolution fusion is able to replace each of those giant subgraphs 
-with a single CPU group convolution node.
-
-This is a big win in several ways: 
-
-* sheer node count, 
-* mappability to MKL-DNN (which has an accelerated group convolution implementation), 
-* elimination of unnecessary temporaries, and so on.
-
+.. _more_detail:
 
 More detail
 -----------
@@ -190,50 +171,35 @@ optimizer.
 
    graph-rewrite.rst
    passes-that-use-matcher.rst
+   optimize-graphs.rst
    
 
-Optimize Graphs 
-===============
+.. _passes_examples:
 
-with nGraph Compiler fusions
-----------------------------
+Examples of Passes
+==================
 
-The nGraph Compiler is an optimizing compiler. As such, it provides a way to 
-capture a given :term:`function graph` and perform a series of optimization 
-passes over that graph. The result is a semantically-equivalent graph that, when 
-executed using any :doc:`backend <../backend-support/index>`, has optimizations 
-inherent at the hardware level: superior runtime characteristics to increase 
-training performance or reduce inference latency.   
+The effectiveness of these passes is more striking to look at in terms of an 
+actual input graph, such as one from the framework bridge.
 
-There are several ways to describe what happens when we capture and translate 
-the framework's output of ops into an nGraph graph. :term:`Fusion` is the term 
-we shall use in our documentation; the action also can be described as: 
-*combining*, *folding*, *squashing*, *collapsing*, or *merging* of graph 
-functions. 
+*Figure 0* shows an excerpt from ``MobileNet v1``, a topology which makes heavy 
+use of group convolution.
 
-Optimization passes may include algebraic simplifications, domain-specific 
-simplifications, and fusion. Most passes share the same mode of operation (or 
-the same operational structure) and consist of various stages (each one a 
-:term:`step`) where a developer can experiment with the intercepted or dynamic 
-graph. These steps may be cycled or recycled as needed: 
+.. _figure-mobilenet-gc:
 
-#. Locate a list of potentially-transformable subgraphs in the given graph.
-#. Transform the selected candidates into semantically-equivalent subgraphs 
-   that execute faster, or with less memory (or both). 
-#. Verify that the optimization pass performs correctly, with any or all expected 
-   transformations, with the ``NGRAPH_SERIALIZE_TRACING`` option, which 
-   serializes a graph in the `json` format after a pass.
-#. Measure and evaluate your performance improvements with ``NGRAPH_CPU_TRACING``, 
-   which produces timelines compatible with ``chrome://tracing``.
+.. figure:: ../graphics/mobilenet-group-conv.png
+   :width: 700px
+   :alt: 
 
-Optimizations can be experimented upon without using any backend by registering 
-a pass with pass manager (``Manager``), calling ``run_passes`` on a function, and 
-then inspecting the transformed graph. 
+   Figure 0: Each of these grouped convolution complexes -- the 
+   operations within the rectangles on the left -- is very wide; each is too 
+   wide to fit legibly on the illustration.
 
-Optimization passes can be programmed ahead of time if you know or can predict 
-what your graph will look like when it's ready to be executed (in other words: 
-which `ops` can be automatically translated into :doc:`nGraph Core ops <../ops/index>`). 
 
-The ``Interpreter`` is simply a backend providing reference implementations of 
-ngraph ops in C++, with the focus on simplicity over performance.
+The group convolution fusion is able to replace each of those giant subgraphs 
+with a single CPU group convolution node. This ends up being a win in several 
+ways: 
 
+* sheer node count, 
+* mappability to MKL-DNN (which has an accelerated group convolution implementation), 
+* elimination of unnecessary temporaries, and so on.

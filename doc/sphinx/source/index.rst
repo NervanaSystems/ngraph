@@ -79,6 +79,7 @@ nGraph Compiler stack
    :maxdepth: 1
    :caption: Project Metadata
 
+   project/release-notes.rst
    project/contribution-guide.rst
    project/index.rst 
    glossary.rst
