@@ -22,13 +22,13 @@ namespace ngraph
 {
     class Distributed
     {
-
     public:
         Distributed();
         ~Distributed();
         int get_size() const;
         int get_rank() const;
-    private: 
+
+    private:
         bool this_init_comm;
         void finalize();
     };
