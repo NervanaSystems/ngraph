@@ -1906,6 +1906,8 @@ TEST(onnx_${BACKEND_NAME}, model_lstm_fwd_with_clip)
     EXPECT_TRUE(outputs.size() == expected_output.size());
     for (std::size_t i{0}; i < expected_output.size(); ++i)
     {
-        EXPECT_TRUE(test::all_close_f(expected_output.at(i), outputs.at(i)));
+        // We have to enlarge tolerance bits to 3 - it's only one bit more than default value.
+        // The discrepancies may occur at most on 7th decimal position.
+        EXPECT_TRUE(test::all_close_f(expected_output.at(i), outputs.at(i), 3));
     }
 }
