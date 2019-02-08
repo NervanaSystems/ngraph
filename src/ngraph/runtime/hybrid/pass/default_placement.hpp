@@ -30,16 +30,16 @@ namespace ngraph
         {
             namespace pass
             {
-                class AssignPlacement;
+                class DefaultPlacement;
             }
         }
     }
 }
 
-class ngraph::runtime::hybrid::pass::AssignPlacement : public ngraph::pass::NodePass
+class ngraph::runtime::hybrid::pass::DefaultPlacement : public ngraph::pass::NodePass
 {
 public:
-    AssignPlacement(
+    DefaultPlacement(
         const std::vector<std::shared_ptr<ngraph::runtime::Backend>>& placement_backends);
 
 private:
