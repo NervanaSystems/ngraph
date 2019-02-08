@@ -426,6 +426,19 @@ static void
     writer << "}\n";
 }
 
+static void generate_class_declarations(codegen::CodeWriter& writer)
+{
+    writer << "// Declare all classes\n";
+    writer << "struct CPURuntimeContextCG;\n";
+}
+
+static void generate_runtime_context_class(codegen::CodeWriter& writer)
+{
+    writer <<
+#include "ngraph/runtime/cpu/pregenerated_src/cpu_cg_runtime_context.hpp"
+           << "\n";
+}
+
 void runtime::cpu::CPU_ExternalFunction::compile()
 {
     if (m_is_compiled)
@@ -616,7 +629,10 @@ using namespace ngraph::runtime;
         }
     }
 
-    const char* func_params = "(void** inputs, void** outputs, cpu::CPURuntimeContext* ctx";
+    generate_class_declarations(writer);
+
+    const char* func_params =
+        "(void** inputs, void** outputs, cpu::CPURuntimeContext* ctx, CPURuntimeContextCG* cg_ctx)";
 
     writer << "// Declare all functions\n";
     for (shared_ptr<Function> f : pass_manager.get_state().get_functions())
@@ -624,6 +640,8 @@ using namespace ngraph::runtime;
         writer << "extern \"C\" void " << f->get_name() << func_params << ";\n";
     }
     writer << "\n";
+
+    generate_runtime_context_class(writer);
 
     writer << common_function_string << "\n";
 
@@ -714,7 +732,7 @@ using namespace ngraph::runtime;
             writer << "tbb::flow::continue_node<tbb::flow::continue_msg>* "
                       "flowgraph_node_start"
                    << " = new tbb::flow::continue_node<tbb::flow::continue_msg> "
-                      "(*(ctx->G), [&](const tbb::flow::continue_msg &msg)\n{});\n";
+                      "(*(cg_ctx->tbb_graph), [&](const tbb::flow::continue_msg &msg)\n{});\n";
         }
 
         for (shared_ptr<Node> node : ordered_ops)
@@ -848,7 +866,7 @@ using namespace ngraph::runtime;
                               "flowgraph_node_"
                            << node->get_name()
                            << " = new tbb::flow::continue_node<tbb::flow::continue_msg> "
-                              "(*(ctx->G), [&](const tbb::flow::continue_msg &msg)\n{\n";
+                              "(*(cg_ctx->tbb_graph), [&](const tbb::flow::continue_msg &msg)\n{\n";
                     writer.indent++;
                 }
                 if (runtime::cpu::IsTracingEnabled() &&
@@ -922,7 +940,7 @@ using namespace ngraph::runtime;
                 {
                     names.push_back(tv.get_name());
                 }
-                writer << func_name << "(" << join(names) << ", ctx);\n";
+                writer << func_name << "(" << join(names) << ", ctx, cg_ctx);\n";
             }
 
             // skip multi-output nodes since they would be covered by GetOutputElement
@@ -1010,9 +1028,9 @@ using namespace ngraph::runtime;
 
             // Execute the flow graph
             writer << "(static_cast<tbb::flow::continue_node<tbb::flow::continue_msg>*>"
-                      "(&(*(ctx->G->begin()))))"
+                      "(&(*(cg_ctx->tbb_graph->begin()))))"
                    << "->try_put(tbb::flow::continue_msg());\n";
-            writer << "try { ctx->G->wait_for_all(); } catch(...) { throw; }\n";
+            writer << "try { cg_ctx->tbb_graph->wait_for_all(); } catch(...) { throw; }\n";
         }
         writer << "ctx->first_iteration = false;\n";
 
@@ -1039,7 +1057,23 @@ using namespace ngraph::runtime;
     }
     m_execution_engine->add_module(codegen_module);
     m_execution_engine->finalize();
-    m_compiled_function = m_execution_engine->find_function<EntryPoint_t>(m_function_name);
+
+    m_compiled_init_ctx_func = m_execution_engine->find_function<InitContextFuncTy>("init_cg_ctx");
+
+    if (m_compiled_init_ctx_func == nullptr)
+    {
+        throw runtime_error("could not find compiled init context function");
+    }
+
+    m_compiled_destroy_ctx_func =
+        m_execution_engine->find_function<DestroyContextFuncTy>("destroy_cg_ctx");
+
+    if (m_compiled_destroy_ctx_func == nullptr)
+    {
+        throw runtime_error("could not find compiled destroy context function");
+    }
+
+    m_compiled_function = m_execution_engine->find_function<EntryPointTy>(m_function_name);
 
     if (m_compiled_function == nullptr)
     {
@@ -2091,6 +2125,8 @@ shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
     }
 
     return make_shared<ngraph::runtime::cpu::CPU_CallFrame>(shared_from_this(),
+                                                            m_compiled_init_ctx_func,
+                                                            m_compiled_destroy_ctx_func,
                                                             m_compiled_function);
 }
 
@@ -2235,7 +2271,7 @@ string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(const Node& node,
         writer << tvw.get_type() << "* " << tvw.get_name();
         out.push_back(tvw);
     }
-    writer << ",\ncpu::CPURuntimeContext* ctx";
+    writer << ",\ncpu::CPURuntimeContext* ctx, CPURuntimeContextCG* cg_ctx";
     writer.indent--;
     writer << "\n)\n";
     writer << "{\n";
