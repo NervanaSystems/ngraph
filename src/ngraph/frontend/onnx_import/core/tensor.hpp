@@ -419,13 +419,13 @@ namespace ngraph
                 }
             }
 
+        private:
             template <typename T>
             std::shared_ptr<ngraph::op::Constant> make_ng_constant(const element::Type& type) const
             {
                 return std::make_shared<ngraph::op::Constant>(type, m_shape, get_data<T>());
             }
 
-        private:
             const onnx::TensorProto* m_tensor_proto;
             Shape m_shape;
         };
