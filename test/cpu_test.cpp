@@ -21,6 +21,7 @@
 #include <memory>
 
 #include "gtest/gtest.h"
+#include "misc.hpp"
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
@@ -124,7 +125,7 @@ TEST(cpu_test, abc_tbb)
     bool use_tbb = (getenv("NGRAPH_CPU_USE_TBB") != nullptr);
     if (!use_tbb)
     {
-        setenv("NGRAPH_CPU_USE_TBB", "1", 1);
+        set_environment("NGRAPH_CPU_USE_TBB", "1", 1);
     }
 
     Shape shape{2, 2};
@@ -160,7 +161,7 @@ TEST(cpu_test, abc_tbb)
 
     if (!use_tbb)
     {
-        unsetenv("NGRAPH_CPU_USE_TBB");
+        unset_environment("NGRAPH_CPU_USE_TBB");
     }
 }
 #endif // NGRAPH_TBB_ENABLE

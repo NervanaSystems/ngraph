@@ -14,23 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/pass/assign_placement.hpp"
-#include "ngraph/log.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/placement.hpp"
-#include "ngraph/runtime/backend.hpp"
+#pragma once
+#include <stdio.h>
+#include <stdlib.h>
 
-using namespace ngraph;
-using namespace std;
-
-pass::AssignPlacement::AssignPlacement(function<Placement(shared_ptr<Node>)> placement_policy)
-    : m_placement_policy(placement_policy)
-{
-}
-
-bool pass::AssignPlacement::run_on_node(shared_ptr<Node> node)
-{
-    node->set_placement(m_placement_policy(node));
-
-    return false;
-}
+FILE* port_open(const char* command, const char* type);
+int port_close(FILE* stream);
+int set_environment(const char* name, const char* value, int overwrite);
+int unset_environment(const char* name);
