@@ -195,16 +195,17 @@ namespace ngraph
                         // The lengths of the sequences in a batch. Shape [batch_size]
                         if (ng_inputs.size() >= 5)
                         {
+                            ASSERT_VALID_ARGUMENT(node, ng_inputs.at(5)->is_constant())
+                                << "Only Constant node is supported for 'sequence_lens' input.";
                             m_map[LSTMInput::LSTM_INPUT_SEQ_LENGTHS] = ng_inputs.at(4);
                         }
                         else
                         {
-                            m_map[LSTMInput::LSTM_INPUT_SEQ_LENGTHS] =
-                                common::make_constant_node<std::int32_t>(
+                            m_map[LSTMInput::LSTM_INPUT_SEQ_LENGTHS] = ngraph::op::Constant::create(
                                     element::i32,
-                                    {batch_size},
-                                    {static_cast<std::int32_t>(
-                                        m_map[LSTMInput::LSTM_INPUT_X]->get_shape().at(0))});
+                                    Shape{batch_size},
+                                    std::vector<std::int32_t>(batch_size,
+                                        m_map[LSTMInput::LSTM_INPUT_X]->get_shape().at(0)));
                         }
                         // The initial value of the hidden. Shape [num_directions, batch_size, hidden_size]
                         if (ng_inputs.size() >= 6)
@@ -316,6 +317,7 @@ namespace ngraph
                                          std::shared_ptr<ngraph::Node> P,
                                          std::shared_ptr<ngraph::Node> initial_h,
                                          std::shared_ptr<ngraph::Node> initial_c,
+                                         std::shared_ptr<ngraph::Node> seq_lengths,
                                          rnn::ActivationFunction activation_f,
                                          rnn::ActivationFunction activation_g,
                                          rnn::ActivationFunction activation_h,
@@ -329,6 +331,7 @@ namespace ngraph
                         , m_P{reshape::squeeze(P)}
                         , m_initial_h{reshape::squeeze(initial_h)}
                         , m_initial_c{reshape::squeeze(initial_c)}
+                        , m_seq_lengths{seq_lengths}
                         , m_activation_f{activation_f}
                         , m_activation_g{activation_g}
                         , m_activation_h{activation_h}
@@ -480,6 +483,7 @@ namespace ngraph
                     std::shared_ptr<ngraph::Node> m_P;
                     std::shared_ptr<ngraph::Node> m_initial_h;
                     std::shared_ptr<ngraph::Node> m_initial_c;
+                    std::shared_ptr<ngraph::Node> m_seq_lengths;
                     rnn::ActivationFunction m_activation_f;
                     rnn::ActivationFunction m_activation_g;
                     rnn::ActivationFunction m_activation_h;
@@ -517,6 +521,7 @@ namespace ngraph
                                              input_map.at(LSTMInput::LSTM_INPUT_P),
                                              input_map.at(LSTMInput::LSTM_INPUT_INIT_H),
                                              input_map.at(LSTMInput::LSTM_INPUT_INIT_C),
+                                             input_map.at(LSTMInput::LSTM_INPUT_SEQ_LENGTHS),
                                              activation_f,
                                              activation_g,
                                              activation_h,
@@ -536,10 +541,12 @@ namespace ngraph
                         NodeVector C{reshape::split(input_map.at(LSTMInput::LSTM_INPUT_INIT_C), 2)};
 
                         LSTMForward lstm_fwd(input_map.at(LSTMInput::LSTM_INPUT_X), W.at(0),
-                            R.at(0), B.at(0), P.at(0), H.at(0), C.at(0), activation_f, activation_g,
+                            R.at(0), B.at(0), P.at(0), H.at(0), C.at(0),
+                            input_map.at(LSTMInput::LSTM_INPUT_SEQ_LENGTHS), activation_f, activation_g,
                             activation_h, attributes.m_input_forget, attributes.m_clip_threshold);
                         LSTMForward lstm_reversed(input_map.at(LSTMInput::LSTM_INPUT_X), W.at(1),
-                            R.at(1), B.at(1), P.at(1), H.at(1), C.at(1), activation_f, activation_g,
+                            R.at(1), B.at(1), P.at(1), H.at(1), C.at(1),
+                            input_map.at(LSTMInput::LSTM_INPUT_SEQ_LENGTHS), activation_f, activation_g,
                             activation_h, attributes.m_input_forget, attributes.m_clip_threshold);
 
                         NodeVector fwd_results{lstm_fwd.run()};
