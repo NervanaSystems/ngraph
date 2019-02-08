@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-
+#include <iostream>
 #include <thread>
 
 #include "cpu_executor.hpp"
@@ -75,6 +75,7 @@ namespace ngraph
                             new Eigen::ThreadPool(num_threads_per_pool)));
                         m_thread_pool_devices.push_back(std::unique_ptr<Eigen::ThreadPoolDevice>(
                             new Eigen::ThreadPoolDevice(m_thread_pools[i].get(), GetNumCores())));
+                        std::cout << "MLA: new Eigen::ThreadPool and ThreadPoolDevice created";
                         m_tbb_arenas.emplace_back(1);
                     }
                 }

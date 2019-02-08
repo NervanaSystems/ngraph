@@ -13,12 +13,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-
 #include <algorithm>
 #include <cassert>
 #include <deque>
 #include <forward_list>
 #include <iomanip>
+#include <iostream>
 #include <map>
 #include <numeric>
 #include <unordered_set>
@@ -167,12 +167,15 @@ void* ngraph::aligned_alloc(size_t alignment, size_t size)
 #elif defined _WIN32
     return new uint64_t[round_up(size, sizeof(uint64_t)) / sizeof(uint64_t)];
 #else
-    return ::aligned_alloc(alignment, size);
+    auto ptr = ::aligned_alloc(alignment, size);
+    std::cout << "MLA: ngraph::aligned_alloc ptr: " << ptr << "\n";
+    return ptr;
 #endif
 }
 
 void ngraph::aligned_free(void* p)
 {
+    std::cout << "MLA: ngraph::aligned_free ptr: " << p << "\n";
 #ifdef __APPLE__
     delete[] reinterpret_cast<uint64_t*>(p);
 #else
@@ -188,15 +191,29 @@ void* ngraph::ngraph_malloc(size_t size)
         NGRAPH_ERR << "malloc failed to allocate memory of size " << size;
         throw std::bad_alloc();
     }
+    std::cout << "ngraph_malloc allocate memory ptr: "<< (ptr) <<", size " << size <<"\n";
     return ptr;
 }
 
 void ngraph::ngraph_free(void* ptr)
 {
+    std::cout << "ngraph_free ptr: "<< (ptr) <<"\n";
     if (ptr)
     {
         free(ptr);
     }
+}
+
+void ngraph::ngraph_calloc(size_t num, size_t size)
+{
+    NGRAPH_ERR << "calloc UNIMPLEMENTED\n";
+    throw ngraph_error("calloc unimplemented");;
+}
+
+void ngraph::ngraph_realloc(size_t num, size_t size)
+{
+    NGRAPH_ERR << "realloc UNIMPLEMENTED\n";
+    throw ngraph_error("realloc unimplemented");
 }
 
 size_t ngraph::round_up(size_t size, size_t alignment)

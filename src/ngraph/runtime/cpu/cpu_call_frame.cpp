@@ -121,6 +121,8 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
         ctx->op_durations = new int64_t[m_external_function->get_op_attrs().size()];
     }
     ctx->p_en = new bool[m_external_function->get_parameter_layout_descriptors().size()];
+    std::cout << "MLA: cpu_call_frame.cpp:121 ptr: " <<ctx->p_en << ", size: " <<
+                    m_external_function->get_parameter_layout_descriptors().size() << "\n";
 
     ctx->first_iteration = true;
 
@@ -129,6 +131,7 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
     for (auto buffer_size : m_external_function->get_memory_buffer_sizes())
     {
         auto buffer = new AlignedBuffer(buffer_size, alignment);
+        std:cout << "MLA: cpu_call_frame.cpp: alignedBuffer; ptr: " <<buffer <<", size: "<<buffer_size<<"\n";
         ctx->memory_buffers.push_back(buffer);
     }
     const auto& mkldnn_emitter = m_external_function->get_mkldnn_emitter();
@@ -153,10 +156,14 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
 
 void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
 {
+    std::cout << "cleanup_runtime_context called \n";
+    std::cout << "\t delete ctx->op_durations, ptr : " << ctx->op_durations << "\n";
+    std::cout << "\t delete ctx->p_ens, ptr : " << ctx->p_en << "\n";
     delete[] ctx->op_durations;
     delete[] ctx->p_en;
     for (auto buffer : ctx->memory_buffers)
     {
+        std::cout << "\tcleanup_runtime_context: delete buffer ptr: " << buffer <<"\n";
         delete buffer;
     }
     if (std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
@@ -181,5 +188,6 @@ void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
         ctx->mlsl_env->DeleteDistribution(ctx->mlsl_dist);
     }
 #endif
+    std::cout << "\t delete ctx, ptr : " << ctx << "\n";
     delete ctx;
 }

@@ -18,6 +18,7 @@
 #include <typeindex>
 #include <typeinfo>
 #include <unordered_set>
+#include <i_malloc.h>
 
 #include "ngraph/node.hpp"
 #include "ngraph/op/add.hpp"
@@ -36,6 +37,7 @@
 #include "ngraph/type/element_type.hpp"
 
 #include "mkldnn_utils.hpp"
+
 
 using namespace mkldnn;
 using namespace ngraph;
@@ -698,4 +700,12 @@ bool runtime::cpu::mkldnn_utils::can_use_mkldnn_batchnorm_bprop(const ngraph::No
     {
         return false;
     }
+}
+
+void runtime::cpu::mkldnn_utils::redefine_mem_functions()
+{
+    i_malloc = ngraph::ngraph_malloc;
+    i_free = ngraph::ngraph_free;
+    //i_calloc = ngraph::ngraph_calloc;
+    //i_realloc = ngraph::ngraph_realloc;
 }

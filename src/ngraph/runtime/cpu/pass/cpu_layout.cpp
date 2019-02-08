@@ -116,8 +116,9 @@ static shared_ptr<Node>
         {
             auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
             layout->set_mkldnn_md(required_mds[index]);
-            auto new_node = std::shared_ptr<Node>(
-                new runtime::cpu::op::ConvertLayout(output.get_node(), output.get_index(), layout));
+            auto ptr = new runtime::cpu::op::ConvertLayout(output.get_node(), output.get_index(), layout);
+            auto new_node = std::shared_ptr<Node>(ptr);
+            std::cout << __func__ << ", ptr: " << ptr <<"\n";
             new_args.push_back(new_node);
             replace_node = true;
             NGRAPH_DEBUG << "Inserted conversion node " << new_node->get_name() << " between "
@@ -197,8 +198,10 @@ static void set_native_layouts(runtime::cpu::CPU_ExternalFunction* external_func
             {
                 auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
                 layout->set_mkldnn_md(native_md);
-                auto new_node = std::shared_ptr<Node>(new runtime::cpu::op::ConvertLayout(
-                    output.get_node(), output.get_index(), layout));
+                auto ptr = new runtime::cpu::op::ConvertLayout(
+                    output.get_node(), output.get_index(), layout);
+                auto new_node = std::shared_ptr<Node>(ptr);
+                std::cout << __func__ << ", ptr: " << ptr <<"\n";
                 new_args.push_back(new_node);
                 if (use_replace)
                 {
@@ -394,8 +397,7 @@ namespace ngraph
                             mkldnn_arg2_shape, et_bias, memory::format::any);
                         try
                         {
-                            fwd_desc.reset(
-                                new convolution_forward::desc(prop_kind::forward,
+                            auto ptr = new convolution_forward::desc(prop_kind::forward,
                                                               algorithm::convolution_direct,
                                                               input_data_desc,
                                                               weights_desc,
@@ -405,7 +407,9 @@ namespace ngraph
                                                               mkldnn_dilated_strides,
                                                               mkldnn_padding_below,
                                                               mkldnn_padding_above,
-                                                              padding_kind::zero));
+                                                              padding_kind::zero);
+                            fwd_desc.reset(ptr);
+                            std::cout << __func__ << ", ptr: " << ptr <<"\n";
                         }
                         catch (const mkldnn::error& e)
                         {
@@ -418,8 +422,7 @@ namespace ngraph
                     {
                         try
                         {
-                            fwd_desc.reset(
-                                new convolution_forward::desc(prop_kind::forward,
+                            auto ptr = new convolution_forward::desc(prop_kind::forward,
                                                               algorithm::convolution_direct,
                                                               input_data_desc,
                                                               weights_desc,
@@ -428,7 +431,9 @@ namespace ngraph
                                                               mkldnn_dilated_strides,
                                                               mkldnn_padding_below,
                                                               mkldnn_padding_above,
-                                                              padding_kind::zero));
+                                                              padding_kind::zero);
+                            fwd_desc.reset(ptr);
+                            std::cout << __func__ << ", ptr: " << ptr <<"\n";
                         }
                         catch (const mkldnn::error& e)
                         {
@@ -834,8 +839,7 @@ namespace ngraph
                             data_shape, filters_shape, bias_shape);
                         memory::dims mkldnn_bias_shape(bias_shape.begin(), bias_shape.end());
                         const memory::desc bias_desc(mkldnn_bias_shape, et, memory::format::any);
-                        bwd_desc.reset(
-                            new convolution_backward_weights::desc(algorithm::convolution_direct,
+                        auto ptr1 = new convolution_backward_weights::desc(algorithm::convolution_direct,
                                                                    data_desc,
                                                                    filters_desc,
                                                                    bias_desc,
@@ -844,9 +848,11 @@ namespace ngraph
                                                                    mkldnn_dilated_strides,
                                                                    mkldnn_padding_below,
                                                                    mkldnn_padding_above,
-                                                                   padding_kind::zero));
+                                                                   padding_kind::zero);
+                        bwd_desc.reset(ptr1);
+                        std::cout << __func__ << ", if ptr1: " << ptr1 <<"\n";
 
-                        fwd_desc.reset(new convolution_forward::desc(prop_kind::forward,
+                        auto ptr2 = new convolution_forward::desc(prop_kind::forward,
                                                                      algorithm::convolution_direct,
                                                                      data_desc,
                                                                      filters_desc,
@@ -856,12 +862,13 @@ namespace ngraph
                                                                      mkldnn_dilated_strides,
                                                                      mkldnn_padding_below,
                                                                      mkldnn_padding_above,
-                                                                     padding_kind::zero));
+                                                                     padding_kind::zero);
+                        fwd_desc.reset(ptr2);
+                        std::cout << __func__ << ", if ptr2: " << ptr2 <<"\n";
                     }
                     else
                     {
-                        bwd_desc.reset(
-                            new convolution_backward_weights::desc(algorithm::convolution_direct,
+                        auto ptr1 = new convolution_backward_weights::desc(algorithm::convolution_direct,
                                                                    data_desc,
                                                                    filters_desc,
                                                                    delta_desc,
@@ -869,9 +876,11 @@ namespace ngraph
                                                                    mkldnn_dilated_strides,
                                                                    mkldnn_padding_below,
                                                                    mkldnn_padding_above,
-                                                                   padding_kind::zero));
+                                                                   padding_kind::zero);
+                        bwd_desc.reset(ptr1);
+                        std::cout << __func__ << ", else ptr1: " << ptr1 <<"\n";
 
-                        fwd_desc.reset(new convolution_forward::desc(prop_kind::forward,
+                        auto ptr2 = new convolution_forward::desc(prop_kind::forward,
                                                                      algorithm::convolution_direct,
                                                                      data_desc,
                                                                      filters_desc,
@@ -880,7 +889,9 @@ namespace ngraph
                                                                      mkldnn_dilated_strides,
                                                                      mkldnn_padding_below,
                                                                      mkldnn_padding_above,
-                                                                     padding_kind::zero));
+                                                                     padding_kind::zero);
+                        fwd_desc.reset(ptr2);
+                        std::cout << __func__ << ", else ptr2: " << ptr2 <<"\n";
                     }
                     convolution_forward::primitive_desc fwd_prim_desc(*fwd_desc, cpu_engine);
                     convolution_backward_weights::primitive_desc prim_desc(

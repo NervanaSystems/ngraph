@@ -152,6 +152,7 @@ shared_ptr<Node> op::AvgPoolBackprop::copy_with_new_args(const NodeVector& new_a
                                                 m_padding_below,
                                                 m_padding_above,
                                                 m_include_padding_in_avg_computation);
+    std::cout <<"MLA: avg_pool.cpp, avpn ptr: " << avpn << ", size: " << sizeof(AvgPoolBackprop) <<"\n";
     return shared_ptr<op::AvgPoolBackprop>(avpn);
 }
 

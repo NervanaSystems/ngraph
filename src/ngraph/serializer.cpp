@@ -317,6 +317,7 @@ shared_ptr<ngraph::Function> ngraph::deserialize(istream& in)
             // The first file is the model
             uint32_t size = static_cast<uint32_t>(file_info[0].get_size());
             char* data = new char[size];
+            std::cout << "MLA: serializer.cpp: deserialize: data ptr: " << data <<", size: " << size << "\n";
             reader.read(file_info[0].get_name(), data, size);
             string jstr(data, size);
             delete[] data;

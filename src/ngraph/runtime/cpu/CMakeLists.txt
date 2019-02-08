@@ -206,6 +206,7 @@ if (NGRAPH_CPU_ENABLE)
         target_link_libraries(cpu_backend PUBLIC codegen)
     endif()
     target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)
+    target_include_directories(cpu_backend SYSTEM PUBLIC ~/project/ngraph/build/mkldnn/src/external/mkl/include)
     set_target_properties(cpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
     if (NOT APPLE)
         # CPU backend uses third-party libraries like Eigen that might be linked in and

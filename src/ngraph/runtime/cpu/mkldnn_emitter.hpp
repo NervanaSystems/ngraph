@@ -787,14 +787,17 @@ namespace ngraph
                     weights_idx = m_primitive_deps[conv_idx][1];
                     m_mkldnn_primitives[input_idx] =
                         new mkldnn::memory({{desc.data.src_desc}, engine}, nullptr);
+                    std::cout << "MLA: mkldnn_emitter.hpp add, input ptr: " << m_mkldnn_primitives[input_idx] << "\n";
                     m_mkldnn_primitives[weights_idx] =
                         new mkldnn::memory({{desc.data.weights_desc}, engine}, nullptr);
+                    std::cout << "MLA: mkldnn_emitter.hpp add, weights ptr: " << m_mkldnn_primitives[weights_idx] << "\n";
                     if (with_bias)
                     {
                         bias_idx = m_primitive_deps[conv_idx][2];
                         results_idx = m_primitive_deps[conv_idx][3];
                         m_mkldnn_primitives[bias_idx] =
                             new mkldnn::memory({{desc.data.bias_desc}, engine}, nullptr);
+                        std::cout << "MLA: mkldnn_emitter.hpp add, bias ptr: " << m_mkldnn_primitives[bias_idx] << "\n";
                     }
                     else
                     {
@@ -802,6 +805,7 @@ namespace ngraph
                     }
                     m_mkldnn_primitives[results_idx] =
                         new mkldnn::memory({{desc.data.dst_desc}, engine}, nullptr);
+                    std::cout << "MLA: mkldnn_emitter.hpp add, results ptr: " << m_mkldnn_primitives[results_idx] << "\n";
 
                     mkldnn::primitive* prim;
                     if (with_bias)
@@ -821,6 +825,7 @@ namespace ngraph
                     }
 
                     m_mkldnn_primitives[conv_idx] = prim;
+                    std::cout << "MLA: mkldnn_emitter.hpp add, conv ptr: " << m_mkldnn_primitives[conv_idx] << "\n";
                 }
 
             private:

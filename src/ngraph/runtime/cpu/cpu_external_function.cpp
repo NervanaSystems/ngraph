@@ -225,6 +225,7 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     , m_function_name(function->get_name())
     , m_is_built(false)
 {
+    runtime::cpu::mkldnn_utils::redefine_mem_functions();
 }
 
 runtime::cpu::CPU_ExternalFunction::~CPU_ExternalFunction()
@@ -2071,6 +2072,7 @@ void*& runtime::cpu::CPU_ExternalFunction::get_tensor_data(const std::string& na
 shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
     runtime::cpu::CPU_ExternalFunction::make_call_frame()
 {
+    
 #if !defined(NGRAPH_DEX_ONLY)
     if (!m_is_compiled && !m_direct_execution)
     {

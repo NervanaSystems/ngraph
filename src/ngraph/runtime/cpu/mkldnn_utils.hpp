@@ -17,6 +17,7 @@
 #pragma once
 
 #include <mkldnn.hpp>
+//#include <i_malloc.h>
 
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/node.hpp"
@@ -105,6 +106,19 @@ namespace ngraph
 
                     return true;
                 }
+                void redefine_mem_functions();
+                extern "C" {
+                    typedef void* (*i_malloc_t)(size_t size);
+                    typedef void* (*i_calloc_t)(size_t nmemb, size_t size);
+                    typedef void* (*i_realloc_t)(void* ptr, size_t size);
+                    typedef void (*i_free_t)(void* ptr);
+
+                    extern i_malloc_t i_malloc; // = ngraph::ngraph_malloc;
+                    extern i_calloc_t i_calloc;
+                    extern i_realloc_t i_realloc;
+                    extern i_free_t i_free;// = ngraph::ngraph_free;
+                }
+
             }
         }
     }

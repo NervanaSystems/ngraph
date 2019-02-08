@@ -238,6 +238,7 @@ const vector<cpio::FileInfo>& cpio::Reader::get_file_info()
             Header header = Header::read(*m_stream);
 
             auto buffer = new char[header.namesize];
+            std::cout <<"MLA: cpio.cpp: buffer ptr: " << buffer <<", size: "<<header.namesize <<"\n"; 
             m_stream->read(buffer, header.namesize);
             // namesize includes the null string terminator so -1
             string file_name = string(buffer, header.namesize - 1);

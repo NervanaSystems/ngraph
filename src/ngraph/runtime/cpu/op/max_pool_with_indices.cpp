@@ -350,6 +350,7 @@ shared_ptr<Node>
                                                                       m_window_movement_strides,
                                                                       m_padding_below,
                                                                       m_padding_above);
+    std::cout << __func__ << ", ptr: " << mpbp <<"\n";
     return shared_ptr<op::MaxPoolWithIndicesBackprop>(mpbp);
 }
 

@@ -81,6 +81,7 @@ ExternalProject_Add(
 ExternalProject_Get_Property(ext_mkl source_dir)
 set(MKL_ROOT ${EXTERNAL_PROJECTS_ROOT}/mkldnn/src/external/mkl)
 set(MKL_SOURCE_DIR ${source_dir})
+#set(MKL_INCLUDE_DIR ${EXTERNAL_PROJECTS_ROOT}/mkldnn/src/external/mkl/include)
 add_library(libmkl INTERFACE)
 add_dependencies(libmkl ext_mkl)
 foreach(LIB ${MKL_LIBS})
@@ -185,6 +186,7 @@ add_custom_command(TARGET ext_mkldnn POST_BUILD
 add_library(libmkldnn INTERFACE)
 add_dependencies(libmkldnn ext_mkldnn)
 target_include_directories(libmkldnn SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/mkldnn/include)
+#target_include_directories(libmkldnn SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/mkldnn/src/external/mkl/include)
 target_link_libraries(libmkldnn INTERFACE
     ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${CMAKE_SHARED_LIBRARY_PREFIX}mkldnn${CMAKE_SHARED_LIBRARY_SUFFIX}
     libmkl
