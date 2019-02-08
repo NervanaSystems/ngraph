@@ -17,6 +17,7 @@
 #include <chrono>
 #include <iostream>
 
+#include "distributed_setup.hpp"
 #include "gtest/gtest.h"
 #include "ngraph/log.hpp"
 
@@ -31,6 +32,9 @@ int main(int argc, char** argv)
 #ifdef NGRAPH_DISTRIBUTED_ENABLE
     auto dist = new ngraph::Distributed;
     bool delete_instance = true;
+    DistributedSetup distributed_setup;
+    distributed_setup.set_comm_size(dist->get_size());
+    distributed_setup.set_comm_rank(dist->get_rank());
     NGRAPH_INFO << "initialize instance in main() ";
     if (dist->get_size() == 1)
     {

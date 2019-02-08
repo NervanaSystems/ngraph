@@ -19,6 +19,7 @@
 
 #include "gtest/gtest.h"
 
+#include "distributed_setup.hpp"
 #include "ngraph/distributed.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/ngraph.hpp"
@@ -31,24 +32,29 @@ using namespace ngraph;
 TEST(distributed_${BACKEND_NAME}, allreduce)
 {
     Distributed dist_instance;
-    NGRAPH_INFO << "initialize instance in allreduce test ";
-    auto shape = Shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::AllReduce>(A), ParameterVector{A});
+    DistributedSetup distsetup;
+    auto comm_size = distsetup.get_comm_size();
+    if (comm_size > 1)
+    {
+        NGRAPH_INFO << "initialize instance in allreduce test ";
+        auto shape = Shape{2, 2};
+        auto A = make_shared<op::Parameter>(element::f32, shape);
+        auto f = make_shared<Function>(make_shared<op::AllReduce>(A), ParameterVector{A});
 
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-    auto comm_size = dist_instance.get_size();
+        auto backend = runtime::Backend::create("${BACKEND_NAME}");
+        // auto comm_size = dist_instance.get_size();
 
-    auto v = vector<float>{1, 2, 3, 4};
-    auto a = backend->create_tensor(element::f32, shape);
-    copy_data(a, vector<float>{1, 2, 3, 4});
+        auto v = vector<float>{1, 2, 3, 4};
+        auto a = backend->create_tensor(element::f32, shape);
+        copy_data(a, vector<float>{1, 2, 3, 4});
 
-    auto result = backend->create_tensor(element::f32, shape);
+        auto result = backend->create_tensor(element::f32, shape);
 
-    std::transform(
-        v.begin(), v.end(), v.begin(), std::bind1st(std::multiplies<float>(), comm_size));
+        std::transform(
+            v.begin(), v.end(), v.begin(), std::bind1st(std::multiplies<float>(), comm_size));
 
-    auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
-    EXPECT_EQ(v, read_vector<float>(result));
+        auto handle = backend->compile(f);
+        backend->call_with_validate(handle, {result}, {a});
+        EXPECT_EQ(v, read_vector<float>(result));
+    }
 }

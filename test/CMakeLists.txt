@@ -39,6 +39,7 @@ set(SRC
     file_util.cpp
     includes.cpp
     input_output_assign.cpp
+    distributed_setup.cpp
     main.cpp
     misc.cpp
     nop_elimination.cpp
@@ -59,6 +60,10 @@ set(SRC
     uuid.cpp
     zero_dim_tensor_elimination.cpp
 )
+
+if(NGRAPH_DISTRIBUTED_ENABLE)
+    list(APPEND SRC distributed_setup.cpp)
+endif()
 
 set_source_files_properties(includes.cpp PROPERTIES COMPILE_DEFINITIONS
     NGRAPH_INCLUDES="${PROJECT_SOURCE_DIR}/src/ngraph")
