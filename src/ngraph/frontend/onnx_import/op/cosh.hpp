@@ -17,24 +17,27 @@
 #pragma once
 
 #include <memory>
-#include <unordered_map>
-#include <vector>
 
-#include "ngraph/function.hpp"
-#include "ngraph/op/parameter.hpp"
-#include "ngraph/op/result.hpp"
+#include "core/node.hpp"
+#include "ngraph/node_vector.hpp"
+#include "ngraph/op/cosh.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace onnx_import
     {
-        namespace hybrid
+        namespace op
         {
-            // Split function to function(s) with unique placement
-            std::pair<
-                std::vector<std::shared_ptr<Function>>,
-                std::unordered_map<std::shared_ptr<op::Parameter>, std::shared_ptr<op::Result>>>
-                split_function_by_placement(const std::shared_ptr<Function>& f);
-        }
-    }
-}
+            namespace set_1
+            {
+                inline NodeVector cosh(const Node& node)
+                {
+                    return {std::make_shared<ngraph::op::Cosh>(node.get_ng_inputs().at(0))};
+                }
+            } // namespace set_1
+
+        } //namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

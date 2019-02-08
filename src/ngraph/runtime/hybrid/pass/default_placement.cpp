@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/hybrid/pass/assign_placement.hpp"
+#include "ngraph/runtime/hybrid/pass/default_placement.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/placement.hpp"
@@ -23,13 +23,13 @@
 using namespace ngraph;
 using namespace std;
 
-runtime::hybrid::pass::AssignPlacement::AssignPlacement(
+runtime::hybrid::pass::DefaultPlacement::DefaultPlacement(
     const vector<shared_ptr<runtime::Backend>>& placement_backends)
     : m_placement_backends(placement_backends)
 {
 }
 
-bool runtime::hybrid::pass::AssignPlacement::run_on_node(shared_ptr<Node> node)
+bool runtime::hybrid::pass::DefaultPlacement::run_on_node(shared_ptr<Node> node)
 {
     size_t backend_index = 0;
     for (auto backend : m_placement_backends)
