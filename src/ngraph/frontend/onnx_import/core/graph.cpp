@@ -63,11 +63,14 @@ namespace ngraph
             : m_graph_proto{&graph_proto}
             , m_model{&model}
         {
-            for (const auto& tensor : m_graph_proto->initializer())
+            // Process all initializers in the graph
+            for (const auto& initializer_tensor : m_graph_proto->initializer())
             {
-                if (tensor.has_name())
+                if (initializer_tensor.has_name())
                 {
-                    m_initializers.emplace(tensor.name(), Tensor{tensor});
+                    Tensor tensor = Tensor{initializer_tensor};
+                    m_ng_node_cache.emplace(initializer_tensor.name(), tensor.get_ng_constant());
+                    m_initializers.emplace(initializer_tensor.name(), tensor);
                 }
             }
 
