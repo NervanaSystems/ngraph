@@ -56,7 +56,7 @@ TEST(HYBRID, abc)
     auto t1 = A * B;
     auto t2 = t1 * D;
     auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>((t2 + C) * t1, ParameterVector{A, B, C, D});
+    auto f = make_shared<Function>(((t2 + C) + A) * t1, ParameterVector{A, B, C, D});
 
     shared_ptr<runtime::Backend> backend = runtime::Backend::create("H1");
     static_pointer_cast<runtime::hybrid::HybridBackend>(backend)->set_debug_enabled(true);
@@ -75,5 +75,5 @@ TEST(HYBRID, abc)
 
     auto handle = backend->compile(f);
     backend->call_with_validate(handle, {result}, {a, b, c, d});
-    EXPECT_EQ(read_vector<float>(result), (vector<float>{145, 552, 1113, 1408}));
+    EXPECT_EQ(read_vector<float>(result), (vector<float>{150, 576, 1176, 1536}));
 }
