@@ -20,7 +20,7 @@ To deploy data-parallel training on backends supported by nGraph API, the
 .. literalinclude:: ../../../examples/mnist_mlp/dist_mnist_mlp.cpp
    :language: cpp
    :lines: 180-196
-   :emphasize-lines: 9-12
+   :emphasize-lines: 8-11
 
 We need to initialize and finalize distributed training with ``Distributed`` object;
 see the `full raw code`_. 
