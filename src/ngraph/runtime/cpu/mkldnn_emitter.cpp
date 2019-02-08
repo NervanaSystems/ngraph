@@ -36,6 +36,7 @@ MKLDNNEmitter::~MKLDNNEmitter()
 {
     for (auto p : m_mkldnn_primitives)
         delete p;
+    mkldnn_utils::mkl_serv_free_buffers();
 }
 
 const std::vector<mkldnn::primitive*>& MKLDNNEmitter::get_mkldnn_primitives() const
