@@ -616,11 +616,12 @@ using namespace ngraph::runtime;
         }
     }
 
+    const char* func_params = "(void** inputs, void** outputs, cpu::CPURuntimeContext* ctx";
+
     writer << "// Declare all functions\n";
     for (shared_ptr<Function> f : pass_manager.get_state().get_functions())
     {
-        writer << "extern \"C\" void " << f->get_name()
-               << "(void** inputs, void** outputs, cpu::CPURuntimeContext* ctx);\n";
+        writer << "extern \"C\" void " << f->get_name() << func_params << ";\n";
     }
     writer << "\n";
 
@@ -685,8 +686,7 @@ using namespace ngraph::runtime;
 
         writer << "bool " << current_function->get_name() << "_t_en[" << tensor_index << "];\n";
 
-        writer << "extern \"C\" void " << current_function->get_name();
-        writer << "(void** inputs, void** outputs, cpu::CPURuntimeContext* ctx)\n";
+        writer << "extern \"C\" void " << current_function->get_name() << func_params << "\n";
         writer << "{\n";
         writer.indent++;
 
