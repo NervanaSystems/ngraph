@@ -29,7 +29,13 @@ using namespace std;
 int main(int argc, char** argv)
 {
 #ifdef NGRAPH_DISTRIBUTED_ENABLE
-    ngraph::Distributed dist;
+    auto dist = new ngraph::Distributed;
+    NGRAPH_INFO << "initialize instance in main() ";
+    if (dist->get_size() == 1)
+    {
+        NGRAPH_INFO << "delete instance in main get_size()==1 ";
+        delete dist;
+    }
 #endif
     const char* exclude = "--gtest_filter=-benchmark.*";
     vector<char*> argv_vector;
@@ -43,5 +49,11 @@ int main(int argc, char** argv)
 
     ::testing::InitGoogleTest(&argc, argv_vector.data());
     int rc = RUN_ALL_TESTS();
+
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
+
+    NGRAPH_INFO << "delete instance in main end ";
+    delete dist;
+#endif
     return rc;
 }

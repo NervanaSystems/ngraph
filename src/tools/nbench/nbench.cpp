@@ -299,7 +299,13 @@ OPTIONS
     }
 
 #if defined NGRAPH_DISTRIBUTED_ENABLE
-    ngraph::Distributed dist;
+    auto dist = new ngraph::Distributed;
+    NGRAPH_INFO << "initialize instance in nbench test ";
+    if (dist->get_size() == 1)
+    {
+        NGRAPH_INFO << "delete instance in nbench get_size()==1 ";
+        delete dist;
+    }
 #endif
 
     vector<string> models;
@@ -423,5 +429,11 @@ OPTIONS
         cout << "============================================================================\n";
         print_results(aggregate_perf_data, timing_detail);
     }
+
+#if defined NGRAPH_DISTRIBUTED_ENABLE
+    NGRAPH_INFO << "delete instance at end in nbench ";
+    delete dist;
+#endif
+
     return rc;
 }

@@ -31,6 +31,7 @@ using namespace ngraph;
 TEST(distributed_${BACKEND_NAME}, allreduce)
 {
     Distributed dist_instance;
+    NGRAPH_INFO << "initialize instance in allreduce test ";
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::AllReduce>(A), ParameterVector{A});

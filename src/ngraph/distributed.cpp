@@ -29,11 +29,13 @@ using namespace ngraph;
 
 ngraph::Distributed::Distributed()
 {
+    NGRAPH_INFO << "initialize () begin";
 #ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
     if (!MLSL::Environment::GetEnv().IsInitialized())
     {
         MLSL::Environment::GetEnv().Init(nullptr, nullptr);
         this_init_comm = true;
+        NGRAPH_INFO << "initialize () MLSL init ";
     }
 #elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
     int flag = 0;
@@ -42,19 +44,27 @@ ngraph::Distributed::Distributed()
     {
         MPI_Init(NULL, NULL);
         this_init_comm = true;
+        NGRAPH_INFO << "initialize () OpenMPI init";
     }
 #else
     throw ngraph_error("Distributed Library not supported/mentioned");
 #endif
+    NGRAPH_INFO << "initialize () end";
 }
 
 ngraph::Distributed::~Distributed()
 {
-    if (!this_init_comm)
+    NGRAPH_INFO << "finalize () begin";
+    if (this_init_comm == true)
     {
-        return;
+        finalize();
     }
-    finalize();
+    else
+    {
+        NGRAPH_INFO << "finalize () skipped";
+    }
+
+    NGRAPH_INFO << "finalize () end";
 }
 
 void ngraph::Distributed::finalize()
@@ -63,6 +73,7 @@ void ngraph::Distributed::finalize()
     if (MLSL::Environment::GetEnv().IsInitialized())
     {
         MLSL::Environment::GetEnv().Finalize();
+        NGRAPH_INFO << "finalize MLSL here ";
     }
 #elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
     int flag = 0;
@@ -70,6 +81,7 @@ void ngraph::Distributed::finalize()
     if (flag)
     {
         MPI_Finalize();
+        NGRAPH_INFO << "finalize OpenMPI here ";
     }
 #else
     throw ngraph_error("Distributed Library not supported/mentioned");
