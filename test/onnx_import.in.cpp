@@ -1867,8 +1867,8 @@ TEST(onnx_${BACKEND_NAME}, model_top_k)
 TEST(onnx_${BACKEND_NAME}, model_initializer_wo_input)
 {
     // This test checks a model which has an initializer, but no input with the same name
-    auto function =
-            onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/initializer_wo_input.onnx"));
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/initializer_wo_input.onnx"));
 
     Inputs inputs;
     inputs.emplace_back(std::vector<float>{0, 1, 2, 3, 4, 5});
