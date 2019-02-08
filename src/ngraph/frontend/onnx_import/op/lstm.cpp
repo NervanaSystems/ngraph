@@ -387,7 +387,15 @@ namespace ngraph
                         std::shared_ptr<ngraph::Node> H_t = m_initial_h;
                         std::shared_ptr<ngraph::Node> C_t = m_initial_c;
 
-                        NodeVector in_seqs = reshape::split(m_X, m_X->get_shape().at(0));
+                        NodeVector in_seqs{};
+                        if (m_X->get_shape().at(0) != 1)
+                        {
+                            in_seqs = reshape::split(m_X, m_X->get_shape().at(0));
+                        }
+                        else
+                        {
+                            in_seqs = NodeVector{m_X};
+                        }
 
                         for (auto& in_x : in_seqs)
                         {
