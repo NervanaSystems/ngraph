@@ -40,6 +40,7 @@
 #include "op/conv.hpp"
 #include "op/conv_transpose.hpp"
 #include "op/cos.hpp"
+#include "op/cosh.hpp"
 #include "op/depth_to_space.hpp"
 #include "op/div.hpp"
 #include "op/elu.hpp"
@@ -80,6 +81,7 @@
 #include "op/shape.hpp"
 #include "op/sigmoid.hpp"
 #include "op/sin.hpp"
+#include "op/sinh.hpp"
 #include "op/size.hpp"
 #include "op/slice.hpp"
 #include "op/softmax.hpp"
@@ -219,6 +221,7 @@ namespace ngraph
             REGISTER_OPERATOR("Conv", 1, conv);
             REGISTER_OPERATOR("ConvTranspose", 1, conv_transpose);
             REGISTER_OPERATOR("Cos", 1, cos);
+            REGISTER_OPERATOR("Cosh", 1, cosh);
             REGISTER_OPERATOR("DepthToSpace", 1, depth_to_space);
             REGISTER_OPERATOR("Div", 1, div);
             REGISTER_OPERATOR("Div", 7, div);
@@ -273,6 +276,7 @@ namespace ngraph
             REGISTER_OPERATOR("Shape", 1, shape);
             REGISTER_OPERATOR("Sigmoid", 1, sigmoid);
             REGISTER_OPERATOR("Sin", 1, sin);
+            REGISTER_OPERATOR("Sinh", 1, sinh);
             REGISTER_OPERATOR("Size", 1, size);
             REGISTER_OPERATOR("Slice", 1, slice);
             REGISTER_OPERATOR("Softmax", 1, softmax);
