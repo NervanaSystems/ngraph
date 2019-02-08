@@ -563,7 +563,7 @@ namespace ngraph
                         // Stack together respective outputs from both forward and reverse passess.
                         std::shared_ptr<ngraph::Node> Y{
                             std::make_shared<ngraph::op::Concat>(
-                                NodeVector{fwd_results.at(0), rev_results.at(0)}, 0)};
+                                NodeVector{fwd_results.at(0), rev_results.at(0)}, 1)};
                         std::shared_ptr<ngraph::Node> Y_h{
                             std::make_shared<ngraph::op::Concat>(
                                 NodeVector{fwd_results.at(1), rev_results.at(1)}, 0)};
