@@ -20,7 +20,7 @@
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/hybrid/hybrid_util.hpp"
-#include "ngraph/runtime/hybrid/pass/assign_placement.hpp"
+#include "ngraph/runtime/hybrid/pass/default_placement.hpp"
 #include "ngraph/runtime/hybrid/pass/dump.hpp"
 #include "ngraph/runtime/hybrid/pass/fix_get_output_element.hpp"
 #include "ngraph/runtime/hybrid/pass/liveness.hpp"
@@ -74,7 +74,7 @@ runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> fun
 
         // Run placement pass
         ngraph::pass::Manager pass_manager;
-        pass_manager.register_pass<runtime::hybrid::pass::AssignPlacement>(m_backend_list);
+        pass_manager.register_pass<runtime::hybrid::pass::DefaultPlacement>(m_backend_list);
         pass_manager.register_pass<runtime::hybrid::pass::FixGetOutputElement>();
         pass_manager.register_pass<runtime::hybrid::pass::Liveness>();
         pass_manager.register_pass<runtime::hybrid::pass::Dump>("graph.dump");
@@ -94,7 +94,7 @@ runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> fun
         size_t subfunction_number = 0;
         for (shared_ptr<Function>& sub_function : instance.m_sub_functions)
         {
-            size_t placement = runtime::hybrid::get_colocated_function_placement(sub_function);
+            size_t placement = sub_function->get_placement();
             if (m_debug_enabled)
             {
                 string name = "subfunction_" + to_string(subfunction_number++);
@@ -149,7 +149,7 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
     for (const shared_ptr<Function>& sub_function : instance.m_sub_functions)
     {
         // Init backend
-        size_t placement = runtime::hybrid::get_colocated_function_placement(sub_function);
+        size_t placement = sub_function->get_placement();
         auto backend = m_backend_list[placement];
 
         // Prepare parameter Tensors

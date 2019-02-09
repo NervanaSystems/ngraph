@@ -220,12 +220,13 @@ paths for what you'll want to do next: either compile a framework to run a DL
 training model, or load an import of an "already-trained" model for inference 
 on an Intel nGraph-enabled backend.
 
-For the former case, this early |version|, :doc:`framework-integration-guides`, 
+For the former case, this early |version|, :doc:`frameworks/index`, 
 can help you get started with a training a model on a supported framework. 
 
-* :doc:`MXNet<framework-integration-guides>` framework,  
-* :doc:`TensorFlow<framework-integration-guides>` framework, and
-* :doc:`neon<framework-integration-guides>` framework,  
+* :doc:`MXNet<frameworks/tensorflow_integ>` framework,  
+* :doc:`TensorFlow<frameworks/mxnet_integ>` framework,
+* :doc:`ONNX & ONNXIFI<frameworks/onnx_integ>`, and
+* :doc:`PaddlePaddle<frameworks/paddle_integ>` framework.
 
 
 For the latter case, if you've followed a tutorial from `ONNX`_, and you have an 
