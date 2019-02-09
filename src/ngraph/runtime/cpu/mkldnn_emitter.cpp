@@ -772,10 +772,18 @@ size_t MKLDNNEmitter::build_reorder(const mkldnn::memory::desc& input_desc,
     size_t input_index = build_memory_primitive(input_desc);
     size_t result_index = build_memory_primitive(result_desc);
 
-    size_t primitive_index = insert_primitive(
-        new mkldnn::reorder(*m_mkldnn_primitives[input_index], *m_mkldnn_primitives[result_index]));
+    size_t primitive_index = 0;
+    try
+    {
+        primitive_index = insert_primitive(new mkldnn::reorder(*m_mkldnn_primitives[input_index],
+                                                               *m_mkldnn_primitives[result_index]));
+        m_primitive_deps[primitive_index] = {input_index, result_index};
+    }
+    catch (const mkldnn::error& e)
+    {
+        throw ngraph_error("Could not create mkldnn primitive " + e.message);
+    }
 
-    m_primitive_deps[primitive_index] = {input_index, result_index};
     return primitive_index;
 }
 
