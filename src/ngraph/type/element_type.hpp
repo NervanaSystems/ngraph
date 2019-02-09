@@ -113,7 +113,7 @@ namespace ngraph
             static bool merge(element::Type& dst, const element::Type& t1, const element::Type& t2);
 
         private:
-            Type_t m_type;
+            Type_t m_type{Type_t::undefined};
         };
 
         extern NGRAPH_API const Type dynamic;

@@ -1980,12 +1980,12 @@ void runtime::cpu::CPU_ExternalFunction::build()
                     for (size_t i = 0; i < functors.size(); i++)
                     {
                         ss << op_names.at(i) << " will be executed with the following inputs:\n";
-                        for (auto is : this->m_op_attrs.at(i).Inputs)
+                        for (auto& is : this->m_op_attrs.at(i).Inputs)
                         {
                             ss << "\t" << is << " = " << this->get_tensor_data(is) << std::endl;
                         }
                         ss << "and outputs :\n";
-                        for (auto os : this->m_op_attrs.at(i).Outputs)
+                        for (auto& os : this->m_op_attrs.at(i).Outputs)
                         {
                             ss << "\t" << os << " = " << this->get_tensor_data(os) << std::endl;
                         }
