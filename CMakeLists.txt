@@ -126,11 +126,13 @@ endif()
 
 if (NGRAPH_DISTRIBUTED_MLSL_ENABLE AND NGRAPH_DISTRIBUTED_OMPI_ENABLE)
     message(FATAL_ERROR 
-                    "Does not support the use of two distributed libraries simultaneously.\n"
-                    "If CPU only backend recommend Intel MLSL by setting NGRAPH_DISTRIBUTED_MLSL_ENABLE flag to true.\n"
-                    "For all other backends use OpenMPI by setting NGRAPH_DISTRIBUTED_OMPI_ENABLE flag to true.\n")
-elseif( NGRAPH_DISTRIBUTED_MLSL_ENABLE  OR NGRAPH_DISTRIBUTED_OMPI_ENABLE) 
-    option(NGRAPH_DISTRIBUTED_ENABLE "Distributed flag for common code/files" TRUE)
+                "Does not support the use of two distributed libraries simultaneously.\n"
+                "If CPU only backend recommend Intel MLSL by setting NGRAPH_DISTRIBUTED_MLSL_ENABLE flag to true.\n"
+                "For all other backends use OpenMPI by setting NGRAPH_DISTRIBUTED_OMPI_ENABLE flag to true.\n")
+elseif(NGRAPH_DISTRIBUTED_MLSL_ENABLE  OR NGRAPH_DISTRIBUTED_OMPI_ENABLE) 
+    set(NGRAPH_DISTRIBUTED_ENABLE TRUE)
+else()
+    set(NGRAPH_DISTRIBUTED_ENABLE FALSE)
 endif()
 
 message(STATUS "NGRAPH_UNIT_TEST_ENABLE:      ${NGRAPH_UNIT_TEST_ENABLE}")
@@ -142,7 +144,6 @@ message(STATUS "NGRAPH_INTERPRETER_ENABLE:    ${NGRAPH_INTERPRETER_ENABLE}")
 message(STATUS "NGRAPH_NOP_ENABLE:            ${NGRAPH_NOP_ENABLE}")
 message(STATUS "NGRAPH_GPUH_ENABLE:           ${NGRAPH_GPUH_ENABLE}")
 message(STATUS "NGRAPH_GENERIC_CPU_ENABLE:    ${NGRAPH_GENERIC_CPU_ENABLE}")
-message(STATUS "NGRAPH_DISTRIBUTED_ENABLE:    ${NGRAPH_DISTRIBUTED_ENABLE}")
 message(STATUS "NGRAPH_DISTRIBUTED_MLSL_ENABLE:    ${NGRAPH_DISTRIBUTED_MLSL_ENABLE}")
 message(STATUS "NGRAPH_DISTRIBUTED_OMPI_ENABLE:    ${NGRAPH_DISTRIBUTED_OMPI_ENABLE}")
 message(STATUS "NGRAPH_DEBUG_ENABLE:          ${NGRAPH_DEBUG_ENABLE}")
