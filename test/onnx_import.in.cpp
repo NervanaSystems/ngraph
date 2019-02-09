@@ -1889,3 +1889,21 @@ TEST(onnx_${BACKEND_NAME}, model_cosh)
 
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
+
+TEST(onnx_${BACKEND_NAME}, model_sign)
+{
+    auto function =
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/sign.onnx"));
+
+    Inputs inputs{std::vector<float>{-std::numeric_limits<float>::infinity(),
+                                     -1.0f,
+                                     0.0f,
+                                     1.0f,
+                                     std::numeric_limits<float>::infinity()}};
+
+    Outputs expected_outputs{std::vector<float>{-1.0f, -1.0f, 0.0f, 1.0f, 1.0f}};
+
+    Outputs outputs{execute<float>(function, inputs, "${BACKEND_NAME}")};
+
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
