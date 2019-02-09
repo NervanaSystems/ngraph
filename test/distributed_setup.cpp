@@ -16,8 +16,6 @@
 
 #include "distributed_setup.hpp"
 
-int ngraph_dist_setup::distributed_comm_size = 1;
-int ngraph_dist_setup::distributed_comm_rank = 0;
 void DistributedSetup::set_comm_size(int comm_size)
 {
     ngraph_dist_setup::distributed_comm_size = comm_size;

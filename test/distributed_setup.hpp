@@ -18,8 +18,8 @@
 
 namespace ngraph_dist_setup
 {
-    extern int distributed_comm_size;
-    extern int distributed_comm_rank;
+    static int distributed_comm_size;
+    static int distributed_comm_rank;
 }
 
 class DistributedSetup
