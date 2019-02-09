@@ -35,7 +35,6 @@ TEST(distributed_${BACKEND_NAME}, allreduce)
     auto comm_size = distsetup.get_comm_size();
     if (comm_size > 1)
     {
-        NGRAPH_INFO << "initialize instance in allreduce test ";
         auto shape = Shape{2, 2};
         auto A = make_shared<op::Parameter>(element::f32, shape);
         auto f = make_shared<Function>(make_shared<op::AllReduce>(A), ParameterVector{A});

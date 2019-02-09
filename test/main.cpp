@@ -35,14 +35,13 @@ int main(int argc, char** argv)
     DistributedSetup distributed_setup;
     distributed_setup.set_comm_size(dist->get_size());
     distributed_setup.set_comm_rank(dist->get_rank());
-    NGRAPH_INFO << "initialize instance in main() ";
     if (dist->get_size() == 1)
     {
-        NGRAPH_INFO << "delete instance in main get_size()==1 ";
         delete dist;
         delete_instance = false;
     }
 #endif
+
     const char* exclude = "--gtest_filter=-benchmark.*";
     vector<char*> argv_vector;
     argv_vector.push_back(argv[0]);
@@ -57,12 +56,11 @@ int main(int argc, char** argv)
     int rc = RUN_ALL_TESTS();
 
 #ifdef NGRAPH_DISTRIBUTED_ENABLE
-
-    NGRAPH_INFO << "delete instance in main end ";
     if (delete_instance)
     {
         delete dist;
     }
 #endif
+
     return rc;
 }
