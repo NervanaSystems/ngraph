@@ -168,6 +168,7 @@ set (SRC
     placement.cpp
     cpio.cpp
     )
+
 if(NGRAPH_DISTRIBUTED_ENABLE)
     list(APPEND SRC distributed.cpp)
 endif()
