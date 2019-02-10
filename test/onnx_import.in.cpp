@@ -1896,9 +1896,9 @@ TEST(onnx_${BACKEND_NAME}, model_sign)
         onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/sign.onnx"));
 
     Inputs inputs{std::vector<float>{-std::numeric_limits<float>::infinity(),
-                                     -1.0f,
+                                     -3.141592f,
                                      0.0f,
-                                     1.0f,
+                                     2.71828f,
                                      std::numeric_limits<float>::infinity()}};
 
     Outputs expected_outputs{std::vector<float>{-1.0f, -1.0f, 0.0f, 1.0f, 1.0f}};
