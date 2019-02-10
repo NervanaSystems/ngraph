@@ -1,7 +1,7 @@
 .. howto/index: 
 
-How to 
-======
+Constructing Graphs
+===================
 
 .. toctree::
    :maxdepth: 1
