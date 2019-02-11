@@ -25,7 +25,7 @@ namespace py = pybind11;
 
 void regclass_pyngraph_runtime_Executable(py::module m)
 {
-    py::class_<ngraph::runtime::Executable, std::unique_ptr<ngraph::runtime::Executable>>
+    py::class_<ngraph::runtime::Executable, std::shared_ptr<ngraph::runtime::Executable>>
         executable(m, "Executable");
     executable.doc() = "ngraph.impl.runtime.Executable wraps ngraph::runtime::Executable";
     executable.def("call",
