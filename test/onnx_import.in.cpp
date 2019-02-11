@@ -1863,3 +1863,44 @@ TEST(onnx_${BACKEND_NAME}, model_top_k)
     EXPECT_TRUE(test::all_close_f(expected_values_output, values_output));
     EXPECT_TRUE(test::all_close(expected_indices_output, indices_output));
 }
+
+TEST(onnx_${BACKEND_NAME}, model_sinh)
+{
+    auto function =
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/sinh.onnx"));
+
+    Inputs inputs{std::vector<float>{-1.0f, 0.0f, 1.0f}};
+    Outputs expected_outputs{std::vector<float>{-1.1752012f, 0.f, 1.1752012f}};
+
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx_${BACKEND_NAME}, model_cosh)
+{
+    auto function =
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/cosh.onnx"));
+
+    Inputs inputs{std::vector<float>{-1.0f, 0.0f, 1.0f}};
+    Outputs expected_outputs{std::vector<float>{1.54308069f, 1.f, 1.54308069f}};
+
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx_${BACKEND_NAME}, model_initializer_wo_input)
+{
+    // This test checks a model which has an initializer, but no input with the same name
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/initializer_wo_input.onnx"));
+
+    Inputs inputs;
+    inputs.emplace_back(std::vector<float>{0, 1, 2, 3, 4, 5});
+
+    std::vector<float> expected_output{0, 2, 6, 12, 20, 30};
+
+    Outputs output{execute(function, inputs, "${BACKEND_NAME}")};
+    EXPECT_TRUE(test::all_close_f(expected_output, output.front()));
+}

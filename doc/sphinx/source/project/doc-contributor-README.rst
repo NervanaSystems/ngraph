@@ -99,7 +99,7 @@ and the generated output will show readers of your helpful documentation
    :caption: "caption for a block of code that initializes tensors"
 
 Our documentation practices are designed around "write once, reuse" that we can 
-use to prevent code bloat.  See the :doc:`code-contributor-README` for our code 
+use to prevent code bloat.  See the :doc:`contribution-guide` for our code 
 style guide.       
 
 
@@ -127,7 +127,7 @@ To build documentation locally, run:
 
    .. code-block:: console
 
-      $ sudo apt-get install python3-sphinx
+      $ sudo apt-get install python3-sphinxcd
       $ pip3 install [-I] Sphinx==1.7.5 [--user] 
       $ pip3 install [-I] breathe numpy [--user]
       $ cd doc/sphinx/
@@ -165,3 +165,6 @@ stable reST documentation.
 .. _wiki: https://github.com/NervanaSystems/ngraph/wiki/
 .. _breathe: https://breathe.readthedocs.io/en/latest/
 .. _doxygen: http://www.doxygen.org/index.html
+
+
+.. 45555555555555555555555555555

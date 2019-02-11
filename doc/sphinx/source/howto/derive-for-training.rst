@@ -137,7 +137,7 @@ update computation for ``N`` will be given by the node
 
 The different update nodes will share intermediate computations. So to
 get the updated values for the weights as computed with the specified 
-:doc:`backend <../programmable/index>`, 
+:doc:`backend <../backend-support/index>`.
 
 .. literalinclude:: ../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
