@@ -16,9 +16,10 @@ for your scenario.
   in the system. If it's not present on the system, install Open MPI 2.1.1 before 
   running the compile. 
 
-* Use ``-NGRAPH_DISTRIBUTED_MLSL_ENABLE=TRUE`` to enable MLSL.
+* Use ``-NGRAPH_DISTRIBUTED_MLSL_ENABLE=TRUE`` to enable the option for 
+  :abbr:`Intel® Machine Learning Scaling Library (MLSL)` for Linux* OS:
 
-  .. important:: The MLSL option applies to ``CPU`` and ``Interpreter`` 
+  .. important:: The Intel® MLSL option applies to ``CPU`` and ``Interpreter`` 
      backends only. For all other backends, ``OpenMPI`` is presently the 
      only supported option. We recommend the use of `Intel MLSL` if there 
      are CPU only backends.
