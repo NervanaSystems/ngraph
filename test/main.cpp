@@ -17,7 +17,6 @@
 #include <chrono>
 #include <iostream>
 
-#include "distributed_setup.hpp"
 #include "gtest/gtest.h"
 #include "ngraph/log.hpp"
 
@@ -25,6 +24,8 @@ using namespace std;
 
 #ifdef NGRAPH_DISTRIBUTED_ENABLE
 #include "ngraph/distributed.hpp"
+
+#include "distributed_setup.hpp"
 #endif
 
 int main(int argc, char** argv)

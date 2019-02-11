@@ -39,7 +39,6 @@ set(SRC
     file_util.cpp
     includes.cpp
     input_output_assign.cpp
-    distributed_setup.cpp
     main.cpp
     misc.cpp
     nop_elimination.cpp
