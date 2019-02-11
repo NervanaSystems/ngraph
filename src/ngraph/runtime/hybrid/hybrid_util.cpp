@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/hybrid/hybrid_util.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 
@@ -25,20 +26,20 @@ static Node* take_independent_node_with_placement_priority(
     map<size_t, deque<Node*>>& independent_nodes_by_placement, size_t placement)
 {
     Node* selected_node = nullptr;
-    if (independent_nodes_by_placement.find(placement) != independent_nodes_by_placement.end() &&
-        independent_nodes_by_placement.at(placement).size() != 0)
+    auto it = independent_nodes_by_placement.find(placement);
+    if (it != independent_nodes_by_placement.end() && it->second.size() != 0)
     {
-        selected_node = independent_nodes_by_placement.at(placement).front();
-        independent_nodes_by_placement.at(placement).pop_front();
+        selected_node = it->second.front();
+        it->second.pop_front();
     }
     else
     {
-        for (auto& it : independent_nodes_by_placement)
+        for (auto& p : independent_nodes_by_placement)
         {
-            if (it.second.size() > 0)
+            if (p.second.size() > 0)
             {
-                selected_node = it.second.front();
-                it.second.pop_front();
+                selected_node = p.second.front();
+                p.second.pop_front();
                 break;
             }
         }
@@ -238,8 +239,10 @@ pair<vector<shared_ptr<Function>>, unordered_map<shared_ptr<op::Parameter>, shar
     {
         ParameterVector par_vector;
         ResultVector res_vector;
+        size_t placement = -1;
         for (auto node : cluster)
         {
+            placement = node->get_placement_index();
             if (auto res_node = dynamic_pointer_cast<op::Result>(node))
             {
                 res_vector.push_back(res_node);
@@ -250,6 +253,7 @@ pair<vector<shared_ptr<Function>>, unordered_map<shared_ptr<op::Parameter>, shar
             }
         }
         auto sub_function = make_shared<Function>(res_vector, par_vector);
+        sub_function->set_placement(placement);
         sub_functions.push_back(sub_function);
 #ifdef HYBRID_DEBUG
         ngraph::pass::Manager pass_manager;
@@ -260,27 +264,4 @@ pair<vector<shared_ptr<Function>>, unordered_map<shared_ptr<op::Parameter>, shar
     }
 
     return make_pair(sub_functions, map_parameter_to_result);
-}
-
-// Assert that nodes in the function is colocated and return that placement
-size_t runtime::hybrid::get_colocated_function_placement(shared_ptr<Function> func)
-{
-    auto ops = func->get_ops();
-
-    //it's okay to not do Placement::DEFAULT check; the same node will be checked in the loop below
-    size_t function_placement = ops.front()->get_placement_index();
-    for (auto op : ops)
-    {
-        size_t node_placement = op->get_placement_index();
-        if (node_placement == Node::placement_invalid)
-        {
-            throw ngraph_error("Node " + op->get_name() + " should have a device placement");
-        }
-        if (function_placement != node_placement)
-        {
-            throw ngraph_error("Function contains nodes of two different placements");
-        }
-    }
-
-    return function_placement;
 }

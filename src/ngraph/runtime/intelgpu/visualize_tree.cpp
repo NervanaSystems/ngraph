@@ -403,9 +403,14 @@ void print_node(ostringstream& writer, const shared_ptr<Node>& node)
         size_t arg_idx = 0;
         for (const descriptor::Input& op_input : node->get_inputs())
         {
-            writer << table_row_begin() << font_small_begin
-                   << op_input.get_element_type().c_type_string() << " input" << arg_idx
-                   << vector_to_string(op_input.get_shape()) << font_end << table_row_end;
+            writer << print_table_row_dims(op_input.get_element_type().c_type_string() + " input" +
+                                               to_string(arg_idx),
+                                           op_input.get_shape());
+            if (arg_idx >= 9)
+            {
+                writer << print_table_row_value("... total inputs", node->get_inputs().size());
+                break;
+            }
             ++arg_idx;
         }
     }
@@ -415,9 +420,9 @@ void print_node(ostringstream& writer, const shared_ptr<Node>& node)
         size_t arg_idx = 0;
         for (const descriptor::Output& op_output : node->get_outputs())
         {
-            writer << table_row_begin() << font_small_begin
-                   << op_output.get_element_type().c_type_string() << " output" << arg_idx
-                   << vector_to_string(op_output.get_shape()) << font_end << table_row_end;
+            writer << print_table_row_dims(op_output.get_element_type().c_type_string() +
+                                               " output" + to_string(arg_idx),
+                                           op_output.get_shape());
             ++arg_idx;
         }
     }

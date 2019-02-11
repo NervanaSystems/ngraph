@@ -2079,21 +2079,24 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconvb_add()
     auto dq_l =
         std::make_shared<op::Dequantize>(qconvb_label, dq_scale1, dq_zp1, element::f32, AxisSet{});
     auto dq_l_label = std::make_shared<pattern::op::Label>(dq_l, nullptr, NodeVector{dq_l});
-    auto reshape_a =
-        std::make_shared<op::Reshape>(dq_l_label, AxisVector{0, 1, 2, 3}, Shape{2, 2, 1, 1});
-    auto pbroadcast_a = std::make_shared<op::Broadcast>(reshape_a, shape, AxisSet{});
+    auto skipr_l = std::make_shared<pattern::op::Skip>(
+        dq_l_label, [](std::shared_ptr<Node> n) { return n->description() == "Reshape"; });
+    auto skipb_l = std::make_shared<pattern::op::Skip>(
+        skipr_l, [](std::shared_ptr<Node> n) { return n->description() == "Broadcast"; });
 
     //Right Graph
     auto summand = std::make_shared<pattern::op::Label>(element::i8, qconvb->get_shape());
     auto dq_r =
         std::make_shared<op::Dequantize>(summand, dq_scale2, dq_zp2, element::f32, AxisSet{});
     auto dq_r_label = std::make_shared<pattern::op::Label>(dq_r, nullptr, NodeVector{dq_r});
-    auto reshape_a_r =
-        std::make_shared<op::Reshape>(dq_r_label, AxisVector{0, 1, 2, 3}, Shape{2, 2, 1, 1});
-    auto pbroadcast_a_r = std::make_shared<op::Broadcast>(reshape_a_r, shape, AxisSet{});
+    auto skipr_r = std::make_shared<pattern::op::Skip>(
+        dq_r_label, [](std::shared_ptr<Node> n) { return n->description() == "Reshape"; });
+    auto skipb_r = std::make_shared<pattern::op::Skip>(
+        skipr_r, [](std::shared_ptr<Node> n) { return n->description() == "Broadcast"; });
 
     //Add left + right
-    auto add = std::make_shared<op::Add>(pbroadcast_a, pbroadcast_a_r);
+    auto add = skipb_l + skipb_r;
+    ;
     auto prelu = std::make_shared<op::Relu>(add);
 
     pattern::graph_rewrite_callback callback = [dq_l_label, dq_r_label](pattern::Matcher& m) {
@@ -2142,9 +2145,12 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconvb_add()
             return false;
         }
 
-        auto two = op::Constant::create(element::f32, Shape{}, {2.0f});
-        // new_requant_scale = qconv->get_argument(3);
-        // auto requant_scale = two * qconv->get_argument(3);
+        if (inplace_input->get_shape() != qconv->get_shape())
+        {
+            NGRAPH_DEBUG << "Summand shape doesn't match convolution shape";
+            return false;
+        }
+
         auto requant_scale = qconv->get_argument(3);
         auto dq_l_scale = dq_l_m->get_argument(1);
         auto dq_r_scale = dq_r_m->get_argument(1);

@@ -96,7 +96,7 @@ to improve it:
 [framework integration guides]: http://ngraph.nervanasys.com/docs/latest/framework-integration-guides.html
 [release notes]: https://ngraph.nervanasys.com/docs/latest/project/release-notes.html
 [Github issues]: https://github.com/NervanaSystems/ngraph/issues
-[contrib guide]: https://ngraph.nervanasys.com/docs/latest/project/code-contributor-README.html
+[contrib guide]: https://ngraph.nervanasys.com/docs/latest/project/contribution-guide.html
 [pull request]: https://github.com/NervanaSystems/ngraph/pulls
 [how to import]: https://ngraph.nervanasys.com/docs/latest/howto/import.html
 [ngraph_wireframes_with_notice]: doc/sphinx/source/graphics/readme_stack.png "nGraph wireframe"
