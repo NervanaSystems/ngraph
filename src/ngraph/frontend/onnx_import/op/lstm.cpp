@@ -126,22 +126,6 @@ namespace ngraph
                     LSTM_INPUT_P
                 };
 
-                std::string to_str(const LSTMInput& in)
-                {
-                    switch (in)
-                    {
-                    case LSTMInput::LSTM_INPUT_X: return "X";
-                    case LSTMInput::LSTM_INPUT_W: return "W";
-                    case LSTMInput::LSTM_INPUT_R: return "R";
-                    case LSTMInput::LSTM_INPUT_B: return "B";
-                    case LSTMInput::LSTM_INPUT_SEQ_LENGTHS: return "sequence_lens";
-                    case LSTMInput::LSTM_INPUT_INIT_H: return "initial_h";
-                    case LSTMInput::LSTM_INPUT_INIT_C: return "initial_c";
-                    case LSTMInput::LSTM_INPUT_P: return "P";
-                    default: return "Unrecognized input value!";
-                    }
-                }
-
                 struct LSTMNgInputMap
                 {
                     using container_type = std::map<LSTMInput, std::shared_ptr<ngraph::Node>>;
