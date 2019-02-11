@@ -44,6 +44,7 @@
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
+#include "ngraph/util.hpp"
 #include "utils/broadcasting.hpp"
 #include "utils/common.hpp"
 #include "utils/reshape.hpp"
@@ -102,24 +103,12 @@ namespace ngraph
                         max_val_node, std::make_shared<ngraph::op::Maximum>(data, min_val_node));
                 }
 
-                std::string& to_lower_case(std::string&& s)
-                {
-                    std::transform(std::begin(s), std::end(s), std::begin(s), ::tolower);
-                    return s;
-                }
-
-                std::string& to_lower_case(std::string& s)
-                {
-                    std::transform(std::begin(s), std::end(s), std::begin(s), ::tolower);
-                    return s;
-                }
-
                 std::vector<std::string>& to_lower_case(std::vector<std::string>&& vs)
                 {
                     std::transform(std::begin(vs),
                                    std::end(vs),
                                    std::begin(vs),
-                                   [](std::string& s) { return to_lower_case(s); });
+                                   [](std::string& s) { return ngraph::to_lower(s); });
                     return vs;
                 }
 
@@ -247,8 +236,6 @@ namespace ngraph
                     {
                         return m_map.at(key);
                     }
-                    iterator begin() { return m_map.begin(); }
-                    iterator end() { return m_map.end(); }
                     container_type m_map;
                 };
 
@@ -291,7 +278,7 @@ namespace ngraph
                               node.get_attribute_value<std::int64_t>("input_forget", 0))}
                     {
                         m_clip_threshold = std::abs(m_clip_threshold);
-                        std::string direction{to_lower_case(
+                        std::string direction{ngraph::to_lower(
                             node.get_attribute_value<std::string>("direction", {"forward"}))};
 
                         ASSERT_VALID_ARGUMENT(node,
