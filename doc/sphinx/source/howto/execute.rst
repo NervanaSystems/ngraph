@@ -18,9 +18,9 @@ directory. We'll be deconstructing the steps that must happen (either programmat
 or manually) in order to successfully execute a computation:
 
 * :ref:`define_cmp`
-* :ref:`specify_bkd`
+* :ref:`specify_backend`
 * :ref:`compile_cmp`
-* :ref:`allocate_bkd_storage`
+* :ref:`allocate_backend_storage`
 * :ref:`initialize_inputs`
 * :ref:`invoke_cmp`
 * :ref:`access_outputs`
@@ -108,7 +108,7 @@ function, in the order they are to be passed to the compiled function. A
    the computation of the results.
 
 
-.. _specify_bkd:
+.. _specify_backend:
 
 Specify the backend upon which to run the computation
 =====================================================
@@ -126,10 +126,10 @@ There are two backends for the CPU: the optimized ``"CPU"`` backend, which uses
 the `Intel MKL-DNN`_, and the ``"INTERPRETER"`` backend, which runs reference 
 versions of kernels that favor implementation clarity over speed. The 
 ``"INTERPRETER"`` backend can be slow, and is primarily intended for testing. 
-See the documentation on :doc:`runtime options for various backends <../programmable/index>` 
+See the documentation on :doc:`runtime options for various backends <../backend-support/index>` 
 for additional details.
 
-To continue with our original example and select the ``"CPU"`` backend: 
+To continue with our original example and select the ``"CPU_Backend"``: 
 
 .. literalinclude:: ../../../examples/abc/abc.cpp
    :language: cpp
@@ -149,7 +149,7 @@ thread needs to execute the function at the same time, create multiple
 ``CallFrame`` objects from the ``ExternalFunction``.
 
 
-.. _allocate_bkd_storage:
+.. _allocate_backend_storage:
 
 Allocate backend storage for the inputs and outputs
 ===================================================
@@ -175,7 +175,8 @@ the three parameters and the return value.
 Each tensor is a shared pointer to a :term:`Tensorview`, which is the interface 
 backends implement for tensor use. When there are no more references to the 
 tensor view, it will be freed when convenient for the backend. See the 
-:doc:`../programmable/index` documentation for details on ``Tensor``.
+:doc:`../backend-support/cpp-api` documentation for details on how to work 
+with ``Tensor``.
 
 
 .. _initialize_inputs:
