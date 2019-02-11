@@ -1877,25 +1877,65 @@ TEST(onnx_${BACKEND_NAME}, model_lstm_fwd_with_clip)
     inputs.emplace_back(std::vector<float>{-0.455351, -0.276391, -0.185934, -0.269585});
 
     // W
-    inputs.emplace_back(std::vector<float>{-0.494659f, 0.0453352f, -0.487793f, 0.417264f,
-              -0.0175329f, 0.489074f, -0.446013f, 0.414029f, -0.0091708f, -0.255364f, -0.106952f,
-              -0.266717f, -0.0888852f, -0.428709f, -0.283349f, 0.208792f});
+    inputs.emplace_back(std::vector<float>{-0.494659f,
+                                           0.0453352f,
+                                           -0.487793f,
+                                           0.417264f,
+                                           -0.0175329f,
+                                           0.489074f,
+                                           -0.446013f,
+                                           0.414029f,
+                                           -0.0091708f,
+                                           -0.255364f,
+                                           -0.106952f,
+                                           -0.266717f,
+                                           -0.0888852f,
+                                           -0.428709f,
+                                           -0.283349f,
+                                           0.208792f});
 
     // R
-    inputs.emplace_back(std::vector<float>{0.146626f, -0.0620289f, -0.0815302f, 0.100482f,
-              -0.219535f, -0.306635f, -0.28515f, -0.314112f, -0.228172f, 0.405972f, 0.31576f,
-              0.281487f, -0.394864f, 0.42111f, -0.386624f, -0.390225f});
+    inputs.emplace_back(std::vector<float>{0.146626f,
+                                           -0.0620289f,
+                                           -0.0815302f,
+                                           0.100482f,
+                                           -0.219535f,
+                                           -0.306635f,
+                                           -0.28515f,
+                                           -0.314112f,
+                                           -0.228172f,
+                                           0.405972f,
+                                           0.31576f,
+                                           0.281487f,
+                                           -0.394864f,
+                                           0.42111f,
+                                           -0.386624f,
+                                           -0.390225f});
 
     // B
-    inputs.emplace_back(std::vector<float>{0.381619f, 0.0323954f, -0.14449f, 0.420804f, -0.258721f,
-         0.45056f, -0.250755f, 0.0967895f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f});
+    inputs.emplace_back(std::vector<float>{0.381619f,
+                                           0.0323954f,
+                                           -0.14449f,
+                                           0.420804f,
+                                           -0.258721f,
+                                           0.45056f,
+                                           -0.250755f,
+                                           0.0967895f,
+                                           0.0f,
+                                           0.0f,
+                                           0.0f,
+                                           0.0f,
+                                           0.0f,
+                                           0.0f,
+                                           0.0f,
+                                           0.0f});
     // P
     inputs.emplace_back(std::vector<float>{0.2345f, 0.5235f, 0.4378f, 0.3475f, 0.8927f, 0.3456f});
 
     Outputs expected_output{};
     // Y_data
-    expected_output.emplace_back(std::vector<float>{-0.02280854f, 0.02744377f, -0.03516197f,
-        0.03875681f});
+    expected_output.emplace_back(
+        std::vector<float>{-0.02280854f, 0.02744377f, -0.03516197f, 0.03875681f});
     // Y_h_data
     expected_output.emplace_back(std::vector<float>{-0.03516197f, 0.03875681f});
     // Y_c_data

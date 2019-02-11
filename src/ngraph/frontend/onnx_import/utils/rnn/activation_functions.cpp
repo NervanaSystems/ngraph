@@ -19,9 +19,9 @@
 #include <unordered_map>
 
 #include "activation_functions.hpp"
+#include "ngraph/op/relu.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/tanh.hpp"
-#include "ngraph/op/relu.hpp"
 
 namespace ngraph
 {
@@ -54,8 +54,7 @@ namespace ngraph
                 static ActivationFunctionMap func_map{
                     {"sigmoid", std::bind(detail::sigmoid, std::placeholders::_1)},
                     {"tanh", std::bind(detail::tanh, std::placeholders::_1)},
-                    {"relu", std::bind(detail::relu, std::placeholders::_1)}
-                };
+                    {"relu", std::bind(detail::relu, std::placeholders::_1)}};
 
                 auto func_it = func_map.find(func_name);
                 if (func_it == std::end(func_map))
@@ -64,7 +63,6 @@ namespace ngraph
                 }
                 return func_it->second;
             }
-
 
         } //namespace rnn
 

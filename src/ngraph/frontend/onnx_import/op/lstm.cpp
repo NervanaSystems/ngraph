@@ -204,10 +204,10 @@ namespace ngraph
                         else
                         {
                             m_map[LSTMInput::LSTM_INPUT_SEQ_LENGTHS] = ngraph::op::Constant::create(
-                                    element::i32,
-                                    Shape{batch_size},
-                                    std::vector<std::int32_t>(batch_size,
-                                        m_map[LSTMInput::LSTM_INPUT_X]->get_shape().at(0)));
+                                element::i32,
+                                Shape{batch_size},
+                                std::vector<std::int32_t>(
+                                    batch_size, m_map[LSTMInput::LSTM_INPUT_X]->get_shape().at(0)));
                         }
                         // The initial value of the hidden. Shape [num_directions, batch_size, hidden_size]
                         if (ng_inputs.size() >= 6)
@@ -549,28 +549,43 @@ namespace ngraph
                         NodeVector H{reshape::split(input_map.at(LSTMInput::LSTM_INPUT_INIT_H), 2)};
                         NodeVector C{reshape::split(input_map.at(LSTMInput::LSTM_INPUT_INIT_C), 2)};
 
-                        LSTMForward lstm_fwd(input_map.at(LSTMInput::LSTM_INPUT_X), W.at(0),
-                            R.at(0), B.at(0), P.at(0), H.at(0), C.at(0),
-                            input_map.at(LSTMInput::LSTM_INPUT_SEQ_LENGTHS), activation_f, activation_g,
-                            activation_h, attributes.m_input_forget, attributes.m_clip_threshold);
-                        LSTMForward lstm_reversed(input_map.at(LSTMInput::LSTM_INPUT_X), W.at(1),
-                            R.at(1), B.at(1), P.at(1), H.at(1), C.at(1),
-                            input_map.at(LSTMInput::LSTM_INPUT_SEQ_LENGTHS), activation_f, activation_g,
-                            activation_h, attributes.m_input_forget, attributes.m_clip_threshold);
+                        LSTMForward lstm_fwd(input_map.at(LSTMInput::LSTM_INPUT_X),
+                                             W.at(0),
+                                             R.at(0),
+                                             B.at(0),
+                                             P.at(0),
+                                             H.at(0),
+                                             C.at(0),
+                                             input_map.at(LSTMInput::LSTM_INPUT_SEQ_LENGTHS),
+                                             activation_f,
+                                             activation_g,
+                                             activation_h,
+                                             attributes.m_input_forget,
+                                             attributes.m_clip_threshold);
+                        LSTMForward lstm_reversed(input_map.at(LSTMInput::LSTM_INPUT_X),
+                                                  W.at(1),
+                                                  R.at(1),
+                                                  B.at(1),
+                                                  P.at(1),
+                                                  H.at(1),
+                                                  C.at(1),
+                                                  input_map.at(LSTMInput::LSTM_INPUT_SEQ_LENGTHS),
+                                                  activation_f,
+                                                  activation_g,
+                                                  activation_h,
+                                                  attributes.m_input_forget,
+                                                  attributes.m_clip_threshold);
 
                         NodeVector fwd_results{lstm_fwd.run()};
                         NodeVector rev_results{lstm_fwd.run(true)};
 
                         // Stack together respective outputs from both forward and reverse passess.
-                        std::shared_ptr<ngraph::Node> Y{
-                            std::make_shared<ngraph::op::Concat>(
-                                NodeVector{fwd_results.at(0), rev_results.at(0)}, 1)};
-                        std::shared_ptr<ngraph::Node> Y_h{
-                            std::make_shared<ngraph::op::Concat>(
-                                NodeVector{fwd_results.at(1), rev_results.at(1)}, 0)};
-                        std::shared_ptr<ngraph::Node> Y_c{
-                            std::make_shared<ngraph::op::Concat>(
-                                NodeVector{fwd_results.at(2), rev_results.at(2)}, 0)};
+                        std::shared_ptr<ngraph::Node> Y{std::make_shared<ngraph::op::Concat>(
+                            NodeVector{fwd_results.at(0), rev_results.at(0)}, 1)};
+                        std::shared_ptr<ngraph::Node> Y_h{std::make_shared<ngraph::op::Concat>(
+                            NodeVector{fwd_results.at(1), rev_results.at(1)}, 0)};
+                        std::shared_ptr<ngraph::Node> Y_c{std::make_shared<ngraph::op::Concat>(
+                            NodeVector{fwd_results.at(2), rev_results.at(2)}, 0)};
                         results = NodeVector{Y, Y_h, Y_c};
                     }
 
