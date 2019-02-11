@@ -31,15 +31,13 @@ using namespace std;
 int main(int argc, char** argv)
 {
 #ifdef NGRAPH_DISTRIBUTED_ENABLE
-    auto dist = new ngraph::Distributed;
-    bool delete_instance = true;
+    unique_ptr<ngraph::Distributed> dist(new ngraph::Distributed());
     DistributedSetup distributed_setup;
     distributed_setup.set_comm_size(dist->get_size());
     distributed_setup.set_comm_rank(dist->get_rank());
     if (dist->get_size() == 1)
     {
-        delete dist;
-        delete_instance = false;
+        dist.reset();
     }
 #endif
 
@@ -57,9 +55,9 @@ int main(int argc, char** argv)
     int rc = RUN_ALL_TESTS();
 
 #ifdef NGRAPH_DISTRIBUTED_ENABLE
-    if (delete_instance)
+    if (dist)
     {
-        delete dist;
+        dist.reset();
     }
 #endif
 

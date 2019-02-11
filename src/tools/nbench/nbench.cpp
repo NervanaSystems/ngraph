@@ -299,12 +299,11 @@ OPTIONS
     }
 
 #if defined NGRAPH_DISTRIBUTED_ENABLE
-    auto dist = new ngraph::Distributed;
+    unique_ptr<ngraph::Distributed> dist(new ngraph::Distributed());
     bool delete_instance = true;
     if (dist->get_size() == 1)
     {
-        delete dist;
-        delete_instance = false;
+        dist.reset();
     }
 #endif
 
@@ -431,9 +430,9 @@ OPTIONS
     }
 
 #if defined NGRAPH_DISTRIBUTED_ENABLE
-    if (delete_instance)
+    if (dist)
     {
-        delete dist;
+        dist.reset();
     }
 #endif
 
