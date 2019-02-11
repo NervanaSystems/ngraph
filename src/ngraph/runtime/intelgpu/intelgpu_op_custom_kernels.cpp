@@ -1345,7 +1345,7 @@ void runtime::intelgpu::do_arg_max_min_operation(cldnn::topology& topology,
     vector<size_t> gws;
 
     const string operation_sign = is_max ? " > " : " < ";
-    const string infinity = is_max ? "-INFINITY" : "INFINITY";
+    const string infinity = get_opencl_type_min_max_value(input_type, is_max);
     const string var_name = operation_name + "_val";
 
     size_t current_input = 0;
