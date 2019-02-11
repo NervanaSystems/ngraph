@@ -1,17 +1,27 @@
 .. howto/distribute-train.rst 
 
 
-Train using multiple nGraph CPU backends with data parallel 
-===========================================================
+Distribute training across multiple nGraph backends 
+===================================================
 
 In the :doc:`previous section <../howto/derive-for-training>`, we described the 
 steps needed to create a "trainable" nGraph model. Here we demonstrate how to 
 train a data parallel model by distributing the graph to more than one device.
 
-As of release version 0.12, the default build is with OpenMPI.  To use the 
-`Intel MLSL`_ library, set the following compilation flag at build time: 
+These options are currently supported for available backends; choose the best one 
+for your scenario.  
 
-``-DNGRAPH_DISTRIBUTED_ENABLE=TRUE``.
+* Use ``NGRAPH_DISTRIBUTED_OMPI_ENABLE=TRUE`` to enable distributed training with 
+  OpenMPI. Use of this flag requires that OpenMPI be a pre-existing library 
+  in the system. If it's not present on the system, install Open MPI 2.1.1 before 
+  running the compile. 
+
+* Use ``-NGRAPH_DISTRIBUTED_MLSL_ENABLE=TRUE`` to enable MLSL.
+
+  .. important:: The MLSL option applies to ``CPU`` and ``Interpreter`` 
+     backends only. For all other backends, ``OpenMPI`` is presently the 
+     only supported option. We recommend the use of `Intel MLSL` if there 
+     are CPU only backends.
 
 To deploy data-parallel training on backends supported by nGraph API, the 
 ``AllReduce`` op should be added after the steps needed to complete the 
@@ -27,7 +37,6 @@ see the `full raw code`_.
 
 Finally, to run the training using two nGraph devices, invoke :command:`mpirun` which 
 is distributed with `Intel MLSL`_ library.  This will launch two nGraph CPU backends.
-
 
 .. code-block:: console 
 
