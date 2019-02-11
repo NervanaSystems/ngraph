@@ -300,7 +300,6 @@ OPTIONS
 
 #if defined NGRAPH_DISTRIBUTED_ENABLE
     unique_ptr<ngraph::Distributed> dist(new ngraph::Distributed());
-    bool delete_instance = true;
     if (dist->get_size() == 1)
     {
         dist.reset();
