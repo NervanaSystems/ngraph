@@ -11,12 +11,12 @@ train a data parallel model by distributing the graph to more than one device.
 These options are currently supported for available backends; choose the best one 
 for your scenario.  
 
-* Use ``-NGRAPH_DISTRIBUTED_OMPI_ENABLE=TRUE`` to enable distributed training with 
+* Use ``-DNGRAPH_DISTRIBUTED_OMPI_ENABLE=TRUE`` to enable distributed training with 
   OpenMPI. Use of this flag requires that OpenMPI be a pre-existing library 
   in the system. If it's not present on the system, install Open MPI 2.1.1 before 
   running the compile. 
 
-* Use ``-NGRAPH_DISTRIBUTED_MLSL_ENABLE=TRUE`` to enable the option for 
+* Use ``-DNGRAPH_DISTRIBUTED_MLSL_ENABLE=TRUE`` to enable the option for 
   :abbr:`Intel® Machine Learning Scaling Library (MLSL)` for Linux* OS:
 
   .. important:: The Intel® MLSL option applies to ``CPU`` and ``Interpreter`` 
