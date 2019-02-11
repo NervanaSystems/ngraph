@@ -265,12 +265,7 @@ if (NGRAPH_PLAIDML_ENABLE)
 endif()
 
 if (NOT DEFINED NGRAPH_TBB_ENABLE)
-    # Disable TBB on Windows for now.
-    if(WIN32)
-        set(NGRAPH_TBB_ENABLE FALSE})
-    else()
-        set(NGRAPH_TBB_ENABLE ${NGRAPH_CPU_ENABLE})
-    endif()
+    set(NGRAPH_TBB_ENABLE ${NGRAPH_CPU_ENABLE})
 endif()
 
 add_custom_target(style-check
