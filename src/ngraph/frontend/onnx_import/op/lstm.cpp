@@ -26,6 +26,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "core/null_node.hpp"
 #include "exceptions.hpp"
 #include "lstm.hpp"
 #include "ngraph/axis_set.hpp"
@@ -156,7 +157,7 @@ namespace ngraph
 
                         // ------ Optional inputs ------
                         // The bias tensor for input gate. Shape [num_directions, 8*hidden_size]
-                        if (ng_inputs.size() >= 4)
+                        if (!ng_inputs.at(3)->is_null())
                         {
                             m_map[LSTMInput::LSTM_INPUT_B] = ng_inputs.at(3);
                         }
@@ -168,9 +169,9 @@ namespace ngraph
                                 {0.f});
                         }
                         // The lengths of the sequences in a batch. Shape [batch_size]
-                        if (ng_inputs.size() >= 5)
+                        if (!ng_inputs.at(4)->is_null())
                         {
-                            ASSERT_VALID_ARGUMENT(node, ng_inputs.at(5)->is_constant())
+                            ASSERT_VALID_ARGUMENT(node, ng_inputs.at(4)->is_constant())
                                 << "Only Constant node is supported for 'sequence_lens' input.";
                             m_map[LSTMInput::LSTM_INPUT_SEQ_LENGTHS] = ng_inputs.at(4);
                         }
@@ -183,7 +184,7 @@ namespace ngraph
                                     batch_size, m_map[LSTMInput::LSTM_INPUT_X]->get_shape().at(0)));
                         }
                         // The initial value of the hidden. Shape [num_directions, batch_size, hidden_size]
-                        if (ng_inputs.size() >= 6)
+                        if (!ng_inputs.at(5)->is_null())
                         {
                             m_map[LSTMInput::LSTM_INPUT_INIT_H] = ng_inputs.at(5);
                         }
@@ -193,7 +194,7 @@ namespace ngraph
                                 element::f32, {num_directions, batch_size, hidden_size}, {0.f});
                         }
                         // The initial value of the cell. Shape [num_directions, batch_size, hidden_size]
-                        if (ng_inputs.size() >= 7)
+                        if (!ng_inputs.at(6)->is_null())
                         {
                             m_map[LSTMInput::LSTM_INPUT_INIT_C] = ng_inputs.at(6);
                         }
@@ -203,7 +204,7 @@ namespace ngraph
                                 element::f32, {num_directions, batch_size, hidden_size}, {0.f});
                         }
                         // The weight tensor for peepholes. Shape [num_directions, 3*hidde_size]
-                        if (ng_inputs.size() >= 8)
+                        if (!ng_inputs.at(7)->is_null())
                         {
                             m_map[LSTMInput::LSTM_INPUT_P] = ng_inputs.at(7);
                         }
