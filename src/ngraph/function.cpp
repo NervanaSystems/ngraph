@@ -214,3 +214,13 @@ size_t Function::get_graph_size() const
     }
     return total_size;
 }
+
+size_t Function::get_placement() const
+{
+    return m_placement;
+}
+
+void Function::set_placement(size_t placement)
+{
+    m_placement = placement;
+}

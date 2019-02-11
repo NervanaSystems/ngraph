@@ -1907,5 +1907,32 @@ TEST(onnx_${BACKEND_NAME}, model_missing_input)
     Outputs expected_outputs{{50, 144, 294, 512}};
 
     Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx_${BACKEND_NAME}, model_sinh)
+{
+    auto function =
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/sinh.onnx"));
+
+    Inputs inputs{std::vector<float>{-1.0f, 0.0f, 1.0f}};
+    Outputs expected_outputs{std::vector<float>{-1.1752012f, 0.f, 1.1752012f}};
+
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx_${BACKEND_NAME}, model_cosh)
+{
+    auto function =
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/cosh.onnx"));
+
+    Inputs inputs{std::vector<float>{-1.0f, 0.0f, 1.0f}};
+    Outputs expected_outputs{std::vector<float>{1.54308069f, 1.f, 1.54308069f}};
+
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
