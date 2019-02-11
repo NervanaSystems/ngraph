@@ -1,6 +1,5 @@
 .. about: 
 
-
 Architecture, Features, FAQs
 ############################
 
@@ -168,7 +167,7 @@ added with new functions that build sub-graphs from existing core ops.
 For a more detailed dive into how custom bridge code can be implemented, see our 
 documentation on how to :doc:`../howto/execute`. To learn how TensorFlow and 
 MXNet currently make use of custom bridge code, see the section on 
-:doc:`../framework-integration-guides`.
+:doc:`../frameworks/index`.
 
 .. figure:: ../graphics/bridge-to-graph-compiler.png
     :width: 733px

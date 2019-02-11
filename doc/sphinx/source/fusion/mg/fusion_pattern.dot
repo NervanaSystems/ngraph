@@ -1,9 +1,0 @@
-digraph G {
-    Label_0 -> Max_2
-    Constant_1 -> Max_2
-    Label_0 [shape=ellipse color=black]
-    Constant_1 [shape=ellipse color=black]
-    Max_2 [shape=ellipse color=black]
-}
-
-

@@ -51,7 +51,8 @@ namespace ngraph
                 UnsupportedVersion(const std::string& name,
                                    std::int64_t version,
                                    const std::string& domain)
-                    : ngraph_error{(domain.empty() ? "" : domain + ".") + name + ":" +
+                    : ngraph_error{"Unsupported operator version: " +
+                                   (domain.empty() ? "" : domain + ".") + name + ":" +
                                    std::to_string(version)}
                 {
                 }
@@ -62,16 +63,17 @@ namespace ngraph
         class OperatorsBridge
         {
         public:
-            static constexpr const int LATEST_SUPPORTED_OPSET_VERSION = ONNX_OPSET_VERSION;
+            static constexpr const int LATEST_SUPPORTED_ONNX_OPSET_VERSION = ONNX_OPSET_VERSION;
 
             OperatorsBridge(const OperatorsBridge&) = delete;
             OperatorsBridge& operator=(const OperatorsBridge&) = delete;
             OperatorsBridge(OperatorsBridge&&) = delete;
             OperatorsBridge& operator=(OperatorsBridge&&) = delete;
 
-            static OperatorSet get_operator_set(std::int64_t version, const std::string& domain)
+            static OperatorSet get_operator_set(const std::string& domain,
+                                                std::int64_t version = -1)
             {
-                return instance()._get_operator_set(version, domain);
+                return instance()._get_operator_set(domain, version);
             }
 
             static void register_operator(const std::string& name,
@@ -90,6 +92,20 @@ namespace ngraph
             }
 
         private:
+            // Registered operators structure
+            // {
+            //    domain_1: {
+            //      op_type_1: {
+            //          version_1: {func_handle},
+            //          version_2: {func_handle},
+            //          ...
+            //      },
+            //      op_type_2: { ... }
+            //      ...
+            //    },
+            //    domain_2: { ... },
+            //    ...
+            // }
             std::unordered_map<std::string,
                                std::unordered_map<std::string, std::map<std::int64_t, Operator>>>
                 m_map;
@@ -106,7 +122,8 @@ namespace ngraph
                                     std::int64_t version,
                                     const std::string& domain,
                                     Operator fn);
-            OperatorSet _get_operator_set(std::int64_t version, const std::string& domain);
+            OperatorSet _get_operator_set(const std::string& domain, std::int64_t version);
+
             bool _is_operator_registered(const std::string& name,
                                          std::int64_t version,
                                          const std::string& domain);
