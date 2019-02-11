@@ -1108,6 +1108,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
     REGISTER_KNOBBED_PASS(ReshapeElimination, false, ngraph::pass);
     REGISTER_KNOBBED_PASS(CoreFusion, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(CPUFusion, true, runtime::cpu::pass);
+    REGISTER_KNOBBED_PASS(CPUQuantFusion, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(CPUHorizontalFusion, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(CPUCollapseDims, true, runtime::cpu::pass);
 #if defined(NGRAPH_HALIDE)

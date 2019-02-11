@@ -119,6 +119,7 @@ option(NGRAPH_LIB_VERSIONING_ENABLE "Enable shared library versioning" FALSE)
 option(NGRAPH_PYTHON_BUILD_ENABLE "Enable build nGraph python package wheel" FALSE)
 option(NGRAPH_DISTRIBUTED_MLSL_ENABLE "Add distributed MLSL mode for CPU only backend" FALSE)
 option(NGRAPH_DISTRIBUTED_OMPI_ENABLE "Add distributed Open-MPI mode for all backend" FALSE)
+option(NGRAPH_PLAIDML_ENABLE "Enable the PlaidML backend" ${PLAIDML_FOUND})
 
 if (NGRAPH_GPUH_ENABLE)
     set(NGRAPH_GPU_ENABLE TRUE)
@@ -133,6 +134,11 @@ elseif(NGRAPH_DISTRIBUTED_MLSL_ENABLE  OR NGRAPH_DISTRIBUTED_OMPI_ENABLE)
     set(NGRAPH_DISTRIBUTED_ENABLE TRUE)
 else()
     set(NGRAPH_DISTRIBUTED_ENABLE FALSE)
+endif()
+
+if (NGRAPH_ONNX_IMPORT_ENABLE)
+    option(NGRAPH_USE_SYSTEM_PROTOBUF "Use system provided Protobuf shared object" FALSE)
+    option(NGRAPH_ONNXIFI_ENABLE "Enable ONNX Interface for Framework Integration" TRUE)
 endif()
 
 message(STATUS "NGRAPH_UNIT_TEST_ENABLE:      ${NGRAPH_UNIT_TEST_ENABLE}")
@@ -153,22 +159,6 @@ message(STATUS "NGRAPH_CODE_COVERAGE_ENABLE:  ${NGRAPH_CODE_COVERAGE_ENABLE}")
 message(STATUS "NGRAPH_LIB_VERSIONING_ENABLE: ${NGRAPH_LIB_VERSIONING_ENABLE}")
 message(STATUS "NGRAPH_PYTHON_BUILD_ENABLE:   ${NGRAPH_PYTHON_BUILD_ENABLE}")
 message(STATUS "NGRAPH_USE_PREBUILT_LLVM:     ${NGRAPH_USE_PREBUILT_LLVM}")
-
-if (NGRAPH_ONNX_IMPORT_ENABLE)
-    option(NGRAPH_USE_SYSTEM_PROTOBUF "Use system provided Protobuf shared object" FALSE)
-    option(NGRAPH_ONNXIFI_ENABLE "Enable ONNX Interface for Framework Integration" TRUE)
-endif()
-
-find_package(PlaidML CONFIG)
-
-option(NGRAPH_PLAIDML_ENABLE "Enable the PlaidML backend" ${PLAIDML_FOUND})
-
-if (NGRAPH_PLAIDML_ENABLE)
-    if (NOT PLAIDML_FOUND)
-        message(FATAL_ERROR "PlaidML not installed")
-    endif()
-endif()
-
 message(STATUS "NGRAPH_PLAIDML_ENABLE:        ${NGRAPH_PLAIDML_ENABLE}")
 
 #-----------------------------------------------------------------------------------------------
@@ -275,6 +265,11 @@ if (NGRAPH_CPU_ENABLE)
 endif()
 
 if (NGRAPH_PLAIDML_ENABLE)
+    find_package(PlaidML CONFIG)
+    if (NOT PLAIDML_FOUND)
+        message(FATAL_ERROR "PlaidML not installed")
+    endif()
+
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_PlaidML_ENABLE")
 endif()
 
