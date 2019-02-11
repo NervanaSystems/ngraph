@@ -105,6 +105,22 @@ namespace ngraph
 
                     return true;
                 }
+
+                // TODO(pruthvi): Populate this enums based of addition of new MKLDNN RNN variants
+                enum rnntype
+                {
+                    vanilla_rnn,
+                    vanilla_gru,
+                    vanilla_lstm
+                };
+
+                enum rnndirection
+                {
+                    left_to_right,
+                    right_to_left,
+                    bi_concat,
+                    bi_sum
+                };
             }
         }
     }

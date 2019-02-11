@@ -485,11 +485,14 @@ namespace ngraph
                         static_cast<unsigned long>(rnn_node->get_num_cell_states());
 
                     auto get_mkldnn_rnn_cell_type = [&]() {
-                        switch (rnn_cell_n_gates)
+                        switch (rnn_node->get_rnn_type())
                         {
-                        case 1: return mkldnn::algorithm::vanilla_rnn;
-                        case 3: return mkldnn::algorithm::vanilla_gru;
-                        case 4: return mkldnn::algorithm::vanilla_lstm;
+                        case mkldnn_utils::rnntype::vanilla_rnn:
+                            return mkldnn::algorithm::vanilla_rnn;
+                        case mkldnn_utils::rnntype::vanilla_gru:
+                            return mkldnn::algorithm::vanilla_gru;
+                        case mkldnn_utils::rnntype::vanilla_lstm:
+                            return mkldnn::algorithm::vanilla_lstm;
                         default: throw ngraph_error("unsupported mkldnn rnn algorithm");
                         }
                     };

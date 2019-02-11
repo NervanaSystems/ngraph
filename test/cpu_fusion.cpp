@@ -2175,6 +2175,9 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
     const int num_rnn_cell_states = 2;
     const int rnn_direction = 1;
     const int num_of_rnn_fused_layer = 1;
+    ngraph::runtime::cpu::mkldnn_utils::rnntype rnn_type =
+        ngraph::runtime::cpu::mkldnn_utils::rnntype::vanilla_lstm;
+
     auto rnn_node = make_shared<op::Rnn>(src_layer,
                                          src_iter,
                                          weights_layer,
@@ -2185,7 +2188,9 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
                                          src_seq_length,
                                          num_rnn_cell_states,
                                          rnn_direction,
-                                         num_of_rnn_fused_layer);
+                                         num_of_rnn_fused_layer,
+                                         rnn_type);
+
     auto rnn_ht_output = make_shared<op::GetOutputElement>(rnn_node, 0);
     auto rnn_ct_output = make_shared<op::GetOutputElement>(rnn_node, 1);
 

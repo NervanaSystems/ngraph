@@ -37,7 +37,8 @@ shared_ptr<Node> op::Rnn::copy_with_new_args(const NodeVector& new_args) const
                             m_src_sequence_length,
                             m_num_cell_states,
                             m_direction,
-                            m_num_fused_layers);
+                            m_num_fused_layers,
+                            m_rnntype);
 }
 
 op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
@@ -50,7 +51,8 @@ op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
              size_t src_sequence_length,
              size_t num_cell_states,
              size_t direction,
-             size_t num_fused_layers)
+             size_t num_fused_layers,
+             ngraph::runtime::cpu::mkldnn_utils::rnntype rnn_type)
     : Op("Rnn", check_single_output_args({src_layer, src_iter, weights_layer, weights_iter, bias}))
     , m_num_timesteps(num_timesteps)
     , m_num_gates_per_cell(num_gates_per_cell)
@@ -58,6 +60,7 @@ op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
     , m_num_cell_states(num_cell_states)
     , m_direction(direction)
     , m_num_fused_layers(num_fused_layers)
+    , m_rnntype(rnn_type)
 {
     constructor_validate_and_infer_types();
     if (src_layer->get_shape().size() != weights_layer->get_shape().size())
