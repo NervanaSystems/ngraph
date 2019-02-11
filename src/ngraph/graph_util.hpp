@@ -309,6 +309,8 @@ namespace ngraph
 
     bool is_one(std::shared_ptr<Node> reduce_constant);
 
+    bool compare_constants(const std::shared_ptr<Node>& n1, const std::shared_ptr<Node>& n2);
+
     // Returns true if `node` is live in the graph i.e. a result op
     // transitively uses this `node`
     bool is_used(Node* node);

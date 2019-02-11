@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include <algorithm>
-#include <algorithm>
 #include <cinttypes>
 #include <cmath>
 #include <cstdlib>
@@ -1712,6 +1711,32 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_3d_strided_different_strides)
     auto handle = backend->compile(f);
     backend->call_with_validate(handle, {result}, {a});
     EXPECT_EQ((vector<float>{0, 3, 8, 11, 32, 35, 40, 43}), read_vector<float>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, slice_3d_strided_different_strides_int64)
+{
+    Shape shape_a{4, 4, 4};
+    auto A = make_shared<op::Parameter>(element::i64, shape_a);
+    Shape shape_r{2, 2, 2};
+    auto r = make_shared<op::Slice>(A, Coordinate{0, 0, 0}, Coordinate{4, 4, 4}, Strides{2, 2, 3});
+    auto f = make_shared<Function>(r, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::i64, shape_a);
+    copy_data(a, vector<int64_t>{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
+
+                                 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+
+                                 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+
+                                 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63});
+    auto result = backend->create_tensor(element::i64, shape_r);
+
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a});
+    EXPECT_EQ((vector<int64_t>{0, 3, 8, 11, 32, 35, 40, 43}), read_vector<int64_t>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, slice_3d_start_just_oob)

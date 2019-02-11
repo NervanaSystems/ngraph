@@ -872,7 +872,12 @@ void runtime::intelgpu::do_slice_operation(cldnn::topology& topology,
     codegen::CodeWriter writer;
     vector<size_t> gws;
 
-    gen_func_def(writer, entry_point_name, {"float"}, {input_shape}, "float", output_shape);
+    gen_func_def(writer,
+                 entry_point_name,
+                 {get_opencl_type_name(output_type)},
+                 {input_shape},
+                 get_opencl_type_name(output_type),
+                 output_shape);
 
     writer.block_begin();
     {

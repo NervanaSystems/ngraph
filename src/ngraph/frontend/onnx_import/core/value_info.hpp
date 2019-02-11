@@ -138,42 +138,7 @@ namespace ngraph
 
             std::shared_ptr<op::Constant> get_ng_constant(const Tensor& tensor) const
             {
-                switch (m_value_info_proto->type().tensor_type().elem_type())
-                {
-                case onnx::TensorProto_DataType::TensorProto_DataType_BOOL:
-                    return make_ng_constant<bool>(element::boolean, tensor);
-                case onnx::TensorProto_DataType::TensorProto_DataType_FLOAT:
-                case onnx::TensorProto_DataType::TensorProto_DataType_FLOAT16:
-                    return make_ng_constant<float>(element::f32, tensor);
-                case onnx::TensorProto_DataType::TensorProto_DataType_DOUBLE:
-                    return make_ng_constant<double>(element::f64, tensor);
-                case onnx::TensorProto_DataType::TensorProto_DataType_INT8:
-                    return make_ng_constant<int8_t>(element::i8, tensor);
-                case onnx::TensorProto_DataType::TensorProto_DataType_INT16:
-                    return make_ng_constant<int16_t>(element::i16, tensor);
-                case onnx::TensorProto_DataType::TensorProto_DataType_INT32:
-                    return make_ng_constant<int32_t>(element::i32, tensor);
-                case onnx::TensorProto_DataType::TensorProto_DataType_INT64:
-                    return make_ng_constant<int64_t>(element::i64, tensor);
-                case onnx::TensorProto_DataType::TensorProto_DataType_UINT8:
-                    return make_ng_constant<uint8_t>(element::u8, tensor);
-                case onnx::TensorProto_DataType::TensorProto_DataType_UINT16:
-                    return make_ng_constant<uint16_t>(element::u16, tensor);
-                case onnx::TensorProto_DataType::TensorProto_DataType_UINT32:
-                    return make_ng_constant<uint32_t>(element::u32, tensor);
-                case onnx::TensorProto_DataType::TensorProto_DataType_UINT64:
-                    return make_ng_constant<uint64_t>(element::u64, tensor);
-                default:
-                    throw error::value_info::unsupported_element_type{
-                        m_value_info_proto->type().tensor_type().elem_type()};
-                }
-            }
-
-            template <typename T>
-            std::shared_ptr<op::Constant> make_ng_constant(const element::Type& type,
-                                                           const Tensor& tensor) const
-            {
-                return std::make_shared<op::Constant>(type, m_shape, tensor.get_data<T>());
+                return tensor.get_ng_constant();
             }
 
         private:
