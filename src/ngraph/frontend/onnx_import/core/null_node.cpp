@@ -25,7 +25,6 @@ namespace ngraph
         NullNode::NullNode()
             : ngraph::Node("NullNode", {}, 0)
         {
-            m_name = "NullNode";
         }
 
         std::shared_ptr<Node> NullNode::copy_with_new_args(const NodeVector& new_args) const
