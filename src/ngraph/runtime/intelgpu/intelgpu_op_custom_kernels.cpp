@@ -28,34 +28,38 @@ using namespace ngraph;
 
 string runtime::intelgpu::get_opencl_type_name(const element::Type& ngraph_type)
 {
-    if (ngraph_type == ngraph::element::i64)
+    switch (ngraph_type.get_type_enum())
     {
-        return "long";
+    case element::Type_t::i64: return "long";
+    case element::Type_t::i32: return "int";
+    case element::Type_t::i16: return "short";
+    case element::Type_t::u16: return "ushort";
+    case element::Type_t::i8: return "char";
+    case element::Type_t::u8: return "uchar";
     }
-    else if (ngraph_type == ngraph::element::i32)
+
+    return ngraph_type.c_type_string();
+}
+
+string runtime::intelgpu::get_opencl_type_min_max_value(const element::Type& ngraph_type,
+                                                        bool is_min)
+{
+    switch (ngraph_type.get_type_enum())
     {
-        return "int";
+    case element::Type_t::f32: return is_min ? "-INFINITY" : "INFINITY";
+    case element::Type_t::f64: return is_min ? "-INFINITY" : "INFINITY";
+    case element::Type_t::i64: return is_min ? "LONG_MIN" : "LONG_MAX";
+    case element::Type_t::u64: return is_min ? "0" : "ULONG_MAX";
+    case element::Type_t::i32: return is_min ? "INT_MIN" : "INT_MAX";
+    case element::Type_t::u32: return is_min ? "0" : "UINT_MAX";
+    case element::Type_t::i16: return is_min ? "SHRT_MIN" : "SHRT_MAX";
+    case element::Type_t::u16: return is_min ? "0" : "USHRT_MAX";
+    case element::Type_t::i8: return is_min ? "CHAR_MIN" : "CHAR_MAX";
+    case element::Type_t::u8: return is_min ? "0" : "UCHAR_MAX";
     }
-    else if (ngraph_type == ngraph::element::i16)
-    {
-        return "short";
-    }
-    else if (ngraph_type == ngraph::element::u16)
-    {
-        return "ushort";
-    }
-    else if (ngraph_type == ngraph::element::i8)
-    {
-        return "char";
-    }
-    else if (ngraph_type == ngraph::element::u8)
-    {
-        return "uchar";
-    }
-    else
-    {
-        return ngraph_type.c_type_string();
-    }
+
+    throw ngraph_error("Unsupported type '" + ngraph_type.c_type_string() +
+                       "' in runtime::intelgpu::get_opencl_type_min_max_value()");
 }
 
 vector<cldnn_arg> runtime::intelgpu::get_kernel_args(size_t input, size_t output)
@@ -868,7 +872,12 @@ void runtime::intelgpu::do_slice_operation(cldnn::topology& topology,
     codegen::CodeWriter writer;
     vector<size_t> gws;
 
-    gen_func_def(writer, entry_point_name, {"float"}, {input_shape}, "float", output_shape);
+    gen_func_def(writer,
+                 entry_point_name,
+                 {get_opencl_type_name(output_type)},
+                 {input_shape},
+                 get_opencl_type_name(output_type),
+                 output_shape);
 
     writer.block_begin();
     {
@@ -1291,7 +1300,10 @@ void runtime::intelgpu::do_custom_eltwise_operation(cldnn::topology& topology,
         }
         case CUSTOM_ELTWISE::Floor:
         {
-            writer << "floor";
+            if (input_type.is_real())
+            {
+                writer << "floor";
+            }
             break;
         }
         case CUSTOM_ELTWISE::Sign:
@@ -1338,7 +1350,7 @@ void runtime::intelgpu::do_arg_max_min_operation(cldnn::topology& topology,
     vector<size_t> gws;
 
     const string operation_sign = is_max ? " > " : " < ";
-    const string infinity = is_max ? "-INFINITY" : "INFINITY";
+    const string infinity = get_opencl_type_min_max_value(input_type, is_max);
     const string var_name = operation_name + "_val";
 
     size_t current_input = 0;

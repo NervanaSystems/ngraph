@@ -40,16 +40,15 @@ ExternalProject_Add(
 ExternalProject_Get_Property(ext_tbb SOURCE_DIR)
 set(SOURCE_DIR ${SOURCE_DIR}/${ARCHIVE_FILE_BASE})
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(TBB_LIB_NAME tbb_debug)
+else()
+    set(TBB_LIB_NAME tbb)
+endif()
+
 if (WIN32)
-    set(TBB_LINK_LIBS
-        ${SOURCE_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}clangTooling${CMAKE_SHARED_LIBRARY_SUFFIX}
-    )
+    set(TBB_LINK_LIBS ${SOURCE_DIR}/lib/intel64/vc14/${TBB_LIB_NAME}.lib)
 elseif(APPLE)
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        set(TBB_LIB_NAME tbb_debug)
-    else()
-        set(TBB_LIB_NAME tbb)
-    endif()
     set(TBB_LINK_LIBS
         ${NGRAPH_BUILD_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}
     )

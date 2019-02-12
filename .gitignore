@@ -115,3 +115,7 @@ python/pybind11/
 CMakeCache.txt
 CMakeFiles/
 CMakeSettings.json
+
+# don't add dot-save files!
+
+.save
