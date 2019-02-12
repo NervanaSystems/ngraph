@@ -1863,3 +1863,109 @@ TEST(onnx_${BACKEND_NAME}, model_top_k)
     EXPECT_TRUE(test::all_close_f(expected_values_output, values_output));
     EXPECT_TRUE(test::all_close(expected_indices_output, indices_output));
 }
+
+TEST(onnx_${BACKEND_NAME}, model_missing_input)
+{
+    onnx_import::register_operator(
+        "TestMissingInOut", 1, "com.intel.ai", [](const onnx_import::Node& node) -> NodeVector {
+            NodeVector ng_inputs{node.get_ng_inputs()};
+            std::shared_ptr<ngraph::Node> A = ng_inputs.at(0);
+            std::shared_ptr<ngraph::Node> B = ng_inputs.at(1);
+            std::shared_ptr<ngraph::Node> C = ng_inputs.at(2);
+
+            A = A * C;
+            if (!B->is_null())
+            {
+                B = B / C;
+            }
+
+            C = C + C;
+            return {A, B, C};
+        });
+
+    onnx_import::register_operator(
+        "TestMissingIn", 1, "com.intel.ai", [](const onnx_import::Node& node) -> NodeVector {
+            NodeVector ng_inputs{node.get_ng_inputs()};
+            std::shared_ptr<ngraph::Node> result = std::make_shared<ngraph::op::Constant>(
+                element::f32, ngraph::Shape{2, 2}, std::vector<float>{1, 1, 1, 1});
+
+            for (const auto& ng_input : ng_inputs)
+            {
+                if (!ng_input->is_null())
+                {
+                    result = ng_input * result;
+                }
+            }
+
+            return {result};
+        });
+
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/missing_input.onnx"));
+
+    Inputs inputs{{1, 2, 3, 4}, {5, 6, 7, 8}};
+    Outputs expected_outputs{{50, 144, 294, 512}};
+
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx_${BACKEND_NAME}, model_sinh)
+{
+    auto function =
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/sinh.onnx"));
+
+    Inputs inputs{std::vector<float>{-1.0f, 0.0f, 1.0f}};
+    Outputs expected_outputs{std::vector<float>{-1.1752012f, 0.f, 1.1752012f}};
+
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx_${BACKEND_NAME}, model_cosh)
+{
+    auto function =
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/cosh.onnx"));
+
+    Inputs inputs{std::vector<float>{-1.0f, 0.0f, 1.0f}};
+    Outputs expected_outputs{std::vector<float>{1.54308069f, 1.f, 1.54308069f}};
+
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx_${BACKEND_NAME}, model_initializer_wo_input)
+{
+    // This test checks a model which has an initializer, but no input with the same name
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/initializer_wo_input.onnx"));
+
+    Inputs inputs;
+    inputs.emplace_back(std::vector<float>{0, 1, 2, 3, 4, 5});
+
+    std::vector<float> expected_output{0, 2, 6, 12, 20, 30};
+
+    Outputs output{execute(function, inputs, "${BACKEND_NAME}")};
+    EXPECT_TRUE(test::all_close_f(expected_output, output.front()));
+}
+
+TEST(onnx_${BACKEND_NAME}, model_sign)
+{
+    auto function =
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/sign.onnx"));
+
+    Inputs inputs{std::vector<float>{-std::numeric_limits<float>::infinity(),
+                                     -3.141592f,
+                                     0.0f,
+                                     2.71828f,
+                                     std::numeric_limits<float>::infinity()}};
+
+    Outputs expected_outputs{std::vector<float>{-1.0f, -1.0f, 0.0f, 1.0f, 1.0f}};
+
+    Outputs outputs{execute<float>(function, inputs, "${BACKEND_NAME}")};
+
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
