@@ -104,6 +104,7 @@ namespace ngraph
                         max_val_node, std::make_shared<ngraph::op::Maximum>(data, min_val_node));
                 }
 
+                // Modify input vector in-place and return reference to modified vector.
                 std::vector<std::string>& to_lower_case(std::vector<std::string>&& vs)
                 {
                     std::transform(std::begin(vs),
