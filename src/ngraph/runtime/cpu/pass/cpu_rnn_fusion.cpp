@@ -352,7 +352,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
     auto lstm_bias = std::make_shared<op::Add>(lstm_bias_layer_shared, lstm_bias_iter_shared);
     auto lstm_bias_label =
         std::make_shared<pattern::op::Label>(lstm_bias, nullptr, NodeVector{lstm_bias});
-    ngraph::runtime::cpu::mkldnn_utils::rnntype rnn_type =
+    ngraph::runtime::cpu::mkldnn_utils::rnntype ref_rnn_type =
         ngraph::runtime::cpu::mkldnn_utils::rnntype::vanilla_lstm;
 
     auto lstm = std::make_shared<op::Lstm>(lstm_src_layer,
@@ -360,7 +360,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                                            lstm_weights_layer_label,
                                            lstm_weights_iter_label,
                                            lstm_bias_label,
-                                           rnn_type);
+                                           ref_rnn_type);
     auto lstm_goe = std::make_shared<op::GetOutputElement>(lstm, 1);
     // We cannot attach labels to multi-output nodes, so we attach a label to the goe instead
     auto lstm_goe_label =
@@ -581,7 +581,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
     const size_t ref_num_rnn_cell_states = 2;
     const size_t ref_rnn_direction = 1;
     const size_t ref_num_of_rnn_fused_layer = 1;
-    ngraph::runtime::cpu::mkldnn_utils::rnntype rnn_type =
+    ngraph::runtime::cpu::mkldnn_utils::rnntype ref_rnn_type =
         ngraph::runtime::cpu::mkldnn_utils::rnntype::vanilla_lstm;
 
     auto ref_rnn_node = std::make_shared<op::Rnn>(rnn_src_layer,
@@ -595,7 +595,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
                                                   ref_num_rnn_cell_states,
                                                   ref_rnn_direction,
                                                   ref_num_of_rnn_fused_layer,
-                                                  rnn_type);
+                                                  ref_rnn_type);
 
     auto rnn_goe0 = std::make_shared<op::GetOutputElement>(ref_rnn_node, 0);
 
@@ -643,8 +643,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         size_t num_rnn_cell_states = rnn_nodes[0]->get_num_cell_states();
         size_t rnn_direction = rnn_nodes[0]->get_direction();
         size_t num_fused_rnn_layers = rnn_nodes.size();
-        ngraph::runtime::cpu::mkldnn_utils::rnntype rnn_type =
-            ngraph::runtime::cpu::mkldnn_utils::rnntype::vanilla_lstm;
+        ngraph::runtime::cpu::mkldnn_utils::rnntype rnn_type = rnn_nodes[0]->get_rnn_type();
 
         for (auto rnn_node : rnn_nodes)
         {
