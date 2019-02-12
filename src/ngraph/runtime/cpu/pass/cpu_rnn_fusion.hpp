@@ -91,4 +91,3 @@ public:
 private:
     void construct_bidirectional_rnn();
 };
-
