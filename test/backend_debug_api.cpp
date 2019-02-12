@@ -37,9 +37,6 @@ TEST(INTERPRETER, nan_check_input)
 
     shared_ptr<runtime::Backend> backend = runtime::Backend::create("INTERPRETER");
 
-    shared_ptr<runtime::interpreter::INTBackend> ibackend =
-        static_pointer_cast<runtime::interpreter::INTBackend>(backend);
-
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{2, 4, NAN, 16});
@@ -47,9 +44,12 @@ TEST(INTERPRETER, nan_check_input)
     copy_data(b, vector<float>{1, 2, 1, 8});
     auto result = backend->create_tensor(element::f32, shape);
 
-    auto handle = backend->compile(f);
-    ibackend->set_nan_check(handle, true);
-    EXPECT_ANY_THROW(ibackend->call_with_validate(handle, {result}, {a, b}));
+    shared_ptr<runtime::Executable> handle = backend->compile(f);
+
+    shared_ptr<runtime::interpreter::INTExecutable> ihandle =
+        static_pointer_cast<runtime::interpreter::INTExecutable>(handle);
+    ihandle->set_nan_check(true);
+    EXPECT_ANY_THROW(handle->call_with_validate({result}, {a, b}));
 }
 
 TEST(INTERPRETER, nan_check_output)
@@ -61,9 +61,6 @@ TEST(INTERPRETER, nan_check_output)
 
     shared_ptr<runtime::Backend> backend = runtime::Backend::create("INTERPRETER");
 
-    shared_ptr<runtime::interpreter::INTBackend> ibackend =
-        static_pointer_cast<runtime::interpreter::INTBackend>(backend);
-
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{2, 4, 0, 16});
@@ -71,7 +68,9 @@ TEST(INTERPRETER, nan_check_output)
     copy_data(b, vector<float>{1, 2, 0, 8});
     auto result = backend->create_tensor(element::f32, shape);
 
-    auto handle = backend->compile(f);
-    ibackend->set_nan_check(handle, true);
-    EXPECT_ANY_THROW(ibackend->call_with_validate(handle, {result}, {a, b}));
+    shared_ptr<runtime::Executable> handle = backend->compile(f);
+    shared_ptr<runtime::interpreter::INTExecutable> ihandle =
+        static_pointer_cast<runtime::interpreter::INTExecutable>(handle);
+    ihandle->set_nan_check(true);
+    EXPECT_ANY_THROW(handle->call_with_validate({result}, {a, b}));
 }
