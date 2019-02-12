@@ -30,6 +30,7 @@ namespace ngraph
         namespace hybrid
         {
             class HybridBackend;
+            class HybridExecutable;
         }
     }
 }
@@ -48,29 +49,37 @@ public:
                       const ngraph::Shape& shape,
                       void* memory_pointer) override;
 
-    Handle compile(std::shared_ptr<ngraph::Function> func) override;
-
-    bool call(std::shared_ptr<ngraph::Function> func,
-              const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& outputs,
-              const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& inputs) override;
+    std::shared_ptr<Executable> compile(std::shared_ptr<ngraph::Function> func,
+                                        bool enable_performance_data = false) override;
 
     bool is_supported(const ngraph::Node& node) const override;
 
     void set_debug_enabled(bool flag) { m_debug_enabled = flag; }
 private:
-    class FunctionInstance
-    {
-    public:
-        std::shared_ptr<ngraph::Function> m_function;
-        std::vector<std::shared_ptr<ngraph::Function>> m_sub_functions;
-        std::unordered_map<std::shared_ptr<ngraph::op::Parameter>,
-                           std::shared_ptr<ngraph::op::Result>>
-            m_map_parameter_to_result;
-    };
-
-    std::map<std::shared_ptr<ngraph::Function>, FunctionInstance> m_function_map;
     std::vector<std::shared_ptr<runtime::Backend>> m_backend_list;
     bool m_debug_enabled = false;
+};
+
+class ngraph::runtime::hybrid::HybridExecutable : public runtime::Executable
+{
+public:
+    HybridExecutable(const std::vector<std::shared_ptr<runtime::Backend>>& backend_list,
+                     const std::shared_ptr<Function>& func,
+                     bool enable_performance_collection = false,
+                     bool debug_enabled = false);
+
+    bool call(const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& outputs,
+              const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& inputs) override;
+
+private:
+    std::shared_ptr<ngraph::Function> m_function;
+    std::vector<std::shared_ptr<ngraph::Function>> m_sub_functions;
+    std::unordered_map<std::shared_ptr<ngraph::op::Parameter>, std::shared_ptr<ngraph::op::Result>>
+        m_map_parameter_to_result;
+
+    std::vector<std::shared_ptr<runtime::Backend>> m_backend_list;
+    bool m_debug_enabled = false;
+    std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<Executable>> m_executable_map;
 
     size_t get_placement(const runtime::Tensor* t);
 };
