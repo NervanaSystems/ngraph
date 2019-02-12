@@ -39,7 +39,6 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::Dequantize)
             {
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
                 const ngraph::op::Dequantize* dequantize =
                     static_cast<const ngraph::op::Dequantize*>(node);

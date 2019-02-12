@@ -33,7 +33,6 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::ArgMax)
             {
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
                 const ngraph::op::ArgMax* argmax = static_cast<const ngraph::op::ArgMax*>(node);
                 CPUKernelFunctor functor;

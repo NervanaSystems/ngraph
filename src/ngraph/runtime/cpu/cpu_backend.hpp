@@ -50,7 +50,7 @@ namespace ngraph
                 std::shared_ptr<ngraph::runtime::Executable>
                     compile(std::shared_ptr<Function> func,
                             bool enable_performance_counters = false) override;
-                            
+
                 std::shared_ptr<ngraph::runtime::Executable>
                     compile(std::shared_ptr<Function> func,
                             ngraph::pass::PassConfig pass_config,
@@ -69,7 +69,9 @@ namespace ngraph
             class CPU_Executable : public runtime::Executable
             {
             public:
-                CPU_Executable(std::shared_ptr<Function> func, ngraph::pass::PassConfig pass_config, bool performance_counters_enabled);
+                CPU_Executable(std::shared_ptr<Function> func,
+                               ngraph::pass::PassConfig pass_config,
+                               bool performance_counters_enabled);
                 bool call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                           const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
 

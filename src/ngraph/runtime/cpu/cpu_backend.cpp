@@ -75,9 +75,10 @@ shared_ptr<runtime::Executable>
     return compile(func, pass_config, performance_counters_enabled);
 }
 
-runtime::Handle runtime::cpu::CPU_Backend::compile(shared_ptr<Function> func,
-                                                   ngraph::pass::PassConfig pass_config,
-                                                   bool performance_counters_enabled)
+shared_ptr<runtime::Executable>
+    runtime::cpu::CPU_Backend::compile(shared_ptr<Function> func,
+                                       ngraph::pass::PassConfig pass_config,
+                                       bool performance_counters_enabled)
 {
     shared_ptr<runtime::Executable> rc;
     auto it = m_exec_map.find(func);
