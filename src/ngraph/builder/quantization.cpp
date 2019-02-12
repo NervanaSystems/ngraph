@@ -325,6 +325,12 @@ namespace ngraph
                                                                        max_freezed_output_conv_1,
                                                                        min_freezed_output_conv_2,
                                                                        max_freezed_output_conv_2);
+            if (output_et == element::u8)
+            {
+                // Need to multiply by two to account for u8 requantization_scale
+                auto two = make_constant(element::f32, sum_scale->get_shape(), 2.0f);
+                sum_scale = two * sum_scale;
+            }
 
             if (bias->get_element_type() != element::i32)
             {

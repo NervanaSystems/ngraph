@@ -64,14 +64,24 @@ static void node_modifiers(const Node& node, vector<string>& attributes)
     }
 }
 
-runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> func)
+shared_ptr<runtime::Executable>
+    runtime::hybrid::HybridBackend::compile(shared_ptr<Function> func,
+                                            bool enable_performance_collection)
 {
-    if (m_function_map.find(func) == m_function_map.end())
-    {
-        // Clone function
-        FunctionInstance instance;
-        instance.m_function = clone_function(*func);
+    return make_shared<HybridExecutable>(
+        m_backend_list, func, enable_performance_collection, m_debug_enabled);
+}
 
+runtime::hybrid::HybridExecutable::HybridExecutable(
+    const std::vector<std::shared_ptr<runtime::Backend>>& backend_list,
+    const shared_ptr<Function>& func,
+    bool enable_performance_collection,
+    bool debug_enabled)
+    : m_function{func}
+    , m_backend_list{backend_list}
+    , m_debug_enabled{debug_enabled}
+{
+    {
         // Run placement pass
         ngraph::pass::Manager pass_manager;
         pass_manager.register_pass<runtime::hybrid::pass::DefaultPlacement>(m_backend_list);
@@ -83,16 +93,15 @@ runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> fun
         {
             pass_manager.register_pass<ngraph::pass::VisualizeTree>("graph.png", node_modifiers);
         }
-        pass_manager.run_passes(instance.m_function);
+        pass_manager.run_passes(m_function);
 
         // Split function to sub_functions
-        tie(instance.m_sub_functions, instance.m_map_parameter_to_result) =
-            runtime::hybrid::split_function_by_placement(instance.m_function);
-        m_function_map.insert({func, instance});
+        tie(m_sub_functions, m_map_parameter_to_result) =
+            runtime::hybrid::split_function_by_placement(m_function);
 
         // Compile subfunctions in corresponding backends
         size_t subfunction_number = 0;
-        for (shared_ptr<Function>& sub_function : instance.m_sub_functions)
+        for (shared_ptr<Function>& sub_function : m_sub_functions)
         {
             size_t placement = sub_function->get_placement();
             if (m_debug_enabled)
@@ -104,7 +113,8 @@ runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> fun
                 pm.run_passes(sub_function);
             }
             auto backend = m_backend_list[placement];
-            backend->compile(sub_function);
+            shared_ptr<Executable> exec = backend->compile(sub_function);
+            m_executable_map[sub_function] = exec;
 
             // Compile will replace nodes so we need to make one more pass through all
             // ops to reset placement
@@ -115,38 +125,29 @@ runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> fun
         }
     }
 
-    return func;
+    set_parameters_and_results(*func);
 }
 
-bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
-                                          const vector<shared_ptr<runtime::Tensor>>& outputs,
-                                          const vector<shared_ptr<runtime::Tensor>>& inputs)
+bool runtime::hybrid::HybridExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                             const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
-    // Get FunctionInstance
     bool rc = true;
 
     using node_map_t = unordered_map<shared_ptr<Node>, shared_ptr<runtime::Tensor>>;
-
-    auto fit = m_function_map.find(func);
-    if (fit == m_function_map.end())
-    {
-        throw runtime_error("compile() must be called before call().");
-    }
-    FunctionInstance& instance = fit->second;
 
     // Parameter and result node in sub_function maps to one Tensor
     node_map_t map_node_to_tensor;
     for (size_t i = 0; i < inputs.size(); ++i)
     {
-        map_node_to_tensor[instance.m_function->get_parameters()[i]] = inputs[i];
+        map_node_to_tensor[m_function->get_parameters()[i]] = inputs[i];
     }
     for (size_t i = 0; i < outputs.size(); ++i)
     {
-        map_node_to_tensor[instance.m_function->get_results()[i]] = outputs[i];
+        map_node_to_tensor[m_function->get_results()[i]] = outputs[i];
     }
 
     // Call subfunctions
-    for (const shared_ptr<Function>& sub_function : instance.m_sub_functions)
+    for (const shared_ptr<Function>& sub_function : m_sub_functions)
     {
         // Init backend
         size_t placement = sub_function->get_placement();
@@ -174,7 +175,7 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
             else
             {
                 // Handle temporary tensors that go between subgraphs
-                auto result_node = instance.m_map_parameter_to_result.at(parameter_node);
+                auto result_node = m_map_parameter_to_result.at(parameter_node);
                 auto result = map_node_to_tensor.at(result_node);
                 auto parameter = backend->create_tensor(parameter_node->get_element_type(),
                                                         parameter_node->get_shape());
@@ -215,7 +216,8 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
         }
 
         // Call
-        backend->call(sub_function, results, parameters);
+        auto exec = m_executable_map[sub_function];
+        exec->call(results, parameters);
 
         // Need to copy any results to the correct device
         for (const auto& p : copy_back)
@@ -231,7 +233,7 @@ bool runtime::hybrid::HybridBackend::is_supported(const Node& node) const
     return true;
 }
 
-size_t runtime::hybrid::HybridBackend::get_placement(const runtime::Tensor* t)
+size_t runtime::hybrid::HybridExecutable::get_placement(const runtime::Tensor* t)
 {
     size_t index = 0;
     for (const shared_ptr<ngraph::runtime::Backend>& be : m_backend_list)
