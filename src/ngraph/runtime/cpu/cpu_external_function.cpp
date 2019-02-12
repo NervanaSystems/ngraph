@@ -174,7 +174,7 @@
 #include "ngraph/runtime/cpu/pass/cpu_workspace_insertion.hpp"
 #include "ngraph/runtime/cpu/pass/halide_subgraph_extraction.hpp"
 
-#ifdef NGRAPH_DISTRIBUTED
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
 #include "ngraph/op/allreduce.hpp"
 #endif
 
@@ -283,7 +283,7 @@ static StaticInitializers s_static_initializers(s_output_dir);
 
 static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Add), &runtime::cpu::CPU_Emitter::emit<op::Add>},
-#ifdef NGRAPH_DISTRIBUTED
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
     {TI(ngraph::op::AllReduce), &runtime::cpu::CPU_Emitter::emit<op::AllReduce>},
 #endif
     {TI(ngraph::op::MatmulBias), &runtime::cpu::CPU_Emitter::emit<op::MatmulBias>},
@@ -471,9 +471,15 @@ void runtime::cpu::CPU_ExternalFunction::compile()
         writer << "#include <tbb/flow_graph.h>";
     }
 
-#ifdef NGRAPH_DISTRIBUTED
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
+    writer << "#define NGRAPH_DISTRIBUTED_ENABLE\n";
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
     writer << "#include <mlsl.hpp>\n";
-    writer << "#define NGRAPH_DISTRIBUTED\n";
+    writer << "#define NGRAPH_DISTRIBUTED_MLSL_ENABLE\n";
+#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
+    writer << "#include <mpi.h>\n";
+    writer << "#define NGRAPH_DISTRIBUTED_OMPI_ENABLE\n";
+#endif
 #endif
 
     writer +=
@@ -1102,6 +1108,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
     REGISTER_KNOBBED_PASS(ReshapeElimination, false, ngraph::pass);
     REGISTER_KNOBBED_PASS(CoreFusion, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(CPUFusion, true, runtime::cpu::pass);
+    REGISTER_KNOBBED_PASS(CPUQuantFusion, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(CPUHorizontalFusion, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(CPUCollapseDims, true, runtime::cpu::pass);
 #if defined(NGRAPH_HALIDE)

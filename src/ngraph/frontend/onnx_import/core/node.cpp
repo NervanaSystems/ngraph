@@ -19,6 +19,7 @@
 #include "attribute.hpp"
 #include "graph.hpp"
 #include "node.hpp"
+#include "null_node.hpp"
 #include "tensor.hpp"
 
 namespace ngraph
@@ -122,7 +123,14 @@ namespace ngraph
             NodeVector result;
             for (const auto& name : m_node_proto->input())
             {
-                result.push_back(m_graph->get_ng_node_from_cache(name));
+                if (!name.empty())
+                {
+                    result.push_back(m_graph->get_ng_node_from_cache(name));
+                }
+                else
+                {
+                    result.push_back(std::make_shared<NullNode>());
+                }
             }
             return result;
         }

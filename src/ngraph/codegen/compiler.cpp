@@ -472,8 +472,14 @@ void codegen::CompilerCore::configure_search_path()
     add_header_search_path(CUDNN_HEADER_PATHS);
 #endif
 
-#ifdef NGRAPH_DISTRIBUTED
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
     add_header_search_path(MLSL_HEADER_PATH);
+#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
+    add_header_search_path(MPI_HEADER_PATH);
+#else
+    throw ngraph_error("Distributed Library not supported/mentioned");
+#endif
 #endif
 }
 

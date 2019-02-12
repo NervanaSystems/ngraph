@@ -14,16 +14,21 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "pyngraph/runtime/regmodule_pyngraph_runtime.hpp"
-#include <pybind11/pybind11.h>
+#include "distributed_setup.hpp"
 
-namespace py = pybind11;
-
-void regmodule_pyngraph_runtime(py::module m)
+void DistributedSetup::set_comm_size(int comm_size)
 {
-    py::module m_runtime =
-        m.def_submodule("runtime", "Package ngraph.impl.runtime wraps ngraph::runtime");
-    regclass_pyngraph_runtime_Tensor(m_runtime);
-    regclass_pyngraph_runtime_Backend(m_runtime);
-    regclass_pyngraph_runtime_Executable(m_runtime);
+    ngraph_dist_setup::distributed_comm_size = comm_size;
+}
+void DistributedSetup::set_comm_rank(int comm_rank)
+{
+    ngraph_dist_setup::distributed_comm_rank = comm_rank;
+}
+int DistributedSetup::get_comm_size()
+{
+    return ngraph_dist_setup::distributed_comm_size;
+}
+int DistributedSetup::get_comm_rank()
+{
+    return ngraph_dist_setup::distributed_comm_rank;
 }
