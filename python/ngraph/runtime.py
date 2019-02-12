@@ -20,7 +20,7 @@ from typing import List, Union
 import numpy as np
 
 from ngraph.impl import Function, Node, Shape, serialize, util
-from ngraph.impl.runtime import Backend, Tensor
+from ngraph.impl.runtime import Backend, Executable, Tensor
 from ngraph.utils.types import get_dtype, NumericData
 from ngraph.exceptions import UserInputError
 
@@ -93,7 +93,7 @@ class Computation(object):
                 value = np.array(value)
             Computation._write_ndarray_to_tensor_view(value, tensor_view)
 
-        self.runtime.backend.call(self.handle, self.result_views, self.tensor_views)
+        self.handle.call(self.result_views, self.tensor_views)
 
         results = []
         for result_view in self.result_views:

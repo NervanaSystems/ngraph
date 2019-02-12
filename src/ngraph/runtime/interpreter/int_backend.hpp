@@ -143,6 +143,7 @@ namespace ngraph
         namespace interpreter
         {
             class INTBackend;
+            class INTExecutable;
         }
     } // namespace runtime
 } // namespace ngraph
@@ -161,19 +162,27 @@ public:
 
     std::shared_ptr<Tensor> create_tensor(const element::Type& type, const Shape& shape) override;
 
-    Handle compile(std::shared_ptr<Function> function) override;
-
-    bool call(std::shared_ptr<Function> function,
-              const std::vector<std::shared_ptr<Tensor>>& outputs,
-              const std::vector<std::shared_ptr<Tensor>>& intputs) override;
-
-    void set_nan_check(std::shared_ptr<Function> func, bool);
-
-    void enable_performance_data(std::shared_ptr<Function> func, bool enable) override;
-    std::vector<PerformanceCounter>
-        get_performance_data(std::shared_ptr<Function> func) const override;
+    std::shared_ptr<Executable> compile(std::shared_ptr<Function> function,
+                                        bool enable_performance_data = false) override;
 
     bool is_supported(const Node& node) const override;
+
+private:
+    std::set<std::string> m_unsupported_op_name_list;
+};
+
+class ngraph::runtime::interpreter::INTExecutable : public Executable
+{
+public:
+    INTExecutable(const std::shared_ptr<Function>& function,
+                  bool enable_performance_collection = false);
+
+    bool call(const std::vector<std::shared_ptr<Tensor>>& outputs,
+              const std::vector<std::shared_ptr<Tensor>>& intputs) override;
+
+    void set_nan_check(bool enable);
+
+    std::vector<PerformanceCounter> get_performance_data() const override;
 
 private:
     int get_alignment() const { return 64; }
@@ -186,8 +195,7 @@ private:
         std::unordered_map<const Node*, stopwatch> m_timer_map;
         std::vector<NodeWrapper> m_wrapped_nodes;
         std::unordered_map<const Node*, std::shared_ptr<RNGState>> m_states;
-    };
-    std::map<std::shared_ptr<Function>, FunctionInstance> m_function_map;
+    } m_function_instance;
     std::set<std::string> m_unsupported_op_name_list;
 
     static void perform_nan_check(const std::vector<std::shared_ptr<HostTensor>>&,
