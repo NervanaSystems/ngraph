@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 
 namespace ngraph
@@ -36,7 +37,7 @@ namespace ngraph
     }
 }
 
-class ngraph::runtime::cpu::pass::LSTMFusion : public ngraph::pass::GraphRewrite
+class CPU_BACKEND_API ngraph::runtime::cpu::pass::LSTMFusion : public ngraph::pass::GraphRewrite
 {
 public:
     LSTMFusion()
@@ -51,20 +52,8 @@ private:
     void construct_lstm_fprop();
 };
 
-class ngraph::runtime::cpu::pass::BiDirectionalRnn : public ngraph::pass::GraphRewrite
-{
-public:
-    BiDirectionalRnn()
-        : GraphRewrite()
-    {
-        construct_bidirectional_rnn();
-    }
-
-private:
-    void construct_bidirectional_rnn();
-};
-
-class ngraph::runtime::cpu::pass::RNNFusion : public ngraph::pass::RecurrentGraphRewrite
+class CPU_BACKEND_API ngraph::runtime::cpu::pass::RNNFusion
+    : public ngraph::pass::RecurrentGraphRewrite
 {
 public:
     RNNFusion()
@@ -89,3 +78,17 @@ public:
 private:
     void construct_multi_layer_rnn_fusion_fprop();
 };
+
+class ngraph::runtime::cpu::pass::BiDirectionalRnn : public ngraph::pass::GraphRewrite
+{
+public:
+    BiDirectionalRnn()
+        : GraphRewrite()
+    {
+        construct_bidirectional_rnn();
+    }
+
+private:
+    void construct_bidirectional_rnn();
+};
+

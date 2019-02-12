@@ -193,13 +193,16 @@ namespace ngraph
                     auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
                     auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
                     auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
+                    auto& arg3_tensor = external_function->get_tensor_data(args[3].get_name());
                     auto& arg4_tensor = external_function->get_tensor_data(args[4].get_name());
                     auto& arg5_tensor = external_function->get_tensor_data(args[5].get_name());
                     auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
 
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    size_t arg3_size = args[3].get_size();
                     auto scales_size = shape_size(args[4].get_shape());
                     auto sum_scales_size = shape_size(args[5].get_shape());
+
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
 
                     auto conv_desc =
                         mkldnn_emitter
@@ -212,45 +215,58 @@ namespace ngraph
                     size_t conv_index = mkldnn_emitter->convolution_forward_init(true);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                    auto functor =
-                        [&, scales_size, sum_scales_size, conv_desc, conv_attr, deps, conv_index](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) mutable {
-                            if (ctx->first_iteration)
+                    auto functor = [&,
+                                    scales_size,
+                                    sum_scales_size,
+                                    conv_desc,
+                                    conv_attr,
+                                    deps,
+                                    conv_index,
+                                    arg3_size](CPURuntimeContext* ctx,
+                                               CPUExecutionContext* ectx) mutable {
+                        if (ctx->first_iteration)
+                        {
+                            vector<float> dyn_scales;
+                            vector<float> dyn_post_op_scales;
+                            dyn_scales.assign(static_cast<float*>(arg4_tensor),
+                                              static_cast<float*>(arg4_tensor) + scales_size);
+                            dyn_post_op_scales.assign(static_cast<float*>(arg5_tensor),
+                                                      static_cast<float*>(arg5_tensor) +
+                                                          sum_scales_size);
+                            auto old_pops = conv_attr.get_post_ops();
+                            mkldnn::post_ops new_pops;
+                            for (int i = 0; i < old_pops.len(); i++)
                             {
-                                vector<float> dyn_scales;
-                                vector<float> dyn_post_op_scales;
-                                dyn_scales.assign(static_cast<float*>(arg4_tensor),
-                                                  static_cast<float*>(arg4_tensor) + scales_size);
-                                dyn_post_op_scales.assign(static_cast<float*>(arg5_tensor),
-                                                          static_cast<float*>(arg5_tensor) +
-                                                              sum_scales_size);
-                                auto old_pops = conv_attr.get_post_ops();
-                                mkldnn::post_ops new_pops;
-                                for (int i = 0; i < old_pops.len(); i++)
+                                if (old_pops.kind(i) == mkldnn::primitive::kind::eltwise)
                                 {
-                                    if (old_pops.kind(i) == mkldnn::primitive::kind::eltwise)
-                                    {
-                                        mkldnn::algorithm alg;
-                                        float scale, alpha, beta;
-                                        old_pops.get_params_eltwise(i, scale, alg, alpha, beta);
-                                        new_pops.append_eltwise(scale, alg, alpha, beta);
-                                    }
-                                    if (old_pops.kind(i) == mkldnn::primitive::kind::sum)
-                                    {
-                                        new_pops.append_sum(dyn_post_op_scales[0]);
-                                    }
+                                    mkldnn::algorithm alg;
+                                    float scale, alpha, beta;
+                                    old_pops.get_params_eltwise(i, scale, alg, alpha, beta);
+                                    new_pops.append_eltwise(scale, alg, alpha, beta);
                                 }
-                                conv_attr.set_output_scales(0, dyn_scales);
-                                conv_attr.set_post_ops(new_pops);
-                                mkldnn_emitter->convolution_forward<true>(
-                                    conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
+                                if (old_pops.kind(i) == mkldnn::primitive::kind::sum)
+                                {
+                                    new_pops.append_sum(dyn_post_op_scales[0]);
+                                }
                             }
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], arg2_tensor);
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], out0_tensor);
-                            cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
-                        };
+                            conv_attr.set_output_scales(0, dyn_scales);
+                            conv_attr.set_post_ops(new_pops);
+                            mkldnn_emitter->convolution_forward<true>(
+                                conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
+                        }
+
+                        if (out0_tensor != arg3_tensor)
+                        {
+                            memcpy(static_cast<char*>(out0_tensor),
+                                   static_cast<char*>(arg3_tensor),
+                                   arg3_size);
+                        }
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], arg2_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], out0_tensor);
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+                    };
                     functors.emplace_back(functor);
                 }
                 else
@@ -269,13 +285,16 @@ namespace ngraph
                     auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
                     auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
                     auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
+                    auto& arg3_tensor = external_function->get_tensor_data(args[3].get_name());
                     auto& arg4_tensor = external_function->get_tensor_data(args[4].get_name());
                     auto& arg5_tensor = external_function->get_tensor_data(args[5].get_name());
                     auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
 
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    size_t arg3_size = args[3].get_size();
                     auto scales_size = shape_size(args[4].get_shape());
                     auto sum_scales_size = shape_size(args[5].get_shape());
+
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
 
                     auto conv_desc = mkldnn_emitter->get_convolution_forward_desc<
                         ngraph::op::QuantizedConvolutionBiasSignedAdd>(node, args, out);
@@ -284,45 +303,58 @@ namespace ngraph
                     size_t conv_index = mkldnn_emitter->convolution_forward_init(true);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                    auto functor =
-                        [&, scales_size, sum_scales_size, conv_desc, conv_attr, deps, conv_index](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) mutable {
-                            if (ctx->first_iteration)
+                    auto functor = [&,
+                                    scales_size,
+                                    sum_scales_size,
+                                    conv_desc,
+                                    conv_attr,
+                                    deps,
+                                    conv_index,
+                                    arg3_size](CPURuntimeContext* ctx,
+                                               CPUExecutionContext* ectx) mutable {
+                        if (ctx->first_iteration)
+                        {
+                            vector<float> dyn_scales;
+                            vector<float> dyn_post_op_scales;
+                            dyn_scales.assign(static_cast<float*>(arg4_tensor),
+                                              static_cast<float*>(arg4_tensor) + scales_size);
+                            dyn_post_op_scales.assign(static_cast<float*>(arg5_tensor),
+                                                      static_cast<float*>(arg5_tensor) +
+                                                          sum_scales_size);
+                            auto old_pops = conv_attr.get_post_ops();
+                            mkldnn::post_ops new_pops;
+                            for (int i = 0; i < old_pops.len(); i++)
                             {
-                                vector<float> dyn_scales;
-                                vector<float> dyn_post_op_scales;
-                                dyn_scales.assign(static_cast<float*>(arg4_tensor),
-                                                  static_cast<float*>(arg4_tensor) + scales_size);
-                                dyn_post_op_scales.assign(static_cast<float*>(arg5_tensor),
-                                                          static_cast<float*>(arg5_tensor) +
-                                                              sum_scales_size);
-                                auto old_pops = conv_attr.get_post_ops();
-                                mkldnn::post_ops new_pops;
-                                for (int i = 0; i < old_pops.len(); i++)
+                                if (old_pops.kind(i) == mkldnn::primitive::kind::eltwise)
                                 {
-                                    if (old_pops.kind(i) == mkldnn::primitive::kind::eltwise)
-                                    {
-                                        mkldnn::algorithm alg;
-                                        float scale, alpha, beta;
-                                        old_pops.get_params_eltwise(i, scale, alg, alpha, beta);
-                                        new_pops.append_eltwise(scale, alg, alpha, beta);
-                                    }
-                                    if (old_pops.kind(i) == mkldnn::primitive::kind::sum)
-                                    {
-                                        new_pops.append_sum(2 * dyn_post_op_scales[0]);
-                                    }
+                                    mkldnn::algorithm alg;
+                                    float scale, alpha, beta;
+                                    old_pops.get_params_eltwise(i, scale, alg, alpha, beta);
+                                    new_pops.append_eltwise(scale, alg, alpha, beta);
                                 }
-                                conv_attr.set_post_ops(new_pops);
-                                conv_attr.set_output_scales(0, dyn_scales);
-                                mkldnn_emitter->convolution_forward<true>(
-                                    conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
+                                if (old_pops.kind(i) == mkldnn::primitive::kind::sum)
+                                {
+                                    new_pops.append_sum(dyn_post_op_scales[0]);
+                                }
                             }
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], arg2_tensor);
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], out0_tensor);
-                            cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
-                        };
+                            conv_attr.set_post_ops(new_pops);
+                            conv_attr.set_output_scales(0, dyn_scales);
+                            mkldnn_emitter->convolution_forward<true>(
+                                conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
+                        }
+
+                        if (out0_tensor != arg3_tensor)
+                        {
+                            memcpy(static_cast<char*>(out0_tensor),
+                                   static_cast<char*>(arg3_tensor),
+                                   arg3_size);
+                        }
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], arg2_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], out0_tensor);
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+                    };
                     functors.emplace_back(functor);
                 }
                 else

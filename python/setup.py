@@ -373,10 +373,6 @@ class BuildExt(build_ext):
         build_ext.build_extensions(self)
 
 
-if sys.platform == 'darwin':
-    # This turns out to be needed when building using Anaconda python on macOS.
-    os.environ['MACOSX_DEPLOYMENT_TARGET'] = '10.9'
-
 with open(os.path.join(PYNGRAPH_ROOT_DIR, 'requirements.txt')) as req:
     requirements = req.read().splitlines()
 

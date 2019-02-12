@@ -180,8 +180,8 @@ protected:
         }
     }
 
-    float expected;
-    int tolerance_bits;
+    float expected{0};
+    int tolerance_bits{0};
     float upper_bound;
     float lower_bound;
     float past_upper_bound;
@@ -299,8 +299,8 @@ protected:
         }
     }
 
-    double expected;
-    int tolerance_bits;
+    double expected{0};
+    int tolerance_bits{0};
     double upper_bound;
     double lower_bound;
     double past_upper_bound;

@@ -32,14 +32,15 @@ set(SRC
     control_dependencies.cpp
     coordinate.cpp
     copy.cpp
+    core.cpp
     cpio.cpp
     cse.cpp
     element_type.cpp
     file_util.cpp
-    graph_partition.cpp
     includes.cpp
     input_output_assign.cpp
     main.cpp
+    misc.cpp
     nop_elimination.cpp
     op.cpp
     partial_shape.cpp
@@ -58,6 +59,10 @@ set(SRC
     uuid.cpp
     zero_dim_tensor_elimination.cpp
 )
+
+if(NGRAPH_DISTRIBUTED_ENABLE)
+    list(APPEND SRC distributed_setup.cpp)
+endif()
 
 set_source_files_properties(includes.cpp PROPERTIES COMPILE_DEFINITIONS
     NGRAPH_INCLUDES="${PROJECT_SOURCE_DIR}/src/ngraph")
@@ -183,8 +188,16 @@ if(NGRAPH_ADDRESS_SANITIZER)
 endif()
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
-    target_compile_definitions(unit-test PRIVATE NGRAPH_DISTRIBUTED)
-    target_link_libraries(unit-test PRIVATE libmlsl)
+    if(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
+        target_link_libraries(unit-test PRIVATE libmlsl)
+    elseif(NGRAPH_DISTRIBUTED_OMPI_ENABLE)
+        find_package(MPI REQUIRED)
+        target_include_directories(unit-test
+        SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+        target_link_libraries(unit-test PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+    else()
+            message(FATAL_ERROR "Distributed Library not supported/mentioned")
+    endif()
 endif()
 
 target_link_libraries(unit-test PRIVATE ngraph_test_util)
@@ -199,7 +212,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
 endif()
 
 if (NGRAPH_CPU_ENABLE)
-    # The INTERPRETER backend is required for graph_partition, convolution, and backwards unit tests
+    # The INTERPRETER backend is required for convolution, and backwards unit tests
     target_link_libraries(unit-test PRIVATE cpu_backend interpreter_backend)
     target_link_libraries(unit-test PRIVATE libmkldnn)
 endif()
@@ -245,10 +258,19 @@ if (NGRAPH_ONNXIFI_ENABLE)
     target_link_libraries(unit-test PRIVATE onnxifi-ngraph)
 endif()
 
-add_custom_target(unit-test-check
-    COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
-    DEPENDS unit-test
-)
+# If all the runtime libraries are installed into one location, that will make life easier.
+if (MSVS)
+    add_custom_target(unit-test-check
+        COMMAND set "PATH=${EXTERNAL_PROJECTS_ROOT}/src/ngraph/Release;${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/;${EXTERNAL_PROJECTS_ROOT}/mkl/src/ext_mkl/lib/;${EXTERNAL_PROJECTS_ROOT}/ext_tbb-prefix/src/ext_tbb/tbb2019_20181203oss/bin/intel64/vc14;%PATH%"
+        COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
+        DEPENDS unit-test
+    )
+else()
+    add_custom_target(unit-test-check
+        COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
+        DEPENDS unit-test
+    )
+endif()
 
 add_custom_target(check
     DEPENDS

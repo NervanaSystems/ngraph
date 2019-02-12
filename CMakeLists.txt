@@ -27,6 +27,14 @@ if("${CMAKE_GENERATOR}" STREQUAL "Ninja")
     message(FATAL_ERROR "Ninja generator not supported.")
 endif()
 
+if (CMAKE_BUILD_TYPE)
+    set(RELEASE_TYPES Debug Release RelWithDebInfo MinSizeRel)
+    list(FIND RELEASE_TYPES ${CMAKE_BUILD_TYPE} INDEX_FOUND)
+    if (${INDEX_FOUND} EQUAL -1)
+        message(FATAL_ERROR "CMAKE_BUILD_TYPE must be one of Debug, Release, RelWithDebInfo, or MinSizeRel")
+    endif()
+endif()
+
 include(git_tags)
 include(var_functions)
 
@@ -76,16 +84,13 @@ set(NGRAPH_FORWARD_CMAKE_ARGS
 
 if (NOT MSVS)
     if(NOT CMAKE_BUILD_TYPE)
-        set(NGRAPH_FORWARD_CMAKE_ARGS
-                ${NGRAPH_FORWARD_CMAKE_ARGS}
-                -DCMAKE_BUILD_TYPE=Release
-                )
-    else()
-        set(NGRAPH_FORWARD_CMAKE_ARGS
-                ${NGRAPH_FORWARD_CMAKE_ARGS}
-                -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-                )
+        set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type" FORCE)
     endif()
+
+    set(NGRAPH_FORWARD_CMAKE_ARGS
+            ${NGRAPH_FORWARD_CMAKE_ARGS}
+            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+            )
 endif()
 message(STATUS "NGRAPH_FORWARD_CMAKE_ARGS ${NGRAPH_FORWARD_CMAKE_ARGS}")
 
@@ -106,16 +111,34 @@ option(NGRAPH_INTERPRETER_ENABLE "Control the building of the INTERPRETER backen
 option(NGRAPH_NOP_ENABLE "Control the building of the NOP backend" TRUE)
 option(NGRAPH_GPUH_ENABLE "Control the building of the Hybrid GPU backend" FALSE)
 option(NGRAPH_GENERIC_CPU_ENABLE "Enable build nGraph for generic CPU backend" FALSE)
-option(NGRAPH_DISTRIBUTED_ENABLE "Add distributed mode to the CPU backend" FALSE)
 option(NGRAPH_DEBUG_ENABLE "Enable output for NGRAPH_DEBUG statements" FALSE)
 option(NGRAPH_ONNX_IMPORT_ENABLE "Enable ONNX importer" FALSE)
 option(NGRAPH_DEX_ONLY "Build CPU DEX without codegen" FALSE)
 option(NGRAPH_CODE_COVERAGE_ENABLE "Enable code coverage data collection" FALSE)
 option(NGRAPH_LIB_VERSIONING_ENABLE "Enable shared library versioning" FALSE)
 option(NGRAPH_PYTHON_BUILD_ENABLE "Enable build nGraph python package wheel" FALSE)
+option(NGRAPH_DISTRIBUTED_MLSL_ENABLE "Add distributed MLSL mode for CPU only backend" FALSE)
+option(NGRAPH_DISTRIBUTED_OMPI_ENABLE "Add distributed Open-MPI mode for all backend" FALSE)
+option(NGRAPH_PLAIDML_ENABLE "Enable the PlaidML backend" ${PLAIDML_FOUND})
 
 if (NGRAPH_GPUH_ENABLE)
     set(NGRAPH_GPU_ENABLE TRUE)
+endif()
+
+if (NGRAPH_DISTRIBUTED_MLSL_ENABLE AND NGRAPH_DISTRIBUTED_OMPI_ENABLE)
+    message(FATAL_ERROR 
+                "Does not support the use of two distributed libraries simultaneously.\n"
+                "If CPU only backend recommend Intel MLSL by setting NGRAPH_DISTRIBUTED_MLSL_ENABLE flag to true.\n"
+                "For all other backends use OpenMPI by setting NGRAPH_DISTRIBUTED_OMPI_ENABLE flag to true.\n")
+elseif(NGRAPH_DISTRIBUTED_MLSL_ENABLE  OR NGRAPH_DISTRIBUTED_OMPI_ENABLE) 
+    set(NGRAPH_DISTRIBUTED_ENABLE TRUE)
+else()
+    set(NGRAPH_DISTRIBUTED_ENABLE FALSE)
+endif()
+
+if (NGRAPH_ONNX_IMPORT_ENABLE)
+    option(NGRAPH_USE_SYSTEM_PROTOBUF "Use system provided Protobuf shared object" FALSE)
+    option(NGRAPH_ONNXIFI_ENABLE "Enable ONNX Interface for Framework Integration" TRUE)
 endif()
 
 message(STATUS "NGRAPH_UNIT_TEST_ENABLE:      ${NGRAPH_UNIT_TEST_ENABLE}")
@@ -127,7 +150,8 @@ message(STATUS "NGRAPH_INTERPRETER_ENABLE:    ${NGRAPH_INTERPRETER_ENABLE}")
 message(STATUS "NGRAPH_NOP_ENABLE:            ${NGRAPH_NOP_ENABLE}")
 message(STATUS "NGRAPH_GPUH_ENABLE:           ${NGRAPH_GPUH_ENABLE}")
 message(STATUS "NGRAPH_GENERIC_CPU_ENABLE:    ${NGRAPH_GENERIC_CPU_ENABLE}")
-message(STATUS "NGRAPH_DISTRIBUTED_ENABLE:    ${NGRAPH_DISTRIBUTED_ENABLE}")
+message(STATUS "NGRAPH_DISTRIBUTED_MLSL_ENABLE:    ${NGRAPH_DISTRIBUTED_MLSL_ENABLE}")
+message(STATUS "NGRAPH_DISTRIBUTED_OMPI_ENABLE:    ${NGRAPH_DISTRIBUTED_OMPI_ENABLE}")
 message(STATUS "NGRAPH_DEBUG_ENABLE:          ${NGRAPH_DEBUG_ENABLE}")
 message(STATUS "NGRAPH_ONNX_IMPORT_ENABLE:    ${NGRAPH_ONNX_IMPORT_ENABLE}")
 message(STATUS "NGRAPH_DEX_ONLY:              ${NGRAPH_DEX_ONLY}")
@@ -135,22 +159,6 @@ message(STATUS "NGRAPH_CODE_COVERAGE_ENABLE:  ${NGRAPH_CODE_COVERAGE_ENABLE}")
 message(STATUS "NGRAPH_LIB_VERSIONING_ENABLE: ${NGRAPH_LIB_VERSIONING_ENABLE}")
 message(STATUS "NGRAPH_PYTHON_BUILD_ENABLE:   ${NGRAPH_PYTHON_BUILD_ENABLE}")
 message(STATUS "NGRAPH_USE_PREBUILT_LLVM:     ${NGRAPH_USE_PREBUILT_LLVM}")
-
-if (NGRAPH_ONNX_IMPORT_ENABLE)
-    option(NGRAPH_USE_SYSTEM_PROTOBUF "Use system provided Protobuf shared object" FALSE)
-    option(NGRAPH_ONNXIFI_ENABLE "Enable ONNX Interface for Framework Integration" TRUE)
-endif()
-
-find_package(PlaidML CONFIG)
-
-option(NGRAPH_PLAIDML_ENABLE "Enable the PlaidML backend" ${PLAIDML_FOUND})
-
-if (NGRAPH_PLAIDML_ENABLE)
-    if (NOT PLAIDML_FOUND)
-        message(FATAL_ERROR "PlaidML not installed")
-    endif()
-endif()
-
 message(STATUS "NGRAPH_PLAIDML_ENABLE:        ${NGRAPH_PLAIDML_ENABLE}")
 
 #-----------------------------------------------------------------------------------------------
@@ -257,7 +265,21 @@ if (NGRAPH_CPU_ENABLE)
 endif()
 
 if (NGRAPH_PLAIDML_ENABLE)
+    find_package(PlaidML CONFIG)
+    if (NOT PLAIDML_FOUND)
+        message(FATAL_ERROR "PlaidML not installed")
+    endif()
+
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_PlaidML_ENABLE")
+endif()
+
+if (NGRAPH_DISTRIBUTED_ENABLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_DISTRIBUTED_ENABLE")
+    if (NGRAPH_DISTRIBUTED_MLSL_ENABLE)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_DISTRIBUTED_MLSL_ENABLE")
+    elseif (NGRAPH_DISTRIBUTED_OMPI_ENABLE)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_DISTRIBUTED_OMPI_ENABLE")
+    endif()
 endif()
 
 if (NOT DEFINED NGRAPH_TBB_ENABLE)
@@ -327,19 +349,19 @@ include(cmake/external_cldnn.cmake)
 
 if (NGRAPH_USE_PREBUILT_LLVM OR DEFINED LLVM_TARBALL_URL)
     include(cmake/external_llvm_prebuilt.cmake)
-else()
+elseif (NOT NGRAPH_DEX_ONLY OR NOT MSVS)
     include(cmake/external_llvm.cmake)
 endif()
 
-if (WIN32)
+if (WIN32 OR APPLE)
     include(cmake/external_tbb_prebuilt.cmake)
 else()
     include(cmake/external_tbb.cmake)
 endif()
-if (NGRAPH_DISTRIBUTED_ENABLE)
+
+if (NGRAPH_DISTRIBUTED_MLSL_ENABLE)
     include(cmake/external_mlsl.cmake)
 endif()
-
 
 if (NGRAPH_HALIDE)
     message(WARNING "Halide build system integration is currently using an older LLVM release \
