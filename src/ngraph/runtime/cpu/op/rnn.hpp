@@ -62,8 +62,6 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            // TODO: populate this enum when a new variant of RNN kernel is added to MKLDNN
-
             ngraph::runtime::cpu::mkldnn_utils::rnntype get_rnn_type() const { return m_rnntype; }
             size_t get_num_timesteps() const { return m_num_timesteps; }
             size_t get_src_sequence_length() const { return m_src_sequence_length; }
