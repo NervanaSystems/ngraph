@@ -35,6 +35,7 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | Conv | 1- |
 | ConvTranspose | 1- | 
 | Cos | 7- |
+| Cosh | 9- |
 | Div | 1-6-7- | 
 | Dropout | 1-6-7- | Only for inference.
 | Elu | 1-6- |
@@ -79,7 +80,9 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | Selu | 1-6- | 
 | Shape | 1- | 
 | Sigmoid | 1-6- | 
+| Sign | 9- |
 | Sin | 7- | 
+| Sinh | 9- |
 | Size | 1- | 
 | Slice | 1- | 
 | Softmax | 1- |
@@ -151,7 +154,4 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | InstanceNormalization | - | | 436 | Just an equation. For per channel computation may _slice/op/concat_ pattern need to be used. |
 | Shrink | (9) | | 449 | Just an easy equation. |
 | TopK | - | | 327. | Use nGraph `Topk`. |
-| Cosh | (9) | | 448 | Use nGraph `Cosh`. |
-| Sign | (9) | | 448 | Use nGraph `Sign`. |
-| Sinh | (9) | | 448 | Use nGraph `Sinh`. |
 | Where | (9) | | 448 |  Use nGraph `Select`. |
