@@ -877,8 +877,24 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
         auto layer_rnn_ht = std::make_shared<op::GetOutputElement>(rnn, 0);
         size_t batch_size = layer_rnn_ht->get_shape()[0] / num_time_steps;
         size_t feature_size = layer_rnn_ht->get_shape()[1];
-        auto layer_rnn_ht_reshape = std::make_shared<op::Reshape>(
-            layer_rnn_ht, AxisVector{0, 1}, Shape{num_time_steps, batch_size, feature_size});
+
+        // if the shape doesnt match, we will logically reshape it to expaned_dims{tnc} from squeezed_dims{t*n, c}
+        std::shared_ptr<Node> layer_rnn_ht_reshape = layer_rnn_ht;
+        if (m.get_match_root()->get_shape() != layer_rnn_ht->get_shape())
+        {
+            layer_rnn_ht_reshape = std::make_shared<op::Reshape>(
+                layer_rnn_ht, AxisVector{0, 1}, Shape{num_time_steps, batch_size, feature_size});
+        }
+
+        // we will check if the node being replaced is in Shape{n, t, c}, if so we will transpose
+        if (m.get_match_root()->get_shape() == Shape{batch_size, num_time_steps, feature_size})
+        {
+            layer_rnn_ht_reshape =
+                std::make_shared<op::Reshape>(layer_rnn_ht_reshape,
+                                              AxisVector{1, 0, 2},
+                                              Shape{batch_size, num_time_steps, feature_size});
+        }
+
         ngraph::replace_node(m.get_match_root(), layer_rnn_ht_reshape);
         return true;
     };

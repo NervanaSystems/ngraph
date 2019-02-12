@@ -141,21 +141,8 @@ void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_
     {
         auto tensor_shape = this->get_shape();
         auto input_desc = cpu_tvl->get_mkldnn_md();
-
-        // if output tensor dims == 3, then we should create the shape in mkldnn_tnc order,
-        // we will fetch the shape info from input
-        auto output_shape = this->get_shape();
-        auto input_ndims = input_desc.data.ndims;
-        if (this->get_shape().size() == 3 && input_ndims == 3)
-        {
-            auto input_dims = input_desc.data.dims;
-            for (size_t i = 0; i < input_ndims; i++)
-            {
-                output_shape[i] = *(input_dims + i);
-            }
-        }
         auto output_desc = mkldnn_utils::create_blocked_mkldnn_md(
-            output_shape, cpu_tvl->get_strides(), this->get_element_type());
+            this->get_shape(), cpu_tvl->get_strides(), this->get_element_type());
 
         memory input{{input_desc, executor::global_cpu_engine}, aligned_buffer};
         memory output{{output_desc, executor::global_cpu_engine}, target};

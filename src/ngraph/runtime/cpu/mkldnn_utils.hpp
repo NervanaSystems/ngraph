@@ -113,14 +113,6 @@ namespace ngraph
                     vanilla_gru,
                     vanilla_lstm
                 };
-
-                enum rnndirection
-                {
-                    left_to_right,
-                    right_to_left,
-                    bi_concat,
-                    bi_sum
-                };
             }
         }
     }
