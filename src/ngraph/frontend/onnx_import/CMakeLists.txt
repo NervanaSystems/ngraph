@@ -32,6 +32,8 @@ add_library(onnx_import STATIC
         core/model.cpp
         core/model.hpp
         core/node.hpp
+        core/null_node.cpp
+        core/null_node.hpp
         core/operator_set.hpp
         core/tensor.hpp
         core/value_info.hpp
