@@ -37,6 +37,7 @@
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
+#include "ngraph/op/quantize.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
@@ -1188,6 +1189,31 @@ namespace ngraph
                 }
 
                 template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::Quantize)
+                {
+                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                      auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                      auto i_fmt = input_md.data.format;
+                      // reorder as nhwc for mkldnn input data
+                      if (i_fmt == mkldnn::memory::format::nChw8c ||
+                          i_fmt == mkldnn::memory::format::nChw16c) {
+                          vector<memory::desc> o_mds;
+                          auto input_shape = node->get_input_shape(0);
+                          memory::dims data_shape(input_shape.begin(), input_shape.end());
+                          const memory::desc data_desc(
+                              data_shape,
+                              mkldnn_utils::get_mkldnn_data_type(node->get_element_type()),
+                              memory::format::nhwc);
+                          o_mds.push_back(data_desc);
+                          set_output_layouts(node, o_mds);
+                          return;
+                      }
+                    }
+                    set_native_layouts(external_function, node);
+                }
+
+                template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::MaxPoolWithIndices)
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
@@ -1962,6 +1988,8 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedMaxPool>},
     {TI(ngraph::op::QuantizedAvgPool),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedAvgPool>},
+    {TI(ngraph::op::Quantize),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::Quantize>},
     {TI(ngraph::op::MaxPoolWithIndices),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::MaxPoolWithIndices>},
     {TI(ngraph::op::MaxPoolBackprop),
