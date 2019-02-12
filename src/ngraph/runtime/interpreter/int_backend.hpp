@@ -132,7 +132,7 @@
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/state/rng_state.hpp"
 
-#ifdef NGRAPH_DISTRIBUTED
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
 #include "ngraph/runtime/reference/allreduce.hpp"
 #endif
 
@@ -251,7 +251,7 @@ private:
             break;
         }
         case OP_TYPEID::AllReduce: {
-#ifdef NGRAPH_DISTRIBUTED
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
             reference::allreduce<T>(static_cast<T*>(const_cast<void*>(args[0])),
                                     static_cast<T*>(out[0]),
                                     node.get_input_element_type(0),

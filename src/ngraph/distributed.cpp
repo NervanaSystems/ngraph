@@ -14,37 +14,90 @@
 // limitations under the License.
 //*****************************************************************************
 
-#ifdef NGRAPH_DISTRIBUTED
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
 
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
 #include <mlsl.hpp>
+#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
+#include <mpi.h>
+#endif
 
 #include "ngraph/distributed.hpp"
+#include "ngraph/log.hpp"
 
 using namespace ngraph;
 
 ngraph::Distributed::Distributed()
 {
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
     if (!MLSL::Environment::GetEnv().IsInitialized())
     {
         MLSL::Environment::GetEnv().Init(nullptr, nullptr);
+        this_init_comm = true;
     }
+#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
+    int flag = 0;
+    MPI_Initialized(&flag);
+    if (!flag)
+    {
+        MPI_Init(NULL, NULL);
+        this_init_comm = true;
+    }
+#else
+    throw ngraph_error("Distributed Library not supported/mentioned");
+#endif
 }
 
 ngraph::Distributed::~Distributed()
 {
+    if (this_init_comm == true)
+    {
+        finalize();
+    }
+}
+
+void ngraph::Distributed::finalize()
+{
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
     if (MLSL::Environment::GetEnv().IsInitialized())
     {
         MLSL::Environment::GetEnv().Finalize();
     }
+#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
+    int flag = 0;
+    MPI_Initialized(&flag);
+    if (flag)
+    {
+        MPI_Finalize();
+    }
+#else
+    throw ngraph_error("Distributed Library not supported/mentioned");
+#endif
 }
 
-size_t ngraph::Distributed::get_size() const
+int ngraph::Distributed::get_size() const
 {
-    return MLSL::Environment::GetEnv().GetProcessCount();
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
+    return static_cast<int>(MLSL::Environment::GetEnv().GetProcessCount());
+#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
+    int size;
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    return size;
+#else
+    throw ngraph_error("Distributed Library not supported/mentioned");
+#endif
 }
 
-size_t ngraph::Distributed::get_rank() const
+int ngraph::Distributed::get_rank() const
 {
-    return MLSL::Environment::GetEnv().GetProcessIdx();
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
+    return static_cast<int>(MLSL::Environment::GetEnv().GetProcessIdx());
+#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    return rank;
+#else
+    throw ngraph_error("Distributed Library not supported/mentioned");
+#endif
 }
 #endif
