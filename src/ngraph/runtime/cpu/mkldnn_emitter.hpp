@@ -37,6 +37,7 @@
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
+#include "ngraph/runtime/cpu/op/rnn_utils.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -480,11 +481,9 @@ namespace ngraph
                     auto get_mkldnn_rnn_cell_type = [&]() {
                         switch (rnn_node->get_rnn_type())
                         {
-                        case mkldnn_utils::rnntype::vanilla_rnn:
-                            return mkldnn::algorithm::vanilla_rnn;
-                        case mkldnn_utils::rnntype::vanilla_gru:
-                            return mkldnn::algorithm::vanilla_gru;
-                        case mkldnn_utils::rnntype::vanilla_lstm:
+                        case rnn_utils::rnntype::vanilla_rnn: return mkldnn::algorithm::vanilla_rnn;
+                        case rnn_utils::rnntype::vanilla_gru: return mkldnn::algorithm::vanilla_gru;
+                        case rnn_utils::rnntype::vanilla_lstm:
                             return mkldnn::algorithm::vanilla_lstm;
                         default: throw ngraph_error("unsupported mkldnn rnn algorithm");
                         }

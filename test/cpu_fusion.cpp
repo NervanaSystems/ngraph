@@ -67,6 +67,7 @@
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
+#include "ngraph/runtime/cpu/op/rnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/runtime/cpu/op/update_slice.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
@@ -2180,8 +2181,8 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
     const int num_rnn_cell_states = 2;
     const int rnn_direction = 1;
     const int num_of_rnn_fused_layer = 1;
-    ngraph::runtime::cpu::mkldnn_utils::rnntype rnn_type =
-        ngraph::runtime::cpu::mkldnn_utils::rnntype::vanilla_lstm;
+    ngraph::runtime::cpu::rnn_utils::rnntype rnn_type =
+        ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_lstm;
 
     auto rnn_node = make_shared<op::Rnn>(src_layer,
                                          src_iter,

@@ -50,6 +50,7 @@
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
+#include "ngraph/runtime/cpu/op/rnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 
 #define STR(X) #X
@@ -269,8 +270,8 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
             auto slc = weights_layer->get_shape()[0];
             auto dic = weights_iter->get_shape()[1] / (lstm_n_gates * direction * layers);
             auto sic = weights_iter->get_shape()[0];
-            ngraph::runtime::cpu::mkldnn_utils::rnntype rnn_type =
-                ngraph::runtime::cpu::mkldnn_utils::rnntype::vanilla_lstm;
+            ngraph::runtime::cpu::rnn_utils::rnntype rnn_type =
+                ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_lstm;
 
             if (dlc != dic)
             {
@@ -352,8 +353,8 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
     auto lstm_bias = std::make_shared<op::Add>(lstm_bias_layer_shared, lstm_bias_iter_shared);
     auto lstm_bias_label =
         std::make_shared<pattern::op::Label>(lstm_bias, nullptr, NodeVector{lstm_bias});
-    ngraph::runtime::cpu::mkldnn_utils::rnntype ref_rnn_type =
-        ngraph::runtime::cpu::mkldnn_utils::rnntype::vanilla_lstm;
+    ngraph::runtime::cpu::rnn_utils::rnntype ref_rnn_type =
+        ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_lstm;
 
     auto lstm = std::make_shared<op::Lstm>(lstm_src_layer,
                                            lstm_src_iter_label,
@@ -411,8 +412,8 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         const size_t num_cell_states = 2;
         const size_t direction = 1;
         const size_t num_fused_rnn_layers = 1;
-        ngraph::runtime::cpu::mkldnn_utils::rnntype rnn_type =
-            ngraph::runtime::cpu::mkldnn_utils::rnntype::vanilla_lstm;
+        ngraph::runtime::cpu::rnn_utils::rnntype rnn_type =
+            ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_lstm;
 
         NGRAPH_DEBUG << "src_layer: " << join(rnn_src_layer->get_shape());
         NGRAPH_DEBUG << "src_iter: " << join(rnn_src_iter->get_shape());
@@ -581,8 +582,8 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
     const size_t ref_num_rnn_cell_states = 2;
     const size_t ref_rnn_direction = 1;
     const size_t ref_num_of_rnn_fused_layer = 1;
-    ngraph::runtime::cpu::mkldnn_utils::rnntype ref_rnn_type =
-        ngraph::runtime::cpu::mkldnn_utils::rnntype::vanilla_lstm;
+    ngraph::runtime::cpu::rnn_utils::rnntype ref_rnn_type =
+        ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_lstm;
 
     auto ref_rnn_node = std::make_shared<op::Rnn>(rnn_src_layer,
                                                   rnn_src_iter,
@@ -643,7 +644,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         size_t num_rnn_cell_states = rnn_nodes[0]->get_num_cell_states();
         size_t rnn_direction = rnn_nodes[0]->get_direction();
         size_t num_fused_rnn_layers = rnn_nodes.size();
-        ngraph::runtime::cpu::mkldnn_utils::rnntype rnn_type = rnn_nodes[0]->get_rnn_type();
+        ngraph::runtime::cpu::rnn_utils::rnntype rnn_type = rnn_nodes[0]->get_rnn_type();
 
         for (auto rnn_node : rnn_nodes)
         {
@@ -844,8 +845,8 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
         size_t num_rnn_cell_states = rnn_ltor_node->get_num_cell_states();
         size_t rnn_direction = 2;
         size_t num_fused_rnn_layers = 1;
-        ngraph::runtime::cpu::mkldnn_utils::rnntype rnn_type =
-            ngraph::runtime::cpu::mkldnn_utils::rnntype::vanilla_lstm;
+        ngraph::runtime::cpu::rnn_utils::rnntype rnn_type =
+            ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_lstm;
 
         auto construct_birnn_inputs = [&](int index) {
 

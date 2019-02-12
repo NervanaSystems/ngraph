@@ -52,7 +52,7 @@ op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
              size_t num_cell_states,
              size_t direction,
              size_t num_fused_layers,
-             ngraph::runtime::cpu::mkldnn_utils::rnntype rnn_type)
+             ngraph::runtime::cpu::rnn_utils::rnntype rnn_type)
     : Op("Rnn", check_single_output_args({src_layer, src_iter, weights_layer, weights_iter, bias}))
     , m_num_timesteps(num_timesteps)
     , m_num_gates_per_cell(num_gates_per_cell)

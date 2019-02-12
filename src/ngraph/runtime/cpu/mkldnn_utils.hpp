@@ -122,14 +122,6 @@ namespace ngraph
                     }
                     return true;
                 }
-
-                // TODO(pruthvi): Populate this enums based of addition of new MKLDNN RNN variants
-                enum rnntype
-                {
-                    vanilla_rnn,
-                    vanilla_gru,
-                    vanilla_lstm
-                };
             }
         }
     }
