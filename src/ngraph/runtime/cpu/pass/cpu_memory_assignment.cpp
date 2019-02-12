@@ -721,10 +721,16 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                         NGRAPH_ASSERT(m_tensor_to_key_map.find(output_tensor) !=
                                       m_tensor_to_key_map.end());
                         auto output_key = m_tensor_to_key_map[output_tensor];
-                        // check buffer sizes, if required output buffer is larger than input buffer, do not reuse input buffer
+
                         NGRAPH_ASSERT(m_key_to_tensors_set_map.find(input_key) !=
                                       m_key_to_tensors_set_map.end());
+                        // do not modify function input, so no destructive oi
+                        if (m_key_to_tensors_set_map[input_key].first == CPUTensorRole::INPUT)
+                        {
+                            continue;
+                        }
                         auto input_set = m_key_to_tensors_set_map[input_key].second;
+                        // check buffer sizes, if required output buffer is larger than input buffer, do not reuse input buffer
                         // get the largest tensor size, which is the size of the memory buffer for the set
                         size_t input_size = input_tensor->size();
                         // get the smallest offset, which is the offset of the memory buffer for the set
@@ -765,6 +771,9 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                         // set the tensor offset for tensors in the set containing the output tensor to the starting offset
                         // of the set of input tensor.
                         // do not combine those two sets.
+                        // change the label of output tensor set to that of input tensor set
+                        m_key_to_tensors_set_map[output_key].first =
+                            m_key_to_tensors_set_map[input_key].first;
                         for (auto& ele_t : m_key_to_tensors_set_map[output_key].second)
                         {
                             ele_t->set_pool_offset(offset);
