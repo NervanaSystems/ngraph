@@ -31,6 +31,7 @@ namespace ngraph
         namespace intelgpu
         {
             class IntelGPUBackend;
+            class IntelGPUExecutable;
         }
     }
 }
@@ -47,33 +48,51 @@ public:
     std::shared_ptr<ngraph::runtime::Tensor>
         create_tensor(const ngraph::element::Type& element_type, const Shape& shape) override;
 
-    Handle compile(std::shared_ptr<Function> func) override;
-
-    bool call(std::shared_ptr<Function> func,
-              const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-              const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
-
-    void remove_compiled_function(std::shared_ptr<Function> func) override;
-    void enable_performance_data(std::shared_ptr<Function> func, bool enable) override;
-    std::vector<PerformanceCounter>
-        get_performance_data(std::shared_ptr<Function> func) const override;
+    std::shared_ptr<runtime::Executable> compile(std::shared_ptr<Function> func,
+                                                 bool enable_timing = false) override;
+    void remove_compiled_function(std::shared_ptr<runtime::Executable> exec) override;
 
     bool is_supported_property(const Property prop) const override;
 
 private:
-    class FunctionInstance
-    {
-    public:
-        std::shared_ptr<cldnn::network> ocl_network = nullptr;
-        bool m_performance_counters_enabled = false;
-        double m_compilation_time = 0.0;
-        double m_consumed_memory = 0.0;
-    };
+    std::shared_ptr<cldnn::engine> cldnn_engine;
+    std::map<std::shared_ptr<Function>, std::shared_ptr<runtime::Executable>> cldnn_networks;
 
-    std::map<std::shared_ptr<Function>, FunctionInstance> ocl_networks;
-    std::shared_ptr<cldnn::engine> ocl_engine;
-
+    bool m_profile_enable = false;
+    long m_profile_lines_limit_count = 10;
+    bool m_dump_graph_enable = false;
+    bool m_cldnn_graph_optimize = true;
+    bool m_cldnn_dump_enable = false;
+    bool m_function_cache_disabled = false;
     bool m_disable_backend_optimizations = false;
+    std::string m_cldnn_dump_dir = std::string("intelgpu_codegen");
+};
+
+class ngraph::runtime::intelgpu::IntelGPUExecutable : public runtime::Executable
+{
+public:
+    IntelGPUExecutable(std::shared_ptr<Function> func,
+                       std::shared_ptr<cldnn::network> network,
+                       bool enable_timing,
+                       bool enable_profile,
+                       double compilation_time,
+                       double consumed_memory,
+                       size_t profile_lines_limit_count);
+
+    bool call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+              const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
+
+    std::vector<PerformanceCounter> get_performance_data() const override;
+
+private:
+    std::shared_ptr<Function> m_function;
+    std::shared_ptr<cldnn::network> m_cldnn_network = nullptr;
+    bool m_performance_counters_enabled = false;
+    bool m_profile_enable = false;
+    double m_compilation_time = 0.0;
+    double m_consumed_memory = 0.0;
+    long m_profile_lines_limit_count = 10;
+    std::string delim = std::string(":");
 
     // Statistic related things
     void print_call_performance(const std::shared_ptr<cldnn::network> network,
@@ -83,13 +102,4 @@ private:
                                 double mem_compilation_consumed,
                                 double mem_call_consumed,
                                 double mem_current) const;
-
-    bool m_profile_enable = false;
-    long m_profile_lines_limit_count = 10;
-    bool m_dump_graph_enable = false;
-    bool m_cldnn_graph_optimize = true;
-    bool m_cldnn_dump_enable = false;
-    bool m_function_cache_disabled = false;
-    std::string m_cldnn_dump_dir = std::string("intelgpu_codegen");
-    std::string delim = std::string(":");
 };
