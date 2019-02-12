@@ -47,8 +47,9 @@ namespace ngraph
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto& arg0_tensor = tensor_data[args[0].get_name()];
-                    auto& out_tensor = tensor_data[out[0].get_name()];
+                    auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                    auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
@@ -106,10 +107,11 @@ namespace ngraph
                 }
                 else
                 {
-                    auto& arg0_tensor = tensor_data[args[0].get_name()];
-                    auto& arg1_tensor = tensor_data[args[1].get_name()];
-                    auto& arg2_tensor = tensor_data[args[2].get_name()];
-                    auto& out_tensor = tensor_data[out[0].get_name()];
+                    auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                    auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                    auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
+                    auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+
                     auto arg0_shape = args[0].get_shape();
                     auto arg1_shape = args[1].get_shape();
                     auto daxes = dequantize->get_axes();
@@ -307,10 +309,10 @@ namespace ngraph
                         static_cast<const ngraph::op::Quantize*>(node);
                     CPUKernelFunctor functor;
 
-                    auto& arg0_tensor = tensor_data[args[0].get_name()];
-                    auto& arg1_tensor = tensor_data[args[1].get_name()];
-                    auto& arg2_tensor = tensor_data[args[2].get_name()];
-                    auto& out_tensor = tensor_data[out[0].get_name()];
+                    auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                    auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                    auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
+                    auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
 
                     auto arg0_shape = args[0].get_shape();
                     auto arg1_shape = args[1].get_shape();

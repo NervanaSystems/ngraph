@@ -36,10 +36,10 @@ namespace ngraph
                 auto& tensor_data = external_function->get_tensor_data();
 
                 CPUKernelFunctor functor;
+                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
 
-                auto& arg0_tensor = tensor_data[args[0].get_name()];
-                auto& arg1_tensor = tensor_data[args[1].get_name()];
-                auto& out_tensor = tensor_data[out[0].get_name()];
                 if (out[0].get_element_type() != element::f32 &&
                     out[0].get_element_type() != element::f64)
                 {

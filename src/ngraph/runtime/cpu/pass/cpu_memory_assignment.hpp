@@ -19,8 +19,11 @@
 #include <limits>
 #include <list>
 #include <sstream>
+#include <unordered_map>
+#include <unordered_set>
 
 #include "ngraph/pass/pass.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -38,11 +41,34 @@ namespace ngraph
 class ngraph::runtime::cpu::pass::CPUMemoryAssignment : public ngraph::pass::FunctionPass
 {
 public:
-    CPUMemoryAssignment(size_t alignment = 1, bool disable_memory_sharing = false);
+    CPUMemoryAssignment(
+        std::unordered_map<size_t,
+                           std::pair<CPUTensorRole, std::unordered_set<descriptor::Tensor*>>>&,
+        std::unordered_map<descriptor::Tensor*, size_t>&,
+        size_t alignment = 1,
+        bool disable_memory_sharing = false);
     bool run_on_function(std::shared_ptr<ngraph::Function>) override;
 
 private:
+    // Find in-place concat ops and set appropriate memory pool offset for its arguments
+    void process_in_place_concat(std::list<std::shared_ptr<Node>> nodes);
+
+    // For a chain of concat ops, propagate memory pool offsets
+    void propagate_in_place_concat(std::shared_ptr<ngraph::op::Op> concat, size_t index);
+
+#if 1
+    // Find in-place slice ops and set appropriate memory pool offset for its output
+    void process_in_place_slice(std::list<std::shared_ptr<Node>> nodes);
+
+    // propagate slice when its arg comes from function input
+    void propagate_in_place_slice(ngraph::descriptor::Input* input, size_t input_index);
+#endif
+
     size_t m_alignment;
     bool m_disable_memory_sharing;
     std::set<descriptor::Tensor*> m_tensor_caching;
+    std::unordered_map<size_t,
+                       std::pair<ngraph::CPUTensorRole, std::unordered_set<descriptor::Tensor*>>>&
+        m_key_to_tensors_set_map;
+    std::unordered_map<descriptor::Tensor*, size_t>& m_tensor_to_key_map;
 };

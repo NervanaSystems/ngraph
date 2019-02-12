@@ -223,48 +223,6 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
         }
     }
 
-    //mark last concat
-    for (auto n : function->get_ordered_ops())
-    {
-        if (n->description() == "Concat")
-        {
-            auto concat = std::static_pointer_cast<op::Concat>(n);
-            if (auto op_annotations = concat->get_op_annotations())
-            {
-                auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
-                if (in_place_oi_pairs.size() > 0)
-                {
-                    // check if it is the last in place concat
-                    bool found_last_concat = true;
-                    for (auto user : concat->get_users())
-                    {
-                        if (user->description() == "Concat")
-                        {
-                            auto user_concat = std::static_pointer_cast<ngraph::op::Concat>(user);
-                            if (auto user_op_annotations = user_concat->get_op_annotations())
-                            {
-                                auto user_in_place_oi_pairs =
-                                    user_op_annotations->get_in_place_oi_pairs();
-                                if (user_in_place_oi_pairs.size() > 0)
-                                {
-                                    found_last_concat = false;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    if (found_last_concat)
-                    {
-                        auto cpu_op_annotations =
-                            std::static_pointer_cast<runtime::cpu::CPUOpAnnotations>(
-                                op_annotations);
-                        cpu_op_annotations->set_free_memory(false);
-                    }
-                }
-            }
-        }
-    }
-
     for (auto n : function->get_ordered_ops())
     {
         if (n->description() == "Slice")
@@ -282,25 +240,6 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
             {
                 NGRAPH_DEBUG << "cpu_memory_optimization: " << arg->get_name()
                              << ": constant, no in place slice";
-                continue;
-            }
-
-            bool no_in_place_slice = false;
-            if (arg->is_parameter())
-            {
-                for (auto user : slice->get_users())
-                {
-                    if (user->is_output())
-                    {
-                        NGRAPH_DEBUG << "cpu_memory_optimization: slice between function input and "
-                                        "output, no in place slice";
-                        no_in_place_slice = true;
-                        break;
-                    }
-                }
-            }
-            if (no_in_place_slice)
-            {
                 continue;
             }
 

@@ -38,8 +38,8 @@ namespace ngraph
                 const ngraph::op::ArgMin* argmin = static_cast<const ngraph::op::ArgMin*>(node);
                 CPUKernelFunctor functor;
 
-                auto& arg_tensor = tensor_data[args[0].get_name()];
-                auto& out_tensor = tensor_data[out[0].get_name()];
+                auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
                 if (out[0].get_element_type() != element::i64 &&
                     out[0].get_element_type() != element::i32)
                 {
