@@ -228,7 +228,8 @@ std::vector<T> read_binary_file(const std::string& path)
     inputs_fs.seekg(0, std::ios::beg);
     if (size % sizeof(T) != 0)
     {
-        throw std::runtime_error("Error reading binary file content: Input file size (in bytes) "
+        throw std::runtime_error(
+            "Error reading binary file content: Input file size (in bytes) "
             "is not a multiple of requested data type size.");
     }
     file_content.resize(size / sizeof(T));
