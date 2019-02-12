@@ -191,3 +191,36 @@ void Function::replace_node(std::shared_ptr<Node> old, std::shared_ptr<Node> rep
 {
     ngraph::replace_node(old, repl);
 }
+
+size_t Function::get_graph_size() const
+{
+    size_t total_size = 0;
+    for (auto node : get_ops())
+    {
+        total_size += sizeof(*node);
+        if (node->description() == "Constant")
+        {
+            const Shape& shape = node->get_outputs()[0].get_shape();
+            size_t const_size = node->get_outputs()[0].get_element_type().size();
+            if (shape.size() == 0)
+            {
+                total_size += const_size;
+            }
+            else
+            {
+                total_size += (const_size * shape_size(node->get_outputs()[0].get_shape()));
+            }
+        }
+    }
+    return total_size;
+}
+
+size_t Function::get_placement() const
+{
+    return m_placement;
+}
+
+void Function::set_placement(size_t placement)
+{
+    m_placement = placement;
+}

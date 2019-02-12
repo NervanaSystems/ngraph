@@ -71,7 +71,6 @@ set (SRC
     op/experimental/quantized_max_pool.cpp
     op/experimental/shape_of.cpp
     op/floor.cpp
-    op/function_call.cpp
     op/get_output_element.cpp
     op/greater.cpp
     op/greater_eq.cpp
@@ -96,15 +95,12 @@ set (SRC
     op/power.cpp
     op/product.cpp
     op/quantize.cpp
-    op/reduce.cpp
-    op/reduce_window.cpp
     op/relu.cpp
     op/replace_slice.cpp
     op/reshape.cpp
     op/result.cpp
     op/reverse.cpp
     op/reverse_sequence.cpp
-    op/select_and_scatter.cpp
     op/select.cpp
     op/sigmoid.cpp
     op/sign.cpp
@@ -127,9 +123,6 @@ set (SRC
     op/util/logical_reduction.cpp
     op/util/unary_elementwise_arithmetic.cpp
     partial_shape.cpp
-    pass/any_all_insertion.cpp
-    pass/any_all_replacement.cpp
-    pass/assign_placement.cpp
     pass/algebraic_simplification.cpp
     pass/common_function_collection.cpp
     pass/constant_folding.cpp
@@ -137,7 +130,6 @@ set (SRC
     pass/dump_sorted.cpp
     pass/get_output_element_elimination.cpp
     pass/graph_rewrite.cpp
-    pass/inliner.cpp
     pass/like_replacement.cpp
     pass/liveness.cpp
     pass/manager.cpp
@@ -147,6 +139,7 @@ set (SRC
     pass/nop_elimination.cpp
     pass/pass.cpp
     pass/pass_config.cpp
+    pass/prefix_reshape_elimination.cpp
     pass/propagate_cacheability.cpp
     pass/reshape_elimination.cpp
     pass/reshape_sinking.cpp
@@ -175,6 +168,7 @@ set (SRC
     placement.cpp
     cpio.cpp
     )
+
 if(NGRAPH_DISTRIBUTED_ENABLE)
     list(APPEND SRC distributed.cpp)
 endif()
@@ -185,9 +179,16 @@ add_library(ngraph SHARED ${SRC})
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
     target_sources(ngraph PRIVATE distributed.cpp)
-    target_compile_definitions(ngraph PRIVATE NGRAPH_DISTRIBUTED)
-    target_include_directories(ngraph SYSTEM PRIVATE libmlsl)
-    target_link_libraries(ngraph PRIVATE libmlsl)
+    if(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
+        target_include_directories(ngraph SYSTEM PRIVATE libmlsl)
+        target_link_libraries(ngraph PRIVATE libmlsl)
+    elseif(NGRAPH_DISTRIBUTED_OMPI_ENABLE)
+        find_package(MPI REQUIRED)
+        target_include_directories(ngraph SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+        target_link_libraries(ngraph PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+    else()
+        message(FATAL_ERROR "Distributed Library not supported/mentioned")
+    endif()
 endif()
 
 add_subdirectory(frontend)

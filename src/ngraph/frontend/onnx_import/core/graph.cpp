@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <functional>
 #include <set>
 
 #include "graph.hpp"
@@ -25,34 +26,53 @@ namespace ngraph
     {
         namespace detail
         {
-            std::string to_string(const std::set<std::string>& set)
+            static std::string to_string(
+                const std::map<std::string, std::reference_wrapper<const onnx::NodeProto>>& map)
             {
                 std::string result;
-                for (auto it = std::begin(set); it != std::end(set); ++it)
+                for (auto it = std::begin(map); it != std::end(map); ++it)
                 {
-                    result += (it != std::begin(set) ? ", " : "") + *it;
+                    result += (it != std::begin(map) ? ", " : "") + it->first;
                 }
                 return result;
             }
 
-            inline std::string to_string(const onnx::NodeProto& node_proto)
+            static std::string get_node_domain(const onnx::NodeProto& node_proto)
             {
-                return (node_proto.domain().empty() ? "" : node_proto.domain() + ".") +
-                       node_proto.op_type();
+                return (node_proto.domain().empty() ? "" : node_proto.domain());
             }
-        }
 
-        Graph::Graph(const onnx::GraphProto& graph_proto,
-                     const Model& model,
-                     const Weights& weights)
+            /// \brief      Gets the operator represented by provided node unique identificator.
+            ///
+            /// \param[in]  node_proto  The node protobuf representation object.
+            ///
+            /// \note       The operator is uniquely identified by the tuple (domain, op_type,
+            ///             since_version). The first two elements are stored in NodeProto object,
+            ///             thus we use only them.
+            ///
+            /// \return     The unique identificator.
+            ///
+            static std::string get_op_domain_and_name(const onnx::NodeProto& node_proto)
+            {
+                std::string domain = get_node_domain(node_proto);
+                return (domain.empty() ? "" : domain + ".") + node_proto.op_type();
+            }
+        } // namespace detail
+
+        Graph::Graph(const onnx::GraphProto& graph_proto, Model& model, const Weights& weights)
             : m_graph_proto{&graph_proto}
             , m_model{&model}
         {
-            for (const auto& tensor : m_graph_proto->initializer())
+            // Process all initializers in the graph
+            for (const auto& initializer_tensor : m_graph_proto->initializer())
             {
-                if (tensor.has_name())
+                if (initializer_tensor.has_name())
                 {
-                    m_initializers.emplace(tensor.name(), Tensor{tensor});
+                    Tensor tensor = Tensor{initializer_tensor};
+                    m_initializers.emplace(initializer_tensor.name(), tensor);
+
+                    // For each initializer, create a Constant node and store in cache
+                    m_ng_node_cache.emplace(initializer_tensor.name(), tensor.get_ng_constant());
                 }
             }
 
@@ -60,6 +80,13 @@ namespace ngraph
             for (const auto& input : m_graph_proto->input())
             {
                 m_inputs.emplace_back(input);
+
+                // Check if a Constant node was already created from an initializer
+                if (m_ng_node_cache.count(input.name()) > 0)
+                {
+                    continue;
+                }
+
                 m_ng_node_cache[input.name()] =
                     m_inputs.back().get_ng_node(m_parameters, m_initializers, weights);
             }
@@ -70,17 +97,34 @@ namespace ngraph
             }
 
             // Verify that ONNX graph contains only nodes of available operator types
-            std::set<std::string> unknown_operator_types;
+            std::map<std::string, std::reference_wrapper<const onnx::NodeProto>> unknown_operators;
             for (const auto& node_proto : m_graph_proto->node())
             {
                 if (!m_model->is_operator_available(node_proto))
                 {
-                    unknown_operator_types.emplace(detail::to_string(node_proto));
+                    unknown_operators.emplace(detail::get_op_domain_and_name(node_proto),
+                                              node_proto);
+                    // Try adding missing domain
+                    m_model->enable_opset_domain(detail::get_node_domain(node_proto));
                 }
             }
 
-            NGRAPH_ASSERT(unknown_operator_types.empty())
-                << "unknown operations: " << detail::to_string(unknown_operator_types);
+            // Reverify wheter we still have any unavailable operators.
+            auto it = std::begin(unknown_operators);
+            while (it != std::end(unknown_operators))
+            {
+                if (m_model->is_operator_available(it->second))
+                {
+                    it = unknown_operators.erase(it);
+                }
+                else
+                {
+                    it++;
+                }
+            }
+
+            NGRAPH_ASSERT(unknown_operators.empty()) << "unknown operations: "
+                                                     << detail::to_string(unknown_operators);
 
             // Process ONNX graph nodes, convert to nGraph nodes
             for (const auto& node_proto : m_graph_proto->node())

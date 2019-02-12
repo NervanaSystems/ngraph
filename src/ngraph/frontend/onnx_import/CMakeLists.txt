@@ -17,12 +17,12 @@
 set(ONNX_OPSET_VERSION 9 CACHE INTERNAL "Supported version of ONNX operator set")
 
 add_library(onnx_import_interface OBJECT
-        onnx.cpp
-        onnx.hpp
-        core/operator_set.hpp
         core/node.cpp
         core/node.hpp
-        core/weight.hpp)
+        core/operator_set.hpp
+        core/weight.hpp
+        onnx.cpp
+        onnx.hpp)
 
 add_library(onnx_import STATIC
         core/attribute.cpp
@@ -55,6 +55,7 @@ add_library(onnx_import STATIC
         op/clip.cpp
         op/clip.hpp
         op/cos.hpp
+        op/cosh.hpp
         op/concat.cpp
         op/concat.hpp
         op/constant.cpp
@@ -63,6 +64,8 @@ add_library(onnx_import STATIC
         op/conv.hpp
         op/conv_transpose.cpp
         op/conv_transpose.hpp
+        op/depth_to_space.cpp
+        op/depth_to_space.hpp
         op/div.hpp
         op/elu.cpp
         op/elu.hpp
@@ -120,6 +123,7 @@ add_library(onnx_import STATIC
         op/shape.cpp
         op/sigmoid.hpp
         op/sin.hpp
+        op/sinh.hpp
         op/size.cpp
         op/size.hpp
         op/slice.cpp
@@ -130,6 +134,8 @@ add_library(onnx_import STATIC
         op/softplus.hpp
         op/softsign.cpp
         op/softsign.hpp
+        op/space_to_depth.cpp
+        op/space_to_depth.hpp
         op/split.cpp
         op/split.hpp
         op/sqrt.hpp
@@ -141,6 +147,8 @@ add_library(onnx_import STATIC
         op/tanh.hpp
         op/thresholded_relu.cpp
         op/thresholded_relu.hpp
+        op/topk.cpp
+        op/topk.hpp
         op/transpose.cpp
         op/transpose.hpp
         op/unsqueeze.cpp
@@ -160,7 +168,7 @@ add_library(onnx_import STATIC
 
 set(ONNX_IMPORT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "")
 
-add_dependencies(onnx_import_interface onnx::libonnx onnx::libonnx_proto)
+add_dependencies(onnx_import_interface protobuf::libprotobuf onnx::libonnx onnx::libonnx_proto)
 add_dependencies(onnx_import onnx_import_interface)
 
 set_property(TARGET onnx_import PROPERTY POSITION_INDEPENDENT_CODE ON)

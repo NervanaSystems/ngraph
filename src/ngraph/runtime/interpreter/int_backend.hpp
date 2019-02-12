@@ -46,15 +46,11 @@
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
-#include "ngraph/op/reduce.hpp"
-#include "ngraph/op/reduce_window.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
-#include "ngraph/op/select_and_scatter.hpp"
-#include "ngraph/op/select_and_scatter.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
@@ -113,8 +109,6 @@
 #include "ngraph/runtime/reference/power.hpp"
 #include "ngraph/runtime/reference/product.hpp"
 #include "ngraph/runtime/reference/quantize.hpp"
-#include "ngraph/runtime/reference/reduce.hpp"
-#include "ngraph/runtime/reference/reduce_window.hpp"
 #include "ngraph/runtime/reference/relu.hpp"
 #include "ngraph/runtime/reference/replace_slice.hpp"
 #include "ngraph/runtime/reference/reshape.hpp"
@@ -122,7 +116,6 @@
 #include "ngraph/runtime/reference/reverse.hpp"
 #include "ngraph/runtime/reference/reverse_sequence.hpp"
 #include "ngraph/runtime/reference/select.hpp"
-#include "ngraph/runtime/reference/select_and_scatter.hpp"
 #include "ngraph/runtime/reference/shape_of.hpp"
 #include "ngraph/runtime/reference/sigmoid.hpp"
 #include "ngraph/runtime/reference/sign.hpp"
@@ -139,7 +132,7 @@
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/state/rng_state.hpp"
 
-#ifdef NGRAPH_DISTRIBUTED
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
 #include "ngraph/runtime/reference/allreduce.hpp"
 #endif
 
@@ -151,8 +144,8 @@ namespace ngraph
         {
             class INTBackend;
         }
-    }
-}
+    } // namespace runtime
+} // namespace ngraph
 
 class ngraph::runtime::interpreter::INTBackend : public Backend
 {
@@ -193,9 +186,6 @@ private:
         std::unordered_map<const Node*, stopwatch> m_timer_map;
         std::vector<NodeWrapper> m_wrapped_nodes;
         std::unordered_map<const Node*, std::shared_ptr<RNGState>> m_states;
-        std::shared_ptr<AlignedBuffer> m_temporary_memory;
-
-        void* get_temporary_pointer(size_t offset) { return m_temporary_memory->get_ptr(offset); }
     };
     std::map<std::shared_ptr<Function>, FunctionInstance> m_function_map;
     std::set<std::string> m_unsupported_op_name_list;
@@ -205,8 +195,8 @@ private:
 
     void generate_calls(const element::Type& type,
                         const NodeWrapper& op,
-                        const std::vector<void*>& outputs,
-                        const std::vector<const void*>& inputs,
+                        const std::vector<std::shared_ptr<HostTensor>>& outputs,
+                        const std::vector<std::shared_ptr<HostTensor>>& inputs,
                         FunctionInstance& instance);
 
     template <typename T>
@@ -261,7 +251,7 @@ private:
             break;
         }
         case OP_TYPEID::AllReduce: {
-#ifdef NGRAPH_DISTRIBUTED
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
             reference::allreduce<T>(static_cast<T*>(const_cast<void*>(args[0])),
                                     static_cast<T*>(out[0]),
                                     node.get_input_element_type(0),
@@ -494,7 +484,9 @@ private:
         }
         case OP_TYPEID::Constant:
         {
-            // Constant is handled in the main loop
+            const op::Constant* c = static_cast<const op::Constant*>(&node);
+            size_t element_count = shape_size(node.get_output_shape(0));
+            reference::constant<T>(c->get_data_ptr<T>(), static_cast<T*>(out[0]), element_count);
             break;
         }
         case OP_TYPEID::ScalarConstantLike: break;
@@ -768,35 +760,6 @@ private:
                 static_cast<const T*>(args[0]), static_cast<T*>(out[0]), element_count);
             break;
         }
-        case OP_TYPEID::FunctionCall:
-        {
-            std::shared_ptr<Function> function = node.get_functions()[0];
-
-            std::vector<std::shared_ptr<runtime::Tensor>> outputs;
-            for (size_t i = 0; i < function->get_output_size(); i++)
-            {
-                element::Type et = function->get_output_element_type(i);
-                Shape shape = function->get_output_shape(i);
-                auto host_tensor = std::make_shared<HostTensor>(et, shape, out[i]);
-                outputs.push_back(std::static_pointer_cast<runtime::Tensor>(host_tensor));
-            }
-
-            std::vector<std::shared_ptr<runtime::Tensor>> inputs;
-            auto parameters = function->get_parameters();
-            for (size_t i = 0; i < parameters.size(); i++)
-            {
-                auto parameter = parameters[i];
-                element::Type et = parameter->get_element_type();
-                Shape shape = parameter->get_shape();
-                auto host_tensor =
-                    std::make_shared<HostTensor>(et, shape, const_cast<void*>(args[i]));
-                inputs.push_back(std::static_pointer_cast<runtime::Tensor>(host_tensor));
-            }
-
-            auto handle = compile(function);
-            call(handle, outputs, inputs);
-            break;
-        }
         case OP_TYPEID::Greater:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -1052,62 +1015,16 @@ private:
 
             break;
         }
-        case OP_TYPEID::Reduce:
+        case OP_TYPEID::QuantizedAvgPool:
+        case OP_TYPEID::QuantizedConvolutionBias:
+        case OP_TYPEID::QuantizedConvolutionBiasAdd:
+        case OP_TYPEID::QuantizedConvolutionBiasSignedAdd:
+        case OP_TYPEID::QuantizedConvolutionRelu:
+        case OP_TYPEID::QuantizedConvolution:
+        case OP_TYPEID::QuantizedMaxPool:
         {
-            const op::Reduce* reduce = static_cast<const op::Reduce*>(&node);
-            std::shared_ptr<Function> reduction_function = reduce->get_functions()[0];
-
-            std::function<T(T, T)> f = [this, &node, reduction_function](T x, T y) -> T {
-                auto tx = std::make_shared<HostTensor>(
-                    node.get_inputs().at(0).get_element_type(), Shape{}, &x, "reduce_temp_x");
-                auto ty = std::make_shared<HostTensor>(
-                    node.get_inputs().at(1).get_element_type(), Shape{}, &y, "reduce_temp_y");
-                auto tr = std::make_shared<HostTensor>(
-                    node.get_output_element_type(0), Shape{}, "reduce_temp_r");
-                auto handle = compile(reduction_function);
-                call(handle, {tr}, {tx, ty});
-                return *(tr->get_data_ptr<T>());
-            };
-
-            reference::reduce(static_cast<const T*>(args[0]),
-                              static_cast<const T*>(args[1]),
-                              static_cast<T*>(out[0]),
-                              node.get_inputs().at(0).get_shape(),
-                              node.get_output_shape(0),
-                              reduce->get_reduction_axes(),
-                              f);
-            break;
-        }
-        case OP_TYPEID::ReduceWindow:
-        {
-            const op::ReduceWindow* reduce_window = static_cast<const op::ReduceWindow*>(&node);
-            std::shared_ptr<Function> reduction_function = reduce_window->get_functions()[0];
-
-            std::function<T(T, T)> f = [this, &node, reduction_function](T x, T y) -> T {
-                auto tx = std::make_shared<HostTensor>(node.get_inputs().at(0).get_element_type(),
-                                                       Shape{},
-                                                       &x,
-                                                       "reduce_window_temp_x");
-                auto ty = std::make_shared<HostTensor>(node.get_inputs().at(1).get_element_type(),
-                                                       Shape{},
-                                                       &y,
-                                                       "reduce_window_temp_y");
-                auto tr = std::make_shared<HostTensor>(
-                    node.get_output_element_type(0), Shape{}, "reduce_window_temp_r");
-                auto handle = compile(reduction_function);
-                call(handle, {tr}, {tx, ty});
-                return *(tr->get_data_ptr<T>());
-            };
-
-            reference::reduce_window(static_cast<const T*>(args[0]),
-                                     static_cast<const T*>(args[1]),
-                                     static_cast<T*>(out[0]),
-                                     node.get_inputs().at(0).get_shape(),
-                                     node.get_output_shape(0),
-                                     f,
-                                     reduce_window->get_window_shape(),
-                                     reduce_window->get_window_movement_strides());
-            break;
+            throw unsupported_op("Unsupported op '" + node.description() +
+                                 "' in Interpreter back end.");
         }
         case OP_TYPEID::Relu:
         {
@@ -1193,53 +1110,6 @@ private:
                                  static_cast<const T*>(args[2]),
                                  static_cast<T*>(out[0]),
                                  element_count);
-            break;
-        }
-        case OP_TYPEID::SelectAndScatter:
-        {
-            const ngraph::op::SelectAndScatter* select_and_scatter =
-                static_cast<const ngraph::op::SelectAndScatter*>(&node);
-
-            std::shared_ptr<ngraph::Function> selection_function =
-                select_and_scatter->get_functions()[0];
-            std::function<bool(T, T)> f_selection = [this, &node, selection_function](T x,
-                                                                                      T y) -> bool {
-                auto tx = std::make_shared<runtime::HostTensor>(
-                    node.get_inputs().at(0).get_element_type(), Shape{}, &x, "selection_temp_x");
-                auto ty = std::make_shared<runtime::HostTensor>(
-                    node.get_inputs().at(1).get_element_type(), Shape{}, &y, "selection_temp_y");
-                auto tr = std::make_shared<runtime::HostTensor>(
-                    element::boolean, Shape{}, "selection_temp_r");
-                auto handle = compile(selection_function);
-                call(handle, {tr}, {tx, ty});
-                return *(tr->get_data_ptr<char>());
-            };
-
-            std::shared_ptr<ngraph::Function> scatter_function =
-                select_and_scatter->get_functions()[1];
-            std::function<T(T, T)> f_scatter = [this, &node, scatter_function](T x, T y) -> T {
-                auto tx = std::make_shared<runtime::HostTensor>(
-                    node.get_inputs().at(0).get_element_type(), Shape{}, &x, "scatter_temp_x");
-                auto ty = std::make_shared<runtime::HostTensor>(
-                    node.get_inputs().at(1).get_element_type(), Shape{}, &y, "scatter_temp_y");
-                auto tr = std::make_shared<runtime::HostTensor>(
-                    node.get_output_element_type(0), Shape{}, "scatter_temp_r");
-                auto handle = compile(scatter_function);
-                call(handle, {tr}, {tx, ty});
-                return *(tr->get_data_ptr<T>());
-            };
-
-            reference::select_and_scatter<T>(static_cast<const T*>(args[0]),
-                                             static_cast<const T*>(args[1]),
-                                             static_cast<const T*>(args[2]),
-                                             static_cast<T*>(out[0]),
-                                             node.get_input_shape(0),
-                                             node.get_input_shape(1),
-                                             node.get_output_shape(0),
-                                             f_selection,
-                                             f_scatter,
-                                             select_and_scatter->get_window_shape(),
-                                             select_and_scatter->get_window_movement_strides());
             break;
         }
         case OP_TYPEID::ShapeOf:

@@ -31,7 +31,6 @@ set(SRC
     plaidml_ops_convert.cpp
     plaidml_ops_convolution.cpp
     plaidml_ops_dot.cpp
-    plaidml_ops_function.cpp
     plaidml_ops_general.cpp
     plaidml_ops_index_reduction.cpp
     plaidml_ops_io.cpp
@@ -54,7 +53,6 @@ set(SRC
     plaidml_pass_lower_convolutions.cpp
     plaidml_pass_replicate_combination.cpp
     plaidml_pass_replicate_elision.cpp
-    plaidml_pass_reshape_elision.cpp
     plaidml_pass_winograd.cpp
     plaidml_tensor.cpp
     plaidml_translate.cpp

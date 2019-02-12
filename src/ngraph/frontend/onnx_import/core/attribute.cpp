@@ -22,7 +22,7 @@ namespace ngraph
 {
     namespace onnx_import
     {
-        std::vector<Graph> Attribute::get_graph_array(const Model& model) const
+        std::vector<Graph> Attribute::get_graph_array(Model& model) const
         {
             std::vector<Graph> result;
             for (const auto& graph : m_attribute_proto->graphs())
@@ -32,7 +32,7 @@ namespace ngraph
             return result;
         }
 
-        Graph Attribute::get_graph(const Model& model) const
+        Graph Attribute::get_graph(Model& model) const
         {
             return Graph{m_attribute_proto->g(), model};
         }

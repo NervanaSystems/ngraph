@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include <algorithm>
-#include <algorithm>
 #include <cinttypes>
 #include <cmath>
 #include <cstdlib>
@@ -1366,46 +1365,6 @@ NGRAPH_TEST(${BACKEND_NAME}, constant_multi_use)
     EXPECT_EQ(read_vector<int>(r2), std::vector<int>{388});
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, function_call)
-{
-    // First create "f(A,B,C) = (A+B)*C".
-    Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C});
-
-    // Now make "g(X,Y,Z) = f(X,Y,Z) + f(X,Y,Z)"
-    auto X = make_shared<op::Parameter>(element::f32, shape);
-    auto Y = make_shared<op::Parameter>(element::f32, shape);
-    auto Z = make_shared<op::Parameter>(element::f32, shape);
-    auto g =
-        make_shared<Function>(make_shared<op::FunctionCall>(f, NodeVector{X + Y, Y + Z, Z + X}) +
-                                  make_shared<op::FunctionCall>(f, NodeVector{X, Y, Z}),
-                              ParameterVector{X, Y, Z});
-
-    // Now call g on some test vectors.
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
-    auto x = backend->create_tensor(element::f32, shape);
-    copy_data(x, vector<float>{1, 2, 3, 4});
-    auto y = backend->create_tensor(element::f32, shape);
-    copy_data(y, vector<float>{5, 6, 7, 8});
-    auto z = backend->create_tensor(element::f32, shape);
-    copy_data(z, vector<float>{9, 10, 11, 12});
-    auto result = backend->create_tensor(element::f32, shape);
-
-    auto handle = backend->compile(g);
-    backend->call_with_validate(handle, {result}, {x, y, z});
-    EXPECT_EQ((vector<float>{254, 368, 502, 656}), read_vector<float>(result));
-
-    backend->call_with_validate(handle, {result}, {y, x, z});
-    EXPECT_EQ((vector<float>{278, 400, 542, 704}), read_vector<float>(result));
-
-    backend->call_with_validate(handle, {result}, {x, z, y});
-    EXPECT_EQ((vector<float>{194, 296, 418, 560}), read_vector<float>(result));
-}
-
 NGRAPH_TEST(${BACKEND_NAME}, convert_int32_float32)
 {
     Shape shape{2, 2};
@@ -1752,6 +1711,54 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_3d_strided_different_strides)
     auto handle = backend->compile(f);
     backend->call_with_validate(handle, {result}, {a});
     EXPECT_EQ((vector<float>{0, 3, 8, 11, 32, 35, 40, 43}), read_vector<float>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, slice_3d_strided_different_strides_int64)
+{
+    Shape shape_a{4, 4, 4};
+    auto A = make_shared<op::Parameter>(element::i64, shape_a);
+    Shape shape_r{2, 2, 2};
+    auto r = make_shared<op::Slice>(A, Coordinate{0, 0, 0}, Coordinate{4, 4, 4}, Strides{2, 2, 3});
+    auto f = make_shared<Function>(r, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::i64, shape_a);
+    copy_data(a, vector<int64_t>{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
+
+                                 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+
+                                 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+
+                                 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63});
+    auto result = backend->create_tensor(element::i64, shape_r);
+
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a});
+    EXPECT_EQ((vector<int64_t>{0, 3, 8, 11, 32, 35, 40, 43}), read_vector<int64_t>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, slice_3d_start_just_oob)
+{
+    Shape shape_a{20, 10, 5};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_r{20, 0, 5};
+    auto r =
+        make_shared<op::Slice>(A, Coordinate{0, 10, 0}, Coordinate{20, 10, 5}, Strides{1, 1, 1});
+    auto f = make_shared<Function>(r, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    vector<float> a_data(20 * 10 * 5, 222.0f);
+    copy_data(a, a_data);
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a});
+    EXPECT_EQ((vector<float>{}), read_vector<float>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, scalar_constant_float32)
@@ -2492,172 +2499,6 @@ NGRAPH_TEST(${BACKEND_NAME}, numeric_double_inf)
     auto handle = backend->compile(f);
     backend->call_with_validate(handle, {result}, {});
     EXPECT_EQ((vector<char>{false, false, true, false, false}), read_vector<char>(result));
-}
-
-//
-// From the XLA docs: https://www.tensorflow.org/performance/xla/operation_semantics#selectandscatter
-//
-NGRAPH_TEST(${BACKEND_NAME}, select_and_scatter_with_overlap)
-{
-    Shape shape_sel_a{};
-    auto SEL_A = make_shared<op::Parameter>(element::f32, shape_sel_a);
-    Shape shape_sel_b{};
-    auto SEL_B = make_shared<op::Parameter>(element::f32, shape_sel_b);
-    auto sel_f = make_shared<Function>(make_shared<op::Greater>(SEL_A, SEL_B),
-                                       ParameterVector{SEL_A, SEL_B});
-
-    Shape shape_scatter_a{};
-    auto SCATTER_A = make_shared<op::Parameter>(element::f32, shape_scatter_a);
-    Shape shape_scatter_b{};
-    auto SCATTER_B = make_shared<op::Parameter>(element::f32, shape_scatter_b);
-    auto scatter_f =
-        make_shared<Function>(SCATTER_A + SCATTER_B, ParameterVector{SCATTER_A, SCATTER_B});
-
-    Shape shape_a{4, 5};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    Shape shape_b{2, 2};
-    auto B = make_shared<op::Parameter>(element::f32, shape_b);
-    Shape shape_c{};
-    auto C = make_shared<op::Parameter>(element::f32, shape_c);
-    Shape shape_r{4, 5};
-    Shape window_shape{2, 3};
-    auto window_strides = Strides{2, 2};
-    auto f = make_shared<Function>(
-        make_shared<op::SelectAndScatter>(A, B, C, sel_f, scatter_f, window_shape, window_strides),
-        ParameterVector{A, B, C});
-
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::f32, shape_a);
-    copy_data(a,
-              test::NDArray<float, 2>(
-                  {{7, 2, 5, 3, 8}, {3, 8, 9, 3, 4}, {1, 5, 7, 5, 6}, {0, 6, 2, 10, 2}})
-                  .get_vector());
-    auto b = backend->create_tensor(element::f32, shape_b);
-    copy_data(b, test::NDArray<float, 2>({{2, 6}, {3, 1}}).get_vector());
-    auto c = backend->create_tensor(element::f32, shape_c);
-    copy_data(c, vector<float>{0});
-    auto result = backend->create_tensor(element::f32, shape_r);
-
-    auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b, c});
-    EXPECT_EQ((test::NDArray<float, 2>(
-                   {{0, 0, 0, 0, 0}, {0, 0, 8, 0, 0}, {0, 0, 3, 0, 0}, {0, 0, 0, 1, 0}})
-                   .get_vector()),
-              read_vector<float>(result));
-}
-
-//
-// From the XLA docs: https://www.tensorflow.org/performance/xla/operation_semantics#selectandscatter
-//
-NGRAPH_TEST(${BACKEND_NAME}, select_and_scatter_without_overlap)
-{
-    Shape shape_sel_a{};
-    auto SEL_A = make_shared<op::Parameter>(element::f32, shape_sel_a);
-    Shape shape_sel_b{};
-    auto SEL_B = make_shared<op::Parameter>(element::f32, shape_sel_b);
-    auto sel_f = make_shared<Function>(make_shared<op::Greater>(SEL_A, SEL_B),
-                                       ParameterVector{SEL_A, SEL_B});
-
-    Shape shape_scatter_a{};
-    auto SCATTER_A = make_shared<op::Parameter>(element::f32, shape_scatter_a);
-    Shape shape_scatter_b{};
-    auto SCATTER_B = make_shared<op::Parameter>(element::f32, shape_scatter_b);
-    auto scatter_f =
-        make_shared<Function>(SCATTER_A + SCATTER_B, ParameterVector{SCATTER_A, SCATTER_B});
-
-    Shape shape_a{4, 6};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    Shape shape_b{2, 2};
-    auto B = make_shared<op::Parameter>(element::f32, shape_b);
-    Shape shape_c{};
-    auto C = make_shared<op::Parameter>(element::f32, shape_c);
-    Shape shape_r{4, 6};
-    Shape window_shape{2, 3};
-    auto window_strides = Strides{2, 3};
-    auto f = make_shared<Function>(
-        make_shared<op::SelectAndScatter>(A, B, C, sel_f, scatter_f, window_shape, window_strides),
-        ParameterVector{A, B, C});
-
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::f32, shape_a);
-    copy_data(a,
-              test::NDArray<float, 2>(
-                  {{7, 2, 5, 3, 10, 2}, {3, 8, 9, 3, 4, 2}, {1, 5, 7, 5, 6, 1}, {0, 6, 2, 7, 2, 8}})
-                  .get_vector());
-    auto b = backend->create_tensor(element::f32, shape_b);
-    copy_data(b, test::NDArray<float, 2>({{2, 6}, {3, 1}}).get_vector());
-    auto c = backend->create_tensor(element::f32, shape_c);
-    copy_data(c, vector<float>{0});
-    auto result = backend->create_tensor(element::f32, shape_r);
-
-    auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b, c});
-    EXPECT_EQ((test::NDArray<float, 2>(
-                   {{0, 0, 0, 0, 6, 0}, {0, 0, 2, 0, 0, 0}, {0, 0, 3, 0, 0, 0}, {0, 0, 0, 0, 0, 1}})
-                   .get_vector()),
-              read_vector<float>(result));
-}
-
-//
-// Adapted from the XLA docs to provide an example in >2D: https://www.tensorflow.org/performance/xla/operation_semantics#selectandscatter
-//
-NGRAPH_TEST(${BACKEND_NAME}, select_and_scatter_3d_without_overlap)
-{
-    Shape shape_sel_a{};
-    auto SEL_A = make_shared<op::Parameter>(element::f32, shape_sel_a);
-    Shape shape_sel_b{};
-    auto SEL_B = make_shared<op::Parameter>(element::f32, shape_sel_b);
-    auto sel_f = make_shared<Function>(make_shared<op::Greater>(SEL_A, SEL_B),
-                                       ParameterVector{SEL_A, SEL_B});
-
-    Shape shape_scatter_a{};
-    auto SCATTER_A = make_shared<op::Parameter>(element::f32, shape_scatter_a);
-    Shape shape_scatter_b{};
-    auto SCATTER_B = make_shared<op::Parameter>(element::f32, shape_scatter_b);
-    auto scatter_f =
-        make_shared<Function>(SCATTER_A + SCATTER_B, ParameterVector{SCATTER_A, SCATTER_B});
-
-    Shape shape_a{2, 4, 6};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    Shape shape_b{1, 2, 2};
-    auto B = make_shared<op::Parameter>(element::f32, shape_b);
-    Shape shape_c{};
-    auto C = make_shared<op::Parameter>(element::f32, shape_c);
-    Shape shape_r{2, 4, 6};
-    Shape window_shape{2, 2, 3};
-    auto window_strides = Strides{2, 2, 3};
-    auto f = make_shared<Function>(
-        make_shared<op::SelectAndScatter>(A, B, C, sel_f, scatter_f, window_shape, window_strides),
-        ParameterVector{A, B, C});
-
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::f32, shape_a);
-    copy_data(
-        a,
-        test::NDArray<float, 3>(
-            {{{7, 2, 5, 3, 10, 2}, {3, 8, 9, 3, 4, 2}, {1, 5, 7, 5, 6, 1}, {0, 6, 2, 7, 2, 8}},
-             {{2, 5, 8, 3, 4, 2}, {1, 2, 8, 4, 5, 2}, {10, 2, 3, 4, 1, 0}, {4, 1, 2, 4, 5, 7}}})
-            .get_vector());
-    auto b = backend->create_tensor(element::f32, shape_b);
-    copy_data(b, test::NDArray<float, 3>({{{2, 6}, {3, 1}}}).get_vector());
-    auto c = backend->create_tensor(element::f32, shape_c);
-    copy_data(c, vector<float>{0});
-    auto result = backend->create_tensor(element::f32, shape_r);
-
-    auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b, c});
-    EXPECT_EQ(
-        (test::NDArray<float, 3>(
-             {{{0, 0, 0, 0, 6, 0}, {0, 0, 2, 0, 0, 0}, {0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 1}},
-              {{0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0}, {3, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0}}})
-             .get_vector()),
-        read_vector<float>(result));
 }
 
 template <typename OP>
@@ -6811,4 +6652,79 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_5d)
     backend->call_with_validate(handle, {result}, {a});
     vector<uint64_t> expected{2, 4, 8, 16, 32};
     EXPECT_EQ(expected, read_vector<uint64_t>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, dequantize_dynamic_offset)
+{
+    Shape input_shape{4};
+    Shape scale_offset_shape = {};
+    AxisSet quantization_axes;
+
+    auto input_type = element::u8;
+    auto output_type = element::f32;
+
+    typedef uint8_t input_c_type;
+    typedef float output_c_type;
+
+    auto X = make_shared<op::Parameter>(input_type, input_shape);
+    auto scale = make_shared<op::Parameter>(output_type, scale_offset_shape);
+    auto offset = make_shared<op::Parameter>(input_type, scale_offset_shape);
+    auto dequantize = make_shared<op::Dequantize>(X, scale, offset, output_type, quantization_axes);
+    auto f = make_shared<Function>(dequantize, ParameterVector{X, scale, offset});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    auto x = backend->create_tensor(input_type, input_shape);
+    auto y = backend->create_tensor(output_type, input_shape);
+    auto Scale = backend->create_tensor(output_type, scale_offset_shape);
+    auto Offset = backend->create_tensor(input_type, scale_offset_shape);
+
+    copy_data(x, vector<input_c_type>{0, 3, 128, 255});
+    copy_data(Scale, vector<output_c_type>{2});
+    copy_data(Offset, vector<input_c_type>{128});
+
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {y}, {x, Scale, Offset});
+    EXPECT_EQ((vector<output_c_type>{-256.0f, -250.0f, 0.0f, 254.0f}),
+              read_vector<output_c_type>(y));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, quantize_dynamic_offset)
+{
+    Shape input_shape{4, 3};
+    Shape scale_offset_shape = {};
+    AxisSet quantization_axes;
+
+    auto input_type = element::f32;
+    auto output_type = element::u8;
+
+    typedef float input_c_type;
+    typedef uint8_t output_c_type;
+
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+
+    auto X = make_shared<op::Parameter>(input_type, input_shape);
+    auto scale = make_shared<op::Parameter>(input_type, scale_offset_shape);
+    auto offset = make_shared<op::Parameter>(output_type, scale_offset_shape);
+    auto quantize =
+        make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
+    auto f = make_shared<Function>(quantize, ParameterVector{X, scale, offset});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    auto x = backend->create_tensor(input_type, input_shape);
+    auto y = backend->create_tensor(output_type, input_shape);
+    auto Scale = backend->create_tensor(input_type, scale_offset_shape);
+    auto Offset = backend->create_tensor(output_type, scale_offset_shape);
+
+    copy_data(x, vector<input_c_type>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11});
+    // divide by scale                2  2  2  2  2  2  2  2  2  2  2   2
+    // equals (rounded)               0  0  1  2  2  2  3  4  4  4  5   6
+    // plus offset                    1  1  1  1  1  1  1  1  1  1  1   1
+    // equals                         1  1  2  3  3  3  4  5  5  5  6   7
+    copy_data(Scale, vector<input_c_type>{2});
+    copy_data(Offset, vector<output_c_type>{1});
+
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {y}, {x, Scale, Offset});
+    EXPECT_EQ((vector<output_c_type>{1, 1, 2, 3, 3, 3, 4, 5, 5, 5, 6, 7}),
+              read_vector<output_c_type>(y));
 }
