@@ -14,16 +14,30 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "pyngraph/runtime/regmodule_pyngraph_runtime.hpp"
-#include <pybind11/pybind11.h>
+#pragma once
 
-namespace py = pybind11;
+#include <memory>
 
-void regmodule_pyngraph_runtime(py::module m)
+#include "core/node.hpp"
+#include "ngraph/node_vector.hpp"
+#include "ngraph/op/sign.hpp"
+
+namespace ngraph
 {
-    py::module m_runtime =
-        m.def_submodule("runtime", "Package ngraph.impl.runtime wraps ngraph::runtime");
-    regclass_pyngraph_runtime_Tensor(m_runtime);
-    regclass_pyngraph_runtime_Backend(m_runtime);
-    regclass_pyngraph_runtime_Executable(m_runtime);
-}
+    namespace onnx_import
+    {
+        namespace op
+        {
+            namespace set_1
+            {
+                inline NodeVector sign(const Node& node)
+                {
+                    return {std::make_shared<ngraph::op::Sign>(node.get_ng_inputs().at(0))};
+                }
+            } // namespace set_1
+
+        } //namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

@@ -14,16 +14,22 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "pyngraph/runtime/regmodule_pyngraph_runtime.hpp"
-#include <pybind11/pybind11.h>
+#include "null_node.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/node_vector.hpp"
 
-namespace py = pybind11;
-
-void regmodule_pyngraph_runtime(py::module m)
+namespace ngraph
 {
-    py::module m_runtime =
-        m.def_submodule("runtime", "Package ngraph.impl.runtime wraps ngraph::runtime");
-    regclass_pyngraph_runtime_Tensor(m_runtime);
-    regclass_pyngraph_runtime_Backend(m_runtime);
-    regclass_pyngraph_runtime_Executable(m_runtime);
-}
+    namespace onnx_import
+    {
+        NullNode::NullNode()
+            : ngraph::Node("NullNode", {}, 0)
+        {
+        }
+
+        std::shared_ptr<Node> NullNode::copy_with_new_args(const NodeVector& new_args) const
+        {
+            return std::make_shared<NullNode>();
+        }
+    } // namespace onnx_import
+} // namespace ngraph

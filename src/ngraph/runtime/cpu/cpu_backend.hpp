@@ -47,34 +47,44 @@ namespace ngraph
                     create_tensor(const ngraph::element::Type& element_type,
                                   const Shape& shape) override;
 
-                Handle compile(std::shared_ptr<Function> func) override;
-                Handle compile(std::shared_ptr<Function> func,
-                               ngraph::pass::PassConfig pass_config);
+                std::shared_ptr<ngraph::runtime::Executable>
+                    compile(std::shared_ptr<Function> func,
+                            bool enable_performance_counters = false) override;
+                            
+                std::shared_ptr<ngraph::runtime::Executable>
+                    compile(std::shared_ptr<Function> func,
+                            ngraph::pass::PassConfig pass_config,
+                            bool enable_performance_counters = false);
 
-                bool call(std::shared_ptr<Function> func,
-                          const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                          const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
-
-                void remove_compiled_function(std::shared_ptr<Function> func) override;
-                std::shared_ptr<CPU_CallFrame> get_call_frame(std::shared_ptr<Function> func);
-
-                void enable_performance_data(std::shared_ptr<Function> func, bool enable) override;
-                std::vector<PerformanceCounter>
-                    get_performance_data(std::shared_ptr<Function> func) const override;
+                void remove_compiled_function(std::shared_ptr<Executable> exec) override;
 
                 bool is_supported(const Node& node) const override;
                 bool is_supported_property(const Property prop) const override;
 
             private:
+                std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<Executable>>
+                    m_exec_map;
+            };
+
+            class CPU_Executable : public runtime::Executable
+            {
+            public:
+                CPU_Executable(std::shared_ptr<Function> func, ngraph::pass::PassConfig pass_config, bool performance_counters_enabled);
+                bool call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                          const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
+
+                std::shared_ptr<CPU_CallFrame> get_call_frame();
+
+                std::vector<PerformanceCounter> get_performance_data() const override;
+
+            private:
                 class FunctionInstance
                 {
                 public:
-                    std::shared_ptr<CPU_ExternalFunction> m_external_function;
-                    std::shared_ptr<CPU_CallFrame> m_call_frame;
+                    std::shared_ptr<CPU_ExternalFunction> m_external_function = nullptr;
+                    std::shared_ptr<CPU_CallFrame> m_call_frame = nullptr;
                     bool m_performance_counters_enabled = false;
-                };
-
-                std::map<std::shared_ptr<Function>, FunctionInstance> m_function_map;
+                } m_function_instance;
             };
         }
     }

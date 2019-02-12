@@ -93,6 +93,7 @@ namespace ngraph
                 friend class CPU_Backend;
                 friend class CPU_CallFrame;
                 friend class CPU_Debugger;
+                friend class CPU_Executable;
 
             public:
                 CPU_ExternalFunction(
