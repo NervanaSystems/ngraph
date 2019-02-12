@@ -20,8 +20,11 @@
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/hybrid/hybrid_util.hpp"
-#include "ngraph/runtime/hybrid/pass/assign_placement.hpp"
+#include "ngraph/runtime/hybrid/pass/default_placement.hpp"
+#include "ngraph/runtime/hybrid/pass/dump.hpp"
 #include "ngraph/runtime/hybrid/pass/fix_get_output_element.hpp"
+#include "ngraph/runtime/hybrid/pass/liveness.hpp"
+#include "ngraph/runtime/hybrid/pass/memory_layout.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
 using namespace ngraph;
@@ -38,6 +41,7 @@ shared_ptr<runtime::Tensor>
                                                   const Shape& shape)
 {
     auto it = m_backend_list.begin();
+    NGRAPH_ASSERT(it != m_backend_list.end());
     return (*it)->create_tensor(element_type, shape);
 }
 
@@ -45,7 +49,19 @@ shared_ptr<runtime::Tensor> runtime::hybrid::HybridBackend::create_tensor(
     const element::Type& element_type, const Shape& shape, void* memory_pointer)
 {
     auto it = m_backend_list.begin();
+    NGRAPH_ASSERT(it != m_backend_list.end());
     return (*it)->create_tensor(element_type, shape, memory_pointer);
+}
+
+static void node_modifiers(const Node& node, vector<string>& attributes)
+{
+    vector<string> colors = {"\"#A0FFA0\"", "\"#FFF790\""};
+    if (node.get_placement_index() < colors.size())
+    {
+        string color = colors[node.get_placement_index()];
+        attributes.push_back("style=filled");
+        attributes.push_back("fillcolor=" + color);
+    }
 }
 
 runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> func)
@@ -58,11 +74,15 @@ runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> fun
 
         // Run placement pass
         ngraph::pass::Manager pass_manager;
-        pass_manager.register_pass<runtime::hybrid::pass::AssignPlacement>(m_backend_list);
+        pass_manager.register_pass<runtime::hybrid::pass::DefaultPlacement>(m_backend_list);
         pass_manager.register_pass<runtime::hybrid::pass::FixGetOutputElement>();
-#ifdef GPUH_DEBUG
-        pass_manager.register_pass<ngraph::pass::VisualizeTree>("graph.png");
-#endif
+        pass_manager.register_pass<runtime::hybrid::pass::Liveness>();
+        pass_manager.register_pass<runtime::hybrid::pass::Dump>("graph.dump");
+        // pass_manager.register_pass<runtime::hybrid::pass::MemoryLayout>();
+        if (m_debug_enabled)
+        {
+            pass_manager.register_pass<ngraph::pass::VisualizeTree>("graph.png", node_modifiers);
+        }
         pass_manager.run_passes(instance.m_function);
 
         // Split function to sub_functions
@@ -71,9 +91,18 @@ runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> fun
         m_function_map.insert({func, instance});
 
         // Compile subfunctions in corresponding backends
+        size_t subfunction_number = 0;
         for (shared_ptr<Function>& sub_function : instance.m_sub_functions)
         {
-            size_t placement = runtime::hybrid::get_colocated_function_placement(sub_function);
+            size_t placement = sub_function->get_placement();
+            if (m_debug_enabled)
+            {
+                string name = "subfunction_" + to_string(subfunction_number++);
+                ngraph::pass::Manager pm;
+                pm.register_pass<ngraph::pass::VisualizeTree>(name + ".png", node_modifiers);
+                pm.register_pass<runtime::hybrid::pass::Dump>(name + ".dump");
+                pm.run_passes(sub_function);
+            }
             auto backend = m_backend_list[placement];
             backend->compile(sub_function);
 
@@ -120,7 +149,7 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
     for (const shared_ptr<Function>& sub_function : instance.m_sub_functions)
     {
         // Init backend
-        size_t placement = runtime::hybrid::get_colocated_function_placement(sub_function);
+        size_t placement = sub_function->get_placement();
         auto backend = m_backend_list[placement];
 
         // Prepare parameter Tensors

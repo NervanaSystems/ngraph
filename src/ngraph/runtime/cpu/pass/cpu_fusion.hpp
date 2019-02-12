@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 
 namespace ngraph
 {
@@ -27,12 +28,13 @@ namespace ngraph
             namespace pass
             {
                 class CPUFusion;
+                class CPUQuantFusion;
             }
         }
     }
 }
 
-class ngraph::runtime::cpu::pass::CPUFusion : public ngraph::pass::GraphRewrite
+class CPU_BACKEND_API ngraph::runtime::cpu::pass::CPUFusion : public ngraph::pass::GraphRewrite
 {
 public:
     CPUFusion(ngraph::pass::FusionType fusions = ngraph::pass::ALL_FUSIONS)
@@ -99,4 +101,22 @@ private:
     void construct_groupconv_batchnorm_global_stats_folding_relu();
     void construct_update_slice();
     void construct_fuse_lstm_recurrent_state();
+};
+
+class CPU_BACKEND_API ngraph::runtime::cpu::pass::CPUQuantFusion : public ngraph::pass::GraphRewrite
+{
+public:
+    CPUQuantFusion()
+        : GraphRewrite()
+    {
+        construct_qconv_relu(true);
+        construct_qconv_relu(false);
+        construct_qconvb_add();
+        construct_dq_q();
+    }
+
+private:
+    void construct_qconv_relu(bool with_bias);
+    void construct_dq_q();
+    void construct_qconvb_add();
 };

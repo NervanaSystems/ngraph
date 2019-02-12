@@ -103,6 +103,11 @@
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
+#ifdef NGRAPH_DISTRIBUTED_OMPI_ENABLE
+#include <mpi.h>
+#include "ngraph/op/allreduce.hpp"
+#endif
+
 using namespace std;
 using namespace ngraph;
 
@@ -366,8 +371,6 @@ namespace ngraph
             {
                 static BuildOpMap build_dispatcher{
                     {TI(ngraph::op::Parameter), &runtime::cpu::Builder::nop},
-                    {TI(ngraph::runtime::cpu::op::ConvertLayout),
-                     &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::ConvertLayout>},
                     {TI(ngraph::runtime::cpu::op::LoopKernel),
                      &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::LoopKernel>},
                     {TI(ngraph::runtime::cpu::op::HalideOp),

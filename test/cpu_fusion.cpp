@@ -21,6 +21,7 @@
 #include <memory>
 
 #include "gtest/gtest.h"
+#include "misc.hpp"
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
@@ -28,10 +29,14 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/concat.hpp"
+#include "ngraph/op/dequantize.hpp"
+#include "ngraph/op/experimental/quantized_conv.hpp"
+#include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/parameter.hpp"
+#include "ngraph/op/quantize.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/sum.hpp"
@@ -1339,9 +1344,9 @@ TEST(cpu_fusion, rnn_fusion_from_json_model)
     shared_ptr<Function> func = ngraph::deserialize(ss);
     pass_manager.run_passes(func);
     const size_t NUM_STEPS = 10;
-    auto mmb_predicate = [](std::shared_ptr<Node> node) {
+    auto mmb_predicate = [=](std::shared_ptr<Node> node) {
         auto users = node->get_users();
-        return users.size() == NUM_STEPS &&
+        return (users.size() == NUM_STEPS) &&
                std::all_of(begin(users), end(users), [](std::shared_ptr<Node> n) {
                    return std::dynamic_pointer_cast<op::Slice>(n) != nullptr;
                });
@@ -3449,4 +3454,356 @@ TEST(cpu_fusion, rnn_input_fusion_inter_vs_cpu)
     {
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
     }
+}
+
+TEST(cpu_fusion, validate_fuse_gru_inputs)
+{
+    const std::string file_name("mxnet/gru_debug.json");
+    auto cpu_func = make_function_from_file(file_name);
+    auto int_func = make_function_from_file(file_name);
+
+    test::Uniform<float> rng(-10.0f, 10.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : int_func->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    auto int_results = execute(int_func, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_func, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+    }
+}
+
+TEST(cpu_quant_fusion, qconv_relu)
+{
+    auto make_function = []() {
+        Shape shape_input{1, 2, 2, 2};
+        Shape shape_weights{1, 2, 1, 1};
+        auto input = std::make_shared<op::Parameter>(element::f32, shape_input);
+        auto weights = std::make_shared<op::Parameter>(element::f32, shape_weights);
+        auto input_scale = op::Constant::create(element::f32, Shape{}, {2.0f});
+        auto weights_scale = op::Constant::create(element::f32, Shape{}, {2.0f});
+        auto output_scale = op::Constant::create(element::f32, Shape{}, {4.0f});
+        auto int8_zero = op::Constant::create(element::i8, Shape{}, {0});
+        auto uint8_zero = op::Constant::create(element::u8, Shape{}, {0});
+
+        op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+        auto q_input = std::make_shared<op::Quantize>(
+            input, input_scale, uint8_zero, element::u8, AxisSet{}, round_mode);
+        auto q_weights = std::make_shared<op::Quantize>(
+            weights, weights_scale, int8_zero, element::i8, AxisSet{}, round_mode);
+        auto requant_scale = (input_scale * weights_scale) / output_scale;
+        auto conv = std::make_shared<op::QuantizedConvolution>(q_input,
+                                                               q_weights,
+                                                               Strides{1, 1},
+                                                               Strides{1, 1},
+                                                               CoordinateDiff{0, 0},
+                                                               CoordinateDiff{0, 0},
+                                                               Strides{1, 1},
+                                                               requant_scale);
+        auto dq = std::make_shared<op::Dequantize>(
+            conv, output_scale, int8_zero, element::f32, AxisSet{});
+        auto relu = std::make_shared<op::Relu>(dq);
+        auto q = std::make_shared<op::Quantize>(
+            relu, output_scale, uint8_zero, element::u8, AxisSet{}, round_mode);
+        auto q_f =
+            std::make_shared<op::Dequantize>(q, output_scale, uint8_zero, element::f32, AxisSet{});
+        return make_shared<Function>(NodeVector{q_f}, ParameterVector{input, weights});
+    };
+
+    auto cpu_f1 = make_function();
+    auto cpu_f2 = make_function();
+
+    test::Uniform<float> rng(2.0f, 2.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f1->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:0", 1);
+    auto cpu1_results = execute(cpu_f1, args, "CPU");
+    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:1", 1);
+    auto cpu2_results = execute(cpu_f2, args, "CPU");
+    // Expected output - [2, 2, ...]
+    EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
+}
+
+TEST(cpu_quant_fusion, qconvb_relu)
+{
+    auto make_function = []() {
+        Shape shape_input{1, 2, 2, 2};
+        Shape shape_weights{1, 2, 1, 1};
+        auto input = std::make_shared<op::Parameter>(element::f32, shape_input);
+        auto weights = std::make_shared<op::Parameter>(element::f32, shape_weights);
+        auto bias = std::make_shared<op::Parameter>(element::f32, Shape{shape_weights[0]});
+        auto input_scale = op::Constant::create(element::f32, Shape{}, {2.0f});
+        auto weights_scale = op::Constant::create(element::f32, Shape{}, {2.0f});
+        auto output_scale = op::Constant::create(element::f32, Shape{}, {4.0f});
+        auto int8_zero = op::Constant::create(element::i8, Shape{}, {0});
+        auto int32_zero = op::Constant::create(element::i32, Shape{}, {0});
+        auto uint8_zero = op::Constant::create(element::u8, Shape{}, {0});
+
+        op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+        auto q_input = std::make_shared<op::Quantize>(
+            input, input_scale, uint8_zero, element::u8, AxisSet{}, round_mode);
+        auto q_weights = std::make_shared<op::Quantize>(
+            weights, weights_scale, int8_zero, element::i8, AxisSet{}, round_mode);
+        auto q_bias = std::make_shared<op::Quantize>(
+            bias, input_scale * weights_scale, int32_zero, element::i32, AxisSet{}, round_mode);
+        auto requant_scale = (input_scale * weights_scale) / output_scale;
+        auto conv = std::make_shared<op::QuantizedConvolutionBias>(q_input,
+                                                                   q_weights,
+                                                                   bias,
+                                                                   Strides{1, 1},
+                                                                   Strides{1, 1},
+                                                                   CoordinateDiff{0, 0},
+                                                                   CoordinateDiff{0, 0},
+                                                                   Strides{1, 1},
+                                                                   requant_scale);
+        auto dq = std::make_shared<op::Dequantize>(
+            conv, output_scale, int8_zero, element::f32, AxisSet{});
+        auto relu = std::make_shared<op::Relu>(dq);
+        auto q = std::make_shared<op::Quantize>(
+            relu, output_scale, uint8_zero, element::u8, AxisSet{}, round_mode);
+        auto q_f =
+            std::make_shared<op::Dequantize>(q, output_scale, uint8_zero, element::f32, AxisSet{});
+        return make_shared<Function>(NodeVector{q_f}, ParameterVector{input, weights, bias});
+    };
+
+    auto cpu_f1 = make_function();
+    auto cpu_f2 = make_function();
+
+    test::Uniform<float> rng(2.0f, 2.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f1->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:0", 1);
+    auto cpu1_results = execute(cpu_f1, args, "CPU");
+    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:1", 1);
+    auto cpu2_results = execute(cpu_f2, args, "CPU");
+    EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
+}
+
+TEST(cpu_quant_fusion, dq_q)
+{
+    auto make_function = [](bool match_scales = true, bool match_et = true) {
+        Shape shape_input{1, 2, 2};
+        auto input = std::make_shared<op::Parameter>(element::i8, shape_input);
+        auto dq_scale = op::Constant::create(element::f32, Shape{}, {2.0f});
+        auto int8_zero = op::Constant::create(element::i8, Shape{}, {0});
+        auto dq =
+            std::make_shared<op::Dequantize>(input, dq_scale, int8_zero, element::f32, AxisSet{});
+        float q_scalev = 2.0f;
+        if (!match_scales)
+        {
+            q_scalev = 1.0f;
+        }
+        auto q_scale = op::Constant::create(element::f32, Shape{}, {q_scalev});
+        op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+        if (match_et)
+        {
+            auto q = std::make_shared<op::Quantize>(
+                dq, q_scale, int8_zero, element::i8, AxisSet{}, round_mode);
+            return make_shared<Function>(NodeVector{q}, ParameterVector{input});
+        }
+        else
+        {
+            auto uint8_zero = op::Constant::create(element::u8, Shape{}, {0});
+            auto q = std::make_shared<op::Quantize>(
+                dq, q_scale, uint8_zero, element::u8, AxisSet{}, round_mode);
+            return make_shared<Function>(NodeVector{q}, ParameterVector{input});
+        }
+    };
+
+    auto cpu_f1 = make_function();
+    auto cpu_f2 = make_function();
+
+    vector<vector<int8_t>> args;
+    args.push_back({-1, 2, 3, 4});
+
+    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:0", 1);
+    auto cpu1_results = execute(cpu_f1, args, "CPU");
+    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:1", 1);
+    auto cpu2_results = execute(cpu_f2, args, "CPU");
+    EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
+
+    auto backend = runtime::Backend::create("CPU");
+    auto fuse = make_function(true, true);
+    auto no_fuse1 = make_function(false, true);
+    auto no_fuse2 = make_function(true, false);
+    backend->compile(fuse);
+    backend->compile(no_fuse1);
+    backend->compile(no_fuse2);
+    ASSERT_EQ(count_ops_of_type<op::Quantize>(fuse), 0);
+    ASSERT_EQ(count_ops_of_type<op::Quantize>(no_fuse1), 1);
+    ASSERT_EQ(count_ops_of_type<op::Quantize>(no_fuse2), 1);
+}
+
+TEST(cpu_quant_fusion, qconvbsa)
+{
+    auto make_function = []() {
+        Shape shape_input{1, 2, 2, 2};
+        Shape shape_weights{1, 2, 1, 1};
+        Shape shape_summand{1, 1, 2, 2};
+        auto input = std::make_shared<op::Parameter>(element::f32, shape_input);
+        auto weights = std::make_shared<op::Parameter>(element::f32, shape_weights);
+        auto bias = std::make_shared<op::Parameter>(element::f32, Shape{shape_weights[0]});
+        auto summand = std::make_shared<op::Parameter>(element::f32, shape_summand);
+
+        auto input_scale = op::Constant::create(element::f32, Shape{}, {2.0f});
+        auto weights_scale = op::Constant::create(element::f32, Shape{}, {2.0f});
+        auto output_scale = op::Constant::create(element::f32, Shape{}, {4.0f});
+        auto summand_scale = op::Constant::create(element::f32, Shape{}, {2.0f});
+
+        auto int8_zero = op::Constant::create(element::i8, Shape{}, {0});
+        auto int32_zero = op::Constant::create(element::i32, Shape{}, {0});
+        auto uint8_zero = op::Constant::create(element::u8, Shape{}, {0});
+
+        op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+        auto q_input = std::make_shared<op::Quantize>(
+            input, input_scale, uint8_zero, element::u8, AxisSet{}, round_mode);
+        auto q_weights = std::make_shared<op::Quantize>(
+            weights, weights_scale, int8_zero, element::i8, AxisSet{}, round_mode);
+        auto q_bias = std::make_shared<op::Quantize>(
+            bias, input_scale * weights_scale, int32_zero, element::i32, AxisSet{}, round_mode);
+        auto q_summand = std::make_shared<op::Quantize>(
+            summand, summand_scale, int8_zero, element::i8, AxisSet{}, round_mode);
+
+        // Left Graph
+        auto requant_scale = (input_scale * weights_scale) / output_scale;
+        auto conv = std::make_shared<op::QuantizedConvolutionBias>(q_input,
+                                                                   q_weights,
+                                                                   bias,
+                                                                   Strides{1, 1},
+                                                                   Strides{1, 1},
+                                                                   CoordinateDiff{0, 0},
+                                                                   CoordinateDiff{0, 0},
+                                                                   Strides{1, 1},
+                                                                   requant_scale);
+        auto dq_l = std::make_shared<op::Dequantize>(
+            conv, output_scale, int8_zero, element::f32, AxisSet{});
+        auto r_l = std::make_shared<op::Reshape>(dq_l, AxisVector{0, 1, 2, 3}, Shape{1, 2, 2});
+        auto b_l = std::make_shared<op::Broadcast>(r_l, Shape{1, 1, 2, 2}, AxisSet{0});
+
+        // Right Graph
+        auto dq_r = std::make_shared<op::Dequantize>(
+            q_summand, summand_scale, int8_zero, element::f32, AxisSet{});
+        auto r_r = std::make_shared<op::Reshape>(dq_r, AxisVector{0, 1, 2, 3}, Shape{1, 2, 2});
+        auto b_r = std::make_shared<op::Broadcast>(r_r, Shape{1, 1, 2, 2}, AxisSet{0});
+        auto add = b_l + b_r;
+        auto relu = std::make_shared<op::Relu>(add);
+        return make_shared<Function>(NodeVector{relu},
+                                     ParameterVector{input, weights, bias, summand});
+    };
+
+    auto cpu_f1 = make_function();
+    auto cpu_f2 = make_function();
+
+    test::Uniform<float> rng(4.0f, 4.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f1->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    // Disable CPUQuantFusion
+    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:0", 1);
+    auto cpu1_results = execute(cpu_f1, args, "CPU");
+    // Enable CPUQuantFusion
+    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:1", 1);
+    auto cpu2_results = execute(cpu_f2, args, "CPU");
+    EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
+}
+
+TEST(cpu_quant_fusion, qconvba)
+{
+    auto make_function = []() {
+        Shape shape_input{1, 2, 2, 2};
+        Shape shape_weights{1, 2, 1, 1};
+        Shape shape_summand{1, 1, 2, 2};
+        auto input = std::make_shared<op::Parameter>(element::f32, shape_input);
+        auto weights = std::make_shared<op::Parameter>(element::f32, shape_weights);
+        auto bias = std::make_shared<op::Parameter>(element::f32, Shape{shape_weights[0]});
+        auto summand = std::make_shared<op::Parameter>(element::f32, shape_summand);
+
+        auto input_scale = op::Constant::create(element::f32, Shape{}, {2.0f});
+        auto weights_scale = op::Constant::create(element::f32, Shape{}, {2.0f});
+        auto output_scale = op::Constant::create(element::f32, Shape{}, {4.0f});
+        auto summand_scale = op::Constant::create(element::f32, Shape{}, {4.0f});
+
+        auto int8_zero = op::Constant::create(element::i8, Shape{}, {0});
+        auto int32_zero = op::Constant::create(element::i32, Shape{}, {0});
+        auto uint8_zero = op::Constant::create(element::u8, Shape{}, {0});
+
+        op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+        auto q_input = std::make_shared<op::Quantize>(
+            input, input_scale, uint8_zero, element::u8, AxisSet{}, round_mode);
+        auto q_weights = std::make_shared<op::Quantize>(
+            weights, weights_scale, int8_zero, element::i8, AxisSet{}, round_mode);
+        auto q_bias = std::make_shared<op::Quantize>(
+            bias, input_scale * weights_scale, int32_zero, element::i32, AxisSet{}, round_mode);
+        auto q_summand = std::make_shared<op::Quantize>(
+            summand, summand_scale, uint8_zero, element::u8, AxisSet{}, round_mode);
+
+        // Left Graph
+        auto requant_scale = (input_scale * weights_scale) / output_scale;
+        auto conv = std::make_shared<op::QuantizedConvolutionBias>(q_input,
+                                                                   q_weights,
+                                                                   bias,
+                                                                   Strides{1, 1},
+                                                                   Strides{1, 1},
+                                                                   CoordinateDiff{0, 0},
+                                                                   CoordinateDiff{0, 0},
+                                                                   Strides{1, 1},
+                                                                   requant_scale);
+        auto dq_l = std::make_shared<op::Dequantize>(
+            conv, output_scale, int8_zero, element::f32, AxisSet{});
+        auto r_l = std::make_shared<op::Reshape>(dq_l, AxisVector{0, 1, 2, 3}, Shape{1, 2, 2});
+        auto b_l = std::make_shared<op::Broadcast>(r_l, Shape{1, 1, 2, 2}, AxisSet{0});
+
+        // Right Graph
+        auto dq_r = std::make_shared<op::Dequantize>(
+            q_summand, summand_scale, uint8_zero, element::f32, AxisSet{});
+        auto r_r = std::make_shared<op::Reshape>(dq_r, AxisVector{0, 1, 2, 3}, Shape{1, 2, 2});
+        auto b_r = std::make_shared<op::Broadcast>(r_r, Shape{1, 1, 2, 2}, AxisSet{0});
+        auto add = b_l + b_r;
+        auto relu = std::make_shared<op::Relu>(add);
+        return make_shared<Function>(NodeVector{relu},
+                                     ParameterVector{input, weights, bias, summand});
+    };
+
+    auto cpu_f1 = make_function();
+    auto cpu_f2 = make_function();
+
+    test::Uniform<float> rng(2.0f, 2.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f1->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    // Disable CPUQuantFusion
+    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:0", 1);
+    auto cpu1_results = execute(cpu_f1, args, "CPU");
+    // Enable CPUQuantFusion
+    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:1", 1);
+    auto cpu2_results = execute(cpu_f2, args, "CPU");
+    EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
 }

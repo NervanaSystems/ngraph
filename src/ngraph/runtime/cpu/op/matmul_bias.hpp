@@ -18,6 +18,7 @@
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 
 namespace ngraph
 {
@@ -26,14 +27,14 @@ namespace ngraph
         class MatmulBias : public Op
         {
         public:
-            MatmulBias(std::shared_ptr<Node> W,
-                       std::shared_ptr<Node> x,
-                       std::shared_ptr<Node> b,
-                       Shape shape_w,
-                       Shape shape_x,
-                       bool transpose_w,
-                       bool transpose_x,
-                       AxisSet axes = AxisSet{});
+            CPU_BACKEND_API MatmulBias(std::shared_ptr<Node> W,
+                                       std::shared_ptr<Node> x,
+                                       std::shared_ptr<Node> b,
+                                       Shape shape_w,
+                                       Shape shape_x,
+                                       bool transpose_w,
+                                       bool transpose_x,
+                                       AxisSet axes = AxisSet{});
 
             void validate_and_infer_types() override;
 

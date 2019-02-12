@@ -31,7 +31,6 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
-#include "ngraph/placement.hpp"
 #include "ngraph/result_vector.hpp"
 #include "ngraph/util.hpp"
 
@@ -406,29 +405,6 @@ void ngraph::insert_new_node_between(const shared_ptr<Node>& src_node,
     dst_input->replace_output(new_node, 0); // Remove [0] (again), add [8], remove [1], add [9]
 }
 
-// Assert that nodes in the function is colocated and return that placement
-Placement ngraph::get_colocated_function_placement(shared_ptr<Function> func)
-{
-    Placement function_placement = Placement::DEFAULT;
-    traverse_nodes(func, [&](shared_ptr<Node> node) {
-        Placement node_placement = node->get_placement();
-        if (node_placement == Placement::DEFAULT)
-        {
-            throw ngraph_error("Node should have a device placement, not Placement::DEFAULT");
-        }
-        if (function_placement == Placement::DEFAULT)
-        {
-            // First time seeing a node
-            function_placement = node->get_placement();
-        }
-        else if (function_placement != node_placement)
-        {
-            throw ngraph_error("Function contains nodes of two different placements");
-        }
-    });
-    return function_placement;
-}
-
 std::shared_ptr<Node> ngraph::make_zero(const element::Type& element_type, const Shape& shape)
 {
     std::shared_ptr<Node> zero = op::Constant::create(element_type, Shape{}, {0.0});
@@ -571,4 +547,20 @@ bool ngraph::is_valid_rank(const std::shared_ptr<Node>& node, std::vector<size_t
         }
     }
     return false;
+}
+
+bool ngraph::compare_constants(const std::shared_ptr<Node>& n1, const std::shared_ptr<Node>& n2)
+{
+    if (!(n1->is_constant() && n2->is_constant()))
+    {
+        return false;
+    }
+
+    if (static_pointer_cast<op::Constant>(n1)->get_value_strings() !=
+        static_pointer_cast<op::Constant>(n2)->get_value_strings())
+    {
+        return false;
+    }
+
+    return true;
 }

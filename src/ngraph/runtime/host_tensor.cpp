@@ -19,6 +19,7 @@
 
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/util.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -46,7 +47,7 @@ runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type,
     else if (m_buffer_size > 0)
     {
         size_t allocation_size = m_buffer_size + runtime::alignment;
-        m_allocated_buffer_pool = static_cast<char*>(malloc(allocation_size));
+        m_allocated_buffer_pool = static_cast<char*>(ngraph_malloc(allocation_size));
         m_aligned_buffer_pool = m_allocated_buffer_pool;
         size_t mod = size_t(m_aligned_buffer_pool) % alignment;
         if (mod != 0)
@@ -83,7 +84,7 @@ runtime::HostTensor::~HostTensor()
 {
     if (m_allocated_buffer_pool != nullptr)
     {
-        free(m_allocated_buffer_pool);
+        ngraph_free(m_allocated_buffer_pool);
     }
 }
 
