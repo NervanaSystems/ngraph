@@ -172,8 +172,6 @@ namespace ngraph
                         // The lengths of the sequences in a batch. Shape [batch_size]
                         if (!ng_inputs.at(4)->is_null())
                         {
-                            ASSERT_VALID_ARGUMENT(node, ng_inputs.at(4)->is_constant())
-                                << "Only Constant node is supported for 'sequence_lens' input.";
                             m_map[LSTMInput::LSTM_INPUT_SEQ_LENGTHS] = ng_inputs.at(4);
                         }
                         else
