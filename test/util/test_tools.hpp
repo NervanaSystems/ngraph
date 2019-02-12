@@ -17,9 +17,9 @@
 #pragma once
 
 #include <exception>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <fstream>
 #include <list>
 #include <memory>
 #include <random>
