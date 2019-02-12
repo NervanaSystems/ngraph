@@ -33,7 +33,6 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::ArgMin)
             {
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
                 const ngraph::op::ArgMin* argmin = static_cast<const ngraph::op::ArgMin*>(node);
                 CPUKernelFunctor functor;

@@ -19,8 +19,8 @@
 #include <map>
 #include <memory>
 
-#include "ngraph/pass/pass_config.hpp"
 #include "cpu_backend_visibility.h"
+#include "ngraph/pass/pass_config.hpp"
 #include "ngraph/runtime/backend.hpp"
 
 namespace ngraph

@@ -624,7 +624,7 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
         }
     }
 
-    // backward pass to build livenew_free_list
+    // backward pass to build liveness_free_list
     for (auto it = ops.rbegin(); it != ops.rend(); it++)
     {
         const shared_ptr<Node>& node = *it;
@@ -699,29 +699,76 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                     if (oi_pair.destructive && node->liveness_free_list.count(input_tensor) != 0 &&
                         node->liveness_new_list.count(output_tensor) != 0)
                     {
-                        NGRAPH_DEBUG << "last use of input tensor, destructive oi allowed:";
-                        NGRAPH_DEBUG << "input_tensor is " << input_tensor->get_name();
-                        NGRAPH_DEBUG << "output_tensor is " << output_tensor->get_name();
-                        no_free.insert(input_tensor);
-                        no_new.insert(output_tensor);
+                        auto input_node = node->get_inputs().at(oi_pair.input).get_node();
+                        // when reusing memory, check cacheability
+                        if (!m_disable_memory_sharing && input_node->is_op())
+                        {
+                            auto input_op = std::static_pointer_cast<op::Op>(input_node);
+                            if (auto input_op_annotations = input_op->get_op_annotations())
+                            {
+                                // when reusing memory, ops with different cacheabilities are using different memory manager
+                                // and should not share the same buffer.
+                                if (op_annotations->is_cacheable() !=
+                                    input_op_annotations->is_cacheable())
+                                {
+                                    continue;
+                                }
+                            }
+                        }
                         NGRAPH_ASSERT(m_tensor_to_key_map.find(input_tensor) !=
                                       m_tensor_to_key_map.end());
                         auto input_key = m_tensor_to_key_map[input_tensor];
                         NGRAPH_ASSERT(m_tensor_to_key_map.find(output_tensor) !=
                                       m_tensor_to_key_map.end());
                         auto output_key = m_tensor_to_key_map[output_tensor];
-                        auto input_offset = input_tensor->get_pool_offset();
-                        // move tensors in the set containing the output tensor to the set of input tensor
-                        // then erase that output tensor set
-                        for (auto ele_t : m_key_to_tensors_set_map[output_key].second)
+                        // check buffer sizes, if required output buffer is larger than input buffer, do not reuse input buffer
+                        NGRAPH_ASSERT(m_key_to_tensors_set_map.find(input_key) !=
+                                      m_key_to_tensors_set_map.end());
+                        auto input_set = m_key_to_tensors_set_map[input_key].second;
+                        // get the largest tensor size, which is the size of the memory buffer for the set
+                        size_t input_size = input_tensor->size();
+                        // get the smallest offset, which is the offset of the memory buffer for the set
+                        size_t offset = input_tensor->get_pool_offset();
+                        for (auto e : input_set)
                         {
-                            NGRAPH_ASSERT(m_key_to_tensors_set_map.find(input_key) !=
-                                          m_key_to_tensors_set_map.end());
-                            m_key_to_tensors_set_map[input_key].second.insert(ele_t);
-                            m_tensor_to_key_map[ele_t] = input_key;
-                            ele_t->set_pool_offset(input_offset);
+                            if (e->size() > input_size)
+                            {
+                                input_size = e->size();
+                            }
+                            if (e->get_pool_offset() < offset)
+                            {
+                                offset = e->get_pool_offset();
+                            }
                         }
-                        m_key_to_tensors_set_map.erase(output_key);
+                        NGRAPH_ASSERT(m_key_to_tensors_set_map.find(output_key) !=
+                                      m_key_to_tensors_set_map.end());
+                        auto output_set = m_key_to_tensors_set_map[output_key].second;
+                        size_t output_size = input_tensor->size();
+                        // get the largest tensor size, which is the size of memory buffer for the set
+                        for (auto e : output_set)
+                        {
+                            if (e->size() > output_size)
+                            {
+                                output_size = e->size();
+                            }
+                        }
+                        if (input_size < output_size)
+                        {
+                            continue;
+                        }
+                        NGRAPH_DEBUG << "last use of input tensor, destructive oi allowed:";
+                        NGRAPH_DEBUG << "input_tensor is " << input_tensor->get_name();
+                        NGRAPH_DEBUG << "output_tensor is " << output_tensor->get_name();
+                        no_free.insert(input_tensor);
+                        no_new.insert(output_tensor);
+
+                        // set the tensor offset for tensors in the set containing the output tensor to the starting offset
+                        // of the set of input tensor.
+                        // do not combine those two sets.
+                        for (auto& ele_t : m_key_to_tensors_set_map[output_key].second)
+                        {
+                            ele_t->set_pool_offset(offset);
+                        }
                     }
                 }
             }
@@ -734,7 +781,9 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                 continue;
             }
             size_t offset = 0;
+            NGRAPH_ASSERT(m_tensor_to_key_map.find(tensor) != m_tensor_to_key_map.end());
             auto key = m_tensor_to_key_map[tensor];
+            NGRAPH_ASSERT(m_key_to_tensors_set_map.find(key) != m_key_to_tensors_set_map.end());
             auto tensors_set = m_key_to_tensors_set_map[key].second;
             size_t size = tensor->size();
             for (auto e : tensors_set)
