@@ -14,22 +14,19 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include <iostream>
 
-#include <cstddef>
-
-namespace ngraph
+namespace ngraph_dist_setup
 {
-    class Distributed
-    {
-    public:
-        Distributed();
-        ~Distributed();
-        int get_size() const;
-        int get_rank() const;
-
-    private:
-        bool this_init_comm;
-        void finalize();
-    };
+    static int distributed_comm_size;
+    static int distributed_comm_rank;
 }
+
+class DistributedSetup
+{
+public:
+    int get_comm_size();
+    int get_comm_rank();
+    void set_comm_size(int comm_size);
+    void set_comm_rank(int comm_rank);
+};
