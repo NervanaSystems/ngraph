@@ -197,6 +197,8 @@ namespace ngraph
 
             // Helper functions used in cldnn::custom_gpu_primitive kernels
             std::string get_opencl_type_name(const element::Type& ngraph_type);
+            std::string get_opencl_type_min_max_value(const element::Type& ngraph_type,
+                                                      bool is_min);
             std::vector<cldnn_arg> get_kernel_args(size_t input, size_t output);
             std::string array_dims(const Shape& dimentions, const AxisSet& axis = {});
             std::string access_dims(const Shape& dimentions,

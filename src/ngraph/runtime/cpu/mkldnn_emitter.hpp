@@ -40,6 +40,7 @@
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
 #include "ngraph/type/element_type.hpp"
+#include "ngraph/util.hpp"
 
 #define MKLDNN_DIMS(X) mkldnn::memory::dims(X.begin(), X.end())
 
@@ -55,8 +56,8 @@ namespace ngraph
             class MKLDNNWorkspace
             {
             public:
-                MKLDNNWorkspace(size_t size) { buf = reinterpret_cast<char*>(malloc(size)); }
-                ~MKLDNNWorkspace() { free(buf); }
+                MKLDNNWorkspace(size_t size) { buf = reinterpret_cast<char*>(ngraph_malloc(size)); }
+                ~MKLDNNWorkspace() { ngraph_free(buf); }
                 char* buf;
 
                 MKLDNNWorkspace(const MKLDNNWorkspace&) = delete;
@@ -185,19 +186,12 @@ namespace ngraph
                         ops.append_sum(1.f);
                     }
 
-                    if (std::is_same<OP, ngraph::op::QuantizedConvolutionBiasAdd>())
+                    if (std::is_same<OP, ngraph::op::QuantizedConvolutionBiasAdd>() ||
+                        std::is_same<OP, ngraph::op::QuantizedConvolutionBiasSignedAdd>())
                     {
                         auto sum_scale_val =
                             extract_scale_value<ngraph::op::QuantizedConvolutionBiasAdd>(node, 5);
                         ops.append_sum(sum_scale_val[0]);
-                    }
-
-                    if (std::is_same<OP, ngraph::op::QuantizedConvolutionBiasSignedAdd>())
-                    {
-                        auto sum_scale_val =
-                            extract_scale_value<ngraph::op::QuantizedConvolutionBiasSignedAdd>(node,
-                                                                                               5);
-                        ops.append_sum(2.0 * sum_scale_val[0]);
                     }
 
                     if (has_relu<OP>(node))
@@ -739,19 +733,12 @@ namespace ngraph
                         ops.append_sum(1.f);
                     }
 
-                    if (std::is_same<OP, ngraph::op::QuantizedConvolutionBiasAdd>())
+                    if (std::is_same<OP, ngraph::op::QuantizedConvolutionBiasAdd>() ||
+                        std::is_same<OP, ngraph::op::QuantizedConvolutionBiasSignedAdd>())
                     {
                         auto sum_scale_val =
                             extract_scale_value<ngraph::op::QuantizedConvolutionBiasAdd>(node, 5);
                         ops.append_sum(sum_scale_val[0]);
-                    }
-
-                    if (std::is_same<OP, ngraph::op::QuantizedConvolutionBiasSignedAdd>())
-                    {
-                        auto sum_scale_val =
-                            extract_scale_value<ngraph::op::QuantizedConvolutionBiasSignedAdd>(node,
-                                                                                               5);
-                        ops.append_sum(2.0 * sum_scale_val[0]);
                     }
 
                     if (has_relu<OP>(node))

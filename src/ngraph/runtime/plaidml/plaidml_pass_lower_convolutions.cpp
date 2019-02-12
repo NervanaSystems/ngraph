@@ -53,9 +53,7 @@ ngraph::runtime::plaidml::pass::LowerConvolutions::LowerConvolutions()
             {
                 return reshape->get_input_order();
             }
-            AxisVector result(node->get_shape().size());
-            std::iota(result.begin(), result.end(), 0);
-            return result;
+            return get_default_order(node->get_shape());
         };
 
         std::shared_ptr<Node> node = m.get_match_root();
