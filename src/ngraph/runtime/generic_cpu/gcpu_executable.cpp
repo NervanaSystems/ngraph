@@ -37,8 +37,7 @@ runtime::gcpu::GCPUExecutable::GCPUExecutable(const shared_ptr<Function>& functi
                                               bool enable_performance_collection)
 {
     {
-        FunctionInstance& instance = m_function_instance;
-        instance.m_is_compiled = true;
+        m_is_compiled = true;
         pass::Manager pass_manager;
         pass_manager.register_pass<pass::LikeReplacement>();
         pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
@@ -47,7 +46,7 @@ runtime::gcpu::GCPUExecutable::GCPUExecutable(const shared_ptr<Function>& functi
 
         for (const shared_ptr<Node>& node : function->get_ordered_ops())
         {
-            instance.m_wrapped_nodes.emplace_back(node);
+            m_wrapped_nodes.emplace_back(node);
         }
     }
     set_parameters_and_results(*function);
@@ -56,8 +55,6 @@ runtime::gcpu::GCPUExecutable::GCPUExecutable(const shared_ptr<Function>& functi
 bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                          const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
-    FunctionInstance& instance = m_function_instance;
-
     // convert inputs to HostTensor
     vector<shared_ptr<HostTensor>> func_inputs;
     for (auto tensor : inputs)
@@ -65,7 +62,7 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
         auto host_tensor = static_pointer_cast<runtime::HostTensor>(tensor);
         func_inputs.push_back(host_tensor);
     }
-    if (instance.m_nan_check_enabled)
+    if (m_nan_check_enabled)
     {
         perform_nan_check(func_inputs);
     }
@@ -103,7 +100,7 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
     }
 
     // for each ordered op in the graph
-    for (const NodeWrapper& wrapped : instance.m_wrapped_nodes)
+    for (const NodeWrapper& wrapped : m_wrapped_nodes)
     {
         const Node* op = &wrapped.get_node();
         auto type_id = wrapped.get_typeid();
@@ -169,16 +166,16 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
         }
 #pragma GCC diagnostic pop
 
-        if (instance.m_performance_counters_enabled)
+        if (m_performance_counters_enabled)
         {
-            instance.m_timer_map[op].start();
+            m_timer_map[op].start();
         }
-        generate_calls(type, wrapped, op_outputs, op_inputs, instance);
-        if (instance.m_performance_counters_enabled)
+        generate_calls(type, wrapped, op_outputs, op_inputs);
+        if (m_performance_counters_enabled)
         {
-            instance.m_timer_map[op].stop();
+            m_timer_map[op].stop();
         }
-        if (instance.m_nan_check_enabled)
+        if (m_nan_check_enabled)
         {
             perform_nan_check(op_outputs, op);
         }
@@ -190,8 +187,7 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
 void runtime::gcpu::GCPUExecutable::generate_calls(const element::Type& type,
                                                    const NodeWrapper& op,
                                                    const vector<shared_ptr<HostTensor>>& outputs,
-                                                   const vector<shared_ptr<HostTensor>>& inputs,
-                                                   FunctionInstance& instance)
+                                                   const vector<shared_ptr<HostTensor>>& inputs)
 {
     vector<void*> out;
     vector<const void*> in;
@@ -206,17 +202,17 @@ void runtime::gcpu::GCPUExecutable::generate_calls(const element::Type& type,
     stringstream ss;
     switch (type.get_type_enum())
     {
-    case element::Type_t::boolean: op_engine<char>(op, out, in, instance); break;
-    case element::Type_t::f32: op_engine<float>(op, out, in, instance); break;
-    case element::Type_t::f64: op_engine<double>(op, out, in, instance); break;
-    case element::Type_t::i8: op_engine<int8_t>(op, out, in, instance); break;
-    case element::Type_t::i16: op_engine<int16_t>(op, out, in, instance); break;
-    case element::Type_t::i32: op_engine<int32_t>(op, out, in, instance); break;
-    case element::Type_t::i64: op_engine<int64_t>(op, out, in, instance); break;
-    case element::Type_t::u8: op_engine<uint8_t>(op, out, in, instance); break;
-    case element::Type_t::u16: op_engine<uint16_t>(op, out, in, instance); break;
-    case element::Type_t::u32: op_engine<uint32_t>(op, out, in, instance); break;
-    case element::Type_t::u64: op_engine<uint64_t>(op, out, in, instance); break;
+    case element::Type_t::boolean: op_engine<char>(op, out, in); break;
+    case element::Type_t::f32: op_engine<float>(op, out, in); break;
+    case element::Type_t::f64: op_engine<double>(op, out, in); break;
+    case element::Type_t::i8: op_engine<int8_t>(op, out, in); break;
+    case element::Type_t::i16: op_engine<int16_t>(op, out, in); break;
+    case element::Type_t::i32: op_engine<int32_t>(op, out, in); break;
+    case element::Type_t::i64: op_engine<int64_t>(op, out, in); break;
+    case element::Type_t::u8: op_engine<uint8_t>(op, out, in); break;
+    case element::Type_t::u16: op_engine<uint16_t>(op, out, in); break;
+    case element::Type_t::u32: op_engine<uint32_t>(op, out, in); break;
+    case element::Type_t::u64: op_engine<uint64_t>(op, out, in); break;
     case element::Type_t::undefined:
     case element::Type_t::dynamic:
     case element::Type_t::bf16:
@@ -227,15 +223,13 @@ void runtime::gcpu::GCPUExecutable::generate_calls(const element::Type& type,
 
 void runtime::gcpu::GCPUExecutable::set_nan_check(bool enable)
 {
-    FunctionInstance& instance = m_function_instance;
-    instance.m_nan_check_enabled = enable;
+    m_nan_check_enabled = enable;
 }
 
 vector<runtime::PerformanceCounter> runtime::gcpu::GCPUExecutable::get_performance_data() const
 {
     vector<runtime::PerformanceCounter> rc;
-    const FunctionInstance& instance = m_function_instance;
-    for (const pair<const Node*, stopwatch> p : instance.m_timer_map)
+    for (const pair<const Node*, stopwatch> p : m_timer_map)
     {
         rc.emplace_back(p.first->get_name().c_str(),
                         p.second.get_total_microseconds(),
