@@ -28,4 +28,5 @@ else:
 sys.setdlopenflags(flags)
 
 from _pyngraph.runtime import Backend
+from _pyngraph.runtime import Executable
 from _pyngraph.runtime import Tensor

@@ -32,6 +32,7 @@ namespace ngraph
         namespace nop
         {
             class NOPBackend;
+            class NOPExecutable;
         }
     }
 }
@@ -44,9 +45,14 @@ public:
 
     std::shared_ptr<Tensor> create_tensor(const element::Type& type, const Shape& shape) override;
 
-    Handle compile(std::shared_ptr<Function> function) override;
+    std::shared_ptr<Executable> compile(std::shared_ptr<Function> function,
+                                        bool enable_performance_data = false) override;
+};
 
-    bool call(std::shared_ptr<Function> function,
-              const std::vector<std::shared_ptr<Tensor>>& outputs,
-              const std::vector<std::shared_ptr<Tensor>>& intputs) override;
+class ngraph::runtime::nop::NOPExecutable : public Executable
+{
+public:
+    NOPExecutable(std::shared_ptr<Function> function, bool enable_performance_collection = false);
+    bool call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+              const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
 };
