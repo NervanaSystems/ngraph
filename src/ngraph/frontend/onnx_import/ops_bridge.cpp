@@ -24,6 +24,7 @@
 #include "ngraph/log.hpp"
 #include "op/abs.hpp"
 #include "op/acos.hpp"
+#include "op/acosh.hpp"
 #include "op/add.hpp"
 #include "op/and.hpp"
 #include "op/argmax.hpp"
@@ -205,6 +206,7 @@ namespace ngraph
         {
             REGISTER_OPERATOR("Abs", 1, abs);
             REGISTER_OPERATOR("Acos", 1, acos);
+            REGISTER_OPERATOR("Acosh", 1, acosh);
             REGISTER_OPERATOR("Add", 1, add);
             REGISTER_OPERATOR("Add", 7, add);
             REGISTER_OPERATOR("And", 1, logical_and);

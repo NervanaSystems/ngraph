@@ -39,6 +39,8 @@ add_library(onnx_import STATIC
         core/value_info.hpp
         exceptions.hpp
         op/acos.hpp
+        op/acosh.cpp
+        op/acosh.hpp
         op/add.hpp
         op/and.hpp
         op/argmax.cpp
