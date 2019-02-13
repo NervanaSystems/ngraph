@@ -53,12 +53,15 @@ set(SRC
     serialize.cpp
     shape.cpp
     tensor.cpp
-    tools.cpp
     type_prop.cpp
     util.cpp
     uuid.cpp
     zero_dim_tensor_elimination.cpp
 )
+
+if(NGRAPH_TOOLS_ENABLE)
+    list(APPEND SRC tools.cpp)
+endif()
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
     list(APPEND SRC distributed_setup.cpp)
