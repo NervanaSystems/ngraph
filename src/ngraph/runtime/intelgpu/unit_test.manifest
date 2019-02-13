@@ -57,7 +57,6 @@ replace_slice_matrix
 replace_slice_matrix_inplace
 replace_slice_scalar
 replace_slice_vector
-reshape_6d
 reverse_sequence_n2c3h4w2
 reverse_sequence_n4c3h2w2
 reverse_sequence_n4d2c3h2w2
