@@ -1983,7 +1983,7 @@ TEST(onnx_${BACKEND_NAME}, model_where)
     // cond - single value
     inputs.emplace_back(std::vector<int>{1});
 
-    // x1 - 5x3x1
+    // x1 - 5x3x1 tensor of ones
     const auto x1 = test::NDArray<int, 5>{
         {
             {{{{1}, {1}, {1}}}},
@@ -1995,10 +1995,21 @@ TEST(onnx_${BACKEND_NAME}, model_where)
     }.get_vector();
 
     inputs.push_back(x1);
-    // x2 - 1x10
+    // x2 - 1x10 filled with zeros
     inputs.emplace_back(std::vector<int>(10, 0));
 
-    Outputs expected_outputs{{x1}};
+    // y = 5x3x10
+    Outputs expected_outputs{
+        test::NDArray<int, 5>{
+            {
+                {{{{1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}}}},
+                {{{{1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}}}},
+                {{{{1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}}}},
+                {{{{1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}}}},
+                {{{{1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}}}}
+            }
+        }.get_vector()
+    };
 
     Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
 
