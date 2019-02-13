@@ -70,7 +70,6 @@ shape_of_matrix
 shape_of_scalar
 shape_of_vector
 softmax_axis_3d_double
-sum_stable_acc
 sum_stable_acc_double
 sum_stable_simple_double
 sum_trivial_in_double
