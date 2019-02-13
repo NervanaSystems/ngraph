@@ -78,12 +78,12 @@ namespace ngraph
                             k,
                             1.0f,
                             static_cast<float*>(arg0_tensor),
-                            max(1UL, lda),
+                            max<size_t>(1, lda),
                             static_cast<float*>(arg1_tensor),
-                            max(1UL, ldb),
+                            max<size_t>(1, ldb),
                             beta,
                             static_cast<float*>(out0_tensor),
-                            max(1UL, arg2_shape[1]));
+                            max<size_t>(1, arg2_shape[1]));
                     };
 
                 CPUKernelFunctor bias_functor = [](CPURuntimeContext* ctx,
@@ -111,10 +111,10 @@ namespace ngraph
                                                    ones_row.data(),
                                                    1UL,
                                                    static_cast<float*>(arg2_tensor),
-                                                   max(1UL, arg2_shape[1]),
+                                                   max<size_t>(1, arg2_shape[1]),
                                                    1.0f,
                                                    static_cast<float*>(out0_tensor),
-                                                   max(1UL, arg2_shape[1]));
+                                                   max<size_t>(1, arg2_shape[1]));
                             };
                         }
                         else
@@ -132,10 +132,10 @@ namespace ngraph
                                                    static_cast<float*>(arg2_tensor),
                                                    1UL,
                                                    ones_col.data(),
-                                                   max(1UL, arg2_shape[1]),
+                                                   max<size_t>(1, arg2_shape[1]),
                                                    1.0f,
                                                    static_cast<float*>(out0_tensor),
-                                                   max(1UL, arg2_shape[1]));
+                                                   max<size_t>(1, arg2_shape[1]));
                             };
                         }
                     }
@@ -161,10 +161,10 @@ namespace ngraph
                                                ones_scalar.data(),
                                                1UL,
                                                bias.data(),
-                                               max(1UL, arg2_shape[1]),
+                                               max<size_t>(1, arg2_shape[1]),
                                                1.0f,
                                                static_cast<float*>(out0_tensor),
-                                               max(1UL, arg2_shape[1]));
+                                               max<size_t>(1, arg2_shape[1]));
                         };
                     }
                 }
@@ -262,8 +262,8 @@ namespace ngraph
                 size_t m = shape_a[1];
                 size_t k = shape_a[2];
                 size_t n = shape_b[2];
-                size_t lda = std::max(1UL, k);
-                size_t ldb = std::max(1UL, n);
+                size_t lda = std::max<size_t>(1, k);
+                size_t ldb = std::max<size_t>(1, n);
                 cblas::Transpose ctranspose_a = cblas::Transpose::None;
                 cblas::Transpose ctranspose_b = cblas::Transpose::None;
 
@@ -272,15 +272,15 @@ namespace ngraph
                     ctranspose_a = cblas::Transpose::Transpose;
                     m = shape_a[2];
                     k = shape_a[1];
-                    lda = std::max(1UL, m);
+                    lda = std::max<size_t>(1, m);
                 }
                 if (transpose_b)
                 {
                     ctranspose_b = cblas::Transpose::Transpose;
                     n = shape_b[1];
-                    ldb = std::max(1UL, k);
+                    ldb = std::max<size_t>(1, k);
                 }
-                size_t ldc = std::max(1UL, n);
+                size_t ldc = std::max<size_t>(1, n);
 
                 CblasGemmOptions options(data_a, data_b, data_c);
 

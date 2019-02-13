@@ -90,6 +90,7 @@ namespace ngraph
                 };
                 functors.emplace_back(functor);
             }
+            REGISTER_CPU_OP_BUILDER(ConvertLayout);
         }
     }
 }

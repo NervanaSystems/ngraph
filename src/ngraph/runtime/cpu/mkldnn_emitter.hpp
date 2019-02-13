@@ -209,19 +209,12 @@ namespace ngraph
                         ops.append_sum(1.f);
                     }
 
-                    if (std::is_same<OP, ngraph::op::QuantizedConvolutionBiasAdd>())
+                    if (std::is_same<OP, ngraph::op::QuantizedConvolutionBiasAdd>() ||
+                        std::is_same<OP, ngraph::op::QuantizedConvolutionBiasSignedAdd>())
                     {
                         auto sum_scale_val =
                             extract_scale_value<ngraph::op::QuantizedConvolutionBiasAdd>(node, 5);
                         ops.append_sum(sum_scale_val[0]);
-                    }
-
-                    if (std::is_same<OP, ngraph::op::QuantizedConvolutionBiasSignedAdd>())
-                    {
-                        auto sum_scale_val =
-                            extract_scale_value<ngraph::op::QuantizedConvolutionBiasSignedAdd>(node,
-                                                                                               5);
-                        ops.append_sum(2.0 * sum_scale_val[0]);
                     }
 
                     if (has_relu<OP>(node))
@@ -1183,19 +1176,12 @@ namespace ngraph
                         ops.append_sum(1.f);
                     }
 
-                    if (std::is_same<OP, ngraph::op::QuantizedConvolutionBiasAdd>())
+                    if (std::is_same<OP, ngraph::op::QuantizedConvolutionBiasAdd>() ||
+                        std::is_same<OP, ngraph::op::QuantizedConvolutionBiasSignedAdd>())
                     {
                         auto sum_scale_val =
                             extract_scale_value<ngraph::op::QuantizedConvolutionBiasAdd>(node, 5);
                         ops.append_sum(sum_scale_val[0]);
-                    }
-
-                    if (std::is_same<OP, ngraph::op::QuantizedConvolutionBiasSignedAdd>())
-                    {
-                        auto sum_scale_val =
-                            extract_scale_value<ngraph::op::QuantizedConvolutionBiasSignedAdd>(node,
-                                                                                               5);
-                        ops.append_sum(2.0 * sum_scale_val[0]);
                     }
 
                     if (has_relu<OP>(node))

@@ -62,7 +62,7 @@ elseif (APPLE)
 elseif (WIN32)
     set(MKLPACKAGE "mklml_win_${MKLVERSION}.zip")
     set(MKL_SHA1_HASH 97f01ab854d8ee88cc0429f301df84844d7cce6b)
-    set(MKL_LIBS mklml.dll libiomp5md.dll)
+    set(MKL_LIBS mklml.lib libiomp5md.lib)
 endif()
 set(MKLURL ${MKLURLROOT}${MKLPACKAGE})
 
@@ -84,18 +84,18 @@ set(MKL_SOURCE_DIR ${source_dir})
 add_library(libmkl INTERFACE)
 add_dependencies(libmkl ext_mkl)
 foreach(LIB ${MKL_LIBS})
-    list(APPEND TMP_PATHS ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${LIB})
+    if (WIN32)
+        list(APPEND TMP_PATHS ${EXTERNAL_PROJECTS_ROOT}/mkl/src/ext_mkl/lib/${LIB})
+    else()
+        list(APPEND TMP_PATHS ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${LIB})
+    endif()
 endforeach()
 set(MKL_LIBS ${TMP_PATHS})
 target_link_libraries(libmkl INTERFACE ${MKL_LIBS})
 
 set(MKLDNN_GIT_REPO_URL https://github.com/intel/mkl-dnn)
 set(MKLDNN_GIT_TAG "b9ce57a")
-if(NGRAPH_LIB_VERSIONING_ENABLE)
-    set(MKLDNN_PATCH_FILE mkldnn.patch)
-else()
-    set(MKLDNN_PATCH_FILE mkldnn_no_so_link.patch)
-endif()
+set(MKLDNN_PATCH_FILE mkldnn.patch)
 set(MKLDNN_LIBS ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libmkldnn${CMAKE_SHARED_LIBRARY_SUFFIX})
 
 if (WIN32)
@@ -124,6 +124,7 @@ if (WIN32)
             -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/mkldnn
             -DMKLDNN_ENABLE_CONCURRENT_EXEC=ON
             -DMKLROOT=${MKL_ROOT}
+            -DMKLDNN_LIB_VERSIONING_ENABLE=${NGRAPH_LIB_VERSIONING_ENABLE}
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/stamp"
         DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/download"
@@ -158,6 +159,7 @@ else()
             -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/mkldnn
             -DMKLDNN_ENABLE_CONCURRENT_EXEC=ON
             -DMKLROOT=${MKL_ROOT}
+            -DMKLDNN_LIB_VERSIONING_ENABLE=${NGRAPH_LIB_VERSIONING_ENABLE}
             "-DARCH_OPT_FLAGS=-march=${NGRAPH_TARGET_ARCH} -mtune=${NGRAPH_TARGET_ARCH}"
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/stamp"
@@ -185,9 +187,15 @@ add_custom_command(TARGET ext_mkldnn POST_BUILD
 add_library(libmkldnn INTERFACE)
 add_dependencies(libmkldnn ext_mkldnn)
 target_include_directories(libmkldnn SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/mkldnn/include)
-target_link_libraries(libmkldnn INTERFACE
+if (WIN32)
+    target_link_libraries(libmkldnn INTERFACE
+    ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/mkldnn.lib
+    libmkl
+    )
+else()
+    target_link_libraries(libmkldnn INTERFACE
     ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${CMAKE_SHARED_LIBRARY_PREFIX}mkldnn${CMAKE_SHARED_LIBRARY_SUFFIX}
     libmkl
     )
-
+endif()
 install(DIRECTORY ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/ DESTINATION ${NGRAPH_INSTALL_LIB} OPTIONAL)
