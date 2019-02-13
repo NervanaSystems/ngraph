@@ -73,6 +73,7 @@ namespace ngraph
                                 vector<float> dyn_scales;
                                 dyn_scales.assign(static_cast<float*>(arg1_tensor),
                                                   static_cast<float*>(arg1_tensor) + scales_size);
+                                // quantize across first dim (mask=2^0) if dyn_scales is a vector
                                 const int mask = scales_size == 1 ? 0 : 1;
                                 attr.set_output_scales(mask, dyn_scales);
                                 attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);
@@ -269,6 +270,7 @@ namespace ngraph
                                 {
                                     dyn_scales[i] = 1.0 / dyn_scales[i];
                                 }
+                                // quantize across first dim (mask=2^0) if dyn_scales is a vector
                                 const int mask = scales_size == 1 ? 0 : 1;
                                 attr.set_output_scales(mask, dyn_scales);
                                 attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);
