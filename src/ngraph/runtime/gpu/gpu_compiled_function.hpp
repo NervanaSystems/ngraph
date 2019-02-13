@@ -49,6 +49,7 @@ namespace ngraph
             class GPUCompiledFunction
             {
                 friend class GPU_Backend;
+                friend class GPU_Executable;
 
             public:
                 GPUCompiledFunction(

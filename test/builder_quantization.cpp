@@ -679,6 +679,68 @@ TEST(builder, scaled_QC_with_bias_signed_add_and_relu)
               read_vector<uint8_t>(result));
 }
 
+TEST(builder, scaled_QC_with_bias_signed_add_and_relu_nhwc)
+{
+    Shape shape_a{1, 3, 4, 1}; // input shape
+    Shape shape_b{1, 3, 3, 1}; // filter shape
+    Shape shape_r{1, 1, 3, 4}; // output shape
+    vector<uint8_t> a_data = {1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4};
+    vector<int8_t> b_data = {1, 2, 3, 4, 5, 0, 0, 1, 2};
+    vector<int32_t> c_data = {5};
+    vector<int8_t> conv_2_data = {-1, -2, -3, -4, -5, -6, -10, 0, 1, 2, 3, 4};
+    auto A = make_shared<op::Parameter>(element::u8, shape_a);
+    auto A_reshape = make_shared<op::Reshape>(A, AxisVector{0, 3, 1, 2}, Shape{1, 1, 3, 4});
+    auto B = make_shared<op::Parameter>(element::i8, shape_b);
+    auto B_reshape = make_shared<op::Reshape>(B, AxisVector{0, 3, 1, 2}, Shape{1, 1, 3, 3});
+    auto Add = make_shared<op::Parameter>(element::i8, shape_a);
+    auto Add_reshape = make_shared<op::Reshape>(Add, AxisVector{0, 3, 1, 2}, Shape{1, 1, 3, 4});
+    auto Bias = make_shared<op::Parameter>(element::i32, Shape{1});
+    auto C = op::Constant::create(element::f32, Shape{}, {0.0f});
+    auto D = op::Constant::create(element::f32, Shape{}, {255.0f});
+    auto E = op::Constant::create(element::f32, Shape{}, {-127.0f});
+    auto F = op::Constant::create(element::f32, Shape{}, {127.0f});
+    auto G = op::Constant::create(element::f32, Shape{}, {22.0f});
+    auto H = op::Constant::create(element::f32, Shape{}, {90.0f});
+    auto I = op::Constant::create(element::f32, Shape{}, {22.0f});
+    auto J = op::Constant::create(element::f32, Shape{}, {90.0f});
+    auto CV =
+        ngraph::builder::ScaledQuantizedConvolutionBiasSignedAdd(A_reshape,
+                                                                 B_reshape,
+                                                                 Bias,
+                                                                 Add_reshape,
+                                                                 Strides{1, 1}, // move_strides
+                                                                 Strides{1, 1}, // filter_dilation
+                                                                 CoordinateDiff{1, 1}, // below_pads
+                                                                 CoordinateDiff{1, 1}, // above_pads
+                                                                 Strides{1, 1}, // data_dilation
+                                                                 C,
+                                                                 D,
+                                                                 E,
+                                                                 F,
+                                                                 G,
+                                                                 H,
+                                                                 I,
+                                                                 J,
+                                                                 true);
+    auto f = make_shared<Function>(NodeVector{CV}, ParameterVector{A, B, Bias, Add});
+    constant_fold(f);
+    auto backend = runtime::Backend::create("CPU");
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::u8, shape_a);
+    copy_data(a, a_data);
+    auto b = backend->create_tensor(element::i8, shape_b);
+    copy_data(b, b_data);
+    auto c = backend->create_tensor(element::i32, Shape{1});
+    copy_data(c, c_data);
+    auto d = backend->create_tensor(element::i8, shape_a);
+    copy_data(d, conv_2_data);
+    auto result = backend->create_tensor(element::u8, shape_r);
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a, b, c, d});
+    EXPECT_EQ((vector<uint8_t>{74, 106, 93, 97, 112, 127, 127, 127, 110, 127, 127, 127}),
+              read_vector<uint8_t>(result));
+}
+
 TEST(builder, dynamic_scaled_QC_with_bias_signed_add_and_relu)
 {
     Shape shape_a{1, 1, 3, 4}; // input shape
