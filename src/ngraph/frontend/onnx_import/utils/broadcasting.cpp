@@ -96,6 +96,42 @@ static std::shared_ptr<ngraph::Node> broadcast(const std::shared_ptr<ngraph::Nod
     return std::make_shared<ngraph::op::Broadcast>(broadcasted_node, output_shape, broadcast_axes);
 }
 
+static ngraph::Shape shape_left_fold(const ngraph::Shape& shape1, const ngraph::Shape& shape2)
+{
+    ngraph::Shape output_shape, left_shape = shape1, right_shape = shape2;
+    auto rank_left = left_shape.size();
+    auto rank_right = right_shape.size();
+    auto max_rank = std::max(rank_left, rank_right);
+
+    for (auto i = 0; i < (max_rank - rank_left); ++i)
+    {
+        left_shape.insert(std::begin(left_shape), 1);
+    }
+    for (auto i = 0; i < (max_rank - rank_right); ++i)
+    {
+        right_shape.insert(std::begin(right_shape), 1);
+    }
+    for (auto index = 0; index < max_rank; ++index)
+    {
+        output_shape.push_back(std::max(left_shape.at(index), right_shape.at(index)));
+    }
+
+    return output_shape;
+}
+
+static ngraph::Shape get_numpy_broadcast_shape(ngraph::NodeVector inputs)
+{
+    auto accumulator = [](const ngraph::Shape& partial_shape,
+                          const std::shared_ptr<ngraph::Node>& input) {
+        return shape_left_fold(partial_shape, input->get_shape());
+    };
+
+    ngraph::Shape target_shape =
+        std::accumulate(inputs.begin(), inputs.end(), ngraph::Shape{}, accumulator);
+
+    return target_shape;
+}
+
 namespace ngraph
 {
     namespace onnx_import
@@ -113,6 +149,25 @@ namespace ngraph
 
             return {broadcast(left, output_shape, left_full_shape),
                     broadcast(right, output_shape, right_full_shape)};
+        }
+
+        NodeVector numpy_style_broadcast(NodeVector inputs)
+        {
+            if (inputs.size() <= 1)
+            {
+                return inputs;
+            }
+
+            Shape target_shape = get_numpy_broadcast_shape(inputs);
+
+            NodeVector broadcasted_inputs;
+            for (const auto& input_node : inputs)
+            {
+                Shape source_shape = input_node->get_shape();
+                broadcasted_inputs.push_back(broadcast(input_node, target_shape, source_shape));
+            }
+
+            return broadcasted_inputs;
         }
 
         NodeVector

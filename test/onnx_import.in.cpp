@@ -1969,3 +1969,38 @@ TEST(onnx_${BACKEND_NAME}, model_sign)
 
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
+
+TEST(onnx_${BACKEND_NAME}, model_where)
+{
+    auto function =
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/where.onnx"));
+
+    using Inputs = std::vector<std::vector<int>>;
+    using Outputs = std::vector<std::vector<int>>;
+
+    Inputs inputs;
+
+    // cond - single value
+    inputs.emplace_back(std::vector<int>{1});
+
+    // x1 - 5x3x1
+    const auto x1 = test::NDArray<int, 5>{
+        {
+            {{{{1}, {1}, {1}}}},
+            {{{{1}, {1}, {1}}}},
+            {{{{1}, {1}, {1}}}},
+            {{{{1}, {1}, {1}}}},
+            {{{{1}, {1}, {1}}}}
+        }
+    }.get_vector();
+
+    inputs.push_back(x1);
+    // x2 - 1x10
+    inputs.emplace_back(std::vector<int>(10, 0));
+
+    Outputs expected_outputs{{x1}};
+
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+
+    EXPECT_EQ(expected_outputs.front(), outputs.front());
+}
