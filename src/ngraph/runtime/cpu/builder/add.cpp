@@ -40,7 +40,8 @@ namespace ngraph
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto sum_pd = mkldnn_emitter->get_elementwise_add_desc(node);
-                    size_t add_index = mkldnn_emitter->primitive_init(4);
+                    // Add needs 4 primitives: input0, input1, result, and sum.
+                    size_t add_index = mkldnn_emitter->reserve_primitive_space(4);
                     auto& deps = mkldnn_emitter->get_primitive_deps(add_index);
 
                     auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
@@ -51,7 +52,7 @@ namespace ngraph
                                                           CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->elementwise_add(sum_pd, add_index);
+                            mkldnn_emitter->build_elementwise_add(sum_pd, add_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);

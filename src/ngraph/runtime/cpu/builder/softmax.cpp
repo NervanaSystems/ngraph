@@ -48,14 +48,15 @@ namespace ngraph
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto softmax_desc = mkldnn_emitter->get_softmax_forward_desc(node);
-                    size_t softmax_index = mkldnn_emitter->primitive_init(3);
+                    // Softmax needs 3 primitives: input, result, and softmax_forward.
+                    size_t softmax_index = mkldnn_emitter->reserve_primitive_space(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(softmax_index);
 
                     auto functor = [&, softmax_desc, softmax_index](CPURuntimeContext* ctx,
                                                                     CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->softmax_forward(softmax_desc, softmax_index);
+                            mkldnn_emitter->build_softmax_forward(softmax_desc, softmax_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);

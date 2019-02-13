@@ -54,14 +54,15 @@ namespace ngraph
                     auto max_pool_desc =
                         mkldnn_emitter->get_max_pooling_forward_desc<ngraph::op::MaxPool>(node,
                                                                                           false);
-                    size_t max_pool_index = mkldnn_emitter->primitive_init(3);
+                    // MaxPool needs 3 primitives: input, result, and pooling_forward.
+                    size_t max_pool_index = mkldnn_emitter->reserve_primitive_space(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(max_pool_index);
 
                     auto functor = [&, max_pool_desc, max_pool_index](CPURuntimeContext* ctx,
                                                                       CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->pooling_forward(max_pool_desc, max_pool_index);
+                            mkldnn_emitter->build_pooling_forward(max_pool_desc, max_pool_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
@@ -128,7 +129,10 @@ namespace ngraph
                             node);
                     auto fprop_src_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
 
-                    size_t fwd_pool_index = mkldnn_emitter->primitive_init(4, true);
+                    // MaxPoolBackprop forward needs 4 primitives: fprop_src, diff_src, workspace,
+                    // and pooling_forward.
+                    // It needs a new workspace.
+                    size_t fwd_pool_index = mkldnn_emitter->reserve_primitive_space(4, true);
                     auto& fdeps = mkldnn_emitter->get_primitive_deps(fwd_pool_index);
 
                     auto functor_fprop = [&, fwd_pool_index](CPURuntimeContext* ctx,
@@ -140,7 +144,10 @@ namespace ngraph
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, fwd_pool_index);
                     };
 
-                    size_t bwd_pool_index = mkldnn_emitter->primitive_init(4, true);
+                    // MaxPoolBackprop backward needs 4 primitives: diff_dst, workspace, diff_src,
+                    // and pooling_backward.
+                    // It needs a new workspace.
+                    size_t bwd_pool_index = mkldnn_emitter->reserve_primitive_space(4, true);
                     auto& bdeps = mkldnn_emitter->get_primitive_deps(bwd_pool_index);
                     auto functor_bprop = [&, bwd_pool_index](CPURuntimeContext* ctx,
                                                              CPUExecutionContext* ectx) {
@@ -161,11 +168,11 @@ namespace ngraph
                                                    CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->max_pooling_backward(bwd_pool_desc,
-                                                                 fwd_pool_desc,
-                                                                 fprop_src_desc,
-                                                                 fwd_pool_index,
-                                                                 bwd_pool_index);
+                            mkldnn_emitter->build_max_pooling_backward(bwd_pool_desc,
+                                                                       fwd_pool_desc,
+                                                                       fprop_src_desc,
+                                                                       fwd_pool_index,
+                                                                       bwd_pool_index);
                             ctx->mkldnn_workspaces = mkldnn_emitter->get_mkldnn_workspaces().data();
                         }
                         functor_fprop(ctx, ectx);
@@ -223,15 +230,17 @@ namespace ngraph
                     mkldnn_emitter
                         ->get_max_pooling_with_indices_forward_desc<ngraph::op::MaxPoolWithIndices>(
                             node);
-                size_t max_pool_index = mkldnn_emitter->primitive_init(4);
+
+                // MaxPoolWithIndices needs 4 primitives: src, dst, workspace, and pooling_forward.
+                size_t max_pool_index = mkldnn_emitter->reserve_primitive_space(4);
                 auto& deps = mkldnn_emitter->get_primitive_deps(max_pool_index);
 
                 auto functor = [&, max_pool_desc, max_pool_index](CPURuntimeContext* ctx,
                                                                   CPUExecutionContext* ectx) {
                     if (ctx->first_iteration)
                     {
-                        mkldnn_emitter->max_pooling_with_indices_forward(max_pool_desc,
-                                                                         max_pool_index);
+                        mkldnn_emitter->build_max_pooling_with_indices_forward(max_pool_desc,
+                                                                               max_pool_index);
                     }
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out0_tensor);
@@ -264,14 +273,16 @@ namespace ngraph
                     mkldnn_emitter
                         ->get_max_pooling_backward_desc<ngraph::op::MaxPoolWithIndicesBackprop>(
                             node);
-                size_t max_pool_index = mkldnn_emitter->primitive_init(4);
+                // MaxPoolWithIndicesBackprop needs 4 primitives: diff_dst, fprop_workspace,
+                // diff_dst, and pooling_backward.
+                size_t max_pool_index = mkldnn_emitter->reserve_primitive_space(4);
                 auto& deps = mkldnn_emitter->get_primitive_deps(max_pool_index);
 
                 auto functor = [&, bwd_pool_desc, fwd_pool_desc, max_pool_index](
                     CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                     if (ctx->first_iteration)
                     {
-                        mkldnn_emitter->max_pooling_with_indices_backward(
+                        mkldnn_emitter->build_max_pooling_with_indices_backward(
                             bwd_pool_desc, fwd_pool_desc, max_pool_index);
                     }
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg1_tensor);

@@ -98,8 +98,8 @@ namespace ngraph
                     {
                         inputs_data_desc.push_back(mkldnn_utils::get_input_mkldnn_md(node, i));
                     }
-
-                    auto concat_index = mkldnn_emitter->primitive_init(nargs + 2);
+                    // Concat needs number of inputs plus 2 primitives; those two are for result and concat.
+                    auto concat_index = mkldnn_emitter->reserve_primitive_space(nargs + 2);
                     auto& deps = mkldnn_emitter->get_primitive_deps(concat_index);
 
                     auto functor =
@@ -107,7 +107,8 @@ namespace ngraph
                             CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                             if (ctx->first_iteration)
                             {
-                                mkldnn_emitter->concat(concat_pd, inputs_data_desc, concat_index);
+                                mkldnn_emitter->build_concat(
+                                    concat_pd, inputs_data_desc, concat_index);
                             }
                             for (size_t i = 0; i < nargs; i++)
                             {

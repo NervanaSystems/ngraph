@@ -51,14 +51,17 @@ namespace ngraph
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 auto rnn_desc =
                     mkldnn_emitter->get_rnn_forward_desc<ngraph::op::Rnn>(node, args, out);
-                auto rnn_index = mkldnn_emitter->primitive_init(9, true);
+                // Rnn needs 9 primitives: src_layer, src_iter, weights_layer, weights_iter, bias,
+                // dst_layer, dst_iter, and rnn_forward.
+                // It needs a new workspace.
+                auto rnn_index = mkldnn_emitter->reserve_primitive_space(9, true);
                 auto& deps = mkldnn_emitter->get_primitive_deps(rnn_index);
 
                 auto functor = [&, rnn_desc, rnn_index](CPURuntimeContext* ctx,
                                                         CPUExecutionContext* ectx) {
                     if (ctx->first_iteration)
                     {
-                        mkldnn_emitter->rnn_forward(rnn_desc, rnn_index);
+                        mkldnn_emitter->build_rnn_forward(rnn_desc, rnn_index);
                         ctx->mkldnn_workspaces = mkldnn_emitter->get_mkldnn_workspaces().data();
                     }
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], src_layer_tensor);

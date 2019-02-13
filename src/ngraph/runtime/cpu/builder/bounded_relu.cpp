@@ -44,14 +44,16 @@ namespace ngraph
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto bounded_relu_desc = mkldnn_emitter->get_bounded_relu_desc(node);
-                    auto bounded_relu_index = mkldnn_emitter->primitive_init(3);
+                    // BoundedRelu needs 3 primitives: input, result, and eltwise_forward.
+                    auto bounded_relu_index = mkldnn_emitter->reserve_primitive_space(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(bounded_relu_index);
 
                     auto functor = [&, bounded_relu_desc, bounded_relu_index](
                         CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->bounded_relu(bounded_relu_desc, bounded_relu_index);
+                            mkldnn_emitter->build_bounded_relu(bounded_relu_desc,
+                                                               bounded_relu_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], input_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);

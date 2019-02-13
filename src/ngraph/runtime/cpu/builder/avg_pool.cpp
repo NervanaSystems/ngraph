@@ -55,14 +55,15 @@ namespace ngraph
                     auto avg_pool_desc =
                         mkldnn_emitter->get_avg_pooling_forward_desc<ngraph::op::AvgPool>(node,
                                                                                           false);
-                    size_t avg_pool_index = mkldnn_emitter->primitive_init(3);
+                    // AvgPool needs 3 primitives: input, result, and pooling_forward.
+                    size_t avg_pool_index = mkldnn_emitter->reserve_primitive_space(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(avg_pool_index);
 
                     auto functor = [&, avg_pool_desc, avg_pool_index](CPURuntimeContext* ctx,
                                                                       CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->pooling_forward(avg_pool_desc, avg_pool_index);
+                            mkldnn_emitter->build_pooling_forward(avg_pool_desc, avg_pool_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
@@ -130,15 +131,15 @@ namespace ngraph
                     auto avg_pool_desc =
                         mkldnn_emitter->get_avg_pooling_backward_desc<ngraph::op::AvgPoolBackprop>(
                             node);
-
-                    size_t avg_pool_index = mkldnn_emitter->primitive_init(3);
+                    // AvgPoolBackprop needs 3 primitives: input, result, and pooling_backward.
+                    size_t avg_pool_index = mkldnn_emitter->reserve_primitive_space(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(avg_pool_index);
 
                     auto functor = [&, avg_pool_desc, avg_pool_fwd_desc, avg_pool_index](
                         CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->pooling_backward(
+                            mkldnn_emitter->build_pooling_backward(
                                 avg_pool_desc, avg_pool_fwd_desc, avg_pool_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], delta_tensor);

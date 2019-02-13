@@ -41,14 +41,15 @@ namespace ngraph
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto relu_desc = mkldnn_emitter->get_relu_forward_desc(node);
-                    size_t relu_index = mkldnn_emitter->primitive_init(3);
+                    // Relu needs 3 primitives: input, result, and eltwise_forward.
+                    size_t relu_index = mkldnn_emitter->reserve_primitive_space(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(relu_index);
 
                     auto functor = [&, relu_desc, relu_index](CPURuntimeContext* ctx,
                                                               CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->relu_forward(relu_desc, relu_index);
+                            mkldnn_emitter->build_relu_forward(relu_desc, relu_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
@@ -77,14 +78,15 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto bwd_desc = mkldnn_emitter->get_relu_backward_desc(node);
                     auto fwd_desc = mkldnn_emitter->get_relu_forward_desc(node);
-                    size_t relu_index = mkldnn_emitter->primitive_init(4);
+                    // ReluBackprop needs 4 primitives: input, delta, result, and eltwise_backward.
+                    size_t relu_index = mkldnn_emitter->reserve_primitive_space(4);
                     auto& deps = mkldnn_emitter->get_primitive_deps(relu_index);
 
                     auto functor = [&, bwd_desc, fwd_desc, relu_index](CPURuntimeContext* ctx,
                                                                        CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->relu_backward(bwd_desc, fwd_desc, relu_index);
+                            mkldnn_emitter->build_relu_backward(bwd_desc, fwd_desc, relu_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg_fwd_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], delta_tensor);

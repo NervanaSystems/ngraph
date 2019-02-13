@@ -44,14 +44,15 @@ namespace ngraph
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto leaky_relu_desc = mkldnn_emitter->get_leaky_relu_desc(node);
-                    auto leaky_relu_index = mkldnn_emitter->primitive_init(3);
+                    // LeakyRelu needs 3 primitives: input, result, and eltwise_forward.
+                    auto leaky_relu_index = mkldnn_emitter->reserve_primitive_space(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(leaky_relu_index);
 
                     auto functor = [&, leaky_relu_desc, leaky_relu_index](
                         CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->leaky_relu(leaky_relu_desc, leaky_relu_index);
+                            mkldnn_emitter->build_leaky_relu(leaky_relu_desc, leaky_relu_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], input_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);

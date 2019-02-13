@@ -147,10 +147,10 @@ size_t MKLDNNEmitter::build_quantize_reorder(const mkldnn::memory::desc& input_d
     return primitive_index;
 }
 
-void MKLDNNEmitter::quantize_reorder(const mkldnn::memory::desc& input_desc,
-                                     const mkldnn::memory::desc& result_desc,
-                                     const std::vector<float>& scales,
-                                     size_t quantize_index)
+void MKLDNNEmitter::build_quantize_reorder(const mkldnn::memory::desc& input_desc,
+                                           const mkldnn::memory::desc& result_desc,
+                                           const std::vector<float>& scales,
+                                           size_t quantize_index)
 {
     size_t input_index = m_primitive_deps[quantize_index][0];
     build_memory_primitive(input_desc, input_index);
@@ -496,7 +496,7 @@ size_t MKLDNNEmitter::build_convolution_backward_weights_bias(
     return conv_index;
 }
 
-void MKLDNNEmitter::convolution_backward_weights_bias(
+void MKLDNNEmitter::build_convolution_backward_weights_bias(
     const mkldnn::convolution_backward_weights::desc& bwd_desc,
     const mkldnn::convolution_forward::desc& fwd_desc,
     size_t conv_index)
@@ -567,7 +567,7 @@ size_t
     return primitive_index;
 }
 
-void MKLDNNEmitter::convolution_backward_weights(
+void MKLDNNEmitter::build_convolution_backward_weights(
     const mkldnn::convolution_backward_weights::desc& bwd_desc,
     const mkldnn::convolution_forward::desc& fwd_desc,
     size_t conv_index)
@@ -632,7 +632,7 @@ size_t MKLDNNEmitter::build_convolution_backward_data(const mkldnn::memory::desc
     return primitive_index;
 }
 
-void MKLDNNEmitter::convolution_backward_data(
+void MKLDNNEmitter::build_convolution_backward_data(
     const mkldnn::convolution_backward_data::desc& bwd_desc,
     const mkldnn::convolution_forward::desc& fwd_desc,
     size_t conv_index)
@@ -683,8 +683,8 @@ size_t MKLDNNEmitter::build_pooling_forward(mkldnn::algorithm pooling_algorithm,
     return primitive_index;
 }
 
-void MKLDNNEmitter::pooling_forward(const mkldnn::pooling_forward::desc& pool_desc,
-                                    size_t pool_index)
+void MKLDNNEmitter::build_pooling_forward(const mkldnn::pooling_forward::desc& pool_desc,
+                                          size_t pool_index)
 {
     size_t input_index = m_primitive_deps[pool_index][0];
     build_memory_primitive(pool_desc.data.src_desc, input_index);
@@ -735,9 +735,9 @@ size_t MKLDNNEmitter::build_pooling_backward(mkldnn::algorithm pooling_algorithm
     return primitive_index;
 }
 
-void MKLDNNEmitter::pooling_backward(const mkldnn::pooling_backward::desc& pool_desc,
-                                     const mkldnn::pooling_forward::desc& pool_fwd_desc,
-                                     size_t pool_index)
+void MKLDNNEmitter::build_pooling_backward(const mkldnn::pooling_backward::desc& pool_desc,
+                                           const mkldnn::pooling_forward::desc& pool_fwd_desc,
+                                           size_t pool_index)
 {
     size_t input_index = m_primitive_deps[pool_index][0];
     build_memory_primitive(pool_desc.data.diff_dst_desc, input_index);
@@ -814,11 +814,11 @@ size_t MKLDNNEmitter::build_max_pooling_backward(mkldnn::algorithm pooling_algor
     return bwd_primitive_index;
 }
 
-void MKLDNNEmitter::max_pooling_backward(const mkldnn::pooling_backward::desc& bwd_pool_desc,
-                                         const mkldnn::pooling_forward::desc& fwd_pool_desc,
-                                         const mkldnn::memory::desc& fprop_src_desc,
-                                         size_t fwd_pool_index,
-                                         size_t bwd_pool_index)
+void MKLDNNEmitter::build_max_pooling_backward(const mkldnn::pooling_backward::desc& bwd_pool_desc,
+                                               const mkldnn::pooling_forward::desc& fwd_pool_desc,
+                                               const mkldnn::memory::desc& fprop_src_desc,
+                                               size_t fwd_pool_index,
+                                               size_t bwd_pool_index)
 {
     size_t fprop_src_index = m_primitive_deps[fwd_pool_index][0];
     build_memory_primitive(fprop_src_desc, fprop_src_index);
@@ -891,7 +891,7 @@ size_t MKLDNNEmitter::build_max_pooling_with_indices_forward(mkldnn::algorithm p
     return fwd_primitive_index;
 }
 
-void MKLDNNEmitter::max_pooling_with_indices_forward(
+void MKLDNNEmitter::build_max_pooling_with_indices_forward(
     const mkldnn::pooling_forward::desc& max_pool_desc, size_t max_pool_index)
 {
     size_t src_index = m_primitive_deps[max_pool_index][0];
@@ -956,7 +956,7 @@ size_t MKLDNNEmitter::build_max_pooling_with_indices_backward(
     return bwd_primitive_index;
 }
 
-void MKLDNNEmitter::max_pooling_with_indices_backward(
+void MKLDNNEmitter::build_max_pooling_with_indices_backward(
     const mkldnn::pooling_backward::desc& bwd_pool_desc,
     const mkldnn::pooling_forward::desc& fwd_pool_desc,
     size_t max_pool_index)
@@ -991,9 +991,9 @@ size_t MKLDNNEmitter::build_reorder(const mkldnn::memory::desc& input_desc,
     return primitive_index;
 }
 
-void MKLDNNEmitter::reorder(const mkldnn::memory::desc& input_desc,
-                            const mkldnn::memory::desc& result_desc,
-                            size_t reorder_index)
+void MKLDNNEmitter::build_reorder(const mkldnn::memory::desc& input_desc,
+                                  const mkldnn::memory::desc& result_desc,
+                                  size_t reorder_index)
 {
     size_t input_index = m_primitive_deps[reorder_index][0];
     build_memory_primitive(input_desc, input_index);
@@ -1050,39 +1050,13 @@ mkldnn::lrn_forward::desc MKLDNNEmitter::get_lrn_forward_desc(const ngraph::Node
                                      bias);
 }
 
-void MKLDNNEmitter::lrn_forward(const mkldnn::lrn_forward::desc& lrn_desc, size_t lrn_index)
+void MKLDNNEmitter::build_lrn_forward(const mkldnn::lrn_forward::desc& lrn_desc, size_t lrn_index)
 {
     size_t input_index = m_primitive_deps[lrn_index][0];
     build_memory_primitive(lrn_desc.data.data_desc, input_index);
     size_t result_index = m_primitive_deps[lrn_index][1];
     build_memory_primitive(lrn_desc.data.data_desc, result_index);
 
-    auto lrn_prim_desc = mkldnn::lrn_forward::primitive_desc(lrn_desc, executor::global_cpu_engine);
-
-    m_mkldnn_primitives[lrn_index] = new mkldnn::lrn_forward(
-        lrn_prim_desc, *m_mkldnn_primitives[input_index], *m_mkldnn_primitives[result_index]);
-}
-
-void MKLDNNEmitter::lrn_forward(const mkldnn::memory::desc& input_desc,
-                                const mkldnn::memory::desc& result_desc,
-                                float alpha,
-                                float beta,
-                                float bias,
-                                int nsize,
-                                size_t lrn_index)
-{
-    size_t input_index = m_primitive_deps[lrn_index][0];
-    build_memory_primitive(input_desc, input_index);
-    size_t result_index = m_primitive_deps[lrn_index][1];
-    build_memory_primitive(result_desc, result_index);
-
-    auto lrn_desc = mkldnn::lrn_forward::desc(mkldnn::prop_kind::forward_scoring,
-                                              mkldnn::algorithm::lrn_across_channels,
-                                              input_desc,
-                                              nsize,
-                                              alpha,
-                                              beta,
-                                              bias);
     auto lrn_prim_desc = mkldnn::lrn_forward::primitive_desc(lrn_desc, executor::global_cpu_engine);
 
     m_mkldnn_primitives[lrn_index] = new mkldnn::lrn_forward(
@@ -1117,7 +1091,8 @@ mkldnn::eltwise_forward::desc MKLDNNEmitter::get_relu_forward_desc(const ngraph:
         mkldnn::prop_kind::forward, mkldnn::algorithm::eltwise_relu, input_desc, negative_slope);
 }
 
-void MKLDNNEmitter::relu_forward(const mkldnn::eltwise_forward::desc& relu_desc, size_t relu_index)
+void MKLDNNEmitter::build_relu_forward(const mkldnn::eltwise_forward::desc& relu_desc,
+                                       size_t relu_index)
 {
     size_t input_index = m_primitive_deps[relu_index][0];
     build_memory_primitive(relu_desc.data.data_desc, input_index);
@@ -1170,9 +1145,9 @@ mkldnn::eltwise_backward::desc MKLDNNEmitter::get_relu_backward_desc(const ngrap
         mkldnn::algorithm::eltwise_relu, result_desc, input_desc, negative_slope);
 }
 
-void MKLDNNEmitter::relu_backward(const mkldnn::eltwise_backward::desc& bwd_desc,
-                                  const mkldnn::eltwise_forward::desc& fwd_desc,
-                                  size_t relu_index)
+void MKLDNNEmitter::build_relu_backward(const mkldnn::eltwise_backward::desc& bwd_desc,
+                                        const mkldnn::eltwise_forward::desc& fwd_desc,
+                                        size_t relu_index)
 {
     size_t input_index = m_primitive_deps[relu_index][0];
     build_memory_primitive(bwd_desc.data.data_desc, input_index);
@@ -1235,8 +1210,8 @@ mkldnn::eltwise_forward::desc MKLDNNEmitter::get_sigmoid_forward_desc(const ngra
     }
 }
 
-void MKLDNNEmitter::sigmoid_forward(const mkldnn::eltwise_forward::desc& sigmoid_desc,
-                                    size_t sigmoid_index)
+void MKLDNNEmitter::build_sigmoid_forward(const mkldnn::eltwise_forward::desc& sigmoid_desc,
+                                          size_t sigmoid_index)
 {
     size_t input_index = m_primitive_deps[sigmoid_index][0];
     build_memory_primitive(sigmoid_desc.data.data_desc, input_index);
@@ -1284,9 +1259,9 @@ mkldnn::eltwise_backward::desc MKLDNNEmitter::get_sigmoid_backward_desc(const ng
         mkldnn::algorithm::eltwise_logistic, delta_desc, input_desc, 0, 0);
 }
 
-void MKLDNNEmitter::sigmoid_backward(const mkldnn::eltwise_backward::desc& bwd_desc,
-                                     const mkldnn::eltwise_forward::desc& fwd_desc,
-                                     size_t sigmoid_index)
+void MKLDNNEmitter::build_sigmoid_backward(const mkldnn::eltwise_backward::desc& bwd_desc,
+                                           const mkldnn::eltwise_forward::desc& fwd_desc,
+                                           size_t sigmoid_index)
 {
     size_t input_index = m_primitive_deps[sigmoid_index][0];
     build_memory_primitive(bwd_desc.data.data_desc, input_index);
@@ -1353,7 +1328,8 @@ mkldnn::sum::primitive_desc MKLDNNEmitter::get_elementwise_add_desc(const ngraph
     return sum_pd;
 }
 
-void MKLDNNEmitter::elementwise_add(const mkldnn::sum::primitive_desc& sum_pd, size_t add_index)
+void MKLDNNEmitter::build_elementwise_add(const mkldnn::sum::primitive_desc& sum_pd,
+                                          size_t add_index)
 {
     std::vector<mkldnn::memory::primitive::at> inputs_primitive;
 
@@ -1432,7 +1408,7 @@ size_t MKLDNNEmitter::build_batchnorm_forward(const mkldnn::memory::desc& input_
     }
 }
 
-void MKLDNNEmitter::batchnorm_forward(
+void MKLDNNEmitter::build_batchnorm_forward(
     const mkldnn::batch_normalization_forward::desc& batchnorm_desc,
     const mkldnn::memory::desc& weights_desc,
     bool bn_training_flag,
@@ -1551,7 +1527,7 @@ mkldnn::batch_normalization_backward::desc
         mkldnn::batch_normalization_flag::use_scale_shift);
 }
 
-void MKLDNNEmitter::batchnorm_backward(
+void MKLDNNEmitter::build_batchnorm_backward(
     const mkldnn::batch_normalization_backward::desc& batchnorm_desc,
     const mkldnn::memory::desc& weights_desc,
     const mkldnn::memory::desc& dweights_desc,
@@ -1647,7 +1623,7 @@ size_t MKLDNNEmitter::build_rnn_forward(const mkldnn::memory::desc& src_layer_de
     return rnn_index;
 }
 
-void MKLDNNEmitter::rnn_forward(const mkldnn::rnn_forward::desc& rnn_desc, size_t rnn_index)
+void MKLDNNEmitter::build_rnn_forward(const mkldnn::rnn_forward::desc& rnn_desc, size_t rnn_index)
 {
     size_t src_layer_index = m_primitive_deps[rnn_index][0];
     build_memory_primitive(rnn_desc.data.src_layer_desc, src_layer_index);
@@ -1743,9 +1719,9 @@ mkldnn::concat::primitive_desc MKLDNNEmitter::get_concat_desc(const ngraph::Node
     return mkldnn::concat::primitive_desc(result_desc, static_cast<int>(concat_dim), inputs_pd);
 }
 
-void MKLDNNEmitter::concat(const mkldnn::concat::primitive_desc& concat_pd,
-                           const std::vector<mkldnn::memory::desc>& inputs_data_desc,
-                           size_t concat_index)
+void MKLDNNEmitter::build_concat(const mkldnn::concat::primitive_desc& concat_pd,
+                                 const std::vector<mkldnn::memory::desc>& inputs_data_desc,
+                                 size_t concat_index)
 {
     std::vector<mkldnn::memory::primitive::at> inputs_primitive;
     std::vector<mkldnn::memory::primitive_desc> inputs_pd;
@@ -1801,11 +1777,11 @@ size_t MKLDNNEmitter::build_slice(const mkldnn::memory::desc& input_desc,
     return reorder_index;
 }
 
-void MKLDNNEmitter::slice(const mkldnn::memory::desc& input_desc,
-                          const mkldnn::memory::desc& result_desc,
-                          const ngraph::Coordinate& lower_bounds,
-                          const ngraph::Shape& result_shape,
-                          size_t slice_index)
+void MKLDNNEmitter::build_slice(const mkldnn::memory::desc& input_desc,
+                                const mkldnn::memory::desc& result_desc,
+                                const ngraph::Coordinate& lower_bounds,
+                                const ngraph::Shape& result_shape,
+                                size_t slice_index)
 {
     std::vector<size_t> in_out_index;
     mkldnn::memory::primitive_desc input_pd =
@@ -1864,8 +1840,8 @@ mkldnn::softmax_forward::desc MKLDNNEmitter::get_softmax_forward_desc(const ngra
         mkldnn::prop_kind::forward_scoring, input_desc, softmax_axis);
 }
 
-void MKLDNNEmitter::softmax_forward(const mkldnn::softmax_forward::desc& softmax_desc,
-                                    size_t softmax_index)
+void MKLDNNEmitter::build_softmax_forward(const mkldnn::softmax_forward::desc& softmax_desc,
+                                          size_t softmax_index)
 {
     size_t input_index = m_primitive_deps[softmax_index][0];
     build_memory_primitive(softmax_desc.data.data_desc, input_index);
@@ -1912,8 +1888,8 @@ mkldnn::eltwise_forward::desc MKLDNNEmitter::get_leaky_relu_desc(const ngraph::N
                                          0.0f);
 }
 
-void MKLDNNEmitter::leaky_relu(const mkldnn::eltwise_forward::desc& leaky_relu_desc,
-                               size_t leaky_relu_index)
+void MKLDNNEmitter::build_leaky_relu(const mkldnn::eltwise_forward::desc& leaky_relu_desc,
+                                     size_t leaky_relu_index)
 {
     size_t input_index = m_primitive_deps[leaky_relu_index][0];
     build_memory_primitive(leaky_relu_desc.data.data_desc, input_index);
@@ -1960,8 +1936,8 @@ mkldnn::eltwise_forward::desc MKLDNNEmitter::get_bounded_relu_desc(const ngraph:
                                          0.0f);
 }
 
-void MKLDNNEmitter::bounded_relu(const mkldnn::eltwise_forward::desc& bounded_relu_desc,
-                                 size_t bounded_relu_index)
+void MKLDNNEmitter::build_bounded_relu(const mkldnn::eltwise_forward::desc& bounded_relu_desc,
+                                       size_t bounded_relu_index)
 {
     size_t input_index = m_primitive_deps[bounded_relu_index][0];
     build_memory_primitive(bounded_relu_desc.data.data_desc, input_index);
@@ -1992,7 +1968,7 @@ size_t MKLDNNEmitter::convolution_forward_init(bool with_bias)
     return m_mkldnn_primitives.size() - 1;
 }
 
-size_t MKLDNNEmitter::primitive_init(size_t count, bool new_workspace)
+size_t MKLDNNEmitter::reserve_primitive_space(size_t count, bool new_workspace)
 {
     size_t size = m_mkldnn_primitives.size();
     m_mkldnn_primitives.resize(size + count, nullptr);
