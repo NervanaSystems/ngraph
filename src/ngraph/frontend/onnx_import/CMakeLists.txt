@@ -48,6 +48,8 @@ add_library(onnx_import STATIC
         op/argmin.cpp
         op/argmin.hpp
         op/asin.hpp
+        op/asinh.cpp
+        op/asinh.hpp
         op/atan.hpp
         op/average_pool.cpp
         op/average_pool.hpp

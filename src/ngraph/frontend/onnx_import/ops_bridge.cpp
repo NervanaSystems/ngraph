@@ -30,6 +30,7 @@
 #include "op/argmax.hpp"
 #include "op/argmin.hpp"
 #include "op/asin.hpp"
+#include "op/asinh.hpp"
 #include "op/atan.hpp"
 #include "op/average_pool.hpp"
 #include "op/batch_norm.hpp"
@@ -213,6 +214,7 @@ namespace ngraph
             REGISTER_OPERATOR("ArgMin", 1, argmin);
             REGISTER_OPERATOR("ArgMax", 1, argmax);
             REGISTER_OPERATOR("Asin", 1, asin);
+            REGISTER_OPERATOR("Asinh", 1, asinh);
             REGISTER_OPERATOR("Atan", 1, atan);
             REGISTER_OPERATOR("AveragePool", 1, average_pool);
             REGISTER_OPERATOR("BatchNormalization", 1, batch_norm);
