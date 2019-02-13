@@ -132,7 +132,10 @@ namespace ngraph
                 m_nodes.emplace_back(node_proto, *this);
                 const Node& node{m_nodes.back()};
                 NodeVector ng_nodes{node.get_ng_nodes()};
-                for (int i = 0; i < ng_nodes.size(); i++)
+                // Iterate over the requested number of outputs for given node, since some of
+                // them may be optional and trimmed. See:
+                // https://github.com/onnx/onnx/blob/master/docs/IR.md#optional-inputs-and-outputs
+                for (int i = 0; i < node.get_outputs_size(); i++)
                 {
                     m_ng_node_cache[node.output(i)] = ng_nodes[i];
                 }
