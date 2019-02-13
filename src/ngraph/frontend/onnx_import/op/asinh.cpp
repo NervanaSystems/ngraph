@@ -36,7 +36,7 @@ namespace ngraph
 
                     // Define inverse hyperbolic sine in terms of natural logarithm:
                     //
-                    // arccosh(x) = ln(x + sqrt(x^2 + 1))
+                    // asinh(x) = ln(x + sqrt(x^2 + 1))
                     //
 
                     std::shared_ptr<ngraph::Node> one_node{ngraph::op::Constant::create(
