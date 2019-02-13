@@ -1,9 +1,0 @@
-digraph G {
-    Parameter_0 -> Abs_1 -> Negative_2 -> Negative_3;
-    Parameter_0 [shape=box color=blue]
-    Abs_1 [shape=ellipse color=black]
-    Negative_2 [shape=ellipse color=black]
-    Negative_3 [shape=ellipse color=black]
-}
-
-

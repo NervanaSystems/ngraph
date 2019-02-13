@@ -186,7 +186,9 @@ namespace ngraph
                 auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
                 auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
                 auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
+                auto& arg3_tensor = external_function->get_tensor_data(args[3].get_name());
                 auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                size_t arg3_size = args[3].get_size();
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -196,8 +198,14 @@ namespace ngraph
                             node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                    auto functor = [&, conv_index](CPURuntimeContext* ctx,
-                                                   CPUExecutionContext* ectx) {
+                    auto functor = [&, conv_index, arg3_size](CPURuntimeContext* ctx,
+                                                              CPUExecutionContext* ectx) {
+                        if (out_tensor != arg3_tensor)
+                        {
+                            memcpy(static_cast<char*>(out_tensor),
+                                   static_cast<char*>(arg3_tensor),
+                                   arg3_size);
+                        }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], arg2_tensor);
@@ -219,7 +227,9 @@ namespace ngraph
 
                 auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
                 auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
                 auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                size_t arg2_size = args[2].get_size();
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -228,8 +238,14 @@ namespace ngraph
                         node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                    auto functor = [&, conv_index](CPURuntimeContext* ctx,
-                                                   CPUExecutionContext* ectx) {
+                    auto functor = [&, conv_index, arg2_size](CPURuntimeContext* ctx,
+                                                              CPUExecutionContext* ectx) {
+                        if (out_tensor != arg2_tensor)
+                        {
+                            memcpy(static_cast<char*>(out_tensor),
+                                   static_cast<char*>(arg2_tensor),
+                                   arg2_size);
+                        }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out_tensor);
