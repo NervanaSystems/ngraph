@@ -1,7 +1,7 @@
 .. backend-support/index.rst
 
 
-Transformer, CPU, GPU, PlaidML
+Transformers, PlaidML
 ###############################
 
 
@@ -9,8 +9,6 @@ Transformer, CPU, GPU, PlaidML
 * :ref:`cpu_backend`
 * :ref:`plaidml_backend`
 * :ref:`gpu_backend`
-
-
 
 
 What is a backend?
@@ -25,13 +23,12 @@ current and future nGraph Backends are also available; see, for example, the
 section on :ref:`plaidml_backend`.
 
 
-
 .. _hybrid_transformer:
 
 Hybrid Transformer
 ==================
 
-Lorem ipsum
+Coming soon
 
 
 .. _cpu_backend:
@@ -39,7 +36,7 @@ Lorem ipsum
 CPU Backend
 ===========
 
-Lorem ipsum
+Coming soon
 
 
 .. _gpu_backend:
@@ -47,7 +44,7 @@ Lorem ipsum
 GPU Backend
 ===========
 
-Lorem ipsum
+Coming soon 
 
 
 .. _plaidml_backend:
