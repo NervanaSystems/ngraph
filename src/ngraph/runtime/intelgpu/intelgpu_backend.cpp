@@ -1316,7 +1316,8 @@ shared_ptr<runtime::Executable>
 
             arguments_check(op, 5, 1);
 
-            if (get_input_shape(op, 2).size() != 4)
+            if ((get_input_shape(op, 2).size() != 4) ||
+                (get_input_type(op) != ngraph::element::f32))
             {
                 do_batch_norm_operation(topology,
                                         get_output_name(op),
@@ -1348,7 +1349,8 @@ shared_ptr<runtime::Executable>
                 static_pointer_cast<op::BatchNormTraining>(op);
             const double eps = bnorm->get_eps_value();
 
-            if (get_input_shape(op, 2).size() != 4)
+            if ((get_input_shape(op, 2).size() != 4) ||
+                (get_input_type(op) != ngraph::element::f32))
             {
                 string mean_name;
                 string variance_name;

@@ -1,5 +1,4 @@
 all_2x2x3_eliminate_dims_0_1
-argmin_trivial_in_double
 avg_pool_2d_2channel_2image_padded_only_above_do_not_include_in_computation
 avg_pool_2d_2channel_2image_padded_only_above_include_in_computation
 avg_pool_3d_uneven_strided_padded
@@ -30,10 +29,7 @@ embedding_lookup_10x1_arbitrary
 embedding_lookup_10x1_arbitrary_index_type_int
 embedding_lookup_4x5_reverse
 generate_mask
-max_3d_to_scalar_double
 max_pool_3d
-numeric_double_inf
-numeric_double_nan
 quantize
 quantize_axes
 quantize_clamp_int32
@@ -70,9 +66,6 @@ shape_of_matrix
 shape_of_scalar
 shape_of_vector
 softmax_axis_3d_double
-sum_stable_acc_double
-sum_stable_simple_double
-sum_trivial_in_double
 topk_1d_max_all
 topk_1d_max_one
 topk_1d_max_partial
