@@ -150,17 +150,20 @@ void runtime::intelgpu::do_bcast_sum_operation(cldnn::topology& topology,
                                                   axis);
             }
 
+            const string opencl_type_name = get_opencl_type_name(output_type);
+            const string reduction_init_acc = opencl_type_name + " result = 0.0f;\n" +
+                                              opencl_type_name + " compensation = 0.0f;\n";
             const string reduction_str =
                 "output" + access_dims(input_shape, "i", axis) + " = result;\n";
 
             // Generate loops related to input order with GWS
-            gws = generate_loops_w_axes(writer,
-                                        input_shape,
-                                        true,
-                                        axis,
-                                        get_opencl_type_name(output_type) + " result = 0.0f;\n");
+            gws = generate_loops_w_axes(writer, input_shape, true, axis, reduction_init_acc);
 
-            writer << "result += input0" << access_dims(input_shape) << ";\n";
+            writer << opencl_type_name << " y = input0" << access_dims(input_shape)
+                   << " - compensation;\n"
+                   << opencl_type_name << " t = result + y;\n"
+                   << "compensation = (t - result) - y;\n"
+                   << "result = t;\n";
 
             // Close brackets related to input order with reduction
             generate_loops_w_axes(writer, input_shape, false, axis, reduction_str);
