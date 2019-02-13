@@ -131,13 +131,27 @@ cldnn::layout runtime::intelgpu::IntelGPULayout::create_cldnn_layout(
     const cldnn::tensor tensor = create_cldnn_tensor(element_shape);
     cldnn::data_types data_type;
 
-    if ((element_type == ngraph::element::i16) || (element_type == ngraph::element::u16))
+    switch (element_type.get_type_enum())
+    {
+    case element::Type_t::i16:
+    case element::Type_t::u16:
     {
         data_type = cldnn::data_types::f16;
+        break;
     }
-    else
+    case element::Type_t::u32:
     {
-        data_type = get_cldnn_type(element_type);
+        data_type = cldnn::data_types::i32;
+        break;
+    }
+    case element::Type_t::u64:
+    case element::Type_t::f64:
+    {
+        data_type = cldnn::data_types::i64;
+        break;
+    }
+    default: { data_type = get_cldnn_type(element_type);
+    }
     }
 
     return cldnn::layout(data_type, format, tensor);
