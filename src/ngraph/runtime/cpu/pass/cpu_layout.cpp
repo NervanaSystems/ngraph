@@ -1193,24 +1193,15 @@ namespace ngraph
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
-                      auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
-                      auto i_fmt = input_md.data.format;
-                      // reorder as nhwc for mkldnn input data
-                      if (i_fmt == mkldnn::memory::format::nChw8c ||
-                          i_fmt == mkldnn::memory::format::nChw16c) {
-                          vector<memory::desc> o_mds;
-                          auto input_shape = node->get_input_shape(0);
-                          memory::dims data_shape(input_shape.begin(), input_shape.end());
-                          const memory::desc data_desc(
-                              data_shape,
-                              mkldnn_utils::get_mkldnn_data_type(node->get_element_type()),
-                              memory::format::nhwc);
-                          o_mds.push_back(data_desc);
-                          set_output_layouts(node, o_mds);
-                          return;
-                      }
+                        vector<memory::desc> o_mds;
+                        auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                        o_mds.push_back(input_md);
+                        set_output_layouts(node, o_mds);
                     }
-                    set_native_layouts(external_function, node);
+                    else
+                    {
+                        set_native_layouts(external_function, node);
+                    }
                 }
 
                 template <>
