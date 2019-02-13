@@ -41,14 +41,14 @@ namespace ngraph
                     //
 
                     std::shared_ptr<ngraph::Node> one_node{ngraph::op::Constant::create(
-                            data->get_element_type(),
-                            data->get_shape(),
-                            std::vector<float>(ngraph::shape_size(data->get_shape()), 1.f))};
+                        data->get_element_type(),
+                        data->get_shape(),
+                        std::vector<float>(ngraph::shape_size(data->get_shape()), 1.f))};
 
                     std::shared_ptr<ngraph::Node> half_node{ngraph::op::Constant::create(
-                            data->get_element_type(),
-                            data->get_shape(),
-                            std::vector<float>(ngraph::shape_size(data->get_shape()), 0.5f))};
+                        data->get_element_type(),
+                        data->get_shape(),
+                        std::vector<float>(ngraph::shape_size(data->get_shape()), 0.5f))};
 
                     return {half_node * (std::make_shared<ngraph::op::Log>(one_node + data) -
                                          std::make_shared<ngraph::op::Log>(one_node - data))};
