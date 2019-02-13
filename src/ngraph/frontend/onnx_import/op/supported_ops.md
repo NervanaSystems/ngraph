@@ -106,7 +106,7 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | Atanh | (9) | 283 | 444 | |
 | Erf | (9) | 284 | 442 | Maybe we may implement this as a simple closed interval integral? :) |
 | Pad | 1-2- | 273 | 416 | Not fully supported. |
-| LSTM | 1-7- | | 430 | Not fully supported. |
+| LSTM | 1-7- | | 476 | Mixed sequences length not supported yet. |
 | MaxUnpool | (9) | 286, 289 | 447 | |
 | LpPool | - | 291 | 437 | Further analysis needed, however probably unsupported by nGraph. |
 | Multinomial | - | 199 | 435 | Lack of PRNG in nGraph. |
