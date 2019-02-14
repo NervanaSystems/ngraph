@@ -14,8 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/constant.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
