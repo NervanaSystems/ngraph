@@ -73,7 +73,7 @@ ngraph::runtime::plaidml::Compiler::Compiler(Config* config)
 {
 }
 
-std::shared_ptr<ngraph::runtime::plaidml::CompiledFunction>
+std::shared_ptr<ngraph::runtime::plaidml::PlaidML_Executable>
     ngraph::runtime::plaidml::Compiler::compile(std::shared_ptr<Function> func)
 {
     // N.B. ngraph::pass::Manager::run_passes() is *not* a const
@@ -121,15 +121,20 @@ std::shared_ptr<ngraph::runtime::plaidml::CompiledFunction>
     // The caller may wish to perform operations (e.g. clone) on their
     // supplied function that will cause validation to occur.  So
     // before we rewrite, we make our own copy of the function.
-    func = clone_function(*func);
+    auto rewrite_func = clone_function(*func);
 
     // Apply passes.
-    pass_manager.run_passes(func);
+    pass_manager.run_passes(rewrite_func);
 
     // Compile the resulting function.
     Build b;
-    build(std::move(func), &b);
-    return std::make_shared<CompiledFunction>(std::move(b));
+    build(std::move(rewrite_func), &b);
+    return std::make_shared<PlaidML_Executable>(std::move(b), std::move(func));
+}
+
+bool ngraph::runtime::plaidml::Compiler::is_supported(const Node& node) const
+{
+    return GlobalOpImplMap()->count(std::type_index(typeid(node))) != 0;
 }
 
 void ngraph::runtime::plaidml::Compiler::build(std::shared_ptr<Function> func, Build* b)
