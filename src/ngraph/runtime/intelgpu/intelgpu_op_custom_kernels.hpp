@@ -33,6 +33,8 @@ namespace ngraph
     {
         namespace intelgpu
         {
+            size_t get_max_memory_rss();
+
             void do_pad_operation(cldnn::topology& topology,
                                   const std::string& input_name,
                                   const Shape& input_shape,

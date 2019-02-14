@@ -4,11 +4,16 @@
 Distribute training across multiple nGraph backends 
 ===================================================
 
+.. important::  Distributed training is not officially supported in version 0.14; 
+    however, the following configuration options have worked for nGraph devices 
+    with mixed/limited success in testing.  
+
 In the :doc:`previous section <../howto/derive-for-training>`, we described the 
 steps needed to create a "trainable" nGraph model. Here we demonstrate how to 
 train a data parallel model by distributing the graph to more than one device.
 
-These options are currently supported for available backends:
+Frameworks can implement distributed training with nGraph versions prior to 
+`0.13`:
 
 * Use ``-DNGRAPH_DISTRIBUTED_OMPI_ENABLE=TRUE`` to enable distributed training 
   with OpenMPI. Use of this flag requires that OpenMPI be a pre-existing library 
