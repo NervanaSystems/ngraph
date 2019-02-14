@@ -34,7 +34,9 @@ string runtime::intelgpu::get_opencl_type_name(const element::Type& ngraph_type)
     switch (ngraph_type.get_type_enum())
     {
     case element::Type_t::i64: return "long";
+    case element::Type_t::u64: return "ulong";
     case element::Type_t::i32: return "int";
+    case element::Type_t::u32: return "uint";
     case element::Type_t::i16: return "short";
     case element::Type_t::u16: return "ushort";
     case element::Type_t::i8: return "char";
