@@ -51,23 +51,37 @@ static std::vector<ngraph::Shape> get_numpy_broadcast_shape(ngraph::Shape left_s
     return {output_shape, left_shape, right_shape};
 }
 
-/// \brief Calculate output shape of numpy-style broadcast operation for all input nodes.
+/// \brief Calculate the output shape of numpy-style broadcast operation for all input nodes.
+///
+/// This function finds the maximum tensor shape that will be the result of element-wise operation
+/// that will be applied to the inputs vector. The function also prepares the shape of each input
+/// for the element-wise operation by left-padding those shapes so that their rank is equal to
+/// the target_shape's rank.
 ///
 /// \param inputs A vector of input nodes for which a common shape should be found
-/// \return Shape of the output tensor
-static ngraph::Shape get_numpy_broadcast_shape(ngraph::NodeVector inputs)
+/// \return A pair that contains the target shape as its first object and a vector of padded
+///         input shapes ready to be broadcasted as the second object
+static std::pair<ngraph::Shape, std::vector<ngraph::Shape>>
+    get_numpy_broadcast_shapes(const ngraph::NodeVector& inputs)
 {
     auto shape_left_fold = [](const ngraph::Shape& accumulator,
                               const std::shared_ptr<ngraph::Node>& input) {
+        // TODO: in a separate PR remove the 'get_numpy_broadcast_shape' function
         return get_numpy_broadcast_shape(accumulator, input->get_shape()).at(0);
     };
 
     ngraph::Shape target_shape =
-            std::accumulate(inputs.begin(), inputs.end(),
-                            ngraph::Shape{},
-                            shape_left_fold);
+        std::accumulate(inputs.begin(), inputs.end(), ngraph::Shape{}, shape_left_fold);
 
-    return target_shape;
+    std::vector<ngraph::Shape> full_shapes;
+    for (const std::shared_ptr<ngraph::Node>& input : inputs)
+    {
+        ngraph::Shape padded_shape = input->get_shape();
+        padded_shape.insert(padded_shape.begin(), target_shape.size() - padded_shape.size(), 1);
+        full_shapes.push_back(std::move(padded_shape));
+    }
+
+    return {target_shape, full_shapes};
 }
 
 /// \brief      Broadcast input node.
@@ -82,9 +96,10 @@ static ngraph::Shape get_numpy_broadcast_shape(ngraph::NodeVector inputs)
 ///
 /// \return     The broadcasted Node.
 ///
-static std::shared_ptr<ngraph::Node> broadcast_node_numpy_style(const std::shared_ptr<ngraph::Node> &node,
-                                                           const ngraph::Shape &output_shape,
-                                                           const ngraph::Shape &source_shape)
+static std::shared_ptr<ngraph::Node>
+    broadcast_node_numpy_style(const std::shared_ptr<ngraph::Node>& node,
+                               const ngraph::Shape& output_shape,
+                               const ngraph::Shape& source_shape)
 {
     ngraph::AxisVector broadcast_axes;
     ngraph::Shape squeezed_shape;
@@ -139,13 +154,16 @@ namespace ngraph
             }
 
             // find the output tensor's shape, then broadcast all inputs so that they are compatible
-            Shape target_shape = get_numpy_broadcast_shape(inputs);
+            auto bcast_shapes = get_numpy_broadcast_shapes(inputs);
 
             NodeVector broadcasted_inputs;
-            for (const auto& input_node : inputs)
+            for (size_t i = 0; i < inputs.size(); ++i)
             {
+                const std::shared_ptr<ngraph::Node> input_node = inputs[i];
+
                 Shape source_shape = input_node->get_shape();
-                broadcasted_inputs.push_back(broadcast_node_numpy_style(input_node, target_shape, source_shape));
+                broadcasted_inputs.push_back(broadcast_node_numpy_style(
+                    inputs[i], bcast_shapes.first, bcast_shapes.second[i]));
             }
 
             return broadcasted_inputs;

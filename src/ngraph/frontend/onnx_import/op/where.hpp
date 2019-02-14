@@ -33,10 +33,9 @@ namespace ngraph
                 inline NodeVector where(const Node& node)
                 {
                     NodeVector ng_inputs{numpy_style_broadcast(node.get_ng_inputs())};
-                    
-                    return {
-                        std::make_shared<ngraph::op::Select>(ng_inputs.at(0), ng_inputs.at(1), ng_inputs.at(2))
-                    };
+
+                    return {std::make_shared<ngraph::op::Select>(
+                        ng_inputs.at(0), ng_inputs.at(1), ng_inputs.at(2))};
                 }
             } // namespace set_1
 
