@@ -18,10 +18,10 @@ set(SRC
     plaidml_backend.cpp
     plaidml_builder.cpp
     plaidml_compilation_cache.cpp
-    plaidml_compiled_function.cpp
     plaidml_compiler.cpp
     plaidml_config.cpp
     plaidml_convpool_formatter.cpp
+    plaidml_executable.cpp
     plaidml_impl.cpp
     plaidml_logger.cpp
     plaidml_ops_arithmetic.cpp
