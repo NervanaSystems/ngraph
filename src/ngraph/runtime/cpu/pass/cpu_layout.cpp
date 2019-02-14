@@ -38,6 +38,7 @@
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/quantize.hpp"
+#include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
@@ -1193,9 +1194,53 @@ namespace ngraph
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
+                        auto i_desc = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                        auto i_fmt = static_cast<mkldnn::memory::format>(i_desc.data.format);
+                        // mkldnn expects nhwc for int8, avoids reorder
+                        if (i_fmt == mkldnn::memory::format::nchw ||
+                            i_fmt == mkldnn::memory::format::nChw8c ||
+                            i_fmt == mkldnn::memory::format::nChw16c)
+                        {
+                            i_fmt = mkldnn::memory::format::nhwc;
+                        }
+
                         vector<memory::desc> o_mds;
-                        auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
-                        o_mds.push_back(input_md);
+                        auto input_shape = node->get_input_shape(0);
+                        memory::dims data_shape(input_shape.begin(), input_shape.end());
+                        const memory::desc data_desc(
+                            data_shape,
+                            mkldnn_utils::get_mkldnn_data_type(node->get_element_type()),
+                            i_fmt);
+                        o_mds.push_back(data_desc);
+                        set_output_layouts(node, o_mds);
+                    }
+                    else
+                    {
+                        set_native_layouts(external_function, node);
+                    }
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::Dequantize)
+                {
+                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        auto i_desc = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                        auto i_fmt = static_cast<mkldnn::memory::format>(i_desc.data.format);
+                        // reorder as default nchw layout
+                        if (i_fmt == mkldnn::memory::format::nhwc)
+                        {
+                            i_fmt = mkldnn::memory::format::nchw;
+                        }
+
+                        vector<memory::desc> o_mds;
+                        auto input_shape = node->get_input_shape(0);
+                        memory::dims data_shape(input_shape.begin(), input_shape.end());
+                        const memory::desc data_desc(
+                            data_shape,
+                            mkldnn_utils::get_mkldnn_data_type(node->get_element_type()),
+                            i_fmt);
+                        o_mds.push_back(data_desc);
                         set_output_layouts(node, o_mds);
                     }
                     else
@@ -1981,6 +2026,8 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedAvgPool>},
     {TI(ngraph::op::Quantize),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::Quantize>},
+    {TI(ngraph::op::Dequantize),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::Dequantize>},
     {TI(ngraph::op::MaxPoolWithIndices),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::MaxPoolWithIndices>},
     {TI(ngraph::op::MaxPoolBackprop),
