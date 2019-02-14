@@ -20,7 +20,7 @@ set (SRC
     autodiff/adjoints.cpp
     builder/autobroadcast.cpp
     builder/numpy_transpose.cpp
-	builder/quantization/quantized_linear_convolution.cpp
+    builder/quantization/quantized_linear_convolution.cpp
     builder/quantization.cpp
     builder/reduce_ops.cpp
     coordinate.cpp
