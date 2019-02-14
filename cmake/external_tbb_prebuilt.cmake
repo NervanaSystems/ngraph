@@ -57,6 +57,9 @@ elseif(APPLE)
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SOURCE_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX} ${NGRAPH_BUILD_DIR}
         COMMENT "Move tbb libraries to ngraph build directory"
     )
+
+    install(FILES ${NGRAPH_BUILD_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}
+            DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()
 
 
