@@ -1942,8 +1942,11 @@ namespace ngraph
                 void CPULayout::LAYOUT_DECL(ngraph::op::Convert)
                 {
                     auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                    auto tv = node->get_output_tensor_ptr(0);
+
                     if (input_md.data.format == mkldnn_blocked ||
-                        input_md.data.format == mkldnn_format_undef)
+                        input_md.data.format == mkldnn_format_undef ||
+                        !mkldnn_utils::can_create_mkldnn_md(tv->get_element_type()))
                     {
                         // Cannot pass through layout information for blocked layouts at the moment
                         set_native_layouts(external_function, node);
