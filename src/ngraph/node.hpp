@@ -70,7 +70,7 @@ namespace ngraph
     const NodeVector& check_single_output_args(const NodeVector& args);
 
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
-    /// zero or more nodes as arguments and one value, which is tensor
+    /// zero or more nodes as arguments and one value, which is either a tensor
     /// or a (possibly empty) tuple of values.
     class Node : public std::enable_shared_from_this<Node>
     {
