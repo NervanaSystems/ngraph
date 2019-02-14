@@ -182,10 +182,10 @@ namespace ngraph
         /// Checks that there is exactly one output and returns its tensor.
         descriptor::Tensor& get_output_tensor() const;
 
-        /// Returns the tensor view of output i
+        /// Returns the tensor of output i
         std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr(size_t i) const;
 
-        /// Checks that there is exactly one output and returns its tensor view.
+        /// Checks that there is exactly one output and returns its tensor.
         std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr() const;
 
         /// Returns the set of inputs using output i
