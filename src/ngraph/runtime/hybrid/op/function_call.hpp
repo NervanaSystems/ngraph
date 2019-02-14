@@ -16,13 +16,8 @@
 
 #pragma once
 
-#include <memory>
-#include <unordered_map>
-#include <vector>
-
-#include "ngraph/function.hpp"
-#include "ngraph/op/parameter.hpp"
-#include "ngraph/op/result.hpp"
+#include "ngraph/op/op.hpp"
+#include "ngraph/runtime/backend.hpp"
 
 namespace ngraph
 {
@@ -30,9 +25,30 @@ namespace ngraph
     {
         namespace hybrid
         {
-            void rewrite_function(
-                const std::shared_ptr<Function>& f,
-                const std::vector<std::shared_ptr<runtime::Backend>>& backend_list);
+            namespace op
+            {
+                class FunctionCall;
+            }
         }
     }
 }
+
+class ngraph::runtime::hybrid::op::FunctionCall : public ngraph::op::Op
+{
+public:
+    FunctionCall(const NodeVector& outputs,
+                 const NodeVector& inputs,
+                 std::shared_ptr<Function> function,
+                 std::shared_ptr<Backend> backend);
+
+    std::shared_ptr<Backend> get_backend() const;
+    std::shared_ptr<Executable> get_executable() const;
+
+private:
+    std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+
+    const NodeVector m_outputs;
+    std::shared_ptr<Function> m_function;
+    std::shared_ptr<Backend> m_backend;
+    std::shared_ptr<Executable> m_executable;
+};
