@@ -51,6 +51,25 @@ static std::vector<ngraph::Shape> get_numpy_broadcast_shape(ngraph::Shape left_s
     return {output_shape, left_shape, right_shape};
 }
 
+/// \brief Calculate output shape of numpy-style broadcast operation for all input nodes.
+///
+/// \param inputs A vector of input nodes for which a common shape should be found
+/// \return Shape of the output tensor
+static ngraph::Shape get_numpy_broadcast_shape(ngraph::NodeVector inputs)
+{
+    auto shape_left_fold = [](const ngraph::Shape& accumulator,
+                              const std::shared_ptr<ngraph::Node>& input) {
+        return get_numpy_broadcast_shape(accumulator, input->get_shape()).at(0);
+    };
+
+    ngraph::Shape target_shape =
+            std::accumulate(inputs.begin(), inputs.end(),
+                            ngraph::Shape{},
+                            shape_left_fold);
+
+    return target_shape;
+}
+
 /// \brief      Broadcast input node.
 ///
 /// \note       The source shape does not have to be the actual shape of input node. However
@@ -61,7 +80,7 @@ static std::vector<ngraph::Shape> get_numpy_broadcast_shape(ngraph::Shape left_s
 /// \param[in]  output_shape  The output shape.
 /// \param[in]  source_shape  The source shape from which we want to broadcast input node.
 ///
-/// \return     The boroadcasted Node.
+/// \return     The broadcasted Node.
 ///
 static std::shared_ptr<ngraph::Node> broadcast_node_numpy_style(const std::shared_ptr<ngraph::Node> &node,
                                                            const ngraph::Shape &output_shape,
@@ -93,21 +112,6 @@ static std::shared_ptr<ngraph::Node> broadcast_node_numpy_style(const std::share
     return std::make_shared<ngraph::op::Broadcast>(broadcasted_node, output_shape, broadcast_axes);
 }
 
-static ngraph::Shape get_numpy_broadcast_shape(ngraph::NodeVector inputs)
-{
-    auto shape_left_fold = [](const ngraph::Shape& accumulator,
-                          const std::shared_ptr<ngraph::Node>& input) {
-        return get_numpy_broadcast_shape(accumulator, input->get_shape()).at(0);
-    };
-
-    ngraph::Shape target_shape =
-        std::accumulate(inputs.begin(), inputs.end(),
-                ngraph::Shape{},
-                shape_left_fold);
-
-    return target_shape;
-}
-
 namespace ngraph
 {
     namespace onnx_import
@@ -134,6 +138,7 @@ namespace ngraph
                 return inputs;
             }
 
+            // find the output tensor's shape, then broadcast all inputs so that they are compatible
             Shape target_shape = get_numpy_broadcast_shape(inputs);
 
             NodeVector broadcasted_inputs;

@@ -47,7 +47,11 @@ namespace ngraph
             return numpy_style_broadcast_for_binary_operation(inputs.at(0), inputs.at(1));
         }
 
-        /// \brief Cast the shapes of all input nodes to make them compatible for an element-wise binary operation.
+        /// \brief Cast shape of all input nodes for an element-wise operation that requires shape-compatibility
+        ///
+        /// \param inputs Original list of inputs
+        ///
+        /// \return Numpy-style broadcasted list of nodes.
         NodeVector numpy_style_broadcast(NodeVector inputs);
 
         /// \brief Cast shape of two nodes to make them compatible for an element-wise binary operation.
