@@ -1942,10 +1942,22 @@ namespace ngraph
                 void CPULayout::LAYOUT_DECL(ngraph::op::Convert)
                 {
                     auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
-                    vector<memory::desc> o_mds;
-                    o_mds.push_back(mkldnn_utils::create_default_mkldnn_md(
-                        node.get(), 0, true, static_cast<memory::format>(input_md.data.format)));
-                    set_output_layouts(node, o_mds);
+                    if (input_md.data.format == mkldnn_blocked ||
+                        input_md.data.format == mkldnn_format_undef)
+                    {
+                        // Cannot pass through layout information for blocked layouts at the moment
+                        set_native_layouts(external_function, node);
+                    }
+                    else
+                    {
+                        vector<memory::desc> o_mds;
+                        o_mds.push_back(mkldnn_utils::create_default_mkldnn_md(
+                            node.get(),
+                            0,
+                            true,
+                            static_cast<memory::format>(input_md.data.format)));
+                        set_output_layouts(node, o_mds);
+                    }
                 }
             }
         }
