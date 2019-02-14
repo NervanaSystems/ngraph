@@ -1044,7 +1044,7 @@ TEST(builder, scaled_quantize_concat_unsigned)
     auto mins = op::Constant::create(element::f32, Shape{3}, {2.0, 2.0, 2.0});
     auto maxes = op::Constant::create(element::f32, Shape{3}, {16.0, 16.0, 16.0});
     auto QConcat = ngraph::builder::ScaledQuantizedConcat(NodeVector{A, B, C}, 0, mins, maxes);
-    auto f = make_shared<Function>(NodeVector{QConcat}, op::ParameterVector{A, B, C});
+    auto f = make_shared<Function>(NodeVector{QConcat}, ParameterVector{A, B, C});
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::u8, shape_a);
@@ -1054,7 +1054,7 @@ TEST(builder, scaled_quantize_concat_unsigned)
     auto c = backend->create_tensor(element::u8, shape_c);
     copy_data(c, vector<uint8_t>{2, 3, 5, 7, 11, 16});
     auto result = backend->create_tensor(element::u8, shape_r);
-    backend->call(f, {result}, {a, b, c});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b, c});
     EXPECT_EQ((vector<uint8_t>{2, 4, 8, 16, 2, 2, 4, 8, 16, 15, 2, 3, 5, 7, 11, 16}),
               read_vector<uint8_t>(result));
 }
@@ -1070,8 +1070,9 @@ TEST(builder, scaled_quantize_concat_signed)
     Shape shape_r{8, 2};
     auto mins = op::Constant::create(element::f32, Shape{3}, {-2.0, -2.0, -2.0});
     auto maxes = op::Constant::create(element::f32, Shape{3}, {16.0, 16.0, 16.0});
+
     auto QConcat = ngraph::builder::ScaledQuantizedConcat(NodeVector{A, B, C}, 0, mins, maxes);
-    auto f = make_shared<Function>(NodeVector{QConcat}, op::ParameterVector{A, B, C});
+    auto f = make_shared<Function>(NodeVector{QConcat}, ParameterVector{A, B, C});
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::i8, shape_a);
@@ -1081,7 +1082,7 @@ TEST(builder, scaled_quantize_concat_signed)
     auto c = backend->create_tensor(element::i8, shape_c);
     copy_data(c, vector<int8_t>{-2, 3, 5, 7, 11, 16});
     auto result = backend->create_tensor(element::i8, shape_r);
-    backend->call(f, {result}, {a, b, c});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b, c});
     EXPECT_EQ((vector<int8_t>{-2, 4, 8, 16, -2, 2, 4, 8, 16, 15, -2, 3, 5, 7, 11, 16}),
               read_vector<int8_t>(result));
 }

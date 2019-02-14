@@ -250,9 +250,9 @@ namespace ngraph
                 return max_abs_range / target_range;
             }
 
-            void check_concat(const NodeVector args,
-                              std::shared_ptr<Node> min,
-                              std::shared_ptr<Node> max)
+            void check_concat(const NodeVector& args,
+                              const std::shared_ptr<Node>& min,
+                              const std::shared_ptr<Node>& max)
             {
                 auto type = min->get_element_type();
                 if (type != max->get_element_type())

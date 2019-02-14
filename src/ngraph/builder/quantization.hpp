@@ -44,10 +44,10 @@ namespace ngraph
                                                const ngraph::element::Type& type,
                                                const ngraph::AxisSet& axes);
 
-        std::shared_ptr<Node> ScaledQuantizedConcat(const NodeVector args,
+        std::shared_ptr<Node> ScaledQuantizedConcat(const NodeVector& args,
                                                     size_t concatenation_axis,
-                                                    std::shared_ptr<Node> mins,
-                                                    std::shared_ptr<Node> maxes);
+                                                    const std::shared_ptr<Node>& mins,
+                                                    const std::shared_ptr<Node>& maxes);
 
         std::shared_ptr<Node> ScaledQuantizedAvgPool(std::shared_ptr<Node> input,
                                                      const Shape& window_shape,
