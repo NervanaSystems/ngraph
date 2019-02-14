@@ -49,8 +49,11 @@ runtime::cpu::CPU_CallFrame::CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction>
 
 runtime::cpu::CPU_CallFrame::~CPU_CallFrame()
 {
-    assert(m_compiled_destroy_ctx_func && "compiled_destroy_ctx_func cannot be null.");
-    m_compiled_destroy_ctx_func(cg_ctx);
+    if (!m_external_function->is_direct_execution())
+    {
+        assert(m_compiled_destroy_ctx_func && "compiled_destroy_ctx_func cannot be null.");
+        m_compiled_destroy_ctx_func(cg_ctx);
+    }
 }
 
 void runtime::cpu::CPU_CallFrame::inner_call(
