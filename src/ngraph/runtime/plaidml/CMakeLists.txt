@@ -48,6 +48,7 @@ set(SRC
     plaidml_ops_transcendental.cpp
     plaidml_ops_winograd.cpp
     plaidml_pass_concat_elision.cpp
+    plaidml_pass_concat_split.cpp
     plaidml_pass_explicit_logicals.cpp
     plaidml_pass_implicit_broadcast.cpp
     plaidml_pass_lower_convolutions.cpp
