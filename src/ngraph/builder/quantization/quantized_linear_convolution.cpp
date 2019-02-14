@@ -101,7 +101,6 @@ namespace ngraph
                         bias, bias_scale, zero, element::i32, quantization_axes, round_mode);
                 }
 
-
                 return make_shared<op::QuantizedConvolutionBias>(input,
                                                                  filter,
                                                                  bias,

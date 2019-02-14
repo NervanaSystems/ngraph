@@ -1112,7 +1112,8 @@ void ngraph::runtime::cpu::pass::CPUFusionQuantSum::construct_qconv_bias_dq_sign
     auto dq_label = std::make_shared<pattern::op::Label>(dq, nullptr, NodeVector{dq});
     auto reshape_a =
         std::make_shared<op::Reshape>(dq_label, AxisVector{0, 1, 2, 3}, Shape{2, 2, 1, 1});
-    auto pbroadcast_a = std::make_shared<op::Broadcast>(reshape_a, shape, AxisSet{});
+    auto bcast_pred = [] (std::shared_ptr<Node> node) { return node->description() == "Broadcast"; };
+    auto pbroadcast_a = std::make_shared<pattern::op::Skip>(reshape_a, bcast_pred);
     //Right of graph
     auto add_input = std::make_shared<pattern::op::Label>(element::i8, qconv_bias->get_shape());
     auto dq_r = std::make_shared<op::Dequantize>(
@@ -1120,7 +1121,7 @@ void ngraph::runtime::cpu::pass::CPUFusionQuantSum::construct_qconv_bias_dq_sign
     auto dq_r_label = std::make_shared<pattern::op::Label>(dq_r, nullptr, NodeVector{dq_r});
     auto reshape_a_r =
         std::make_shared<op::Reshape>(dq_r_label, AxisVector{0, 1, 2, 3}, Shape{2, 2, 1, 1});
-    auto pbroadcast_a_r = std::make_shared<op::Broadcast>(reshape_a_r, shape, AxisSet{});
+    auto pbroadcast_a_r = std::make_shared<pattern::op::Skip>(reshape_a_r, bcast_pred);
     //Add left + right
     auto add = std::make_shared<op::Add>(pbroadcast_a, pbroadcast_a_r);
     auto prelu = std::make_shared<op::Relu>(add);
@@ -1226,7 +1227,8 @@ void ngraph::runtime::cpu::pass::CPUFusionQuantSum::construct_qconv_bias_dq_unsi
     auto dq_label = std::make_shared<pattern::op::Label>(dq, nullptr, NodeVector{dq});
     auto reshape_a =
         std::make_shared<op::Reshape>(dq_label, AxisVector{0, 1, 2, 3}, Shape{2, 2, 1, 1});
-    auto pbroadcast_a = std::make_shared<op::Broadcast>(reshape_a, shape, AxisSet{});
+    auto bcast_pred = [] (std::shared_ptr<Node> node) { return node->description() == "Broadcast"; };
+    auto pbroadcast_a = std::make_shared<pattern::op::Skip>(reshape_a, bcast_pred);
     //Right of graph
     auto add_input = std::make_shared<pattern::op::Label>(element::u8, qconv_bias->get_shape());
     auto dq_r = std::make_shared<op::Dequantize>(
@@ -1234,7 +1236,7 @@ void ngraph::runtime::cpu::pass::CPUFusionQuantSum::construct_qconv_bias_dq_unsi
     auto dq_r_label = std::make_shared<pattern::op::Label>(dq_r, nullptr, NodeVector{dq_r});
     auto reshape_a_r =
         std::make_shared<op::Reshape>(dq_r_label, AxisVector{0, 1, 2, 3}, Shape{2, 2, 1, 1});
-    auto pbroadcast_a_r = std::make_shared<op::Broadcast>(reshape_a_r, shape, AxisSet{});
+    auto pbroadcast_a_r = std::make_shared<pattern::op::Skip>(reshape_a_r, bcast_pred);
     //Add left + right
     auto add = std::make_shared<op::Add>(pbroadcast_a, pbroadcast_a_r);
     auto prelu = std::make_shared<op::Relu>(add);

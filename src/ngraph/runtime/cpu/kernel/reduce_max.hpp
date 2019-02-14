@@ -38,6 +38,18 @@ namespace ngraph
                                     const Shape& output_shape,
                                     int arena)
                 {
+                    size_t num_elements = shape_size(input_shape);
+                    ElementType val = 0;
+                    ElementType* in = static_cast<ElementType*>(input);
+#pragma omp parallel for reduction(max: val)
+                    for (size_t i = 0; i < num_elements; i++)
+                    {
+                        if (in[i] > val)
+                            val = in[i];
+                    }
+                    *(ElementType*)output = val;
+// TODO (jbobba): Figure out why this Eigen kernel is slow
+#if 0
                     Eigen::array<Eigen::Index, Rank> in_dims;
                     Eigen::array<Eigen::Index, 0> out_dims;
 
@@ -52,6 +64,7 @@ namespace ngraph
                         static_cast<ElementType*>(input), in_dims);
                     out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
                         in.maximum();
+#endif
                 }
 
                 template <typename ElementType, unsigned int Rank>
