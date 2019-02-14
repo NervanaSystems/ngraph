@@ -17,7 +17,6 @@
 #include <memory>
 
 #include "exceptions.hpp"
-#include "onehot.hpp"
 #include "ngraph/coordinate.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
@@ -26,6 +25,7 @@
 #include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/subtract.hpp"
+#include "onehot.hpp"
 #include "utils/broadcasting.hpp"
 
 namespace ngraph
@@ -39,7 +39,8 @@ namespace ngraph
                 NodeVector onehot(const Node& node)
                 {
                     NodeVector inputs{node.get_ng_inputs()};
-                    auto indices = std::make_shared<ngraph::op::Convert>(inputs.at(0), element::i64);
+                    auto indices =
+                        std::make_shared<ngraph::op::Convert>(inputs.at(0), element::i64);
                     auto indices_shape = indices->get_shape();
                     auto depth = inputs.at(1);
                     auto values = inputs.at(2);
@@ -72,7 +73,8 @@ namespace ngraph
                     on_value = numpy_style_broadcast_for_binary_operation(one_hot, on_value)[1];
                     off_value = numpy_style_broadcast_for_binary_operation(one_hot, off_value)[1];
                     one_hot = one_hot * (on_value - off_value) + off_value;
-                    return {std::make_shared<ngraph::op::Convert>(one_hot, inputs.at(0)->get_element_type())};
+                    return {std::make_shared<ngraph::op::Convert>(
+                        one_hot, inputs.at(0)->get_element_type())};
                 }
 
             } // namespace set_1
