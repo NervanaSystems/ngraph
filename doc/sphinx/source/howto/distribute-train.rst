@@ -4,9 +4,9 @@
 Distribute training across multiple nGraph backends 
 ===================================================
 
-.. important::  Distributed training is not officially supported in version 0.14; 
+.. important:: Distributed training is not officially supported in version |version|;
     however, the following configuration options have worked for nGraph devices 
-    with mixed/limited success in testing.  
+    with mixed or limited success in testing.
 
 In the :doc:`previous section <../howto/derive-for-training>`, we described the 
 steps needed to create a "trainable" nGraph model. Here we demonstrate how to 
@@ -23,7 +23,7 @@ Frameworks can implement distributed training with nGraph versions prior to
 * Use ``-DNGRAPH_DISTRIBUTED_MLSL_ENABLE=TRUE`` to enable the option for 
   :abbr:`Intel® Machine Learning Scaling Library (MLSL)` for Linux* OS:
 
-  .. important:: The Intel® MLSL option applies to Intel® Architecture CPUs 
+  .. note:: The Intel® MLSL option applies to Intel® Architecture CPUs 
      (``CPU``) and ``Interpreter`` backends only. For all other backends, 
      ``OpenMPI`` is presently the only supported option. We recommend the 
      use of `Intel MLSL` for CPU backends to avoid an extra download step.
