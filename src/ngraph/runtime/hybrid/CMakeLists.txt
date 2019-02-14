@@ -16,6 +16,7 @@
 
 add_library(hybrid_base STATIC
     hybrid_backend.cpp
+    hybrid_executable.cpp
     hybrid_util.cpp
     pass/default_placement.cpp
     pass/dump.cpp
