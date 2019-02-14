@@ -31,7 +31,9 @@ string runtime::intelgpu::get_opencl_type_name(const element::Type& ngraph_type)
     switch (ngraph_type.get_type_enum())
     {
     case element::Type_t::i64: return "long";
+    case element::Type_t::u64: return "ulong";
     case element::Type_t::i32: return "int";
+    case element::Type_t::u32: return "uint";
     case element::Type_t::i16: return "short";
     case element::Type_t::u16: return "ushort";
     case element::Type_t::i8: return "char";
@@ -1452,4 +1454,64 @@ void runtime::intelgpu::do_negative_operation(cldnn::topology& topology,
                                                   layout,
                                                   gws);
     topology.add(op_negative);
+}
+
+void runtime::intelgpu::do_reshape_operation(cldnn::topology& topology,
+                                             const string& input_name,
+                                             const Shape& input_shape,
+                                             const element::Type& input_type,
+                                             const string& output_name,
+                                             const Shape& output_shape,
+                                             const element::Type& output_type,
+                                             const AxisVector& reshape_axes)
+{
+    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const string entry_point_name = "reshape_" + output_name;
+    const string& input_type_name = get_opencl_type_name(input_type);
+    const string& output_type_name = get_opencl_type_name(output_type);
+    const size_t dst_shape_size = shape_size(output_shape);
+    codegen::CodeWriter writer;
+
+    gen_func_def(writer,
+                 entry_point_name,
+                 {input_type_name},
+                 {input_shape},
+                 output_type_name,
+                 {dst_shape_size});
+
+    writer.block_begin();
+    {
+        writer << "// input: " << input_shape << "\n";
+        writer << "//output: " << output_shape << "\n";
+        writer << "//axes: " << reshape_axes << "\n\n";
+        writer << "uint output_it = 0;\n";
+
+        // Main operation loop
+        for (auto const i : reshape_axes)
+        {
+            writer << "for (uint i" << i << " = 0; i" << i << " < " << input_shape.at(i) << "; ++i"
+                   << i << ")\n";
+            writer.block_begin();
+        }
+
+        writer << "output[output_it] = input0" << access_dims(input_shape) << ";\n"
+               << "++output_it;\n";
+
+        // Closing brackets for loop
+        for (auto const i : reshape_axes)
+        {
+            writer.block_end();
+        }
+    }
+    writer.block_end();
+
+    const cldnn::custom_gpu_primitive op_reshape(output_name,
+                                                 {input_name},
+                                                 {writer.get_code()},
+                                                 entry_point_name,
+                                                 get_kernel_args(1, 1),
+                                                 "",
+                                                 layout,
+                                                 {1});
+    topology.add(op_reshape);
 }
