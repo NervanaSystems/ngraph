@@ -1,11 +1,15 @@
-.. fusion/optimize-graphs: 
+.. fusion/index.rst:
 
+Pattern matcher
+###############
 
-Optimize Graphs 
-===============
+.. toctree::
+   :maxdepth: 1 
 
-with nGraph Compiler fusions
-----------------------------
+   overview.rst
+   graph-rewrite.rst
+   passes-that-use-matcher.rst
+
 
 The nGraph Compiler is an optimizing compiler. As such, it provides a way to 
 capture a given :term:`function graph` and perform a series of optimization 
@@ -45,3 +49,27 @@ which `ops` can be automatically translated into :doc:`nGraph Core ops <../ops/i
 
 The ``Interpreter`` is simply a backend providing reference implementations of 
 ngraph ops in C++, with the focus on simplicity over performance.
+
+Example 
+-------
+
+Let us first consider a simple example. A user would like to execute a graph 
+that describes the following arithmetic expression:
+
+:math:`a + b * 1` or :math:`Add(a, Mul(b, 1))` 
+
+In the above expressions, `1` is an identity element; any element multiplied by 
+the identity element is equal to itself. This is the same as saying:
+
+:math:`b * 1 = b` 
+
+The writer of an optimization pass which uses algebraic simplification would 
+probably want to first ``locate`` all multiplication expressions where 
+multiplicands are multiplied by `1` (for stage 1) and to then ``transform``, 
+``simplify``, or ``replace`` those expressions with just their multiplicands 
+(for stage 2).  
+
+To make the work of an optimization pass writer easier, the nGraph Library 
+includes facilities that enable the *finding* of relevant candidates using 
+pattern matching (via ``pattern/matcher.hpp``), and the *transforming* of the 
+original graph into a condensed version (via ``pass/graph_rewrite.hpp``).   

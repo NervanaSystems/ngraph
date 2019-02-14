@@ -4,7 +4,8 @@
 Overview
 ========
 
-What follows here is a table of all documented namespaces with brief descriptions:
+What follows here is a table of all documented namespaces with brief 
+descriptions:
 
 
 Namespace List

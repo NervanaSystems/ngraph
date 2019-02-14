@@ -12,7 +12,9 @@ Constructing Graphs
    update.rst
    derive-for-training.rst
    distribute-train.rst
-   import.rst    
+   import.rst
+   Using the Python API <../python_api/index.rst>
+       
 
 The "How to" articles in this section explain how to do specific tasks with 
 nGraph components. The recipes are all framework agnostic; in other words, 

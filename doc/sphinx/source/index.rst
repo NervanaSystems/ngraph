@@ -42,12 +42,10 @@ nGraph Compiler stack
    :caption: nGraph Core
 
    core/overview.rst
-   Pattern matcher <fusion/index.rst>
+   core/fusion/index.rst
    nGraph Core Ops <ops/index.rst>
-   More about Ops <ops/about.rst>
    Graph construction <howto/index.rst>
-   Using the Python API <python_api/index.rst>
-   Compiler passes  <fusion/graph-rewrite.rst>
+   core/passes/passes.rst
    buildlb.rst
    
    
