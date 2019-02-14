@@ -293,11 +293,11 @@ namespace ngraph
                 {
                     float local_min = mins[i];
                     float local_max = maxes[i];
-                    if (local_min != min_val)
+                    if (local_min - min_val > 0)
                     {
                         throw ngraph_error("All tensors must have same ranges. Mins must be same");
                     }
-                    if (local_max != max_val)
+                    if (local_max - max_val > 0)
                     {
                         throw ngraph_error("All tensors must have same ranges. Maxes must be same");
                     }
