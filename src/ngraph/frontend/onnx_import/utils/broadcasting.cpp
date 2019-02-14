@@ -38,15 +38,12 @@ static std::vector<ngraph::Shape> get_numpy_broadcast_shape(ngraph::Shape left_s
     auto rank_right = right_shape.size();
     auto max_rank = std::max(rank_left, rank_right);
 
-    for (auto i = 0; i < (max_rank - rank_left); ++i)
-    {
-        left_shape.insert(std::begin(left_shape), 1);
-    }
-    for (auto i = 0; i < (max_rank - rank_right); ++i)
-    {
-        right_shape.insert(std::begin(right_shape), 1);
-    }
-    for (auto index = 0; index < max_rank; ++index)
+    // left-pad the left_shape with ones
+    left_shape.insert(left_shape.begin(), max_rank - rank_left, 1);
+    // left-pad the right_shape with ones
+    right_shape.insert(right_shape.begin(), max_rank - rank_right, 1);
+
+    for (size_t index = 0; index < max_rank; ++index)
     {
         output_shape.push_back(std::max(left_shape.at(index), right_shape.at(index)));
     }
@@ -66,9 +63,9 @@ static std::vector<ngraph::Shape> get_numpy_broadcast_shape(ngraph::Shape left_s
 ///
 /// \return     The boroadcasted Node.
 ///
-static std::shared_ptr<ngraph::Node> broadcast(const std::shared_ptr<ngraph::Node>& node,
-                                               const ngraph::Shape& output_shape,
-                                               const ngraph::Shape& source_shape)
+static std::shared_ptr<ngraph::Node> broadcast_node_numpy_style(const std::shared_ptr<ngraph::Node> &node,
+                                                           const ngraph::Shape &output_shape,
+                                                           const ngraph::Shape &source_shape)
 {
     ngraph::AxisVector broadcast_axes;
     ngraph::Shape squeezed_shape;
@@ -96,38 +93,17 @@ static std::shared_ptr<ngraph::Node> broadcast(const std::shared_ptr<ngraph::Nod
     return std::make_shared<ngraph::op::Broadcast>(broadcasted_node, output_shape, broadcast_axes);
 }
 
-static ngraph::Shape shape_left_fold(const ngraph::Shape& shape1, const ngraph::Shape& shape2)
-{
-    ngraph::Shape output_shape, left_shape = shape1, right_shape = shape2;
-    auto rank_left = left_shape.size();
-    auto rank_right = right_shape.size();
-    auto max_rank = std::max(rank_left, rank_right);
-
-    for (auto i = 0; i < (max_rank - rank_left); ++i)
-    {
-        left_shape.insert(std::begin(left_shape), 1);
-    }
-    for (auto i = 0; i < (max_rank - rank_right); ++i)
-    {
-        right_shape.insert(std::begin(right_shape), 1);
-    }
-    for (auto index = 0; index < max_rank; ++index)
-    {
-        output_shape.push_back(std::max(left_shape.at(index), right_shape.at(index)));
-    }
-
-    return output_shape;
-}
-
 static ngraph::Shape get_numpy_broadcast_shape(ngraph::NodeVector inputs)
 {
-    auto accumulator = [](const ngraph::Shape& partial_shape,
+    auto shape_left_fold = [](const ngraph::Shape& accumulator,
                           const std::shared_ptr<ngraph::Node>& input) {
-        return shape_left_fold(partial_shape, input->get_shape());
+        return get_numpy_broadcast_shape(accumulator, input->get_shape()).at(0);
     };
 
     ngraph::Shape target_shape =
-        std::accumulate(inputs.begin(), inputs.end(), ngraph::Shape{}, accumulator);
+        std::accumulate(inputs.begin(), inputs.end(),
+                ngraph::Shape{},
+                shape_left_fold);
 
     return target_shape;
 }
@@ -147,8 +123,8 @@ namespace ngraph
             auto left_full_shape = numpy_shapes.at(1);
             auto right_full_shape = numpy_shapes.at(2);
 
-            return {broadcast(left, output_shape, left_full_shape),
-                    broadcast(right, output_shape, right_full_shape)};
+            return {broadcast_node_numpy_style(left, output_shape, left_full_shape),
+                    broadcast_node_numpy_style(right, output_shape, right_full_shape)};
         }
 
         NodeVector numpy_style_broadcast(NodeVector inputs)
@@ -164,7 +140,7 @@ namespace ngraph
             for (const auto& input_node : inputs)
             {
                 Shape source_shape = input_node->get_shape();
-                broadcasted_inputs.push_back(broadcast(input_node, target_shape, source_shape));
+                broadcasted_inputs.push_back(broadcast_node_numpy_style(input_node, target_shape, source_shape));
             }
 
             return broadcasted_inputs;
@@ -202,8 +178,8 @@ namespace ngraph
                                     std::next(std::begin(right_shape), right_shape.size() - 2),
                                     std::end(right_shape));
 
-            return {broadcast(left, left_output_shape, left_full_shape),
-                    broadcast(right, right_output_shape, right_full_shape)};
+            return {broadcast_node_numpy_style(left, left_output_shape, left_full_shape),
+                    broadcast_node_numpy_style(right, right_output_shape, right_full_shape)};
         }
 
         NodeVector
