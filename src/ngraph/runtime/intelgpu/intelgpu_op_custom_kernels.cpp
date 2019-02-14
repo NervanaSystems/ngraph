@@ -14,6 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <sys/resource.h>
+#include <sys/time.h>
+
 #include <CPP/concatenation.hpp>
 #include <CPP/custom_gpu_primitive.hpp>
 #include <CPP/reshape.hpp>
@@ -31,7 +34,9 @@ string runtime::intelgpu::get_opencl_type_name(const element::Type& ngraph_type)
     switch (ngraph_type.get_type_enum())
     {
     case element::Type_t::i64: return "long";
+    case element::Type_t::u64: return "ulong";
     case element::Type_t::i32: return "int";
+    case element::Type_t::u32: return "uint";
     case element::Type_t::i16: return "short";
     case element::Type_t::u16: return "ushort";
     case element::Type_t::i8: return "char";
@@ -1512,4 +1517,20 @@ void runtime::intelgpu::do_reshape_operation(cldnn::topology& topology,
                                                  layout,
                                                  {1});
     topology.add(op_reshape);
+}
+
+size_t runtime::intelgpu::get_max_memory_rss()
+{
+    size_t result = 0;
+    struct rusage usage;
+
+    if (getrusage(RUSAGE_SELF, &usage) == 0)
+    {
+        result = usage.ru_maxrss; // the value is in kilobytes
+
+        // aligne result to return bytes
+        result *= 1000;
+    }
+
+    return result;
 }
