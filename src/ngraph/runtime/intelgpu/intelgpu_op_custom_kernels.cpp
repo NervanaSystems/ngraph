@@ -14,6 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <sys/resource.h>
+#include <sys/time.h>
+
 #include <CPP/concatenation.hpp>
 #include <CPP/custom_gpu_primitive.hpp>
 #include <CPP/reshape.hpp>
@@ -1512,4 +1515,20 @@ void runtime::intelgpu::do_reshape_operation(cldnn::topology& topology,
                                                  layout,
                                                  {1});
     topology.add(op_reshape);
+}
+
+size_t runtime::intelgpu::get_max_memory_rss()
+{
+    size_t result = 0;
+    struct rusage usage;
+
+    if (getrusage(RUSAGE_SELF, &usage) == 0)
+    {
+        result = usage.ru_maxrss; // the value is in kilobytes
+
+        // aligne result to return bytes
+        result *= 1000;
+    }
+
+    return result;
 }
