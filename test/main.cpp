@@ -23,6 +23,8 @@
 using namespace std;
 
 #ifdef NGRAPH_DISTRIBUTED_ENABLE
+#include <memory>
+
 #include "ngraph/distributed.hpp"
 
 #include "distributed_setup.hpp"
