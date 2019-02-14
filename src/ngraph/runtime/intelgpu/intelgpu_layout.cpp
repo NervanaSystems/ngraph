@@ -54,32 +54,19 @@ bool runtime::intelgpu::IntelGPULayout::
 cldnn::data_types
     runtime::intelgpu::IntelGPULayout::get_cldnn_type(const element::Type& element_type)
 {
-    if ((element_type == ngraph::element::i8) || (element_type == ngraph::element::boolean))
+    switch (element_type.get_type_enum())
     {
-        return cldnn::data_types::i8;
+    case element::Type_t::i8:
+    case element::Type_t::boolean: return cldnn::data_types::i8;
+    case element::Type_t::u8: return cldnn::data_types::u8;
+    case element::Type_t::i32: return cldnn::data_types::i32;
+    case element::Type_t::i64: return cldnn::data_types::i64;
+    case element::Type_t::f32: return cldnn::data_types::f32;
     }
-    else if (element_type == ngraph::element::u8)
-    {
-        return cldnn::data_types::u8;
-    }
-    else if (element_type == ngraph::element::i32)
-    {
-        return cldnn::data_types::i32;
-    }
-    else if (element_type == ngraph::element::i64)
-    {
-        return cldnn::data_types::i64;
-    }
-    else if (element_type == ngraph::element::f32)
-    {
-        return cldnn::data_types::f32;
-    }
-    else
-    {
-        ostringstream os;
-        os << "IntelGPULayout::get_cldnn_type: Unknown type " << element_type;
-        throw invalid_argument(os.str());
-    }
+
+    ostringstream os;
+    os << "IntelGPULayout::get_cldnn_type: Unknown type " << element_type;
+    throw invalid_argument(os.str());
 }
 
 cldnn::tensor runtime::intelgpu::IntelGPULayout::create_cldnn_tensor(const Shape& element_shape)

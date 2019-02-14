@@ -107,6 +107,6 @@ namespace ngraph
         size_t m_instance_id;
         std::string m_name;
         const std::string m_unique_name;
-        size_t m_placement;
+        size_t m_placement{0};
     };
 }
