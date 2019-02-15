@@ -138,7 +138,7 @@ if (NOT TARGET onnx::libonnx)
     add_dependencies(onnx::libonnx ext_onnx)
 endif()
 
-if (NOT TARGET onnnx::libonnx_proto)
+if (NOT TARGET onnx::libonnx_proto)
     add_library(onnx::libonnx_proto UNKNOWN IMPORTED)
     set_target_properties(onnx::libonnx_proto PROPERTIES
             INTERFACE_INCLUDE_DIRECTORIES ${ONNX_PROTO_INCLUDE_DIR}
