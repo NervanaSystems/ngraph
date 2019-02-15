@@ -289,6 +289,17 @@ mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_default_mkldnn_md(
     return memory::desc(memory::dims(shape.begin(), shape.end()), et, format);
 }
 
+bool runtime::cpu::mkldnn_utils::can_create_mkldnn_md(const ngraph::element::Type type)
+{
+    auto it = get_mkldnn_data_type_map().find(type);
+    if (it == get_mkldnn_data_type_map().end() ||
+        it->second == mkldnn::memory::data_type::data_undef)
+    {
+        return false;
+    }
+    return true;
+}
+
 bool runtime::cpu::mkldnn_utils::can_create_mkldnn_md(const Shape& dims,
                                                       const Strides& strides,
                                                       const ngraph::element::Type type)
