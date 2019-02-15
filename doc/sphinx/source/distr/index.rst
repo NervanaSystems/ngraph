@@ -4,6 +4,12 @@
 Distributed Training in nGraph
 ##############################
 
+
+.. important:: Distributed training is not officially supported in version |version|;
+   however, some configuration options have worked for nGraph devices with mixed or 
+   limited success in testing environments.
+
+
 Why distributed training?
 =========================
 
