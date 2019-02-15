@@ -148,6 +148,28 @@ NGRAPH_TEST(${BACKEND_NAME}, divide)
     EXPECT_EQ((vector<float>{2, 2, 2, 2}), read_vector<float>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, divide_int32)
+{
+    Shape shape{2, 2};
+
+    auto A = make_shared<op::Parameter>(element::i32, shape);
+    auto B = make_shared<op::Parameter>(element::i32, shape);
+    auto f = make_shared<Function>(make_shared<op::Divide>(A, B), ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::i32, shape);
+    copy_data(a, vector<int32_t>{2, 4, 8, 16});
+    auto b = backend->create_tensor(element::i32, shape);
+    copy_data(b, vector<int32_t>{1, 2, 4, 8});
+    auto result = backend->create_tensor(element::i32, shape);
+
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a, b});
+    EXPECT_EQ((vector<int32_t>{2, 2, 2, 2}), read_vector<int32_t>(result));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, divide_overload)
 {
     Shape shape{2, 2};
