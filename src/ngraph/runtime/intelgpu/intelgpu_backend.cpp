@@ -844,14 +844,27 @@ shared_ptr<runtime::Executable>
             {
                 do_equal_propagation(topology, get_input_name(op), get_output_name(op));
             }
-            else if (get_input_type(op) != element::i32 && get_input_type(op) != element::i64 &&
-                     ((get_input_shape(op).size() == 1 && get_input_shape(op).at(0) == 1) ||
-                      get_input_shape(op).empty()))
+            else if ((get_output_shape(op).size() <= 4) &&
+                     ((get_input_type(op) == element::f32) || (get_input_type(op) == element::i32)))
             {
+                const size_t shift = 4 - get_output_shape(op).size();
+                vector<uint16_t> fixed_b_axes;
+
+                for (uint16_t i = 0; i < shift; ++i)
+                {
+                    fixed_b_axes.push_back(i);
+                }
+
+                for (auto it = axis.cbegin(); it != axis.cend(); ++it)
+                {
+                    fixed_b_axes.push_back(*it + shift);
+                }
+
                 const cldnn::tensor output_tensor_size =
                     intelgpu_space::create_cldnn_tensor(get_output_shape(op));
+
                 const cldnn::broadcast cldnn_broadcast(
-                    get_output_name(op), get_input_name(op), output_tensor_size);
+                    get_output_name(op), get_input_name(op), output_tensor_size, fixed_b_axes);
                 topology.add(cldnn_broadcast);
             }
             else
