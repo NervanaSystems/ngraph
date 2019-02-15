@@ -31,6 +31,7 @@
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/concat.hpp"
+#include "ngraph/op/convert.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
@@ -1936,6 +1937,31 @@ namespace ngraph
                         set_native_layouts(external_function, node);
                     }
                 }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::Convert)
+                {
+                    auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                    auto tv = node->get_output_tensor_ptr(0);
+
+                    if (input_md.data.format == mkldnn_blocked ||
+                        input_md.data.format == mkldnn_format_undef ||
+                        !mkldnn_utils::can_create_mkldnn_md(tv->get_element_type()))
+                    {
+                        // Cannot pass through layout information for blocked layouts at the moment
+                        set_native_layouts(external_function, node);
+                    }
+                    else
+                    {
+                        vector<memory::desc> o_mds;
+                        o_mds.push_back(mkldnn_utils::create_default_mkldnn_md(
+                            node.get(),
+                            0,
+                            true,
+                            static_cast<memory::format>(input_md.data.format)));
+                        set_output_layouts(node, o_mds);
+                    }
+                }
             }
         }
     }
@@ -1945,6 +1971,7 @@ namespace ngraph
 
 static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::Concat), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Concat>},
+    {TI(ngraph::op::Convert), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Convert>},
     {TI(ngraph::op::AvgPool), &runtime::cpu::pass::CPULayout::layout<ngraph::op::AvgPool>},
     {TI(ngraph::op::AvgPoolBackprop),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::AvgPoolBackprop>},

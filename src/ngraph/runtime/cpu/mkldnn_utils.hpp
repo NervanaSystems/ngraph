@@ -51,6 +51,7 @@ namespace ngraph
                                                               bool is_output,
                                                               mkldnn::memory::format format);
                 bool is_perm_sorted(const Strides& a, const AxisVector& perm);
+                bool can_create_mkldnn_md(const ngraph::element::Type type);
                 bool can_create_mkldnn_md(const Shape& dims,
                                           const Strides& strides,
                                           const ngraph::element::Type type);
