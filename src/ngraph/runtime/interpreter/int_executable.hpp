@@ -231,7 +231,7 @@ private:
         }
         case OP_TYPEID::AllReduce: {
 #ifdef NGRAPH_DISTRIBUTED_ENABLE
-            reference::allreduce<T>(static_cast<T*>(const_cast<void*>(args[0]->get_data_ptr<void*>()),
+            reference::allreduce<T>(args[0]->get_data_ptr<T>(),
                                     out[0]->get_data_ptr<T>(),
                                     node.get_input_element_type(0),
                                     static_cast<int>(shape_size(node.get_input_shape(0))));
