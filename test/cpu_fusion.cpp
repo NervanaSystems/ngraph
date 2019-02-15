@@ -3597,6 +3597,82 @@ TEST(cpu_quant_fusion, qconvb_relu)
     EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
 }
 
+TEST(cpu_quant_fusion, qavg_pool)
+{
+    auto make_function = []() {
+        Shape shape_input{1, 2, 4, 4};
+        auto input = std::make_shared<op::Parameter>(element::f32, shape_input);
+        auto input_scale = op::Constant::create(element::f32, Shape{}, {2.0f});
+        auto weights_scale = op::Constant::create(element::f32, Shape{}, {2.0f});
+        auto int8_zero = op::Constant::create(element::i8, Shape{}, {0});
+        auto uint8_zero = op::Constant::create(element::u8, Shape{}, {0});
+
+        op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+        auto q_input = std::make_shared<op::Quantize>(
+            input, input_scale, uint8_zero, element::u8, AxisSet{}, round_mode);
+        auto dq = std::make_shared<op::Dequantize>(
+            q_input, input_scale, uint8_zero, element::f32, AxisSet{});
+        auto avg_pool = std::make_shared<op::AvgPool>(dq, Shape{2, 2});
+        return make_shared<Function>(NodeVector{avg_pool}, ParameterVector{input});
+    };
+
+    auto cpu_f1 = make_function();
+    auto cpu_f2 = make_function();
+
+    test::Uniform<float> rng(4.0f, 4.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f1->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:0", 1);
+    auto cpu1_results = execute(cpu_f1, args, "CPU");
+    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:1", 1);
+    auto cpu2_results = execute(cpu_f2, args, "CPU");
+    EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
+}
+
+TEST(cpu_quant_fusion, qmax_pool)
+{
+    auto make_function = []() {
+        Shape shape_input{1, 2, 4, 4};
+        auto input = std::make_shared<op::Parameter>(element::f32, shape_input);
+        auto input_scale = op::Constant::create(element::f32, Shape{}, {2.0f});
+        auto weights_scale = op::Constant::create(element::f32, Shape{}, {2.0f});
+        auto int8_zero = op::Constant::create(element::i8, Shape{}, {0});
+        auto uint8_zero = op::Constant::create(element::u8, Shape{}, {0});
+
+        op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+        auto q_input = std::make_shared<op::Quantize>(
+            input, input_scale, uint8_zero, element::u8, AxisSet{}, round_mode);
+        auto dq = std::make_shared<op::Dequantize>(
+            q_input, input_scale, uint8_zero, element::f32, AxisSet{});
+        auto maxpool = std::make_shared<op::MaxPool>(dq, Shape{2, 2});
+        return make_shared<Function>(NodeVector{maxpool}, ParameterVector{input});
+    };
+
+    auto cpu_f1 = make_function();
+    auto cpu_f2 = make_function();
+
+    test::Uniform<float> rng(1.0f, 10.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f1->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:0", 1);
+    auto cpu1_results = execute(cpu_f1, args, "CPU");
+    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:1", 1);
+    auto cpu2_results = execute(cpu_f2, args, "CPU");
+    EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
+}
+
 TEST(cpu_quant_fusion, dq_q)
 {
     auto make_function = [](bool match_scales = true, bool match_et = true) {
