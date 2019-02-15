@@ -50,7 +50,7 @@ namespace ngraph
             const std::string& description() const;
             const std::vector<std::reference_wrapper<const std::string>>& get_output_names() const;
             const std::string& output(int index) const;
-            const std::size_t get_outputs_size() const;
+            std::size_t get_outputs_size() const;
 
             template <typename T>
             T get_attribute_value(const std::string& name, T default_value) const;
@@ -86,7 +86,7 @@ namespace ngraph
             return m_node_proto->output(index);
         }
 
-        const std::size_t Node::Impl::get_outputs_size() const { return m_output_names.size(); }
+        std::size_t Node::Impl::get_outputs_size() const { return m_output_names.size(); }
         template <typename T>
         T Node::Impl::get_attribute_value(const std::string& name, T default_value) const
         {
@@ -184,7 +184,7 @@ namespace ngraph
         }
 
         const std::string& Node::output(int index) const { return m_pimpl->output(index); }
-        const std::size_t Node::get_outputs_size() const { return m_pimpl->get_outputs_size(); }
+        std::size_t Node::get_outputs_size() const { return m_pimpl->get_outputs_size(); }
         template <>
         float Node::get_attribute_value(const std::string& name, float default_value) const
         {
