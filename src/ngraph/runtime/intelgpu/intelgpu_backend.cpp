@@ -25,6 +25,7 @@
 #include <CPP/concatenation.hpp>
 #include <CPP/convolution.hpp>
 #include <CPP/convolution_grad_input.hpp>
+#include <CPP/convolution_grad_weights.hpp>
 #include <CPP/crop.hpp>
 #include <CPP/data.hpp>
 #include <CPP/eltwise.hpp>
@@ -1527,25 +1528,97 @@ shared_ptr<runtime::Executable>
             const shared_ptr<op::ConvolutionBackpropFilters> conv_op =
                 static_pointer_cast<op::ConvolutionBackpropFilters>(op);
 
-            do_convolution_operation(topology,
-                                     get_input_name(op, 0),
-                                     get_input_shape(op, 0),
-                                     get_input_name(op, 1),
-                                     get_input_shape(op, 1),
-                                     get_output_name(op),
-                                     get_output_shape(op),
-                                     get_output_type(op),
-                                     conv_op->get_padding_below_backward(),
-                                     conv_op->get_window_movement_strides_backward(),
-                                     conv_op->get_window_dilation_strides_backward(),
-                                     conv_op->get_data_dilation_strides_backward(),
-                                     1,
-                                     0,
-                                     0,
-                                     "input[input_channel][batch]",
-                                     "filter[input_channel][output_channel]",
-                                     "output[output_channel][batch]",
-                                     false);
+            const Strides& win_stride = conv_op->get_window_movement_strides_backward();
+            const CoordinateDiff& pad_below = conv_op->get_padding_below_backward();
+            const CoordinateDiff& pad_above = conv_op->get_padding_above_backward();
+            const Strides& win_dilation = conv_op->get_window_dilation_strides_backward();
+            const Strides& data_dilation = conv_op->get_data_dilation_strides_backward();
+
+            if ((win_stride.size() > 2) || (win_stride.at(0) != 1) || (win_stride.at(1) != 1) ||
+                (pad_below.size() > 2) || (pad_above.size() > 2) || (data_dilation.size() > 2) ||
+                (data_dilation.at(0) != 1) || (data_dilation.at(1) != 1) ||
+                (win_dilation.size() > 2))
+            {
+                do_convolution_operation(topology,
+                                         get_input_name(op, 0),
+                                         get_input_shape(op, 0),
+                                         get_input_name(op, 1),
+                                         get_input_shape(op, 1),
+                                         get_output_name(op),
+                                         get_output_shape(op),
+                                         get_output_type(op),
+                                         conv_op->get_padding_below_backward(),
+                                         conv_op->get_window_movement_strides_backward(),
+                                         conv_op->get_window_dilation_strides_backward(),
+                                         conv_op->get_data_dilation_strides_backward(),
+                                         1,
+                                         0,
+                                         0,
+                                         "input[input_channel][batch]",
+                                         "filter[input_channel][output_channel]",
+                                         "output[output_channel][batch]",
+                                         false);
+            }
+            else
+            {
+                cldnn::tensor::value_type pad_above_x = pad_below.at(1);
+                cldnn::tensor::value_type pad_above_y = pad_below.at(0);
+                cldnn::tensor::value_type pad_below_x = pad_above.at(1);
+                cldnn::tensor::value_type pad_below_y = pad_above.at(0);
+
+                if ((win_dilation.at(0) != 1) && (win_dilation.at(1) != 1) &&
+                    (pad_below.at(0) != pad_above.at(0)) && (pad_below.at(1) != pad_above.at(1)))
+                {
+                    pad_below_x += 1;
+                    pad_below_y += 1;
+                }
+
+                cldnn::tensor::value_type input_offset_x = -pad_above_x;
+                cldnn::tensor::value_type input_offset_y = -pad_above_y;
+
+                std::string op_input_name = get_input_name(op, 0);
+
+                string filter_name = get_output_name(op) + "_filter_output";
+
+                // Create a memory for filter as mutable_data to treat it as constant
+                const cldnn::layout filter_layout =
+                    IntelGPULayout::create_cldnn_layout(get_output_type(op), get_output_shape(op));
+
+                const cldnn::memory filter_mem(
+                    cldnn::memory::allocate(*cldnn_engine, filter_layout));
+
+                const cldnn::mutable_data filter_const(filter_name, filter_mem);
+                topology.add(filter_const);
+
+                if ((pad_below_x != pad_above_x) && (pad_below_y != pad_above_y))
+                {
+                    // Different input padding for operation workarounded by adding aux layer
+                    const cldnn::tensor border_pad_above(0, 0, pad_above_x, pad_above_y);
+                    const cldnn::tensor border_pad_below(0, 0, pad_below_x, pad_below_y);
+                    input_offset_x = 0;
+                    input_offset_y = 0;
+                    op_input_name += "_bordered";
+                    const cldnn::border cldnn_border(op_input_name,
+                                                     get_input_name(op, 0),
+                                                     border_pad_above,
+                                                     border_pad_below,
+                                                     cldnn::border_type::zero);
+                    topology.add(cldnn_border);
+                }
+
+                const cldnn::tensor input_offset(0, 0, input_offset_x, input_offset_y);
+                const cldnn::tensor strides(1, 1, win_dilation.at(1), win_dilation.at(0));
+
+                const cldnn::convolution_grad_weights conv_back_flt(get_output_name(op),
+                                                                    get_input_name(op, 1),
+                                                                    op_input_name,
+                                                                    {filter_name},
+                                                                    strides,
+                                                                    input_offset,
+                                                                    cldnn::tensor(1, 1, 1, 1),
+                                                                    true);
+                topology.add(conv_back_flt);
+            }
             break;
         }
         case OP_TYPEID::ConvolutionBackpropData:
