@@ -306,7 +306,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
             NodeVector params = p.first;
             NodeVector& op_nodes = p.second;
 
-            // we will sort the captured Add(Dot(X, W) + B) as per the the slice ordering of X
+            // we will sort the captured Add(Dot(X, W) + B) as per the slice ordering of X
             // this will simplify the replace_node logic
             auto compare_slices = [&](const std::shared_ptr<Node> node1,
                                       const std::shared_ptr<Node> node2) {

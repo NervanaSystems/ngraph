@@ -151,7 +151,7 @@ public:
     const ngraph::ResultVector& get_results() const;
 
 protected:
-    /// \brief Called at the end of compile to the the values to be returned by get_parameters
+    /// \brief Called at the end of compile to the values to be returned by get_parameters
     ///     and get_results
     /// \param func The function with Results fully resolved.
     void set_parameters_and_results(const Function& func);

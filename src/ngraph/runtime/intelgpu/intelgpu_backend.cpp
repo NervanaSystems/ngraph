@@ -15,8 +15,6 @@
 //*****************************************************************************
 
 #include <iomanip>
-#include <sys/resource.h>
-#include <sys/time.h>
 
 #include <CPP/activation.hpp>
 #include <CPP/activation_grad.hpp>
@@ -37,9 +35,7 @@
 #include <CPP/mutable_data.hpp>
 #include <CPP/permute.hpp>
 #include <CPP/pooling.hpp>
-#include <CPP/reorder.hpp>
 #include <CPP/reshape.hpp>
-#include <CPP/scale.hpp>
 #include <CPP/select.hpp>
 #include <CPP/softmax.hpp>
 #include <CPP/topology.hpp>
@@ -51,6 +47,7 @@
 #include "ngraph/pass/nop_elimination.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_backend.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_executable.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_batchnorm.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_broadcast.hpp"
@@ -141,21 +138,6 @@ static void arguments_check(const shared_ptr<Node>& op, size_t input, size_t out
     }
 }
 
-static void
-    memory_size_check(size_t memory_size, const shared_ptr<Node>& node, const string& function_name)
-{
-    const size_t tensor_size = shape_size(node->get_shape()) * node->get_element_type().size();
-
-    if (memory_size != tensor_size)
-    {
-        ostringstream os;
-        os << "IntelGPU backend failed memory check. In \"" << function_name << "\" with Node \""
-           << node->get_name() << "\" and " << node->get_shape() << " mismatched memory sizes "
-           << tensor_size << " and " << memory_size;
-        throw invalid_argument(os.str());
-    }
-}
-
 static const string& get_input_name(const shared_ptr<Node>& op, size_t num = 0)
 {
     return op->get_inputs().at(num).get_tensor().get_name();
@@ -188,30 +170,15 @@ static const element::Type& get_output_type(const shared_ptr<Node>& op, size_t n
 
 static void do_eltwise_operation(cldnn::topology& topology,
                                  const shared_ptr<Node>& op,
+                                 const string& custom_op,
+                                 bool function_operation,
                                  cldnn::eltwise_mode mode)
 {
     arguments_check(op, 2, 1);
 
-// Leave it here for some time
-#if USE_INTELGPU_CUSTOM_KERNELS
-    if ((get_input_type(op) == element::i32 || get_input_type(op) == element::i64) &&
-        (mode == cldnn::eltwise_mode::min || mode == cldnn::eltwise_mode::max))
+    if (get_input_type(op) != element::f32 || get_input_type(op, 1) != element::f32 ||
+        get_output_type(op) != element::f32)
     {
-        string custom_op;
-
-        if (mode == cldnn::eltwise_mode::min)
-        {
-            custom_op = "min";
-        }
-        else if (mode == cldnn::eltwise_mode::max)
-        {
-            custom_op = "max";
-        }
-        else
-        {
-            custom_op = "not_implemented_operation";
-        }
-
         runtime::intelgpu::do_eltwise_kernel(topology,
                                              get_input_name(op, 0),
                                              get_input_shape(op, 0),
@@ -221,31 +188,59 @@ static void do_eltwise_operation(cldnn::topology& topology,
                                              get_output_name(op),
                                              get_output_shape(op),
                                              get_output_type(op),
-                                             custom_op);
+                                             custom_op,
+                                             function_operation);
     }
     else
     {
-        const cldnn::eltwise op_add(
+        const cldnn::eltwise op_eltwise(
             get_output_name(op), {get_input_name(op, 0), get_input_name(op, 1)}, mode);
-        topology.add(op_add);
+        topology.add(op_eltwise);
     }
-#else
-
-    const cldnn::eltwise op_eltwise(
-        get_output_name(op), {get_input_name(op, 0), get_input_name(op, 1)}, mode);
-    topology.add(op_eltwise);
-#endif
 }
 
-static void do_unary_operation(cldnn::topology& topology,
-                               const shared_ptr<Node>& op,
-                               cldnn_activation_func mode,
-                               const cldnn_activation_additional_params& param = {0.f, 0.f})
+static void do_cldnn_unary(cldnn::topology& topology,
+                           const shared_ptr<Node>& op,
+                           cldnn_activation_func mode,
+                           const cldnn_activation_additional_params& param = {0.f, 0.f})
 {
     arguments_check(op, 1, 1);
 
     const cldnn::activation cldnn_unary(get_output_name(op), get_input_name(op), mode, param);
     topology.add(cldnn_unary);
+}
+
+static void
+    do_custom_unary(cldnn::topology& topology, const shared_ptr<Node>& op, const string& operation)
+{
+    arguments_check(op, 1, 1);
+
+    runtime::intelgpu::do_custom_unary_operation(topology,
+                                                 get_input_name(op),
+                                                 get_input_shape(op),
+                                                 get_input_type(op),
+                                                 get_output_name(op),
+                                                 get_output_shape(op),
+                                                 get_output_type(op),
+                                                 operation);
+}
+
+static void do_universal_unary(cldnn::topology& topology,
+                               const shared_ptr<Node>& op,
+                               const string& operation,
+                               cldnn_activation_func mode,
+                               const cldnn_activation_additional_params& param = {0.f, 0.f})
+{
+    arguments_check(op, 1, 1);
+
+    if (get_input_type(op) != element::f32)
+    {
+        do_custom_unary(topology, op, operation);
+    }
+    else
+    {
+        do_cldnn_unary(topology, op, mode, param);
+    }
 }
 
 static void do_pooling_operation(cldnn::topology& topology,
@@ -310,22 +305,6 @@ extern "C" runtime::Backend* new_backend(const char* configuration_string)
 extern "C" void delete_backend(runtime::Backend* backend)
 {
     delete backend;
-}
-
-static size_t get_max_memory_rss()
-{
-    size_t result = 0;
-    struct rusage usage;
-
-    if (getrusage(RUSAGE_SELF, &usage) == 0)
-    {
-        result = usage.ru_maxrss; // the value is in kilobytes
-
-        // aligne result to return bytes
-        result *= 1000;
-    }
-
-    return result;
 }
 
 runtime::intelgpu::IntelGPUBackend::IntelGPUBackend()
@@ -433,7 +412,7 @@ shared_ptr<runtime::Executable>
 
     if (m_profile_enable)
     {
-        consumed_memory = get_max_memory_rss();
+        consumed_memory = runtime::intelgpu::get_max_memory_rss();
         timer_compile.start();
     }
 
@@ -642,7 +621,8 @@ shared_ptr<runtime::Executable>
 
             // clDNN has limited support for Softmax operation
             // following are the checks to go with custom kernel
-            if ((shape_dim_count > 3) || ((shape_dim_count == 3) && (axes_size == 2)))
+            if ((shape_dim_count > 3) || ((shape_dim_count == 3) && (axes_size == 2)) ||
+                (get_input_type(op) != element::f32))
             {
                 do_softmax_operation(topology,
                                      get_input_name(op),
@@ -678,27 +658,37 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::Add:
         {
-            do_eltwise_operation(topology, op, cldnn::eltwise_mode::sum);
+            do_eltwise_operation(topology, op, "+", false, cldnn::eltwise_mode::sum);
+            break;
+        }
+        case OP_TYPEID::Subtract:
+        {
+            do_eltwise_operation(topology, op, "-", false, cldnn::eltwise_mode::sub);
             break;
         }
         case OP_TYPEID::Multiply:
         {
-            do_eltwise_operation(topology, op, cldnn::eltwise_mode::prod);
+            do_eltwise_operation(topology, op, "*", false, cldnn::eltwise_mode::prod);
             break;
         }
         case OP_TYPEID::Divide:
         {
-            do_eltwise_operation(topology, op, cldnn::eltwise_mode::div);
+            do_eltwise_operation(topology, op, "/", false, cldnn::eltwise_mode::div);
             break;
         }
         case OP_TYPEID::Maximum:
         {
-            do_eltwise_operation(topology, op, cldnn::eltwise_mode::max);
+            do_eltwise_operation(topology, op, "max", true, cldnn::eltwise_mode::max);
             break;
         }
         case OP_TYPEID::Minimum:
         {
-            do_eltwise_operation(topology, op, cldnn::eltwise_mode::min);
+            do_eltwise_operation(topology, op, "min", true, cldnn::eltwise_mode::min);
+            break;
+        }
+        case OP_TYPEID::Power:
+        {
+            do_eltwise_operation(topology, op, "pow", true, cldnn::eltwise_mode::pow);
             break;
         }
         case OP_TYPEID::Constant:
@@ -931,58 +921,51 @@ shared_ptr<runtime::Executable>
             arguments_check(op, 1, 1);
 
             const shared_ptr<op::Reshape> op_reshape = static_pointer_cast<op::Reshape>(op);
+            const AxisVector& reshape_axes = op_reshape->get_input_order();
 
-            if (op_reshape->get_is_transpose())
+            if ((get_input_type(op) != element::f32) || (get_input_shape(op).size() > 4) ||
+                (get_output_shape(op).size() > 4))
             {
-                vector<uint16_t> permute_order({0, 1, 2, 3}); // No action by default
-                const AxisVector& reshape_axes = op_reshape->get_input_order();
-                const size_t max_dim = 4;
-                const size_t scale =
-                    reshape_axes.size() < max_dim ? max_dim - reshape_axes.size() : 0;
-
-                // Need to scale indexes up according on array rank.
-                // For example, in 2D array, indexes are 0,1 but in 4D array it should be 2,3
-                // because cldnn::tensor is always 4D assuming cldnn::bfyx model
-                size_t rindex = max_dim;
-                for (auto i = reshape_axes.crbegin(); i != reshape_axes.crend() && rindex > 0;
-                     ++i, --rindex)
+                do_reshape_operation(topology,
+                                     get_input_name(op),
+                                     get_input_shape(op),
+                                     get_input_type(op),
+                                     get_output_name(op),
+                                     get_output_shape(op),
+                                     get_output_type(op),
+                                     reshape_axes);
+            }
+            else
+            {
+                if (op_reshape->get_is_transpose())
                 {
-                    permute_order.at(rindex - 1) = *i + scale;
-                }
+                    vector<uint16_t> permute_order({0, 1, 2, 3}); // No action by default
+                    const size_t max_dim = 4;
+                    const size_t scale =
+                        reshape_axes.size() < max_dim ? max_dim - reshape_axes.size() : 0;
 
-                const cldnn::permute cldnn_permute(
-                    get_output_name(op), get_input_name(op), permute_order);
-                topology.add(cldnn_permute);
-            }
-            else
-            {
-                const cldnn::tensor new_shape =
-                    intelgpu_space::create_cldnn_tensor(get_output_shape(op));
-                const cldnn::reshape reshape_op(get_output_name(op), get_input_name(op), new_shape);
-                topology.add(reshape_op);
-            }
-            break;
-        }
-        case OP_TYPEID::Negative:
-        {
-            if (get_input_type(op) == ngraph::element::i32)
-            {
-                // This is workaround to enable GNMT in training mode.
-                // clDNN doesn't support i32 data type for activation primitive.
-                // Exception from clDNN:  implementation_map for N5cldnn10activationE
-                // could not find any implementation to match key
-                do_negative_operation(topology,
-                                      get_input_name(op),
-                                      get_input_shape(op),
-                                      get_input_type(op),
-                                      get_output_name(op),
-                                      get_output_shape(op),
-                                      get_output_type(op));
-            }
-            else
-            {
-                const cldnn_activation_additional_params param = {-1.f, 0.f};
-                do_unary_operation(topology, op, activation_linear, param);
+                    // Need to scale indexes up according on array rank.
+                    // For example, in 2D array, indexes are 0,1 but in 4D array it should be 2,3
+                    // because cldnn::tensor is always 4D assuming cldnn::bfyx model
+                    size_t rindex = max_dim;
+                    for (auto i = reshape_axes.crbegin(); i != reshape_axes.crend() && rindex > 0;
+                         ++i, --rindex)
+                    {
+                        permute_order.at(rindex - 1) = *i + scale;
+                    }
+
+                    const cldnn::permute cldnn_permute(
+                        get_output_name(op), get_input_name(op), permute_order);
+                    topology.add(cldnn_permute);
+                }
+                else
+                {
+                    const cldnn::tensor new_shape =
+                        intelgpu_space::create_cldnn_tensor(get_output_shape(op));
+                    const cldnn::reshape reshape_op(
+                        get_output_name(op), get_input_name(op), new_shape);
+                    topology.add(reshape_op);
+                }
             }
             break;
         }
@@ -1032,7 +1015,12 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::Relu:
         {
-            do_unary_operation(topology, op, activation_relu);
+            do_cldnn_unary(topology, op, activation_relu);
+            break;
+        }
+        case OP_TYPEID::Sigmoid:
+        {
+            do_cldnn_unary(topology, op, activation_logistic);
             break;
         }
         case OP_TYPEID::ReluBackprop:
@@ -1050,62 +1038,88 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::Abs:
         {
-            do_unary_operation(topology, op, activation_abs);
+            do_universal_unary(topology, op, "fabs", activation_abs);
             break;
         }
         case OP_TYPEID::Sqrt:
         {
-            do_unary_operation(topology, op, activation_sqrt);
+            do_universal_unary(topology, op, "sqrt", activation_sqrt);
             break;
         }
         case OP_TYPEID::Tanh:
         {
-            do_unary_operation(topology, op, activation_hyperbolic_tan);
+            do_universal_unary(topology, op, "tanh", activation_hyperbolic_tan);
             break;
         }
         case OP_TYPEID::Sin:
         {
-            do_unary_operation(topology, op, activation_sin);
+            do_universal_unary(topology, op, "sin", activation_sin);
             break;
         }
         case OP_TYPEID::Asin:
         {
-            do_unary_operation(topology, op, activation_asin);
+            do_universal_unary(topology, op, "asin", activation_asin);
             break;
         }
         case OP_TYPEID::Sinh:
         {
-            do_unary_operation(topology, op, activation_sinh);
+            do_universal_unary(topology, op, "sinh", activation_sinh);
             break;
         }
         case OP_TYPEID::Cos:
         {
-            do_unary_operation(topology, op, activation_cos);
+            do_universal_unary(topology, op, "cos", activation_cos);
             break;
         }
         case OP_TYPEID::Acos:
         {
-            do_unary_operation(topology, op, activation_acos);
+            do_universal_unary(topology, op, "acos", activation_acos);
             break;
         }
         case OP_TYPEID::Cosh:
         {
-            do_unary_operation(topology, op, activation_cosh);
+            do_universal_unary(topology, op, "cosh", activation_cosh);
             break;
         }
         case OP_TYPEID::Log:
         {
-            do_unary_operation(topology, op, activation_log);
+            do_universal_unary(topology, op, "log", activation_log);
             break;
         }
         case OP_TYPEID::Exp:
         {
-            do_unary_operation(topology, op, activation_exp);
+            do_universal_unary(topology, op, "exp", activation_exp);
             break;
         }
-        case OP_TYPEID::Sigmoid:
+        case OP_TYPEID::Negative:
         {
-            do_unary_operation(topology, op, activation_logistic);
+            const cldnn_activation_additional_params param = {-1.f, 0.f};
+            do_universal_unary(topology, op, "-", activation_linear, param);
+            break;
+        }
+        case OP_TYPEID::Atan:
+        {
+            do_custom_unary(topology, op, "atan");
+            break;
+        }
+        case OP_TYPEID::Ceiling:
+        {
+            do_custom_unary(topology, op, "ceil");
+            break;
+        }
+        case OP_TYPEID::Floor:
+        {
+            do_custom_unary(topology, op, "floor");
+            break;
+        }
+        case OP_TYPEID::Sign:
+        {
+            do_custom_unary(topology, op, "sign");
+            break;
+        }
+        case OP_TYPEID::Tan:
+        {
+            do_custom_unary(topology, op, "tan");
             break;
         }
         case OP_TYPEID::SigmoidBackprop:
@@ -1172,81 +1186,6 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::Or:
         {
             do_logical_operation(topology, op, " || ");
-            break;
-        }
-        case OP_TYPEID::Subtract:
-        {
-            do_eltwise_operation(topology, op, cldnn::eltwise_mode::sub);
-            break;
-        }
-        case OP_TYPEID::Power:
-        {
-            do_eltwise_operation(topology, op, cldnn::eltwise_mode::pow);
-            break;
-        }
-        case OP_TYPEID::Atan:
-        {
-            arguments_check(op, 1, 1);
-            do_custom_eltwise_operation(topology,
-                                        get_input_name(op),
-                                        get_input_shape(op),
-                                        get_input_type(op),
-                                        get_output_name(op),
-                                        get_output_shape(op),
-                                        get_output_type(op),
-                                        CUSTOM_ELTWISE::Atan);
-            break;
-        }
-        case OP_TYPEID::Ceiling:
-        {
-            arguments_check(op, 1, 1);
-            do_custom_eltwise_operation(topology,
-                                        get_input_name(op),
-                                        get_input_shape(op),
-                                        get_input_type(op),
-                                        get_output_name(op),
-                                        get_output_shape(op),
-                                        get_output_type(op),
-                                        CUSTOM_ELTWISE::Ceil);
-            break;
-        }
-        case OP_TYPEID::Floor:
-        {
-            arguments_check(op, 1, 1);
-            do_custom_eltwise_operation(topology,
-                                        get_input_name(op),
-                                        get_input_shape(op),
-                                        get_input_type(op),
-                                        get_output_name(op),
-                                        get_output_shape(op),
-                                        get_output_type(op),
-                                        CUSTOM_ELTWISE::Floor);
-            break;
-        }
-        case OP_TYPEID::Sign:
-        {
-            arguments_check(op, 1, 1);
-            do_custom_eltwise_operation(topology,
-                                        get_input_name(op),
-                                        get_input_shape(op),
-                                        get_input_type(op),
-                                        get_output_name(op),
-                                        get_output_shape(op),
-                                        get_output_type(op),
-                                        CUSTOM_ELTWISE::Sign);
-            break;
-        }
-        case OP_TYPEID::Tan:
-        {
-            arguments_check(op, 1, 1);
-            do_custom_eltwise_operation(topology,
-                                        get_input_name(op),
-                                        get_input_shape(op),
-                                        get_input_type(op),
-                                        get_output_name(op),
-                                        get_output_shape(op),
-                                        get_output_type(op),
-                                        CUSTOM_ELTWISE::Tan);
             break;
         }
         case OP_TYPEID::Pad:
@@ -1316,7 +1255,8 @@ shared_ptr<runtime::Executable>
 
             arguments_check(op, 5, 1);
 
-            if (get_input_shape(op, 2).size() != 4)
+            if ((get_input_shape(op, 2).size() != 4) ||
+                (get_input_type(op) != ngraph::element::f32))
             {
                 do_batch_norm_operation(topology,
                                         get_output_name(op),
@@ -1348,7 +1288,8 @@ shared_ptr<runtime::Executable>
                 static_pointer_cast<op::BatchNormTraining>(op);
             const double eps = bnorm->get_eps_value();
 
-            if (get_input_shape(op, 2).size() != 4)
+            if ((get_input_shape(op, 2).size() != 4) ||
+                (get_input_type(op) != ngraph::element::f32))
             {
                 string mean_name;
                 string variance_name;
@@ -1813,7 +1754,7 @@ shared_ptr<runtime::Executable>
     {
         timer_compile.stop();
         compilation_time = timer_compile.get_milliseconds();
-        consumed_memory = get_max_memory_rss() - consumed_memory;
+        consumed_memory = runtime::intelgpu::get_max_memory_rss() - consumed_memory;
     }
 
     rc = make_shared<IntelGPUExecutable>(func,
@@ -1831,102 +1772,6 @@ shared_ptr<runtime::Executable>
     return rc;
 }
 
-runtime::intelgpu::IntelGPUExecutable::IntelGPUExecutable(shared_ptr<Function> func,
-                                                          shared_ptr<cldnn::network> network,
-                                                          bool enable_timing,
-                                                          bool enable_profile,
-                                                          double compilation_time,
-                                                          double consumed_memory,
-                                                          size_t profile_lines_limit_count)
-{
-    m_function = func;
-    m_cldnn_network = network;
-    m_performance_counters_enabled = enable_timing;
-    m_profile_enable = enable_profile;
-    m_compilation_time = compilation_time;
-    m_consumed_memory = consumed_memory;
-    m_profile_lines_limit_count = profile_lines_limit_count;
-
-    set_parameters_and_results(*func);
-}
-
-bool runtime::intelgpu::IntelGPUExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
-                                                 const vector<shared_ptr<runtime::Tensor>>& inputs)
-{
-    double mem_call_consumed = 0.0f;
-    stopwatch timer_call;
-
-    if (m_cldnn_network == nullptr)
-    {
-        throw runtime_error("compile() must be called before call().");
-    }
-
-    if (m_profile_enable)
-    {
-        mem_call_consumed = get_max_memory_rss();
-        timer_call.start();
-    }
-
-    // Process input parameters. Correctness of parameters was validated by validate_call.
-    // Since we have no correlation between Function::m_parameters and inputs, there is
-    // we try to match them by index number in vectors.
-    for (size_t i = 0; i < inputs.size(); i++)
-    {
-        shared_ptr<runtime::intelgpu::IntelGPUTensorView> tv =
-            static_pointer_cast<runtime::intelgpu::IntelGPUTensorView>(inputs[i]);
-        const ParameterVector& input_params = get_parameters();
-        const string& tensor_name = input_params[i]->get_output_tensor().get_name();
-        m_cldnn_network->set_input_data(tensor_name, *tv->get_data_ptr());
-    }
-
-    // Execute network
-    map<cldnn::primitive_id, cldnn::network_output> result = m_cldnn_network->execute();
-
-    // Process output parameters. Correctness of parameters was validated by validate_call.
-    // Since we have no correlation between Function::m_results and outputs, there is
-    // we try to match them by index number in vectors.
-    for (size_t i = 0; i < m_function->get_output_size(); i++)
-    {
-        const shared_ptr<Node>& dst_node = m_function->get_output_op(i);
-        const size_t dst_shape_size = shape_size(dst_node->get_shape());
-
-        // We should not touch destination memory if it is not existed
-        if (!dst_shape_size)
-        {
-            continue;
-        }
-
-        shared_ptr<runtime::intelgpu::IntelGPUTensorView> ngraph_res =
-            static_pointer_cast<runtime::intelgpu::IntelGPUTensorView>(outputs[i]);
-        const string& tensor_name = get_input_name(dst_node);
-        auto result_memory = result.at(tensor_name).get_memory().pointer<char>();
-
-        memory_size_check(result_memory.size(), dst_node, m_function->get_name());
-
-        ngraph_res->write(result_memory.data(), 0, result_memory.size());
-    }
-
-    if (m_profile_enable)
-    {
-        timer_call.stop();
-        mem_call_consumed = get_max_memory_rss() - mem_call_consumed;
-
-        print_call_performance(m_cldnn_network,
-                               m_function,
-                               m_compilation_time,
-                               timer_call.get_milliseconds(),
-                               m_consumed_memory,
-                               mem_call_consumed,
-                               get_max_memory_rss());
-
-        // Output compile time only once
-        m_compilation_time = 0.0;
-        m_consumed_memory = 0.0;
-    }
-
-    return true;
-}
-
 void runtime::intelgpu::IntelGPUBackend::remove_compiled_function(shared_ptr<Executable> exec)
 {
     for (auto it = cldnn_networks.begin(); it != cldnn_networks.end(); ++it)
@@ -1937,199 +1782,6 @@ void runtime::intelgpu::IntelGPUBackend::remove_compiled_function(shared_ptr<Exe
             break;
         }
     }
-}
-
-// The cldnn::network contains something like "generic_layer_0_Parameter_254_0" names
-// This function should return "Parameter_254" from the example above
-static string convert_cldnn_names(shared_ptr<Function> func, const string& cldnn_name)
-{
-    const string key("_");
-    string result;
-
-    const size_t last_key = cldnn_name.rfind(key);
-    const size_t pre_last_key = cldnn_name.rfind(key, last_key - 1);
-    const size_t pre_pre_last_key = cldnn_name.rfind(key, pre_last_key - 1);
-
-    if (pre_pre_last_key == std::string::npos)
-    {
-        result = cldnn_name.substr(0, last_key);
-    }
-    else
-    {
-        result = cldnn_name.substr(pre_pre_last_key + 1, last_key - pre_pre_last_key - 1);
-    }
-
-    return result;
-}
-
-vector<runtime::PerformanceCounter>
-    runtime::intelgpu::IntelGPUExecutable::get_performance_data() const
-{
-    vector<runtime::PerformanceCounter> rc;
-
-    if (m_cldnn_network != nullptr && m_performance_counters_enabled)
-    {
-        const map<cldnn::primitive_id, cldnn::event>& primitives =
-            m_cldnn_network->get_executed_primitives();
-        for (const auto& p : primitives)
-        {
-            // Let's generate the primitive name that matches to the name in Function
-            const string primitive_name = convert_cldnn_names(m_function, p.first);
-            size_t usec = 0;
-            for (const auto& q : p.second.get_profiling_info())
-            {
-                if (q.name == string("executing"))
-                {
-                    usec += chrono::duration_cast<
-                                chrono::duration<size_t, chrono::milliseconds::period>>(
-                                q.value->value())
-                                .count();
-                }
-            }
-            const runtime::PerformanceCounter perf_counter(primitive_name.c_str(), usec, 1);
-            rc.push_back(perf_counter);
-        }
-    }
-    return rc;
-}
-
-static Node* get_node_by_name(const shared_ptr<Function> func, const string& name)
-{
-    for (shared_ptr<Node> node : func->get_ops())
-    {
-        if (node->get_name() == name)
-        {
-            return node.get();
-        }
-    }
-
-    return nullptr;
-}
-
-void runtime::intelgpu::IntelGPUExecutable::print_call_performance(
-    const shared_ptr<cldnn::network> network,
-    const shared_ptr<Function> func,
-    double time_compile,
-    double time_call,
-    double mem_compilation_consumed,
-    double mem_call_consumed,
-    double mem_current) const
-{
-    struct data_item
-    {
-        string item_name;
-        map<string, double> item_times;
-    };
-    const string& func_name = func->get_name();
-    const map<cldnn::primitive_id, cldnn::event>& primitives = network->get_executed_primitives();
-    size_t limit_count = m_profile_lines_limit_count;
-    multimap<double, data_item> data;
-    map<string, double> total_interval_times;
-    double total_executing_time = 0;
-    size_t total_items_count = 0;
-    size_t max_item_name_size = 0;
-
-    ios_base::fmtflags saved_stream_flags(cout.flags()); // Save stream flags to restore them later
-
-    if (m_profile_lines_limit_count > 0)
-    {
-        // Extract profiling statistic, calculate summary and sort
-        for (auto& prim : primitives)
-        {
-            double executing_time = 0;
-            data_item item;
-            item.item_name = prim.first;
-            max_item_name_size = max(max_item_name_size, prim.first.size());
-
-            for (auto& prof_info : prim.second.get_profiling_info())
-            {
-                const string& interval_name = prof_info.name;
-                double interval =
-                    chrono::duration_cast<chrono::duration<double, chrono::milliseconds::period>>(
-                        prof_info.value->value())
-                        .count();
-
-                item.item_times[interval_name] = interval;
-
-                // Get the Key time to sort by
-                if (interval_name == "executing")
-                {
-                    executing_time += interval;
-                }
-
-                // Accumulate total time for each interval
-                if (total_interval_times.find(interval_name) == total_interval_times.end())
-                {
-                    total_interval_times[interval_name] = interval;
-                }
-                else
-                {
-                    total_interval_times[interval_name] += interval;
-                }
-            }
-            data.emplace(executing_time, item);
-            total_executing_time += executing_time;
-            ++total_items_count;
-        }
-
-        // Print statistic for each primitive in the cldnn::network
-        for (auto it = data.rbegin(); (it != data.rend()) && (limit_count > 0); ++it, --limit_count)
-        {
-            const string ngraph_node_name = convert_cldnn_names(func, it->second.item_name);
-            const Node* ngraph_node = get_node_by_name(func, ngraph_node_name);
-
-            cout << func_name << delim << setw(max_item_name_size) << it->second.item_name << delim
-                 << "time(ms)" << delim << scientific << setprecision(2) << it->first;
-            for (auto item : it->second.item_times)
-            {
-                cout << delim << item.first << "(ms)" << delim << item.second;
-            }
-            cout << delim << ngraph_node_name;
-
-            if (ngraph_node) // it might be initialized by nullptr
-            {
-                // print all input shapes for the Node
-                size_t arg_idx = 0;
-                for (const descriptor::Input& op_input : ngraph_node->get_inputs())
-                {
-                    cout << delim << op_input.get_element_type().c_type_string() << " input"
-                         << arg_idx << vector_to_string(op_input.get_shape());
-                    ++arg_idx;
-                }
-
-                // print all output shapes for the Node
-                arg_idx = 0;
-                for (const descriptor::Output& op_output : ngraph_node->get_outputs())
-                {
-                    cout << delim << op_output.get_element_type().c_type_string() << " output"
-                         << arg_idx << vector_to_string(op_output.get_shape());
-                    ++arg_idx;
-                }
-            }
-
-            cout << "\n";
-        }
-
-        // Print bottom line summary
-        const string total_items_count_string = "Total(cldnn " + to_string(total_items_count) +
-                                                ", ngraph " + to_string(func->get_ops().size()) +
-                                                ")";
-        cout << func_name << delim << setw(max_item_name_size) << total_items_count_string << delim
-             << "time(ms)" << delim << scientific << setprecision(2) << total_executing_time;
-        for (auto item_times : total_interval_times)
-        {
-            cout << delim << item_times.first << "(ms)" << delim << item_times.second;
-        }
-        cout << "\n";
-    }
-
-    // Print time and memory consumed in ::call function
-    cout << func_name << delim << " Backend compilation(ms)" << delim << time_compile << delim
-         << "call(ms)" << delim << time_call << delim << "memory consumption compile(B)" << delim
-         << mem_compilation_consumed << delim << "call(B)" << delim << mem_call_consumed << delim
-         << "RSS(B)" << delim << mem_current << endl;
-
-    cout.flags(saved_stream_flags); // Restore stream configuration to leave it in original state
 }
 
 bool runtime::intelgpu::IntelGPUBackend::is_supported_property(const Property prop) const

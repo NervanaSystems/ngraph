@@ -850,7 +850,7 @@ TEST(cpu_test, memory_reuse_in_place_slice_after_in_place_concat)
     Shape shape_r{2, 1};
     auto slice = make_shared<op::Slice>(concat, Coordinate{0, 0}, Coordinate{2, 1});
     auto f = make_shared<Function>(slice, ParameterVector{A, B, C, D});
-
+  
     auto backend = runtime::Backend::create("CPU");
 
     // Create some tensors for input/output
@@ -867,4 +867,25 @@ TEST(cpu_test, memory_reuse_in_place_slice_after_in_place_concat)
     auto handle = backend->compile(f);
     backend->call_with_validate(handle, {result}, {a, b, c, d});
     EXPECT_EQ((vector<float>{3, 7}), read_vector<float>(result));
+}
+
+TEST(cpu_test, convert_inplace)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::u8, shape);
+    auto B = op::Constant::create(element::u8, shape, {1, 1, 1, 1});
+    auto C = op::Constant::create(element::i8, shape, {1, 1, 1, 1});
+    auto f =
+        make_shared<Function>(make_shared<op::Convert>(A + B, element::i8) - C, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::u8, shape);
+    copy_data(a, vector<uint8_t>{1, 2, 3, 254});
+    auto result = backend->create_tensor(element::i8, shape);
+
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a});
+    EXPECT_EQ((vector<int8_t>{1, 2, 3, -2}), read_vector<int8_t>(result));
 }
