@@ -18,10 +18,10 @@ set(SRC
     plaidml_backend.cpp
     plaidml_builder.cpp
     plaidml_compilation_cache.cpp
-    plaidml_compiled_function.cpp
     plaidml_compiler.cpp
     plaidml_config.cpp
     plaidml_convpool_formatter.cpp
+    plaidml_executable.cpp
     plaidml_impl.cpp
     plaidml_logger.cpp
     plaidml_ops_arithmetic.cpp
@@ -48,6 +48,7 @@ set(SRC
     plaidml_ops_transcendental.cpp
     plaidml_ops_winograd.cpp
     plaidml_pass_concat_elision.cpp
+    plaidml_pass_concat_split.cpp
     plaidml_pass_explicit_logicals.cpp
     plaidml_pass_implicit_broadcast.cpp
     plaidml_pass_lower_convolutions.cpp

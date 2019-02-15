@@ -18,25 +18,28 @@
 
 #include "ngraph/log.hpp"
 #include "ngraph/runtime/plaidml/plaidml_build.hpp"
-#include "ngraph/runtime/plaidml/plaidml_compiled_function.hpp"
+#include "ngraph/runtime/plaidml/plaidml_executable.hpp"
 #include "ngraph/runtime/plaidml/plaidml_tensor.hpp"
 #include "ngraph/runtime/plaidml/plaidml_translate.hpp"
 
 namespace vp = vertexai::plaidml;
 
-ngraph::runtime::plaidml::CompiledFunction::CompiledFunction(Build build)
+ngraph::runtime::plaidml::PlaidML_Executable::PlaidML_Executable(Build build,
+                                                                 std::shared_ptr<Function> func)
     : m_config{build.config}
     , m_func{std::move(build.func)}
+    , m_src_func{std::move(func)}
     , m_input_names{std::move(build.input_names)}
     , m_output_names{std::move(build.output_names)}
     , m_invoker{build.config->ctx, std::move(build.composer)}
 {
+    set_parameters_and_results(*m_func);
     NGRAPH_DEBUG << "Compiled PlaidML function " << this;
 }
 
-bool ngraph::runtime::plaidml::CompiledFunction::schedule_invocation(
-    const std::vector<std::shared_ptr<runtime::Tensor>>& inputs,
-    const std::vector<std::shared_ptr<runtime::Tensor>>& outputs) const
+bool ngraph::runtime::plaidml::PlaidML_Executable::call(
+    const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+    const std::vector<std::shared_ptr<runtime::Tensor>>& inputs)
 {
     std::lock_guard<std::mutex> lock{m_mu};
 
@@ -120,8 +123,14 @@ bool ngraph::runtime::plaidml::CompiledFunction::schedule_invocation(
     return true;
 }
 
-void ngraph::runtime::plaidml::CompiledFunction::save(const std::string& filename,
-                                                      plaidml_file_format format) const
+std::vector<ngraph::runtime::PerformanceCounter>
+    ngraph::runtime::plaidml::PlaidML_Executable::get_performance_data() const
+{
+    return std::vector<ngraph::runtime::PerformanceCounter>{};
+}
+
+void ngraph::runtime::plaidml::PlaidML_Executable::save(const std::string& filename,
+                                                        plaidml_file_format format) const
 {
     std::lock_guard<std::mutex> lock{m_mu};
 
