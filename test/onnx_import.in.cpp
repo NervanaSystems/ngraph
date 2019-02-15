@@ -1979,15 +1979,13 @@ TEST(onnx_${BACKEND_NAME}, model_where)
     using Outputs = std::vector<std::vector<int>>;
 
     // conditions tensor - 3x3x3
-    auto condition = test::NDArray<int, 3>{{{{0, 1, 0}, {1, 0, 1}, {0, 1, 0}},
-                                            {{0, 1, 0}, {1, 0, 1}, {0, 1, 0}},
-                                            {{0, 1, 0}, {1, 0, 1}, {0, 1, 0}}}}
-                         .get_vector();
+    auto condition = std::vector<int>{
+        {0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0}};
 
     // 1x3 tensor of "1"
-    auto x1 = std::vector<int>{{1, 1, 1}};
+    auto x1 = std::vector<int>{1, 1, 1};
     // 3x1 tensor of "2"
-    auto x2 = std::vector<int>{{{2}, {2}, {2}}};
+    auto x2 = std::vector<int>{2, 2, 2};
 
     Inputs inputs;
     inputs.push_back(std::move(condition));
@@ -1995,12 +1993,8 @@ TEST(onnx_${BACKEND_NAME}, model_where)
     inputs.push_back(std::move(x2));
 
     // y = 3x3x3
-    Outputs expected_outputs{test::NDArray<int, 3>{
-        {
-            {{2, 1, 2}, {1, 2, 1}, {2, 1, 2}},
-            {{2, 1, 2}, {1, 2, 1}, {2, 1, 2}},
-            {{2, 1, 2}, {1, 2, 1}, {2, 1, 2}},
-        }}.get_vector()};
+    Outputs expected_outputs{
+        {2, 1, 2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2}};
 
     Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
 
