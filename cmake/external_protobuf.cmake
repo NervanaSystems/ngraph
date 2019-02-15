@@ -24,71 +24,25 @@ include(ExternalProject)
 set(PROTOBUF_GIT_REPO_URL https://github.com/google/protobuf.git)
 set(PROTOBUF_GIT_BRANCH origin/3.5.x)
 
-# The 'BUILD_BYPRODUCTS' arguments was introduced in CMake 3.2.
-if (${CMAKE_VERSION} VERSION_LESS 3.2)
-    ExternalProject_Add(
-        ext_protobuf
-        PREFIX protobuf
-        GIT_REPOSITORY ${PROTOBUF_GIT_REPO_URL}
-        GIT_TAG ${PROTOBUF_GIT_BRANCH}
-        INSTALL_COMMAND ""
-        UPDATE_COMMAND ""
-        PATCH_COMMAND ""
-        CONFIGURE_COMMAND ./autogen.sh && ./configure --disable-shared CXXFLAGS=-fPIC
-        BUILD_COMMAND ${MAKE}
-        TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/tmp"
-        STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/stamp"
-        DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/download"
-        SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/src"
-        BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/src"
-        INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf"
-        EXCLUDE_FROM_ALL TRUE
-        )
-else()
-    if (${CMAKE_VERSION} VERSION_LESS 3.6)
-        ExternalProject_Add(
-            ext_protobuf
-            PREFIX protobuf
-            GIT_REPOSITORY ${PROTOBUF_GIT_REPO_URL}
-            GIT_TAG ${PROTOBUF_GIT_BRANCH}
-            INSTALL_COMMAND ""
-            UPDATE_COMMAND ""
-            PATCH_COMMAND ""
-            CONFIGURE_COMMAND ./autogen.sh && ./configure --disable-shared CXXFLAGS=-fPIC
-            BUILD_COMMAND ${MAKE}
-            TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/tmp"
-            STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/stamp"
-            DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/download"
-            SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/src"
-            BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/src"
-            INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf"
-            BUILD_BYPRODUCTS "${EXTERNAL_PROJECTS_ROOT}/protobuf/src/src/.libs/libprotobuf.a"
-            EXCLUDE_FROM_ALL TRUE
-            )
-    else()
-        # To speed things up prefer 'shallow copy' for CMake 3.6 and later
-        ExternalProject_Add(
-            ext_protobuf
-            PREFIX protobuf
-            GIT_REPOSITORY ${PROTOBUF_GIT_REPO_URL}
-            GIT_TAG ${PROTOBUF_GIT_BRANCH}
-            GIT_SHALLOW TRUE
-            INSTALL_COMMAND ""
-            UPDATE_COMMAND ""
-            PATCH_COMMAND ""
-            CONFIGURE_COMMAND ./autogen.sh && ./configure --disable-shared CXXFLAGS=-fPIC
-            BUILD_COMMAND ${MAKE}
-            TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/tmp"
-            STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/stamp"
-            DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/download"
-            SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/src"
-            BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/src"
-            INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf"
-            BUILD_BYPRODUCTS "${EXTERNAL_PROJECTS_ROOT}/protobuf/src/src/.libs/libprotobuf.a"
-            EXCLUDE_FROM_ALL TRUE
-            )
-    endif()
-endif()
+ExternalProject_Add(
+    ext_protobuf
+    PREFIX protobuf
+    GIT_REPOSITORY ${PROTOBUF_GIT_REPO_URL}
+    GIT_TAG ${PROTOBUF_GIT_BRANCH}
+    ${NGRAPH_GIT_ARGS}
+    INSTALL_COMMAND ""
+    UPDATE_COMMAND ""
+    PATCH_COMMAND ""
+    CONFIGURE_COMMAND ./autogen.sh && ./configure --disable-shared CXXFLAGS=-fPIC
+    BUILD_COMMAND ${MAKE}
+    TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/tmp"
+    STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/stamp"
+    DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/download"
+    SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/src"
+    BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/src"
+    INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf"
+    EXCLUDE_FROM_ALL TRUE
+    )
 
 # -----------------------------------------------------------------------------
 
