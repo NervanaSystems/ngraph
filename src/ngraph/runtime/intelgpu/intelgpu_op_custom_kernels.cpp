@@ -1567,8 +1567,8 @@ void runtime::intelgpu::do_quantize_operation(cldnn::topology& topology,
             writer << real_type_str << " abs_qvalue = fabs(qvalue);\n"
                    << real_type_str << " abs_qvalue_toward_inf = floor(abs_qvalue + 0.5);\n"
                    << "qvalue = (qvalue < 0.0) ? -abs_qvalue_toward_inf : abs_qvalue_toward_inf;\n";
-            break;
         }
+        break;
         case ngraph::op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_ZERO:
         {
             writer
