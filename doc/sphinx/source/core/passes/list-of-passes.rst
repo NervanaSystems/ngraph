@@ -3,11 +3,6 @@
 List of passes
 ==============
 
-.. important:: All of the above passes are currently implementable; more 
-   detailed documentation for each pass may be a :abbr:`Work In Progress (WIP)` 
-   (WIP).
-
-
 .. csv-table::
    :header: "Pass Name", "More Detail"
    :widths: 29, 31
@@ -45,6 +40,11 @@ List of passes
    ``ValidateGraph``, Coming Soon
    ``VisualizeTree``, Coming Soon
    ``ZeroDimTensorElimination``, Coming soon 
+
+
+.. important:: All of the above passes are currently implementable; more 
+   detailed documentation for each pass may be a :abbr:`Work In Progress (WIP)` 
+   (WIP).
 
 
 .. _algebraic_simpl: 
