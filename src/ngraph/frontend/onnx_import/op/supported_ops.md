@@ -20,12 +20,15 @@ opset versions starting from `1` to `6` and to the latest opset version.
 |------|----------------------------|---------|
 | Abs | 1-6- |
 | Acos | 7- |
+| Acosh | 9- |
 | Add | 1-7- |
 | And | 1-7- |
 | ArgMax | 1- |
 | ArgMin | 1- |
 | Asin | 7- |
+| Asinh | 9- |
 | Atan | 7 - |
+| Atanh | 9- |
 | AveragePool | 1-7- |
 | BatchNormalization | 1-6-7- | 
 | Ceil | 1-6- | 
@@ -104,9 +107,6 @@ opset versions starting from `1` to `6` and to the latest opset version.
 ### Lack of support in nGraph
 | Name | Opset supported | NGCORE | NGONNX | Comment |
 |------|-----------------|--------|--------|---------|
-| Acosh | (9) | 283 | 444 | |
-| Asinh | (9) | 283 | 444 | |
-| Atanh | (9) | 283 | 444 | |
 | Erf | (9) | 284 | 442 | Maybe we may implement this as a simple closed interval integral? :) |
 | Pad | 1-2- | 273 | 416 | Not fully supported. |
 | LSTM | 1-7- | | 430 | Not fully supported. |
