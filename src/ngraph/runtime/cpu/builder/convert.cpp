@@ -103,7 +103,10 @@ namespace ngraph
 
                 auto functor = [&, kernel, element_count](CPURuntimeContext* ctx,
                                                           CPUExecutionContext* ectx) {
-                    kernel(arg_tensor, out_tensor, element_count, ectx->arena);
+                    if (arg_tensor != out_tensor)
+                    {
+                        kernel(arg_tensor, out_tensor, element_count, ectx->arena);
+                    }
                 };
                 functors.emplace_back(functor);
             }
