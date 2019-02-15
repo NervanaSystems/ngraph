@@ -37,10 +37,10 @@ runtime::cpu::pass::CPUMemoryAssignment::CPUMemoryAssignment(
     unordered_map<descriptor::Tensor*, size_t>& tensor_to_key_map,
     size_t alignment,
     bool disable_memory_sharing)
-    : m_key_to_tensors_set_map(key_to_tensors_set_map)
-    , m_tensor_to_key_map(tensor_to_key_map)
-    , m_alignment(alignment)
+    : m_alignment(alignment)
     , m_disable_memory_sharing(disable_memory_sharing)
+    , m_key_to_tensors_set_map(key_to_tensors_set_map)
+    , m_tensor_to_key_map(tensor_to_key_map)
 {
     if (m_alignment == 0)
     {
@@ -173,8 +173,8 @@ void runtime::cpu::pass::CPUMemoryAssignment::propagate_in_place_concat(
                                 << "cpu_memory_assignment: call propagate_in_place_concat for "
                                 << arg->get_name();
                             auto input = &op->get_inputs().at(arg_index);
-                            auto output_index = input->get_output().get_index();
-                            propagate_in_place_concat(arg_op, output_index);
+                            auto arg_output_index = input->get_output().get_index();
+                            propagate_in_place_concat(arg_op, arg_output_index);
                         }
                     }
                 }
@@ -220,11 +220,11 @@ void runtime::cpu::pass::CPUMemoryAssignment::propagate_in_place_concat(
                         auto arg_in_place_oi_pairs = arg_op_annotations->get_in_place_oi_pairs();
                         if (arg_in_place_oi_pairs.size() > 0)
                         {
-                            auto output_index = input->get_output().get_index();
+                            auto arg_output_index = input->get_output().get_index();
                             NGRAPH_DEBUG
                                 << "cpu_memory_assignment: call propagate_in_place_concat for "
                                 << arg->get_name();
-                            propagate_in_place_concat(arg_op, output_index);
+                            propagate_in_place_concat(arg_op, arg_output_index);
                         }
                     }
                 }
@@ -531,7 +531,6 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                                     if (node->description() == "Slice")
                                     {
                                         // build in place slice chain
-                                        auto output_tensor = &node->get_output_tensor();
                                         in_place_slice_chain.insert(output_tensor);
                                     }
                                     NGRAPH_ASSERT(m_tensor_to_key_map.find(input_tensor) !=
@@ -703,7 +702,6 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                     if (oi_pair.destructive && node->liveness_free_list.count(input_tensor) != 0 &&
                         node->liveness_new_list.count(output_tensor) != 0)
                     {
-                        auto input_node = node->get_inputs().at(oi_pair.input).get_node();
                         if (input_node->is_op())
                         {
                             auto input_op = std::static_pointer_cast<op::Op>(input_node);
