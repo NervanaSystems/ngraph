@@ -47,15 +47,12 @@ List of passes
    ``ZeroDimTensorElimination``, Coming soon 
 
 
-
-
 .. _algebraic_simpl: 
 
 ``Algebraic Simplification``
-----------------------------
+-------- --------------------
 
-
-.. figure:: ../graphics/algebraic-simpl.png
+.. figure:: ../../graphics/algebraic-simpl.png
    :width: 650px
 
    Algebraic simplification
@@ -77,34 +74,34 @@ particularly impressive on their own, when everything comes together the
 results of this pass often yield improvement even on the initial graph straight 
 out of the bridge. This pass is also quite important as a "glue" pass that can 
 be used to clean up and/or re-simplify after other passes have done their own 
-tricks.  See the :ref:`example_of_passes` for an example of how effective this 
+tricks.  See the example on :doc:`passes` for an example of how effective this 
 can be. 
 
 
 .. _common_subex_elim: 
 
-Common Subexpression Elimination
---------------------------------
+``Common Subexpression Elimination``
+-------------------------------------
 
 
 .. _constant_fold:
 
-Constant Folding
-----------------
+``Constant Folding``
+--------------------
 
 
 .. _core_fusion:
 
-Core Fusion
------------
+``Core Fusion``
+---------------
 
 
 .. _reshape_transpose_elim:
 
-Reshape/Transpose Elimination
------------------------------
+``Reshape Elimination``
+-----------------------
 
-The pass called **Reshape/Transpose Elimination** will find and optimize where 
+The pass also called **Reshape/Transpose Elimination** will find and optimize where 
 we can "push" two ``Transpose`` ops through a matrix multiplication. For example, 
 if you have two matrices (say, *foo* and *bar*), both of these matrices will be 
 transposed (to produce *foo.t* and *bar.t*, respectively), aftew which *foo.t* 
@@ -127,8 +124,8 @@ them both out of the graph.
 
 .. _reshape_transpose_sink:
 
-``Reshape/Transpose Sinking``
------------------------------
+``Reshape Sinking``
+-------------------
 
 
 

@@ -8,13 +8,11 @@ Pattern matcher
 
    overview.rst
    graph-rewrite.rst
-   passes-that-use-matcher.rst
-
 
 The nGraph Compiler is an optimizing compiler. As such, it provides a way to 
 capture a given :term:`function graph` and perform a series of optimization 
 passes over that graph. The result is a semantically-equivalent graph that, when 
-executed using any :doc:`backend <../backend-support/index>`, has optimizations 
+executed using any :doc:`backend <../../backend-support/index>`, has optimizations 
 inherent at the hardware level: superior runtime characteristics to increase 
 training performance or reduce inference latency.   
 
@@ -45,7 +43,7 @@ then inspecting the transformed graph.
 
 Optimization passes can be programmed ahead of time if you know or can predict 
 what your graph will look like when it's ready to be executed (in other words: 
-which `ops` can be automatically translated into :doc:`nGraph Core ops <../ops/index>`). 
+which `ops` can be automatically translated into :doc:`nGraph Core ops <../../ops/index>`). 
 
 The ``Interpreter`` is simply a backend providing reference implementations of 
 ngraph ops in C++, with the focus on simplicity over performance.

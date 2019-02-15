@@ -131,6 +131,6 @@ Equivalent to ``"A(BC)+A"`` in regexes
 
 
 
-.. |image11| image:: mg/fusion_pattern.png
-.. |image12| image:: mg/rp_graph1.png
-.. |image13| image:: mg/rp_pattern.png
+.. |image11| image:: ../fusion/mg/fusion_pattern.png
+.. |image12| image:: ../fusion/mg/rp_graph1.png
+.. |image13| image:: ../fusion/mg/rp_pattern.png
