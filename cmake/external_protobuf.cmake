@@ -48,7 +48,7 @@ else()
     if (${CMAKE_VERSION} VERSION_LESS 3.6)
         ExternalProject_Add(
             ext_protobuf
-            PREFIX ext_protobuf
+            PREFIX protobuf
             GIT_REPOSITORY ${PROTOBUF_GIT_REPO_URL}
             GIT_TAG ${PROTOBUF_GIT_BRANCH}
             INSTALL_COMMAND ""
@@ -69,7 +69,7 @@ else()
         # To speed things up prefer 'shallow copy' for CMake 3.6 and later
         ExternalProject_Add(
             ext_protobuf
-            PREFIX ext_protobuf
+            PREFIX protobuf
             GIT_REPOSITORY ${PROTOBUF_GIT_REPO_URL}
             GIT_TAG ${PROTOBUF_GIT_BRANCH}
             GIT_SHALLOW TRUE
