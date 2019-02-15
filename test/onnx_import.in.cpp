@@ -1978,38 +1978,29 @@ TEST(onnx_${BACKEND_NAME}, model_where)
     using Inputs = std::vector<std::vector<int>>;
     using Outputs = std::vector<std::vector<int>>;
 
+    // conditions tensor - 3x3x3
+    auto condition = test::NDArray<int, 3>{{{{0, 1, 0}, {1, 0, 1}, {0, 1, 0}},
+                                            {{0, 1, 0}, {1, 0, 1}, {0, 1, 0}},
+                                            {{0, 1, 0}, {1, 0, 1}, {0, 1, 0}}}}
+                         .get_vector();
+
+    // 1x3 tensor of "1"
+    auto x1 = std::vector<int>{{1, 1, 1}};
+    // 3x1 tensor of "2"
+    auto x2 = std::vector<int>{{{2}, {2}, {2}}};
+
     Inputs inputs;
+    inputs.push_back(std::move(condition));
+    inputs.push_back(std::move(x1));
+    inputs.push_back(std::move(x2));
 
-    // cond - single value
-    inputs.emplace_back(std::vector<int>{1});
-
-    // x1 - 5x3x1 tensor of ones
-    const auto x1 = test::NDArray<int, 5>{
+    // y = 3x3x3
+    Outputs expected_outputs{test::NDArray<int, 3>{
         {
-            {{{{1}, {1}, {1}}}},
-            {{{{1}, {1}, {1}}}},
-            {{{{1}, {1}, {1}}}},
-            {{{{1}, {1}, {1}}}},
-            {{{{1}, {1}, {1}}}}
-        }
-    }.get_vector();
-
-    inputs.push_back(x1);
-    // x2 - 1x10 filled with zeros
-    inputs.emplace_back(std::vector<int>(10, 0));
-
-    // y = 5x3x10
-    Outputs expected_outputs{
-        test::NDArray<int, 5>{
-            {
-                {{{{1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}}}},
-                {{{{1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}}}},
-                {{{{1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}}}},
-                {{{{1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}}}},
-                {{{{1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}, {1}}}}
-            }
-        }.get_vector()
-    };
+            {{2, 1, 2}, {1, 2, 1}, {2, 1, 2}},
+            {{2, 1, 2}, {1, 2, 1}, {2, 1, 2}},
+            {{2, 1, 2}, {1, 2, 1}, {2, 1, 2}},
+        }}.get_vector()};
 
     Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
 
