@@ -302,7 +302,6 @@ namespace ngraph
                 else
                 {
                     auto& functors = external_function->get_functors();
-                    auto& tensor_data = external_function->get_tensor_data();
 
                     const ngraph::op::Quantize* quantize =
                         static_cast<const ngraph::op::Quantize*>(node);

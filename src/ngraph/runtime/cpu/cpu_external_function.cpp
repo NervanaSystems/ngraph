@@ -817,7 +817,7 @@ using namespace ngraph::runtime;
                        << ele_t->get_pool_offset() / et.size() << ")";
                 }
                 m_variable_name_map[ele_t->get_name()] = ss.str();
-                m_tensor_roles[ele_t->get_name()] = CPUTensorRole::INPUT;
+                m_tensor_roles[ele_t->get_name()] = CPUTensorRole::OUTPUT;
             }
         }
 

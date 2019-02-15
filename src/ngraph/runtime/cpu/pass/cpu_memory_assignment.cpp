@@ -288,7 +288,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::process_in_place_slice(
                             for (auto slice_output_input : slice_output->get_inputs())
                             {
                                 NGRAPH_DEBUG
-                                    << "cpu_external_function: call propagate_in_place_slice "
+                                    << "cpu_memory_assignment: call propagate_in_place_slice "
                                        "for output "
                                     << i << " of " << slice->get_name();
                                 propagate_in_place_slice(slice_output_input,
@@ -452,6 +452,8 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                             if (in_place_slice_chain.find(input_tensor) !=
                                 in_place_slice_chain.end())
                             {
+                                NGRAPH_DEBUG << "cpu_memory_assignment: no in place concat after "
+                                                "in place slice";
                                 continue;
                             }
 
@@ -518,6 +520,8 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                                         // when reusing memory, ops with different cacheabilities should not be in the same set.
                                         if (cacheable != input_op_annotations->is_cacheable())
                                         {
+                                            NGRAPH_DEBUG << "cpu_memory_assignment: no in place "
+                                                            "due to cacheability";
                                             no_in_place = true;
                                         }
                                     }
@@ -587,7 +591,7 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
     //liveness analysis
     unordered_set<size_t> allocated_sets;
     unordered_set<size_t> freed_sets;
-    NGRAPH_DEBUG << "m_key_to_tensors_set_map:";
+    NGRAPH_DEBUG << "cpu_memory_assignment: m_key_to_tensors_set_map:";
     for (auto& ele : m_key_to_tensors_set_map)
     {
         NGRAPH_DEBUG << "key : " << ele.first << "; label: " << find_role(ele.second.first)
@@ -700,16 +704,22 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                         node->liveness_new_list.count(output_tensor) != 0)
                     {
                         auto input_node = node->get_inputs().at(oi_pair.input).get_node();
-                        // when reusing memory, check cacheability
-                        if (!m_disable_memory_sharing && input_node->is_op())
+                        if (input_node->is_op())
                         {
                             auto input_op = std::static_pointer_cast<op::Op>(input_node);
                             if (auto input_op_annotations = input_op->get_op_annotations())
                             {
+                                // when input is cacheable, do not allow destructive oi
+                                if (input_op_annotations->is_cacheable())
+                                {
+                                    NGRAPH_DEBUG << "cpu_memory_assignment: cacheable input, no "
+                                                    "destructive oi";
+                                    continue;
+                                }
                                 // when reusing memory, ops with different cacheabilities are using different memory manager
                                 // and should not share the same buffer.
-                                if (op_annotations->is_cacheable() !=
-                                    input_op_annotations->is_cacheable())
+                                else if (!m_disable_memory_sharing &&
+                                         op_annotations->is_cacheable())
                                 {
                                     continue;
                                 }
@@ -724,9 +734,12 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
 
                         NGRAPH_ASSERT(m_key_to_tensors_set_map.find(input_key) !=
                                       m_key_to_tensors_set_map.end());
-                        // do not modify function input, so no destructive oi
-                        if (m_key_to_tensors_set_map[input_key].first == CPUTensorRole::INPUT)
+                        // do not modify function inputs and constants, so no destructive oi
+                        if (m_key_to_tensors_set_map[input_key].first == CPUTensorRole::INPUT ||
+                            m_key_to_tensors_set_map[input_key].first == CPUTensorRole::CONSTANT)
                         {
+                            NGRAPH_DEBUG << "cpu_memory_assignment: input is function input or "
+                                            "constant, no destructive oi";
                             continue;
                         }
                         auto input_set = m_key_to_tensors_set_map[input_key].second;
@@ -762,7 +775,8 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                         {
                             continue;
                         }
-                        NGRAPH_DEBUG << "last use of input tensor, destructive oi allowed:";
+                        NGRAPH_DEBUG << "cpu_memory_assignment: last use of input tensor, "
+                                        "destructive oi allowed:";
                         NGRAPH_DEBUG << "input_tensor is " << input_tensor->get_name();
                         NGRAPH_DEBUG << "output_tensor is " << output_tensor->get_name();
                         no_free.insert(input_tensor);
