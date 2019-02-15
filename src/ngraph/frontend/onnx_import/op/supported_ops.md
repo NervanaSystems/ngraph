@@ -107,7 +107,7 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | Acosh | (9) | 283 | 444 | |
 | Asinh | (9) | 283 | 444 | |
 | Atanh | (9) | 283 | 444 | |
-| Erf | (9) | 284 | 442 | Maybe we may implement this as a simple closed interval integral? :) |
+| Erf | (9) | 284 | 442 | Need separate kernel for this in nGraph core. |
 | Pad | 1-2- | 273 | 416 | Not fully supported. |
 | LSTM | 1-7- | | 430 | Not fully supported. |
 | MaxUnpool | (9) | 286, 289 | 447 | |
