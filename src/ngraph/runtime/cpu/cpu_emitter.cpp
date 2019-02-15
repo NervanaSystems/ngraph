@@ -1386,6 +1386,8 @@ namespace ngraph
             {
                 auto& result_element_type = out[0].get_element_type();
 
+                writer << "if ((void*)" << out[0].get_name() << " != (void*)" << args[0].get_name()
+                       << ") \n";
                 writer.block_begin();
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
