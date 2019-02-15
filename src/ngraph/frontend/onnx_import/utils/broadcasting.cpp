@@ -14,12 +14,14 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <cstddef>
 #include <iterator>
 #include <numeric>
 #include <vector>
 
 #include "broadcasting.hpp"
 #include "ngraph/axis_vector.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "reshape.hpp"
@@ -39,11 +41,11 @@ static std::vector<ngraph::Shape> get_numpy_broadcast_shape(ngraph::Shape left_s
     auto max_rank = std::max(rank_left, rank_right);
 
     // left-pad the left_shape with ones
-    left_shape.insert(left_shape.begin(), max_rank - rank_left, 1);
+    left_shape.insert(std::begin(left_shape), max_rank - rank_left, 1);
     // left-pad the right_shape with ones
-    right_shape.insert(right_shape.begin(), max_rank - rank_right, 1);
+    right_shape.insert(std::begin(right_shape), max_rank - rank_right, 1);
 
-    for (size_t index = 0; index < max_rank; ++index)
+    for (std::size_t index = 0; index < max_rank; ++index)
     {
         output_shape.push_back(std::max(left_shape.at(index), right_shape.at(index)));
     }
@@ -71,13 +73,13 @@ static std::pair<ngraph::Shape, std::vector<ngraph::Shape>>
     };
 
     ngraph::Shape target_shape =
-        std::accumulate(inputs.begin(), inputs.end(), ngraph::Shape{}, shape_left_fold);
+        std::accumulate(std::begin(inputs), std::end(inputs), ngraph::Shape{}, shape_left_fold);
 
     std::vector<ngraph::Shape> full_shapes;
     for (const std::shared_ptr<ngraph::Node>& input : inputs)
     {
         ngraph::Shape padded_shape = input->get_shape();
-        padded_shape.insert(padded_shape.begin(), target_shape.size() - padded_shape.size(), 1);
+        padded_shape.insert(std::begin(padded_shape), target_shape.size() - padded_shape.size(), 1);
         full_shapes.push_back(std::move(padded_shape));
     }
 
@@ -89,6 +91,8 @@ static std::pair<ngraph::Shape, std::vector<ngraph::Shape>>
 /// \note       The source shape does not have to be the actual shape of input node. However
 ///             it should be a superset of it (containing it as a continuous subset). This implies
 ///             we may expand the number of axes of input node.
+///             The ranks of source_shape and output_shape must be equal. This means that the
+///             source_shape has to be padded with ones for this operation.
 ///
 /// \param[in]  node          The input Node to be broadcasted.
 /// \param[in]  output_shape  The output shape.
@@ -101,6 +105,12 @@ static std::shared_ptr<ngraph::Node>
                                const ngraph::Shape& output_shape,
                                const ngraph::Shape& source_shape)
 {
+    if (source_shape.size() != output_shape.size())
+    {
+        NGRAPH_WARN << "Ranks of source_shape and output_shape dont match: " << source_shape.size()
+                    << " vs " << output_shape.size();
+    }
+
     ngraph::AxisVector broadcast_axes;
     ngraph::Shape squeezed_shape;
     // Positions of axes which have length of 1 are needed to calculate broadcast_axes
@@ -157,7 +167,7 @@ namespace ngraph
             auto bcast_shapes = get_numpy_broadcast_shapes(inputs);
 
             NodeVector broadcasted_inputs;
-            for (size_t i = 0; i < inputs.size(); ++i)
+            for (std::size_t i = 0; i < inputs.size(); ++i)
             {
                 const std::shared_ptr<ngraph::Node> input_node = inputs[i];
 
@@ -235,8 +245,8 @@ namespace ngraph
             }
 
             // Find first dimensions at front with length different from 1
-            size_t num_ones = 0;
-            for (size_t dimension : new_right_shape)
+            std::size_t num_ones = 0;
+            for (std::size_t dimension : new_right_shape)
             {
                 if (dimension == 1)
                 {
@@ -270,7 +280,7 @@ namespace ngraph
                                          const Shape& input_shape,
                                          std::size_t start_match_axis)
         {
-            std::vector<size_t> result(output_shape.size() - input_shape.size());
+            std::vector<std::size_t> result(output_shape.size() - input_shape.size());
             // Populate the result vector with monotonic increasing series from 0 until
             // output_shape_size, excluding values in range [start_match_axis, start_match_axis + input_shape.size()
             std::iota(std::begin(result), std::begin(result) + start_match_axis, 0);

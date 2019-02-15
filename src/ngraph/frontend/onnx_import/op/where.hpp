@@ -21,6 +21,7 @@
 #include "core/node.hpp"
 #include "ngraph/node_vector.hpp"
 #include "ngraph/op/select.hpp"
+#include "utils/broadcasting.hpp"
 
 namespace ngraph
 {
