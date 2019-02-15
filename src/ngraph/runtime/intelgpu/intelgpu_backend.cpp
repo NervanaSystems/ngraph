@@ -171,30 +171,15 @@ static const element::Type& get_output_type(const shared_ptr<Node>& op, size_t n
 
 static void do_eltwise_operation(cldnn::topology& topology,
                                  const shared_ptr<Node>& op,
+                                 const string& custom_op,
+                                 bool function_operation,
                                  cldnn::eltwise_mode mode)
 {
     arguments_check(op, 2, 1);
 
-// Leave it here for some time
-#if USE_INTELGPU_CUSTOM_KERNELS
-    if ((get_input_type(op) == element::i32 || get_input_type(op) == element::i64) &&
-        (mode == cldnn::eltwise_mode::min || mode == cldnn::eltwise_mode::max))
+    if (get_input_type(op) != element::f32 || get_input_type(op, 1) != element::f32 ||
+        get_output_type(op) != element::f32)
     {
-        string custom_op;
-
-        if (mode == cldnn::eltwise_mode::min)
-        {
-            custom_op = "min";
-        }
-        else if (mode == cldnn::eltwise_mode::max)
-        {
-            custom_op = "max";
-        }
-        else
-        {
-            custom_op = "not_implemented_operation";
-        }
-
         runtime::intelgpu::do_eltwise_kernel(topology,
                                              get_input_name(op, 0),
                                              get_input_shape(op, 0),
@@ -204,31 +189,59 @@ static void do_eltwise_operation(cldnn::topology& topology,
                                              get_output_name(op),
                                              get_output_shape(op),
                                              get_output_type(op),
-                                             custom_op);
+                                             custom_op,
+                                             function_operation);
     }
     else
     {
-        const cldnn::eltwise op_add(
+        const cldnn::eltwise op_eltwise(
             get_output_name(op), {get_input_name(op, 0), get_input_name(op, 1)}, mode);
-        topology.add(op_add);
+        topology.add(op_eltwise);
     }
-#else
-
-    const cldnn::eltwise op_eltwise(
-        get_output_name(op), {get_input_name(op, 0), get_input_name(op, 1)}, mode);
-    topology.add(op_eltwise);
-#endif
 }
 
-static void do_unary_operation(cldnn::topology& topology,
-                               const shared_ptr<Node>& op,
-                               cldnn_activation_func mode,
-                               const cldnn_activation_additional_params& param = {0.f, 0.f})
+static void do_cldnn_unary(cldnn::topology& topology,
+                           const shared_ptr<Node>& op,
+                           cldnn_activation_func mode,
+                           const cldnn_activation_additional_params& param = {0.f, 0.f})
 {
     arguments_check(op, 1, 1);
 
     const cldnn::activation cldnn_unary(get_output_name(op), get_input_name(op), mode, param);
     topology.add(cldnn_unary);
+}
+
+static void
+    do_custom_unary(cldnn::topology& topology, const shared_ptr<Node>& op, const string& operation)
+{
+    arguments_check(op, 1, 1);
+
+    runtime::intelgpu::do_custom_unary_operation(topology,
+                                                 get_input_name(op),
+                                                 get_input_shape(op),
+                                                 get_input_type(op),
+                                                 get_output_name(op),
+                                                 get_output_shape(op),
+                                                 get_output_type(op),
+                                                 operation);
+}
+
+static void do_universal_unary(cldnn::topology& topology,
+                               const shared_ptr<Node>& op,
+                               const string& operation,
+                               cldnn_activation_func mode,
+                               const cldnn_activation_additional_params& param = {0.f, 0.f})
+{
+    arguments_check(op, 1, 1);
+
+    if (get_input_type(op) != element::f32)
+    {
+        do_custom_unary(topology, op, operation);
+    }
+    else
+    {
+        do_cldnn_unary(topology, op, mode, param);
+    }
 }
 
 static void do_pooling_operation(cldnn::topology& topology,
@@ -609,7 +622,8 @@ shared_ptr<runtime::Executable>
 
             // clDNN has limited support for Softmax operation
             // following are the checks to go with custom kernel
-            if ((shape_dim_count > 3) || ((shape_dim_count == 3) && (axes_size == 2)))
+            if ((shape_dim_count > 3) || ((shape_dim_count == 3) && (axes_size == 2)) ||
+                (get_input_type(op) != element::f32))
             {
                 do_softmax_operation(topology,
                                      get_input_name(op),
@@ -645,27 +659,37 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::Add:
         {
-            do_eltwise_operation(topology, op, cldnn::eltwise_mode::sum);
+            do_eltwise_operation(topology, op, "+", false, cldnn::eltwise_mode::sum);
+            break;
+        }
+        case OP_TYPEID::Subtract:
+        {
+            do_eltwise_operation(topology, op, "-", false, cldnn::eltwise_mode::sub);
             break;
         }
         case OP_TYPEID::Multiply:
         {
-            do_eltwise_operation(topology, op, cldnn::eltwise_mode::prod);
+            do_eltwise_operation(topology, op, "*", false, cldnn::eltwise_mode::prod);
             break;
         }
         case OP_TYPEID::Divide:
         {
-            do_eltwise_operation(topology, op, cldnn::eltwise_mode::div);
+            do_eltwise_operation(topology, op, "/", false, cldnn::eltwise_mode::div);
             break;
         }
         case OP_TYPEID::Maximum:
         {
-            do_eltwise_operation(topology, op, cldnn::eltwise_mode::max);
+            do_eltwise_operation(topology, op, "max", true, cldnn::eltwise_mode::max);
             break;
         }
         case OP_TYPEID::Minimum:
         {
-            do_eltwise_operation(topology, op, cldnn::eltwise_mode::min);
+            do_eltwise_operation(topology, op, "min", true, cldnn::eltwise_mode::min);
+            break;
+        }
+        case OP_TYPEID::Power:
+        {
+            do_eltwise_operation(topology, op, "pow", true, cldnn::eltwise_mode::pow);
             break;
         }
         case OP_TYPEID::Constant:
@@ -821,14 +845,27 @@ shared_ptr<runtime::Executable>
             {
                 do_equal_propagation(topology, get_input_name(op), get_output_name(op));
             }
-            else if (get_input_type(op) != element::i32 && get_input_type(op) != element::i64 &&
-                     ((get_input_shape(op).size() == 1 && get_input_shape(op).at(0) == 1) ||
-                      get_input_shape(op).empty()))
+            else if ((get_output_shape(op).size() <= 4) &&
+                     ((get_input_type(op) == element::f32) || (get_input_type(op) == element::i32)))
             {
+                const size_t shift = 4 - get_output_shape(op).size();
+                vector<uint16_t> fixed_b_axes;
+
+                for (uint16_t i = 0; i < shift; ++i)
+                {
+                    fixed_b_axes.push_back(i);
+                }
+
+                for (auto it = axis.cbegin(); it != axis.cend(); ++it)
+                {
+                    fixed_b_axes.push_back(*it + shift);
+                }
+
                 const cldnn::tensor output_tensor_size =
                     intelgpu_space::create_cldnn_tensor(get_output_shape(op));
+
                 const cldnn::broadcast cldnn_broadcast(
-                    get_output_name(op), get_input_name(op), output_tensor_size);
+                    get_output_name(op), get_input_name(op), output_tensor_size, fixed_b_axes);
                 topology.add(cldnn_broadcast);
             }
             else
@@ -946,29 +983,6 @@ shared_ptr<runtime::Executable>
             }
             break;
         }
-        case OP_TYPEID::Negative:
-        {
-            if (get_input_type(op) == ngraph::element::i32)
-            {
-                // This is workaround to enable GNMT in training mode.
-                // clDNN doesn't support i32 data type for activation primitive.
-                // Exception from clDNN:  implementation_map for N5cldnn10activationE
-                // could not find any implementation to match key
-                do_negative_operation(topology,
-                                      get_input_name(op),
-                                      get_input_shape(op),
-                                      get_input_type(op),
-                                      get_output_name(op),
-                                      get_output_shape(op),
-                                      get_output_type(op));
-            }
-            else
-            {
-                const cldnn_activation_additional_params param = {-1.f, 0.f};
-                do_unary_operation(topology, op, activation_linear, param);
-            }
-            break;
-        }
         case OP_TYPEID::All:
         {
             arguments_check(op, 1, 1);
@@ -1015,7 +1029,12 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::Relu:
         {
-            do_unary_operation(topology, op, activation_relu);
+            do_cldnn_unary(topology, op, activation_relu);
+            break;
+        }
+        case OP_TYPEID::Sigmoid:
+        {
+            do_cldnn_unary(topology, op, activation_logistic);
             break;
         }
         case OP_TYPEID::ReluBackprop:
@@ -1033,62 +1052,88 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::Abs:
         {
-            do_unary_operation(topology, op, activation_abs);
+            do_universal_unary(topology, op, "fabs", activation_abs);
             break;
         }
         case OP_TYPEID::Sqrt:
         {
-            do_unary_operation(topology, op, activation_sqrt);
+            do_universal_unary(topology, op, "sqrt", activation_sqrt);
             break;
         }
         case OP_TYPEID::Tanh:
         {
-            do_unary_operation(topology, op, activation_hyperbolic_tan);
+            do_universal_unary(topology, op, "tanh", activation_hyperbolic_tan);
             break;
         }
         case OP_TYPEID::Sin:
         {
-            do_unary_operation(topology, op, activation_sin);
+            do_universal_unary(topology, op, "sin", activation_sin);
             break;
         }
         case OP_TYPEID::Asin:
         {
-            do_unary_operation(topology, op, activation_asin);
+            do_universal_unary(topology, op, "asin", activation_asin);
             break;
         }
         case OP_TYPEID::Sinh:
         {
-            do_unary_operation(topology, op, activation_sinh);
+            do_universal_unary(topology, op, "sinh", activation_sinh);
             break;
         }
         case OP_TYPEID::Cos:
         {
-            do_unary_operation(topology, op, activation_cos);
+            do_universal_unary(topology, op, "cos", activation_cos);
             break;
         }
         case OP_TYPEID::Acos:
         {
-            do_unary_operation(topology, op, activation_acos);
+            do_universal_unary(topology, op, "acos", activation_acos);
             break;
         }
         case OP_TYPEID::Cosh:
         {
-            do_unary_operation(topology, op, activation_cosh);
+            do_universal_unary(topology, op, "cosh", activation_cosh);
             break;
         }
         case OP_TYPEID::Log:
         {
-            do_unary_operation(topology, op, activation_log);
+            do_universal_unary(topology, op, "log", activation_log);
             break;
         }
         case OP_TYPEID::Exp:
         {
-            do_unary_operation(topology, op, activation_exp);
+            do_universal_unary(topology, op, "exp", activation_exp);
             break;
         }
-        case OP_TYPEID::Sigmoid:
+        case OP_TYPEID::Negative:
         {
-            do_unary_operation(topology, op, activation_logistic);
+            const cldnn_activation_additional_params param = {-1.f, 0.f};
+            do_universal_unary(topology, op, "-", activation_linear, param);
+            break;
+        }
+        case OP_TYPEID::Atan:
+        {
+            do_custom_unary(topology, op, "atan");
+            break;
+        }
+        case OP_TYPEID::Ceiling:
+        {
+            do_custom_unary(topology, op, "ceil");
+            break;
+        }
+        case OP_TYPEID::Floor:
+        {
+            do_custom_unary(topology, op, "floor");
+            break;
+        }
+        case OP_TYPEID::Sign:
+        {
+            do_custom_unary(topology, op, "sign");
+            break;
+        }
+        case OP_TYPEID::Tan:
+        {
+            do_custom_unary(topology, op, "tan");
             break;
         }
         case OP_TYPEID::SigmoidBackprop:
@@ -1155,81 +1200,6 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::Or:
         {
             do_logical_operation(topology, op, " || ");
-            break;
-        }
-        case OP_TYPEID::Subtract:
-        {
-            do_eltwise_operation(topology, op, cldnn::eltwise_mode::sub);
-            break;
-        }
-        case OP_TYPEID::Power:
-        {
-            do_eltwise_operation(topology, op, cldnn::eltwise_mode::pow);
-            break;
-        }
-        case OP_TYPEID::Atan:
-        {
-            arguments_check(op, 1, 1);
-            do_custom_eltwise_operation(topology,
-                                        get_input_name(op),
-                                        get_input_shape(op),
-                                        get_input_type(op),
-                                        get_output_name(op),
-                                        get_output_shape(op),
-                                        get_output_type(op),
-                                        CUSTOM_ELTWISE::Atan);
-            break;
-        }
-        case OP_TYPEID::Ceiling:
-        {
-            arguments_check(op, 1, 1);
-            do_custom_eltwise_operation(topology,
-                                        get_input_name(op),
-                                        get_input_shape(op),
-                                        get_input_type(op),
-                                        get_output_name(op),
-                                        get_output_shape(op),
-                                        get_output_type(op),
-                                        CUSTOM_ELTWISE::Ceil);
-            break;
-        }
-        case OP_TYPEID::Floor:
-        {
-            arguments_check(op, 1, 1);
-            do_custom_eltwise_operation(topology,
-                                        get_input_name(op),
-                                        get_input_shape(op),
-                                        get_input_type(op),
-                                        get_output_name(op),
-                                        get_output_shape(op),
-                                        get_output_type(op),
-                                        CUSTOM_ELTWISE::Floor);
-            break;
-        }
-        case OP_TYPEID::Sign:
-        {
-            arguments_check(op, 1, 1);
-            do_custom_eltwise_operation(topology,
-                                        get_input_name(op),
-                                        get_input_shape(op),
-                                        get_input_type(op),
-                                        get_output_name(op),
-                                        get_output_shape(op),
-                                        get_output_type(op),
-                                        CUSTOM_ELTWISE::Sign);
-            break;
-        }
-        case OP_TYPEID::Tan:
-        {
-            arguments_check(op, 1, 1);
-            do_custom_eltwise_operation(topology,
-                                        get_input_name(op),
-                                        get_input_shape(op),
-                                        get_input_type(op),
-                                        get_output_name(op),
-                                        get_output_shape(op),
-                                        get_output_type(op),
-                                        CUSTOM_ELTWISE::Tan);
             break;
         }
         case OP_TYPEID::Pad:
