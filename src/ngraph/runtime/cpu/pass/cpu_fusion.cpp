@@ -2002,12 +2002,6 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qavg_pool()
         auto avg_pool_m = std::static_pointer_cast<op::AvgPool>(m.get_match_root());
         auto dq_m = std::static_pointer_cast<op::Dequantize>(avg_pool_m->get_argument(0));
 
-        if (dq_m->get_argument(0)->get_users().size() > 1)
-        {
-            NGRAPH_DEBUG << "DQ has more than one user";
-            return false;
-        }
-
         auto qavg_pool_n = std::make_shared<op::QuantizedAvgPool>(
             dq_m->get_argument(0),
             avg_pool_m->get_window_shape(),
@@ -2044,12 +2038,6 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qmax_pool()
 
         auto max_pool_m = std::static_pointer_cast<op::MaxPool>(m.get_match_root());
         auto dq_m = std::static_pointer_cast<op::Dequantize>(max_pool_m->get_argument(0));
-
-        if (dq_m->get_argument(0)->get_users().size() > 1)
-        {
-            NGRAPH_DEBUG << "DQ has more than one user";
-            return false;
-        }
 
         auto qmax_pool_n =
             std::make_shared<op::QuantizedMaxPool>(dq_m->get_argument(0),
