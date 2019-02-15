@@ -50,7 +50,7 @@ List of passes
 .. _algebraic_simpl: 
 
 ``Algebraic Simplification``
--------- --------------------
+----------------------------
 
 .. figure:: ../../graphics/algebraic-simpl.png
    :width: 650px
