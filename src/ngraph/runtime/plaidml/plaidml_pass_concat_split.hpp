@@ -16,13 +16,7 @@
 
 #pragma once
 
-#include <memory>
-
-#include <plaidml/plaidml++.h>
-
-#include "ngraph/function.hpp"
-#include "ngraph/runtime/plaidml/plaidml_config.hpp"
-#include "ngraph/runtime/plaidml/plaidml_executable.hpp"
+#include "ngraph/pass/graph_rewrite.hpp"
 
 namespace ngraph
 {
@@ -30,24 +24,20 @@ namespace ngraph
     {
         namespace plaidml
         {
-            struct Build;
-            class Compiler;
+            namespace pass
+            {
+                class ConcatSplit;
+            }
         }
     }
 }
 
-// Compiles nGraph operation graphs (functions).
-class ngraph::runtime::plaidml::Compiler final
+// A pass to split concats.
+//
+// PlaidML's concat operator is remarkably inefficient.  To make it
+// slightly less awful, we split concats into groups.
+class ngraph::runtime::plaidml::pass::ConcatSplit final : public ngraph::pass::GraphRewrite
 {
 public:
-    Compiler(Config* config);
-
-    std::shared_ptr<PlaidML_Executable> compile(std::shared_ptr<Function> func);
-
-    bool is_supported(const Node& node) const;
-
-private:
-    void build(std::shared_ptr<Function> func, Build* build);
-
-    Config* m_config;
+    ConcatSplit();
 };
