@@ -65,9 +65,10 @@ void runtime::intelgpu::do_softmax_operation(cldnn::topology& topology,
     codegen::CodeWriter writer1;
     vector<size_t> gws;
 
-    writer0 << "__kernel void " << entry_point_middle_name << "(const __global float input"
-            << array_dims(input_shape) << ", __global float output" << array_dims(input_shape, axes)
-            << ")\n";
+    writer0 << "__kernel void " << entry_point_middle_name << "(const __global "
+            << get_opencl_type_name(input_type) << " input" << array_dims(input_shape)
+            << ", __global " << get_opencl_type_name(output_type) << " output"
+            << array_dims(input_shape, axes) << ")\n";
 
     writer0.block_begin();
     {
@@ -90,10 +91,11 @@ void runtime::intelgpu::do_softmax_operation(cldnn::topology& topology,
                                                         gws);
     topology.add(op_softmax_middle);
 
-    writer1 << "__kernel void " << entry_point_name << "(const __global float input0"
-            << array_dims(input_shape) << ", const __global float input1"
-            << array_dims(input_shape, axes) << ", __global float output"
-            << array_dims(output_shape) << ")\n";
+    writer1 << "__kernel void " << entry_point_name << "(const __global "
+            << get_opencl_type_name(input_type) << " input0" << array_dims(input_shape)
+            << ", const __global " << get_opencl_type_name(input_type) << " input1"
+            << array_dims(input_shape, axes) << ", __global " << get_opencl_type_name(output_type)
+            << " output" << array_dims(output_shape) << ")\n";
 
     writer1.block_begin();
     {

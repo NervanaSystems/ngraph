@@ -18,36 +18,22 @@
 
 #include <memory>
 
-#include <plaidml/plaidml++.h>
-
-#include "ngraph/function.hpp"
-#include "ngraph/runtime/plaidml/plaidml_config.hpp"
-#include "ngraph/runtime/plaidml/plaidml_executable.hpp"
+#include "core/node.hpp"
+#include "ngraph/node_vector.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace onnx_import
     {
-        namespace plaidml
+        namespace op
         {
-            struct Build;
-            class Compiler;
-        }
-    }
-}
+            namespace set_1
+            {
+                NodeVector asinh(const Node& node);
+            } // namespace set_1
 
-// Compiles nGraph operation graphs (functions).
-class ngraph::runtime::plaidml::Compiler final
-{
-public:
-    Compiler(Config* config);
+        } //namespace op
 
-    std::shared_ptr<PlaidML_Executable> compile(std::shared_ptr<Function> func);
+    } // namespace onnx_import
 
-    bool is_supported(const Node& node) const;
-
-private:
-    void build(std::shared_ptr<Function> func, Build* build);
-
-    Config* m_config;
-};
+} // namespace ngraph
