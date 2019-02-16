@@ -18,7 +18,7 @@
 
 #include <CPP/topology.hpp>
 
-#include "ngraph/runtime/intelgpu/code_writer.hpp"
+#include "ngraph/code_writer.hpp"
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/axis_vector.hpp"

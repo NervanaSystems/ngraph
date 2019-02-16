@@ -16,7 +16,7 @@
 
 #include <CPP/custom_gpu_primitive.hpp>
 
-#include "ngraph/runtime/intelgpu/code_writer.hpp"
+#include "ngraph/code_writer.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_softmax.hpp"

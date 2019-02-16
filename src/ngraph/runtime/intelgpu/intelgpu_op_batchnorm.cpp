@@ -20,7 +20,7 @@
 #include <CPP/scale.hpp>
 #include <CPP/split.hpp>
 
-#include "ngraph/runtime/intelgpu/code_writer.hpp"
+#include "ngraph/code_writer.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_batchnorm.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
