@@ -28,7 +28,7 @@ namespace ngraph
         public:
             /// \brief Constructs a min-reduction operation.
             ///
-            /// \param arg The tensor view to be reduced.
+            /// \param arg The tensor to be reduced.
             /// \param reduction_axes The axis positions (0-based) to be eliminated.
             Min(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes);
 
