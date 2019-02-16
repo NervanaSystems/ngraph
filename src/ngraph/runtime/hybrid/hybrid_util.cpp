@@ -160,8 +160,8 @@ void runtime::hybrid::rewrite_function(const shared_ptr<Function>& f,
     {
         if (cluster.size() > 0)
         {
-            shared_ptr<Node> node = *cluster.begin();
-            auto placement = node->get_placement_index();
+            shared_ptr<Node> tmp_node = *cluster.begin();
+            auto placement = tmp_node->get_placement_index();
             if (placement != 0)
             {
                 // This is a non-native cluster so make it a FunctionCall
