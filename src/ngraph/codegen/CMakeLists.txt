@@ -33,10 +33,10 @@ add_library(codegen SHARED ${SRC})
 # This must be kept in sync with the LLVM + Clang version in use
 set_source_files_properties(compiler.cpp PROPERTIES COMPILE_FLAGS "-fno-rtti")
 
-get_target_property(LLVM_LIB_DIR libllvm INTERFACE_INCLUDE_DIRECTORIES)
+get_target_property(LLVM_INCLUDE_DIR libllvm INTERFACE_INCLUDE_DIRECTORIES)
 
 # find_file(HEADER_1 cmath HINTS /usr/include/c++/7)
-get_filename_component(LLVM_LIB_DIR ${LLVM_LIB_DIR}/../lib/clang/5.0.2/include ABSOLUTE)
+get_filename_component(CLANG_INCLUDE_DIR ${LLVM_INCLUDE_DIR}/../lib/clang/5.0.2/include ABSOLUTE)
 
 if(NGRAPH_CPU_ENABLE)
     get_target_property(MKLDNN_INCLUDE_DIR libmkldnn INTERFACE_INCLUDE_DIRECTORIES)
@@ -45,7 +45,7 @@ if(NGRAPH_CPU_ENABLE)
     list(APPEND HEADER_SEARCH_DEFINES MKLDNN_HEADERS_PATH="${MKLDNN_INCLUDE_DIR}")
 endif()
 
-list(APPEND HEADER_SEARCH_DEFINES CLANG_BUILTIN_HEADERS_PATH="${LLVM_LIB_DIR}")
+list(APPEND HEADER_SEARCH_DEFINES CLANG_BUILTIN_HEADERS_PATH="${CLANG_INCLUDE_DIR}")
 list(APPEND HEADER_SEARCH_DEFINES NGRAPH_HEADERS_PATH="${NGRAPH_INCLUDE_PATH}")
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
@@ -76,7 +76,7 @@ set_source_files_properties(compiler.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADE
 # Generate the resource file containing all headers used by the codegen compiler
 add_custom_target(header_resource
     resource_generator --output ${CMAKE_BINARY_DIR}/header_resource.hpp --base codegen
-    DEPENDS resource_generator ext_llvm
+    DEPENDS resource_generator
     BYPRODUCTS
 )
 if (NGRAPH_CPU_ENABLE)
@@ -99,5 +99,5 @@ if (NGRAPH_CPU_ENABLE)
 endif()
 target_include_directories(codegen SYSTEM PRIVATE ${CMAKE_BINARY_DIR})
 target_link_libraries(codegen PRIVATE libllvm ngraph)
+set_target_properties(codegen PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 install(TARGETS codegen DESTINATION ${NGRAPH_INSTALL_LIB})
-
