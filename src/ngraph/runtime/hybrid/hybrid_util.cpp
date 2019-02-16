@@ -220,7 +220,6 @@ void runtime::hybrid::rewrite_function(const shared_ptr<Function>& f,
                     auto old_source = cluster_outputs[i];
                     auto new_source = fc;
                     auto target = function_call_outputs[i];
-                    descriptor::Output* old_source_output = old_source->get_output_to(target);
                     descriptor::Input* target_input = target->get_input_from(old_source);
                     descriptor::Output& new_output = new_source->get_outputs()[i];
                     target_input->replace_output(new_output);
