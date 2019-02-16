@@ -32,7 +32,7 @@ set(ONNX_GIT_BRANCH rel-${ONNX_VERSION})
 
 ExternalProject_Add(
     ext_onnx
-    PREFIX ext_onnx
+    PREFIX onnx
     GIT_REPOSITORY ${ONNX_GIT_REPO_URL}
     GIT_TAG ${ONNX_GIT_BRANCH}
     ${NGRAPH_GIT_ARGS}
@@ -42,13 +42,9 @@ ExternalProject_Add(
     CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
     CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
     CMAKE_ARGS ${NGRAPH_FORWARD_CMAKE_ARGS}
-        -DONNX_GEN_PB_TYPE_STUBS=OFF
-        -DProtobuf_PROTOC_EXECUTABLE=${Protobuf_PROTOC_EXECUTABLE}
-        -DProtobuf_INCLUDE_DIR=${Protobuf_INCLUDE_DIR}
-        -DPROTOBUF_LIBRARY=${Protobuf_LIBRARY}
-        -DPROTOBUF_INCLUDE_DIR=${Protobuf_INCLUDE_DIR}
-        -DPROTOBUF_SRC_ROOT_FOLDER=${Protobuf_SRC_ROOT_FOLDER}
-        -DONNX_ML=TRUE
+               -DONNX_GEN_PB_TYPE_STUBS=OFF
+               -DCMAKE_PREFIX_PATH=${Protobuf_INSTALL_PREFIX}
+               -DONNX_ML=TRUE
     TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/tmp"
     STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/stamp"
     DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/download"
@@ -56,7 +52,7 @@ ExternalProject_Add(
     BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/bin"
     INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx"
     EXCLUDE_FROM_ALL TRUE
-    )
+)
 
 # -----------------------------------------------------------------------------
 
