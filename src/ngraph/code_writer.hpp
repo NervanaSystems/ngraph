@@ -21,13 +21,10 @@
 
 namespace ngraph
 {
-    namespace codegen
-    {
-        class CodeWriter;
-    }
+    class CodeWriter;
 }
 
-class ngraph::codegen::CodeWriter
+class ngraph::CodeWriter
 {
 public:
     CodeWriter()

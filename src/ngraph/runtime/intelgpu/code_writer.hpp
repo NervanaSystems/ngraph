@@ -27,7 +27,7 @@ namespace ngraph
     }
 }
 
-class ngraph::codegen::CodeWriter
+class ngraph::CodeWriter
 {
 public:
     CodeWriter();

@@ -61,8 +61,8 @@ void runtime::intelgpu::do_softmax_operation(cldnn::topology& topology,
     const string expression = "output" + access_dims(input_shape, "i", axes) + " = 0.0f;\n";
     const Shape new_shape = shape_dims(output_shape, axes);
     const cldnn::layout layout_middle = IntelGPULayout::create_cldnn_layout(output_type, new_shape);
-    codegen::CodeWriter writer0;
-    codegen::CodeWriter writer1;
+    CodeWriter writer0;
+    CodeWriter writer1;
     vector<size_t> gws;
 
     writer0 << "__kernel void " << entry_point_middle_name << "(const __global "

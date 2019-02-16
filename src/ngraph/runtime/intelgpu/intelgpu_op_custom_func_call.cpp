@@ -37,7 +37,7 @@ void runtime::intelgpu::do_all_any_op(cldnn::topology& topology,
     const string entry_point_name = "custom_op_all_any_" + output_name;
     const string kernel_type_name = get_opencl_type_name(output_type);
     const size_t input_size = shape_size<Shape>(input0_shape);
-    codegen::CodeWriter writer;
+    CodeWriter writer;
 
     // The kernel name and parameters
     gen_func_def(writer,
@@ -106,7 +106,7 @@ void runtime::intelgpu::do_all_any_op(cldnn::topology& topology,
     topology.add(op_all_any);
 }
 
-static void get_custom_func_name(codegen::CodeWriter& writer,
+static void get_custom_func_name(CodeWriter& writer,
                                  vector<shared_ptr<Function>>& func,
                                  const string& func_name,
                                  const string& type_name)
@@ -183,7 +183,7 @@ void runtime::intelgpu::do_reduce_func_call(cldnn::topology& topology,
     const string aux_point_name = "aux_call_" + output_name;
     const string kernel_type_name = get_opencl_type_name(output_type);
     const size_t input_size = shape_size<Shape>(input0_shape);
-    codegen::CodeWriter writer;
+    CodeWriter writer;
 
     get_custom_func_name(writer, func, aux_point_name, kernel_type_name);
     // The kernel name and parameters
