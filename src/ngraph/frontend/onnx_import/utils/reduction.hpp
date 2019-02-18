@@ -57,22 +57,24 @@ namespace ngraph
                 }
             } // namespace  detail
 
-            /// \brief      Create an nGraph version of an ONNX reduction operation.
             ///
-            /// \param[in]  node          The node representing incoming ONNX operation.
+            /// \brief      Create an nGraph version of an ONNX reduction
+            ///             operation.
             ///
-            /// \tparam     OnnxOperator  Class of an nGraph ArithmeticReduction operation
-            ///                           (e.g. Min, Max, SUm, Product).
+            /// \param[in]  node                The node representing incoming ONNX operation.
+            /// \param[in]  ng_input            The input (nGraph) Tensor.
+            /// \param[in]  reduction_function  The reduction function.
+            ///
+            /// \tparam     ReductionFunction   Functor defining arithmetic reduction operation
+            ///                                 (e.g. Min, Max, SUm, Product).
             ///
             /// \return     nGraph node equivalent of the ONNX operation.
             ///
-            template <class OnnxOperator,
-                      typename std::enable_if<std::is_base_of<ngraph::op::util::ArithmeticReduction,
-                                                              OnnxOperator>::value,
-                                              int>::type = 0>
+            template <class ReductionFunction>
             std::shared_ptr<ngraph::Node>
                 make_ng_reduction_op(const Node& node,
-                                     const std::shared_ptr<ngraph::Node>& ng_input)
+                                     const std::shared_ptr<ngraph::Node>& ng_input,
+                                     const ReductionFunction& reduction_function)
             {
                 auto data_shape = ng_input->get_shape();
 
@@ -82,7 +84,8 @@ namespace ngraph
                     << "provided reduction axes count (" << reduction_axes.size()
                     << ") is larger than input tensor rank (" << data_shape.size() << ")";
 
-                auto op_node = std::make_shared<OnnxOperator>(ng_input, reduction_axes);
+                std::shared_ptr<ngraph::Node> op_node =
+                    reduction_function(ng_input, reduction_axes);
 
                 std::int64_t keepdims = node.get_attribute_value<std::int64_t>("keepdims", 1);
                 if (keepdims == 0)
