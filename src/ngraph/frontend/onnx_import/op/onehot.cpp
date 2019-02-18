@@ -67,6 +67,12 @@ namespace ngraph
 
                     std::int64_t depth_value = constant_depth->get_vector<std::int64_t>()[0];
                     auto output_shape = indices_shape;
+                    // Insert OneHot axis on position pointed by an axis attribute.
+                    // example:
+                    // data_shape = (2, 2)
+                    // axis = 1
+                    // depth = 10
+                    // output_shape = (2, 10, 2)
                     output_shape.insert(std::next(std::begin(output_shape), axis), depth_value);
 
                     std::shared_ptr<ngraph::Node> one_hot = std::make_shared<ngraph::op::Convert>(
