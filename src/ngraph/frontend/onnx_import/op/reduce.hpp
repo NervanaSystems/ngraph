@@ -28,9 +28,9 @@
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/product.hpp"
-#include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/sum.hpp"
 #include "utils/broadcasting.hpp"
+#include "utils/norm.hpp"
 #include "utils/reduction.hpp"
 
 namespace ngraph
@@ -105,8 +105,10 @@ namespace ngraph
                 ///
                 inline NodeVector reduce_l1(const Node& node)
                 {
-                    auto abs_node = std::make_shared<ngraph::op::Abs>(node.get_ng_inputs().at(0));
-                    return {reduction::make_ng_reduction_op<ngraph::op::Sum>(node, abs_node)};
+                    return {reduction::make_ng_reduction_op(
+                        node,
+                        node.get_ng_inputs().at(0),
+                        std::bind(norm::l1_norm, std::placeholders::_1, std::placeholders::_2))};
                 }
 
                 /// \brief      Compute the L2 norm of the input tensor's element along the provided axes.
@@ -122,12 +124,10 @@ namespace ngraph
                 ///
                 inline NodeVector reduce_l2(const Node& node)
                 {
-                    NodeVector ng_inputs{node.get_ng_inputs()};
-                    auto square_node =
-                        std::make_shared<ngraph::op::Multiply>(ng_inputs.at(0), ng_inputs.at(0));
-                    auto sum_node =
-                        reduction::make_ng_reduction_op<ngraph::op::Sum>(node, square_node);
-                    return {std::make_shared<ngraph::op::Sqrt>(sum_node)};
+                    return {reduction::make_ng_reduction_op(
+                        node,
+                        node.get_ng_inputs().at(0),
+                        std::bind(norm::l2_norm, std::placeholders::_1, std::placeholders::_2))};
                 }
 
                 /// \brief      Compute the maximum value of the input tensor's elements along the provided axes.
