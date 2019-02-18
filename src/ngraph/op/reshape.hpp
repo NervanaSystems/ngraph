@@ -62,7 +62,7 @@ namespace ngraph
         public:
             /// \brief Constructs a reshape operation.
             ///
-            /// \param arg The tensor view to be reshaped.
+            /// \param arg The tensor to be reshaped.
             /// \param input_order The order in which to iterate over input axes. This must be a permutation of the
             ///                    sequence \f$(0,\dots,n-1)\f$ where \f$n\f$ is the rank of the input tensor.
             /// \param output_shape The output shape. If the input shape is \f$(a_0,\dots,a_{k-1})\f$ then the output shape must

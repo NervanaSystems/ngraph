@@ -16,24 +16,24 @@
 
 #pragma once
 
-#include "ngraph/op/util/arithmetic_reduction.hpp"
+#include <memory>
+
+#include "core/node.hpp"
+#include "ngraph/node_vector.hpp"
 
 namespace ngraph
 {
-    namespace op
+    namespace onnx_import
     {
-        /// \brief Max-reduction operation.
-        class Max : public util::ArithmeticReduction
+        namespace op
         {
-        public:
-            /// \brief Constructs a max-reduction operation.
-            ///
-            /// \param arg The tensor to be reduced.
-            /// \param reduction_axes The axis positions (0-based) to be eliminated.
-            Max(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes);
+            namespace set_1
+            {
+                NodeVector asinh(const Node& node);
+            } // namespace set_1
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-        };
-    }
-}
+        } //namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph
