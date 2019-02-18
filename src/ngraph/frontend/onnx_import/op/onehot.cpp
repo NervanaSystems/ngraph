@@ -56,13 +56,16 @@ namespace ngraph
                     }
 
                     ASSERT_VALID_ARGUMENT(node, (axis >= 0) && (axis <= indices_shape.size()))
-                        << "provided 'axis' attribute is not valid.";
+                        << "invalid 'axis' attribute: "
+                        << node.get_attribute_value<int64_t>("axis", -1);
 
-                    auto cdepth = std::dynamic_pointer_cast<ngraph::op::Constant>(depth);
+                    auto constant_depth = std::dynamic_pointer_cast<ngraph::op::Constant>(depth);
 
-                    ASSERT_VALID_ARGUMENT(node, cdepth) << "Only static depth is supported";
+                    ASSERT_VALID_ARGUMENT(node, constant_depth)
+                        << "Only constant values for depth input are supported for the OneHot "
+                           "operator.";
 
-                    std::int64_t depth_value = cdepth->get_vector<std::int64_t>()[0];
+                    std::int64_t depth_value = constant_depth->get_vector<std::int64_t>()[0];
                     auto output_shape = indices_shape;
                     output_shape.insert(std::next(std::begin(output_shape), axis), depth_value);
 
