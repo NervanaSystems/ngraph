@@ -44,12 +44,10 @@ namespace ngraph
                     auto indices_shape = indices->get_shape();
                     auto depth = inputs.at(1);
                     auto values = inputs.at(2);
-                    std::shared_ptr<ngraph::Node> off_value = std::make_shared<ngraph::op::Convert>(
-                        std::make_shared<ngraph::op::Slice>(values, Coordinate{0}, Coordinate{1}),
-                        element::i64);
-                    std::shared_ptr<ngraph::Node> on_value = std::make_shared<ngraph::op::Convert>(
-                        std::make_shared<ngraph::op::Slice>(values, Coordinate{1}, Coordinate{2}),
-                        element::i64);
+                    std::shared_ptr<ngraph::Node> off_value =
+                        std::make_shared<ngraph::op::Slice>(values, Coordinate{0}, Coordinate{1});
+                    std::shared_ptr<ngraph::Node> on_value =
+                        std::make_shared<ngraph::op::Slice>(values, Coordinate{1}, Coordinate{2});
                     auto axis = node.get_attribute_value<int64_t>("axis", -1);
 
                     if (axis < 0)
@@ -68,13 +66,13 @@ namespace ngraph
                     auto output_shape = indices_shape;
                     output_shape.insert(std::next(std::begin(output_shape), axis), depth_value);
 
-                    std::shared_ptr<ngraph::Node> one_hot =
-                        std::make_shared<ngraph::op::OneHot>(indices, output_shape, axis);
+                    std::shared_ptr<ngraph::Node> one_hot = std::make_shared<ngraph::op::Convert>(
+                        std::make_shared<ngraph::op::OneHot>(indices, output_shape, axis),
+                        values->get_element_type());
                     on_value = numpy_style_broadcast_for_binary_operation(one_hot, on_value)[1];
                     off_value = numpy_style_broadcast_for_binary_operation(one_hot, off_value)[1];
                     one_hot = one_hot * (on_value - off_value) + off_value;
-                    return {std::make_shared<ngraph::op::Convert>(
-                        one_hot, inputs.at(0)->get_element_type())};
+                    return {one_hot};
                 }
 
             } // namespace set_1
