@@ -61,6 +61,7 @@
 #include "op/less.hpp"
 #include "op/log.hpp"
 #include "op/log_softmax.hpp"
+#include "op/lp_pool.hpp"
 #include "op/lrn.hpp"
 #include "op/lstm.hpp"
 #include "op/matmul.hpp"
@@ -240,6 +241,7 @@ namespace ngraph
             REGISTER_OPERATOR("Floor", 1, floor);
             REGISTER_OPERATOR("Gemm", 1, gemm);
             REGISTER_OPERATOR("GlobalAveragePool", 1, global_average_pool);
+            REGISTER_OPERATOR("GlobalLpPool", 1, global_lp_pool);
             REGISTER_OPERATOR("GlobalMaxPool", 1, global_max_pool);
             REGISTER_OPERATOR("Greater", 1, greater);
             REGISTER_OPERATOR("HardSigmoid", 1, hard_sigmoid);
