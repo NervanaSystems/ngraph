@@ -22,7 +22,7 @@ include(ExternalProject)
 #------------------------------------------------------------------------------
 
 set(MLSL_GIT_URL https://github.com/intel/MLSL)
-set(MLSL_GIT_TAG d1bcc74cccdd86cae8841dab67723c811ddbd592)
+set(MLSL_GIT_TAG ed538bacf78583585aa77c8facdc9126894efbcc)
 
 find_program(MAKE_EXE NAMES gmake nmake make)
 
