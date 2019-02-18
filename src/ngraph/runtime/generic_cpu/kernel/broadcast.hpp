@@ -33,7 +33,7 @@ namespace ngraph
         {
             namespace kernel
             {
-                std::tuple<size_t, size_t> get_start_finish(size_t size)
+                static std::tuple<size_t, size_t> get_start_finish(size_t size)
                 {
                     const size_t nthreads = omp_get_num_threads();
                     const size_t ithread = omp_get_thread_num();
