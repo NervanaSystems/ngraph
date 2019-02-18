@@ -111,7 +111,7 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | Pad | 1-2- | 273 | 416 | Not fully supported. |
 | LSTM | 1-7- | | 430 | Not fully supported. |
 | MaxUnpool | (9) | 286, 289 | 447 | |
-| LpPool | - | 291 | 437 | Further analysis needed, however probably unsupported by nGraph. |
+| LpPool | - | 291 | 437 | Unsupported by nGraph - only max/avg pooling ops. |
 | Multinomial | - | 199 | 435 | Lack of PRNG in nGraph. |
 | RandomNormal | - | 199 | 434 | Lack of PRNG in nGraph. |
 | RandomNormalLike | - | 199 | 434 | Lack of PRNG in nGraph. |
@@ -139,7 +139,7 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | Gather | - | NGRAPH-3291 | 369, | Dynamic op.  |
 | Tile | - | NGRAPH-3292 | 368 | Dynamic op. |
 | Upsample | (7) | 287 | 441 | Dynamic op. |
-| MaxRoiPool | - | 288 | 437 | Dynamic op. Beside just use _slice/op/concat_ pattern. |
+| MaxRoiPool | - | 288 | 437 | Dynamic op - need dynamic slicing. Beside just use _slice/op/concat_ pattern. |
 | Reshape | 1-5- | NGRAPH-3290 | 357 | Lack of support for dynamic shape input. Only as a Constant or as an Initializer. |
 | Scatter | (9) | 289 | 446 | Dynamic indices input. |
 

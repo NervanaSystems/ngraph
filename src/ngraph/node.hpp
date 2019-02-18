@@ -71,7 +71,7 @@ namespace ngraph
 
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
-    /// view or a (possibly empty) tuple of values.
+    /// or a (possibly empty) tuple of values.
     class Node : public std::enable_shared_from_this<Node>
     {
         // So Adjoints can call generate_adjoints
@@ -182,10 +182,10 @@ namespace ngraph
         /// Checks that there is exactly one output and returns its tensor.
         descriptor::Tensor& get_output_tensor() const;
 
-        /// Returns the tensor view of output i
+        /// Returns the tensor of output i
         std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr(size_t i) const;
 
-        /// Checks that there is exactly one output and returns its tensor view.
+        /// Checks that there is exactly one output and returns its tensor.
         std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr() const;
 
         /// Returns the set of inputs using output i
