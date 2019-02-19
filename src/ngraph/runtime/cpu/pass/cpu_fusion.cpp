@@ -38,6 +38,7 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
+#include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
@@ -2056,6 +2057,56 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qmax_pool()
 
     this->add_matcher(
         std::make_shared<pattern::Matcher>(max_pool, callback, "CPUQuantFusion.QMaxPool"));
+}
+
+// {Dequantize}* + Concat -> QuantizedConcat + Dequantize
+void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconcat()
+{
+    Shape shape{2, 2, 1, 1};
+    auto input1 = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto input2 = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto input3 = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto input4 = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto input5 = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto input6 = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto concat3 = std::make_shared<op::Concat>(NodeVector{input1, input2, input3}, 0);
+    auto concat4 = std::make_shared<op::Concat>(NodeVector{input1, input2, input3, input4}, 0);
+    auto concat6 =
+        std::make_shared<op::Concat>(NodeVector{input1, input2, input3, input4, input5, input6}, 0);
+
+    pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In a callback for construct_qconcat against "
+                     << m.get_match_root()->get_name();
+
+        auto concat_m = std::static_pointer_cast<op::Concat>(m.get_match_root());
+        NodeVector new_args;
+        for (auto arg : concat_m->get_arguments())
+        {
+            if (arg->description() != "Dequantize")
+            {
+                return false;
+            }
+            new_args.push_back(arg->get_argument(0));
+        }
+        auto dq_m = std::static_pointer_cast<op::Dequantize>(concat_m->get_argument(0));
+        auto concat_n =
+            std::make_shared<op::QuantizedConcat>(new_args, concat_m->get_concatenation_axis());
+        auto dq_n = std::make_shared<op::Dequantize>(concat_n,
+                                                     dq_m->get_argument(1),
+                                                     dq_m->get_argument(2),
+                                                     dq_m->get_element_type(),
+                                                     dq_m->get_axes());
+        ngraph::replace_node(m.get_match_root(), dq_n);
+
+        return true;
+    };
+
+    this->add_matcher(
+        std::make_shared<pattern::Matcher>(concat4, callback, "CPUQuantFusion.QConcat4"));
+    this->add_matcher(
+        std::make_shared<pattern::Matcher>(concat3, callback, "CPUQuantFusion.QConcat3"));
+    this->add_matcher(
+        std::make_shared<pattern::Matcher>(concat6, callback, "CPUQuantFusion.QConcat6"));
 }
 
 void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_dq_q()

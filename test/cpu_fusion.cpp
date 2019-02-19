@@ -30,6 +30,7 @@
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/dequantize.hpp"
+#include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -3658,6 +3659,55 @@ TEST(cpu_quant_fusion, qmax_pool)
     auto cpu_f2 = make_function();
 
     test::Uniform<float> rng(1.0f, 10.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f1->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:0", 1);
+    auto cpu1_results = execute(cpu_f1, args, "CPU");
+    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:1", 1);
+    auto cpu2_results = execute(cpu_f2, args, "CPU");
+    EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
+}
+
+TEST(cpu_quant_fusion, qconcat)
+{
+    auto make_function = []() {
+        auto get_input_slice = [](std::shared_ptr<op::Parameter>& input) {
+            auto input_scale = op::Constant::create(element::f32, Shape{}, {2.0f});
+            auto int8_zero = op::Constant::create(element::i8, Shape{}, {0});
+            auto uint8_zero = op::Constant::create(element::u8, Shape{}, {0});
+
+            op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+            auto q_input = std::make_shared<op::Quantize>(
+                input, input_scale, uint8_zero, element::u8, AxisSet{}, round_mode);
+            auto dq = std::make_shared<op::Dequantize>(
+                q_input, input_scale, uint8_zero, element::f32, AxisSet{});
+            return dq;
+        };
+
+        NodeVector concat_inputs;
+        ParameterVector inputs;
+        for (size_t i = 0; i < 2; i++)
+        {
+            // Shape shape_input{1, 2, 4, 4};
+            Shape shape_input{1, 1};
+            auto input = std::make_shared<op::Parameter>(element::f32, shape_input);
+            inputs.push_back(input);
+            concat_inputs.push_back(get_input_slice(input));
+        }
+        auto concat = std::make_shared<op::Concat>(concat_inputs, 0);
+        return make_shared<Function>(NodeVector{concat}, inputs);
+    };
+
+    auto cpu_f1 = make_function();
+    auto cpu_f2 = make_function();
+
+    test::Uniform<float> rng(2.0f, 2.0f);
     vector<vector<float>> args;
     for (shared_ptr<op::Parameter> param : cpu_f1->get_parameters())
     {
