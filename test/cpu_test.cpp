@@ -850,7 +850,7 @@ TEST(cpu_test, memory_reuse_in_place_slice_after_in_place_concat)
     Shape shape_r{2, 1};
     auto slice = make_shared<op::Slice>(concat, Coordinate{0, 0}, Coordinate{2, 1});
     auto f = make_shared<Function>(slice, ParameterVector{A, B, C, D});
-  
+
     auto backend = runtime::Backend::create("CPU");
 
     // Create some tensors for input/output
