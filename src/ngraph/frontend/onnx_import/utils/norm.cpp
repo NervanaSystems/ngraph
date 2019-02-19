@@ -50,9 +50,9 @@ namespace ngraph
                     values = std::make_shared<ngraph::op::Sum>(values, reduction_axes);
 
                     std::shared_ptr<ngraph::Node> inv_p_node = ngraph::op::Constant::create(
-                        node->get_element_type(),
-                        node->get_shape(),
-                        std::vector<float>(shape_size(node->get_shape()), 1.f / p_norm));
+                        values->get_element_type(),
+                        values->get_shape(),
+                        std::vector<float>(shape_size(values->get_shape()), 1.f / p_norm));
 
                     return {std::make_shared<ngraph::op::Power>(values, inv_p_node)};
                 }
@@ -69,7 +69,7 @@ namespace ngraph
                 std::shared_ptr<ngraph::Node> non_zero_values =
                     std::make_shared<ngraph::op::Convert>(
                         std::make_shared<ngraph::op::NotEqual>(node, zero_node),
-                        ngraph::element::i64);
+                        node->get_element_type());
 
                 return std::make_shared<ngraph::op::Sum>(non_zero_values, reduction_axes);
             }
