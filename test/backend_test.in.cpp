@@ -1401,7 +1401,6 @@ NGRAPH_TEST(${BACKEND_NAME}, convert_int32_float32_bfloat16_fail)
     EXPECT_EQ((vector<float>{281, 2, 3, 4}), read_vector<float>(result));
 }
 
-
 NGRAPH_TEST(${BACKEND_NAME}, convert_uint16_float32)
 {
     Shape shape{2, 2};
