@@ -112,6 +112,8 @@ add_library(onnx_import STATIC
         op/mul.hpp
         op/neg.hpp
         op/not.hpp
+        op/onehot.cpp
+        op/onehot.hpp
         op/or.hpp
         op/pad.cpp
         op/pad.hpp
@@ -162,6 +164,7 @@ add_library(onnx_import STATIC
         op/transpose.hpp
         op/unsqueeze.cpp
         op/unsqueeze.hpp
+        op/where.hpp
         op/xor.hpp
         ops_bridge.cpp
         ops_bridge.hpp

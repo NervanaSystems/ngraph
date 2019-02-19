@@ -265,8 +265,13 @@ namespace ngraph
                                 vector<float> dyn_scales;
                                 dyn_scales.assign(static_cast<float*>(arg1_tensor),
                                                   static_cast<float*>(arg1_tensor) + scales_size);
-                                dyn_scales[0] = 1.0 / dyn_scales[0];
-                                attr.set_output_scales(0, dyn_scales);
+                                for (size_t i = 0; i < scales_size; i++)
+                                {
+                                    dyn_scales[i] = 1.0 / dyn_scales[i];
+                                }
+                                // quantize across first dim (mask=2^0) if dyn_scales is a vector
+                                const int mask = scales_size == 1 ? 0 : 1;
+                                attr.set_output_scales(mask, dyn_scales);
                                 attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);
                                 auto reorder_desc = mkldnn::reorder::primitive_desc(
                                     {input_desc, executor::global_cpu_engine},

@@ -35,7 +35,7 @@ namespace ngraph
                                            const NodeVector& deltas) override;
 
         public:
-            /// \brief Constructions a tensor view-typed parameter node.
+            /// \brief Constructions a tensor-typed parameter node.
             ///
             /// \param element_type The element type of the parameter.
             /// \param pshape The partial shape of the parameter.
