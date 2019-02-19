@@ -131,11 +131,14 @@ namespace ngraph
             {
                 m_nodes.emplace_back(node_proto, *this);
                 const Node& node{m_nodes.back()};
+
                 NodeVector ng_nodes{node.get_ng_nodes()};
-                // Iterate over the requested number of outputs for given node, since some of
-                // them may be optional and trimmed. See:
+                // Iterate over the minimum from requested number of outputs for given node and
+                // the number of outputs we return.
+                // Some of them may be optional and trimmed. See:
                 // https://github.com/onnx/onnx/blob/master/docs/IR.md#optional-inputs-and-outputs
-                for (int i = 0; i < node.get_outputs_size(); i++)
+                std::size_t output_count = std::min(ng_nodes.size(), node.get_outputs_size());
+                for (std::size_t i{0}; i < output_count; ++i)
                 {
                     m_ng_node_cache[node.output(i)] = ng_nodes[i];
                 }
