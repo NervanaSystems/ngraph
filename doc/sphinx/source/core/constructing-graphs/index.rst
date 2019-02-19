@@ -13,7 +13,7 @@ Constructing Graphs
    derive-for-training.rst
    distribute-train.rst
    import.rst
-   Using the Python API <../python_api/index.rst>
+   Using the Python API <../../python_api/index.rst>
        
 
 The "How to" articles in this section explain how to do specific tasks with 

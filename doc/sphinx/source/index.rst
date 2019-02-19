@@ -44,7 +44,7 @@ nGraph Compiler stack
    core/overview.rst
    core/fusion/index.rst
    nGraph Core Ops <ops/index.rst>
-   Graph construction <howto/index.rst>
+   core/constructing-graphs/index.rst
    core/passes/passes.rst
    buildlb.rst
    

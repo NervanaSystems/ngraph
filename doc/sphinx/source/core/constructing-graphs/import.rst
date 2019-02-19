@@ -26,7 +26,7 @@ usually named ``<some_model>.onnx`` or ``<some_model>.onnx.pb``. These
    or ``.onnx.pb`` formatted file, you should be able to run the inference 
    without needing to dig into anything from the "Frameworks" sections. You 
    will, however, need to have completed the steps outlined in 
-   our :doc:`../buildlb` guide.  If you intend to build nGraph for :   doc:`distributed-training`, 
+   our :doc:`../../buildlb` guide.  If you intend to build nGraph for :   doc:`distributed-training`, 
    you will need to build that has already been compiled with the additional 
    cmake flag: ``-DNGRAPH_DISTRIBUTED_ENABLE=TRUE``.
 
@@ -154,7 +154,7 @@ specify the relative path to the location of the ``.onnx`` file.
 Enable ONNX and load an ONNX file from disk
 --------------------------------------------
 
-.. literalinclude:: ../../../examples/onnx/onnx_example.py
+.. literalinclude:: ../../../../examples/onnx/onnx_example.py
    :language: python
    :lines: 17-19
 
@@ -162,7 +162,7 @@ Enable ONNX and load an ONNX file from disk
 Convert an ONNX model to an ngraph model 
 -------------------------------------------
 
-.. literalinclude:: ../../../examples/onnx/onnx_example.py
+.. literalinclude:: ../../../../examples/onnx/onnx_example.py
    :language: python
    :lines: 22-23
 
@@ -189,7 +189,7 @@ input parameters for the computation which generates the output.
 Using ngraph_api, create a callable computation object
 -------------------------------------------------------
 
-.. literalinclude:: ../../../examples/onnx/onnx_example.py
+.. literalinclude:: ../../../../examples/onnx/onnx_example.py
    :language: python
    :lines: 27-29
 
@@ -197,14 +197,14 @@ Using ngraph_api, create a callable computation object
 Load or create an image
 ------------------------
 
-.. literalinclude:: ../../../examples/onnx/onnx_example.py
+.. literalinclude:: ../../../../examples/onnx/onnx_example.py
    :language: python
    :lines: 32-33
 
 Run ResNet inference on picture
 ---------------------------------
 
-.. literalinclude:: ../../../examples/onnx/onnx_example.py
+.. literalinclude:: ../../../../examples/onnx/onnx_example.py
    :language: python
    :lines: 36-37
  
@@ -212,7 +212,7 @@ Run ResNet inference on picture
 Put it all together
 ===================
 
-.. literalinclude:: ../../../examples/onnx/onnx_example.py
+.. literalinclude:: ../../../../examples/onnx/onnx_example.py
    :language: python
    :lines: 17-37
    :caption: "Demo sample code to run inference with nGraph"
