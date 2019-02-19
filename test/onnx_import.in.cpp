@@ -1970,6 +1970,36 @@ TEST(onnx_${BACKEND_NAME}, model_sign)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
+TEST(onnx_${BACKEND_NAME}, model_one_hot_with_axis)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/one_hot_axis.onnx"));
+
+    Inputs inputs{{1.0, 9.0, 2.0, 4.0}, {1.0, 3.0}};
+    Outputs expected_outputs{{1.0, 1.0, 3.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                              1.0, 1.0, 1.0, 1.0, 1.0, 3.0, 1.0, 1.0, 1.0, 1.0, 3.0, 1.0, 1.0, 1.0,
+                              1.0, 3.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0}};
+
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx_${BACKEND_NAME}, model_one_hot_without_axis)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/one_hot_no_axis.onnx"));
+
+    std::vector<std::vector<std::int64_t>> inputs{{0, 7, 8}, {2, 5}};
+    std::vector<std::vector<std::int64_t>> expected_outputs{{5, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                                                             2, 2, 2, 2, 2, 2, 2, 5, 2, 2, 2, 2,
+                                                             2, 2, 2, 2, 2, 2, 2, 2, 5, 2, 2, 2}};
+
+    std::vector<std::vector<std::int64_t>> outputs{execute(function, inputs, "${BACKEND_NAME}")};
+
+    EXPECT_TRUE(test::all_close(expected_outputs.front(), outputs.front()));
+}
+
 TEST(onnx_${BACKEND_NAME}, model_where)
 {
     auto function =
