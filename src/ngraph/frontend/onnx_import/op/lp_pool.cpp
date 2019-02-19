@@ -20,7 +20,10 @@
 
 #include "exceptions.hpp"
 #include "lp_pool.hpp"
+#include "ngraph/axis_set.hpp"
 #include "ngraph/op/concat.hpp"
+#include "ngraph/op/reshape.hpp"
+#include "utils/common.hpp"
 #include "utils/norm.hpp"
 #include "utils/reshape.hpp"
 
@@ -46,7 +49,21 @@ namespace ngraph
 
                     for (auto& slice : slices)
                     {
-                        slice = norm::lp_norm(slice, static_cast<std::size_t>(p_norm));
+                        const Shape& orig_shape = data->get_shape();
+                        // all dimensions except spatial/feature
+                        AxisSet reduction_axes{
+                            common::get_monotonic_range<std::size_t>(orig_shape.size(), 2)};
+
+                        slice =
+                            norm::lp_norm(slice, reduction_axes, static_cast<std::size_t>(p_norm));
+
+                        // output shape is all ones except N channel
+                        Shape output_shape(orig_shape.size(), 1);
+                        output_shape.at(0) = orig_shape.at(0);
+                        slice = std::make_shared<ngraph::op::Reshape>(
+                            slice,
+                            reshape::get_default_axis_vector(slice->get_shape().size()),
+                            output_shape);
                     }
 
                     return {std::make_shared<ngraph::op::Concat>(slices, channel_axis)};
