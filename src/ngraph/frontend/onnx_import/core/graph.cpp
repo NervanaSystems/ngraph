@@ -124,7 +124,7 @@ namespace ngraph
             }
 
             NGRAPH_ASSERT(unknown_operators.empty())
-                << "nGraph does not support the following operations: "
+                << "nGraph does not support the following ONNX operations: "
                 << detail::to_string(unknown_operators);
 
             // Process ONNX graph nodes, convert to nGraph nodes
