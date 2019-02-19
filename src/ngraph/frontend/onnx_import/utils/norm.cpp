@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include "norm.hpp"
-#include "ngraph/axis_set.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
@@ -113,14 +112,6 @@ namespace ngraph
                 {
                     return detail::lp_norm(node, p_norm, reduction_axes);
                 }
-            }
-
-            std::shared_ptr<ngraph::Node> lp_norm(const std::shared_ptr<ngraph::Node>& node,
-                                                  std::size_t p_norm)
-            {
-                return lp_norm(node,
-                               common::get_monotonic_range<std::size_t>(node->get_shape().size()),
-                               p_norm);
             }
 
         } //namespace norm

@@ -17,6 +17,7 @@
 
 #include <memory>
 
+#include "ngraph/axis_set.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/node_vector.hpp"
 
@@ -63,16 +64,6 @@ namespace ngraph
             ///
             std::shared_ptr<ngraph::Node> l2_norm(const std::shared_ptr<ngraph::Node>& node,
                                                   const ngraph::AxisSet& reduction_axes);
-
-            /// \brief      Calculates L-p norm on input tensor.
-            ///
-            /// \param[in]  node    The input nGraph tensor.
-            /// \param[in]  p_norm  The p norm to calculate.
-            ///
-            /// \return     Resulting L-p norm.
-            ///
-            std::shared_ptr<ngraph::Node> lp_norm(const std::shared_ptr<ngraph::Node>& node,
-                                                  std::size_t p_norm = 2);
 
             /// \brief      Calculates L-p norm on input tensor.
             ///
