@@ -249,6 +249,60 @@ namespace ngraph
 
                 return max_abs_range / target_range;
             }
+
+            void check_concat(const NodeVector& args,
+                              const std::shared_ptr<Node>& min,
+                              const std::shared_ptr<Node>& max)
+            {
+                auto type = min->get_element_type();
+                if (type != max->get_element_type())
+                {
+                    throw ngraph_error("check_concat: min and max must have same type");
+                }
+
+                auto shape = min->get_shape();
+                if (shape != max->get_shape())
+                {
+                    throw ngraph_error("check_concat: min and max must have same shape");
+                }
+
+                auto min_const_op = std::dynamic_pointer_cast<ngraph::op::Constant>(min);
+                auto max_const_op = std::dynamic_pointer_cast<ngraph::op::Constant>(max);
+                if (min_const_op == nullptr)
+                {
+                    throw ngraph_error("QuantizedConcat min must be a Constant");
+                }
+                if (max_const_op == nullptr)
+                {
+                    throw ngraph_error("QuantizedConcat max must be a Constant");
+                }
+
+                // TODO (nbpatel) The check below is mkldnn specific.
+                // Will need to sit in cpu_assignment pass probably.
+                // But since we dont propogate min and max vector to the backend currently
+                // we have the check here.
+                auto mins = min_const_op->get_vector<float>();
+                auto maxes = max_const_op->get_vector<float>();
+                if (mins.size() != maxes.size())
+                {
+                    throw ngraph_error("Mins and Maxes vectors must be of same length");
+                }
+                float min_val = mins[0];
+                float max_val = maxes[0];
+                for (size_t i = 1; i < mins.size(); i++)
+                {
+                    float local_min = mins[i];
+                    float local_max = maxes[i];
+                    if (local_min != min_val)
+                    {
+                        throw ngraph_error("All tensors must have same ranges. Mins must be same");
+                    }
+                    if (local_max != max_val)
+                    {
+                        throw ngraph_error("All tensors must have same ranges. Maxes must be same");
+                    }
+                }
+            }
         }
     }
 }

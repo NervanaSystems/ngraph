@@ -1031,3 +1031,58 @@ TEST(builder, dynamic_scaled_DQ)
     EXPECT_EQ((vector<float>{0.13725491, 0.59215689, 0.60392159, 0.8588236}),
               read_vector<float>(result2));
 }
+
+TEST(builder, scaled_quantize_concat_unsigned)
+{
+    Shape shape_a{2, 2};
+    auto A = make_shared<op::Parameter>(element::u8, shape_a);
+    Shape shape_b{3, 2};
+    auto B = make_shared<op::Parameter>(element::u8, shape_b);
+    Shape shape_c{3, 2};
+    auto C = make_shared<op::Parameter>(element::u8, shape_c);
+    Shape shape_r{8, 2};
+    auto mins = op::Constant::create(element::f32, Shape{3}, {2.0, 2.0, 2.0});
+    auto maxes = op::Constant::create(element::f32, Shape{3}, {16.0, 16.0, 16.0});
+    auto QConcat = ngraph::builder::ScaledQuantizedConcat(NodeVector{A, B, C}, 0, mins, maxes);
+    auto f = make_shared<Function>(NodeVector{QConcat}, ParameterVector{A, B, C});
+    auto backend = runtime::Backend::create("CPU");
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::u8, shape_a);
+    copy_data(a, vector<uint8_t>{2, 4, 8, 16});
+    auto b = backend->create_tensor(element::u8, shape_b);
+    copy_data(b, vector<uint8_t>{2, 2, 4, 8, 16, 15});
+    auto c = backend->create_tensor(element::u8, shape_c);
+    copy_data(c, vector<uint8_t>{2, 3, 5, 7, 11, 16});
+    auto result = backend->create_tensor(element::u8, shape_r);
+    backend->call_with_validate(backend->compile(f), {result}, {a, b, c});
+    EXPECT_EQ((vector<uint8_t>{2, 4, 8, 16, 2, 2, 4, 8, 16, 15, 2, 3, 5, 7, 11, 16}),
+              read_vector<uint8_t>(result));
+}
+
+TEST(builder, scaled_quantize_concat_signed)
+{
+    Shape shape_a{2, 2};
+    auto A = make_shared<op::Parameter>(element::i8, shape_a);
+    Shape shape_b{3, 2};
+    auto B = make_shared<op::Parameter>(element::i8, shape_b);
+    Shape shape_c{3, 2};
+    auto C = make_shared<op::Parameter>(element::i8, shape_c);
+    Shape shape_r{8, 2};
+    auto mins = op::Constant::create(element::f32, Shape{3}, {-2.0, -2.0, -2.0});
+    auto maxes = op::Constant::create(element::f32, Shape{3}, {16.0, 16.0, 16.0});
+
+    auto QConcat = ngraph::builder::ScaledQuantizedConcat(NodeVector{A, B, C}, 0, mins, maxes);
+    auto f = make_shared<Function>(NodeVector{QConcat}, ParameterVector{A, B, C});
+    auto backend = runtime::Backend::create("CPU");
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::i8, shape_a);
+    copy_data(a, vector<int8_t>{-2, 4, 8, 16});
+    auto b = backend->create_tensor(element::i8, shape_b);
+    copy_data(b, vector<int8_t>{-2, 2, 4, 8, 16, 15});
+    auto c = backend->create_tensor(element::i8, shape_c);
+    copy_data(c, vector<int8_t>{-2, 3, 5, 7, 11, 16});
+    auto result = backend->create_tensor(element::i8, shape_r);
+    backend->call_with_validate(backend->compile(f), {result}, {a, b, c});
+    EXPECT_EQ((vector<int8_t>{-2, 4, 8, 16, -2, 2, 4, 8, 16, 15, -2, 3, 5, 7, 11, 16}),
+              read_vector<int8_t>(result));
+}
