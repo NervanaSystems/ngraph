@@ -1383,6 +1383,25 @@ NGRAPH_TEST(${BACKEND_NAME}, convert_int32_float32)
     EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, convert_int32_float32_bfloat16_fail)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::i32, shape);
+    auto f = make_shared<Function>(make_shared<op::Convert>(A, element::f32), ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::i32, shape);
+    copy_data(a, vector<int32_t>{281, 2, 3, 4});
+    auto result = backend->create_tensor(element::f32, shape);
+
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a});
+    EXPECT_EQ((vector<float>{281, 2, 3, 4}), read_vector<float>(result));
+}
+
+
 NGRAPH_TEST(${BACKEND_NAME}, convert_uint16_float32)
 {
     Shape shape{2, 2};
@@ -1791,6 +1810,21 @@ NGRAPH_TEST(${BACKEND_NAME}, scalar_constant_int64)
     EXPECT_EQ(vector<int64_t>{2112}, read_vector<int64_t>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, scalar_constant_int64_bfloat16_fail)
+{
+    auto r = op::Constant::create(element::i64, Shape{}, {501});
+    auto f = make_shared<Function>(r, ParameterVector{});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto result = backend->create_tensor(element::i64, Shape{});
+
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {});
+    EXPECT_EQ(vector<int64_t>{501}, read_vector<int64_t>(result));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_float32)
 {
     Shape shape{2, 2};
@@ -1821,6 +1855,22 @@ NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_int64)
     auto handle = backend->compile(f);
     backend->call_with_validate(handle, {result}, {});
     EXPECT_EQ((vector<int64_t>{2112, 1848, 1776, 1964}), read_vector<int64_t>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_int64_bfloat16_fail)
+{
+    Shape shape{2, 2};
+    auto r = op::Constant::create(element::i64, shape, {1201, 501, 558, 797});
+    auto f = make_shared<Function>(r, ParameterVector{});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto result = backend->create_tensor(element::i64, shape);
+
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {});
+    EXPECT_EQ((vector<int64_t>{1201, 501, 558, 797}), read_vector<int64_t>(result));
 }
 
 // TODO: Kahan sum only works in limited cases with CPU / Interpreter backend

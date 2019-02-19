@@ -101,6 +101,27 @@ NGRAPH_TEST(${BACKEND_NAME}, greater)
     EXPECT_EQ((vector<char>{0, 1, 0, 1, 0, 1, 1, 0}), read_vector<char>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, greater_int64_bfloat16_fail)
+{
+    Shape shape{2, 2, 2};
+    auto A = make_shared<op::Parameter>(element::i64, shape);
+    auto B = make_shared<op::Parameter>(element::i64, shape);
+    auto f = make_shared<Function>(make_shared<op::Greater>(A, B), ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::i64, shape);
+    copy_data(a, vector<int64_t>{6000, 1201, -8, 17, -5, 5, 2, 1});
+    auto b = backend->create_tensor(element::i64, shape);
+    copy_data(b, vector<int64_t>{6000, 1200, 4, 8, 0, 0, 1, 2});
+    auto result = backend->create_tensor(element::boolean, shape);
+
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a, b});
+    EXPECT_EQ((vector<char>{0, 1, 0, 1, 0, 1, 1, 0}), read_vector<char>(result));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, greatereq)
 {
     Shape shape{2, 2, 2};
@@ -162,6 +183,27 @@ NGRAPH_TEST(${BACKEND_NAME}, lesseq)
     auto handle = backend->compile(f);
     backend->call_with_validate(handle, {result}, {a, b});
     EXPECT_EQ((vector<char>{1, 0, 1, 0, 1, 1, 0, 1}), read_vector<char>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, lesseq_int32_bfloat16_fail)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::i32, shape);
+    auto B = make_shared<op::Parameter>(element::i32, shape);
+    auto f = make_shared<Function>(make_shared<op::LessEq>(A, B), ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::i32, shape);
+    copy_data(a, vector<int32_t>{1201, -8, 17, -5});
+    auto b = backend->create_tensor(element::i32, shape);
+    copy_data(b, vector<int32_t>{1200, 4, 8, 0});
+    auto result = backend->create_tensor(element::boolean, shape);
+
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a, b});
+    EXPECT_EQ((vector<char>{0, 1, 0, 1}), read_vector<char>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, lesseq_bool)

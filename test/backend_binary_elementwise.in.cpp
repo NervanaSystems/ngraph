@@ -170,6 +170,28 @@ NGRAPH_TEST(${BACKEND_NAME}, divide_int32)
     EXPECT_EQ((vector<int32_t>{2, 2, 2, 2}), read_vector<int32_t>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, divide_int32_bfloat16_fail)
+{
+    Shape shape{2, 2};
+
+    auto A = make_shared<op::Parameter>(element::i32, shape);
+    auto B = make_shared<op::Parameter>(element::i32, shape);
+    auto f = make_shared<Function>(make_shared<op::Divide>(A, B), ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::i32, shape);
+    copy_data(a, vector<int32_t>{2, 6000, 8, 16});
+    auto b = backend->create_tensor(element::i32, shape);
+    copy_data(b, vector<int32_t>{1, 2, 4, 8});
+    auto result = backend->create_tensor(element::i32, shape);
+
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a, b});
+    EXPECT_EQ((vector<int32_t>{2, 3000, 2, 2}), read_vector<int32_t>(result));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, divide_overload)
 {
     Shape shape{2, 2};
@@ -326,6 +348,27 @@ NGRAPH_TEST(${BACKEND_NAME}, maximum)
     auto handle = backend->compile(f);
     backend->call_with_validate(handle, {result}, {a, b});
     EXPECT_EQ((vector<float>{1, 8, 4, 17, 0, 0.5, 2, 1.5}), read_vector<float>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, maximum_int32_bfloat16_fail)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::i32, shape);
+    auto B = make_shared<op::Parameter>(element::i32, shape);
+    auto f = make_shared<Function>(make_shared<op::Maximum>(A, B), ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::i32, shape);
+    copy_data(a, vector<int32_t>{1201, 281, -8, 17});
+    auto b = backend->create_tensor(element::i32, shape);
+    copy_data(b, vector<int32_t>{1200, 280, 4, 8});
+    auto result = backend->create_tensor(element::i32, shape);
+
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a, b});
+    EXPECT_EQ((vector<int32_t>{1201, 281, 4, 17}), read_vector<int32_t>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, minimum)

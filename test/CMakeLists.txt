@@ -133,7 +133,6 @@ set(MULTI_TEST_SRC
     backend_arg_reduce.in.cpp
     backend_test.in.cpp
     backend_unary_elementwise.in.cpp
-    backend_nnp_datatype_test.in.cpp
     convolution_test.in.cpp
 )
 

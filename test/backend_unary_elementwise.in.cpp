@@ -264,6 +264,24 @@ NGRAPH_TEST(${BACKEND_NAME}, floor_int32)
     EXPECT_EQ((vector<int32_t>{-2, -136314880, 0, 4}), read_vector<int32_t>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, floor_int32_bfloat16_fail)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::i32, shape);
+    auto f = make_shared<Function>(make_shared<op::Floor>(A), ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::i32, shape);
+    copy_data(a, vector<int32_t>{-6000, 501, 1, 10});
+    auto result = backend->create_tensor(element::i32, shape);
+
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a});
+    EXPECT_EQ((vector<int32_t>{-6000, 501, 1, 10}), read_vector<int32_t>(result));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, log)
 {
     Shape shape{2, 2, 2};
