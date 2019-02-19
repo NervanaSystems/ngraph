@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2018-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,24 +16,25 @@
 
 #pragma once
 
-#include "ngraph/op/util/arithmetic_reduction.hpp"
+#include <memory>
+
+#include "core/node.hpp"
+#include "ngraph/node_vector.hpp"
 
 namespace ngraph
 {
-    namespace op
+    namespace onnx_import
     {
-        /// \brief Max-reduction operation.
-        class Max : public util::ArithmeticReduction
+        namespace op
         {
-        public:
-            /// \brief Constructs a max-reduction operation.
-            ///
-            /// \param arg The tensor to be reduced.
-            /// \param reduction_axes The axis positions (0-based) to be eliminated.
-            Max(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes);
+            namespace set_1
+            {
+                NodeVector onehot(const Node& node);
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-        };
-    }
-}
+            } // namespace set_1
+
+        } //namespace op
+
+    } // namespace  onnx_import
+
+} // namespace  ngraph
