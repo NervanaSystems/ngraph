@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <cstdint>
 #include <memory>
 
 #include "exceptions.hpp"
@@ -48,7 +49,7 @@ namespace ngraph
                         std::make_shared<ngraph::op::Slice>(values, Coordinate{0}, Coordinate{1});
                     std::shared_ptr<ngraph::Node> on_value =
                         std::make_shared<ngraph::op::Slice>(values, Coordinate{1}, Coordinate{2});
-                    auto axis = node.get_attribute_value<int64_t>("axis", -1);
+                    auto axis = node.get_attribute_value<std::int64_t>("axis", -1);
 
                     if (axis < 0)
                     {
@@ -57,7 +58,7 @@ namespace ngraph
 
                     ASSERT_VALID_ARGUMENT(node, (axis >= 0) && (axis <= indices_shape.size()))
                         << "invalid 'axis' attribute: "
-                        << node.get_attribute_value<int64_t>("axis", -1);
+                        << node.get_attribute_value<std::int64_t>("axis", -1);
 
                     auto constant_depth = std::dynamic_pointer_cast<ngraph::op::Constant>(depth);
 
