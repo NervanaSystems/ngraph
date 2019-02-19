@@ -29,6 +29,7 @@ if(MKLDNN_INCLUDE_DIR AND MKLDNN_LIB_DIR)
     endif()
     ExternalProject_Add(
         ext_mkldnn
+        PREFIX mkldnn
         DOWNLOAD_COMMAND ""
         UPDATE_COMMAND ""
         CONFIGURE_COMMAND ""
@@ -101,9 +102,11 @@ set(MKLDNN_LIBS ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libmkldnn${CMAKE_SHARED_LIB
 if (WIN32)
     ExternalProject_Add(
         ext_mkldnn
+        PREFIX mkldnn
         DEPENDS ext_mkl
         GIT_REPOSITORY ${MKLDNN_GIT_REPO_URL}
         GIT_TAG ${MKLDNN_GIT_TAG}
+        ${NGRAPH_GIT_ARGS}
         UPDATE_COMMAND ""
         CONFIGURE_COMMAND
         # Patch gets mad if it applied for a second time so:
@@ -136,9 +139,11 @@ if (WIN32)
 else()
     ExternalProject_Add(
         ext_mkldnn
+        PREFIX mkldnn
         DEPENDS ext_mkl
         GIT_REPOSITORY ${MKLDNN_GIT_REPO_URL}
         GIT_TAG ${MKLDNN_GIT_TAG}
+        ${NGRAPH_GIT_ARGS}
         UPDATE_COMMAND ""
         CONFIGURE_COMMAND
         # Patch gets mad if it applied for a second time so:

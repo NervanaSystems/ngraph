@@ -21,6 +21,7 @@
 #include "ngraph/runtime/intelgpu/code_writer.hpp"
 
 #include "ngraph/axis_set.hpp"
+#include "ngraph/axis_vector.hpp"
 #include "ngraph/coordinate.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
@@ -32,6 +33,8 @@ namespace ngraph
     {
         namespace intelgpu
         {
+            size_t get_max_memory_rss();
+
             void do_pad_operation(cldnn::topology& topology,
                                   const std::string& input_name,
                                   const Shape& input_shape,
@@ -116,7 +119,8 @@ namespace ngraph
                                    const std::string& output_name,
                                    const Shape& output_shape,
                                    const element::Type& output_type,
-                                   const std::string& operation);
+                                   const std::string& operation,
+                                   bool function_operation);
 
             void do_reverse_operation(cldnn::topology& topology,
                                       const std::string& input_name,
@@ -159,23 +163,14 @@ namespace ngraph
                                                const Shape& output_shape,
                                                const element::Type& output_type);
 
-            enum class CUSTOM_ELTWISE
-            {
-                Atan,
-                Ceil,
-                Floor,
-                Sign,
-                Tan
-            };
-
-            void do_custom_eltwise_operation(cldnn::topology& topology,
-                                             const std::string& input_name,
-                                             const Shape& input_shape,
-                                             const element::Type& input_type,
-                                             const std::string& output_name,
-                                             const Shape& output_shape,
-                                             const element::Type& output_type,
-                                             const CUSTOM_ELTWISE operation_name);
+            void do_custom_unary_operation(cldnn::topology& topology,
+                                           const std::string& input_name,
+                                           const Shape& input_shape,
+                                           const element::Type& input_type,
+                                           const std::string& output_name,
+                                           const Shape& output_shape,
+                                           const element::Type& output_type,
+                                           const std::string& operation_name);
 
             void do_arg_max_min_operation(cldnn::topology& topology,
                                           const std::string& input_name,
@@ -187,13 +182,14 @@ namespace ngraph
                                           const size_t reduction_axis,
                                           const bool is_max);
 
-            void do_negative_operation(cldnn::topology& topology,
-                                       const std::string& input_name,
-                                       const Shape& input_shape,
-                                       const element::Type& input_type,
-                                       const std::string& output_name,
-                                       const Shape& output_shape,
-                                       const element::Type& output_type);
+            void do_reshape_operation(cldnn::topology& topology,
+                                      const std::string& input_name,
+                                      const Shape& input_shape,
+                                      const element::Type& input_type,
+                                      const std::string& output_name,
+                                      const Shape& output_shape,
+                                      const element::Type& output_type,
+                                      const AxisVector& reshape_axes);
 
             // Helper functions used in cldnn::custom_gpu_primitive kernels
             std::string get_opencl_type_name(const element::Type& ngraph_type);

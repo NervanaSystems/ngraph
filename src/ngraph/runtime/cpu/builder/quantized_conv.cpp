@@ -64,7 +64,9 @@ namespace ngraph
                             vector<float> dyn_scales;
                             dyn_scales.assign(static_cast<float*>(arg2_tensor),
                                               static_cast<float*>(arg2_tensor) + scales_size);
-                            conv_attr.set_output_scales(0, dyn_scales);
+                            // use conv channelwise (dim 1, mask=2^1) if dyn_scales is a vector
+                            const int mask = scales_size == 1 ? 0 : 2;
+                            conv_attr.set_output_scales(mask, dyn_scales);
                             mkldnn_emitter->build_convolution_forward<false>(
                                 conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
                         }
@@ -113,7 +115,9 @@ namespace ngraph
                             vector<float> dyn_scales;
                             dyn_scales.assign(static_cast<float*>(arg2_tensor),
                                               static_cast<float*>(arg2_tensor) + scales_size);
-                            conv_attr.set_output_scales(0, dyn_scales);
+                            // use conv channelwise (dim 1, mask=2^1) if dyn_scales is a vector
+                            const int mask = scales_size == 1 ? 0 : 2;
+                            conv_attr.set_output_scales(mask, dyn_scales);
                             mkldnn_emitter->build_convolution_forward<false>(
                                 conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
                         }
@@ -164,7 +168,9 @@ namespace ngraph
                             vector<float> dyn_scales;
                             dyn_scales.assign(static_cast<float*>(arg3_tensor),
                                               static_cast<float*>(arg3_tensor) + scales_size);
-                            conv_attr.set_output_scales(0, dyn_scales);
+                            // use conv channelwise (dim 1, mask=2^1) if dyn_scales is a vector
+                            const int mask = scales_size == 1 ? 0 : 2;
+                            conv_attr.set_output_scales(mask, dyn_scales);
                             mkldnn_emitter->build_convolution_forward<true>(
                                 conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
                         }
@@ -248,7 +254,9 @@ namespace ngraph
                                     new_pops.append_sum(dyn_post_op_scales[0]);
                                 }
                             }
-                            conv_attr.set_output_scales(0, dyn_scales);
+                            // use conv channelwise (dim 1, mask=2^1) if dyn_scales is a vector
+                            const int mask = scales_size == 1 ? 0 : 2;
+                            conv_attr.set_output_scales(mask, dyn_scales);
                             conv_attr.set_post_ops(new_pops);
                             mkldnn_emitter->build_convolution_forward<true>(
                                 conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
@@ -337,7 +345,9 @@ namespace ngraph
                                 }
                             }
                             conv_attr.set_post_ops(new_pops);
-                            conv_attr.set_output_scales(0, dyn_scales);
+                            // use conv channelwise (dim 1, mask=2^1) if dyn_scales is a vector
+                            const int mask = scales_size == 1 ? 0 : 2;
+                            conv_attr.set_output_scales(mask, dyn_scales);
                             mkldnn_emitter->build_convolution_forward<true>(
                                 conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
                         }
