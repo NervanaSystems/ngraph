@@ -2003,11 +2003,10 @@ TEST(onnx_${BACKEND_NAME}, model_where)
 
 TEST(onnx_${BACKEND_NAME}, model_override_op)
 {
-    onnx_import::register_operator(
-        "Add", 1, "", [](const onnx_import::Node& node) -> NodeVector {
-            NodeVector ng_inputs{node.get_ng_inputs()};
-            return {std::make_shared<ngraph::op::Subtract>(ng_inputs.at(0), ng_inputs.at(1))};
-        });
+    onnx_import::register_operator("Add", 1, "", [](const onnx_import::Node& node) -> NodeVector {
+        NodeVector ng_inputs{node.get_ng_inputs()};
+        return {std::make_shared<ngraph::op::Subtract>(ng_inputs.at(0), ng_inputs.at(1))};
+    });
 
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/override_op.onnx"));
