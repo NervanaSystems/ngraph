@@ -198,7 +198,20 @@ namespace ngraph
                     auto& arg5_tensor = external_function->get_tensor_data(args[5].get_name());
                     auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
 
-                    size_t arg3_size = args[3].get_size();
+                    auto input_md = mkldnn_utils::get_input_mkldnn_md(node, 3);
+                    auto element_size = node->get_input_element_type(3).size();
+                    size_t arg3_size = shape_size(args[3].get_shape()) * element_size;
+                    auto elements = 1;
+                    AxisVector axis_list = ngraph::get_default_order(args[3].get_shape());
+                    if (mkldnn_utils::is_mkldnn_padded_layout(input_md, axis_list))
+                    {
+                        for (auto i = 0; i < input_md.data.ndims; i++)
+                        {
+                            elements *= input_md.data.layout_desc.blocking.padding_dims[i];
+                        }
+                        arg3_size = elements * element_size;
+                    }
+
                     auto scales_size = shape_size(args[4].get_shape());
                     auto sum_scales_size = shape_size(args[5].get_shape());
 
@@ -290,7 +303,20 @@ namespace ngraph
                     auto& arg5_tensor = external_function->get_tensor_data(args[5].get_name());
                     auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
 
-                    size_t arg3_size = args[3].get_size();
+                    auto input_md = mkldnn_utils::get_input_mkldnn_md(node, 3);
+                    auto element_size = node->get_input_element_type(3).size();
+                    size_t arg3_size = shape_size(args[3].get_shape()) * element_size;
+                    auto elements = 1;
+                    AxisVector axis_list = ngraph::get_default_order(args[3].get_shape());
+                    if (mkldnn_utils::is_mkldnn_padded_layout(input_md, axis_list))
+                    {
+                        for (auto i = 0; i < input_md.data.ndims; i++)
+                        {
+                            elements *= input_md.data.layout_desc.blocking.padding_dims[i];
+                        }
+                        arg3_size = elements * element_size;
+                    }
+
                     auto scales_size = shape_size(args[4].get_shape());
                     auto sum_scales_size = shape_size(args[5].get_shape());
 

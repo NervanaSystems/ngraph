@@ -499,18 +499,12 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                             auto output_tensor =
                                 &node->get_outputs().at(oi_pair.output).get_tensor();
 
-                            // keep track of tensors sharing the memory buffer with in-place slice output tensor
-                            if (in_place_slice_chain.find(input_tensor) !=
-                                in_place_slice_chain.end())
-                            {
-                                in_place_slice_chain.insert(output_tensor);
-                            }
-
                             // if destructive, do not put input tensor and output tensor into the same set.
                             if (!oi_pair.destructive)
                             {
                                 bool no_in_place = false;
-                                auto input_node = node->get_inputs().at(oi_pair.input).get_node();
+                                auto input_node =
+                                    node->get_inputs().at(oi_pair.input).get_output().get_node();
                                 // when reusing memory, check cacheability
                                 if (!m_disable_memory_sharing && input_node->is_op())
                                 {
@@ -532,6 +526,15 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                                     {
                                         // build in place slice chain
                                         in_place_slice_chain.insert(output_tensor);
+                                    }
+                                    else
+                                    {
+                                        // keep track of tensors sharing the memory buffer with in-place slice output tensor
+                                        if (in_place_slice_chain.find(input_tensor) !=
+                                            in_place_slice_chain.end())
+                                        {
+                                            in_place_slice_chain.insert(output_tensor);
+                                        }
                                     }
                                     NGRAPH_ASSERT(m_tensor_to_key_map.find(input_tensor) !=
                                                   m_tensor_to_key_map.end());
@@ -719,6 +722,9 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                                 else if (!m_disable_memory_sharing &&
                                          op_annotations->is_cacheable())
                                 {
+                                    NGRAPH_DEBUG << "cpu_memory_assignment: reusing memory with "
+                                                    "non-cacheable input and cacheable output, no "
+                                                    "destructive oi";
                                     continue;
                                 }
                             }
