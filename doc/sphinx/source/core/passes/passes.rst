@@ -39,7 +39,7 @@ Example of Passes
 The effectiveness of these passes is more striking to look at in terms of an 
 actual input graph, such as one from the framework bridge.
 
-*Figure 0* shows an excerpt from ``MobileNet v\1``, a topology which makes heavy 
+*Figure 0* shows an excerpt from ``MobileNet v1``, a topology which makes heavy 
 use of group convolution.
 
 .. _figure-mobilenet-gc:

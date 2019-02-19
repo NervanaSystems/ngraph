@@ -166,5 +166,12 @@ and nGraph.
    Figure 7: A closer look at tensor compilers.
 
 
+Other notable efforts
+----------------------
+
+
+See: https://arxiv.org/pdf/1805.00907.pdf 
+
+
 
 
