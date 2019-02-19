@@ -142,7 +142,7 @@ namespace ngraph
             auto it = m_map[domain][name].find(version);
             if (it == std::end(m_map[domain][name]))
             {
-                auto result = m_map[domain][name].emplace(version, std::move(fn));
+                m_map[domain][name].emplace(version, std::move(fn));
             }
             else
             {
