@@ -2000,3 +2000,29 @@ TEST(onnx_${BACKEND_NAME}, model_where)
 
     EXPECT_EQ(expected_outputs.front(), outputs.front());
 }
+
+TEST(onnx_${BACKEND_NAME}, model_override_op)
+{
+    onnx_import::register_operator(
+        "Add", 1, "", [](const onnx_import::Node& node) -> NodeVector {
+            NodeVector ng_inputs{node.get_ng_inputs()};
+            return {std::make_shared<ngraph::op::Subtract>(ng_inputs.at(0), ng_inputs.at(1))};
+        });
+
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/override_op.onnx"));
+
+    Inputs inputs;
+    inputs.emplace_back(std::vector<float>{0.f, 1.f, 2.f, 3.f});
+    inputs.emplace_back(std::vector<float>{3.f, 2.f, 1.f, 0.f});
+
+    Outputs expected_output{std::vector<float>{-3.f, -1.f, 1.f, 3.f}};
+
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+
+    onnx_import::register_operator("Add", 1, "", [](const onnx_import::Node& node) -> NodeVector {
+        NodeVector ng_inputs{node.get_ng_inputs()};
+        return {std::make_shared<ngraph::op::Add>(ng_inputs.at(0), ng_inputs.at(1))};
+    });
+}
