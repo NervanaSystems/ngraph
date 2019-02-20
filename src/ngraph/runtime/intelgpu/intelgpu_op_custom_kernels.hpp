@@ -57,6 +57,19 @@ namespace ngraph
                                                 const Shape& win_stride,
                                                 const Shape& pad_below);
 
+            void do_max_avg_pool_operation(cldnn::topology& topology,
+                                           const std::string& input_name,
+                                           const Shape& input_shape,
+                                           const std::string& output_name,
+                                           const Shape& output_shape,
+                                           const element::Type& output_type,
+                                           const Shape& win_shape,
+                                           const Shape& win_stride,
+                                           const Shape& pad_below,
+                                           bool include_padding,
+                                           const std::string& def_val,
+                                           bool is_max_pool);
+
             void do_avg_pool_backprop_operation(cldnn::topology& topology,
                                                 const std::string& delta_name,
                                                 const Shape& delta_shape,
