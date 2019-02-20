@@ -123,8 +123,9 @@ namespace ngraph
                 }
             }
 
-            NGRAPH_ASSERT(unknown_operators.empty()) << "unknown operations: "
-                                                     << detail::to_string(unknown_operators);
+            NGRAPH_ASSERT(unknown_operators.empty())
+                << "nGraph does not support the following ONNX operations: "
+                << detail::to_string(unknown_operators);
 
             // Process ONNX graph nodes, convert to nGraph nodes
             for (const auto& node_proto : m_graph_proto->node())
