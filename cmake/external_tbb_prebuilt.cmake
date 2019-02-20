@@ -48,7 +48,28 @@ else()
 endif()
 
 if (WIN32)
-    set(TBB_LINK_LIBS ${INSTALL_DIR}/lib/intel64/vc14/${TBB_LIB_NAME}.lib)
+    set(TBB_PREFIX ${INSTALL_DIR}/lib/intel64/vc14)
+    set(TBB_LINK_LIBS ${NGRAPH_BUILD_DIR}/${TBB_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX})
+
+    ExternalProject_Add_Step(
+        ext_tbb
+        CopyTBB
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${TBB_PREFIX}/${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX} ${NGRAPH_BUILD_DIR}
+        COMMENT "Move tbb shared libraries to ngraph build directory"
+        DEPENDEES download
+        )
+
+    ExternalProject_Add_Step(
+        ext_tbb
+        CopyTBBIMP
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${TBB_PREFIX}/${TBB_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX} ${NGRAPH_BUILD_DIR}
+        COMMENT "Move tbb libraries to ngraph build directory"
+        DEPENDEES download
+        )
+
+    install(FILES ${NGRAPH_BUILD_DIR}/${TBB_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX}
+                  ${NGRAPH_BUILD_DIR}/${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}
+            DESTINATION ${NGRAPH_INSTALL_LIB})
 elseif(APPLE)
     set(TBB_LINK_LIBS
         ${NGRAPH_BUILD_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}
