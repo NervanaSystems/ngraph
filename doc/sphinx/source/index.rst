@@ -73,6 +73,12 @@ nGraph Compiler stack
    diagnostics/visualize.rst
    diagnostics/debug.rst 
 
+.. toctree::
+   :maxdepth: 1
+   :caption: Tutorials
+
+   tutorials/index.rst
+
 
 .. toctree::
    :maxdepth: 1
@@ -82,7 +88,7 @@ nGraph Compiler stack
    project/contribution-guide.rst
    project/index.rst 
    glossary.rst
-
+   project/doc-contributor-README.rst
 
 
 Indices and tables
