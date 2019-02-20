@@ -2015,15 +2015,15 @@ TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p2)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p4)
+TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p3)
 {
     auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/global_lp_pool_p4.onnx"));
+        file_util::path_join(SERIALIZED_ZOO, "onnx/global_lp_pool_p3.onnx"));
 
     Inputs inputs{std::vector<float>(2 * 3 * 4)};
     std::iota(std::begin(inputs.front()), std::end(inputs.front()), 0.f);
 
-    Outputs expected_outputs{std::vector<float>{14.139836966318452f, 34.34415655182325f}};
+    Outputs expected_outputs{std::vector<float>{16.331620904278438f, 41.56697946707537f}};
 
     Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
 
