@@ -38,6 +38,8 @@ namespace ngraph
                                                       std::size_t p_norm,
                                                       const ngraph::AxisSet& reduction_axes)
                 {
+                    std::shared_ptr<ngraph::Node> abs_values{
+                        std::make_shared<ngraph::op::Abs>(node)};
                     std::shared_ptr<ngraph::Node> p_node = ngraph::op::Constant::create(
                         node->get_element_type(),
                         node->get_shape(),
@@ -45,7 +47,7 @@ namespace ngraph
                                            static_cast<float>(p_norm)));
 
                     std::shared_ptr<ngraph::Node> values =
-                        std::make_shared<ngraph::op::Power>(node, p_node);
+                        std::make_shared<ngraph::op::Power>(abs_values, p_node);
 
                     values = std::make_shared<ngraph::op::Sum>(values, reduction_axes);
 
@@ -61,6 +63,7 @@ namespace ngraph
             std::shared_ptr<ngraph::Node> l0_norm(const std::shared_ptr<ngraph::Node>& node,
                                                   const ngraph::AxisSet& reduction_axes)
             {
+                std::shared_ptr<ngraph::Node> abs_values{std::make_shared<ngraph::op::Abs>(node)};
                 std::shared_ptr<ngraph::Node> zero_node{ngraph::op::Constant::create(
                     node->get_element_type(),
                     node->get_shape(),
@@ -68,8 +71,8 @@ namespace ngraph
 
                 std::shared_ptr<ngraph::Node> non_zero_values =
                     std::make_shared<ngraph::op::Convert>(
-                        std::make_shared<ngraph::op::NotEqual>(node, zero_node),
-                        node->get_element_type());
+                        std::make_shared<ngraph::op::NotEqual>(abs_values, zero_node),
+                        abs_values->get_element_type());
 
                 return std::make_shared<ngraph::op::Sum>(non_zero_values, reduction_axes);
             }
@@ -77,40 +80,41 @@ namespace ngraph
             std::shared_ptr<ngraph::Node> l1_norm(const std::shared_ptr<ngraph::Node>& node,
                                                   const ngraph::AxisSet& reduction_axes)
             {
-                return std::make_shared<ngraph::op::Sum>(node, reduction_axes);
+                return std::make_shared<ngraph::op::Sum>(std::make_shared<ngraph::op::Abs>(node),
+                                                         reduction_axes);
             }
 
             std::shared_ptr<ngraph::Node> l2_norm(const std::shared_ptr<ngraph::Node>& node,
                                                   const ngraph::AxisSet& reduction_axes)
             {
+                std::shared_ptr<ngraph::Node> abs_values{std::make_shared<ngraph::op::Abs>(node)};
                 return {std::make_shared<ngraph::op::Sqrt>(
-                    std::make_shared<ngraph::op::Sum>(node * node, reduction_axes))};
+                    std::make_shared<ngraph::op::Sum>(abs_values * abs_values, reduction_axes))};
             }
 
             std::shared_ptr<ngraph::Node> lp_norm(const std::shared_ptr<ngraph::Node>& node,
                                                   const ngraph::AxisSet& reduction_axes,
                                                   std::size_t p_norm)
             {
-                std::shared_ptr<ngraph::Node> abs_values = std::make_shared<ngraph::op::Abs>(node);
                 // The number of non-zero elements
                 if (p_norm == 0)
                 {
-                    return l0_norm(abs_values, reduction_axes);
+                    return l0_norm(node, reduction_axes);
                 }
                 //  sum of absolute values.
                 else if (p_norm == 1)
                 {
-                    return l1_norm(abs_values, reduction_axes);
+                    return l1_norm(node, reduction_axes);
                 }
                 // sqrt of sum of squares - Euclidean norm
                 else if (p_norm == 2)
                 {
-                    return l2_norm(abs_values, reduction_axes);
+                    return l2_norm(node, reduction_axes);
                 }
                 // generic case
                 else
                 {
-                    return detail::lp_norm(abs_values, p_norm, reduction_axes);
+                    return detail::lp_norm(node, p_norm, reduction_axes);
                 }
             }
 
