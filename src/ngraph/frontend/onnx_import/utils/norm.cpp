@@ -77,8 +77,7 @@ namespace ngraph
             std::shared_ptr<ngraph::Node> l1_norm(const std::shared_ptr<ngraph::Node>& node,
                                                   const ngraph::AxisSet& reduction_axes)
             {
-                std::shared_ptr<ngraph::Node> abs_values = std::make_shared<ngraph::op::Abs>(node);
-                return std::make_shared<ngraph::op::Sum>(abs_values, reduction_axes);
+                return std::make_shared<ngraph::op::Sum>(node, reduction_axes);
             }
 
             std::shared_ptr<ngraph::Node> l2_norm(const std::shared_ptr<ngraph::Node>& node,
@@ -92,25 +91,26 @@ namespace ngraph
                                                   const ngraph::AxisSet& reduction_axes,
                                                   std::size_t p_norm)
             {
+                std::shared_ptr<ngraph::Node> abs_values = std::make_shared<ngraph::op::Abs>(node);
                 // The number of non-zero elements
                 if (p_norm == 0)
                 {
-                    return l0_norm(node, reduction_axes);
+                    return l0_norm(abs_values, reduction_axes);
                 }
                 //  sum of absolute values.
                 else if (p_norm == 1)
                 {
-                    return l1_norm(node, reduction_axes);
+                    return l1_norm(abs_values, reduction_axes);
                 }
                 // sqrt of sum of squares - Euclidean norm
                 else if (p_norm == 2)
                 {
-                    return l2_norm(node, reduction_axes);
+                    return l2_norm(abs_values, reduction_axes);
                 }
                 // generic case
                 else
                 {
-                    return detail::lp_norm(node, p_norm, reduction_axes);
+                    return detail::lp_norm(abs_values, p_norm, reduction_axes);
                 }
             }
 
