@@ -529,7 +529,7 @@ void ngraph::runtime::cpu::kernel::emit_sum(codegen::CodeWriter& writer,
     // If we don't have a zero index in the input, perform the sum
     if (find(arg0_shape.begin(), arg0_shape.end(), 0) == arg0_shape.end())
     {
-        // create the the interation variables without writing the for loops
+        // create the interation variables without writing the for loops
         vector<string> index_vars;
 
         for (size_t i = 0; i < arg0_shape.size(); i++)
@@ -604,7 +604,7 @@ void ngraph::runtime::cpu::kernel::emit_reduce(codegen::CodeWriter& writer,
     // If we don't have a zero index in the input, perform the sum
     if (find(arg0_shape.begin(), arg0_shape.end(), 0) == arg0_shape.end())
     {
-        // create the the interation variables without writing the for loops
+        // create the interation variables without writing the for loops
         vector<string> index_vars;
         for (size_t i = 0; i < arg0_shape.size(); i++)
         {

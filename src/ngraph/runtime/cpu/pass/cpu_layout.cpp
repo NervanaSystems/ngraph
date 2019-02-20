@@ -31,7 +31,9 @@
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/concat.hpp"
+#include "ngraph/op/convert.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
@@ -42,6 +44,7 @@
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/op/quantize.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/result.hpp"
@@ -1189,6 +1192,60 @@ namespace ngraph
                 }
 
                 template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::Quantize)
+                {
+                    auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                    auto tv = node->get_output_tensor_ptr(0);
+                    auto fmt = static_cast<mkldnn::memory::format>(input_md.data.format);
+                    if (fmt == mkldnn_blocked || fmt == mkldnn_format_undef ||
+                        !mkldnn_utils::can_create_mkldnn_md(tv->get_element_type()))
+                    {
+                        // Cannot pass through layout information for blocked layouts at the moment
+                        set_native_layouts(external_function, node);
+                    }
+                    else
+                    {
+                        // mkldnn expects nhwc for int8, avoids reorder
+                        if (fmt == mkldnn::memory::format::nchw ||
+                            fmt == mkldnn::memory::format::nChw8c ||
+                            fmt == mkldnn::memory::format::nChw16c)
+                        {
+                            fmt = mkldnn::memory::format::nhwc;
+                        }
+                        vector<memory::desc> o_mds;
+                        o_mds.push_back(mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 0, true, static_cast<memory::format>(fmt)));
+                        set_output_layouts(node, o_mds);
+                    }
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::Dequantize)
+                {
+                    auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                    auto tv = node->get_output_tensor_ptr(0);
+                    auto fmt = static_cast<mkldnn::memory::format>(input_md.data.format);
+                    if (fmt == mkldnn_blocked || fmt == mkldnn_format_undef ||
+                        !mkldnn_utils::can_create_mkldnn_md(tv->get_element_type()))
+                    {
+                        // Cannot pass through layout information for blocked layouts at the moment
+                        set_native_layouts(external_function, node);
+                    }
+                    else
+                    {
+                        // reorder as default nchw layout
+                        if (fmt == mkldnn::memory::format::nhwc)
+                        {
+                            fmt = mkldnn::memory::format::nchw;
+                        }
+                        vector<memory::desc> o_mds;
+                        o_mds.push_back(mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 0, true, static_cast<memory::format>(fmt)));
+                        set_output_layouts(node, o_mds);
+                    }
+                }
+
+                template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::MaxPoolWithIndices)
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
@@ -1958,6 +2015,31 @@ namespace ngraph
                         set_native_layouts(external_function, node);
                     }
                 }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::Convert)
+                {
+                    auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                    auto tv = node->get_output_tensor_ptr(0);
+
+                    if (input_md.data.format == mkldnn_blocked ||
+                        input_md.data.format == mkldnn_format_undef ||
+                        !mkldnn_utils::can_create_mkldnn_md(tv->get_element_type()))
+                    {
+                        // Cannot pass through layout information for blocked layouts at the moment
+                        set_native_layouts(external_function, node);
+                    }
+                    else
+                    {
+                        vector<memory::desc> o_mds;
+                        o_mds.push_back(mkldnn_utils::create_default_mkldnn_md(
+                            node.get(),
+                            0,
+                            true,
+                            static_cast<memory::format>(input_md.data.format)));
+                        set_output_layouts(node, o_mds);
+                    }
+                }
             }
         }
     }
@@ -1967,6 +2049,7 @@ namespace ngraph
 
 static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::Concat), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Concat>},
+    {TI(ngraph::op::Convert), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Convert>},
     {TI(ngraph::op::AvgPool), &runtime::cpu::pass::CPULayout::layout<ngraph::op::AvgPool>},
     {TI(ngraph::op::AvgPoolBackprop),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::AvgPoolBackprop>},
@@ -1984,6 +2067,8 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedMaxPool>},
     {TI(ngraph::op::QuantizedAvgPool),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedAvgPool>},
+    {TI(ngraph::op::Quantize), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Quantize>},
+    {TI(ngraph::op::Dequantize), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Dequantize>},
     {TI(ngraph::op::MaxPoolWithIndices),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::MaxPoolWithIndices>},
     {TI(ngraph::op::MaxPoolBackprop),

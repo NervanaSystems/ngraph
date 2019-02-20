@@ -30,6 +30,7 @@
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/convert.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
@@ -704,39 +705,26 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedConvolutionRelu)
                 {
-                    if (node->get_input_element_type(0) == element::u8 &&
-                        node->get_input_element_type(1) == element::i8)
-                    {
-                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
-                    }
+                    runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                 }
 
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedConvolutionBias)
                 {
-                    if (node->get_input_element_type(0) == element::u8 &&
-                        node->get_input_element_type(1) == element::i8)
-                    {
-                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
-                    }
+                    runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                 }
 
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedConvolutionBiasAdd)
                 {
                     auto quantized_conv_bias = static_cast<op::QuantizedConvolutionBiasAdd*>(node);
-                    if (node->get_input_element_type(0) == element::u8 &&
-                        node->get_input_element_type(1) == element::i8 &&
-                        node->get_input_element_type(3) == element::u8)
-                    {
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        const int ADD_INPUT = 3;
-                        // Accumulates conv into the second input of the unfused add
-                        op_annotations->add_in_place_oi_pair({0, ADD_INPUT, true});
-                        quantized_conv_bias->set_op_annotations(op_annotations);
-                    }
+                    auto op_annotations =
+                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                    op_annotations->set_mkldnn_op(true);
+                    const int ADD_INPUT = 3;
+                    // Accumulates conv into the second input of the unfused add
+                    op_annotations->add_in_place_oi_pair({0, ADD_INPUT, true});
+                    quantized_conv_bias->set_op_annotations(op_annotations);
                 }
 
                 template <>
@@ -744,18 +732,13 @@ namespace ngraph
                 {
                     auto quantized_conv_bias =
                         static_cast<op::QuantizedConvolutionBiasSignedAdd*>(node);
-                    if (node->get_input_element_type(0) == element::u8 &&
-                        node->get_input_element_type(1) == element::i8 &&
-                        node->get_input_element_type(3) == element::i8)
-                    {
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        const int ADD_INPUT = 3;
-                        // Accumulates conv into the second input of the unfused add
-                        op_annotations->add_in_place_oi_pair({0, ADD_INPUT, true});
-                        quantized_conv_bias->set_op_annotations(op_annotations);
-                    }
+                    auto op_annotations =
+                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                    op_annotations->set_mkldnn_op(true);
+                    const int ADD_INPUT = 3;
+                    // Accumulates conv into the second input of the unfused add
+                    op_annotations->add_in_place_oi_pair({0, ADD_INPUT, true});
+                    quantized_conv_bias->set_op_annotations(op_annotations);
                 }
 
                 template <>
@@ -844,6 +827,22 @@ namespace ngraph
                     }
                     runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                 }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::Convert)
+                {
+                    auto convert = static_cast<op::Convert*>(node);
+                    if ((node->get_input_element_type(0) == element::i8 &&
+                         node->get_output_element_type(0) == element::u8) ||
+                        (node->get_input_element_type(0) == element::u8 &&
+                         node->get_output_element_type(0) == element::i8))
+                    {
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->add_in_place_oi_pair({0, 0, false});
+                        convert->set_op_annotations(op_annotations);
+                    }
+                }
             }
         }
     }
@@ -854,6 +853,7 @@ namespace ngraph
 static const runtime::cpu::pass::AssignOpMap s_dispatcher{
     {TI(ngraph::op::Add), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Add>},
     {TI(ngraph::op::Concat), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Concat>},
+    {TI(ngraph::op::Convert), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Convert>},
     {TI(ngraph::op::AvgPool), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::AvgPool>},
     {TI(ngraph::op::AvgPoolBackprop),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::AvgPoolBackprop>},
