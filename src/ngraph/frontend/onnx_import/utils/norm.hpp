@@ -30,7 +30,7 @@ namespace ngraph
             /// \brief      Calculates L-0 norm of input tensor.
             ///
             /// \note       The L-0 norm represents the cardinality of elements different
-            ///             from zero.
+            ///             from zero. This actually is not a "true" norm.
             ///
             /// \param[in]  node            The input tensor node.
             /// \param[in]  reduction_axes  The axes along which we calculate norm.
