@@ -928,7 +928,8 @@ namespace ngraph
                 void build_quantize_reorder(const mkldnn::memory::desc& input_desc,
                                             const mkldnn::memory::desc& result_desc,
                                             const std::vector<float>& scales,
-                                            size_t quantize_index);
+                                            size_t quantize_index,
+                                            const int mask = 0);
 
                 template <typename OP>
                 size_t get_scale_index()

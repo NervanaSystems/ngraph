@@ -154,7 +154,8 @@ size_t MKLDNNEmitter::build_quantize_reorder(const mkldnn::memory::desc& input_d
 void MKLDNNEmitter::build_quantize_reorder(const mkldnn::memory::desc& input_desc,
                                            const mkldnn::memory::desc& result_desc,
                                            const std::vector<float>& scales,
-                                           size_t quantize_index)
+                                           size_t quantize_index,
+                                           const int mask)
 {
     size_t input_index = m_primitive_deps[quantize_index][0];
     build_memory_primitive(input_desc, input_index);
@@ -162,7 +163,7 @@ void MKLDNNEmitter::build_quantize_reorder(const mkldnn::memory::desc& input_des
     build_memory_primitive(result_desc, result_index);
 
     mkldnn::primitive_attr attr;
-    attr.set_output_scales(0, scales);
+    attr.set_output_scales(mask, scales);
     attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);
     auto reorder_desc = mkldnn::reorder::primitive_desc({input_desc, executor::global_cpu_engine},
                                                         {result_desc, executor::global_cpu_engine},

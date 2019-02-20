@@ -265,10 +265,8 @@ namespace ngraph
                                 }
                                 // quantize across first dim (mask=2^0) if dyn_scales is a vector
                                 const int mask = scales_size == 1 ? 0 : 1;
-                                attr.set_output_scales(mask, dyn_scales);
-                                attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);
                                 mkldnn_emitter->build_quantize_reorder(
-                                    input_desc, result_desc, dyn_scales, quantize_index);
+                                    input_desc, result_desc, dyn_scales, quantize_index, mask);
                             }
                             cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                             cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
