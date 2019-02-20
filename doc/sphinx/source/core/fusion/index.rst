@@ -57,17 +57,16 @@ that describes the following arithmetic expression:
 :math:`a + b * 1` or :math:`Add(a, Mul(b, 1))` 
 
 In the above expressions, `1` is an identity element; any element multiplied by 
-the identity element is equal to itself. This is the same as saying:
-
-:math:`b * 1 = b` 
+the identity element is equal to itself. In other words, the original expression 
+:math:`a + b * 1` is exactly equivalent to the expression :math:`a + b`, so we 
+can eliminate this extra multiplication step.
 
 The writer of an optimization pass which uses algebraic simplification would 
 probably want to first ``locate`` all multiplication expressions where 
-multiplicands are multiplied by `1` (for stage 1) and to then ``transform``, 
-``simplify``, or ``replace`` those expressions with just their multiplicands 
-(for stage 2).  
+multiplicands are multiplied by `1` (for stage 1) and to then ``replace``, 
+those expressions with just their multiplicands (for stage 2).  
 
 To make the work of an optimization pass writer easier, the nGraph Library 
 includes facilities that enable the *finding* of relevant candidates using 
 pattern matching (via ``pattern/matcher.hpp``), and the *transforming* of the 
-original graph into a condensed version (via ``pass/graph_rewrite.hpp``).   
+original graph into an optimized version (via ``pass/graph_rewrite.hpp``).   

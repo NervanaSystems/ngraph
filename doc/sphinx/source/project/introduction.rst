@@ -169,8 +169,11 @@ and nGraph.
 Other notable efforts
 ----------------------
 
+A few other notable efforts in compiler projects include: 
 
-See: https://arxiv.org/pdf/1805.00907.pdf 
+* **TVM** https://github.com/dmlc/tvm
+* **XLA** https://developers.googleblog.com/2017/03/xla-tensorflow-compiled.html
+* **Glow** https://arxiv.org/pdf/1805.00907.pdf 
 
 
 

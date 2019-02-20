@@ -24,11 +24,11 @@ Invoking these passes is fairly straightforward:
 
 #. Create a "pass manager" object. 
 #. Populate it with the desired pass(es). 
-#. Pass to it a pointer to your unoptimized graph, and it’ll return a pointer 
+#. Invoke the pass manager with a pointer to your unoptimized graph, and it’ll return a pointer 
    to an optimized graph.
 
-nGraph Core includes a large library of hardware-agnostic passes -- passes useful 
-for almost any kind of hardware backend. Some of these passes should be familiar 
+nGraph Core includes a large library of hardware-agnostic passes useful 
+for almost any kind of hardware backend. Some of these passes are likely familiar 
 to people who are comfortable with classical compiler designs. Others, like the 
 reshape/transpose elimination and sinking passes, are quite specific to deep 
 learning.
@@ -36,8 +36,8 @@ learning.
 Example of Passes
 -----------------
 
-The effectiveness of these passes is more striking to look at in terms of an 
-actual input graph, such as one from the framework bridge.
+The effectiveness of graph-level optimization with nGraph is more striking to look 
+at in terms of an actual input graph, such as one from the framework bridge.
 
 *Figure 0* shows an excerpt from ``MobileNet v1``, a topology which makes heavy 
 use of group convolution.
