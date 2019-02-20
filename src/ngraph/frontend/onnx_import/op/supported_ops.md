@@ -113,7 +113,7 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | Pad | 1-2- | 273 | 416 | Not fully supported. |
 | LSTM | 1-7- | | 430 | Not fully supported. |
 | MaxUnpool | (9) | 286, 289 | 447 | |
-| LpPool | - | 291 | 437 | Unsupported by nGraph - only max/avg pooling ops. Need separate kernel. |
+| LpPool | - | 291 | 488 | Unsupported by nGraph - only max/avg pooling ops. Need separate kernel. |
 | Multinomial | - | 199 | 435 | Lack of PRNG in nGraph. |
 | RandomNormal | - | 199 | 434 | Lack of PRNG in nGraph. |
 | RandomNormalLike | - | 199 | 434 | Lack of PRNG in nGraph. |
@@ -141,7 +141,7 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | Gather | - | NGRAPH-3291 | 369, | Dynamic op.  |
 | Tile | - | NGRAPH-3292 | 368 | Dynamic op. |
 | Upsample | (7) | 287 | 441 | Dynamic op. |
-| MaxRoiPool | - | 288 | 437 | Dynamic op - Need dynamic slicing. Beside just use _slice/op/concat_ pattern. |
+| MaxRoiPool | - | 288 | 487 | Dynamic op - Need dynamic slicing. Beside just use _slice/op/concat_ pattern. |
 | Reshape | 1-5- | NGRAPH-3290 | 357 | Lack of support for dynamic shape input. Only as a Constant or as an Initializer. |
 | Scatter | (9) | 289 | 446 | Dynamic indices input. |
 
@@ -150,7 +150,6 @@ opset versions starting from `1` to `6` and to the latest opset version.
 |------|-----------------|--------|--------|---------|
 | Cast | 1-6- | | 427 | Errors while casting to bool |
 | EyeLike | (9) | | 439 | Make constant node. |
-| GlobalLpPool | - | | 437 | Probably use _slice/op/concat_ pattern. |
 | Hardmax | - | | 431 | Use make constant and Argmax. See `test_ops_unary.py::test_hardmax()` |
 | LpNormalization | - | | 436 | Just an equation. Only Lp{1,2} need to be supported. |
 | InstanceNormalization | - | | 436 | Just an equation. For per channel computation may _slice/op/concat_ pattern need to be used. |
