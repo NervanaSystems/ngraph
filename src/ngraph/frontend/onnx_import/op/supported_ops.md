@@ -20,12 +20,15 @@ opset versions starting from `1` to `6` and to the latest opset version.
 |------|----------------------------|---------|
 | Abs | 1-6- |
 | Acos | 7- |
+| Acosh | 9- |
 | Add | 1-7- |
 | And | 1-7- |
 | ArgMax | 1- |
 | ArgMin | 1- |
 | Asin | 7- |
+| Asinh | 9- |
 | Atan | 7 - |
+| Atanh | 9- |
 | AveragePool | 1-7- |
 | BatchNormalization | 1-6-7- | 
 | Ceil | 1-6- | 
@@ -35,6 +38,7 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | Conv | 1- |
 | ConvTranspose | 1- | 
 | Cos | 7- |
+| Cosh | 9- |
 | Div | 1-6-7- | 
 | Dropout | 1-6-7- | Only for inference.
 | Elu | 1-6- |
@@ -79,7 +83,9 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | Selu | 1-6- | 
 | Shape | 1- | 
 | Sigmoid | 1-6- | 
+| Sign | 9- |
 | Sin | 7- | 
+| Sinh | 9- |
 | Size | 1- | 
 | Slice | 1- | 
 | Softmax | 1- |
@@ -92,23 +98,22 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | Sum | 1-6-8- |
 | Tan | 7- |
 | Tanh | 1-6- |
+| TopK | 1- |
 | Transpose | 1- | 
 | Unsqueeze | 1- |
 | Xor | 1-7- |
+| Where | 9- |
 
 ## Unsupported Ops:
 
 ### Lack of support in nGraph
 | Name | Opset supported | NGCORE | NGONNX | Comment |
 |------|-----------------|--------|--------|---------|
-| Acosh | (9) | 283 | 444 | |
-| Asinh | (9) | 283 | 444 | |
-| Atanh | (9) | 283 | 444 | |
-| Erf | (9) | 284 | 442 | Maybe we may implement this as a simple closed interval integral? :) |
+| Erf | (9) | 284 | 442 | Need separate kernel for this in nGraph core. |
 | Pad | 1-2- | 273 | 416 | Not fully supported. |
 | LSTM | 1-7- | | 476 | Mixed sequences length not supported yet. |
 | MaxUnpool | (9) | 286, 289 | 447 | |
-| LpPool | - | 291 | 437 | Further analysis needed, however probably unsupported by nGraph. |
+| LpPool | - | 291 | 437 | Unsupported by nGraph - only max/avg pooling ops. Need separate kernel. |
 | Multinomial | - | 199 | 435 | Lack of PRNG in nGraph. |
 | RandomNormal | - | 199 | 434 | Lack of PRNG in nGraph. |
 | RandomNormalLike | - | 199 | 434 | Lack of PRNG in nGraph. |
@@ -136,7 +141,7 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | Gather | - | NGRAPH-3291 | 369, | Dynamic op.  |
 | Tile | - | NGRAPH-3292 | 368 | Dynamic op. |
 | Upsample | (7) | 287 | 441 | Dynamic op. |
-| MaxRoiPool | - | 288 | 437 | Dynamic op. Beside just use _slice/op/concat_ pattern. |
+| MaxRoiPool | - | 288 | 437 | Dynamic op - Need dynamic slicing. Beside just use _slice/op/concat_ pattern. |
 | Reshape | 1-5- | NGRAPH-3290 | 357 | Lack of support for dynamic shape input. Only as a Constant or as an Initializer. |
 | Scatter | (9) | 289 | 446 | Dynamic indices input. |
 
@@ -150,8 +155,3 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | LpNormalization | - | | 436 | Just an equation. Only Lp{1,2} need to be supported. |
 | InstanceNormalization | - | | 436 | Just an equation. For per channel computation may _slice/op/concat_ pattern need to be used. |
 | Shrink | (9) | | 449 | Just an easy equation. |
-| TopK | - | | 327. | Use nGraph `Topk`. |
-| Cosh | (9) | | 448 | Use nGraph `Cosh`. |
-| Sign | (9) | | 448 | Use nGraph `Sign`. |
-| Sinh | (9) | | 448 | Use nGraph `Sinh`. |
-| Where | (9) | | 448 |  Use nGraph `Select`. |

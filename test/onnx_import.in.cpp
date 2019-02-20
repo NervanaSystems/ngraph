@@ -2039,3 +2039,82 @@ TEST(onnx_${BACKEND_NAME}, model_initializer_wo_input)
     Outputs output{execute(function, inputs, "${BACKEND_NAME}")};
     EXPECT_TRUE(test::all_close_f(expected_output, output.front()));
 }
+
+TEST(onnx_${BACKEND_NAME}, model_sign)
+{
+    auto function =
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/sign.onnx"));
+
+    Inputs inputs{std::vector<float>{-std::numeric_limits<float>::infinity(),
+                                     -3.141592f,
+                                     0.0f,
+                                     2.71828f,
+                                     std::numeric_limits<float>::infinity()}};
+
+    Outputs expected_outputs{std::vector<float>{-1.0f, -1.0f, 0.0f, 1.0f, 1.0f}};
+
+    Outputs outputs{execute<float>(function, inputs, "${BACKEND_NAME}")};
+
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx_${BACKEND_NAME}, model_one_hot_with_axis)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/one_hot_axis.onnx"));
+
+    Inputs inputs{{1.0, 9.0, 2.0, 4.0}, {1.0, 3.0}};
+    Outputs expected_outputs{{1.0, 1.0, 3.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                              1.0, 1.0, 1.0, 1.0, 1.0, 3.0, 1.0, 1.0, 1.0, 1.0, 3.0, 1.0, 1.0, 1.0,
+                              1.0, 3.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0}};
+
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx_${BACKEND_NAME}, model_one_hot_without_axis)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/one_hot_no_axis.onnx"));
+
+    std::vector<std::vector<std::int64_t>> inputs{{0, 7, 8}, {2, 5}};
+    std::vector<std::vector<std::int64_t>> expected_outputs{{5, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                                                             2, 2, 2, 2, 2, 2, 2, 5, 2, 2, 2, 2,
+                                                             2, 2, 2, 2, 2, 2, 2, 2, 5, 2, 2, 2}};
+
+    std::vector<std::vector<std::int64_t>> outputs{execute(function, inputs, "${BACKEND_NAME}")};
+
+    EXPECT_TRUE(test::all_close(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx_${BACKEND_NAME}, model_where)
+{
+    auto function =
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/where.onnx"));
+
+    using Inputs = std::vector<std::vector<int>>;
+    using Outputs = std::vector<std::vector<int>>;
+
+    // conditions tensor - 3x3x3
+    auto condition = std::vector<int>{
+        {0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0}};
+
+    // 1x3 tensor of "1"
+    auto x1 = std::vector<int>{1, 1, 1};
+    // 3x1 tensor of "2"
+    auto x2 = std::vector<int>{2, 2, 2};
+
+    Inputs inputs;
+    inputs.push_back(std::move(condition));
+    inputs.push_back(std::move(x1));
+    inputs.push_back(std::move(x2));
+
+    // y = 3x3x3
+    Outputs expected_outputs{
+        {2, 1, 2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2}};
+
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+
+    EXPECT_EQ(expected_outputs.front(), outputs.front());
+}
