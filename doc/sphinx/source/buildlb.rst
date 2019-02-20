@@ -61,7 +61,7 @@ The process documented here will work on Ubuntu\* 16.04 (LTS) or on Ubuntu
    give ownership of that directory to your user. Creating such a placeholder 
    can be useful if you'd like to have a local reference for APIs and 
    documentation, or if you are a developer who wants to experiment with 
-   how to :doc:`../core/graph-construction/execute` using resources available through the 
+   how to :doc:`core/constructing-graphs/execute` using resources available through the 
    code base.
 
    .. code-block:: console
@@ -131,7 +131,7 @@ The process documented here will work on CentOS 7.4.
    give ownership of that directory to your user. Creating such a placeholder 
    can be useful if you'd like to have a local reference for APIs and 
    documentation, or if you are a developer who wants to experiment with 
-   how to :doc:`../core/graph-construction/execute` using resources available through the 
+   how to :doc:`core/constructing-graphs/execute` using resources available through the 
    code base.
 
    .. code-block:: console
@@ -231,7 +231,7 @@ can help you get started with a training a model on a supported framework.
 
 For the latter case, if you've followed a tutorial from `ONNX`_, and you have an 
 exported, serialized model, you can skip the section on frameworks and go directly
-to our :doc:`../core/graph-construction/import` documentation. 
+to our :doc:`core/constructing-graphs/import` documentation. 
 
 Please keep in mind that both of these are under continuous development, and will 
 be updated frequently in the coming months. Stay tuned!  
