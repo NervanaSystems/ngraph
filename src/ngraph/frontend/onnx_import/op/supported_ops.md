@@ -109,7 +109,7 @@ opset versions starting from `1` to `6` and to the latest opset version.
 ### Lack of support in nGraph
 | Name | Opset supported | NGCORE | NGONNX | Comment |
 |------|-----------------|--------|--------|---------|
-| Erf | (9) | 284 | 442 | Need separate kernel for this in nGraph core. |
+| Erf | (9) | 284 | 489 | Need separate kernel for this in nGraph core. |
 | Pad | 1-2- | 273 | 416 | Not fully supported. |
 | LSTM | 1-7- | | 430 | Not fully supported. |
 | MaxUnpool | (9) | 286, 289 | 447 | |
