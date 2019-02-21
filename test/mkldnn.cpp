@@ -66,7 +66,7 @@ void test()
 
     auto c3 = convolution_forward(
         convolution_forward::primitive_desc(convolution_forward::desc(prop_kind::forward,
-                                                                      algorithm::convolution_direct,
+                                                                      algorithm::convolution_auto,
                                                                       c3_src_desc,
                                                                       c3_weights_desc,
                                                                       c3_bias_desc,
