@@ -1106,7 +1106,10 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
     REGISTER_KNOBBED_PASS(MultiLayerRNNFusion, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(CPURnnMatFusion, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(CPUBatchFusion, true, runtime::cpu::pass);
-    REGISTER_KNOBBED_PASS(ReshapeSinking, false, ngraph::pass);
+    // TODO: Remove this change before committing to master
+    //       Reshape Sinking should be disabled by default
+    //       This is a workaround for ONNX fp32 baseline numbers 
+    REGISTER_KNOBBED_PASS(ReshapeSinking, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(ReshapeElimination, false, ngraph::pass);
     REGISTER_KNOBBED_PASS(CoreFusion, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(CPUFusion, true, runtime::cpu::pass);
