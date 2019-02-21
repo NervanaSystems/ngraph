@@ -1780,9 +1780,12 @@ NGRAPH_TEST(${BACKEND_NAME}, scalar_constant_int64)
 {
     auto r = op::Constant::create(element::i64, Shape{}, {2112});
     auto f = make_shared<Function>(r, ParameterVector{});
+
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
     // Create some tensors for input/output
     auto result = backend->create_tensor(element::i64, Shape{});
+
     auto handle = backend->compile(f);
     backend->call_with_validate(handle, {result}, {});
     EXPECT_EQ(vector<int64_t>{2112}, read_vector<int64_t>(result));
