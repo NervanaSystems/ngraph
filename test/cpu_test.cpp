@@ -686,6 +686,6 @@ TEST(cpu_test, convert_inplace)
     auto result = backend->create_tensor(element::i8, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<int8_t>{1, 2, 3, -2}), read_vector<int8_t>(result));
 }
