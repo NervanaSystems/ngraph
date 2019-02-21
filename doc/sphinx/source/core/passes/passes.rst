@@ -39,7 +39,7 @@ Example of Passes
 The effectiveness of graph-level optimization with nGraph is more striking to look 
 at in terms of an actual input graph, such as one from the framework bridge.
 
-*Figure 0* shows an excerpt from ``MobileNet v1``, a topology which makes heavy 
+*Figure A* shows an excerpt from ``MobileNet v1``, a topology which makes heavy 
 use of group convolution.
 
 .. _figure-mobilenet-gc:
@@ -48,7 +48,7 @@ use of group convolution.
    :width: 700px
    :alt: 
 
-   Figure 0: Each of these grouped convolution complexes -- the 
+   Figure A: Each of these grouped convolution complexes -- the 
    operations within the rectangles on the left -- is very wide; each is too 
    wide to fit legibly on the illustration.
 
