@@ -91,3 +91,5 @@ all_2x2x3_eliminate_dims_0_1
 all_2x2x3_eliminate_dims_0_2
 all_2x2x3_eliminate_dims_1_2
 all_2x2x3_eliminate_dims_0_1_2
+floor_int32_1
+divide_int32

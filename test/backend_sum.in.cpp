@@ -401,7 +401,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_3d_to_scalar)
               read_vector<float>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, sum_3d_to_scalar_int32_bfloat16_fail)
+NGRAPH_TEST(${BACKEND_NAME}, sum_3d_to_scalar_int32)
 {
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
@@ -412,14 +412,18 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_3d_to_scalar_int32_bfloat16_fail)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::i32, shape_a);
-    copy_data(a, vector<int32_t>{2,  10, 19, 4,  13, 22, 7,  16, 25, 2,  11, 20, 5, 14,
-                                 23, 8,  17, 26, 3,  12, 21, 6,  15, 24, 9,  18, 27});
+    copy_data(
+        a,
+        vector<int32_t>{
+            0x40000001, 10, 19, 4,  13, 22, 7,  16, 25, 2,  11, 20, 5, 14,
+            23,         8,  17, 26, 3,  12, 21, 6,  15, 24, 9,  18, 27}); // 1073742202 == 0x4000017A
     auto result = backend->create_tensor(element::i32, shape_rt);
 
     auto handle = backend->compile(f);
     backend->call_with_validate(handle, {result}, {a});
-    EXPECT_EQ((vector<int32_t>{2 + 10 + 19 + 4 + 13 + 22 + 7 + 16 + 25 + 2 + 11 + 20 + 5 + 14 + 23 +
-                               8 + 17 + 26 + 3 + 12 + 21 + 6 + 15 + 24 + 9 + 18 + 27}),
+    EXPECT_EQ((vector<int32_t>{0x40000001 + 10 + 19 + 4 + 13 + 22 + 7 + 16 + 25 + 2 + 11 + 20 + 5 +
+                               14 + 23 + 8 + 17 + 26 + 3 + 12 + 21 + 6 + 15 + 24 + 9 + 18 +
+                               27}), // NNP output 1073741824 == 0x40000000
               read_vector<int32_t>(result));
 }
 
