@@ -222,9 +222,28 @@ according to those conventions. These scripts require the command
    $ ln -s /usr/local/opt/llvm@3.9/bin/clang-format $HOME/bin/clang-format-3.9
    $ echo 'export PATH=$HOME/bin:$PATH' >> $HOME/.bash_profile
 
+Testing the build 
+=================
 
-Compile with``libngraph``
-=========================
+We use the `googletest framework`_ from Google for unit tests. The ``cmake`` 
+command automatically downloaded a copy of the needed ``gtest`` files when 
+it configured the build directory.
+
+To perform unit tests on the install:
+
+#. Create and configure the build directory as described in our 
+   :doc:`buildlb` guide.
+
+#. Enter the build directory and run ``make check``:
+   
+   .. code-block:: console
+
+      $ cd build/
+      $ make check
+
+
+Adding framework support
+========================
 
 After building and installing nGraph on your system, there are two likely 
 paths for what you'll want to do next: either compile a framework to run a DL 
@@ -232,12 +251,13 @@ training model, or load an import of an "already-trained" model for inference
 on an Intel nGraph-enabled backend.
 
 For the former case, this early |version|, :doc:`frameworks/index`, 
-can help you get started with a training a model on a supported framework. 
+can help you get started with a training a model with a supported framework or 
+companion tool. 
 
 * :doc:`MXNet<frameworks/tensorflow_integ>` framework,  
 * :doc:`TensorFlow<frameworks/mxnet_integ>` framework,
-* :doc:`ONNX & ONNXIFI<frameworks/onnx_integ>`, and
-* :doc:`PaddlePaddle<frameworks/paddle_integ>` framework.
+* :doc:`PaddlePaddle<frameworks/paddle_integ>` framework, or
+* :doc:`ONNX<frameworks/onnx_integ>` and the ONNXIFI tool. 
 
 For the latter case, if you've followed a tutorial from `ONNX`_, and you have an 
 exported, serialized model, you can skip the section on frameworks and go 
@@ -254,3 +274,4 @@ be updated frequently in the coming months. Stay tuned!
 .. _NervanaSystems: https://github.com/NervanaSystems/ngraph/blob/master/README.md
 .. _ONNX: http://onnx.ai
 .. _website docs: http://ngraph.nervanasys.com/docs/latest/
+.. _googletest framework: https://github.com/google/googletest.git
