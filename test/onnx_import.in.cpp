@@ -2053,6 +2053,6 @@ TEST(onnx_${BACKEND_NAME}, import_malformed_model)
     }
     catch (const std::runtime_error& exc)
     {
-        EXPECT_EQ(exc.what(), std::string{"Failure parsing data from the stream"});
+        EXPECT_EQ(exc.what(), std::string{"Failure parsing data from the provided input stream"});
     }
 }
