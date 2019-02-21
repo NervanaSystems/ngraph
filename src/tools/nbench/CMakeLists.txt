@@ -55,5 +55,5 @@ if(NGRAPH_DISTRIBUTED_ENABLE)
             message(FATAL_ERROR "Distributed Library not supported/mentioned")
     endif()
 endif()
-  
+
 install(TARGETS nbench RUNTIME DESTINATION ${NGRAPH_INSTALL_BIN})

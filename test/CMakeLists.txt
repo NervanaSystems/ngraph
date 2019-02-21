@@ -59,7 +59,7 @@ set(SRC
     zero_dim_tensor_elimination.cpp
 )
 
-if(NGRAPH_TOOLS_ENABLE)
+if(NOT WIN32 AND NGRAPH_TOOLS_ENABLE)
     list(APPEND SRC tools.cpp)
 endif()
 
@@ -221,11 +221,7 @@ if (NGRAPH_CPU_ENABLE)
 endif()
 
 if (NGRAPH_TOOLS_ENABLE)
-    if(WIN32)
-        get_property(NBENCH_PATH TARGET nbench PROPERTY RUNTIME_OUTPUT_DIRECTORY)
-    else()
-        get_property(NBENCH_PATH TARGET nbench PROPERTY BINARY_DIR)
-    endif()
+    get_property(NBENCH_PATH TARGET nbench PROPERTY BINARY_DIR)
     set(NBENCH "${NBENCH_PATH}/nbench")
     target_compile_definitions(unit-test PRIVATE NBENCH_PATH="${NBENCH}")
     add_dependencies(unit-test nbench)
