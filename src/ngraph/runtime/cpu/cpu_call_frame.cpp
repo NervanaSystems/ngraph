@@ -42,7 +42,7 @@ runtime::cpu::CPU_CallFrame::CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction>
     if (!m_external_function->is_direct_execution())
     {
         // Invoke codegen runtime context initialization function.
-        assert(m_compiled_init_ctx_func && "compiled_init_ctx_func cannot be null.");
+        NGRAPH_ASSERT(m_compiled_init_ctx_func) << "compiled_init_ctx_func cannot be null.";
         cg_ctx = m_compiled_init_ctx_func();
     }
 }
@@ -51,7 +51,7 @@ runtime::cpu::CPU_CallFrame::~CPU_CallFrame()
 {
     if (!m_external_function->is_direct_execution())
     {
-        assert(m_compiled_destroy_ctx_func && "compiled_destroy_ctx_func cannot be null.");
+        NGRAPH_ASSERT(m_compiled_destroy_ctx_func) << "compiled_destroy_ctx_func cannot be null.";
         m_compiled_destroy_ctx_func(cg_ctx);
     }
 }
