@@ -1036,15 +1036,21 @@ TEST(builder, scaled_quantize_concat_unsigned)
 {
     Shape shape_a{2, 2};
     auto A = make_shared<op::Parameter>(element::u8, shape_a);
+    auto An = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto Ax = make_shared<op::Parameter>(element::f32, Shape{1});
     Shape shape_b{3, 2};
     auto B = make_shared<op::Parameter>(element::u8, shape_b);
+    auto Bn = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto Bx = make_shared<op::Parameter>(element::f32, Shape{1});
     Shape shape_c{3, 2};
     auto C = make_shared<op::Parameter>(element::u8, shape_c);
+    auto Cn = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto Cx = make_shared<op::Parameter>(element::f32, Shape{1});
     Shape shape_r{8, 2};
-    auto mins = op::Constant::create(element::f32, Shape{3}, {2.0, 2.0, 2.0});
-    auto maxes = op::Constant::create(element::f32, Shape{3}, {16.0, 16.0, 16.0});
-    auto QConcat = ngraph::builder::ScaledQuantizedConcat(NodeVector{A, B, C}, 0, mins, maxes);
-    auto f = make_shared<Function>(NodeVector{QConcat}, ParameterVector{A, B, C});
+    auto QConcat = ngraph::builder::ScaledQuantizedConcat(
+        NodeVector{A, B, C}, 0, NodeVector{An, Bn, Cn}, NodeVector{Ax, Bx, Cx});
+    auto f = make_shared<Function>(NodeVector{QConcat},
+                                   ParameterVector{A, B, C, An, Bn, Cn, Ax, Bx, Cx});
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::u8, shape_a);
@@ -1053,8 +1059,22 @@ TEST(builder, scaled_quantize_concat_unsigned)
     copy_data(b, vector<uint8_t>{2, 2, 4, 8, 16, 15});
     auto c = backend->create_tensor(element::u8, shape_c);
     copy_data(c, vector<uint8_t>{2, 3, 5, 7, 11, 16});
+    // min/max vectors
+    auto an = backend->create_tensor(element::f32, Shape{1});
+    copy_data(an, vector<float>{2.0});
+    auto ax = backend->create_tensor(element::f32, Shape{1});
+    copy_data(ax, vector<float>{16.0});
+    auto bn = backend->create_tensor(element::f32, Shape{1});
+    copy_data(bn, vector<float>{2.0});
+    auto bx = backend->create_tensor(element::f32, Shape{1});
+    copy_data(bx, vector<float>{16.0});
+    auto cn = backend->create_tensor(element::f32, Shape{1});
+    copy_data(cn, vector<float>{2.0});
+    auto cx = backend->create_tensor(element::f32, Shape{1});
+    copy_data(cx, vector<float>{16.0});
+    // result
     auto result = backend->create_tensor(element::u8, shape_r);
-    backend->call_with_validate(backend->compile(f), {result}, {a, b, c});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b, c, an, bn, cn, ax, bx, cx});
     EXPECT_EQ((vector<uint8_t>{2, 4, 8, 16, 2, 2, 4, 8, 16, 15, 2, 3, 5, 7, 11, 16}),
               read_vector<uint8_t>(result));
 }
@@ -1063,16 +1083,22 @@ TEST(builder, scaled_quantize_concat_signed)
 {
     Shape shape_a{2, 2};
     auto A = make_shared<op::Parameter>(element::i8, shape_a);
+    auto An = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto Ax = make_shared<op::Parameter>(element::f32, Shape{1});
     Shape shape_b{3, 2};
     auto B = make_shared<op::Parameter>(element::i8, shape_b);
+    auto Bn = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto Bx = make_shared<op::Parameter>(element::f32, Shape{1});
     Shape shape_c{3, 2};
     auto C = make_shared<op::Parameter>(element::i8, shape_c);
+    auto Cn = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto Cx = make_shared<op::Parameter>(element::f32, Shape{1});
     Shape shape_r{8, 2};
-    auto mins = op::Constant::create(element::f32, Shape{3}, {-2.0, -2.0, -2.0});
-    auto maxes = op::Constant::create(element::f32, Shape{3}, {16.0, 16.0, 16.0});
 
-    auto QConcat = ngraph::builder::ScaledQuantizedConcat(NodeVector{A, B, C}, 0, mins, maxes);
-    auto f = make_shared<Function>(NodeVector{QConcat}, ParameterVector{A, B, C});
+    auto QConcat = ngraph::builder::ScaledQuantizedConcat(
+        NodeVector{A, B, C}, 0, NodeVector{An, Bn, Cn}, NodeVector{Ax, Bx, Cx});
+    auto f = make_shared<Function>(NodeVector{QConcat},
+                                   ParameterVector{A, B, C, An, Bn, Cn, Ax, Bx, Cx});
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::i8, shape_a);
@@ -1081,8 +1107,22 @@ TEST(builder, scaled_quantize_concat_signed)
     copy_data(b, vector<int8_t>{-2, 2, 4, 8, 16, 15});
     auto c = backend->create_tensor(element::i8, shape_c);
     copy_data(c, vector<int8_t>{-2, 3, 5, 7, 11, 16});
+    // min/max vectors
+    auto an = backend->create_tensor(element::f32, Shape{1});
+    copy_data(an, vector<float>{2.0});
+    auto ax = backend->create_tensor(element::f32, Shape{1});
+    copy_data(ax, vector<float>{16.0});
+    auto bn = backend->create_tensor(element::f32, Shape{1});
+    copy_data(bn, vector<float>{2.0});
+    auto bx = backend->create_tensor(element::f32, Shape{1});
+    copy_data(bx, vector<float>{16.0});
+    auto cn = backend->create_tensor(element::f32, Shape{1});
+    copy_data(cn, vector<float>{2.0});
+    auto cx = backend->create_tensor(element::f32, Shape{1});
+    copy_data(cx, vector<float>{16.0});
+    // result
     auto result = backend->create_tensor(element::i8, shape_r);
-    backend->call_with_validate(backend->compile(f), {result}, {a, b, c});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b, c, an, bn, cn, ax, bx, cx});
     EXPECT_EQ((vector<int8_t>{-2, 4, 8, 16, -2, 2, 4, 8, 16, 15, -2, 3, 5, 7, 11, 16}),
               read_vector<int8_t>(result));
 }

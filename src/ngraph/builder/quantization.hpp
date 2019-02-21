@@ -46,8 +46,8 @@ namespace ngraph
 
         std::shared_ptr<Node> ScaledQuantizedConcat(const NodeVector& args,
                                                     size_t concatenation_axis,
-                                                    const std::shared_ptr<Node>& mins,
-                                                    const std::shared_ptr<Node>& maxes);
+                                                    const NodeVector& mins,
+                                                    const NodeVector& maxes);
 
         std::shared_ptr<Node> ScaledQuantizedAvgPool(std::shared_ptr<Node> input,
                                                      const Shape& window_shape,
