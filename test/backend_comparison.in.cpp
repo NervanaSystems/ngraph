@@ -112,9 +112,9 @@ NGRAPH_TEST(${BACKEND_NAME}, greater_int64)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::i64, shape);
-    copy_data(a, vector<int64_t>{0x80000000, 0x80000002, -8, 17, -5, 5, 2, 1});
+    copy_data(a, vector<int64_t>{0x4000000000000002, 0x4000000000000006, -8, 17, -5, 5, 2, 1});
     auto b = backend->create_tensor(element::i64, shape);
-    copy_data(b, vector<int64_t>{0x7FFFFFFF, 0x80000000, 4, 8, 0, 0, 1, 2});
+    copy_data(b, vector<int64_t>{0x4000000000000001, 0x4000000000000002, 4, 8, 0, 0, 1, 2});
     auto result = backend->create_tensor(element::boolean, shape);
 
     auto handle = backend->compile(f);
