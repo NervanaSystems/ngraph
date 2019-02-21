@@ -1817,7 +1817,8 @@ NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_int64)
     auto result = backend->create_tensor(element::i64, shape);
     auto handle = backend->compile(f);
     backend->call_with_validate(handle, {result}, {});
-    EXPECT_EQ((vector<int64_t>{0x4000000000000001, 0x4000000000000002}), read_vector<int64_t>(result));
+    EXPECT_EQ((vector<int64_t>{0x4000000000000001, 0x4000000000000002}),
+              read_vector<int64_t>(result));
 }
 
 // TODO: Kahan sum only works in limited cases with CPU / Interpreter backend
