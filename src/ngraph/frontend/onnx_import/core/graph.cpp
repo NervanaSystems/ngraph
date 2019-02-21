@@ -91,6 +91,7 @@ namespace ngraph
                     m_inputs.back().get_ng_node(m_parameters, m_initializers, weights);
             }
 
+            // Process all graph outputs
             for (const auto& output : m_graph_proto->output())
             {
                 m_outputs.emplace_back(output);
@@ -104,7 +105,7 @@ namespace ngraph
                 {
                     unknown_operators.emplace(detail::get_op_domain_and_name(node_proto),
                                               node_proto);
-                    // Try adding missing domain
+                    // If a node from an unregistered domain is detected, try registering that domain
                     m_model->enable_opset_domain(detail::get_node_domain(node_proto));
                 }
             }
