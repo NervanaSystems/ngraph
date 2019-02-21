@@ -148,7 +148,7 @@ if (WIN32)
     ExternalProject_Add(
         ext_mkldnn
         PREFIX mkldnn
-        DEPENDS ${MKLDNN_DEPENDS}l
+        DEPENDS ${MKLDNN_DEPENDS}
         GIT_REPOSITORY ${MKLDNN_GIT_REPO_URL}
         GIT_TAG ${MKLDNN_GIT_TAG}
         ${NGRAPH_GIT_ARGS}
