@@ -47,7 +47,8 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | Flatten | 1-(9) | 
 | Floor | 1-6- | 
 | Gemm | 1-6-7-9 | 
-| GlobalAveragePool | 1- | 
+| GlobalAveragePool | 1- |
+| GlobalLpPool | 1-2- |
 | GlobalMaxPool | 1- | 
 | Greater | 1-7-9 | 
 | HardSigmoid | 1-6- | 
