@@ -43,7 +43,7 @@ namespace ngraph
                 struct stream_parse : ngraph_error
                 {
                     explicit stream_parse(std::istream&)
-                        : ngraph_error{"Failure parsing data from the stream"}
+                        : ngraph_error{"Failure parsing data from the provided input stream"}
                     {
                     }
                 };
