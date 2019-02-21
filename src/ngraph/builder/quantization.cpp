@@ -116,10 +116,10 @@ namespace ngraph
                 auto zero = make_constant(q_type, in_scale->get_shape(), 0);
 
                 rescaled_args[i] =
-                    make_shared<op::Dequantize>(args[i], out_scale, zero, element::f32, AxisSet{});
+                    make_shared<op::Dequantize>(args[i], in_scale, zero, element::f32, AxisSet{});
                 rescaled_args[i] =
                     make_shared<op::Quantize>(rescaled_args[i],
-                                              in_scale,
+                                              out_scale,
                                               zero,
                                               q_type,
                                               AxisSet{},
