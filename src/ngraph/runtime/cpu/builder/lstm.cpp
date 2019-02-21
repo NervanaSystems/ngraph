@@ -59,7 +59,8 @@ namespace ngraph
                 // Lstm needs 9 primitives: src_layer, src_iter, weights_layer, weights_iter, bias,
                 // dst_layer, dst_iter, and rnn_forward.
                 // It needs a new workspace.
-                auto lstm_index = mkldnn_emitter->reserve_primitive_space(9, true);
+                auto lstm_index =
+                    mkldnn_emitter->reserve_primitive_space(9, true /* new workspace */);
                 auto& deps = mkldnn_emitter->get_primitive_deps(lstm_index);
 
                 auto functor = [&, lstm_desc, lstm_index](CPURuntimeContext* ctx,
