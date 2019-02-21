@@ -48,13 +48,12 @@ else()
 endif()
 
 if (WIN32)
-    set(TBB_PREFIX ${INSTALL_DIR}/lib/intel64/vc14)
     set(TBB_LINK_LIBS ${NGRAPH_BUILD_DIR}/${TBB_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX})
 
     ExternalProject_Add_Step(
         ext_tbb
         CopyTBB
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${TBB_PREFIX}/${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX} ${NGRAPH_BUILD_DIR}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${INSTALL_DIR}/bin/intel64/vc14/${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX} ${NGRAPH_BUILD_DIR}
         COMMENT "Move tbb shared libraries to ngraph build directory"
         DEPENDEES download
         )
@@ -62,7 +61,7 @@ if (WIN32)
     ExternalProject_Add_Step(
         ext_tbb
         CopyTBBIMP
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${TBB_PREFIX}/${TBB_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX} ${NGRAPH_BUILD_DIR}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${INSTALL_DIR}/lib/intel64/vc14/${TBB_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX} ${NGRAPH_BUILD_DIR}
         COMMENT "Move tbb libraries to ngraph build directory"
         DEPENDEES download
         )
