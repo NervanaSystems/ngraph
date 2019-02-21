@@ -1326,7 +1326,7 @@ TEST(onnx_${BACKEND_NAME}, model_unsupported_op)
     catch (ngraph::ngraph_error const& err)
     {
         std::string what{err.what()};
-        EXPECT_NE(what.find("unknown operations"), std::string::npos);
+        EXPECT_NE(what.find("nGraph does not support"), std::string::npos);
         EXPECT_NE(what.find("FakeOpName"), std::string::npos);
         EXPECT_NE(what.find("AnotherFakeOpName"), std::string::npos);
     }
