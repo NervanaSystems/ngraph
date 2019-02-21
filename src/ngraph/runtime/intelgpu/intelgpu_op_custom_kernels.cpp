@@ -59,6 +59,7 @@ string runtime::intelgpu::get_opencl_type_min_max_value(const element::Type& ngr
     case element::Type_t::u32: return is_min ? "0" : "UINT_MAX";
     case element::Type_t::i16: return is_min ? "SHRT_MIN" : "SHRT_MAX";
     case element::Type_t::u16: return is_min ? "0" : "USHRT_MAX";
+    case element::Type_t::boolean:
     case element::Type_t::i8: return is_min ? "CHAR_MIN" : "CHAR_MAX";
     case element::Type_t::u8: return is_min ? "0" : "UCHAR_MAX";
     }
@@ -1229,8 +1230,37 @@ void runtime::intelgpu::do_convert_operation(cldnn::topology& topology,
     {
         gws = generate_loops(writer, output_shape, true);
 
-        writer << "output" << access_dims(output_shape) << " = convert_" << output_type_name
-               << "(input0" << access_dims(output_shape) << ");\n";
+        if ((input_type.get_type_enum() == element::Type_t::f64) ||
+            (input_type.get_type_enum() == element::Type_t::f32))
+        {
+            // this is the workaround for OpenCL to be same as with CPU floating point operations
+            writer << input_type_name << " input_var = input0" << access_dims(output_shape) << ";\n"
+                   << output_type_name << " output_var = 0;\n";
+
+            writer << "if (input_var > " << get_opencl_type_min_max_value(output_type, false)
+                   << ")\n";
+            writer.block_begin();
+            {
+                writer << "output_var = " << get_opencl_type_min_max_value(output_type, true)
+                       << ";\n";
+            }
+            writer.block_end();
+
+            writer << "else\n";
+
+            writer.block_begin();
+            {
+                writer << "output_var = convert_" << output_type_name << "(input_var);\n";
+            }
+            writer.block_end();
+
+            writer << "output" << access_dims(output_shape) << " = output_var;\n";
+        }
+        else
+        {
+            writer << "output" << access_dims(output_shape) << " = convert_" << output_type_name
+                   << "(input0" << access_dims(output_shape) << ");\n";
+        }
 
         generate_loops(writer, output_shape, false);
     }

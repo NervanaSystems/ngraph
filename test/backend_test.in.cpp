@@ -1383,6 +1383,66 @@ NGRAPH_TEST(${BACKEND_NAME}, convert_int32_float32)
     EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, convert_float64_int32)
+{
+    Shape shape{2, 3};
+    auto A = make_shared<op::Parameter>(element::f64, shape);
+    auto f = make_shared<Function>(make_shared<op::Convert>(A, element::i32), ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f64, shape);
+    copy_data(a,
+              vector<double>{std::numeric_limits<double>::min(),
+                             std::numeric_limits<double>::max(),
+                             std::numeric_limits<double>::lowest(),
+                             INFINITY,
+                             -INFINITY,
+                             4.0});
+    auto result = backend->create_tensor(element::i32, shape);
+
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a});
+    EXPECT_EQ((vector<int>{0,
+                           std::numeric_limits<int>::lowest(),
+                           std::numeric_limits<int>::lowest(),
+                           std::numeric_limits<int>::lowest(),
+                           std::numeric_limits<int>::min(),
+                           4}),
+              read_vector<int>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, convert_float32_int32)
+{
+    Shape shape{2, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Convert>(A, element::i32), ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a,
+              vector<float>{std::numeric_limits<float>::min(),
+                            std::numeric_limits<float>::max(),
+                            std::numeric_limits<float>::lowest(),
+                            INFINITY,
+                            -INFINITY,
+                            4.0});
+    auto result = backend->create_tensor(element::i32, shape);
+
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a});
+    EXPECT_EQ((vector<int>{0,
+                           std::numeric_limits<int>::lowest(),
+                           std::numeric_limits<int>::lowest(),
+                           std::numeric_limits<int>::lowest(),
+                           std::numeric_limits<int>::min(),
+                           4}),
+              read_vector<int>(result));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, convert_uint16_float32)
 {
     Shape shape{2, 2};
