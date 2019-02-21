@@ -525,6 +525,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_trivial_in_double)
 
 #if NGRAPH_INTERPRETER_ENABLE
 
+#ifndef _WIN32
 NGRAPH_TEST(${BACKEND_NAME}, sum_stable_acc)
 {
     std::string backend_name = "${BACKEND_NAME}";
@@ -556,6 +557,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_stable_acc)
     EXPECT_TRUE(
         test::all_close_f(ref_results.at(0), bk_results.at(0), DEFAULT_FLOAT_TOLERANCE_BITS + 1));
 }
+#endif
 
 NGRAPH_TEST(${BACKEND_NAME}, sum_stable_acc_double)
 {
@@ -616,6 +618,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_stable_simple_float)
         test::all_close_f(ref_results.at(0), bk_results.at(0), DEFAULT_FLOAT_TOLERANCE_BITS - 1));
 }
 
+#ifndef _WIN32
 NGRAPH_TEST(${BACKEND_NAME}, sum_stable_simple_double)
 {
     std::string backend_name = "${BACKEND_NAME}";
@@ -659,4 +662,6 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_stable_simple_double)
 
     EXPECT_TRUE(test::all_close(ref_results.at(0), bk_results.at(0), 0.0, 2.0));
 }
+#endif
+
 #endif
