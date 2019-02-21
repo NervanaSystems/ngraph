@@ -71,6 +71,7 @@
 #include "op/mul.hpp"
 #include "op/neg.hpp"
 #include "op/not.hpp"
+#include "op/onehot.hpp"
 #include "op/or.hpp"
 #include "op/pad.cpp"
 #include "op/pad.hpp"
@@ -269,6 +270,7 @@ namespace ngraph
             REGISTER_OPERATOR("Neg", 1, neg);
             REGISTER_OPERATOR("Not", 1, logical_not);
             REGISTER_OPERATOR("Or", 1, logical_or);
+            REGISTER_OPERATOR("OneHot", 1, onehot);
             REGISTER_OPERATOR("Pad", 1, pad);
             REGISTER_OPERATOR("Pow", 1, pow);
             REGISTER_OPERATOR("PRelu", 1, prelu);
