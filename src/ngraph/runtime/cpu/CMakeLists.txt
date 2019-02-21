@@ -203,5 +203,5 @@ if (NGRAPH_CPU_ENABLE)
         set_property(TARGET cpu_backend APPEND PROPERTY LINK_FLAGS "-Wl,-Bsymbolic-functions -Wl,--exclude-libs=ALL")
     endif()
 
-    install(TARGETS cpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
+    install(TARGETS cpu_backend DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()
