@@ -40,8 +40,8 @@ include(var_functions)
 
 NGRAPH_GET_VERSION_LABEL()
 
-string(REGEX MATCH "([0-9?]+)\.([0-9?]+)\.([0-9?]+)" NGRAPH_VERSION_SHORT "${NGRAPH_VERSION_LABEL}")
-string(REGEX MATCH "([0-9?]+)\.([0-9?]+)" NGRAPH_API_VERSION "${NGRAPH_VERSION_LABEL}")
+string(REGEX MATCH "([0-9?]+)\\.([0-9?]+)\\.([0-9?]+)" NGRAPH_VERSION_SHORT "${NGRAPH_VERSION_LABEL}")
+string(REGEX MATCH "([0-9?]+)\\.([0-9?]+)" NGRAPH_API_VERSION "${NGRAPH_VERSION_LABEL}")
 string(REGEX MATCH "[^v](.*)" NGRAPH_VERSION "${NGRAPH_VERSION_LABEL}")
 string(REPLACE "." ";" NGRAPH_VERSION_PARTS "${NGRAPH_VERSION_SHORT}")
 list(GET NGRAPH_VERSION_PARTS 0 NGRAPH_VERSION_MAJOR)
@@ -74,6 +74,31 @@ endif()
 
 if ("${CMAKE_GENERATOR}" MATCHES "^Visual Studio.*$")
     set(MSVS TRUE)
+endif()
+
+if (APPLE AND (NOT CMAKE_OSX_SYSROOT))
+    execute_process(COMMAND sw_vers -productVersion
+        OUTPUT_VARIABLE OSX_FULL_VERSION
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+    string(REGEX REPLACE "^([0-9]+\\.[0-9]+).*$" "\\1"
+        OSX_SHORT_VERSION "${OSX_FULL_VERSION}")
+
+    if(NOT (OSX_SHORT_VERSION VERSION_LESS 10.14))
+        # Xcode is installed
+        set(XCODE_ISYSROOT /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX${OSX_SHORT_VERSION}.sdk)
+        message(STATUS "Trying Xcode sdk at ${XCODE_ISYSROOT}.")
+        if(NOT EXISTS ${XCODE_ISYSROOT})
+            # Command line tools only
+            set(XCODE_ISYSROOT /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk)
+            message(STATUS "Trying command line tool sdk at ${XCODE_ISYSROOT}.")
+            if(NOT EXISTS ${XCODE_ISYSROOT})
+                message(FATAL_ERROR "Cannot find macos sdk.")
+            endif()
+        endif()
+        message(STATUS "Setting CMAKE_OSX_SYSROOT for macos ${OSX_SHORT_VERSION} to ${XCODE_ISYSROOT}")
+        set(CMAKE_OSX_SYSROOT ${XCODE_ISYSROOT})
+    endif()
 endif()
 
 # Setup CMAKE_ARGS to be forwarded to External Projects
@@ -311,6 +336,11 @@ if(NGRAPH_DEBUG_ENABLE)
     add_definitions(-DNGRAPH_DEBUG_ENABLE)
 endif()
 
+if(NOT (${CMAKE_VERSION} VERSION_LESS 3.6))
+    set(NGRAPH_GIT_ARGS GIT_SHALLOW 1)
+    message(STATUS "nGraph using git shallow copy.")
+endif()
+
 #-----------------------------------------------------------------------------------------------
 # External projects install directory
 #-----------------------------------------------------------------------------------------------
@@ -343,20 +373,38 @@ endif()
 
 include(cmake/external_gtest.cmake)
 include(cmake/external_json.cmake)
-include(cmake/external_eigen.cmake)
-include(cmake/external_mkldnn.cmake)
-include(cmake/external_cldnn.cmake)
-
-if (NGRAPH_USE_PREBUILT_LLVM OR DEFINED LLVM_TARBALL_URL)
-    include(cmake/external_llvm_prebuilt.cmake)
-elseif (NOT NGRAPH_DEX_ONLY OR NOT MSVS)
-    include(cmake/external_llvm.cmake)
+if(NGRAPH_CPU_ENABLE OR NGRAPH_GENERIC_CPU_ENABLE)
+    include(cmake/external_eigen.cmake)
+endif()
+if(NGRAPH_CPU_ENABLE)
+    include(cmake/external_mkldnn.cmake)
+endif()
+if(NGRAPH_INTELGPU_ENABLE)
+    include(cmake/external_cldnn.cmake)
 endif()
 
-if (WIN32 OR APPLE)
-    include(cmake/external_tbb_prebuilt.cmake)
+if ((NGRAPH_GPU_ENABLE OR NGRAPH_CPU_ENABLE) AND NOT NGRAPH_DEX_ONLY)
+    set(NGRAPH_CODEGEN_ENABLE TRUE)
 else()
-    include(cmake/external_tbb.cmake)
+    set(NGRAPH_CODEGEN_ENABLE FALSE)
+endif()
+
+if(NGRAPH_CODEGEN_ENABLE)
+    if (NGRAPH_USE_PREBUILT_LLVM OR DEFINED LLVM_TARBALL_URL)
+        include(cmake/external_llvm_prebuilt.cmake)
+    elseif (NOT MSVS)
+        include(cmake/external_llvm.cmake)
+    else()
+        message(FATAL_ERROR "CODEGEN not support on Windows!")
+    endif()
+endif()
+
+if(NGRAPH_TBB_ENABLE)
+    if (WIN32 OR APPLE)
+        include(cmake/external_tbb_prebuilt.cmake)
+    else()
+        include(cmake/external_tbb.cmake)
+    endif()
 endif()
 
 if (NGRAPH_DISTRIBUTED_MLSL_ENABLE)

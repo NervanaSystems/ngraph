@@ -24,12 +24,15 @@
 #include "ngraph/log.hpp"
 #include "op/abs.hpp"
 #include "op/acos.hpp"
+#include "op/acosh.hpp"
 #include "op/add.hpp"
 #include "op/and.hpp"
 #include "op/argmax.hpp"
 #include "op/argmin.hpp"
 #include "op/asin.hpp"
+#include "op/asinh.hpp"
 #include "op/atan.hpp"
+#include "op/atanh.hpp"
 #include "op/average_pool.hpp"
 #include "op/batch_norm.hpp"
 #include "op/cast.hpp"
@@ -68,6 +71,7 @@
 #include "op/mul.hpp"
 #include "op/neg.hpp"
 #include "op/not.hpp"
+#include "op/onehot.hpp"
 #include "op/or.hpp"
 #include "op/pad.cpp"
 #include "op/pad.hpp"
@@ -100,6 +104,7 @@
 #include "op/topk.hpp"
 #include "op/transpose.hpp"
 #include "op/unsqueeze.hpp"
+#include "op/where.hpp"
 #include "op/xor.hpp"
 #include "ops_bridge.hpp"
 
@@ -205,13 +210,16 @@ namespace ngraph
         {
             REGISTER_OPERATOR("Abs", 1, abs);
             REGISTER_OPERATOR("Acos", 1, acos);
+            REGISTER_OPERATOR("Acosh", 1, acosh);
             REGISTER_OPERATOR("Add", 1, add);
             REGISTER_OPERATOR("Add", 7, add);
             REGISTER_OPERATOR("And", 1, logical_and);
             REGISTER_OPERATOR("ArgMin", 1, argmin);
             REGISTER_OPERATOR("ArgMax", 1, argmax);
             REGISTER_OPERATOR("Asin", 1, asin);
+            REGISTER_OPERATOR("Asinh", 1, asinh);
             REGISTER_OPERATOR("Atan", 1, atan);
+            REGISTER_OPERATOR("Atanh", 1, atanh);
             REGISTER_OPERATOR("AveragePool", 1, average_pool);
             REGISTER_OPERATOR("BatchNormalization", 1, batch_norm);
             REGISTER_OPERATOR("Cast", 1, cast);
@@ -257,6 +265,7 @@ namespace ngraph
             REGISTER_OPERATOR("Neg", 1, neg);
             REGISTER_OPERATOR("Not", 1, logical_not);
             REGISTER_OPERATOR("Or", 1, logical_or);
+            REGISTER_OPERATOR("OneHot", 1, onehot);
             REGISTER_OPERATOR("Pad", 1, pad);
             REGISTER_OPERATOR("Pow", 1, pow);
             REGISTER_OPERATOR("PRelu", 1, prelu);
@@ -298,6 +307,7 @@ namespace ngraph
             REGISTER_OPERATOR("TopK", 1, topk);
             REGISTER_OPERATOR("Transpose", 1, transpose);
             REGISTER_OPERATOR("Unsqueeze", 1, unsqueeze);
+            REGISTER_OPERATOR("Where", 1, where);
             REGISTER_OPERATOR("Xor", 1, logical_xor);
         }
 

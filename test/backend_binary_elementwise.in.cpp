@@ -242,7 +242,7 @@ NGRAPH_TEST(${BACKEND_NAME}, divide_by_zero_float32)
                              std::numeric_limits<float>::infinity()}),
               read_vector<float>(result));
 }
-#ifdef NGRAPH_DISTRIBUTED_OMPI_ENABLE
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
 NGRAPH_TEST(${BACKEND_NAME}, DISABLED_divide_by_zero_int32)
 #else
 NGRAPH_TEST(${BACKEND_NAME}, divide_by_zero_int32)
