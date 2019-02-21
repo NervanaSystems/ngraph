@@ -100,7 +100,7 @@ set(MKL_SOURCE_DIR ${source_dir})
 ExternalProject_Add_Step(
     ext_mkl
     CopyMKL
-    COMMAND ${CMAKE_COMMAND} -E copy ${MKL_SOURCE_DIR}/lib/${MKLML_LIB} ${NGRAPH_BUILD_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy ${MKL_SOURCE_DIR}/lib/${MKLML_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}
     COMMENT "Copy mklml runtime libraries to ngraph build directory."
     DEPENDEES download
     )
@@ -108,7 +108,7 @@ ExternalProject_Add_Step(
 ExternalProject_Add_Step(
     ext_mkl
     CopyOMP
-    COMMAND ${CMAKE_COMMAND} -E copy ${MKL_SOURCE_DIR}/lib/${OMP_LIB} ${NGRAPH_BUILD_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy ${MKL_SOURCE_DIR}/lib/${OMP_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}
     COMMENT "Copy OpenMP runtime libraries to ngraph build directory."
     DEPENDEES download
     )
@@ -117,7 +117,7 @@ if(WIN32)
     ExternalProject_Add_Step(
         ext_mkl
         CopyMKLIMP
-        COMMAND ${CMAKE_COMMAND} -E copy ${MKL_SOURCE_DIR}/lib/${MKLML_IMPLIB} ${NGRAPH_BUILD_DIR}
+        COMMAND ${CMAKE_COMMAND} -E copy ${MKL_SOURCE_DIR}/lib/${MKLML_IMPLIB} ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}
         COMMENT "Copy mklml runtime libraries to ngraph build directory."
         DEPENDEES download
         )
@@ -125,7 +125,7 @@ if(WIN32)
     ExternalProject_Add_Step(
         ext_mkl
         CopyOMPIMP
-        COMMAND ${CMAKE_COMMAND} -E copy ${MKL_SOURCE_DIR}/lib/${OMP_IMPLIB} ${NGRAPH_BUILD_DIR}
+        COMMAND ${CMAKE_COMMAND} -E copy ${MKL_SOURCE_DIR}/lib/${OMP_IMPLIB} ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}
         COMMENT "Copy OpenMP runtime libraries to ngraph build directory."
         DEPENDEES download
         )
@@ -134,9 +134,13 @@ endif()
 add_library(libmkl INTERFACE)
 add_dependencies(libmkl ext_mkl)
 if(WIN32)
-    target_link_libraries(libmkl INTERFACE ${NGRAPH_BUILD_DIR}/${MKLML_IMPLIB} ${NGRAPH_BUILD_DIR}/${OMP_IMPLIB})
+    target_link_libraries(libmkl INTERFACE
+        ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${MKLML_IMPLIB}
+        ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${OMP_IMPLIB})
 else()
-    target_link_libraries(libmkl INTERFACE ${NGRAPH_BUILD_DIR}/${MKLML_LIB} ${NGRAPH_BUILD_DIR}/${OMP_LIB})
+    target_link_libraries(libmkl INTERFACE
+        ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLML_LIB}
+        ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${OMP_LIB})
 endif()
 
 set(MKLDNN_GIT_REPO_URL https://github.com/intel/mkl-dnn)
@@ -224,7 +228,7 @@ endif()
 ExternalProject_Add_Step(
     ext_mkldnn
     CopyMKLDNN
-    COMMAND ${CMAKE_COMMAND} -E copy ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${MKLDNN_LIB} ${NGRAPH_BUILD_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${MKLDNN_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}
     COMMENT "Copy mkldnn runtime libraries to ngraph build directory."
     DEPENDEES install
     )
@@ -233,7 +237,7 @@ if(WIN32)
     ExternalProject_Add_Step(
         ext_mkldnn
         CopyMKLDNNIMP
-        COMMAND ${CMAKE_COMMAND} -E copy ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${MKLDNN_IMPLIB} ${NGRAPH_BUILD_DIR}
+        COMMAND ${CMAKE_COMMAND} -E copy ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${MKLDNN_IMPLIB} ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}
         COMMENT "Copy mkldnn runtime libraries to ngraph build directory."
         DEPENDEES install
         )
@@ -252,12 +256,12 @@ add_dependencies(libmkldnn ext_mkldnn)
 target_include_directories(libmkldnn SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/mkldnn/include)
 if (WIN32)
     target_link_libraries(libmkldnn INTERFACE
-        ${NGRAPH_BUILD_DIR}/${MKLDNN_IMPLIB}
+        ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${MKLDNN_IMPLIB}
         libmkl
     )
 else()
     target_link_libraries(libmkldnn INTERFACE
-        ${NGRAPH_BUILD_DIR}/${MKLDNN_LIB}
+        ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}
         libmkl
     )
 endif()
@@ -265,12 +269,12 @@ endif()
 if(WIN32)
     install(
         FILES
-            ${NGRAPH_BUILD_DIR}/${MKLML_LIB}
-            ${NGRAPH_BUILD_DIR}/${MKLML_IMPLIB}
-            ${NGRAPH_BUILD_DIR}/${OMP_LIB}
-            ${NGRAPH_BUILD_DIR}/${OMP_IMPLIB}
-            ${NGRAPH_BUILD_DIR}/${MKLDNN_LIB}
-            ${NGRAPH_BUILD_DIR}/${MKLDNN_IMPLIB}
+            ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLML_LIB}
+            ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${MKLML_IMPLIB}
+            ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${OMP_LIB}
+            ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${OMP_IMPLIB}
+            ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}
+            ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${MKLDNN_IMPLIB}
         DESTINATION
             ${NGRAPH_INSTALL_LIB}
         OPTIONAL
@@ -278,9 +282,9 @@ if(WIN32)
 else()
     install(
         FILES
-            ${NGRAPH_BUILD_DIR}/${MKLML_LIB}
-            ${NGRAPH_BUILD_DIR}/${OMP_LIB}
-            ${NGRAPH_BUILD_DIR}/${MKLDNN_LIB}
+            ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLML_LIB}
+            ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${OMP_LIB}
+            ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}
         DESTINATION
             ${NGRAPH_INSTALL_LIB}
         OPTIONAL
