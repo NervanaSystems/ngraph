@@ -40,7 +40,7 @@ Most _make_ targets are structured in the form `<action>_<compiler>`.  The `<act
 
 * Finally, **`make clean`** is available to clean up the BUILD-* and docker build directories.
 
-Note that all operations performed inside the the docker image are run as a regular user, using the `run-as-user.sh` script.  This is done to avoid writing root-owned files in mounted filesystems.
+Note that all operations performed inside the docker image are run as a regular user, using the `run-as-user.sh` script.  This is done to avoid writing root-owned files in mounted filesystems.
 
 ## Examples/Hints
 
@@ -124,7 +124,7 @@ BUILD-CLANG: clang 3.9
 pre-built LLVM
 ```
 
-#### CentOS 7.4 
+#### CentOS 7.4
 
 ```
 Dockerfile: Dockerfile.ngraph.centos74_gpu

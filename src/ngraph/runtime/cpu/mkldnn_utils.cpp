@@ -159,9 +159,7 @@ std::map<memory::format, const std::string>&
         {memory::format::tnc, "memory::format::tnc"},
         {memory::format::ldsnc, "memory::format::ldsnc"},
         {memory::format::ldigo, "memory::format::ldigo"},
-        {memory::format::ldigo_p, "memory::format::ldigo_p"},
         {memory::format::ldgoi, "memory::format::ldgoi"},
-        {memory::format::ldgoi_p, "memory::format::ldgoi_p"},
         {memory::format::ldgo, "memory::format::ldgo"},
         {memory::format::wino_fmt, "memory::format::wino_fmt"},
         {memory::format::format_last, "memory::format::format_last"},
@@ -287,6 +285,17 @@ mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_default_mkldnn_md(
         shape = Shape{1};
     }
     return memory::desc(memory::dims(shape.begin(), shape.end()), et, format);
+}
+
+bool runtime::cpu::mkldnn_utils::can_create_mkldnn_md(const ngraph::element::Type type)
+{
+    auto it = get_mkldnn_data_type_map().find(type);
+    if (it == get_mkldnn_data_type_map().end() ||
+        it->second == mkldnn::memory::data_type::data_undef)
+    {
+        return false;
+    }
+    return true;
 }
 
 bool runtime::cpu::mkldnn_utils::can_create_mkldnn_md(const Shape& dims,

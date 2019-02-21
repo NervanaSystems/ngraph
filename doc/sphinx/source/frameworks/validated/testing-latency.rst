@@ -16,7 +16,7 @@ MXNet\*, where `Intel has contributed efforts showing`_ how to work with our
 nGraph Compiler stack as an `experimental backend`_. Our approach provides 
 **more opportunities** to start working with different kinds of graph 
 optimizations **than would be available to the MXNet framework alone**, for 
-reasons outlined in our `features`_ documentation.
+reasons outlined in our `introduction`_ documentation.
 
 .. TODO : Link to latest on mxnet when/if they do this instead of linking to PR;
    keep in mind this tutorial will still work  regardless of the merge status of 
@@ -108,7 +108,7 @@ with the compiled model. At this point, we can test the model's performance.
 
 .. _experimental backend: https://github.com/apache/incubator-mxnet/pull/12502
 .. _Intel has contributed efforts showing: https://cwiki.apache.org/confluence/display/MXNET/MXNet+nGraph+integration+using+subgraph+backend+interface
-.. _features: http://ngraph.nervanasys.com/docs/latest/project/about.html#features
+.. _introduction: http://ngraph.nervanasys.com/docs/latest/project/introduction.html
 .. _gluon model zoo: https://github.com/apache/incubator-mxnet/blob/master/python/mxnet/gluon/model_zoo/vision/resnet.py#L499
 .. _subgraph acceleration API: https://cwiki.apache.org/confluence/display/MXNET/Unified+integration+with+external+backend+libraries
 .. _nGraph-MXNet: https://github.com/NervanaSystems/ngraph-mxnet/blob/master/README.md

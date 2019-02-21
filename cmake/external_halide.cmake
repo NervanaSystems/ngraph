@@ -23,6 +23,7 @@ set(HALIDE_LLVM_SHA1_HASH c7db0162fbf4cc32193b6a85f84f4abee3d107b9)
 
 ExternalProject_Add(
     ext_halide_llvm
+    PREFIX halide_llvm
     URL ${HALIDE_LLVM_TARBALL_URL}
     URL_HASH SHA1=${HALIDE_LLVM_SHA1_HASH}
     CONFIGURE_COMMAND ""
@@ -41,9 +42,11 @@ set(HALIDE_GIT_TAG "ea9c863")
 
 ExternalProject_Add(
     ext_halide
+    PREFIX halide
     DEPENDS ext_halide_llvm
     GIT_REPOSITORY ${HALIDE_GIT_REPO_URL}
     GIT_TAG ${HALIDE_GIT_TAG}
+    ${NGRAPH_GIT_ARGS}
     UPDATE_COMMAND ""
     CMAKE_GENERATOR ${CMAKE_GENERATOR}
     CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
