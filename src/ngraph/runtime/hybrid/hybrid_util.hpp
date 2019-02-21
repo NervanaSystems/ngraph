@@ -33,6 +33,8 @@ namespace ngraph
             void rewrite_function(
                 const std::shared_ptr<Function>& f,
                 const std::vector<std::shared_ptr<runtime::Backend>>& backend_list);
+
+            void node_modifiers(const Node& node, std::vector<std::string>& attributes);
         }
     }
 }

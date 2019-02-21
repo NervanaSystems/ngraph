@@ -31,17 +31,6 @@
 using namespace ngraph;
 using namespace std;
 
-static void node_modifiers(const Node& node, vector<string>& attributes)
-{
-    vector<string> colors = {"\"#A0FFA0\"", "\"#FFF790\""};
-    if (node.get_placement_index() < colors.size())
-    {
-        string color = colors[node.get_placement_index()];
-        attributes.push_back("style=filled");
-        attributes.push_back("fillcolor=" + color);
-    }
-}
-
 runtime::hybrid::HybridExecutable::HybridExecutable(
     const std::vector<std::shared_ptr<runtime::Backend>>& backend_list,
     const shared_ptr<Function>& func,

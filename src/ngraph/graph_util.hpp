@@ -326,5 +326,8 @@ namespace ngraph
 
     bool is_valid_rank(const std::shared_ptr<Node>& node, std::vector<size_t> valid_ranks);
 
-    void plot_graph(std::shared_ptr<Function> f, const std::string& filename);
+    void plot_graph(
+        std::shared_ptr<Function> f,
+        const std::string& filename,
+        std::function<void(const Node& node, std::vector<std::string>& attributes)> = nullptr);
 }

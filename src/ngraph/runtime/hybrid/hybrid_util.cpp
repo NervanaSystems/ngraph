@@ -207,11 +207,12 @@ void runtime::hybrid::rewrite_function(const shared_ptr<Function>& f,
                 // we just added
                 auto sub_function = make_shared<Function>(cluster_outputs, cluster_inputs);
                 sub_function->set_placement(placement);
-                ngraph::plot_graph(sub_function, "sub_function.png");
+                ngraph::plot_graph(sub_function, "sub_function.png", node_modifiers);
                 auto fc = make_shared<runtime::hybrid::op::FunctionCall>(function_call_outputs,
                                                                          function_call_inputs,
                                                                          sub_function,
                                                                          backend_list[placement]);
+                fc->set_placement_index(0);
                 for (size_t i = 0; i < function_call_outputs.size(); i++)
                 {
                     // // First add a GetOutputElement to the ith output of the FunctionCall
@@ -227,5 +228,16 @@ void runtime::hybrid::rewrite_function(const shared_ptr<Function>& f,
             }
         }
     }
-    ngraph::plot_graph(f, "f.png");
+    ngraph::plot_graph(f, "f.png", node_modifiers);
+}
+
+void runtime::hybrid::node_modifiers(const Node& node, vector<string>& attributes)
+{
+    vector<string> colors = {"\"#A0FFA0\"", "\"#FFF790\""};
+    if (node.get_placement_index() < colors.size())
+    {
+        string color = colors[node.get_placement_index()];
+        attributes.push_back("style=filled");
+        attributes.push_back("fillcolor=" + color);
+    }
 }
