@@ -111,14 +111,14 @@ void runtime::cpu::CPU_CallFrame::propagate_layouts(
     if (layouts.size() != tvs.size())
     {
         throw ngraph_error(
-            "Error propagating layouts - tensor view and layout descriptor counts do not match");
+            "Error propagating layouts - tensor and layout descriptor counts do not match");
     }
     for (size_t i = 0; i < tvs.size(); i++)
     {
         if (layouts[i] == nullptr)
         {
             throw ngraph_error(
-                "Error propagating layouts - layout information missing from tensor view");
+                "Error propagating layouts - layout information missing from tensor");
         }
         tvs[i]->set_tensor_layout(layouts[i]);
     }

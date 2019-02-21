@@ -1088,7 +1088,7 @@ using namespace ngraph::runtime;
             auto tv = parameter->get_output_tensor_ptr(i);
             if (tv->get_tensor_layout() == nullptr)
             {
-                throw ngraph_error("layout missing on function parameter's tensor view: " +
+                throw ngraph_error("layout missing on function parameter's tensor: " +
                                    tv->get_name());
             }
             parameter_layout_descriptors.emplace_back(
@@ -1602,7 +1602,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
             auto tv = parameter->get_output_tensor_ptr(i);
             if (tv->get_tensor_layout() == nullptr)
             {
-                throw ngraph_error("layout missing on function parameter's tensor view: " +
+                throw ngraph_error("layout missing on function parameter's tensor: " +
                                    tv->get_name());
             }
             parameter_layout_descriptors.emplace_back(
