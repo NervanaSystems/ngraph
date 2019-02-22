@@ -115,7 +115,7 @@ NGRAPH_TEST(${BACKEND_NAME}, node_name)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = A + B;
-    C->set_name("a node name");
+    C->set_friendly_name("a node name");
     auto f = make_shared<Function>(C, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
