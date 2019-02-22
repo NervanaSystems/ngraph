@@ -12,7 +12,7 @@ MXNet\* bridge
 * **Training**: For experimental or alternative approaches to distributed 
   training methodologies, including data parallel training, see the 
   MXNet-relevant sections of the docs on :doc:`../distr/index` and 
-  :doc:`How to <../howto/index>` topics like :doc:`../howto/distribute-train`. 
+  :doc:`How to <../core/constructing-graphs/index>` topics like :doc:`../core/constructing-graphs/distribute-train`. 
 
 
 .. _README: https://github.com/NervanaSystems/ngraph-mxnet/blob/master/README.md
