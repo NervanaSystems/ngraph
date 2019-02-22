@@ -1177,11 +1177,6 @@ static shared_ptr<ngraph::Function>
             }
 
             node_map[node_name] = node;
-
-            // Typically, it could be unsafe to change the name of a node since it may break nameing
-            // uniqueness. However, it could sometimes be helpful to use the original name from
-            // the serialization for debugging.
-            // node->set_name(node_name);
         }
         catch (...)
         {
