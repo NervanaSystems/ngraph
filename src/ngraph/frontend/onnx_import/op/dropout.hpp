@@ -33,7 +33,7 @@ namespace ngraph
                 inline NodeVector dropout(const Node& node)
                 {
                     // First value is actual output of Dropout,
-                    // the second one is just a plumb for optional trailing output.
+                    // the second one is just a placeholder for optional trailing output.
                     return {node.get_ng_inputs().at(0), std::make_shared<NullNode>()};
                 }
             } // namespace set_1
