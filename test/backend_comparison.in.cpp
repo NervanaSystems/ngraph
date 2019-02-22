@@ -196,14 +196,14 @@ NGRAPH_TEST(${BACKEND_NAME}, lesseq_int32)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::i32, shape);
-    copy_data(a, vector<int32_t>{0x40000170, 0x40000005, 17, -5});
+    copy_data(a, vector<int32_t>{0x40000170, 0x40000005, 0x40000005, -5});
     auto b = backend->create_tensor(element::i32, shape);
-    copy_data(b, vector<int32_t>{0x40000140, 0x40000001, 8, 0});
+    copy_data(b, vector<int32_t>{0x40000140, 0x40000001, 0x40000005, 0});
     auto result = backend->create_tensor(element::boolean, shape);
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ((vector<char>{0, 0, 0, 1}), read_vector<char>(result)); // NNP result {1, 1, 0, 1}
+    EXPECT_EQ((vector<char>{0, 0, 1, 1}), read_vector<char>(result)); // NNP result {1, 1, 0, 1}
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, lesseq_bool)

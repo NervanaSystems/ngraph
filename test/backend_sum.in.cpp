@@ -414,18 +414,14 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_3d_to_scalar_int32)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::i32, shape_a);
-    copy_data(
-        a,
-        vector<int32_t>{
-            0x40000001, 10, 19, 4,  13, 22, 7,  16, 25, 2,  11, 20, 5, 14,
-            23,         8,  17, 26, 3,  12, 21, 6,  15, 24, 9,  18, 27}); // 1073742202 == 0x4000017A
+    copy_data(a, vector<int32_t>{0x40000001, 10, 19, 4,  13, 22, 7,  16, 25, 2,  11, 20, 5, 14,
+                                 23,         8,  17, 26, 3,  12, 21, 6,  15, 24, 9,  18, 27});
     auto result = backend->create_tensor(element::i32, shape_rt);
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<int32_t>{0x40000001 + 10 + 19 + 4 + 13 + 22 + 7 + 16 + 25 + 2 + 11 + 20 + 5 +
-                               14 + 23 + 8 + 17 + 26 + 3 + 12 + 21 + 6 + 15 + 24 + 9 + 18 +
-                               27}), // NNP output 1073741824 == 0x40000000
+                               14 + 23 + 8 + 17 + 26 + 3 + 12 + 21 + 6 + 15 + 24 + 9 + 18 + 27}),
               read_vector<int32_t>(result));
 }
 
