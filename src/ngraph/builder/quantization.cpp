@@ -18,8 +18,12 @@
 
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/builder/quantization.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
+#include "ngraph/op/max.hpp"
+#include "ngraph/op/min.hpp"
+#include "ngraph/op/reshape.hpp"
 #include "quantization_util.hpp"
 
 using namespace std;
@@ -86,6 +90,43 @@ namespace ngraph
             auto zero = make_constant(quant_type, shape, 0);
             auto scale = quantization_util::get_scale(min, max, quant_type);
             return make_shared<op::Dequantize>(input, scale, zero, real_type, axes);
+        }
+
+        std::shared_ptr<Node> ScaledQuantizedConcat(const NodeVector& args,
+                                                    size_t concatenation_axis,
+                                                    const NodeVector& mins,
+                                                    const NodeVector& maxs)
+        {
+            quantization_util::check_concat(args, mins, maxs);
+            auto quant_type = args[0]->get_element_type();
+
+            // output scale
+            auto min = std::make_shared<op::Min>(std::make_shared<op::Concat>(mins, 0),
+                                                 ngraph::AxisSet{0});
+            auto max = std::make_shared<op::Max>(std::make_shared<op::Concat>(maxs, 0),
+                                                 ngraph::AxisSet{0});
+            auto out_scale = quantization_util::get_scale(min, max, quant_type);
+
+            NodeVector rescaled_args(args.size());
+            for (size_t i = 0; i < args.size(); ++i)
+            {
+                auto q_type = args[i]->get_element_type();
+                auto in_scale = std::make_shared<ngraph::op::Reshape>(
+                    quantization_util::get_scale(mins[i], maxs[i], q_type), AxisVector{0}, Shape{});
+                auto zero = make_constant(q_type, in_scale->get_shape(), 0);
+
+                rescaled_args[i] =
+                    make_shared<op::Dequantize>(args[i], in_scale, zero, element::f32, AxisSet{});
+                rescaled_args[i] =
+                    make_shared<op::Quantize>(rescaled_args[i],
+                                              out_scale,
+                                              zero,
+                                              q_type,
+                                              AxisSet{},
+                                              op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN);
+            }
+
+            return make_shared<op::QuantizedConcat>(rescaled_args, concatenation_axis);
         }
 
         std::shared_ptr<Node> ScaledQuantizedAvgPool(std::shared_ptr<Node> input,
