@@ -847,7 +847,7 @@ shared_ptr<runtime::Executable>
             {
                 do_equal_propagation(topology, get_input_name(op), get_output_name(op));
             }
-            else if ((get_output_shape(op).size() <= 4) &&
+            else if ((get_output_shape(op).size() <= 4) && (shape_size(get_output_shape(op)) > 0) &&
                      ((get_input_type(op) == element::f32) || (get_input_type(op) == element::i32)))
             {
                 const size_t shift = 4 - get_output_shape(op).size();
@@ -1434,7 +1434,8 @@ shared_ptr<runtime::Executable>
             // following are the checks to go with workaround
             if ((win_stride.size() > 2) || (pad_below.size() > 2) || (pad_above.size() > 2) ||
                 (win_dilation.size() > 2) || (data_dilation.size() > 2) ||
-                (data_dilation.at(0) != 1) || (data_dilation.at(1) != 1))
+                (data_dilation.at(0) != 1) || (data_dilation.at(1) != 1) ||
+                (get_output_type(op) != element::f32))
             {
                 do_convolution_operation(topology,
                                          get_input_name(op, 0),
@@ -1509,7 +1510,7 @@ shared_ptr<runtime::Executable>
             if ((win_stride.size() > 2) || (win_stride.at(0) != 1) || (win_stride.at(1) != 1) ||
                 (pad_below.size() > 2) || (pad_above.size() > 2) || (data_dilation.size() > 2) ||
                 (data_dilation.at(0) != 1) || (data_dilation.at(1) != 1) ||
-                (win_dilation.size() > 2))
+                (win_dilation.size() > 2) || (get_output_type(op) != element::f32))
             {
                 do_convolution_operation(topology,
                                          get_input_name(op, 0),
@@ -1608,7 +1609,8 @@ shared_ptr<runtime::Executable>
             if ((win_stride.size() > 2) || (win_stride.at(0) != 1) || (win_stride.at(1) != 1) ||
                 (pad_below.size() > 2) || (pad_above.size() > 2) || (data_dilation.size() > 2) ||
                 (data_dilation.at(0) != 1) || (data_dilation.at(1) != 1) ||
-                (win_dilation.size() > 2) || (win_dilation.at(0) != 1) || (win_dilation.at(1) != 1))
+                (win_dilation.size() > 2) || (win_dilation.at(0) != 1) ||
+                (win_dilation.at(1) != 1) || (get_output_type(op) != element::f32))
             {
                 do_convolution_operation(topology,
                                          get_input_name(op, 1),
