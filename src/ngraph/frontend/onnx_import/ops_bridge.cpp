@@ -46,6 +46,7 @@
 #include "op/cosh.hpp"
 #include "op/depth_to_space.hpp"
 #include "op/div.hpp"
+#include "op/dropout.hpp"
 #include "op/elu.hpp"
 #include "op/equal.hpp"
 #include "op/exp.hpp"
@@ -234,7 +235,7 @@ namespace ngraph
             REGISTER_OPERATOR("DepthToSpace", 1, depth_to_space);
             REGISTER_OPERATOR("Div", 1, div);
             REGISTER_OPERATOR("Div", 7, div);
-            REGISTER_OPERATOR("Dropout", 1, identity);
+            REGISTER_OPERATOR("Dropout", 1, dropout);
             REGISTER_OPERATOR("Elu", 1, elu);
             REGISTER_OPERATOR("Equal", 1, equal);
             REGISTER_OPERATOR("Exp", 1, exp);
