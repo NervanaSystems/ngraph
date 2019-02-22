@@ -22,7 +22,7 @@ include(ExternalProject)
 #------------------------------------------------------------------------------
 
 set(CLDNN_GIT_REPO_URL https://github.com/intel/clDNN.git)
-set(CLDNN_GIT_LABEL f91d7d83d8f121e4e159776b108e316f2f08bdf5)
+set(CLDNN_GIT_LABEL e0efde85b3cfdd776b53447500ce0bb2aa8bca54)
 set(BOOST_VERSION 1.64.0)
 set(OUT_DIR ${EXTERNAL_PROJECTS_ROOT}/cldnn/out)
 
@@ -40,6 +40,7 @@ ExternalProject_Add(
     PREFIX cldnn
     GIT_REPOSITORY ${CLDNN_GIT_REPO_URL}
     GIT_TAG ${CLDNN_GIT_LABEL}
+    ${NGRAPH_GIT_ARGS}
     # Disable install step
     INSTALL_COMMAND ""
     UPDATE_COMMAND ""

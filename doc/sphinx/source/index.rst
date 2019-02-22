@@ -43,12 +43,13 @@ nGraph Compiler stack
 
    core/overview.rst
    Pattern matcher <fusion/index.rst>
-   nGraph ops <ops/about.rst>
+   nGraph Core Ops <ops/index.rst>
+   More about Ops <ops/about.rst>
    Graph construction <howto/index.rst>
    Using the Python API <python_api/index.rst>
    Compiler passes  <fusion/graph-rewrite.rst>
    buildlb.rst
-   Using the C++ API <ops/index.rst>
+   
    
 .. toctree::
    :maxdepth: 1

@@ -147,15 +147,15 @@ TEST(cpu_test, abc_tbb)
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b, c});
+    handle->call_with_validate({result}, {a, b, c});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
 
-    backend->call_with_validate(handle, {result}, {b, a, c});
+    handle->call_with_validate({result}, {b, a, c});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
 
-    backend->call_with_validate(handle, {result}, {a, c, b});
+    handle->call_with_validate({result}, {a, c, b});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
 
@@ -216,7 +216,7 @@ TEST(cpu_test, mkldnn_layouts)
     }
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
 
     EXPECT_EQ(vector<float>{expected_result}, rv);
 }
@@ -667,4 +667,25 @@ TEST(cpu_test, convolution_large_padding)
     auto int_f = make_function();
     auto cpu_f = make_function();
     compare_backends(int_f, cpu_f, "INTERPRETER", "CPU", 1e-4, 1e-4);
+}
+
+TEST(cpu_test, convert_inplace)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::u8, shape);
+    auto B = op::Constant::create(element::u8, shape, {1, 1, 1, 1});
+    auto C = op::Constant::create(element::i8, shape, {1, 1, 1, 1});
+    auto f =
+        make_shared<Function>(make_shared<op::Convert>(A + B, element::i8) - C, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::u8, shape);
+    copy_data(a, vector<uint8_t>{1, 2, 3, 254});
+    auto result = backend->create_tensor(element::i8, shape);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_EQ((vector<int8_t>{1, 2, 3, -2}), read_vector<int8_t>(result));
 }

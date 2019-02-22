@@ -14,6 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <sys/resource.h>
+#include <sys/time.h>
+
 #include <CPP/concatenation.hpp>
 #include <CPP/custom_gpu_primitive.hpp>
 #include <CPP/reshape.hpp>
@@ -31,7 +34,9 @@ string runtime::intelgpu::get_opencl_type_name(const element::Type& ngraph_type)
     switch (ngraph_type.get_type_enum())
     {
     case element::Type_t::i64: return "long";
+    case element::Type_t::u64: return "ulong";
     case element::Type_t::i32: return "int";
+    case element::Type_t::u32: return "uint";
     case element::Type_t::i16: return "short";
     case element::Type_t::u16: return "ushort";
     case element::Type_t::i8: return "char";
@@ -1007,7 +1012,8 @@ void runtime::intelgpu::do_eltwise_kernel(cldnn::topology& topology,
                                           const string& output_name,
                                           const Shape& output_shape,
                                           const element::Type& output_type,
-                                          const string& operation)
+                                          const string& operation,
+                                          bool function_operation)
 {
     const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
     const string entry_point_name = "eltwise_" + output_name;
@@ -1026,15 +1032,34 @@ void runtime::intelgpu::do_eltwise_kernel(cldnn::topology& topology,
         // Main loops
         gws = generate_loops(writer, output_shape, true);
 
-        writer << "output" << access_dims(output_shape) << " = " << operation << "(input0"
-               << access_dims(input0_shape) << ", input1" << access_dims(input1_shape) << ");\n";
+        writer << "output" << access_dims(output_shape) << " = ";
+        if (function_operation)
+        {
+            string explicit_conversion;
+            // TODO need better workaround for this built_in
+            if (operation == "pow")
+            {
+                explicit_conversion = "convert_double";
+            }
+
+            writer << operation << "(" << explicit_conversion << "(input0"
+                   << access_dims(input0_shape) << "), " << explicit_conversion << "(input1"
+                   << access_dims(input1_shape) << "));";
+        }
+        else
+        {
+            writer << "(input0" << access_dims(input0_shape) << " " << operation << " input1"
+                   << access_dims(input1_shape) << ");";
+        }
+        writer << " // " << get_opencl_type_name(input0_type) << " "
+               << get_opencl_type_name(output_type) << "\n";
 
         // Closing brackets for main loops
         generate_loops(writer, output_shape, false);
     }
     writer.block_end();
 
-    const cldnn::custom_gpu_primitive op_logical(output_name,
+    const cldnn::custom_gpu_primitive op_eltwise(output_name,
                                                  {input0_name, input1_name},
                                                  {writer.get_code()},
                                                  entry_point_name,
@@ -1042,7 +1067,7 @@ void runtime::intelgpu::do_eltwise_kernel(cldnn::topology& topology,
                                                  "",
                                                  layout,
                                                  gws);
-    topology.add(op_logical);
+    topology.add(op_eltwise);
 }
 
 void runtime::intelgpu::do_reverse_operation(cldnn::topology& topology,
@@ -1263,16 +1288,17 @@ void runtime::intelgpu::do_sigmoid_backprop_operation(cldnn::topology& topology,
     topology.add(op_sigmoid_backprop);
 }
 
-void runtime::intelgpu::do_custom_eltwise_operation(cldnn::topology& topology,
-                                                    const string& input_name,
-                                                    const Shape& input_shape,
-                                                    const element::Type& input_type,
-                                                    const string& output_name,
-                                                    const Shape& output_shape,
-                                                    const element::Type& output_type,
-                                                    const CUSTOM_ELTWISE operation_name)
+void runtime::intelgpu::do_custom_unary_operation(cldnn::topology& topology,
+                                                  const string& input_name,
+                                                  const Shape& input_shape,
+                                                  const element::Type& input_type,
+                                                  const string& output_name,
+                                                  const Shape& output_shape,
+                                                  const element::Type& output_type,
+                                                  const string& operation_name)
 {
-    const string entry_point_name = "op_custom_eltwise_" + output_name;
+    const string entry_point_name = "op_custom_unary_" + output_name;
+    const string intermidiate_type = input_type.size() < 8 ? "float" : "double";
     codegen::CodeWriter writer;
     vector<size_t> gws;
 
@@ -1285,39 +1311,19 @@ void runtime::intelgpu::do_custom_eltwise_operation(cldnn::topology& topology,
     writer.block_begin();
     {
         gws = generate_loops(writer, output_shape, true);
-        writer << "output" << access_dims(output_shape) << " = ";
-        switch (operation_name)
-        {
-        case CUSTOM_ELTWISE::Atan:
-        {
-            writer << "atan";
-            break;
-        }
-        case CUSTOM_ELTWISE::Ceil:
-        {
-            writer << "ceil";
-            break;
-        }
-        case CUSTOM_ELTWISE::Floor:
-        {
-            if (input_type.is_real())
-            {
-                writer << "floor";
-            }
-            break;
-        }
-        case CUSTOM_ELTWISE::Sign:
-        {
-            writer << "sign";
-            break;
-        }
-        case CUSTOM_ELTWISE::Tan:
-        {
-            writer << "tan";
-            break;
-        }
-        }
-        writer << "(input0" << access_dims(input_shape) << ");\n";
+
+        // convert to intermediate floating point type
+        writer << intermidiate_type << " input_var = convert_" << intermidiate_type << "(input0"
+               << access_dims(input_shape) << ");\n";
+
+        // do the operation with the same type
+        writer << intermidiate_type << " output_var = " << operation_name
+               << "(input_var); //Type: " << get_opencl_type_name(input_type) << "\n";
+
+        // convert to destination type
+        writer << "output" << access_dims(output_shape) << " = convert_"
+               << get_opencl_type_name(output_type) << "(output_var);\n";
+
         generate_loops(writer, output_shape, false);
     }
     writer.block_end();
@@ -1414,42 +1420,263 @@ void runtime::intelgpu::do_arg_max_min_operation(cldnn::topology& topology,
     topology.add(op_arg_max_min);
 }
 
-void runtime::intelgpu::do_negative_operation(cldnn::topology& topology,
-                                              const string& input_name,
-                                              const Shape& input_shape,
-                                              const element::Type& input_type,
-                                              const string& output_name,
-                                              const Shape& output_shape,
-                                              const element::Type& output_type)
+void runtime::intelgpu::do_reshape_operation(cldnn::topology& topology,
+                                             const string& input_name,
+                                             const Shape& input_shape,
+                                             const element::Type& input_type,
+                                             const string& output_name,
+                                             const Shape& output_shape,
+                                             const element::Type& output_type,
+                                             const AxisVector& reshape_axes)
 {
     const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
-    const string entry_point_name = "negative_" + output_name;
+    const string entry_point_name = "reshape_" + output_name;
     const string& input_type_name = get_opencl_type_name(input_type);
     const string& output_type_name = get_opencl_type_name(output_type);
+    const size_t dst_shape_size = shape_size(output_shape);
     codegen::CodeWriter writer;
-    vector<size_t> gws;
 
-    gen_func_def(
-        writer, entry_point_name, {input_type_name}, {input_shape}, output_type_name, output_shape);
+    gen_func_def(writer,
+                 entry_point_name,
+                 {input_type_name},
+                 {input_shape},
+                 output_type_name,
+                 {dst_shape_size});
 
     writer.block_begin();
     {
+        writer << "// input: " << input_shape << "\n";
+        writer << "//output: " << output_shape << "\n";
+        writer << "//axes: " << reshape_axes << "\n\n";
+        writer << "uint output_it = 0;\n";
+
+        // Main operation loop
+        for (auto const i : reshape_axes)
+        {
+            writer << "for (uint i" << i << " = 0; i" << i << " < " << input_shape.at(i) << "; ++i"
+                   << i << ")\n";
+            writer.block_begin();
+        }
+
+        writer << "output[output_it] = input0" << access_dims(input_shape) << ";\n"
+               << "++output_it;\n";
+
+        // Closing brackets for loop
+        for (auto const i : reshape_axes)
+        {
+            writer.block_end();
+        }
+    }
+    writer.block_end();
+
+    const cldnn::custom_gpu_primitive op_reshape(output_name,
+                                                 {input_name},
+                                                 {writer.get_code()},
+                                                 entry_point_name,
+                                                 get_kernel_args(1, 1),
+                                                 "",
+                                                 layout,
+                                                 {1});
+    topology.add(op_reshape);
+}
+
+void runtime::intelgpu::do_quantize_operation(cldnn::topology& topology,
+                                              const string& input0_name,
+                                              const Shape& input0_shape,
+                                              const element::Type& input0_type,
+                                              const string& input1_name,
+                                              const Shape& input1_shape,
+                                              const string& input2_name,
+                                              const Shape& input2_shape,
+                                              const string& output_name,
+                                              const Shape& output_shape,
+                                              const element::Type& output_type,
+                                              const AxisSet& axis,
+                                              const ngraph::op::Quantize::RoundMode mode)
+{
+    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const string entry_point_name = "quantize_" + output_name;
+    const string real_type_str = get_opencl_type_name(input0_type);
+    const string quant_type_str = get_opencl_type_name(output_type);
+    codegen::CodeWriter writer;
+    vector<size_t> gws;
+
+    gen_func_def(writer,
+                 entry_point_name,
+                 {real_type_str, real_type_str, quant_type_str},
+                 {input0_shape, input1_shape, input2_shape},
+                 quant_type_str,
+                 output_shape);
+
+    writer.block_begin();
+    {
+        writer << "// " << axis << "\n"
+               << "// rounding mode: " << (int)mode << "\n";
+
+        // Main loops
+        gws = generate_loops(writer, input0_shape, true);
+
+        // apply scale
+        writer << real_type_str << " qvalue = input0" << access_dims(input0_shape) << " / input1"
+               << access_dims(input1_shape) << ";\n";
+
+        // round
+        switch (mode)
+        {
+        case ngraph::op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY:
+        {
+            writer << real_type_str << " abs_qvalue = fabs(qvalue);\n"
+                   << real_type_str << " abs_qvalue_toward_inf = floor(abs_qvalue + 0.5);\n"
+                   << "qvalue = (qvalue < 0.0) ? -abs_qvalue_toward_inf : abs_qvalue_toward_inf;\n";
+        }
+        break;
+        case ngraph::op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_ZERO:
+        {
+            writer
+                << real_type_str << " abs_qvalue = fabs(qvalue);\n"
+                << real_type_str << " abs_qvalue_toward_zero = ceil(abs_qvalue - 0.5);\n"
+                << "qvalue = (qvalue < 0.0) ? -abs_qvalue_toward_zero : abs_qvalue_toward_zero;\n";
+        }
+        break;
+        case ngraph::op::Quantize::RoundMode::ROUND_NEAREST_UPWARD:
+        {
+            writer << "qvalue = floor(qvalue + 0.5);\n";
+        }
+        break;
+        case ngraph::op::Quantize::RoundMode::ROUND_NEAREST_DOWNWARD:
+        {
+            writer << "qvalue = ceil(qvalue - 0.5);\n";
+        }
+        break;
+        case ngraph::op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN:
+        {
+            writer << real_type_str << " up_qvalue = floor(qvalue + 0.5);\n"
+                   << real_type_str << " dn_qvalue = ceil(qvalue - 0.5);\n"
+                   << real_type_str << " rem = fmod(up_qvalue, convert_" << real_type_str
+                   << "(2.0));\n"
+                   << "qvalue = (rem == 0.0) ? up_qvalue : dn_qvalue;\n";
+        }
+        break;
+        case ngraph::op::Quantize::RoundMode::ROUND_TOWARD_INFINITY:
+        {
+            writer << real_type_str << " abs_qvalue = fabs(qvalue);\n"
+                   << real_type_str << " abs_qvalue_toward_inf = ceil(abs_qvalue);\n"
+                   << "qvalue = (qvalue < 0.0) ? -abs_qvalue_toward_inf : abs_qvalue_toward_inf;\n";
+        }
+        break;
+        case ngraph::op::Quantize::RoundMode::ROUND_TOWARD_ZERO:
+        {
+            writer
+                << real_type_str << " abs_qvalue = fabs(qvalue);\n"
+                << real_type_str << " abs_qvalue_toward_zero = floor(abs_qvalue);\n"
+                << "qvalue = (qvalue < 0.0) ? -abs_qvalue_toward_zero : abs_qvalue_toward_zero;\n";
+        }
+        break;
+
+        case ngraph::op::Quantize::RoundMode::ROUND_UP: { writer << "qvalue = ceil(qvalue);\n";
+        }
+        break;
+        case ngraph::op::Quantize::RoundMode::ROUND_DOWN: { writer << "qvalue = floor(qvalue);\n";
+        }
+        break;
+        default:
+        {
+            throw ngraph_error("Unsupported rounding mode '" + to_string((int)mode) +
+                               "' in runtime::intelgpu::do_quantize_operation()");
+        }
+        }
+
+        // apply offset
+        writer << "qvalue += input2" << access_dims(input2_shape) << ";\n";
+
+        // cast to output
+        writer << "output" << access_dims(output_shape) << " = convert_" << quant_type_str
+               << "(qvalue);\n";
+
+        // Closing brackets for main loops
+        generate_loops(writer, input0_shape, false);
+    }
+    writer.block_end();
+
+    const cldnn::custom_gpu_primitive op_quantize(output_name,
+                                                  {input0_name, input1_name, input2_name},
+                                                  {writer.get_code()},
+                                                  entry_point_name,
+                                                  get_kernel_args(3, 1),
+                                                  "",
+                                                  layout,
+                                                  gws);
+    topology.add(op_quantize);
+}
+
+void runtime::intelgpu::do_dequantize_operation(cldnn::topology& topology,
+                                                const std::string& input0_name,
+                                                const Shape& input0_shape,
+                                                const element::Type& input0_type,
+                                                const std::string& input1_name,
+                                                const Shape& input1_shape,
+                                                const element::Type& input1_type,
+                                                const std::string& input2_name,
+                                                const Shape& input2_shape,
+                                                const element::Type& input2_type,
+                                                const string& output_name,
+                                                const Shape& output_shape,
+                                                const element::Type& output_type,
+                                                const AxisSet& axis)
+{
+    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const string entry_point_name = "dequantize_" + output_name;
+    codegen::CodeWriter writer;
+    vector<size_t> gws;
+
+    gen_func_def(writer,
+                 entry_point_name,
+                 {get_opencl_type_name(input0_type),
+                  get_opencl_type_name(input1_type),
+                  get_opencl_type_name(input2_type)},
+                 {input0_shape, input1_shape, input2_shape},
+                 get_opencl_type_name(output_type),
+                 output_shape);
+
+    writer.block_begin();
+    {
+        writer << "// " << axis << "\n";
+
+        // Main loops
         gws = generate_loops(writer, output_shape, true);
 
-        writer << "output" << access_dims(output_shape) << " = - (input0"
-               << access_dims(input_shape) << ");\n";
+        writer << "output" << access_dims(output_shape) << " = ";
+        writer << "(input0" << access_dims(input0_shape) << " - input2" << access_dims(input2_shape)
+               << ") * input1" << access_dims(input1_shape) << ";\n";
 
+        // Closing brackets for main loops
         generate_loops(writer, output_shape, false);
     }
     writer.block_end();
 
-    const cldnn::custom_gpu_primitive op_negative(output_name,
-                                                  {input_name},
-                                                  {writer.get_code()},
-                                                  entry_point_name,
-                                                  get_kernel_args(1, 1),
-                                                  "",
-                                                  layout,
-                                                  gws);
-    topology.add(op_negative);
+    const cldnn::custom_gpu_primitive op_dequantize(output_name,
+                                                    {input0_name, input1_name, input2_name},
+                                                    {writer.get_code()},
+                                                    entry_point_name,
+                                                    get_kernel_args(3, 1),
+                                                    "",
+                                                    layout,
+                                                    gws);
+    topology.add(op_dequantize);
+}
+
+size_t runtime::intelgpu::get_max_memory_rss()
+{
+    size_t result = 0;
+    struct rusage usage;
+
+    if (getrusage(RUSAGE_SELF, &usage) == 0)
+    {
+        result = usage.ru_maxrss; // the value is in kilobytes
+
+        // aligne result to return bytes
+        result *= 1000;
+    }
+
+    return result;
 }

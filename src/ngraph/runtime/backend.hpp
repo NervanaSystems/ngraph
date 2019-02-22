@@ -31,7 +31,6 @@ namespace ngraph
         class Tensor;
         class Backend;
         class Executable;
-        using Handle = std::shared_ptr<Executable>;
     }
 }
 
@@ -102,15 +101,6 @@ public:
     virtual bool is_supported_property(const Property prop) const;
 
     virtual void remove_compiled_function(std::shared_ptr<Executable> exec);
-
-    /// The following methods are temporary hacks to reduce the number of changes in this PR
-    /// They will be removed in a follow-on PR
-    bool call_with_validate(std::shared_ptr<Executable> handle,
-                            const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                            const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
-    bool call_with_validate(const std::unique_ptr<Executable>& handle,
-                            const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                            const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
 };
 
 class ngraph::runtime::Executable
@@ -151,7 +141,7 @@ public:
     const ngraph::ResultVector& get_results() const;
 
 protected:
-    /// \brief Called at the end of compile to the the values to be returned by get_parameters
+    /// \brief Called at the end of compile to the values to be returned by get_parameters
     ///     and get_results
     /// \param func The function with Results fully resolved.
     void set_parameters_and_results(const Function& func);
