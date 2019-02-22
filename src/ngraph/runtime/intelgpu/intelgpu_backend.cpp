@@ -72,6 +72,7 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -82,6 +83,7 @@
 #include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
+#include "ngraph/op/quantize.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/slice.hpp"
@@ -1775,6 +1777,52 @@ shared_ptr<runtime::Executable>
             }
             break;
         }
+        case OP_TYPEID::Quantize:
+        {
+            arguments_check(op, 3, 1);
+
+            const shared_ptr<op::Quantize> quant_op = static_pointer_cast<op::Quantize>(op);
+            const AxisSet& axes = quant_op->get_axes();
+            const op::Quantize::RoundMode mode = quant_op->get_round_mode();
+
+            do_quantize_operation(topology,
+                                  get_input_name(op, 0),
+                                  get_input_shape(op, 0),
+                                  get_input_type(op, 0),
+                                  get_input_name(op, 1),
+                                  get_input_shape(op, 1),
+                                  get_input_name(op, 2),
+                                  get_input_shape(op, 2),
+                                  get_output_name(op),
+                                  get_output_shape(op),
+                                  get_output_type(op),
+                                  axes,
+                                  mode);
+            break;
+        }
+        case OP_TYPEID::Dequantize:
+        {
+            arguments_check(op, 3, 1);
+
+            const shared_ptr<op::Dequantize> dequ_op = static_pointer_cast<op::Dequantize>(op);
+            const AxisSet& axes = dequ_op->get_axes();
+
+            do_dequantize_operation(topology,
+                                    get_input_name(op, 0),
+                                    get_input_shape(op, 0),
+                                    get_input_type(op, 0),
+                                    get_input_name(op, 1),
+                                    get_input_shape(op, 1),
+                                    get_input_type(op, 1),
+                                    get_input_name(op, 2),
+                                    get_input_shape(op, 2),
+                                    get_input_type(op, 2),
+                                    get_output_name(op),
+                                    get_output_shape(op),
+                                    get_output_type(op),
+                                    axes);
+            break;
+        }
         case OP_TYPEID::LRN:
         {
             arguments_check(op, 1, 1);
@@ -1793,8 +1841,6 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::AllReduce:
         case OP_TYPEID::BroadcastLike:
-        case OP_TYPEID::Dequantize:
-        case OP_TYPEID::Quantize:
         case OP_TYPEID::QuantizedAvgPool:
         case OP_TYPEID::QuantizedConvolutionBias:
         case OP_TYPEID::QuantizedConvolutionBiasAdd:

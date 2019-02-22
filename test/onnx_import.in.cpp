@@ -2090,3 +2090,29 @@ TEST(onnx_${BACKEND_NAME}, model_where)
 
     EXPECT_EQ(expected_outputs.front(), outputs.front());
 }
+
+TEST(onnx_${BACKEND_NAME}, import_non_existing_file)
+{
+    try
+    {
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/i.dont.exist"));
+    }
+    catch (const std::runtime_error& exc)
+    {
+        // asserts that an exception was thrown and that the error message contains the file name
+        std::string msg{exc.what()};
+        EXPECT_TRUE(msg.find("i.dont.exist") != std::string::npos);
+    }
+}
+
+TEST(onnx_${BACKEND_NAME}, import_malformed_model)
+{
+    try
+    {
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/malformed.onnx"));
+    }
+    catch (const std::runtime_error& exc)
+    {
+        EXPECT_EQ(exc.what(), std::string{"Failure parsing data from the provided input stream"});
+    }
+}
