@@ -44,13 +44,12 @@ namespace ngraph
                                             return a * input_shape.at(b);
                                         });
 
-                    auto sum_node = reduction::make_ng_reduction_op(
+                    auto sum_node = std::shared_ptr<ngraph::Node>{reduction::make_ng_reduction_op(
                         node,
                         node.get_ng_inputs().at(0),
-                        [](const std::shared_ptr<ngraph::Node>& input,
-                           const ngraph::AxisSet& reduction_axes) {
-                            return std::make_shared<ngraph::op::Sum>(input, reduction_axes);
-                        });
+                        std::make_shared<ngraph::op::Sum,
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         const ngraph::AxisSet&>)};
 
                     auto const_node = ngraph::op::Constant::create(
                         sum_node->get_element_type(),

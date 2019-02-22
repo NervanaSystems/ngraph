@@ -54,16 +54,13 @@ namespace ngraph
                 ///
                 inline NodeVector reduce_log_sum(const Node& node)
                 {
-                    return {reduction::make_ng_reduction_op(
+                    auto sum_node{reduction::make_ng_reduction_op(
                         node,
                         node.get_ng_inputs().at(0),
-                        [](const std::shared_ptr<ngraph::Node>& input,
-                           const ngraph::AxisSet& reduction_axes) {
-
-                            auto sum_node =
-                                std::make_shared<ngraph::op::Sum>(input, reduction_axes);
-                            return std::make_shared<ngraph::op::Log>(sum_node);
-                        })};
+                        std::make_shared<ngraph::op::Sum,
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         const ngraph::AxisSet&>)};
+                    return {std::make_shared<ngraph::op::Log>(sum_node)};
                 }
 
                 /// \brief      Compute the log sum exponent of the input tensor's elements along the provided axes.
@@ -79,17 +76,14 @@ namespace ngraph
                 ///
                 inline NodeVector reduce_log_sum_exp(const Node& node)
                 {
-                    return {reduction::make_ng_reduction_op(
+                    auto exp_node = std::make_shared<ngraph::op::Exp>(node.get_ng_inputs().at(0));
+                    auto sum_node{reduction::make_ng_reduction_op(
                         node,
-                        node.get_ng_inputs().at(0),
-                        [](const std::shared_ptr<ngraph::Node>& input,
-                           const ngraph::AxisSet& reduction_axes) {
-
-                            auto exp_node = std::make_shared<ngraph::op::Exp>(input);
-                            auto sum_node =
-                                std::make_shared<ngraph::op::Sum>(exp_node, reduction_axes);
-                            return std::make_shared<ngraph::op::Log>(sum_node);
-                        })};
+                        exp_node,
+                        std::make_shared<ngraph::op::Sum,
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         const ngraph::AxisSet&>)};
+                    return {std::make_shared<ngraph::op::Log>(sum_node)};
                 }
 
                 /// \brief      Compute the L1 norm of the input tensor's element along the provided axes.
@@ -106,9 +100,7 @@ namespace ngraph
                 inline NodeVector reduce_l1(const Node& node)
                 {
                     return {reduction::make_ng_reduction_op(
-                        node,
-                        node.get_ng_inputs().at(0),
-                        std::bind(norm::l1_norm, std::placeholders::_1, std::placeholders::_2))};
+                        node, node.get_ng_inputs().at(0), norm::l1_norm)};
                 }
 
                 /// \brief      Compute the L2 norm of the input tensor's element along the provided axes.
@@ -125,9 +117,7 @@ namespace ngraph
                 inline NodeVector reduce_l2(const Node& node)
                 {
                     return {reduction::make_ng_reduction_op(
-                        node,
-                        node.get_ng_inputs().at(0),
-                        std::bind(norm::l2_norm, std::placeholders::_1, std::placeholders::_2))};
+                        node, node.get_ng_inputs().at(0), norm::l2_norm)};
                 }
 
                 /// \brief      Compute the maximum value of the input tensor's elements along the provided axes.
@@ -146,10 +136,9 @@ namespace ngraph
                     return {reduction::make_ng_reduction_op(
                         node,
                         node.get_ng_inputs().at(0),
-                        [](const std::shared_ptr<ngraph::Node>& input,
-                           const ngraph::AxisSet& reduction_axes) {
-                            return std::make_shared<ngraph::op::Max>(input, reduction_axes);
-                        })};
+                        std::make_shared<ngraph::op::Max,
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         const ngraph::AxisSet&>)};
                 }
 
                 /// \brief      Compute the mean value of the input tensor's elements along the provided axes.
@@ -181,10 +170,9 @@ namespace ngraph
                     return {reduction::make_ng_reduction_op(
                         node,
                         node.get_ng_inputs().at(0),
-                        [](const std::shared_ptr<ngraph::Node>& input,
-                           const ngraph::AxisSet& reduction_axes) {
-                            return std::make_shared<ngraph::op::Min>(input, reduction_axes);
-                        })};
+                        std::make_shared<ngraph::op::Min,
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         const ngraph::AxisSet&>)};
                 }
 
                 /// \brief      Compute the product of the input tensor's elements along the provided axes.
@@ -203,10 +191,9 @@ namespace ngraph
                     return {reduction::make_ng_reduction_op(
                         node,
                         node.get_ng_inputs().at(0),
-                        [](const std::shared_ptr<ngraph::Node>& input,
-                           const ngraph::AxisSet& reduction_axes) {
-                            return std::make_shared<ngraph::op::Product>(input, reduction_axes);
-                        })};
+                        std::make_shared<ngraph::op::Product,
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         const ngraph::AxisSet&>)};
                 }
 
                 /// \brief      Compute the sum of the input tensor's elements along the provided axes.
@@ -225,10 +212,9 @@ namespace ngraph
                     return {reduction::make_ng_reduction_op(
                         node,
                         node.get_ng_inputs().at(0),
-                        [](const std::shared_ptr<ngraph::Node>& input,
-                           const ngraph::AxisSet& reduction_axes) {
-                            return std::make_shared<ngraph::op::Sum>(input, reduction_axes);
-                        })};
+                        std::make_shared<ngraph::op::Sum,
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         const ngraph::AxisSet&>)};
                 }
 
                 /// \brief      Compute the sum square of the input tensor's element along the provided axes.
@@ -244,13 +230,14 @@ namespace ngraph
                 ///
                 inline NodeVector reduce_sum_square(const Node& node)
                 {
+                    auto input = std::shared_ptr<ngraph::Node>{node.get_ng_inputs().at(0)};
+                    auto square_node = input * input;
                     return {reduction::make_ng_reduction_op(
                         node,
-                        node.get_ng_inputs().at(0),
-                        [](const std::shared_ptr<ngraph::Node>& input,
-                           const ngraph::AxisSet& reduction_axes) {
-                            return std::make_shared<ngraph::op::Sum>(input * input, reduction_axes);
-                        })};
+                        square_node,
+                        std::make_shared<ngraph::op::Sum,
+                                         const std::shared_ptr<ngraph::Node>&,
+                                         const ngraph::AxisSet&>)};
                 }
 
             } // namespace set_1
