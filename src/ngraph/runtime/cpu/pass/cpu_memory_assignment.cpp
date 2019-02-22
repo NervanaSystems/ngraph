@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -357,12 +357,9 @@ void runtime::cpu::pass::CPUMemoryAssignment::propagate_in_place_slice(
     }
 }
 
-bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph::Function> function)
+void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(list<shared_ptr<Node>>& ops)
 {
-    list<shared_ptr<Node>> ops = function->get_ordered_ops();
     unordered_set<descriptor::Tensor*> in_place_slice_chain;
-
-    // build buffer sets maps
     size_t count = 0;
     for (auto it = ops.begin(); it != ops.end(); it++)
     {
@@ -578,7 +575,11 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
             }
         }
     }
+}
 
+void runtime::cpu::pass::CPUMemoryAssignment::liveness_analysis(
+    std::list<std::shared_ptr<Node>>& ops)
+{
     auto find_role = [](CPUTensorRole tensor_role) -> string {
         switch (tensor_role)
         {
@@ -647,6 +648,14 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
             }
         }
     }
+}
+
+bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph::Function> function)
+{
+    list<shared_ptr<Node>> ops = function->get_ordered_ops();
+
+    build_buffer_sets_maps(ops);
+    liveness_analysis(ops);
 
     // memory assignment using liveness analysis result
 

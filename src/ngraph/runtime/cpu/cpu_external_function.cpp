@@ -460,7 +460,8 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 
     unordered_map<shared_ptr<Function>, list<shared_ptr<Node>>> function_ordered_ops;
     // only one function is allowed
-    NGRAPH_ASSERT(pass_manager.get_state().get_functions().size() == 1);
+    NGRAPH_ASSERT(pass_manager.get_state().get_functions().size() == 1)
+        << "only one function is allowed";
     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
     {
         function_ordered_ops.insert({current_function, current_function->get_ordered_ops()});
@@ -1468,7 +1469,6 @@ void runtime::cpu::CPU_ExternalFunction::build()
     //This check ensures we have exactly one functor for Op.
     assert(m_op_attrs.size() == functors.size());
 
-    //std::cout << "before executor\n";
     executor = [&](CPURuntimeContext* ctx, vector<void*>& inputs, vector<void*>& outputs) {
         cpu::Timestamp start_ts, end_ts;
         int profiler_count = 0;
