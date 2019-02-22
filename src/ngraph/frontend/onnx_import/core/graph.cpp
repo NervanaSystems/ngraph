@@ -135,12 +135,10 @@ namespace ngraph
                 const Node& node{m_nodes.back()};
 
                 NodeVector ng_nodes{node.get_ng_nodes()};
-                // Iterate over the minimum from requested number of outputs for given node and
-                // the number of outputs we return.
+                // Iterate over the number of outputs for given node in graph.
                 // Some of them may be optional and trimmed. See:
                 // https://github.com/onnx/onnx/blob/master/docs/IR.md#optional-inputs-and-outputs
-                std::size_t output_count = std::min(ng_nodes.size(), node.get_outputs_size());
-                for (std::size_t i{0}; i < output_count; ++i)
+                for (std::size_t i{0}; i < node.get_outputs_size(); ++i)
                 {
                     m_ng_node_cache[node.output(i)] = ng_nodes[i];
                 }
