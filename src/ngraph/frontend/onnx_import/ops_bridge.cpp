@@ -71,6 +71,7 @@
 #include "op/mul.hpp"
 #include "op/neg.hpp"
 #include "op/not.hpp"
+#include "op/onehot.hpp"
 #include "op/or.hpp"
 #include "op/pad.cpp"
 #include "op/pad.hpp"
@@ -103,6 +104,7 @@
 #include "op/topk.hpp"
 #include "op/transpose.hpp"
 #include "op/unsqueeze.hpp"
+#include "op/where.hpp"
 #include "op/xor.hpp"
 #include "ops_bridge.hpp"
 
@@ -138,9 +140,14 @@ namespace ngraph
                                                  const std::string& domain,
                                                  Operator fn)
         {
-            auto result = m_map[domain][name].emplace(version, std::move(fn));
-            if (result.second)
+            auto it = m_map[domain][name].find(version);
+            if (it == std::end(m_map[domain][name]))
             {
+                m_map[domain][name].emplace(version, std::move(fn));
+            }
+            else
+            {
+                it->second = std::move(fn);
                 NGRAPH_WARN << "Overwriting existing operator: "
                             << domain + "." + name + ":" + std::to_string(version);
             }
@@ -263,6 +270,7 @@ namespace ngraph
             REGISTER_OPERATOR("Neg", 1, neg);
             REGISTER_OPERATOR("Not", 1, logical_not);
             REGISTER_OPERATOR("Or", 1, logical_or);
+            REGISTER_OPERATOR("OneHot", 1, onehot);
             REGISTER_OPERATOR("Pad", 1, pad);
             REGISTER_OPERATOR("Pow", 1, pow);
             REGISTER_OPERATOR("PRelu", 1, prelu);
@@ -304,6 +312,7 @@ namespace ngraph
             REGISTER_OPERATOR("TopK", 1, topk);
             REGISTER_OPERATOR("Transpose", 1, transpose);
             REGISTER_OPERATOR("Unsqueeze", 1, unsqueeze);
+            REGISTER_OPERATOR("Where", 1, where);
             REGISTER_OPERATOR("Xor", 1, logical_xor);
         }
 
