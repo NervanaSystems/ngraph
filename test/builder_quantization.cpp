@@ -1079,7 +1079,8 @@ TEST(builder, scaled_quantize_concat_unsigned)
     copy_data(cx, vector<float>{16.0});
     // result
     auto result = backend->create_tensor(element::u8, shape_r);
-    backend->call_with_validate(backend->compile(f), {result}, {a, b, c, an, bn, cn, ax, bx, cx});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b, c, an, bn, cn, ax, bx, cx});
     EXPECT_EQ((vector<uint8_t>{2, 4, 8, 16, 2, 2, 4, 8, 16, 15, 2, 3, 5, 7, 11, 16}),
               read_vector<uint8_t>(result));
 }
@@ -1127,7 +1128,8 @@ TEST(builder, scaled_quantize_concat_signed)
     copy_data(cx, vector<float>{16.0});
     // result
     auto result = backend->create_tensor(element::i8, shape_r);
-    backend->call_with_validate(backend->compile(f), {result}, {a, b, c, an, bn, cn, ax, bx, cx});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b, c, an, bn, cn, ax, bx, cx});
     EXPECT_EQ((vector<int8_t>{-2, 4, 8, 16, -2, 2, 4, 8, 16, 15, -2, 3, 5, 7, 11, 16}),
               read_vector<int8_t>(result));
 }
