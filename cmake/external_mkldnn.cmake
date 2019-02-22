@@ -95,7 +95,7 @@ set(MKL_LIBS ${TMP_PATHS})
 target_link_libraries(libmkl INTERFACE ${MKL_LIBS})
 
 set(MKLDNN_GIT_REPO_URL https://github.com/intel/mkl-dnn)
-set(MKLDNN_GIT_TAG "b9ce57a")
+set(MKLDNN_GIT_TAG "v0.17.2")
 set(MKLDNN_PATCH_FILE mkldnn.patch)
 set(MKLDNN_LIBS ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libmkldnn${CMAKE_SHARED_LIBRARY_SUFFIX})
 
