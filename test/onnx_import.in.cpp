@@ -1346,7 +1346,7 @@ TEST(onnx_${BACKEND_NAME}, model_unsupported_op)
     catch (ngraph::ngraph_error const& err)
     {
         std::string what{err.what()};
-        EXPECT_NE(what.find("unknown operations"), std::string::npos);
+        EXPECT_NE(what.find("nGraph does not support"), std::string::npos);
         EXPECT_NE(what.find("FakeOpName"), std::string::npos);
         EXPECT_NE(what.find("AnotherFakeOpName"), std::string::npos);
     }
@@ -2016,4 +2016,118 @@ TEST(onnx_${BACKEND_NAME}, model_sign)
     Outputs outputs{execute<float>(function, inputs, "${BACKEND_NAME}")};
 
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx_${BACKEND_NAME}, model_one_hot_with_axis)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/one_hot_axis.onnx"));
+
+    Inputs inputs{{1.0, 9.0, 2.0, 4.0}, {1.0, 3.0}};
+    Outputs expected_outputs{{1.0, 1.0, 3.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                              1.0, 1.0, 1.0, 1.0, 1.0, 3.0, 1.0, 1.0, 1.0, 1.0, 3.0, 1.0, 1.0, 1.0,
+                              1.0, 3.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0}};
+
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx_${BACKEND_NAME}, model_one_hot_without_axis)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/one_hot_no_axis.onnx"));
+
+    std::vector<std::vector<std::int64_t>> inputs{{0, 7, 8}, {2, 5}};
+    std::vector<std::vector<std::int64_t>> expected_outputs{{5, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                                                             2, 2, 2, 2, 2, 2, 2, 5, 2, 2, 2, 2,
+                                                             2, 2, 2, 2, 2, 2, 2, 2, 5, 2, 2, 2}};
+
+    std::vector<std::vector<std::int64_t>> outputs{execute(function, inputs, "${BACKEND_NAME}")};
+
+    EXPECT_TRUE(test::all_close(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx_${BACKEND_NAME}, model_where)
+{
+    auto function =
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/where.onnx"));
+
+    using Inputs = std::vector<std::vector<int>>;
+    using Outputs = std::vector<std::vector<int>>;
+
+    // conditions tensor - 3x3x3
+    auto condition = std::vector<int>{
+        {0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0}};
+
+    // 1x3 tensor of "1"
+    auto x1 = std::vector<int>{1, 1, 1};
+    // 3x1 tensor of "2"
+    auto x2 = std::vector<int>{2, 2, 2};
+
+    Inputs inputs;
+    inputs.push_back(std::move(condition));
+    inputs.push_back(std::move(x1));
+    inputs.push_back(std::move(x2));
+
+    // y = 3x3x3
+    Outputs expected_outputs{
+        {2, 1, 2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2}};
+
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+
+    EXPECT_EQ(expected_outputs.front(), outputs.front());
+}
+
+TEST(onnx_${BACKEND_NAME}, model_override_op)
+{
+    onnx_import::register_operator(
+        "FalseAdd", 1, "", [](const onnx_import::Node& node) -> NodeVector {
+            NodeVector ng_inputs{node.get_ng_inputs()};
+            return {std::make_shared<ngraph::op::Add>(ng_inputs.at(0), ng_inputs.at(1))};
+        });
+
+    onnx_import::register_operator(
+        "FalseAdd", 1, "", [](const onnx_import::Node& node) -> NodeVector {
+            NodeVector ng_inputs{node.get_ng_inputs()};
+            return {std::make_shared<ngraph::op::Subtract>(ng_inputs.at(0), ng_inputs.at(1))};
+        });
+
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/override_op.onnx"));
+
+    Inputs inputs;
+    inputs.emplace_back(std::vector<float>{0.f, 1.f, 2.f, 3.f});
+    inputs.emplace_back(std::vector<float>{3.f, 2.f, 1.f, 0.f});
+
+    Outputs expected_output{std::vector<float>{-3.f, -1.f, 1.f, 3.f}};
+
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+}
+
+TEST(onnx_${BACKEND_NAME}, import_non_existing_file)
+{
+    try
+    {
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/i.dont.exist"));
+    }
+    catch (const std::runtime_error& exc)
+    {
+        // asserts that an exception was thrown and that the error message contains the file name
+        std::string msg{exc.what()};
+        EXPECT_TRUE(msg.find("i.dont.exist") != std::string::npos);
+    }
+}
+
+TEST(onnx_${BACKEND_NAME}, import_malformed_model)
+{
+    try
+    {
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/malformed.onnx"));
+    }
+    catch (const std::runtime_error& exc)
+    {
+        EXPECT_EQ(exc.what(), std::string{"Failure parsing data from the provided input stream"});
+    }
 }

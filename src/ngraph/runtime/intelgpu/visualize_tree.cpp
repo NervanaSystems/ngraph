@@ -31,6 +31,7 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
@@ -40,6 +41,7 @@
 #include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
+#include "ngraph/op/quantize.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/sum.hpp"
@@ -275,6 +277,21 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
 
         writer << print_table_row_dims("broadcast_axes", op_reshape->get_input_order())
                << print_table_row_value("transpose", op_reshape->get_is_transpose());
+        break;
+    }
+    case OP_TYPEID::Quantize:
+    {
+        const shared_ptr<op::Quantize> quant_op = static_pointer_cast<op::Quantize>(node);
+
+        writer << print_table_row_dims("axes", quant_op->get_axes())
+               << print_table_row_value("rounding mode", (int)quant_op->get_round_mode());
+        break;
+    }
+    case OP_TYPEID::Dequantize:
+    {
+        const shared_ptr<op::Dequantize> quant_op = static_pointer_cast<op::Dequantize>(node);
+
+        writer << print_table_row_dims("axes", quant_op->get_axes());
         break;
     }
     case OP_TYPEID::Concat:
