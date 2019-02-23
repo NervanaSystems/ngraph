@@ -12,10 +12,12 @@ Constructing Graphs
    update.rst
    derive-for-training.rst
    distribute-train.rst
-   import.rst    
+   import.rst
+   Using the Python API <../../python_api/index.rst>
+       
 
-The "How to" articles in this section explain how to do specific tasks with 
-nGraph components. The recipes are all framework agnostic; in other words, 
+The "How to" articles in this section explain how to build or construct graphs 
+with nGraph components. The recipes are all framework agnostic; in other words, 
 if an entity (framework or user) wishes to make use of target-based computational 
 resources, it can either:
 

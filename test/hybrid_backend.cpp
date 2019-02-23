@@ -130,7 +130,6 @@ TEST(HYBRID, abc)
     copy_data(d, vector<float>{4, 3, 2, 1});
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result1, result2}, {a, b, c, d});
-    EXPECT_EQ(read_vector<float>(result1), (vector<float>{29, 46, 53, 44}));
-    EXPECT_EQ(read_vector<float>(result2), (vector<float>{150, 576, 1176, 1536}));
+    handle->call_with_validate({result}, {a, b, c, d});
+    EXPECT_EQ(read_vector<float>(result), (vector<float>{150, 576, 1176, 1536}));
 }
