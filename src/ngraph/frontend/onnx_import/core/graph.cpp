@@ -91,6 +91,7 @@ namespace ngraph
                     m_inputs.back().get_ng_node(m_parameters, m_initializers, weights);
             }
 
+            // Process all graph outputs
             for (const auto& output : m_graph_proto->output())
             {
                 m_outputs.emplace_back(output);
@@ -104,7 +105,7 @@ namespace ngraph
                 {
                     unknown_operators.emplace(detail::get_op_domain_and_name(node_proto),
                                               node_proto);
-                    // Try adding missing domain
+                    // If a node from an unregistered domain is detected, try registering that domain
                     m_model->enable_opset_domain(detail::get_node_domain(node_proto));
                 }
             }
@@ -132,8 +133,12 @@ namespace ngraph
             {
                 m_nodes.emplace_back(node_proto, *this);
                 const Node& node{m_nodes.back()};
+
                 NodeVector ng_nodes{node.get_ng_nodes()};
-                for (int i = 0; i < ng_nodes.size(); i++)
+                // Iterate over the number of outputs for given node in graph.
+                // Some of them may be optional and trimmed. See:
+                // https://github.com/onnx/onnx/blob/master/docs/IR.md#optional-inputs-and-outputs
+                for (std::size_t i{0}; i < node.get_outputs_size(); ++i)
                 {
                     m_ng_node_cache[node.output(i)] = ng_nodes[i];
                 }
