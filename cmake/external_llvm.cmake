@@ -27,7 +27,6 @@ ExternalProject_Add(
     PREFIX clang
     GIT_REPOSITORY https://github.com/llvm-mirror/clang.git
     GIT_TAG 26cac19a0d622afc91cd52a002921074bccc6a27
-    ${NGRAPH_GIT_ARGS}
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
@@ -43,7 +42,6 @@ ExternalProject_Add(
     PREFIX openmp
     GIT_REPOSITORY https://github.com/llvm-mirror/openmp.git
     GIT_TAG 29b515e1e6d26b5b0d32d47d28dcdb4b8a11470d
-    ${NGRAPH_GIT_ARGS}
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
@@ -66,7 +64,6 @@ ExternalProject_Add(
     DEPENDS ext_clang ext_openmp
     GIT_REPOSITORY https://github.com/llvm-mirror/llvm.git
     GIT_TAG da4a2839d80ac52958be0129b871beedfe90136e
-    ${NGRAPH_GIT_ARGS}
     CMAKE_GENERATOR ${CMAKE_GENERATOR}
     CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
     CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
