@@ -141,9 +141,14 @@ namespace ngraph
                                                  const std::string& domain,
                                                  Operator fn)
         {
-            auto result = m_map[domain][name].emplace(version, std::move(fn));
-            if (result.second)
+            auto it = m_map[domain][name].find(version);
+            if (it == std::end(m_map[domain][name]))
             {
+                m_map[domain][name].emplace(version, std::move(fn));
+            }
+            else
+            {
+                it->second = std::move(fn);
                 NGRAPH_WARN << "Overwriting existing operator: "
                             << domain + "." + name + ":" + std::to_string(version);
             }
