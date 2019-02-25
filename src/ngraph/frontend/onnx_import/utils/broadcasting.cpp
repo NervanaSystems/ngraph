@@ -131,19 +131,6 @@ namespace ngraph
 {
     namespace onnx_import
     {
-        NodeVector
-            numpy_style_broadcast_for_binary_operation(const std::shared_ptr<ngraph::Node>& left,
-                                                       const std::shared_ptr<ngraph::Node>& right)
-        {
-            const auto& numpy_shapes = get_numpy_broadcast_shapes({left, right});
-            auto output_shape = numpy_shapes.first;
-            auto left_full_shape = numpy_shapes.second.at(0);
-            auto right_full_shape = numpy_shapes.second.at(1);
-
-            return {broadcast_node_numpy_style(left, output_shape, left_full_shape),
-                    broadcast_node_numpy_style(right, output_shape, right_full_shape)};
-        }
-
         NodeVector numpy_style_broadcast(NodeVector inputs)
         {
             if (inputs.size() <= 1)
