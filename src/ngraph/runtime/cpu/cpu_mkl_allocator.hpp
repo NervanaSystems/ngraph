@@ -18,6 +18,10 @@
 
 #include <cstddef>
 #include <cstdint>
+#include "ngraph/runtime/aligned_buffer.hpp"
+#include "ngraph/util.hpp"
+
+using namespace ngraph;
 
 namespace mkl
 {
@@ -33,3 +37,37 @@ namespace mkl
     extern i_free_t i_free;
     }
 }
+
+namespace ngraph
+{
+    namespace runtime
+    {
+        namespace cpu
+        {
+            class CPUAllocator;
+        }
+    }
+}
+
+class ngraph::runtime::cpu::CPUAllocator
+{
+
+    public:
+        CPUAllocator(size_t size);
+        CPUAllocator();
+        ~CPUAllocator();
+        
+    private:
+    char* m_buffer;
+    size_t m_byte_size;
+    
+    inline void* MallocHook(size_t size)
+    {
+        m_buffer = static_cast<char*>(ngraph_malloc(size));
+    }        
+    
+    inline void FreeHook()
+    {
+        ngraph_free(m_buffer);
+    }
+};
