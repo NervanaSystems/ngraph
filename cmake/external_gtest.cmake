@@ -52,7 +52,6 @@ ExternalProject_Add(
     PREFIX gtest
     GIT_REPOSITORY ${GTEST_GIT_REPO_URL}
     GIT_TAG ${GTEST_GIT_LABEL}
-    ${NGRAPH_GIT_ARGS}
     # Disable install step
     INSTALL_COMMAND ""
     UPDATE_COMMAND ""

@@ -39,6 +39,7 @@
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/relu.hpp"
+#include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tanh.hpp"
@@ -67,6 +68,7 @@
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
+#include "ngraph/runtime/cpu/op/rnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/runtime/cpu/op/update_slice.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
@@ -2181,6 +2183,9 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
     const int num_rnn_cell_states = 2;
     const int rnn_direction = 1;
     const int num_of_rnn_fused_layer = 1;
+    ngraph::runtime::cpu::rnn_utils::rnntype rnn_type =
+        ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_lstm;
+
     auto rnn_node = make_shared<op::Rnn>(src_layer,
                                          src_iter,
                                          weights_layer,
@@ -2191,7 +2196,9 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
                                          src_seq_length,
                                          num_rnn_cell_states,
                                          rnn_direction,
-                                         num_of_rnn_fused_layer);
+                                         num_of_rnn_fused_layer,
+                                         rnn_type);
+
     auto rnn_ht_output = make_shared<op::GetOutputElement>(rnn_node, 0);
     auto rnn_ct_output = make_shared<op::GetOutputElement>(rnn_node, 1);
 
@@ -3591,7 +3598,6 @@ TEST(cpu_quant_fusion, qconvb_relu)
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
-
     set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:0", 1);
     auto cpu1_results = execute(cpu_f1, args, "CPU");
     set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:1", 1);
@@ -3933,4 +3939,47 @@ TEST(cpu_quant_fusion, qconvba)
     set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:1", 1);
     auto cpu2_results = execute(cpu_f2, args, "CPU");
     EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
+}
+
+TEST(cpu_fusion, fuse_bi_directional_rnn)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
+    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
+    pass_manager.register_pass<runtime::cpu::pass::MultiLayerRNNFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::BiDirectionalRnn>();
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/lstm_bi_directional.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    pass_manager.run_passes(func);
+    // Bidirectional graph pass will folds the reverse seq
+    auto rev_seq_ops = get_ops_of_type<op::Reverse>(func);
+    auto rnn_ops = get_ops_of_type<op::Rnn>(func);
+    EXPECT_EQ(rev_seq_ops.size(), 0);
+    // fuse two bi-directional rnn layers in to one MKLDNN Op
+    EXPECT_EQ(rnn_ops.size(), 1);
+}
+
+TEST(cpu_fusion, bi_rnn_interpreter_vs_cpu)
+{
+    const std::string file_name("mxnet/lstm_bi_directional.json");
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < int_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+    }
 }

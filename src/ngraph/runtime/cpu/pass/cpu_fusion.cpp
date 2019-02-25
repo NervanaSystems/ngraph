@@ -75,6 +75,7 @@
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
+#include "ngraph/runtime/cpu/op/rnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/runtime/cpu/op/update_slice.hpp"
 #include "ngraph/util.hpp"
@@ -1785,8 +1786,14 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fuse_lstm_recurrent_state(
     auto weights_layer_label = std::make_shared<pattern::op::Label>(element::f32, Shape{100, 400});
     auto weights_iter_label = std::make_shared<pattern::op::Label>(element::f32, Shape{100, 400});
     auto bias_label = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
-    auto lstm1 = std::make_shared<op::Lstm>(
-        src_layer_label, src_iter_label, weights_layer_label, weights_iter_label, bias_label);
+    ngraph::runtime::cpu::rnn_utils::rnntype rnn_type =
+        ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_lstm;
+    auto lstm1 = std::make_shared<op::Lstm>(src_layer_label,
+                                            src_iter_label,
+                                            weights_layer_label,
+                                            weights_iter_label,
+                                            bias_label,
+                                            rnn_type);
 
     auto lstm1_goe0 = std::make_shared<op::GetOutputElement>(lstm1, 0);
     auto lstm1_goe1 = std::make_shared<op::GetOutputElement>(lstm1, 1);
