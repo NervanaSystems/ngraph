@@ -17,9 +17,7 @@
 #include "ngraph/runtime/cpu/cpu_mkl_allocator.hpp"
 
 ngraph::runtime::cpu::CPUAllocator::CPUAllocator()
-    :   m_buffer(nullptr)
-    ,   m_byte_size(0)
+    : m_buffer(nullptr)
+    , m_byte_size(0)
 {
-
 }
-

@@ -51,23 +51,15 @@ namespace ngraph
 
 class ngraph::runtime::cpu::CPUAllocator
 {
+public:
+    CPUAllocator(size_t size);
+    CPUAllocator();
+    ~CPUAllocator();
 
-    public:
-        CPUAllocator(size_t size);
-        CPUAllocator();
-        ~CPUAllocator();
-        
-    private:
+private:
     char* m_buffer;
     size_t m_byte_size;
-    
-    inline void* MallocHook(size_t size)
-    {
-        m_buffer = static_cast<char*>(ngraph_malloc(size));
-    }        
-    
-    inline void FreeHook()
-    {
-        ngraph_free(m_buffer);
-    }
+
+    inline void* MallocHook(size_t size) { m_buffer = static_cast<char*>(ngraph_malloc(size)); }
+    inline void FreeHook() { ngraph_free(m_buffer); }
 };
