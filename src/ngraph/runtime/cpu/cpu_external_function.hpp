@@ -222,6 +222,13 @@ namespace ngraph
                 bool m_is_compiled;
 #endif
                 bool m_direct_execution;
+
+                /// Function that initializes the context used in codegen mode.
+                InitContextFuncCG m_compiled_init_ctx_func;
+
+                /// Function that destroys the context used in codegen mode.
+                DestroyContextFuncCG m_compiled_destroy_ctx_func;
+
                 EntryPoint m_compiled_function;
                 std::unordered_map<std::string, std::string> m_variable_name_map;
                 std::unordered_map<std::string, std::pair<std::size_t, std::size_t>>

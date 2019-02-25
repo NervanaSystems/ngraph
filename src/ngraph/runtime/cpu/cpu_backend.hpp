@@ -67,7 +67,7 @@ namespace ngraph
                     m_exec_map;
             };
 
-            class CPU_Executable : public runtime::Executable
+            class CPU_BACKEND_API CPU_Executable : public runtime::Executable
             {
             public:
                 CPU_Executable(std::shared_ptr<Function> func,
