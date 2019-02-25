@@ -75,6 +75,7 @@ add_library(onnx_import STATIC
         op/depth_to_space.cpp
         op/depth_to_space.hpp
         op/div.hpp
+        op/dropout.hpp
         op/elu.cpp
         op/elu.hpp
         op/equal.hpp
@@ -112,6 +113,8 @@ add_library(onnx_import STATIC
         op/mul.hpp
         op/neg.hpp
         op/not.hpp
+        op/onehot.cpp
+        op/onehot.hpp
         op/or.hpp
         op/pad.cpp
         op/pad.hpp
@@ -162,6 +165,7 @@ add_library(onnx_import STATIC
         op/transpose.hpp
         op/unsqueeze.cpp
         op/unsqueeze.hpp
+        op/where.hpp
         op/xor.hpp
         ops_bridge.cpp
         ops_bridge.hpp
