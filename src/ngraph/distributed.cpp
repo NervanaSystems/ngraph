@@ -29,6 +29,8 @@ using namespace ngraph;
 
 ngraph::Distributed::Distributed()
 {
+    this_init_comm = false;
+
 #ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
     if (!MLSL::Environment::GetEnv().IsInitialized())
     {
