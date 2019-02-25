@@ -96,12 +96,11 @@ namespace ngraph
                 friend class CPU_Executable;
 
             public:
-                CPU_ExternalFunction(
-                    const std::shared_ptr<ngraph::Function>& function,
-                    ngraph::pass::PassConfig pass_config = ngraph::pass::PassConfig(),
-                    bool release_function = true);
+                CPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
+                                     bool release_function = true);
                 ~CPU_ExternalFunction();
-                std::shared_ptr<ngraph::runtime::cpu::CPU_CallFrame> make_call_frame();
+                std::shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
+                    make_call_frame(ngraph::pass::PassConfig& pass_config);
 
                 const LayoutDescriptorPtrs& get_parameter_layout_descriptors();
                 const LayoutDescriptorPtrs& get_result_layout_descriptors();
@@ -166,11 +165,11 @@ namespace ngraph
 #endif
 
             protected:
-                void build();
+                void build(ngraph::pass::PassConfig& pass_config);
 
 #if !defined(NGRAPH_DEX_ONLY)
 
-                void compile();
+                void compile(ngraph::pass::PassConfig& pass_config);
 
 #endif
 
@@ -250,25 +249,36 @@ namespace ngraph
                     executor;
                 std::unordered_map<std::string, void*> tensor_data;
                 std::unordered_map<std::string, bool> tensor_stale;
+                // Each tensor is put into one buffer set.
+                // All the tensors in the same buffer set share the same memory buffer.
+                // bufferID_to_tensorSets maps bufferID to the pair of CPUTensorRole and buffer set.
+                // CPUTensorRole is INPUT, CONSTANT, OUTPUT, or INTERMEDIATE,
+                // which tells from where the memory buffer comes.
                 std::unordered_map<
                     size_t,
                     std::pair<ngraph::CPUTensorRole, std::unordered_set<descriptor::Tensor*>>>
-                    key_to_tensors_set_map;
-                std::unordered_map<descriptor::Tensor*, size_t> tensor_to_key_map;
+                    bufferID_to_tensorSets;
+                // tensor_to_bufferID maps tensor to the ID of the buffer set it belongs to.
+                std::unordered_map<descriptor::Tensor*, size_t> tensor_to_bufferID;
                 std::unordered_map<std::string, std::string> tensor_alias;
 
+                // tenor pointer and its offset into the memory allocated for intermediates
+                // used to calculate the correct address at runtime
                 std::list<std::pair<std::reference_wrapper<void*>, size_t>> intermediates_offsets;
+                // tensor pointer, input index, offset into the input, and if the input is stale
+                // used to calculate the correct address at runtime
                 std::list<std::tuple<std::reference_wrapper<void*>,
                                      size_t,
                                      size_t,
                                      std::reference_wrapper<bool>>>
                     function_input_index_offset;
+                // tensor pointer, output index, and offset into the output
+                // used to calculate the correct address at runtime
                 std::list<std::tuple<std::reference_wrapper<void*>, size_t, size_t>>
                     function_output_index_offset;
                 std::unordered_map<std::string, std::shared_ptr<CPU_ExternalFunction>> callees;
                 bool m_is_built;
                 std::vector<runtime::PerformanceCounter> m_perf_counters;
-                ngraph::pass::PassConfig m_pass_config;
 
 #if defined(NGRAPH_HALIDE)
                 std::unordered_map<std::string, Halide::Func> halide_functions;

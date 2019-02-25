@@ -73,6 +73,6 @@ private:
     std::set<descriptor::Tensor*> m_tensor_caching;
     std::unordered_map<size_t,
                        std::pair<ngraph::CPUTensorRole, std::unordered_set<descriptor::Tensor*>>>&
-        m_key_to_tensors_set_map;
-    std::unordered_map<descriptor::Tensor*, size_t>& m_tensor_to_key_map;
+        m_bufferID_to_tensorSets;
+    std::unordered_map<descriptor::Tensor*, size_t>& m_tensor_to_bufferID;
 };

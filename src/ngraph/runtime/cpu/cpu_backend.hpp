@@ -36,7 +36,8 @@ namespace ngraph
             {
             public:
                 std::shared_ptr<CPU_CallFrame>
-                    make_call_frame(const std::shared_ptr<CPU_ExternalFunction>& external_function);
+                    make_call_frame(const std::shared_ptr<CPU_ExternalFunction>& external_function,
+                                    ngraph::pass::PassConfig& pass_config);
 
                 std::shared_ptr<ngraph::runtime::Tensor>
                     create_tensor(const ngraph::element::Type& element_type,
@@ -53,7 +54,7 @@ namespace ngraph
 
                 std::shared_ptr<ngraph::runtime::Executable>
                     compile(std::shared_ptr<Function> func,
-                            ngraph::pass::PassConfig pass_config,
+                            ngraph::pass::PassConfig& pass_config,
                             bool enable_performance_counters = false);
 
                 void remove_compiled_function(std::shared_ptr<Executable> exec) override;
@@ -70,7 +71,7 @@ namespace ngraph
             {
             public:
                 CPU_Executable(std::shared_ptr<Function> func,
-                               ngraph::pass::PassConfig pass_config,
+                               ngraph::pass::PassConfig& pass_config,
                                bool performance_counters_enabled);
                 bool call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                           const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;

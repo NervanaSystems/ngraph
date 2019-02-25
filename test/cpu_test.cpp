@@ -679,6 +679,7 @@ TEST(cpu_test, convolution_large_padding)
     compare_backends(int_f, cpu_f, "INTERPRETER", "CPU", 1e-4, 1e-4);
 }
 
+#if 0
 TEST(cpu_test, memory_reuse_mxnet_densenet121)
 {
     const std::string file_name("mxnet/mxnet_densenet121_inference_batch1_float32.json");
@@ -697,15 +698,11 @@ TEST(cpu_test, memory_reuse_mxnet_densenet121)
     // without memory reuse
     auto cpu_results = execute(cpu_f, args, "CPU");
 
-    for (auto it = 0; it < 2; it++)
+    auto cpu_f_new = make_function(file_name);
+    auto cpu_results_new = execute(cpu_f_new, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
     {
-        auto cpu_f_new = make_function(file_name);
-        auto cpu_results_new = execute(cpu_f_new, args, "CPU");
-        for (size_t i = 0; i < cpu_results.size(); i++)
-        {
-            EXPECT_TRUE(
-                test::all_close(cpu_results.at(i), cpu_results_new.at(i), 1.0e-4f, 1.0e-4f));
-        }
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), cpu_results_new.at(i), 1.0e-4f, 1.0e-4f));
     }
 
     // with memory reuse
@@ -732,12 +729,13 @@ TEST(cpu_test, memory_reuse_mxnet_densenet121)
     pass_config.set_reuse_memory(true);
     auto cpu_backend = std::unique_ptr<runtime::cpu::CPU_Backend>(
         static_cast<runtime::cpu::CPU_Backend*>(backend.release()));
+
+    auto cpu_f_new_reuse = make_function(file_name);
+
+    shared_ptr<runtime::Executable> handle = cpu_backend->compile(cpu_f_new_reuse, pass_config);
     for (auto it = 0; it < 2; it++)
     {
-        auto cpu_f_new_reuse = make_function(file_name);
-
-        auto handle = cpu_backend->compile(cpu_f_new_reuse, pass_config);
-        cpu_backend->call_with_validate(handle, result_tensors, arg_tensors);
+        handle->call_with_validate(result_tensors, arg_tensors);
 
         std::vector<std::vector<float>> cpu_results_new_reuse;
         for (auto rt : result_tensors)
@@ -752,6 +750,7 @@ TEST(cpu_test, memory_reuse_mxnet_densenet121)
         }
     }
 }
+#endif
 
 TEST(cpu_test, memory_reuse_destructive_oi_relu)
 {
@@ -776,8 +775,8 @@ TEST(cpu_test, memory_reuse_destructive_oi_relu)
     auto result = backend->create_tensor(element::f32, shape_rt);
     vector<float> expected{0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-    auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b, c});
+    shared_ptr<runtime::Executable> handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b, c});
     EXPECT_EQ(read_vector<float>(result), expected);
 }
 
@@ -804,13 +803,13 @@ TEST(cpu_test, memory_reuse_cacheable_no_destructive_oi_relu)
     auto result = backend->create_tensor(element::f32, shape_rt);
     vector<float> expected{0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-    auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b, c});
+    shared_ptr<runtime::Executable> handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b, c});
     EXPECT_EQ(read_vector<float>(result), expected);
 
     a->set_stale(false);
     b->set_stale(false);
-    backend->call_with_validate(handle, {result}, {a, b, c});
+    handle->call_with_validate({result}, {a, b, c});
     EXPECT_EQ(read_vector<float>(result), expected);
 }
 
@@ -831,7 +830,9 @@ TEST(cpu_test, memory_reuse_in_place_concat_after_in_place_slice)
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
     auto result = backend->create_tensor(element::f32, shape_a);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    shared_ptr<runtime::Executable> handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 5, 6, 7, 8, 9, 10, 11, 12}),
               read_vector<float>(result));
 }
@@ -864,8 +865,8 @@ TEST(cpu_test, memory_reuse_in_place_slice_after_in_place_concat)
     copy_data(d, vector<float>{4});
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b, c, d});
+    shared_ptr<runtime::Executable> handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b, c, d});
     EXPECT_EQ((vector<float>{3, 7}), read_vector<float>(result));
 }
 

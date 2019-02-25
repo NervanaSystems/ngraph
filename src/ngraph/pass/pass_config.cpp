@@ -50,7 +50,7 @@ ngraph::pass::PassConfig::PassConfig()
     }
     if (std::getenv("NGRAPH_REUSE_MEMORY"))
     {
-        m_reuse_memory = true;
+        m_pass_attributes["CPUMemoryAssignment::ReuseMemory"] = true;
     }
 }
 
@@ -70,10 +70,14 @@ bool ngraph::pass::PassConfig::get_pass_enable(std::string name)
 
 void ngraph::pass::PassConfig::set_reuse_memory(bool reuse_memory)
 {
-    m_reuse_memory = reuse_memory;
+    m_pass_attributes["CPUMemoryAssignment::ReuseMemory"] = reuse_memory;
 }
 
 bool ngraph::pass::PassConfig::get_reuse_memory()
 {
-    return m_reuse_memory;
+    if (m_pass_attributes.find("CPUMemoryAssignment::ReuseMemory") == m_pass_attributes.end())
+    {
+        return false;
+    }
+    return m_pass_attributes["CPUMemoryAssignment::ReuseMemory"];
 }

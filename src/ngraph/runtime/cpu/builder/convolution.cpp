@@ -188,6 +188,7 @@ namespace ngraph
                 auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
                 auto& arg3_tensor = external_function->get_tensor_data(args[3].get_name());
                 auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                size_t arg3_size = node->get_inputs()[3].get_tensor().size();
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -196,20 +197,6 @@ namespace ngraph
                         mkldnn_emitter->build_convolution<ngraph::op::ConvolutionBiasAdd>(
                             node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
-
-                    auto input_md = mkldnn_utils::get_input_mkldnn_md(node, 3);
-                    auto element_size = node->get_input_element_type(3).size();
-                    size_t arg3_size = shape_size(args[3].get_shape()) * element_size;
-                    auto elements = 1;
-                    AxisVector axis_list = ngraph::get_default_order(args[3].get_shape());
-                    if (mkldnn_utils::is_mkldnn_padded_layout(input_md, axis_list))
-                    {
-                        for (auto i = 0; i < input_md.data.ndims; i++)
-                        {
-                            elements *= input_md.data.layout_desc.blocking.padding_dims[i];
-                        }
-                        arg3_size = elements * element_size;
-                    }
 
                     auto functor = [&, conv_index, arg3_size](CPURuntimeContext* ctx,
                                                               CPUExecutionContext* ectx) {
@@ -242,6 +229,7 @@ namespace ngraph
                 auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
                 auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
                 auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                size_t arg2_size = node->get_inputs()[2].get_tensor().size();
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -249,20 +237,6 @@ namespace ngraph
                     auto conv_index = mkldnn_emitter->build_convolution<ngraph::op::ConvolutionAdd>(
                         node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
-
-                    auto input_md = mkldnn_utils::get_input_mkldnn_md(node, 2);
-                    auto element_size = node->get_input_element_type(2).size();
-                    size_t arg2_size = shape_size(args[2].get_shape()) * element_size;
-                    auto elements = 1;
-                    AxisVector axis_list = ngraph::get_default_order(args[2].get_shape());
-                    if (mkldnn_utils::is_mkldnn_padded_layout(input_md, axis_list))
-                    {
-                        for (auto i = 0; i < input_md.data.ndims; i++)
-                        {
-                            elements *= input_md.data.layout_desc.blocking.padding_dims[i];
-                        }
-                        arg2_size = elements * element_size;
-                    }
 
                     auto functor = [&, conv_index, arg2_size](CPURuntimeContext* ctx,
                                                               CPUExecutionContext* ectx) {

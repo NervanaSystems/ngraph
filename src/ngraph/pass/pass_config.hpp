@@ -38,5 +38,5 @@ public:
 
 private:
     std::map<std::string, bool> m_enables;
-    bool m_reuse_memory = false;
+    std::map<std::string, bool> m_pass_attributes;
 };

@@ -212,9 +212,7 @@ using namespace ngraph;
     }
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
-    const shared_ptr<ngraph::Function>& function,
-    ngraph::pass::PassConfig pass_config,
-    bool release_function)
+    const shared_ptr<ngraph::Function>& function, bool release_function)
     : m_function(function)
     , m_release_function(release_function)
     , m_emit_timing(false)
@@ -228,7 +226,6 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     , m_compiled_function(nullptr)
     , m_function_name(function->get_name())
     , m_is_built(false)
-    , m_pass_config(pass_config)
 {
 }
 
@@ -432,7 +429,7 @@ static void
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_ExternalFunction::compile()
+void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_config)
 {
     if (m_is_compiled)
     {
@@ -454,10 +451,10 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<ngraph::pass::PropagateCacheability>(
         runtime::cpu::get_annotations_factory());
     pass_manager.register_pass<runtime::cpu::pass::CPUMemoryAssignment>(
-        key_to_tensors_set_map,
-        tensor_to_key_map,
+        bufferID_to_tensorSets,
+        tensor_to_bufferID,
         size_t(s_memory_pool_alignment),
-        !m_pass_config.get_reuse_memory());
+        pass_config.get_reuse_memory());
     pass_manager.run_passes(m_function);
 
     unordered_map<shared_ptr<Function>, list<shared_ptr<Node>>> function_ordered_ops;
@@ -624,13 +621,14 @@ using namespace ngraph::runtime;
                        << c->get_data_ptr() << "));\n";
 
                 auto output_tensor = &node->get_output_tensor();
-                NGRAPH_ASSERT(tensor_to_key_map.find(output_tensor) != tensor_to_key_map.end());
-                auto key = tensor_to_key_map[output_tensor];
-                NGRAPH_ASSERT(key_to_tensors_set_map.find(key) != key_to_tensors_set_map.end());
-                auto tensors_set = key_to_tensors_set_map[key].second;
+                NGRAPH_ASSERT(tensor_to_bufferID.find(output_tensor) != tensor_to_bufferID.end());
+                auto key = tensor_to_bufferID[output_tensor];
+                NGRAPH_ASSERT(bufferID_to_tensorSets.find(key) != bufferID_to_tensorSets.end());
+                auto tensors_set = bufferID_to_tensorSets[key].second;
                 // process all tensors in the set containing the output tensor of the constant
                 for (auto& ele_t : tensors_set)
                 {
+                    NGRAPH_ASSERT(ele_t->get_pool_offset() == 0) << "no offset set for constants";
                     m_tensor_roles[ele_t->get_name()] = CPUTensorRole::CONSTANT;
                     m_variable_name_map[ele_t->get_name()] = output_tensor->get_name();
                 }
@@ -744,10 +742,10 @@ using namespace ngraph::runtime;
             {
                 auto output_tensor = &param->get_outputs().at(i).get_tensor();
                 param_index_map[output_tensor->get_name()] = arg_index;
-                NGRAPH_ASSERT(tensor_to_key_map.find(output_tensor) != tensor_to_key_map.end());
-                auto key = tensor_to_key_map[output_tensor];
-                NGRAPH_ASSERT(key_to_tensors_set_map.find(key) != key_to_tensors_set_map.end());
-                auto tensors_set = key_to_tensors_set_map[key].second;
+                NGRAPH_ASSERT(tensor_to_bufferID.find(output_tensor) != tensor_to_bufferID.end());
+                auto key = tensor_to_bufferID[output_tensor];
+                NGRAPH_ASSERT(bufferID_to_tensorSets.find(key) != bufferID_to_tensorSets.end());
+                auto tensors_set = bufferID_to_tensorSets[key].second;
 
                 // process all tensors in the set containing the output tensor of the parameter
                 for (auto& ele_t : tensors_set)
@@ -755,17 +753,8 @@ using namespace ngraph::runtime;
                     const element::Type& et = ele_t->get_element_type();
                     string type = et.c_type_string();
                     stringstream ss;
-                    if (ele_t->get_pool_offset() == 0)
-                    {
-                        // no offset
-                        ss << "((" << type << "*)(inputs[" << arg_index << "]))";
-                    }
-                    else
-                    {
-                        // has offset
-                        ss << "(((" << type << "*)(inputs[" << arg_index << "])) + "
-                           << ele_t->get_pool_offset() / et.size() << ")";
-                    }
+                    ss << "(((" << type << "*)(inputs[" << arg_index << "])) + "
+                       << ele_t->get_pool_offset() / et.size() << ")";
                     m_variable_name_map[ele_t->get_name()] = ss.str();
                     m_tensor_roles[ele_t->get_name()] = CPUTensorRole::INPUT;
                 }
@@ -776,7 +765,7 @@ using namespace ngraph::runtime;
         // Add temporaries to the variable name map
         if (temporaries_used)
         {
-            for (auto& ele : key_to_tensors_set_map)
+            for (auto& ele : bufferID_to_tensorSets)
             {
                 if (ele.second.first == CPUTensorRole::INTERMEDIATE)
                 {
@@ -797,10 +786,10 @@ using namespace ngraph::runtime;
         {
             shared_ptr<Node> op = current_function->get_output_op(i);
             auto output_tensor = &op->get_output_tensor();
-            NGRAPH_ASSERT(tensor_to_key_map.find(output_tensor) != tensor_to_key_map.end());
-            auto key = tensor_to_key_map[output_tensor];
-            NGRAPH_ASSERT(key_to_tensors_set_map.find(key) != key_to_tensors_set_map.end());
-            auto tensors_set = key_to_tensors_set_map[key].second;
+            NGRAPH_ASSERT(tensor_to_bufferID.find(output_tensor) != tensor_to_bufferID.end());
+            auto key = tensor_to_bufferID[output_tensor];
+            NGRAPH_ASSERT(bufferID_to_tensorSets.find(key) != bufferID_to_tensorSets.end());
+            auto tensors_set = bufferID_to_tensorSets[key].second;
 
             // process all tensors in the set containing the output tensor of the result
             for (auto& ele_t : tensors_set)
@@ -808,17 +797,8 @@ using namespace ngraph::runtime;
                 const element::Type& et = ele_t->get_element_type();
                 string type = et.c_type_string();
                 stringstream ss;
-                if (ele_t->get_pool_offset() == 0)
-                {
-                    // no offset
-                    ss << "((" << type << "*)(outputs[" << i << "]))";
-                }
-                else
-                {
-                    // has offset
-                    ss << "(((" << type << "*)(outputs[" << i << "])) + "
-                       << ele_t->get_pool_offset() / et.size() << ")";
-                }
+                ss << "(((" << type << "*)(outputs[" << i << "])) + "
+                   << ele_t->get_pool_offset() / et.size() << ")";
                 m_variable_name_map[ele_t->get_name()] = ss.str();
                 m_tensor_roles[ele_t->get_name()] = CPUTensorRole::OUTPUT;
             }
@@ -1159,7 +1139,7 @@ bool runtime::cpu::CPU_ExternalFunction::computes_result(Node* node)
     return false;
 }
 
-void runtime::cpu::CPU_ExternalFunction::build()
+void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_config)
 {
     if (m_is_built)
     {
@@ -1182,10 +1162,10 @@ void runtime::cpu::CPU_ExternalFunction::build()
     pass_manager.register_pass<ngraph::pass::PropagateCacheability>(
         runtime::cpu::get_annotations_factory());
     pass_manager.register_pass<runtime::cpu::pass::CPUMemoryAssignment>(
-        key_to_tensors_set_map,
-        tensor_to_key_map,
+        bufferID_to_tensorSets,
+        tensor_to_bufferID,
         size_t(s_memory_pool_alignment),
-        !m_pass_config.get_reuse_memory());
+        pass_config.get_reuse_memory());
     pass_manager.run_passes(m_function, false);
 
     // Store layouts assigned for arguments
@@ -1229,7 +1209,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
     if (m_function->get_temporary_pool_size())
     {
         m_memory_buffer_sizes.push_back(m_function->get_temporary_pool_size());
-        for (auto& ele : key_to_tensors_set_map)
+        for (auto& ele : bufferID_to_tensorSets)
         {
             if (ele.second.first == CPUTensorRole::INTERMEDIATE)
             {
@@ -1251,13 +1231,14 @@ void runtime::cpu::CPU_ExternalFunction::build()
             auto output_tensor = &node->get_output_tensor();
             tensor_data[output_tensor->get_name()] =
                 const_cast<void*>(static_pointer_cast<ngraph::op::Constant>(node)->get_data_ptr());
-            NGRAPH_ASSERT(tensor_to_key_map.find(output_tensor) != tensor_to_key_map.end());
-            auto key = tensor_to_key_map[output_tensor];
-            NGRAPH_ASSERT(key_to_tensors_set_map.find(key) != key_to_tensors_set_map.end());
-            auto tensors_set = key_to_tensors_set_map[key].second;
+            NGRAPH_ASSERT(tensor_to_bufferID.find(output_tensor) != tensor_to_bufferID.end());
+            auto key = tensor_to_bufferID[output_tensor];
+            NGRAPH_ASSERT(bufferID_to_tensorSets.find(key) != bufferID_to_tensorSets.end());
+            auto tensors_set = bufferID_to_tensorSets[key].second;
             // process all tensors in the set containing the output tensor of the constant
             for (auto& ele_t : tensors_set)
             {
+                NGRAPH_ASSERT(ele_t->get_pool_offset() == 0) << "no offset set for constants";
                 m_tensor_roles[ele_t->get_name()] = CPUTensorRole::CONSTANT;
                 tensor_alias[ele_t->get_name()] = output_tensor->get_name();
             }
@@ -1271,10 +1252,10 @@ void runtime::cpu::CPU_ExternalFunction::build()
         for (size_t i = 0; i < param->get_output_size(); ++i)
         {
             auto output_tensor = &param->get_outputs().at(i).get_tensor();
-            NGRAPH_ASSERT(tensor_to_key_map.find(output_tensor) != tensor_to_key_map.end());
-            auto key = tensor_to_key_map[output_tensor];
-            NGRAPH_ASSERT(key_to_tensors_set_map.find(key) != key_to_tensors_set_map.end());
-            auto tensors_set = key_to_tensors_set_map[key].second;
+            NGRAPH_ASSERT(tensor_to_bufferID.find(output_tensor) != tensor_to_bufferID.end());
+            auto key = tensor_to_bufferID[output_tensor];
+            NGRAPH_ASSERT(bufferID_to_tensorSets.find(key) != bufferID_to_tensorSets.end());
+            auto tensors_set = bufferID_to_tensorSets[key].second;
 
             auto stale = tensor_stale[output_tensor->get_name()];
             // process all tensors in the set containing the output tensor of the parameter
@@ -1293,10 +1274,10 @@ void runtime::cpu::CPU_ExternalFunction::build()
     {
         shared_ptr<Node> op = m_function->get_output_op(i);
         auto output_tensor = &op->get_output_tensor();
-        NGRAPH_ASSERT(tensor_to_key_map.find(output_tensor) != tensor_to_key_map.end());
-        auto key = tensor_to_key_map[output_tensor];
-        NGRAPH_ASSERT(key_to_tensors_set_map.find(key) != key_to_tensors_set_map.end());
-        auto tensors_set = key_to_tensors_set_map[key].second;
+        NGRAPH_ASSERT(tensor_to_bufferID.find(output_tensor) != tensor_to_bufferID.end());
+        auto key = tensor_to_bufferID[output_tensor];
+        NGRAPH_ASSERT(bufferID_to_tensorSets.find(key) != bufferID_to_tensorSets.end());
+        auto tensors_set = bufferID_to_tensorSets[key].second;
 
         // process all tensors in the set containing the output tensor of the result
         for (auto& ele_t : tensors_set)
@@ -1710,18 +1691,18 @@ void*& runtime::cpu::CPU_ExternalFunction::get_tensor_data(const std::string& na
 }
 
 shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
-    runtime::cpu::CPU_ExternalFunction::make_call_frame()
+    runtime::cpu::CPU_ExternalFunction::make_call_frame(ngraph::pass::PassConfig& pass_config)
 {
 #if !defined(NGRAPH_DEX_ONLY)
     if (!m_is_compiled && !m_direct_execution)
     {
-        compile();
+        compile(pass_config);
     }
 #endif
 
     if (!m_is_built && m_direct_execution)
     {
-        build();
+        build(pass_config);
     }
 
     return make_shared<ngraph::runtime::cpu::CPU_CallFrame>(shared_from_this(),
