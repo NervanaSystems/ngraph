@@ -1,16 +1,18 @@
-.. fusion/optimize-graphs: 
+.. fusion/index.rst:
 
+Pattern matcher
+###############
 
-Optimize Graphs 
-===============
+.. toctree::
+   :maxdepth: 1 
 
-with nGraph Compiler fusions
-----------------------------
+   overview.rst
+   graph-rewrite.rst
 
 The nGraph Compiler is an optimizing compiler. As such, it provides a way to 
 capture a given :term:`function graph` and perform a series of optimization 
 passes over that graph. The result is a semantically-equivalent graph that, when 
-executed using any :doc:`backend <../backend-support/index>`, has optimizations 
+executed using any :doc:`backend <../../backend-support/index>`, has optimizations 
 inherent at the hardware level: superior runtime characteristics to increase 
 training performance or reduce inference latency.   
 
@@ -41,7 +43,30 @@ then inspecting the transformed graph.
 
 Optimization passes can be programmed ahead of time if you know or can predict 
 what your graph will look like when it's ready to be executed (in other words: 
-which `ops` can be automatically translated into :doc:`nGraph Core ops <../ops/index>`). 
+which `ops` can be automatically translated into :doc:`nGraph Core ops <../../ops/index>`). 
 
 The ``Interpreter`` is simply a backend providing reference implementations of 
 ngraph ops in C++, with the focus on simplicity over performance.
+
+Example 
+-------
+
+Let us first consider a simple example. A user would like to execute a graph 
+that describes the following arithmetic expression:
+
+:math:`a + b * 1` or :math:`Add(a, Mul(b, 1))` 
+
+In the above expressions, `1` is an identity element; any element multiplied by 
+the identity element is equal to itself. In other words, the original expression 
+:math:`a + b * 1` is exactly equivalent to the expression :math:`a + b`, so we 
+can eliminate this extra multiplication step.
+
+The writer of an optimization pass which uses algebraic simplification would 
+probably want to first ``locate`` all multiplication expressions where 
+multiplicands are multiplied by `1` (for stage 1) and to then ``replace``, 
+those expressions with just their multiplicands (for stage 2).  
+
+To make the work of an optimization pass writer easier, the nGraph Library 
+includes facilities that enable the *finding* of relevant candidates using 
+pattern matching (via ``pattern/matcher.hpp``), and the *transforming* of the 
+original graph into an optimized version (via ``pass/graph_rewrite.hpp``).   

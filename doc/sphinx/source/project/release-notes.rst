@@ -29,7 +29,7 @@ the following categories:
 
 In our tests, the optimized workloads can perform up to 45X faster than native 
 frameworks, and we expect performance gains for other workloads due to our 
-powerful :doc:`../fusion/index` feature.
+powerful :doc:`../core/fusion/index` feature.
 
 
 See also our recent `API changes`_
