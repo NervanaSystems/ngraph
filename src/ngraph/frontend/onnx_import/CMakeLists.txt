@@ -75,6 +75,7 @@ add_library(onnx_import STATIC
         op/depth_to_space.cpp
         op/depth_to_space.hpp
         op/div.hpp
+        op/dropout.hpp
         op/elu.cpp
         op/elu.hpp
         op/equal.hpp

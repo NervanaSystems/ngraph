@@ -44,7 +44,7 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | Elu | 1-6- |
 | Equal | 1-7 | 
 | Exp | 1-6- | 
-| Flatten | 1-(9) | 
+| Flatten | 1-9- | 
 | Floor | 1-6- | 
 | Gemm | 1-6-7-9 | 
 | GlobalAveragePool | 1- | 
@@ -65,6 +65,7 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | Mul | 1-6-7- | 
 | Neg | 1-6- | 
 | Not | 1- | 
+| OneHot | (9) | Only static version
 | Or | 1-7- | 
 | PRelu | 1-6-7-9 |
 | Pow | 1-7- | 
@@ -129,7 +130,6 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | If | - | | 432 | At this moment probably impossible. |
 | IsNaN | (9) | | 440 | Hacky way is to generate constant nodes with representations of NaN and compare with them. |
 | Loop | - | | 432 | Static loops with some preconditions may be possible, however no idea how to pass graph (proto?) as a _body_ attribute. (what about graph contains `Loop`?) |
-| OneHot | (9) | | 453 | Furhter analysis needed. Unclear nGraph doc of `OneHot` op. |
 | Scan | - |  | 433 | Further analysis needed. - determine whether it is possible to import graph passed by op attribute. |
 
 ### Dynamic operators
@@ -139,6 +139,7 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | ConstantOfShape | (9) | 286 | 445 | Dynamic shape input. |
 | Expand | - | NGRAPH-3289 | 367 | Dynamic op. |
 | Gather | - | NGRAPH-3291 | 369, | Dynamic op.  |
+| OneHot | (9) | NGCORE-339 | 486 | Dynamic output shape
 | Tile | - | NGRAPH-3292 | 368 | Dynamic op. |
 | Upsample | (7) | 287 | 441 | Dynamic op. |
 | MaxRoiPool | - | 288 | 437 | Dynamic op - Need dynamic slicing. Beside just use _slice/op/concat_ pattern. |

@@ -132,7 +132,6 @@ namespace ngraph
                 static constexpr size_t s_memory_pool_alignment = 4096;
 
                 std::vector<CPUKernelFunctor>& get_functors() { return functors; }
-                std::unordered_map<std::string, void*>& get_tensor_data() { return tensor_data; }
                 void*& get_tensor_data(const std::string& name);
                 std::function<void(CPURuntimeContext*, std::vector<void*>&, std::vector<void*>&)>&
                     get_executor()
