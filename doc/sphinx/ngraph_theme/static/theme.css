@@ -2554,9 +2554,10 @@ div[class^='highlight'] pre {
 }
 
 .function {
-    border-right: dashed 0.19em #f4f2f0;
-    border-bottom: solid 0.23em #f4f2f0;
-    border-top: solid 0.31em #77a29f;
+    border-right: dashed 0.19em #f3cdba;
+    border-bottom: solid 0.23em #826c62;
+    border-top: solid 0.31em #826c62;
+    background: #aba09b;
 }
 
 

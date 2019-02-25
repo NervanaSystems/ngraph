@@ -20,6 +20,7 @@ set (SRC
     autodiff/adjoints.cpp
     builder/autobroadcast.cpp
     builder/numpy_transpose.cpp
+    builder/quantization/quantized_linear_convolution.cpp
     builder/quantization.cpp
     builder/reduce_ops.cpp
     coordinate.cpp
@@ -168,6 +169,7 @@ set (SRC
     placement.cpp
     cpio.cpp
     )
+
 if(NGRAPH_DISTRIBUTED_ENABLE)
     list(APPEND SRC distributed.cpp)
 endif()
@@ -178,9 +180,16 @@ add_library(ngraph SHARED ${SRC})
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
     target_sources(ngraph PRIVATE distributed.cpp)
-    target_compile_definitions(ngraph PRIVATE NGRAPH_DISTRIBUTED)
-    target_include_directories(ngraph SYSTEM PRIVATE libmlsl)
-    target_link_libraries(ngraph PRIVATE libmlsl)
+    if(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
+        target_include_directories(ngraph SYSTEM PRIVATE libmlsl)
+        target_link_libraries(ngraph PRIVATE libmlsl)
+    elseif(NGRAPH_DISTRIBUTED_OMPI_ENABLE)
+        find_package(MPI REQUIRED)
+        target_include_directories(ngraph SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+        target_link_libraries(ngraph PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+    else()
+        message(FATAL_ERROR "Distributed Library not supported/mentioned")
+    endif()
 endif()
 
 add_subdirectory(frontend)

@@ -1638,9 +1638,9 @@ html {
 body {
   font-family: "RobotoSlab", Sans, sans-serif;
   font-weight: normal;
-  color: #38403f;
+  color: #3f3c3d;
   min-height: 100%;
-  overflow-x: hidden;
+  overflow-x: visible;
   background: #fcfcfc;
 }
 
@@ -1731,11 +1731,13 @@ p {
 
 h1 {
   font-size: 153%;
+  color: #585351;
 }
 
 h2, .rst-content .toctree-wrapper p.caption {
   font-size: 139%;
   font-weight: lighter;
+  color: #826c62;
 }
 
 h3 {
@@ -1854,7 +1856,7 @@ div[class^='highlight'] td.code {
 
 code, p.caption { 
   font-family: "NeoSansIntel-Light", sans, monospace;
-  color: #A79992;
+  color: #585351;
   font-size: 0.99em;
   line-height: 1.39em;
   }
@@ -1875,7 +1877,7 @@ caption-text {
     padding-top: 0.29em;
     padding-left: 0.11em;
     padding-bottom: 0.23em;
-    text-align: rig6ht; 
+    text-align: right; 
     }
 
 div[class^='highlight'] pre {
@@ -2771,7 +2773,7 @@ span[id*='MathJax-Span'] {
   padding: 0 1.618em;
   margin-bottom: 0;
   display: block;
-  font-family: NeoSansIntel, sans;
+  font-family: "NeoSansIntel", sans;
   font-weight: bold;
   text-transform: uppercase;
   font-size: 80%;
@@ -2925,11 +2927,12 @@ span[id*='MathJax-Span'] {
   padding: 0.809em;
   margin-bottom: 0.809em;
   z-index: 200;
-  background-color: #0071c5;
+  background-color: #fcfcfc;
   text-align: center;
   padding: 0.809em;
   display: block;
-  color: #fcfcfc;
+  color: #585351;
+  font-family: "NeoSansIntel-Regular", sans;
   margin-bottom: 0.809em;
 }
 .wy-side-nav-search input[type=text] {
@@ -2937,14 +2940,14 @@ span[id*='MathJax-Span'] {
     line-height: 1.3em;
   border-radius: 50px;
   padding: 6px 12px;
-  border-color: #8eb0af;
+  border-color: #aba09b;
 }
 .wy-side-nav-search img {
   display: block;
   margin: auto auto 0.809em auto;
   height: 45px;
   width: 45px;
-  background-color: #8eb0af;
+  background-color: #aba09b;
   padding: 5px;
   border-radius: 100%;
 }
@@ -2975,7 +2978,7 @@ span[id*='MathJax-Span'] {
   margin-top: -0.4045em;
   margin-bottom: 0.809em;
   font-weight: normal;
-  color: rgba(255, 255, 255, 0.3);
+  color: #3f3c3d;
 }
 
 .wy-nav .wy-menu-vertical header {
@@ -2985,7 +2988,7 @@ span[id*='MathJax-Span'] {
   color: #dadada;
 }
 .wy-nav .wy-menu-vertical a:hover {
-  background-color: #8eb0af;
+  background-color: #aba09b;
   color: #fff;
 }
 
@@ -3035,7 +3038,7 @@ span[id*='MathJax-Span'] {
   overflow-x: hidden;
   overflow-y: hidden;
   min-height: 100%;
-  background: #5f5f5f;
+  background: #585351;
   z-index: 200;
 }
 
@@ -3049,7 +3052,7 @@ span[id*='MathJax-Span'] {
 
 .wy-nav-top {
   display: none;
-  background: #0071c5;
+  background: #fcfcfc;
   color: #fff;
   padding: 0.4045em 0.809em;
   position: relative;
@@ -3066,14 +3069,14 @@ span[id*='MathJax-Span'] {
   clear: both;
 }
 .wy-nav-top a {
-  color: #fff;
-  font-weight: bold;
+  color: #585351;
+  font-family: "NeoSansIntel-Regular", sans;
 }
 .wy-nav-top img {
   margin-right: 12px;
   height: 45px;
   width: 45px;
-  background-color: #0071c5;
+  background-color: #fcfcfc;
   padding: 5px;
   border-radius: 100%;
 }
@@ -3092,15 +3095,15 @@ span[id*='MathJax-Span'] {
 .wy-nav-content {
   padding: 1.618em 3.236em;
   height: 100%;
-  max-width: 850px !important;
+  max-width: 979px !important;
   margin: auto;
 }
 
 .wy-body-mask {
   position: fixed;
-  width: 100%;
+  width: auto;
   height: 100%;
-  background: rgba(0, 0, 0, 0.2);
+  background: ;
   display: none;
   z-index: 499;
 }
@@ -3137,11 +3140,11 @@ footer span.commit code, footer span.commit .rst-content tt, .rst-content footer
 
 #search-results .search li {
   margin-bottom: 24px;
-  border-bottom: solid 1px #e1e4e5;
+  border-bottom: solid 1px #f3cdba;
   padding-bottom: 24px;
 }
 #search-results .search li:first-child {
-  border-top: solid 1px #e1e4e5;
+  border-top: solid 1px #f3cdba;
   padding-top: 24px;
 }
 #search-results .search li a {

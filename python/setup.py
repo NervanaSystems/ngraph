@@ -228,6 +228,7 @@ sources = [
     'pyngraph/ops/softmax.cpp',
     'pyngraph/ops/result.cpp',
     'pyngraph/runtime/backend.cpp',
+    'pyngraph/runtime/executable.cpp',
     'pyngraph/runtime/regmodule_pyngraph_runtime.cpp',
     'pyngraph/runtime/tensor.cpp',
     'pyngraph/passes/manager.cpp',
@@ -394,4 +395,7 @@ setup(
     setup_requires=['numpy'],
     install_requires=requirements,
     zip_safe=False,
+    extras_require={
+        'plaidml': ['plaidml>=0.5.0'],
+    },
 )

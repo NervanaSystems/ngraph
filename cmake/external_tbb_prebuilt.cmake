@@ -27,6 +27,7 @@ endif()
 
 ExternalProject_Add(
     ext_tbb
+    PREFIX tbb
     URL ${TBB_FILE}
     URL_HASH SHA1=${TBB_SHA1_HASH}
     CONFIGURE_COMMAND ""
@@ -38,30 +39,32 @@ ExternalProject_Add(
     )
 
 ExternalProject_Get_Property(ext_tbb SOURCE_DIR)
-set(SOURCE_DIR ${SOURCE_DIR}/${ARCHIVE_FILE_BASE})
+set(INSTALL_DIR ${SOURCE_DIR}/${ARCHIVE_FILE_BASE})
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(TBB_LIB_NAME tbb_debug)
+else()
+    set(TBB_LIB_NAME tbb)
+endif()
 
 if (WIN32)
-    set(TBB_LINK_LIBS
-        ${SOURCE_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}clangTooling${CMAKE_SHARED_LIBRARY_SUFFIX}
-    )
+    set(TBB_LINK_LIBS ${INSTALL_DIR}/lib/intel64/vc14/${TBB_LIB_NAME}.lib)
 elseif(APPLE)
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        set(TBB_LIB_NAME tbb_debug)
-    else()
-        set(TBB_LIB_NAME tbb)
-    endif()
     set(TBB_LINK_LIBS
         ${NGRAPH_BUILD_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}
     )
 
     add_custom_command(TARGET ext_tbb POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SOURCE_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX} ${NGRAPH_BUILD_DIR}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${INSTALL_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX} ${NGRAPH_BUILD_DIR}
         COMMENT "Move tbb libraries to ngraph build directory"
     )
+
+    install(FILES ${NGRAPH_BUILD_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}
+            DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()
 
 
 add_library(libtbb INTERFACE)
 add_dependencies(libtbb ext_tbb)
-target_include_directories(libtbb SYSTEM INTERFACE ${SOURCE_DIR}/include)
+target_include_directories(libtbb SYSTEM INTERFACE ${INSTALL_DIR}/include)
 target_link_libraries(libtbb INTERFACE ${TBB_LINK_LIBS})

@@ -22,15 +22,27 @@
 
 using namespace std;
 
-#ifdef NGRAPH_DISTRIBUTED
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
+#include <memory>
+
 #include "ngraph/distributed.hpp"
+
+#include "distributed_setup.hpp"
 #endif
 
 int main(int argc, char** argv)
 {
-#ifdef NGRAPH_DISTRIBUTED
-    ngraph::Distributed dist;
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
+    unique_ptr<ngraph::Distributed> dist(new ngraph::Distributed());
+    DistributedSetup distributed_setup;
+    distributed_setup.set_comm_size(dist->get_size());
+    distributed_setup.set_comm_rank(dist->get_rank());
+    if (dist->get_size() == 1)
+    {
+        dist.reset();
+    }
 #endif
+
     const char* exclude = "--gtest_filter=-benchmark.*";
     vector<char*> argv_vector;
     argv_vector.push_back(argv[0]);
@@ -43,6 +55,13 @@ int main(int argc, char** argv)
 
     ::testing::InitGoogleTest(&argc, argv_vector.data());
     int rc = RUN_ALL_TESTS();
+
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
+    if (dist)
+    {
+        dist.reset();
+    }
+#endif
 
     return rc;
 }
