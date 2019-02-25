@@ -8,9 +8,10 @@ Distribute training across multiple nGraph backends
     however, the following configuration options have worked for nGraph devices 
     with mixed or limited success in testing.
 
-In the :doc:`previous section <../howto/derive-for-training>`, we described the 
-steps needed to create a "trainable" nGraph model. Here we demonstrate how to 
-train a data parallel model by distributing the graph to more than one device.
+In the :doc:`previous section <../constructing-graphs/derive-for-training>`, 
+we described the steps needed to create a "trainable" nGraph model. Here we 
+demonstrate how to train a data parallel model by distributing the graph to 
+more than one device.
 
 Frameworks can implement distributed training with nGraph versions prior to 
 `0.13`:
@@ -35,12 +36,12 @@ Finally, to run the training using two nGraph devices, invoke
    $ mpirun 
 
 To deploy data-parallel training, the ``AllReduce`` op should be added after the 
-steps needed to complete the :doc:`backpropagation <../howto/derive-for-training>`; 
+steps needed to complete the :doc:`backpropagation <../constructing-graphs/derive-for-training>`; 
 the new code is highlighted below: 
 
-.. literalinclude:: ../../../examples/mnist_mlp/dist_mnist_mlp.cpp
+.. literalinclude:: ../../../../examples/mnist_mlp/dist_mnist_mlp.cpp
    :language: cpp
-   :lines: 180-196
+   :lines: 178-194
    :emphasize-lines: 8-11
 
 See the `full code`_ in the ``examples`` folder ``/doc/examples/mnist_mlp/dist_mnist_mlp.cpp``. 

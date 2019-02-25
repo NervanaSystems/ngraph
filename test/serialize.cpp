@@ -75,13 +75,13 @@ TEST(serialize, main)
     copy_data(z, vector<float>{9, 10, 11, 12});
     auto result = backend->create_tensor(element::f32, shape);
 
-    backend->call_with_validate(handle, {result}, {x, y, z});
+    handle->call_with_validate({result}, {x, y, z});
     EXPECT_EQ((vector<float>{54, 80, 110, 144}), read_vector<float>(result));
 
-    backend->call_with_validate(handle, {result}, {y, x, z});
+    handle->call_with_validate({result}, {y, x, z});
     EXPECT_EQ((vector<float>{54, 80, 110, 144}), read_vector<float>(result));
 
-    backend->call_with_validate(handle, {result}, {x, z, y});
+    handle->call_with_validate({result}, {x, z, y});
     EXPECT_EQ((vector<float>{50, 72, 98, 128}), read_vector<float>(result));
 }
 #endif

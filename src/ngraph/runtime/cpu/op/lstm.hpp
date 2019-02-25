@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/op/rnn_utils.hpp"
 #include "ngraph/util.hpp"
 
 namespace ngraph
@@ -43,9 +44,11 @@ namespace ngraph
                  std::shared_ptr<Node> src_iter,
                  std::shared_ptr<Node> weights_layer,
                  std::shared_ptr<Node> weights_iter,
-                 std::shared_ptr<Node> bias);
+                 std::shared_ptr<Node> bias,
+                 ngraph::runtime::cpu::rnn_utils::rnntype rnn_type);
             Shape get_output_tensor_shape() const { return m_output_tensor_shape; }
             Shape get_output_cell_shape() const { return m_output_cell_shape; }
+            ngraph::runtime::cpu::rnn_utils::rnntype get_rnn_type() const { return m_rnntype; }
             size_t get_num_timesteps() const { return m_num_timesteps; }
             size_t get_src_sequence_length() const { return m_src_sequence_length; }
             size_t get_gates_per_cell() const { return m_num_gates_per_cell; }
@@ -70,6 +73,7 @@ namespace ngraph
             size_t m_num_cell_states;
             size_t m_direction;
             size_t m_num_fused_layers;
+            ngraph::runtime::cpu::rnn_utils::rnntype m_rnntype;
         };
     }
 }

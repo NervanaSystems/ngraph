@@ -366,6 +366,18 @@ mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_blocked_mkldnn_md(
         }
     }
 
+    if (dims.size() == 3)
+    {
+        if (is_perm_sorted(strides, {0, 1, 2}))
+        {
+            return memory::desc(dim, dtype, memory::format::tnc);
+        }
+        if (is_perm_sorted(strides, {1, 0, 2}))
+        {
+            return memory::desc(dim, dtype, memory::format::ntc);
+        }
+    }
+
     if (dims.size() == 4)
     {
         if (is_perm_sorted(strides, {0, 1, 2, 3}))
@@ -450,6 +462,10 @@ memory::desc runtime::cpu::mkldnn_utils::try_get_named_md(const mkldnn_memory_de
     {
     case 1: CANONICALIZE_MD(mkldnn_x); break;
     case 2: CANONICALIZE_MD(mkldnn_nc); break;
+    case 3:
+        CANONICALIZE_MD(mkldnn_tnc);
+        CANONICALIZE_MD(mkldnn_ntc);
+        break;
     case 4:
         CANONICALIZE_MD(mkldnn_nchw);
         CANONICALIZE_MD(mkldnn_nhwc);
