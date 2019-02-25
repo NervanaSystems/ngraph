@@ -150,17 +150,20 @@ void runtime::intelgpu::do_bcast_sum_operation(cldnn::topology& topology,
                                                   axis);
             }
 
+            const string opencl_type_name = get_opencl_type_name(output_type);
+            const string reduction_init_acc = opencl_type_name + " result = 0.0f;\n" +
+                                              opencl_type_name + " compensation = 0.0f;\n";
             const string reduction_str =
                 "output" + access_dims(input_shape, "i", axis) + " = result;\n";
 
             // Generate loops related to input order with GWS
-            gws = generate_loops_w_axes(writer,
-                                        input_shape,
-                                        true,
-                                        axis,
-                                        get_opencl_type_name(output_type) + " result = 0.0f;\n");
+            gws = generate_loops_w_axes(writer, input_shape, true, axis, reduction_init_acc);
 
-            writer << "result += input0" << access_dims(input_shape) << ";\n";
+            writer << opencl_type_name << " y = input0" << access_dims(input_shape)
+                   << " - compensation;\n"
+                   << opencl_type_name << " t = result + y;\n"
+                   << "compensation = (t - result) - y;\n"
+                   << "result = t;\n";
 
             // Close brackets related to input order with reduction
             generate_loops_w_axes(writer, input_shape, false, axis, reduction_str);
@@ -191,13 +194,16 @@ void runtime::intelgpu::do_max_min_operation(cldnn::topology& topology,
 {
     const string function_name = "min_max_" + output_name;
     const size_t input_size = shape_size<Shape>(input_shape);
-    const string& init_value = is_min ? "INFINITY" : "-INFINITY";
+    const string& init_value = get_opencl_type_min_max_value(output_type, !is_min);
     const string& operation = is_min ? " < " : " > ";
     codegen::CodeWriter writer;
 
-    writer << "__kernel void " << function_name << "(const __global float input"
-           << array_dims(input_shape) << ", __global float output" << array_dims(output_shape)
-           << ")\n";
+    runtime::intelgpu::gen_func_def(writer,
+                                    function_name,
+                                    {get_opencl_type_name(output_type)},
+                                    {input_shape},
+                                    get_opencl_type_name(output_type),
+                                    output_shape);
 
     writer.block_begin();
     {
@@ -231,11 +237,11 @@ void runtime::intelgpu::do_max_min_operation(cldnn::topology& topology,
                 ++var_idx;
             }
 
-            writer << "if (input" << access_dims(input_shape) << operation << "output"
+            writer << "if (input0" << access_dims(input_shape) << operation << "output"
                    << access_dims(input_shape, "i", axis) << ")\n";
             writer.block_begin();
             {
-                writer << "output" << access_dims(input_shape, "i", axis) << " = input"
+                writer << "output" << access_dims(input_shape, "i", axis) << " = input0"
                        << access_dims(input_shape) << ";\n";
             }
             writer.block_end();
@@ -273,9 +279,12 @@ void runtime::intelgpu::do_product_operation(cldnn::topology& topology,
     const size_t input_size = shape_size<Shape>(input_shape);
     codegen::CodeWriter writer;
 
-    writer << "__kernel void " << function_name << "(const __global float input"
-           << array_dims(input_shape) << ", __global float output" << array_dims(output_shape)
-           << ")\n";
+    runtime::intelgpu::gen_func_def(writer,
+                                    function_name,
+                                    {get_opencl_type_name(output_type)},
+                                    {input_shape},
+                                    get_opencl_type_name(output_type),
+                                    output_shape);
 
     writer.block_begin();
     {
@@ -309,7 +318,7 @@ void runtime::intelgpu::do_product_operation(cldnn::topology& topology,
                 ++var_idx;
             }
 
-            writer << "output" << access_dims(input_shape, "i", axis) << " *= input"
+            writer << "output" << access_dims(input_shape, "i", axis) << " *= input0"
                    << access_dims(input_shape) << ";\n";
 
             // Closing brackets for loop

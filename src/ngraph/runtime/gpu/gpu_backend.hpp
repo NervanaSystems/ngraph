@@ -29,7 +29,7 @@ namespace ngraph
         {
             static size_t alignment = 64;
 
-            class GPU_ExternalFunction;
+            class GPUCompiledFunction;
             class GPUPrimitiveEmitter;
             struct GPURuntimeContext;
             class CudaContextManager;
@@ -51,16 +51,8 @@ namespace ngraph
                     create_tensor(const ngraph::element::Type& element_type,
                                   const Shape& shape) override;
 
-                Handle compile(std::shared_ptr<Function> func) override;
-
-                bool call(std::shared_ptr<Function> func,
-                          const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                          const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
-
-                void remove_compiled_function(std::shared_ptr<Function> func) override;
-                void enable_performance_data(std::shared_ptr<Function> func, bool enable) override;
-                std::vector<PerformanceCounter>
-                    get_performance_data(std::shared_ptr<Function> func) const override;
+                std::shared_ptr<runtime::Executable> compile(std::shared_ptr<Function> func,
+                                                             bool timing_enabled = false) override;
 
                 bool is_supported(const Node& node) const override;
 
@@ -80,15 +72,30 @@ namespace ngraph
                 };
 
             private:
+                std::map<std::shared_ptr<Function>, std::shared_ptr<Executable>> m_exec_map;
+            };
+
+            class GPU_Executable : public Executable
+            {
+            public:
+                GPU_Executable(std::shared_ptr<Function> func, bool enable_timing);
+
+                bool call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                          const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
+
+                // void remove_compiled_function(std::shared_ptr<Function> func) override;
+                std::vector<PerformanceCounter> get_performance_data() const override;
+
+            private:
                 class FunctionInstance
                 {
                 public:
-                    std::shared_ptr<GPU_ExternalFunction> m_external_function;
+                    std::shared_ptr<GPUCompiledFunction> m_compiled_function;
                     bool m_performance_counters_enabled = false;
-                    EntryPoint m_compiled_function;
+                    EntryPoint m_runtime;
                     std::vector<void*> m_inputs;
                     std::vector<void*> m_outputs;
-                };
+                } m_function_instance;
 
                 /// \brief Convert a vector of Tensor into a vector of void* where each void*
                 /// points to a Tensor's data buffer.
@@ -99,8 +106,7 @@ namespace ngraph
                     initialize_io(void** target,
                                   const std::vector<std::shared_ptr<runtime::Tensor>>& source);
 
-                std::map<std::shared_ptr<Function>, FunctionInstance> m_function_map;
-                std::shared_ptr<BackendContext> m_context;
+                std::shared_ptr<GPU_Backend::BackendContext> m_context;
             };
         }
     }

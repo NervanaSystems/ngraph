@@ -35,7 +35,7 @@ namespace ngraph
                 struct file_open : ngraph_error
                 {
                     explicit file_open(const std::string& path)
-                        : ngraph_error{"failure opening file:" + path}
+                        : ngraph_error{"Failure opening file: " + path}
                     {
                     }
                 };
@@ -43,7 +43,7 @@ namespace ngraph
                 struct stream_parse : ngraph_error
                 {
                     explicit stream_parse(std::istream&)
-                        : ngraph_error{"failure parsing data from the stream"}
+                        : ngraph_error{"Failure parsing data from the provided input stream"}
                     {
                     }
                 };
@@ -90,13 +90,22 @@ namespace ngraph
         std::set<std::string> get_supported_operators(std::int64_t version,
                                                       const std::string& domain)
         {
-            OperatorSet op_set{OperatorsBridge::get_operator_set(version, domain)};
+            OperatorSet op_set{
+                OperatorsBridge::get_operator_set(domain == "ai.onnx" ? "" : domain, version)};
             std::set<std::string> op_list{};
             for (const auto& op : op_set)
             {
                 op_list.emplace(op.first);
             }
             return op_list;
+        }
+
+        bool is_operator_supported(const std::string& op_name,
+                                   std::int64_t version,
+                                   const std::string& domain)
+        {
+            return OperatorsBridge::is_operator_registered(
+                op_name, version, domain == "ai.onnx" ? "" : domain);
         }
 
     } // namespace onnx_import

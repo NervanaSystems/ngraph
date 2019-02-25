@@ -16,6 +16,8 @@
 
 #pragma once
 
+#if !defined(NGRAPH_DEX_ONLY)
+
 #include <functional>
 #include <memory>
 #include <typeindex>
@@ -32,13 +34,9 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
+#include "ngraph/runtime/gpu/gpu_compiled_function.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
-
-#define EMIT_ARGS                                                                                  \
-    runtime::gpu::GPU_ExternalFunction *external_function, codegen::CodeWriter &writer,            \
-        const Node *node, const std::vector<runtime::gpu::GPUTensorWrapper> &args,                 \
-        const std::vector<runtime::gpu::GPUTensorWrapper> &out
 
 namespace ngraph
 {
@@ -49,37 +47,41 @@ namespace ngraph
             class GPU_Emitter;
             struct GPURuntimeContext;
 
-            class GPU_ExternalFunction
+            class GPUExternalFunction : public GPUCompiledFunction
             {
-                friend class GPU_Backend;
-
             public:
-                GPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                                     std::shared_ptr<GPU_Backend::BackendContext>& shared_context);
-                ~GPU_ExternalFunction();
+                GPUExternalFunction(
+                    const std::shared_ptr<ngraph::Function>& function,
+                    const std::shared_ptr<GPU_Backend::BackendContext>& shared_context);
+                virtual ~GPUExternalFunction();
 
-                std::unique_ptr<runtime::gpu::GPURuntimeContext>& ctx();
-                const std::unique_ptr<GPUPrimitiveEmitter>& get_primitive_emitter() const
-                {
-                    return m_shared_context->m_primitive_emitter;
-                }
-
-                static const size_t s_memory_pool_alignment;
+                virtual std::string
+                    add_to_runtime(size_t primitive_index,
+                                   const std::string& function_name,
+                                   const std::vector<runtime::gpu::GPUTensorWrapper>& args,
+                                   const std::vector<runtime::gpu::GPUTensorWrapper>& out) override;
+                virtual std::string add_call_to_runtime(
+                    const std::string& caller,
+                    const std::string& callee,
+                    const std::vector<runtime::gpu::GPUTensorWrapper>& args,
+                    const std::vector<runtime::gpu::GPUTensorWrapper>& out) override;
+                virtual void get_performance_data(
+                    std::vector<runtime::PerformanceCounter>& rc) const override;
 
             protected:
-                void compile();
-
-                EntryPoint m_compiled_function;
+                virtual void compile_function() override;
+                virtual void add_passes(ngraph::pass::Manager& pass_manager) override;
+                virtual void emit() override;
 
             private:
-                // For non-destructive passthrough kernels, propagate function
-                // input buffers to internal ops
-                void propagate_in_place_input(ngraph::descriptor::Output* output,
-                                              std::string input_name);
-                // For in-place kernels, propagate function output buffers to
-                // internal ops
-                void propagate_in_place_output(ngraph::descriptor::Output* res_src_output,
-                                               std::string output_name);
+                /// \brief Create a list of node names for each arg in args
+                /// \param args list of tensor arguments
+                /// \param arg_indexes a list of indexes into args for which args to include in
+                ///    the output list, so {1, 2} will include args 1 and 2 and skip 0.
+                /// \ return returns a string containing "arg0_name, arg1_name, etc."
+                std::string node_names(const std::vector<runtime::gpu::GPUTensorWrapper>& args,
+                                       std::initializer_list<int> arg_indexes = {});
+
                 void emit_header();
                 void emit_timer_functions();
                 void emit_constant_declarations();
@@ -88,35 +90,31 @@ namespace ngraph
                 void emit_debug_function_entry(Node* node);
                 void emit_debug_function_exit(Node* node);
                 void emit_temp_mem_pool_allocation(std::shared_ptr<Function> current_function);
-                void emit_op(EMIT_ARGS);
                 void store_emitted_functions(const std::string& code);
+                std::string emit_op(EMIT_ARGS);
                 std::string emit_op_as_function(const Node& node, const std::string& function_name);
                 std::string strip_comments(const std::string& s) const;
 
                 static const std::string& get_pch_header_source();
                 static const std::string& get_header_source();
 
+                // For non-destructive passthrough kernels, propagate function
+                // input buffers to internal ops
+                virtual void propagate_in_place_input(ngraph::descriptor::Output* output,
+                                                      const std::string& input_name) override;
+                // For in-place kernels, propagate function output buffers to
+                // internal ops
+                virtual void propagate_in_place_output(ngraph::descriptor::Output* res_src_output,
+                                                       const std::string& output_name) override;
                 codegen::CodeWriter m_writer;
-
+                std::string m_common_function_string;
                 std::unique_ptr<codegen::Compiler> m_compiler;
                 std::unique_ptr<codegen::ExecutionEngine> m_execution_engine;
-                std::shared_ptr<ngraph::Function> m_function;
-
                 std::map<std::string, size_t> m_name_index_map;
                 std::unordered_map<std::string, std::string> m_variable_name_map;
                 std::unordered_map<Node*, Node*> m_node_function_map;
-                std::unordered_map<std::shared_ptr<Function>, std::list<std::shared_ptr<Node>>>
-                    m_function_ordered_ops;
-
-                bool m_emit_timing;
-                bool m_is_compiled;
-                size_t m_offset;
-
-                std::string m_function_name;
-
-                std::unordered_map<std::string, size_t> m_tensor_memory_buffers;
-                std::shared_ptr<GPU_Backend::BackendContext> m_shared_context;
             };
         }
     }
 }
+#endif // !defined(NGRAPH_DEX_ONLY)

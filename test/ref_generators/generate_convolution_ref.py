@@ -247,7 +247,7 @@ NGRAPH_TEST (${BACKEND_NAME}, %s)
     vector<float> expected_result{%s};
 
     auto handle = backend->compile(function);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_TRUE(test::all_close<float>(vector<float>{expected_result}, read_vector<float>(result), 1.0e-4f, 1.0e-6f));
     // only test backprop for certain cases as it takes significant compute resources
     %sEXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {a, b}, .01f, .01f));

@@ -31,6 +31,7 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
@@ -40,8 +41,7 @@
 #include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
-#include "ngraph/op/reduce.hpp"
-#include "ngraph/op/reduce_window.hpp"
+#include "ngraph/op/quantize.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/sum.hpp"
@@ -279,29 +279,26 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
                << print_table_row_value("transpose", op_reshape->get_is_transpose());
         break;
     }
+    case OP_TYPEID::Quantize:
+    {
+        const shared_ptr<op::Quantize> quant_op = static_pointer_cast<op::Quantize>(node);
+
+        writer << print_table_row_dims("axes", quant_op->get_axes())
+               << print_table_row_value("rounding mode", (int)quant_op->get_round_mode());
+        break;
+    }
+    case OP_TYPEID::Dequantize:
+    {
+        const shared_ptr<op::Dequantize> quant_op = static_pointer_cast<op::Dequantize>(node);
+
+        writer << print_table_row_dims("axes", quant_op->get_axes());
+        break;
+    }
     case OP_TYPEID::Concat:
     {
         const shared_ptr<op::Concat> concat_op = static_pointer_cast<op::Concat>(node);
 
         writer << print_table_row_value("concat_axis", concat_op->get_concatenation_axis());
-        break;
-    }
-    case OP_TYPEID::Reduce:
-    {
-        const shared_ptr<op::Reduce> red_op = static_pointer_cast<op::Reduce>(node);
-        const AxisSet& axis = red_op->get_reduction_axes();
-
-        writer << print_table_row_dims("reduction_axis", red_op->get_reduction_axes())
-               << print_table_row_value("Function:TBD", 0);
-        break;
-    }
-    case OP_TYPEID::ReduceWindow:
-    {
-        const shared_ptr<op::ReduceWindow> red_win_op = static_pointer_cast<op::ReduceWindow>(node);
-
-        writer << print_table_row_dims("window_shape", red_win_op->get_window_shape())
-               << print_table_row_dims("window_stride", red_win_op->get_window_movement_strides())
-               << print_table_row_value("Function:TBD", 0);
         break;
     }
     case OP_TYPEID::Pad:
@@ -423,9 +420,14 @@ void print_node(ostringstream& writer, const shared_ptr<Node>& node)
         size_t arg_idx = 0;
         for (const descriptor::Input& op_input : node->get_inputs())
         {
-            writer << table_row_begin() << font_small_begin
-                   << op_input.get_element_type().c_type_string() << " input" << arg_idx
-                   << vector_to_string(op_input.get_shape()) << font_end << table_row_end;
+            writer << print_table_row_dims(op_input.get_element_type().c_type_string() + " input" +
+                                               to_string(arg_idx),
+                                           op_input.get_shape());
+            if (arg_idx >= 9)
+            {
+                writer << print_table_row_value("... total inputs", node->get_inputs().size());
+                break;
+            }
             ++arg_idx;
         }
     }
@@ -435,9 +437,9 @@ void print_node(ostringstream& writer, const shared_ptr<Node>& node)
         size_t arg_idx = 0;
         for (const descriptor::Output& op_output : node->get_outputs())
         {
-            writer << table_row_begin() << font_small_begin
-                   << op_output.get_element_type().c_type_string() << " output" << arg_idx
-                   << vector_to_string(op_output.get_shape()) << font_end << table_row_end;
+            writer << print_table_row_dims(op_output.get_element_type().c_type_string() +
+                                               " output" + to_string(arg_idx),
+                                           op_output.get_shape());
             ++arg_idx;
         }
     }

@@ -16,6 +16,7 @@
 
 set(SRC
     intelgpu_backend.cpp
+    intelgpu_executable.cpp
     intelgpu_tensor_view.cpp
     intelgpu_layout.cpp
     intelgpu_op_batchnorm.cpp
@@ -31,10 +32,16 @@ set(SRC
 if (NGRAPH_INTELGPU_ENABLE)
     add_library(intelgpu_backend SHARED ${SRC})
     target_link_libraries(intelgpu_backend PUBLIC ngraph libcldnn)
+
+    if (NGRAPH_LIB_VERSIONING_ENABLE)
+        set_target_properties(intelgpu_backend
+            PROPERTIES
+                VERSION ${NGRAPH_VERSION}
+                SOVERSION ${NGRAPH_API_VERSION})
+    endif()
+
     set_target_properties(intelgpu_backend
         PROPERTIES
-            VERSION ${NGRAPH_VERSION}
-            SOVERSION ${NGRAPH_API_VERSION}
             LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 
     install(TARGETS intelgpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})

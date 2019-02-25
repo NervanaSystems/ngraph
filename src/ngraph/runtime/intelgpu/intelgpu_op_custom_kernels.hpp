@@ -21,7 +21,9 @@
 #include "ngraph/runtime/intelgpu/code_writer.hpp"
 
 #include "ngraph/axis_set.hpp"
+#include "ngraph/axis_vector.hpp"
 #include "ngraph/coordinate.hpp"
+#include "ngraph/op/quantize.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -32,6 +34,8 @@ namespace ngraph
     {
         namespace intelgpu
         {
+            size_t get_max_memory_rss();
+
             void do_pad_operation(cldnn::topology& topology,
                                   const std::string& input_name,
                                   const Shape& input_shape,
@@ -53,6 +57,19 @@ namespace ngraph
                                                 const Shape& win_shape,
                                                 const Shape& win_stride,
                                                 const Shape& pad_below);
+
+            void do_max_avg_pool_operation(cldnn::topology& topology,
+                                           const std::string& input_name,
+                                           const Shape& input_shape,
+                                           const std::string& output_name,
+                                           const Shape& output_shape,
+                                           const element::Type& output_type,
+                                           const Shape& win_shape,
+                                           const Shape& win_stride,
+                                           const Shape& pad_below,
+                                           bool include_padding,
+                                           const std::string& def_val,
+                                           bool is_max_pool);
 
             void do_avg_pool_backprop_operation(cldnn::topology& topology,
                                                 const std::string& delta_name,
@@ -116,7 +133,8 @@ namespace ngraph
                                    const std::string& output_name,
                                    const Shape& output_shape,
                                    const element::Type& output_type,
-                                   const std::string& operation);
+                                   const std::string& operation,
+                                   bool function_operation);
 
             void do_reverse_operation(cldnn::topology& topology,
                                       const std::string& input_name,
@@ -159,23 +177,14 @@ namespace ngraph
                                                const Shape& output_shape,
                                                const element::Type& output_type);
 
-            enum class CUSTOM_ELTWISE
-            {
-                Atan,
-                Ceil,
-                Floor,
-                Sign,
-                Tan
-            };
-
-            void do_custom_eltwise_operation(cldnn::topology& topology,
-                                             const std::string& input_name,
-                                             const Shape& input_shape,
-                                             const element::Type& input_type,
-                                             const std::string& output_name,
-                                             const Shape& output_shape,
-                                             const element::Type& output_type,
-                                             const CUSTOM_ELTWISE operation_name);
+            void do_custom_unary_operation(cldnn::topology& topology,
+                                           const std::string& input_name,
+                                           const Shape& input_shape,
+                                           const element::Type& input_type,
+                                           const std::string& output_name,
+                                           const Shape& output_shape,
+                                           const element::Type& output_type,
+                                           const std::string& operation_name);
 
             void do_arg_max_min_operation(cldnn::topology& topology,
                                           const std::string& input_name,
@@ -187,16 +196,48 @@ namespace ngraph
                                           const size_t reduction_axis,
                                           const bool is_max);
 
-            void do_negative_operation(cldnn::topology& topology,
-                                       const std::string& input_name,
-                                       const Shape& input_shape,
-                                       const element::Type& input_type,
+            void do_reshape_operation(cldnn::topology& topology,
+                                      const std::string& input_name,
+                                      const Shape& input_shape,
+                                      const element::Type& input_type,
+                                      const std::string& output_name,
+                                      const Shape& output_shape,
+                                      const element::Type& output_type,
+                                      const AxisVector& reshape_axes);
+
+            void do_quantize_operation(cldnn::topology& topology,
+                                       const std::string& input0_name,
+                                       const Shape& input0_shape,
+                                       const element::Type& input0_type,
+                                       const std::string& input1_name,
+                                       const Shape& input1_shape,
+                                       const std::string& input2_name,
+                                       const Shape& input2_shape,
                                        const std::string& output_name,
                                        const Shape& output_shape,
-                                       const element::Type& output_type);
+                                       const element::Type& output_type,
+                                       const AxisSet& axis,
+                                       const ngraph::op::Quantize::RoundMode mode);
+
+            void do_dequantize_operation(cldnn::topology& topology,
+                                         const std::string& input0_name,
+                                         const Shape& input0_shape,
+                                         const element::Type& input0_type,
+                                         const std::string& input1_name,
+                                         const Shape& input1_shape,
+                                         const element::Type& input1_type,
+                                         const std::string& input2_name,
+                                         const Shape& input2_shape,
+                                         const element::Type& input2_type,
+                                         const std::string& output_name,
+                                         const Shape& output_shape,
+                                         const element::Type& output_type,
+                                         const AxisSet& axis);
 
             // Helper functions used in cldnn::custom_gpu_primitive kernels
             std::string get_opencl_type_name(const element::Type& ngraph_type);
+            std::string get_opencl_type_min_max_value(const element::Type& ngraph_type,
+                                                      bool is_min);
             std::vector<cldnn_arg> get_kernel_args(size_t input, size_t output);
             std::string array_dims(const Shape& dimentions, const AxisSet& axis = {});
             std::string access_dims(const Shape& dimentions,

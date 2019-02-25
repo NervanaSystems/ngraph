@@ -39,7 +39,6 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::Dequantize)
             {
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
                 const ngraph::op::Dequantize* dequantize =
                     static_cast<const ngraph::op::Dequantize*>(node);
@@ -47,8 +46,9 @@ namespace ngraph
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto& arg0_tensor = tensor_data[args[0].get_name()];
-                    auto& out_tensor = tensor_data[out[0].get_name()];
+                    auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                    auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
@@ -106,10 +106,11 @@ namespace ngraph
                 }
                 else
                 {
-                    auto& arg0_tensor = tensor_data[args[0].get_name()];
-                    auto& arg1_tensor = tensor_data[args[1].get_name()];
-                    auto& arg2_tensor = tensor_data[args[2].get_name()];
-                    auto& out_tensor = tensor_data[out[0].get_name()];
+                    auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                    auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                    auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
+                    auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+
                     auto arg0_shape = args[0].get_shape();
                     auto arg1_shape = args[1].get_shape();
                     auto daxes = dequantize->get_axes();
@@ -264,8 +265,13 @@ namespace ngraph
                                 vector<float> dyn_scales;
                                 dyn_scales.assign(static_cast<float*>(arg1_tensor),
                                                   static_cast<float*>(arg1_tensor) + scales_size);
-                                dyn_scales[0] = 1.0 / dyn_scales[0];
-                                attr.set_output_scales(0, dyn_scales);
+                                for (size_t i = 0; i < scales_size; i++)
+                                {
+                                    dyn_scales[i] = 1.0 / dyn_scales[i];
+                                }
+                                // quantize across first dim (mask=2^0) if dyn_scales is a vector
+                                const int mask = scales_size == 1 ? 0 : 1;
+                                attr.set_output_scales(mask, dyn_scales);
                                 attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);
                                 auto reorder_desc = mkldnn::reorder::primitive_desc(
                                     {input_desc, executor::global_cpu_engine},
@@ -301,16 +307,15 @@ namespace ngraph
                 else
                 {
                     auto& functors = external_function->get_functors();
-                    auto& tensor_data = external_function->get_tensor_data();
 
                     const ngraph::op::Quantize* quantize =
                         static_cast<const ngraph::op::Quantize*>(node);
                     CPUKernelFunctor functor;
 
-                    auto& arg0_tensor = tensor_data[args[0].get_name()];
-                    auto& arg1_tensor = tensor_data[args[1].get_name()];
-                    auto& arg2_tensor = tensor_data[args[2].get_name()];
-                    auto& out_tensor = tensor_data[out[0].get_name()];
+                    auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                    auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                    auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
+                    auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
 
                     auto arg0_shape = args[0].get_shape();
                     auto arg1_shape = args[1].get_shape();

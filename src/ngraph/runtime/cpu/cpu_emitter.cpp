@@ -26,8 +26,10 @@
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/all.hpp"
 #include "ngraph/op/allreduce.hpp"
 #include "ngraph/op/and.hpp"
+#include "ngraph/op/any.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/asin.hpp"
@@ -51,11 +53,11 @@
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
+#include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/floor.hpp"
-#include "ngraph/op/function_call.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
@@ -80,8 +82,6 @@
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
-#include "ngraph/op/reduce.hpp"
-#include "ngraph/op/reduce_window.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -89,7 +89,6 @@
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/select.hpp"
-#include "ngraph/op/select_and_scatter.hpp"
 #include "ngraph/op/sign.hpp"
 #include "ngraph/op/sin.hpp"
 #include "ngraph/op/sinh.hpp"
@@ -126,9 +125,12 @@
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
-#ifdef NGRAPH_DISTRIBUTED
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
 #include <mlsl.hpp>
-
+#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
+#include <mpi.h>
+#endif
 #include "ngraph/op/allreduce.hpp"
 #endif
 
@@ -199,11 +201,12 @@ namespace ngraph
                 writer.block_end();
             }
 
-#ifdef NGRAPH_DISTRIBUTED
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::AllReduce)
             {
                 const element::Type& element_type = args[0].get_element_type();
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
                 auto data_type = "MLSL::DT_FLOAT";
 
                 if (element_type == element::f32)
@@ -221,6 +224,26 @@ namespace ngraph
                        << data_type << ", MLSL::RT_SUM, MLSL::GT_DATA);\n";
                 writer << "ctx->mlsl_env->Wait(req);\n";
                 writer.block_end();
+#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
+                auto data_type = "MPI_FLOAT";
+
+                if (element_type == element::f32)
+                {
+                    data_type = "MPI_FLOAT";
+                }
+                else if (element_type == element::f64)
+                {
+                    data_type = "MPI_DOUBLE";
+                }
+
+                writer.block_begin();
+                writer << "MPI_Allreduce(" << args[0].get_name() << ", " << out[0].get_name()
+                       << ", " << out[0].get_size() << ", " << data_type
+                       << ", MPI_SUM, MPI_COMM_WORLD);\n";
+                writer.block_end();
+#else
+                throw ngraph_error("Distributed Library not supported/mentioned");
+#endif
             }
 
             template <>
@@ -1073,7 +1096,7 @@ namespace ngraph
 
                     size_t concat_index = 0;
                     size_t concat_dim =
-                        (dynamic_cast<const ngraph::op::Concat*>(node))->get_concatenation_axis();
+                        (static_cast<const ngraph::op::Concat*>(node))->get_concatenation_axis();
                     concat_index =
                         mkldnn_emitter->build_concat(inputs_data_desc, result_desc, concat_dim);
                     auto& deps = mkldnn_emitter->get_primitive_deps(concat_index);
@@ -1092,7 +1115,7 @@ namespace ngraph
                 else
                 {
                     auto axis =
-                        (dynamic_cast<const ngraph::op::Concat*>(node))->get_concatenation_axis();
+                        (static_cast<const ngraph::op::Concat*>(node))->get_concatenation_axis();
 
                     std::vector<std::string> arg_names;
                     std::vector<Shape> arg_shapes;
@@ -1198,6 +1221,38 @@ namespace ngraph
                 writer << out[0].get_name() << "[i] = " << args[0].get_name()
                        << "[i] <= " << args[1].get_name() << "[i];\n";
                 writer.block_end();
+                writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Any)
+            {
+                const ngraph::op::Any* any = static_cast<const ngraph::op::Any*>(node);
+                writer.block_begin();
+                {
+                    writer << "reference::any(";
+                    writer << "            " << args[0].get_name() << ",\n";
+                    writer << "            " << out[0].get_name() << ",\n";
+                    writer << "            {" << join(args[0].get_shape()) << "},\n";
+                    writer << "            {" << join(out[0].get_shape()) << "},\n";
+                    writer << "            {" << join(any->get_reduction_axes()) << "});\n";
+                }
+                writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::All)
+            {
+                const ngraph::op::All* all = static_cast<const ngraph::op::All*>(node);
+                writer.block_begin();
+                {
+                    writer << "reference::all(";
+                    writer << "            " << args[0].get_name() << ",\n";
+                    writer << "            " << out[0].get_name() << ",\n";
+                    writer << "            {" << join(args[0].get_shape()) << "},\n";
+                    writer << "            {" << join(out[0].get_shape()) << "},\n";
+                    writer << "            {" << join(all->get_reduction_axes()) << "});\n";
+                }
                 writer.block_end();
             }
 
@@ -1356,6 +1411,8 @@ namespace ngraph
             {
                 auto& result_element_type = out[0].get_element_type();
 
+                writer << "if ((void*)" << out[0].get_name() << " != (void*)" << args[0].get_name()
+                       << ") \n";
                 writer.block_begin();
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
@@ -1446,88 +1503,6 @@ namespace ngraph
                                          out[0].get_shape(),
                                          reshape->get_input_order());
                 }
-
-                writer.block_end();
-            }
-
-            template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::FunctionCall)
-            {
-                auto function_call = static_cast<const ngraph::op::FunctionCall*>(node);
-                shared_ptr<Function> function = function_call->get_functions()[0];
-
-                writer.block_begin();
-                {
-                    vector<string> input_names;
-                    vector<string> output_names;
-
-                    for (const runtime::cpu::TensorViewWrapper& input : args)
-                    {
-                        input_names.push_back(input.get_name());
-                    }
-
-                    for (const runtime::cpu::TensorViewWrapper& output : out)
-                    {
-                        output_names.push_back(output.get_name());
-                    }
-
-                    writer << "void* args[] =\n";
-                    writer.block_begin();
-                    writer << "\n" << join(input_names, ",\n");
-                    writer.block_end();
-                    writer << ";\n";
-
-                    writer << "void* out[] =\n";
-                    writer.block_begin();
-                    writer << "\n" << join(output_names, ",\n");
-                    writer.block_end();
-                    writer << ";\n";
-
-                    writer << "\n";
-                    writer << function->get_name() << "(args, out, ctx);\n";
-                }
-                writer.block_end();
-            }
-
-            // TODO: This and other ops include comments/notes that
-            // we don't want to just copy-paste here. Figure out a better way
-            // or just point to ngvm/external_function.cpp with a note that
-            // the compiled version of these ops is intended to have semantics identical
-            // to what's seen there (for now atleast)
-
-            template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::Reduce)
-            {
-                auto reduce = static_cast<const ngraph::op::Reduce*>(node);
-                auto reduction_function = reduce->get_functions()[0];
-
-                auto reductee_shape = args[0].get_shape();
-
-                auto& f_result_element_type = out[0].get_element_type();
-                auto result_shape = out[0].get_shape();
-
-                writer.block_begin();
-
-                string type = f_result_element_type.c_type_string();
-
-                writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type << " {\n";
-                writer.indent++;
-                writer << type << " result;\n";
-                writer << "void* args[] = {&x, &y};\n";
-                writer << "void* out[] = {&result};\n";
-                writer << reduction_function->get_name() << "(args, out, ctx);\n";
-                writer << "return result;\n";
-                writer.indent--;
-                writer << "};\n";
-
-                kernel::emit_reduce(writer,
-                                    args[0].get_element_type().c_type_string(),
-                                    args[0].get_name(),
-                                    args[1].get_name(),
-                                    out[0].get_name(),
-                                    args[0].get_shape(),
-                                    out[0].get_shape(),
-                                    reduce->get_reduction_axes());
 
                 writer.block_end();
             }
@@ -2486,6 +2461,11 @@ namespace ngraph
                             node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(qconv_index);
 
+                    writer << "if (" << out[0].get_name() << " != " << args[3].get_name() << ")\n";
+                    writer.block_begin();
+                    writer << "memcpy(" << out[0].get_name() << ", " << args[3].get_name() << ", "
+                           << args[3].get_size() * args[3].get_element_type().size() << ");\n";
+                    writer.block_end();
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
                            << ", " << args[0].get_name() << ");\n";
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
@@ -2517,6 +2497,11 @@ namespace ngraph
                                 node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(qconv_index);
 
+                    writer << "if (" << out[0].get_name() << " != " << args[3].get_name() << ")\n";
+                    writer.block_begin();
+                    writer << "memcpy(" << out[0].get_name() << ", " << args[3].get_name() << ", "
+                           << args[3].get_size() * args[3].get_element_type().size() << ");\n";
+                    writer.block_end();
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
                            << ", " << args[0].get_name() << ");\n";
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
@@ -2576,6 +2561,11 @@ namespace ngraph
                             node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
+                    writer << "if (" << out[0].get_name() << " != " << args[3].get_name() << ")\n";
+                    writer.block_begin();
+                    writer << "memcpy(" << out[0].get_name() << ", " << args[3].get_name() << ", "
+                           << args[3].get_size() * args[3].get_element_type().size() << ");\n";
+                    writer.block_end();
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
                            << ", " << args[0].get_name() << ");\n";
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
@@ -2603,6 +2593,11 @@ namespace ngraph
                         node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
+                    writer << "if (" << out[0].get_name() << " != " << args[2].get_name() << ")\n";
+                    writer.block_begin();
+                    writer << "memcpy(" << out[0].get_name() << ", " << args[2].get_name() << ", "
+                           << args[2].get_size() * args[2].get_element_type().size() << ");\n";
+                    writer.block_end();
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
                            << ", " << args[0].get_name() << ");\n";
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
@@ -2873,98 +2868,6 @@ namespace ngraph
                 {
                     writer.block_end();
                 }
-            }
-
-            template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::ReduceWindow)
-            {
-                auto reduce_window = static_cast<const ngraph::op::ReduceWindow*>(node);
-
-                auto arg_reductee_shape = args[0].get_shape();
-                auto result_shape = out[0].get_shape();
-                auto reduction_function = reduce_window->get_functions()[0];
-                auto& f_result_element_type = out[0].get_element_type();
-
-                writer.block_begin();
-
-                string type = f_result_element_type.c_type_string();
-                writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type << " {\n";
-                writer.indent++;
-                writer << type << " result;\n";
-                writer << "void* args[] = {&x, &y};\n";
-                writer << "void* out[] = {&result};\n";
-                writer << reduction_function->get_name() << "(args, out, ctx);\n";
-                writer << "return result;\n";
-                writer.indent--;
-                writer << "};\n";
-
-                writer << "reference::reduce_window<" << out[0].get_type() << ">("
-                       << args[0].get_name() << ",\n";
-                writer << "                      " << args[1].get_name() << ",\n";
-                writer << "                      " << out[0].get_name() << ",\n";
-                writer << "                      {" << join(arg_reductee_shape) << "},\n";
-                writer << "                      {" << join(result_shape) << "},\n";
-                writer << "                      f,\n";
-                writer << "                      {" << join(reduce_window->get_window_shape())
-                       << "},\n";
-                writer << "                      {"
-                       << join(reduce_window->get_window_movement_strides()) << "});\n";
-
-                writer.block_end();
-            }
-
-            template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::SelectAndScatter)
-            {
-                auto select_and_scatter = static_cast<const ngraph::op::SelectAndScatter*>(node);
-                auto selection_function = select_and_scatter->get_functions()[0];
-                auto scatter_function = select_and_scatter->get_functions()[1];
-
-                auto arg0_shape = args[0].get_shape();
-                auto arg1_shape = args[1].get_shape();
-                auto result_shape = out[0].get_shape();
-
-                writer.block_begin();
-
-                string type = node->get_output_element_type(0).c_type_string();
-
-                writer << "auto f_select = [&](" << type << " x, " << type << " y) -> char {\n";
-                writer.indent++;
-                writer << "char result;\n";
-                writer << "void* args[] = {&x, &y};\n";
-                writer << "void* out[] = {&result};\n";
-                writer << selection_function->get_name() << "(args, out, ctx);\n";
-                writer << "return result;\n";
-                writer.indent--;
-                writer << "};\n";
-
-                writer << "auto f_scatter = [&](" << type << " x, " << type << " y) -> " << type
-                       << " {\n";
-                writer.indent++;
-                writer << type << " result;\n";
-                writer << "void* args[] = {&x, &y};\n";
-                writer << "void* out[] = {&result};\n";
-                writer << scatter_function->get_name() << "(args, out, ctx);\n";
-                writer << "return result;\n";
-                writer.indent--;
-                writer << "};\n";
-
-                writer << "reference::select_and_scatter<" << out[0].get_type() << ">("
-                       << args[0].get_name() << ",\n";
-                writer << "                " << args[1].get_name() << ",\n";
-                writer << "                " << args[2].get_name() << ",\n";
-                writer << "                " << out[0].get_name() << ",\n";
-                writer << "                {" << join(arg0_shape) << "},\n";
-                writer << "                {" << join(arg1_shape) << "},\n";
-                writer << "                {" << join(result_shape) << "},\n";
-                writer << "                f_select,\n";
-                writer << "                f_scatter,\n";
-                writer << "                {" << join(select_and_scatter->get_window_shape())
-                       << "},\n";
-                writer << "                {"
-                       << join(select_and_scatter->get_window_movement_strides()) << "});\n";
-
-                writer.block_end();
             }
 
             template <>
@@ -4159,6 +4062,44 @@ namespace ngraph
                     writer << "            {" << join(quantize->get_axes()) << "},\n";
                     writer << "            static_cast<ngraph::op::Quantize::RoundMode>("
                            << static_cast<int>(quantize->get_round_mode()) << "));\n";
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedConcat)
+            {
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    std::vector<mkldnn::memory::desc> inputs_data_desc;
+                    for (size_t i = 0; i < args.size(); i++)
+                    {
+                        inputs_data_desc.push_back(mkldnn_utils::get_input_mkldnn_md(node, i));
+                    }
+
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+
+                    size_t concat_index = 0;
+                    size_t concat_dim = (static_cast<const ngraph::op::QuantizedConcat*>(node))
+                                            ->get_concatenation_axis();
+                    concat_index =
+                        mkldnn_emitter->build_concat(inputs_data_desc, result_desc, concat_dim);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(concat_index);
+                    size_t i;
+                    for (i = 0; i < args.size(); i++)
+                    {
+                        writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[i])
+                               << ", " << args[i].get_name() << ");\n";
+                    }
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[i])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(concat_index) << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error("unsupported parameters for QuantizedConcat via DEX");
                 }
             }
 
