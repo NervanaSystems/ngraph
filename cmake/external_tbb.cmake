@@ -54,24 +54,24 @@ if(NGRAPH_TBB_ENABLE)
     set(TBB_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX})
     file(COPY
              ${TBB_BUILD_DIR}/${TBB_LIB}
-         DESTINATION ${NGRAPH_BUILD_DIR})
+         DESTINATION ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY})
     if(LINUX)
         execute_process(COMMAND grep TBB_COMPATIBLE_INTERFACE_VERSION ${TBB_ROOT}/include/tbb/tbb_stddef.h OUTPUT_VARIABLE TBB_SOVER_LINE)
         string(REGEX MATCH "[0-9.]+" TBB_SOVER ${TBB_SOVER_LINE})
         message(STATUS "TBB so version: ${TBB_SOVER}")
         file(COPY
                 ${TBB_BUILD_DIR}/${TBB_LIB}.${TBB_SOVER}
-             DESTINATION ${NGRAPH_BUILD_DIR})
+             DESTINATION ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY})
     endif()
-    install(FILES ${NGRAPH_BUILD_DIR}/${TBB_LIB}
+    install(FILES ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${TBB_LIB}
         DESTINATION ${NGRAPH_INSTALL_LIB})
     if(LINUX)
-        install(FILES ${NGRAPH_BUILD_DIR}/${TBB_LIB}.${TBB_SOVER}
+        install(FILES ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${TBB_LIB}.${TBB_SOVER}
             DESTINATION ${NGRAPH_INSTALL_LIB})
     endif()
     add_library(libtbb INTERFACE)
     target_link_libraries(libtbb INTERFACE
-        ${NGRAPH_BUILD_DIR}/${TBB_LIB}
+        ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${TBB_LIB}
     )
     target_include_directories(libtbb SYSTEM INTERFACE ${TBB_ROOT}/include)
 endif()
