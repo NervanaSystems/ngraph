@@ -21,3 +21,10 @@ ngraph::runtime::cpu::CPUAllocator::CPUAllocator()
     , m_byte_size(0)
 {
 }
+
+ngraph::runtime::cpu::CPUAllocator::CPUAllocator(size_t size)
+{
+    m_byte_size = size;
+    mkl::i_malloc = MallocHook;
+    mkl::i_free = FreeHook;
+}

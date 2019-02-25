@@ -57,9 +57,13 @@ public:
     ~CPUAllocator();
 
 private:
-    char* m_buffer;
+    void* m_buffer;
     size_t m_byte_size;
 
-    inline void* MallocHook(size_t size) { m_buffer = static_cast<char*>(ngraph_malloc(size)); }
-    inline void FreeHook() { ngraph_free(m_buffer); }
+    static inline void* MallocHook(size_t size)
+    {
+        void* ptr = static_cast<void*>(ngraph_malloc(size));
+        return ptr;
+    }
+    static inline void FreeHook(void* ptr) { ngraph_free(ptr); }
 };
