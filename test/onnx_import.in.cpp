@@ -1326,7 +1326,7 @@ TEST(onnx_${BACKEND_NAME}, model_unsupported_op)
     catch (ngraph::ngraph_error const& err)
     {
         std::string what{err.what()};
-        EXPECT_NE(what.find("unknown operations"), std::string::npos);
+        EXPECT_NE(what.find("nGraph does not support"), std::string::npos);
         EXPECT_NE(what.find("FakeOpName"), std::string::npos);
         EXPECT_NE(what.find("AnotherFakeOpName"), std::string::npos);
     }
@@ -2029,4 +2029,57 @@ TEST(onnx_${BACKEND_NAME}, model_where)
     Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
 
     EXPECT_EQ(expected_outputs.front(), outputs.front());
+}
+
+TEST(onnx_${BACKEND_NAME}, model_override_op)
+{
+    onnx_import::register_operator(
+        "FalseAdd", 1, "", [](const onnx_import::Node& node) -> NodeVector {
+            NodeVector ng_inputs{node.get_ng_inputs()};
+            return {std::make_shared<ngraph::op::Add>(ng_inputs.at(0), ng_inputs.at(1))};
+        });
+
+    onnx_import::register_operator(
+        "FalseAdd", 1, "", [](const onnx_import::Node& node) -> NodeVector {
+            NodeVector ng_inputs{node.get_ng_inputs()};
+            return {std::make_shared<ngraph::op::Subtract>(ng_inputs.at(0), ng_inputs.at(1))};
+        });
+
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/override_op.onnx"));
+
+    Inputs inputs;
+    inputs.emplace_back(std::vector<float>{0.f, 1.f, 2.f, 3.f});
+    inputs.emplace_back(std::vector<float>{3.f, 2.f, 1.f, 0.f});
+
+    Outputs expected_output{std::vector<float>{-3.f, -1.f, 1.f, 3.f}};
+
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+}
+
+TEST(onnx_${BACKEND_NAME}, import_non_existing_file)
+{
+    try
+    {
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/i.dont.exist"));
+    }
+    catch (const std::runtime_error& exc)
+    {
+        // asserts that an exception was thrown and that the error message contains the file name
+        std::string msg{exc.what()};
+        EXPECT_TRUE(msg.find("i.dont.exist") != std::string::npos);
+    }
+}
+
+TEST(onnx_${BACKEND_NAME}, import_malformed_model)
+{
+    try
+    {
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/malformed.onnx"));
+    }
+    catch (const std::runtime_error& exc)
+    {
+        EXPECT_EQ(exc.what(), std::string{"Failure parsing data from the provided input stream"});
+    }
 }

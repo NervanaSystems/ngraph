@@ -17,11 +17,13 @@
 #pragma once
 
 #include <exception>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <list>
 #include <memory>
 #include <random>
+#include <vector>
 
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/file_util.hpp"
@@ -160,7 +162,7 @@ std::vector<std::shared_ptr<ngraph::runtime::Tensor>>
     }
 
     auto handle = backend->compile(function);
-    backend->call_with_validate(handle, result_tensors, arg_tensors);
+    handle->call_with_validate(result_tensors, arg_tensors);
     return result_tensors;
 }
 
@@ -202,3 +204,35 @@ template <>
 std::string get_results_str(std::vector<char>& ref_data,
                             std::vector<char>& actual_data,
                             size_t max_results);
+
+/// \brief      Reads a binary file to a vector.
+///
+/// \param[in]  path  The path where the file is located.
+///
+/// \tparam     T     The type we want to interpret as the elements in binary file.
+///
+/// \return     Return vector of data read from input binary file.
+///
+template <typename T>
+std::vector<T> read_binary_file(const std::string& path)
+{
+    std::vector<T> file_content;
+    std::ifstream inputs_fs{path, std::ios::in | std::ios::binary};
+    if (!inputs_fs)
+    {
+        throw std::runtime_error("Failed to open the file: " + path);
+    }
+
+    inputs_fs.seekg(0, std::ios::end);
+    auto size = inputs_fs.tellg();
+    inputs_fs.seekg(0, std::ios::beg);
+    if (size % sizeof(T) != 0)
+    {
+        throw std::runtime_error(
+            "Error reading binary file content: Input file size (in bytes) "
+            "is not a multiple of requested data type size.");
+    }
+    file_content.resize(size / sizeof(T));
+    inputs_fs.read(reinterpret_cast<char*>(file_content.data()), size);
+    return file_content;
+}

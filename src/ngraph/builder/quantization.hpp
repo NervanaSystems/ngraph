@@ -20,6 +20,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
+#include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
@@ -42,6 +43,11 @@ namespace ngraph
                                                std::shared_ptr<Node> max,
                                                const ngraph::element::Type& type,
                                                const ngraph::AxisSet& axes);
+
+        std::shared_ptr<Node> ScaledQuantizedConcat(const NodeVector& args,
+                                                    size_t concatenation_axis,
+                                                    const NodeVector& mins,
+                                                    const NodeVector& maxes);
 
         std::shared_ptr<Node> ScaledQuantizedAvgPool(std::shared_ptr<Node> input,
                                                      const Shape& window_shape,

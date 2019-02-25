@@ -42,6 +42,8 @@ set(SRC
     builder/concat.cpp
     builder/convert.cpp
     builder/convert_layout.cpp
+    builder/quantized_conv.cpp
+    builder/quantized_concat.cpp
     builder/convolution.cpp
     builder/dot.cpp
     builder/embedding_lookup.cpp

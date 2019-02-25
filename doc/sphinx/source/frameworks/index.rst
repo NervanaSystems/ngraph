@@ -1,15 +1,11 @@
 .. frameworks/index.rst: 
 
-
-.. TODO update CODEOWNERS for this new structure
-
-
 Current framework integrations  
 ==============================
 
 .. toctree::
    :maxdepth: 1
-
+   
    tensorflow_integ.rst
    mxnet_integ.rst
    onnx_integ.rst
@@ -22,7 +18,7 @@ cloned from one of our GitHub repos and built to connect to nGraph device backen
 all the while maintaining the framework's programmatic or user interface. Bridges 
 currently exist for the TensorFlow\* and MXNet\* frameworks. 
 
-.. figure:: ../graphics/bridge-to-graph-compiler.png
+.. figure:: ../graphics/whole-stack.png
     :width: 733px
     :alt: JiT compiling of a computation
 

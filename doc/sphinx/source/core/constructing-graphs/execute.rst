@@ -60,7 +60,7 @@ Every node has zero or more *inputs*, zero or more *outputs*, and zero or more
 *attributes*. 
 
 The specifics for each ``type`` permitted on a core ``Op``-specific basis can be 
-discovered in our :doc:`../ops/index` docs. For our purpose to 
+discovered in our :doc:`../../ops/index` docs. For our purpose to 
 :ref:`define a computation <define_cmp>`, nodes should be thought of as essentially 
 immutable; that is, when constructing a node, we need to supply all of its 
 inputs. We get this process started with ops that have no inputs, since any op 
@@ -71,7 +71,7 @@ They receive their values from outside of the graph, so they have no inputs.
 They have attributes for the element type and the shape of the tensor that will 
 be passed to them.
 
-.. literalinclude:: ../../../examples/abc/abc.cpp
+.. literalinclude:: ../../../../examples/abc/abc.cpp
    :language: cpp
    :lines: 25-29
 
@@ -81,7 +81,7 @@ shape ``(2, 3)`` and a row-major element layout.
 To create a graph for ``(a + b) * c``, first make an ``op::Add`` node with inputs 
 from ``a`` and ``b``, and an ``op::Multiply`` node from the add node and ``c``:
 
-.. literalinclude:: ../../../examples/abc/abc.cpp
+.. literalinclude:: ../../../../examples/abc/abc.cpp
    :language: cpp
    :lines: 31-32
 
@@ -94,7 +94,7 @@ type and shape of its unique output.
 
 Once the graph is built, we need to package it in a ``Function``:
 
-.. literalinclude:: ../../../examples/abc/abc.cpp
+.. literalinclude:: ../../../../examples/abc/abc.cpp
    :language: cpp
    :lines: 35-36
 
@@ -126,12 +126,12 @@ There are two backends for the CPU: the optimized ``"CPU"`` backend, which uses
 the `Intel MKL-DNN`_, and the ``"INTERPRETER"`` backend, which runs reference 
 versions of kernels that favor implementation clarity over speed. The 
 ``"INTERPRETER"`` backend can be slow, and is primarily intended for testing. 
-See the documentation on :doc:`runtime options for various backends <../backend-support/index>` 
+See the documentation on :doc:`runtime options for various backends <../../backend-support/index>` 
 for additional details.
 
 To continue with our original example and select the ``"CPU_Backend"``: 
 
-.. literalinclude:: ../../../examples/abc/abc.cpp
+.. literalinclude:: ../../../../examples/abc/abc.cpp
    :language: cpp
    :lines: 38-39
 
@@ -168,14 +168,14 @@ Backends are responsible for managing storage. If the storage is off-CPU, caches
 are used to minimize copying between device and CPU. We can allocate storage for 
 the three parameters and the return value.
 
-.. literalinclude:: ../../../examples/abc/abc.cpp
+.. literalinclude:: ../../../../examples/abc/abc.cpp
    :language: cpp
    :lines: 41-46
 
 Each tensor is a shared pointer to a :term:`Tensorview`, which is the interface 
 backends implement for tensor use. When there are no more references to the 
 tensor view, it will be freed when convenient for the backend. See the 
-:doc:`../backend-support/cpp-api` documentation for details on how to work 
+:doc:`../../backend-support/cpp-api` documentation for details on how to work 
 with ``Tensor``.
 
 
@@ -186,7 +186,7 @@ Initialize the inputs
 
 Next we need to copy some data into the tensors.
 
-.. literalinclude:: ../../../examples/abc/abc.cpp
+.. literalinclude:: ../../../../examples/abc/abc.cpp
    :language: cpp
    :lines: 48-55
 
@@ -201,7 +201,7 @@ Invoke the computation
 To invoke the function, we simply pass argument and resultant tensors to the 
 call frame:
 
-.. literalinclude:: ../../../examples/abc/abc.cpp
+.. literalinclude:: ../../../../examples/abc/abc.cpp
    :language: cpp
    :lines: 57-58
 
@@ -213,7 +213,7 @@ Access the outputs
 
 We can use the ``read`` method to access the result:
 
-.. literalinclude:: ../../../examples/abc/abc.cpp
+.. literalinclude:: ../../../../examples/abc/abc.cpp
    :language: cpp
    :lines: 60-77
 
@@ -222,7 +222,7 @@ We can use the ``read`` method to access the result:
 Put it all together
 ===================
 
-.. literalinclude:: ../../../examples/abc/abc.cpp
+.. literalinclude:: ../../../../examples/abc/abc.cpp
    :language: cpp
    :linenos:
    :caption: "The (a + b) * c example for executing a computation on nGraph"

@@ -19,7 +19,6 @@
 #include <CPP/topology.hpp>
 
 #include "ngraph/axis_set.hpp"
-#include "ngraph/function.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
@@ -37,17 +36,6 @@ namespace ngraph
                                const AxisSet& axis,
                                const std::string& operation,
                                const std::string& init_val);
-
-            void do_reduce_func_call(cldnn::topology& topology,
-                                     const std::string& input0_name,
-                                     const Shape& input0_shape,
-                                     const std::string& input1_name,
-                                     const Shape& input1_shape,
-                                     const std::string& output_name,
-                                     const Shape& output_shape,
-                                     const element::Type& output_type,
-                                     const AxisSet& axis,
-                                     std::vector<std::shared_ptr<Function>>& func);
         }
     }
 }
