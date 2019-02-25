@@ -1869,9 +1869,6 @@ TEST(onnx_${BACKEND_NAME}, model_lstm_fwd_with_clip)
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/lstm_fwd_with_clip.onnx"));
 
-    int hidden_size{2};
-    int batch_size{1};
-
     Inputs inputs{};
     // X
     inputs.emplace_back(std::vector<float>{-0.455351, -0.276391, -0.185934, -0.269585});
