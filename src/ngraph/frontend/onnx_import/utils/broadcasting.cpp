@@ -42,7 +42,6 @@ static std::pair<ngraph::Shape, std::vector<ngraph::Shape>>
 {
     auto shape_left_fold = [](ngraph::Shape& accumulator,
                               const std::shared_ptr<ngraph::Node>& input) {
-        // TODO: in a separate PR remove the 'get_numpy_broadcast_shape' function
         ngraph::Shape result;
         auto input_shape = input->get_shape();
         auto accumulator_rank = accumulator.size();
