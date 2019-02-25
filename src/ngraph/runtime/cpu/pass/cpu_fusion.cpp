@@ -2087,13 +2087,6 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconcat()
 
         auto concat_m = std::static_pointer_cast<op::Concat>(m.get_match_root());
         auto dq_m = std::static_pointer_cast<op::Dequantize>(concat_m->get_argument(0));
-        auto scale_m = std::dynamic_pointer_cast<op::Constant>(dq_m->get_argument(1));
-        if (!scale_m)
-        {
-            NGRAPH_DEBUG << "QuantizedConcat: Dequantize scale must be a constant";
-            return false;
-        }
-        auto scale_m_val = scale_m->get_vector<float>()[0];
         NodeVector new_args;
         for (auto arg : concat_m->get_arguments())
         {
@@ -2101,21 +2094,15 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconcat()
             {
                 return false;
             }
-            new_args.push_back(arg->get_argument(0));
 
-            auto scale = std::dynamic_pointer_cast<op::Constant>(arg->get_argument(1));
-            if (!scale)
-            {
-                NGRAPH_DEBUG << "QuantizedConcat: Dequantize scale must be a constant";
-                return false;
-            }
             // ensure dequant scales are same
-            if (std::fabs(scale_m_val - scale->get_vector<float>()[0]) >
-                std::numeric_limits<float>::epsilon())
+            if (!ngraph::compare_constants(arg->get_argument(1), dq_m->get_argument(1)))
             {
                 NGRAPH_DEBUG << "QuantizedConcat: Dequantize scale must be same";
                 return false;
             }
+
+            new_args.push_back(arg->get_argument(0));
         }
         auto concat_n =
             std::make_shared<op::QuantizedConcat>(new_args, concat_m->get_concatenation_axis());
