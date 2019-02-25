@@ -37,6 +37,7 @@
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
+#include "ngraph/runtime/cpu/op/rnn_utils.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -477,7 +478,28 @@ namespace ngraph
                     auto rnn_cell_n_states =
                         static_cast<unsigned long>(rnn_node->get_num_cell_states());
 
-                    if (out[0].get_shape().size() == 2 && (out[0].get_shape()[1] != feature_size))
+                    auto get_mkldnn_rnn_cell_type = [&]() {
+                        switch (rnn_node->get_rnn_type())
+                        {
+                        case rnn_utils::rnntype::vanilla_rnn: return mkldnn::algorithm::vanilla_rnn;
+                        case rnn_utils::rnntype::vanilla_gru: return mkldnn::algorithm::vanilla_gru;
+                        case rnn_utils::rnntype::vanilla_lstm:
+                            return mkldnn::algorithm::vanilla_lstm;
+                        default: throw ngraph_error("unsupported mkldnn rnn algorithm");
+                        }
+                    };
+
+                    auto get_mkldnn_rnn_direction = [&]() {
+                        switch (direction)
+                        {
+                        case 1: return mkldnn::rnn_direction::unidirectional_left2right;
+                        case 2: return mkldnn::rnn_direction::bidirectional_concat;
+                        default: throw ngraph_error("unsupported mkldnn rnn direction");
+                        }
+                    };
+
+                    if (out[0].get_shape().size() == 2 &&
+                        (out[0].get_shape()[1] != direction * feature_size))
                     {
                         throw ngraph_error(
                             "input slc{ht} feature size is not equal to output dlc{ht} feature "
@@ -508,7 +530,7 @@ namespace ngraph
                     Shape wei_iter_tz{
                         num_fused_layers, direction, feature_size, rnn_cell_n_gates, feature_size};
                     Shape bias_tz{num_fused_layers, direction, rnn_cell_n_gates, feature_size};
-                    Shape dst_layer_tz{src_sequence_length_max, batch, feature_size};
+                    Shape dst_layer_tz{src_sequence_length_max, batch, direction * feature_size};
                     Shape dst_iter_tz{
                         num_fused_layers, direction, rnn_cell_n_states, batch, feature_size};
 
@@ -534,7 +556,9 @@ namespace ngraph
                                              wei_iter_md,
                                              bias_md,
                                              dst_layer_md,
-                                             dst_iter_md);
+                                             dst_iter_md,
+                                             get_mkldnn_rnn_direction(),
+                                             get_mkldnn_rnn_cell_type());
                 }
 
                 size_t build_rnn_forward(const mkldnn::memory::desc& src_layer_desc,
@@ -543,7 +567,9 @@ namespace ngraph
                                          const mkldnn::memory::desc& weights_iter_desc,
                                          const mkldnn::memory::desc& bias_desc,
                                          const mkldnn::memory::desc& dst_layer_desc,
-                                         const mkldnn::memory::desc& dst_iter_desc);
+                                         const mkldnn::memory::desc& dst_iter_desc,
+                                         const mkldnn::rnn_direction& rnn_direction,
+                                         const mkldnn::algorithm& rnn_algorithm);
 
                 size_t build_concat(const std::vector<mkldnn::memory::desc>& inputs_data_desc,
                                     const mkldnn::memory::desc& result_desc,

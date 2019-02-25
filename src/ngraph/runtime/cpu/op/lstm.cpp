@@ -28,14 +28,15 @@ shared_ptr<Node> op::Lstm::copy_with_new_args(const NodeVector& new_args) const
         throw ngraph_error("Incorrect number of new arguments");
     }
     return make_shared<Lstm>(
-        new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3), new_args.at(4));
+        new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3), new_args.at(4), m_rnntype);
 }
 
 op::Lstm::Lstm(std::shared_ptr<Node> src_layer,
                std::shared_ptr<Node> src_iter,
                std::shared_ptr<Node> weights_layer,
                std::shared_ptr<Node> weights_iter,
-               std::shared_ptr<Node> bias)
+               std::shared_ptr<Node> bias,
+               ngraph::runtime::cpu::rnn_utils::rnntype rnn_type)
     : Op("Lstm", check_single_output_args({src_layer, src_iter, weights_layer, weights_iter, bias}))
     , m_output_tensor_shape(src_layer->get_shape())
     , m_output_cell_shape(src_iter->get_shape())
@@ -47,6 +48,7 @@ op::Lstm::Lstm(std::shared_ptr<Node> src_layer,
     , m_num_cell_states(2)
     , m_direction(1)
     , m_num_fused_layers(1)
+    , m_rnntype(rnn_type)
 {
     constructor_validate_and_infer_types();
 
