@@ -29,7 +29,6 @@ ExternalProject_Add(
     PREFIX protobuf
     GIT_REPOSITORY ${PROTOBUF_GIT_REPO_URL}
     GIT_TAG ${PROTOBUF_GIT_BRANCH}
-    ${NGRAPH_GIT_ARGS}
     UPDATE_COMMAND ""
     PATCH_COMMAND ""
     CONFIGURE_COMMAND ./autogen.sh COMMAND ./configure --prefix=${EXTERNAL_PROJECTS_ROOT}/protobuf --disable-shared CXX=${CMAKE_CXX_COMPILER} CXXFLAGS=-fPIC

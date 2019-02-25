@@ -80,20 +80,20 @@ We begin by building the graph, starting with the input parameter
 ``X``. We also define a fully-connected layer, including parameters for
 weights and bias:
 
-.. literalinclude:: ../../../examples/mnist_mlp/mnist_mlp.cpp
+.. literalinclude:: ../../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
    :lines: 127-135
 
 
 Repeat the process for the next layer,
 
-.. literalinclude:: ../../../examples/mnist_mlp/mnist_mlp.cpp
+.. literalinclude:: ../../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
    :lines: 138-146
 
 and normalize everything with a ``softmax``.
 
-.. literalinclude:: ../../../examples/mnist_mlp/mnist_mlp.cpp
+.. literalinclude:: ../../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
    :lines: 148-150
 
@@ -107,7 +107,7 @@ We use cross-entropy to compute the loss. nGraph does not currenty have a core
 op for cross-entropy, so we implement it directly, adding clipping to prevent 
 underflow.
 
-.. literalinclude:: ../../../examples/mnist_mlp/mnist_mlp.cpp
+.. literalinclude:: ../../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
    :lines: 154-166
 
@@ -123,7 +123,7 @@ because of the way it is implemented in interpreted frameworks. In nGraph, we
 augment the loss computation with computations for the weight adjustments. This 
 allows the calculations for the adjustments to be further optimized.
 
-.. literalinclude:: ../../../examples/mnist_mlp/mnist_mlp.cpp
+.. literalinclude:: ../../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
    :lines: 169-172
 
@@ -136,16 +136,16 @@ update computation for ``N`` will be given by the node
    auto update = loss->backprop_node(N, delta);
 
 
-.. literalinclude:: ../../../examples/mnist_mlp/mnist_mlp.cpp
+.. literalinclude:: ../../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
    :lines: 177-181
 
 
 The different update nodes will share intermediate computations. So to
 get the updated values for the weights as computed with the specified 
-:doc:`backend <../backend-support/index>`:
+:doc:`backend <../../backend-support/index>`:
 
-.. literalinclude:: ../../../examples/mnist_mlp/mnist_mlp.cpp
+.. literalinclude:: ../../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
    :lines: 182-215
 
@@ -165,7 +165,7 @@ use the same nodes in different functions, nGraph currently does not
 allow the same nodes to be compiled in different functions, so we
 compile clones of the nodes.
 
-.. literalinclude:: ../../../examples/mnist_mlp/mnist_mlp.cpp
+.. literalinclude:: ../../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
    :lines: 216-224
 

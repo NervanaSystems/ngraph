@@ -155,7 +155,6 @@ if (WIN32)
         DEPENDS ${MKLDNN_DEPENDS}
         GIT_REPOSITORY ${MKLDNN_GIT_REPO_URL}
         GIT_TAG ${MKLDNN_GIT_TAG}
-        ${NGRAPH_GIT_ARGS}
         UPDATE_COMMAND ""
         CONFIGURE_COMMAND
         # Patch gets mad if it applied for a second time so:
@@ -192,7 +191,6 @@ else()
         DEPENDS ${MKLDNN_DEPENDS}
         GIT_REPOSITORY ${MKLDNN_GIT_REPO_URL}
         GIT_TAG ${MKLDNN_GIT_TAG}
-        ${NGRAPH_GIT_ARGS}
         UPDATE_COMMAND ""
         CONFIGURE_COMMAND
         # Patch gets mad if it applied for a second time so:
