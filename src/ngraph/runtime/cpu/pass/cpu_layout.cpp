@@ -400,7 +400,7 @@ namespace ngraph
                         {
                             fwd_desc.reset(
                                 new convolution_forward::desc(prop_kind::forward,
-                                                              algorithm::convolution_auto,
+                                                              algorithm::convolution_direct,
                                                               input_data_desc,
                                                               weights_desc,
                                                               bias_desc, // with bias
@@ -424,7 +424,7 @@ namespace ngraph
                         {
                             fwd_desc.reset(
                                 new convolution_forward::desc(prop_kind::forward,
-                                                              algorithm::convolution_auto,
+                                                              algorithm::convolution_direct,
                                                               input_data_desc,
                                                               weights_desc,
                                                               result_desc,
@@ -750,7 +750,7 @@ namespace ngraph
                         const memory::desc result_desc(
                             mkldnn_result_shape, et, memory::format::any);
 
-                        convolution_backward_data::desc bwd_desc(algorithm::convolution_auto,
+                        convolution_backward_data::desc bwd_desc(algorithm::convolution_direct,
                                                                  result_desc,
                                                                  weights_desc,
                                                                  delta_desc,
@@ -761,7 +761,7 @@ namespace ngraph
                                                                  padding_kind::zero);
 
                         convolution_forward::desc fwd_desc(prop_kind::forward,
-                                                           algorithm::convolution_auto,
+                                                           algorithm::convolution_direct,
                                                            result_desc,
                                                            weights_desc,
                                                            delta_desc,
@@ -839,7 +839,7 @@ namespace ngraph
                         memory::dims mkldnn_bias_shape(bias_shape.begin(), bias_shape.end());
                         const memory::desc bias_desc(mkldnn_bias_shape, et, memory::format::any);
                         bwd_desc.reset(
-                            new convolution_backward_weights::desc(algorithm::convolution_auto,
+                            new convolution_backward_weights::desc(algorithm::convolution_direct,
                                                                    data_desc,
                                                                    filters_desc,
                                                                    bias_desc,
@@ -851,7 +851,7 @@ namespace ngraph
                                                                    padding_kind::zero));
 
                         fwd_desc.reset(new convolution_forward::desc(prop_kind::forward,
-                                                                     algorithm::convolution_auto,
+                                                                     algorithm::convolution_direct,
                                                                      data_desc,
                                                                      filters_desc,
                                                                      bias_desc,
@@ -865,7 +865,7 @@ namespace ngraph
                     else
                     {
                         bwd_desc.reset(
-                            new convolution_backward_weights::desc(algorithm::convolution_auto,
+                            new convolution_backward_weights::desc(algorithm::convolution_direct,
                                                                    data_desc,
                                                                    filters_desc,
                                                                    delta_desc,
@@ -876,7 +876,7 @@ namespace ngraph
                                                                    padding_kind::zero));
 
                         fwd_desc.reset(new convolution_forward::desc(prop_kind::forward,
-                                                                     algorithm::convolution_auto,
+                                                                     algorithm::convolution_direct,
                                                                      data_desc,
                                                                      filters_desc,
                                                                      delta_desc,

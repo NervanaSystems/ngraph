@@ -217,7 +217,7 @@ mkldnn::memory::format MKLDNNEmitter::query_convolution_forward_weight_format(
     mkldnn::engine cpu_engine(mkldnn::engine::cpu, 0);
     mkldnn::convolution_forward::desc conv_desc_layout(
         mkldnn::prop_kind::forward,
-        mkldnn::algorithm::convolution_auto,
+        mkldnn::algorithm::convolution_direct,
         input_data_desc,
         weights_desc_any, // this needs to be in default format
         result_desc,
@@ -253,7 +253,7 @@ size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& inpu
     {
         auto conv_prim = new mkldnn::convolution_forward(
             {{mkldnn::prop_kind::forward,
-              mkldnn::algorithm::convolution_auto,
+              mkldnn::algorithm::convolution_direct,
               input_data_desc,
               weights_desc,
               result_desc,
@@ -304,7 +304,7 @@ size_t
     conv_attr.set_output_scales(0, output_scale);
     size_t conv_index = insert_primitive(new mkldnn::convolution_forward(
         {{mkldnn::prop_kind::forward,
-          mkldnn::algorithm::convolution_auto,
+          mkldnn::algorithm::convolution_direct,
           input_data_desc,
           weights_desc,
           result_desc,
@@ -348,7 +348,7 @@ size_t
     conv_attr.set_output_scales(0, output_scale);
     size_t conv_index = insert_primitive(new mkldnn::convolution_forward(
         {{mkldnn::prop_kind::forward,
-          mkldnn::algorithm::convolution_auto,
+          mkldnn::algorithm::convolution_direct,
           input_data_desc,
           weights_desc,
           bias_desc,
@@ -391,7 +391,7 @@ size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& inpu
     {
         conv_index = insert_primitive(new mkldnn::convolution_forward(
             {{mkldnn::prop_kind::forward,
-              mkldnn::algorithm::convolution_auto,
+              mkldnn::algorithm::convolution_direct,
               input_data_desc,
               weights_desc,
               bias_desc,
@@ -437,7 +437,7 @@ size_t MKLDNNEmitter::build_convolution_backward_weights_bias(
     mkldnn::memory::dims padding_l(ng_padding_below.begin(), ng_padding_below.end());
     mkldnn::memory::dims padding_r(ng_padding_above.begin(), ng_padding_above.end());
     mkldnn::convolution_forward::primitive_desc fwd_pd{{mkldnn::prop_kind::forward,
-                                                        mkldnn::algorithm::convolution_auto,
+                                                        mkldnn::algorithm::convolution_direct,
                                                         in_data_desc,
                                                         out_weights_delta_desc,
                                                         out_bias_delta_desc,
@@ -450,7 +450,7 @@ size_t MKLDNNEmitter::build_convolution_backward_weights_bias(
                                                        executor::global_cpu_engine};
 
     mkldnn::convolution_backward_weights::primitive_desc bwd_pd{
-        {mkldnn::algorithm::convolution_auto,
+        {mkldnn::algorithm::convolution_direct,
          in_data_desc,
          out_weights_delta_desc,
          out_bias_delta_desc,
@@ -489,7 +489,7 @@ size_t
     size_t result_index = build_memory_primitive(result_desc);
 
     size_t primitive_index = insert_primitive(new mkldnn::convolution_backward_weights(
-        {{mkldnn::algorithm::convolution_auto,
+        {{mkldnn::algorithm::convolution_direct,
           input_desc,
           result_desc,
           delta_desc,
@@ -501,7 +501,7 @@ size_t
          executor::global_cpu_engine,
          // Forward primitive descriptor corresponding to this backward weights descriptor
          {{mkldnn::prop_kind::forward,
-           mkldnn::algorithm::convolution_auto,
+           mkldnn::algorithm::convolution_direct,
            input_desc,
            result_desc,
            delta_desc,
@@ -532,7 +532,7 @@ size_t MKLDNNEmitter::build_convolution_backward_data(const mkldnn::memory::desc
     size_t result_index = build_memory_primitive(result_desc);
 
     size_t primitive_index = insert_primitive(new mkldnn::convolution_backward_data(
-        {{mkldnn::algorithm::convolution_auto,
+        {{mkldnn::algorithm::convolution_direct,
           result_desc,
           weights_desc,
           delta_desc,
@@ -544,7 +544,7 @@ size_t MKLDNNEmitter::build_convolution_backward_data(const mkldnn::memory::desc
          executor::global_cpu_engine,
          // Forward primitive descriptor corresponding to this backward data descriptor
          {{mkldnn::prop_kind::forward,
-           mkldnn::algorithm::convolution_auto,
+           mkldnn::algorithm::convolution_direct,
            result_desc,
            weights_desc,
            delta_desc,
