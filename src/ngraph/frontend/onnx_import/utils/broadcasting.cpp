@@ -23,35 +23,9 @@
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/parameter.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "reshape.hpp"
-
-/// \brief Calculate output shape of numpy - style broadcast operation.
-///        https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html#general-broadcasting-rules
-///
-/// \param left_shape Shape of first input tensor.
-/// \param right_shape Shape of the second input tensor.
-/// \return Shape of the output tensor and full shape of input tensors.
-static std::vector<ngraph::Shape> get_numpy_broadcast_shape(ngraph::Shape left_shape,
-                                                            ngraph::Shape right_shape)
-{
-    ngraph::Shape output_shape;
-    auto rank_left = left_shape.size();
-    auto rank_right = right_shape.size();
-    auto max_rank = std::max(rank_left, rank_right);
-
-    // left-pad the left_shape with ones
-    left_shape.insert(std::begin(left_shape), max_rank - rank_left, 1);
-    // left-pad the right_shape with ones
-    right_shape.insert(std::begin(right_shape), max_rank - rank_right, 1);
-
-    for (std::size_t index = 0; index < max_rank; ++index)
-    {
-        output_shape.push_back(std::max(left_shape.at(index), right_shape.at(index)));
-    }
-
-    return {output_shape, left_shape, right_shape};
-}
 
 /// \brief Calculate the output shape of numpy-style broadcast operation for all input nodes.
 ///
@@ -66,10 +40,26 @@ static std::vector<ngraph::Shape> get_numpy_broadcast_shape(ngraph::Shape left_s
 static std::pair<ngraph::Shape, std::vector<ngraph::Shape>>
     get_numpy_broadcast_shapes(const ngraph::NodeVector& inputs)
 {
-    auto shape_left_fold = [](const ngraph::Shape& accumulator,
+    auto shape_left_fold = [](ngraph::Shape& accumulator,
                               const std::shared_ptr<ngraph::Node>& input) {
         // TODO: in a separate PR remove the 'get_numpy_broadcast_shape' function
-        return get_numpy_broadcast_shape(accumulator, input->get_shape()).at(0);
+        ngraph::Shape result;
+        auto input_shape = input->get_shape();
+        auto accumulator_rank = accumulator.size();
+        auto input_rank = input_shape.size();
+        auto max_rank = std::max(accumulator_rank, input_rank);
+
+        // left-pad the accumulator with ones
+        accumulator.insert(std::begin(accumulator), max_rank - accumulator_rank, 1);
+        // left-pad the input_shape with ones
+        input_shape.insert(std::begin(input_shape), max_rank - input_rank, 1);
+
+        for (std::size_t index = 0; index < max_rank; ++index)
+        {
+            result.push_back(std::max(accumulator.at(index), input_shape.at(index)));
+        }
+
+        return result;
     };
 
     ngraph::Shape target_shape =
@@ -145,12 +135,10 @@ namespace ngraph
             numpy_style_broadcast_for_binary_operation(const std::shared_ptr<ngraph::Node>& left,
                                                        const std::shared_ptr<ngraph::Node>& right)
         {
-            const auto& left_shape = left->get_shape();
-            const auto& right_shape = right->get_shape();
-            const auto& numpy_shapes = get_numpy_broadcast_shape(left_shape, right_shape);
-            auto output_shape = numpy_shapes.at(0);
-            auto left_full_shape = numpy_shapes.at(1);
-            auto right_full_shape = numpy_shapes.at(2);
+            const auto& numpy_shapes = get_numpy_broadcast_shapes({left, right});
+            auto output_shape = numpy_shapes.first;
+            auto left_full_shape = numpy_shapes.second.at(0);
+            auto right_full_shape = numpy_shapes.second.at(1);
 
             return {broadcast_node_numpy_style(left, output_shape, left_full_shape),
                     broadcast_node_numpy_style(right, output_shape, right_full_shape)};
@@ -185,14 +173,20 @@ namespace ngraph
         {
             const auto& left_shape = left->get_shape();
             const auto& right_shape = right->get_shape();
-            // Broadcast only _stack of matrices_ axes.
-            const auto& numpy_shapes = get_numpy_broadcast_shape(
-                Shape{std::begin(left_shape), std::next(std::end(left_shape), -2)},
+            // Make temporary Parameters to pass shapes into broadcast function.
+            std::shared_ptr<ngraph::Node> left_parameter = std::make_shared<ngraph::op::Parameter>(
+                element::boolean,
+                Shape{std::begin(left_shape), std::next(std::end(left_shape), -2)});
+            std::shared_ptr<ngraph::Node> right_parameter = std::make_shared<ngraph::op::Parameter>(
+                element::boolean,
                 Shape{std::begin(right_shape), std::next(std::end(right_shape), -2)});
+            // Broadcast only _stack of matrices_ axes.
+            const auto& numpy_shapes =
+                get_numpy_broadcast_shapes({left_parameter, right_parameter});
 
             // Prepare tensors output shapes with broadcasted _stack of matrices_ axes.
-            auto left_output_shape = numpy_shapes.at(0);
-            auto right_output_shape = numpy_shapes.at(0);
+            auto left_output_shape = numpy_shapes.first;
+            auto right_output_shape = numpy_shapes.first;
             // Append the last two axes original dimensions.
             left_output_shape.insert(std::end(left_output_shape),
                                      std::next(std::begin(left_shape), left_shape.size() - 2),
@@ -201,8 +195,8 @@ namespace ngraph
                                       std::next(std::begin(right_shape), right_shape.size() - 2),
                                       std::end(right_shape));
 
-            auto left_full_shape = numpy_shapes.at(1);
-            auto right_full_shape = numpy_shapes.at(2);
+            auto left_full_shape = numpy_shapes.second.at(0);
+            auto right_full_shape = numpy_shapes.second.at(1);
             // Append the last two axes original dimensions.
             left_full_shape.insert(std::end(left_full_shape),
                                    std::next(std::begin(left_shape), left_shape.size() - 2),
