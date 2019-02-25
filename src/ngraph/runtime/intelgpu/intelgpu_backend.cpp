@@ -765,14 +765,40 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::MaxPool:
         {
+            arguments_check(op, 1, 1);
+
             const shared_ptr<op::MaxPool> max_pool = static_pointer_cast<op::MaxPool>(op);
 
-            do_pooling_operation(topology,
-                                 op,
-                                 max_pool->get_window_shape(),
-                                 max_pool->get_window_movement_strides(),
-                                 max_pool->get_padding_below(),
-                                 cldnn::pooling_mode::max);
+            if ((get_input_shape(op).size() > 4) || (get_output_type(op) != element::f32) ||
+                !max_pool->get_padding_below().empty() || !max_pool->get_padding_above().empty())
+            {
+                const shared_ptr<Node> def_val = max_pool->get_default_value();
+                const shared_ptr<op::Constant> def_const =
+                    static_pointer_cast<op::Constant>(def_val);
+                const vector<std::string>& values = def_const->get_value_strings();
+
+                do_max_avg_pool_operation(topology,
+                                          get_input_name(op),
+                                          get_input_shape(op),
+                                          get_output_name(op),
+                                          get_output_shape(op),
+                                          get_output_type(op),
+                                          max_pool->get_window_shape(),
+                                          max_pool->get_window_movement_strides(),
+                                          max_pool->get_padding_below(),
+                                          false,
+                                          values.at(0),
+                                          true);
+            }
+            else
+            {
+                do_pooling_operation(topology,
+                                     op,
+                                     max_pool->get_window_shape(),
+                                     max_pool->get_window_movement_strides(),
+                                     max_pool->get_padding_below(),
+                                     cldnn::pooling_mode::max);
+            }
             break;
         }
         case OP_TYPEID::MaxPoolBackprop:
@@ -804,17 +830,45 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::AvgPool:
         {
-            const shared_ptr<op::AvgPool> avg_pool = static_pointer_cast<op::AvgPool>(op);
-            const cldnn::pooling_mode mode = avg_pool->get_include_padding_in_avg_computation()
-                                                 ? cldnn::pooling_mode::average
-                                                 : cldnn::pooling_mode::average_no_padding;
+            arguments_check(op, 1, 1);
 
-            do_pooling_operation(topology,
-                                 op,
-                                 avg_pool->get_window_shape(),
-                                 avg_pool->get_window_movement_strides(),
-                                 avg_pool->get_padding_below(),
-                                 mode);
+            const shared_ptr<op::AvgPool> avg_pool = static_pointer_cast<op::AvgPool>(op);
+
+            if ((get_input_shape(op).size() > 4) || (get_output_type(op) != element::f32) ||
+                avg_pool->get_include_padding_in_avg_computation() ||
+                !avg_pool->get_padding_below().empty() || !avg_pool->get_padding_above().empty())
+            {
+                const shared_ptr<Node> def_val = avg_pool->get_default_value();
+                const shared_ptr<op::Constant> def_const =
+                    static_pointer_cast<op::Constant>(def_val);
+                const vector<std::string>& values = def_const->get_value_strings();
+
+                do_max_avg_pool_operation(topology,
+                                          get_input_name(op),
+                                          get_input_shape(op),
+                                          get_output_name(op),
+                                          get_output_shape(op),
+                                          get_output_type(op),
+                                          avg_pool->get_window_shape(),
+                                          avg_pool->get_window_movement_strides(),
+                                          avg_pool->get_padding_below(),
+                                          avg_pool->get_include_padding_in_avg_computation(),
+                                          values.at(0),
+                                          false);
+            }
+            else
+            {
+                const cldnn::pooling_mode mode = avg_pool->get_include_padding_in_avg_computation()
+                                                     ? cldnn::pooling_mode::average
+                                                     : cldnn::pooling_mode::average_no_padding;
+
+                do_pooling_operation(topology,
+                                     op,
+                                     avg_pool->get_window_shape(),
+                                     avg_pool->get_window_movement_strides(),
+                                     avg_pool->get_padding_below(),
+                                     mode);
+            }
             break;
         }
         case OP_TYPEID::AvgPoolBackprop:
@@ -825,8 +879,8 @@ shared_ptr<runtime::Executable>
                 static_pointer_cast<op::AvgPoolBackprop>(op);
 
             do_avg_pool_backprop_operation(topology,
-                                           get_input_name(op, 0),
-                                           get_input_shape(op, 0),
+                                           get_input_name(op),
+                                           get_input_shape(op),
                                            get_output_name(op),
                                            get_output_shape(op),
                                            get_output_type(op),
@@ -847,7 +901,7 @@ shared_ptr<runtime::Executable>
             {
                 do_equal_propagation(topology, get_input_name(op), get_output_name(op));
             }
-            else if ((get_output_shape(op).size() <= 4) &&
+            else if ((get_output_shape(op).size() <= 4) && (shape_size(get_output_shape(op)) > 0) &&
                      ((get_input_type(op) == element::f32) || (get_input_type(op) == element::i32)))
             {
                 const size_t shift = 4 - get_output_shape(op).size();
@@ -1434,7 +1488,8 @@ shared_ptr<runtime::Executable>
             // following are the checks to go with workaround
             if ((win_stride.size() > 2) || (pad_below.size() > 2) || (pad_above.size() > 2) ||
                 (win_dilation.size() > 2) || (data_dilation.size() > 2) ||
-                (data_dilation.at(0) != 1) || (data_dilation.at(1) != 1))
+                (data_dilation.at(0) != 1) || (data_dilation.at(1) != 1) ||
+                (get_output_type(op) != element::f32))
             {
                 do_convolution_operation(topology,
                                          get_input_name(op, 0),
@@ -1509,7 +1564,7 @@ shared_ptr<runtime::Executable>
             if ((win_stride.size() > 2) || (win_stride.at(0) != 1) || (win_stride.at(1) != 1) ||
                 (pad_below.size() > 2) || (pad_above.size() > 2) || (data_dilation.size() > 2) ||
                 (data_dilation.at(0) != 1) || (data_dilation.at(1) != 1) ||
-                (win_dilation.size() > 2))
+                (win_dilation.size() > 2) || (get_output_type(op) != element::f32))
             {
                 do_convolution_operation(topology,
                                          get_input_name(op, 0),
@@ -1608,7 +1663,8 @@ shared_ptr<runtime::Executable>
             if ((win_stride.size() > 2) || (win_stride.at(0) != 1) || (win_stride.at(1) != 1) ||
                 (pad_below.size() > 2) || (pad_above.size() > 2) || (data_dilation.size() > 2) ||
                 (data_dilation.at(0) != 1) || (data_dilation.at(1) != 1) ||
-                (win_dilation.size() > 2) || (win_dilation.at(0) != 1) || (win_dilation.at(1) != 1))
+                (win_dilation.size() > 2) || (win_dilation.at(0) != 1) ||
+                (win_dilation.at(1) != 1) || (get_output_type(op) != element::f32))
             {
                 do_convolution_operation(topology,
                                          get_input_name(op, 1),
