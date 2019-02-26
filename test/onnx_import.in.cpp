@@ -2065,9 +2065,6 @@ TEST(onnx_${BACKEND_NAME}, model_where)
     auto function =
         onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/where.onnx"));
 
-    using Inputs = std::vector<std::vector<int>>;
-    using Outputs = std::vector<std::vector<int>>;
-
     // conditions tensor - 3x3x3
     auto condition = std::vector<int>{
         {0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0}};
@@ -2077,16 +2074,16 @@ TEST(onnx_${BACKEND_NAME}, model_where)
     // 3x1 tensor of "2"
     auto x2 = std::vector<int>{2, 2, 2};
 
-    Inputs inputs;
+    std::vector<std::vector<int>> inputs;
     inputs.push_back(std::move(condition));
     inputs.push_back(std::move(x1));
     inputs.push_back(std::move(x2));
 
     // y = 3x3x3
-    Outputs expected_outputs{
+    std::vector<std::vector<int>> expected_outputs{
         {2, 1, 2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2}};
 
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+    std::vector<std::vector<int>> outputs{execute(function, inputs, "${BACKEND_NAME}")};
 
     EXPECT_EQ(expected_outputs.front(), outputs.front());
 }
