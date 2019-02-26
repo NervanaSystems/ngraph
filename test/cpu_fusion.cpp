@@ -3697,18 +3697,19 @@ TEST(cpu_quant_fusion, qconcat)
             return dq;
         };
 
-        NodeVector concat_inputs;
+        NodeVector concat_inputs, concats;
         ParameterVector inputs;
-        for (size_t i = 0; i < 2; i++)
+        Shape shape_input{1, 2, 4, 4};
+        inputs.push_back(std::make_shared<op::Parameter>(element::f32, shape_input));
+        concat_inputs.push_back(get_input_slice(inputs.back()));
+        // Concat2  -- Concat7
+        for (size_t i = 0; i < 6; i++)
         {
-            // Shape shape_input{1, 2, 4, 4};
-            Shape shape_input{1, 1};
-            auto input = std::make_shared<op::Parameter>(element::f32, shape_input);
-            inputs.push_back(input);
-            concat_inputs.push_back(get_input_slice(input));
+            inputs.push_back(std::make_shared<op::Parameter>(element::f32, shape_input));
+            concat_inputs.push_back(get_input_slice(inputs.back()));
+            concats.push_back(std::make_shared<op::Concat>(concat_inputs, 0));
         }
-        auto concat = std::make_shared<op::Concat>(concat_inputs, 0);
-        return make_shared<Function>(NodeVector{concat}, inputs);
+        return make_shared<Function>(concats, inputs);
     };
 
     auto cpu_f1 = make_function();
@@ -3727,6 +3728,8 @@ TEST(cpu_quant_fusion, qconcat)
     auto cpu1_results = execute(cpu_f1, args, "CPU");
     set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:1", 1);
     auto cpu2_results = execute(cpu_f2, args, "CPU");
+    // Expect Concat2 -- Concat6 to be fused and not Concat7
+    ASSERT_EQ(count_ops_of_type<op::QuantizedConcat>(cpu_f2), 5);
     EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
 }
 

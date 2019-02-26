@@ -2070,16 +2070,16 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qmax_pool()
 void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconcat()
 {
     Shape shape{2, 2, 1, 1};
-    auto input1 = std::make_shared<pattern::op::Label>(element::f32, shape);
-    auto input2 = std::make_shared<pattern::op::Label>(element::f32, shape);
-    auto input3 = std::make_shared<pattern::op::Label>(element::f32, shape);
-    auto input4 = std::make_shared<pattern::op::Label>(element::f32, shape);
-    auto input5 = std::make_shared<pattern::op::Label>(element::f32, shape);
-    auto input6 = std::make_shared<pattern::op::Label>(element::f32, shape);
-    auto concat3 = std::make_shared<op::Concat>(NodeVector{input1, input2, input3}, 0);
-    auto concat4 = std::make_shared<op::Concat>(NodeVector{input1, input2, input3, input4}, 0);
-    auto concat6 =
-        std::make_shared<op::Concat>(NodeVector{input1, input2, input3, input4, input5, input6}, 0);
+    NodeVector inputs;
+    NodeVector concats;
+    // Pattern matcher looks for concats with exact number of inputs
+    inputs.push_back(std::make_shared<pattern::op::Label>(element::f32, shape));
+    // Concat2, Concat3, ... Concat6
+    for (size_t i = 0; i <= 5; i++)
+    {
+        inputs.push_back(std::make_shared<pattern::op::Label>(element::f32, shape));
+        concats.push_back(std::make_shared<op::Concat>(inputs, 0));
+    }
 
     pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_qconcat against "
@@ -2116,12 +2116,11 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconcat()
         return true;
     };
 
-    this->add_matcher(
-        std::make_shared<pattern::Matcher>(concat4, callback, "CPUQuantFusion.QConcat4"));
-    this->add_matcher(
-        std::make_shared<pattern::Matcher>(concat3, callback, "CPUQuantFusion.QConcat3"));
-    this->add_matcher(
-        std::make_shared<pattern::Matcher>(concat6, callback, "CPUQuantFusion.QConcat6"));
+    for (size_t i = 0; i < 5; i++)
+    {
+        this->add_matcher(std::make_shared<pattern::Matcher>(
+            concats[i], callback, "CPUQuantFusion.QConcat" + std::to_string(i + 2)));
+    }
 }
 
 void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_dq_q()
