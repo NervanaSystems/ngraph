@@ -1159,7 +1159,8 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::Relu:
         {
-            const string zero_const = "convert_" + get_opencl_type_name(get_output_type(op)) + "(0)";
+            const string zero_const =
+                "convert_" + get_opencl_type_name(get_output_type(op)) + "(0)";
             do_universal_unary(topology, op, "max(" + zero_const + ", input_var)", activation_relu);
             break;
         }
