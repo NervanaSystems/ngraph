@@ -1864,6 +1864,91 @@ TEST(onnx_${BACKEND_NAME}, model_top_k)
     EXPECT_TRUE(test::all_close(expected_indices_output, indices_output));
 }
 
+TEST(onnx_${BACKEND_NAME}, model_lstm_fwd_with_clip)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/lstm_fwd_with_clip.onnx"));
+
+    Inputs inputs{};
+    // X
+    inputs.emplace_back(std::vector<float>{-0.455351, -0.276391, -0.185934, -0.269585});
+
+    // W
+    inputs.emplace_back(std::vector<float>{-0.494659f,
+                                           0.0453352f,
+                                           -0.487793f,
+                                           0.417264f,
+                                           -0.0175329f,
+                                           0.489074f,
+                                           -0.446013f,
+                                           0.414029f,
+                                           -0.0091708f,
+                                           -0.255364f,
+                                           -0.106952f,
+                                           -0.266717f,
+                                           -0.0888852f,
+                                           -0.428709f,
+                                           -0.283349f,
+                                           0.208792f});
+
+    // R
+    inputs.emplace_back(std::vector<float>{0.146626f,
+                                           -0.0620289f,
+                                           -0.0815302f,
+                                           0.100482f,
+                                           -0.219535f,
+                                           -0.306635f,
+                                           -0.28515f,
+                                           -0.314112f,
+                                           -0.228172f,
+                                           0.405972f,
+                                           0.31576f,
+                                           0.281487f,
+                                           -0.394864f,
+                                           0.42111f,
+                                           -0.386624f,
+                                           -0.390225f});
+
+    // B
+    inputs.emplace_back(std::vector<float>{0.381619f,
+                                           0.0323954f,
+                                           -0.14449f,
+                                           0.420804f,
+                                           -0.258721f,
+                                           0.45056f,
+                                           -0.250755f,
+                                           0.0967895f,
+                                           0.0f,
+                                           0.0f,
+                                           0.0f,
+                                           0.0f,
+                                           0.0f,
+                                           0.0f,
+                                           0.0f,
+                                           0.0f});
+    // P
+    inputs.emplace_back(std::vector<float>{0.2345f, 0.5235f, 0.4378f, 0.3475f, 0.8927f, 0.3456f});
+
+    Outputs expected_output{};
+    // Y_data
+    expected_output.emplace_back(
+        std::vector<float>{-0.02280854f, 0.02744377f, -0.03516197f, 0.03875681f});
+    // Y_h_data
+    expected_output.emplace_back(std::vector<float>{-0.03516197f, 0.03875681f});
+    // Y_c_data
+    expected_output.emplace_back(std::vector<float>{-0.07415761f, 0.07395997f});
+
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+
+    EXPECT_TRUE(outputs.size() == expected_output.size());
+    for (std::size_t i{0}; i < expected_output.size(); ++i)
+    {
+        // We have to enlarge tolerance bits to 3 - it's only one bit more than default value.
+        // The discrepancies may occur at most on 7th decimal position.
+        EXPECT_TRUE(test::all_close_f(expected_output.at(i), outputs.at(i), 3));
+    }
+}
+
 TEST(onnx_${BACKEND_NAME}, model_missing_input)
 {
     onnx_import::register_operator(
@@ -2005,9 +2090,6 @@ TEST(onnx_${BACKEND_NAME}, model_where)
     auto function =
         onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/where.onnx"));
 
-    using Inputs = std::vector<std::vector<int>>;
-    using Outputs = std::vector<std::vector<int>>;
-
     // conditions tensor - 3x3x3
     auto condition = std::vector<int>{
         {0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0}};
@@ -2017,16 +2099,69 @@ TEST(onnx_${BACKEND_NAME}, model_where)
     // 3x1 tensor of "2"
     auto x2 = std::vector<int>{2, 2, 2};
 
-    Inputs inputs;
+    std::vector<std::vector<int>> inputs;
     inputs.push_back(std::move(condition));
     inputs.push_back(std::move(x1));
     inputs.push_back(std::move(x2));
 
     // y = 3x3x3
-    Outputs expected_outputs{
+    std::vector<std::vector<int>> expected_outputs{
         {2, 1, 2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2}};
 
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+    std::vector<std::vector<int>> outputs{execute(function, inputs, "${BACKEND_NAME}")};
 
     EXPECT_EQ(expected_outputs.front(), outputs.front());
+}
+
+TEST(onnx_${BACKEND_NAME}, model_override_op)
+{
+    onnx_import::register_operator(
+        "FalseAdd", 1, "", [](const onnx_import::Node& node) -> NodeVector {
+            NodeVector ng_inputs{node.get_ng_inputs()};
+            return {std::make_shared<ngraph::op::Add>(ng_inputs.at(0), ng_inputs.at(1))};
+        });
+
+    onnx_import::register_operator(
+        "FalseAdd", 1, "", [](const onnx_import::Node& node) -> NodeVector {
+            NodeVector ng_inputs{node.get_ng_inputs()};
+            return {std::make_shared<ngraph::op::Subtract>(ng_inputs.at(0), ng_inputs.at(1))};
+        });
+
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/override_op.onnx"));
+
+    Inputs inputs;
+    inputs.emplace_back(std::vector<float>{0.f, 1.f, 2.f, 3.f});
+    inputs.emplace_back(std::vector<float>{3.f, 2.f, 1.f, 0.f});
+
+    Outputs expected_output{std::vector<float>{-3.f, -1.f, 1.f, 3.f}};
+
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+}
+
+TEST(onnx_${BACKEND_NAME}, import_non_existing_file)
+{
+    try
+    {
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/i.dont.exist"));
+    }
+    catch (const std::runtime_error& exc)
+    {
+        // asserts that an exception was thrown and that the error message contains the file name
+        std::string msg{exc.what()};
+        EXPECT_TRUE(msg.find("i.dont.exist") != std::string::npos);
+    }
+}
+
+TEST(onnx_${BACKEND_NAME}, import_malformed_model)
+{
+    try
+    {
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/malformed.onnx"));
+    }
+    catch (const std::runtime_error& exc)
+    {
+        EXPECT_EQ(exc.what(), std::string{"Failure parsing data from the provided input stream"});
+    }
 }

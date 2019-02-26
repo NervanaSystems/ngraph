@@ -260,8 +260,8 @@ companion tool.
 * :doc:`ONNX<frameworks/onnx_integ>` and the ONNXIFI tool. 
 
 For the latter case, if you've followed a tutorial from `ONNX`_, and you have an 
-exported, serialized model, you can skip the section on frameworks and go 
-directly to our :doc:`core/constructing-graphs/import` documentation. 
+exported, serialized model, you can skip the section on frameworks and go directly
+to our :doc:`core/constructing-graphs/import` documentation. 
 
 Please keep in mind that both of these are under continuous development, and will 
 be updated frequently in the coming months. Stay tuned!  

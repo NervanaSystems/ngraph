@@ -50,7 +50,7 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_scalar_2_in_3)
     auto result = backend->create_tensor(element::i32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<int32_t>{0, 0, 1}), read_vector<int32_t>(result));
 }
 
@@ -70,7 +70,7 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_scalar_1_in_3)
     auto result = backend->create_tensor(element::i32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<int32_t>{0, 1, 0}), read_vector<int32_t>(result));
 }
 
@@ -90,7 +90,7 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_scalar_0_in_3)
     auto result = backend->create_tensor(element::i32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<int32_t>{1, 0, 0}), read_vector<int32_t>(result));
 }
 
@@ -112,7 +112,7 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_scalar_fp_nonint_in_3)
     try
     {
         auto handle = backend->compile(f);
-        backend->call_with_validate(handle, {result}, {a});
+        handle->call_with_validate({result}, {a});
     }
     catch (const std::exception& e)
     {
@@ -142,7 +142,7 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_scalar_oob_in_3)
     try
     {
         auto handle = backend->compile(f);
-        backend->call_with_validate(handle, {result}, {a});
+        handle->call_with_validate({result}, {a});
     }
     catch (const std::exception& e)
     {
@@ -170,7 +170,7 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_0)
     auto result = backend->create_tensor(element::i32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ(
         (vector<int32_t>{0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0}),
         read_vector<int32_t>(result));
@@ -192,7 +192,7 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_1)
     auto result = backend->create_tensor(element::i32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ(
         (vector<int32_t>{0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0}),
         read_vector<int32_t>(result));
@@ -216,7 +216,7 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_1_barely_oob)
     try
     {
         auto handle = backend->compile(f);
-        backend->call_with_validate(handle, {result}, {a});
+        handle->call_with_validate({result}, {a});
     }
     catch (const std::exception& e)
     {
@@ -246,7 +246,7 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_1_far_oob)
     try
     {
         auto handle = backend->compile(f);
-        backend->call_with_validate(handle, {result}, {a});
+        handle->call_with_validate({result}, {a});
     }
     catch (const std::exception& e)
     {
@@ -277,7 +277,7 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_matrix_0)
     auto result = backend->create_tensor(element::i32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<int32_t>{1, 0, 0, 0, 0, 1, 1, 0, 0,
 
                                0, 1, 1, 0, 1, 0, 0, 0, 1,
@@ -302,7 +302,7 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_1_fp)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ(
         (vector<float>{0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0}),
         read_vector<float>(result));
@@ -326,7 +326,7 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_1_fp_nonint)
     try
     {
         auto handle = backend->compile(f);
-        backend->call_with_validate(handle, {result}, {a});
+        handle->call_with_validate({result}, {a});
     }
     catch (const std::exception& e)
     {
