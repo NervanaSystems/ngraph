@@ -71,8 +71,6 @@ ExternalProject_Add(
     DEPENDS ext_clang ext_openmp
     URL http://releases.llvm.org/5.0.2/llvm-5.0.2.src.tar.xz
     URL_HASH SHA1=576d005305335049b89608d897d7ec184d99c6e1
-    GIT_REPOSITORY https://github.com/llvm-mirror/llvm.git
-    GIT_TAG da4a2839d80ac52958be0129b871beedfe90136e
     CMAKE_GENERATOR ${CMAKE_GENERATOR}
     CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
     CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
