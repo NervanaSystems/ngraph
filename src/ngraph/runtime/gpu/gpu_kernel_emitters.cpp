@@ -18,12 +18,12 @@
 #include <map>
 
 #include "gpu_kernel_emitters.hpp"
-#include "ngraph/codegen/code_writer.hpp"
+#include "ngraph/code_writer.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
 
-void runtime::gpu::kernel::emit_memset(codegen::CodeWriter& writer,
+void runtime::gpu::kernel::emit_memset(CodeWriter& writer,
                                        const GPUTensorWrapper& dst,
                                        int value,
                                        size_t buffer_size)
@@ -36,7 +36,7 @@ void runtime::gpu::kernel::emit_memset(codegen::CodeWriter& writer,
            << ");\n";
 }
 
-void runtime::gpu::kernel::emit_memcpyDtD(codegen::CodeWriter& writer,
+void runtime::gpu::kernel::emit_memcpyDtD(CodeWriter& writer,
                                           const GPUTensorWrapper& dst,
                                           const GPUTensorWrapper& src,
                                           size_t buffer_size)
@@ -52,7 +52,7 @@ void runtime::gpu::kernel::emit_memcpyDtD(codegen::CodeWriter& writer,
     return;
 }
 
-void runtime::gpu::kernel::emit_cudnnConvolutionDescriptor(codegen::CodeWriter& writer,
+void runtime::gpu::kernel::emit_cudnnConvolutionDescriptor(CodeWriter& writer,
                                                            const std::string& name,
                                                            const CoordinateDiff& padding,
                                                            const Strides& window_movement_strides,
@@ -84,7 +84,7 @@ void runtime::gpu::kernel::emit_cudnnConvolutionDescriptor(codegen::CodeWriter& 
     }
 }
 
-void runtime::gpu::kernel::emit_cudnnFilterDescriptor(codegen::CodeWriter& writer,
+void runtime::gpu::kernel::emit_cudnnFilterDescriptor(CodeWriter& writer,
                                                       const std::string& name,
                                                       const std::string& format,
                                                       const std::string& data_type,
@@ -120,7 +120,7 @@ void runtime::gpu::kernel::emit_cudnnFilterDescriptor(codegen::CodeWriter& write
     }
 }
 
-void runtime::gpu::kernel::emit_cudnnTensorDescriptor(codegen::CodeWriter& writer,
+void runtime::gpu::kernel::emit_cudnnTensorDescriptor(CodeWriter& writer,
                                                       const std::string& name,
                                                       const std::string& format,
                                                       const std::string& data_type,
@@ -157,7 +157,7 @@ void runtime::gpu::kernel::emit_cudnnTensorDescriptor(codegen::CodeWriter& write
     }
 }
 
-void runtime::gpu::kernel::emit_cudnnTensor4dDescriptor(codegen::CodeWriter& writer,
+void runtime::gpu::kernel::emit_cudnnTensor4dDescriptor(CodeWriter& writer,
                                                         const std::string& name,
                                                         const std::string& format,
                                                         const std::string& data_type,
@@ -174,7 +174,7 @@ void runtime::gpu::kernel::emit_cudnnTensor4dDescriptor(codegen::CodeWriter& wri
     writer << "));\n";
 }
 
-void runtime::gpu::kernel::emit_cudnnTensorNdDescriptor(codegen::CodeWriter& writer,
+void runtime::gpu::kernel::emit_cudnnTensorNdDescriptor(CodeWriter& writer,
                                                         const std::string& name,
                                                         const std::string& data_type,
                                                         const size_t& num_axes,
@@ -191,7 +191,7 @@ void runtime::gpu::kernel::emit_cudnnTensorNdDescriptor(codegen::CodeWriter& wri
     writer << "                 /*strides*/" << name << "_strides));\n";
 }
 
-void runtime::gpu::kernel::emit_cudnnReduceTensor(codegen::CodeWriter& writer,
+void runtime::gpu::kernel::emit_cudnnReduceTensor(CodeWriter& writer,
                                                   const GPUTensorWrapper& in,
                                                   const GPUTensorWrapper& out,
                                                   const std::string& reduce_op,

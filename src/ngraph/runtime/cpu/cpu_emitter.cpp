@@ -246,7 +246,7 @@ namespace ngraph
             }
 #endif
 
-            static void emitCblasSgemmBatch(codegen::CodeWriter& writer,
+            static void emitCblasSgemmBatch(CodeWriter& writer,
                                             const Shape& shape_a,
                                             const Shape& shape_b,
                                             const Shape& shape_c,
@@ -334,7 +334,7 @@ namespace ngraph
                                      const Shape& shape_c,
                                      const std::vector<TensorViewWrapper>& args,
                                      const std::vector<TensorViewWrapper>& out,
-                                     codegen::CodeWriter& writer)
+                                     CodeWriter& writer)
             {
                 writer.block_begin();
 
@@ -588,7 +588,7 @@ namespace ngraph
 
             template <typename T>
             void CPU_Emitter::emitBatchNorm(CPU_ExternalFunction* external_function,
-                                            codegen::CodeWriter& writer,
+                                            CodeWriter& writer,
                                             const ngraph::Node* node,
                                             const std::vector<TensorViewWrapper>& args,
                                             const std::vector<TensorViewWrapper>& out,
@@ -1776,7 +1776,7 @@ namespace ngraph
                                          const std::vector<TensorViewWrapper>& out,
                                          size_t reduction_axis,
                                          const char* kernel_name,
-                                         codegen::CodeWriter& writer)
+                                         CodeWriter& writer)
             {
                 if (out[0].get_element_type() != element::i64 &&
                     out[0].get_element_type() != element::i32)
