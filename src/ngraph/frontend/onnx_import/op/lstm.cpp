@@ -69,7 +69,7 @@ namespace ngraph
                 std::shared_ptr<ngraph::Node> sub(const std::shared_ptr<ngraph::Node>& lhs,
                                                   const std::shared_ptr<ngraph::Node>& rhs)
                 {
-                    auto args = numpy_style_broadcast_for_binary_operation(lhs, rhs);
+                    auto args = numpy_style_broadcast({lhs, rhs});
                     return {std::make_shared<ngraph::op::Subtract>(args.at(0), args.at(1))};
                 }
 
