@@ -75,6 +75,7 @@ add_library(onnx_import STATIC
         op/depth_to_space.cpp
         op/depth_to_space.hpp
         op/div.hpp
+        op/dropout.hpp
         op/elu.cpp
         op/elu.hpp
         op/equal.hpp
@@ -112,6 +113,8 @@ add_library(onnx_import STATIC
         op/mul.hpp
         op/neg.hpp
         op/not.hpp
+        op/onehot.cpp
+        op/onehot.hpp
         op/or.hpp
         op/pad.cpp
         op/pad.hpp
@@ -162,6 +165,7 @@ add_library(onnx_import STATIC
         op/transpose.hpp
         op/unsqueeze.cpp
         op/unsqueeze.hpp
+        op/where.hpp
         op/xor.hpp
         ops_bridge.cpp
         ops_bridge.hpp
@@ -173,6 +177,8 @@ add_library(onnx_import STATIC
         utils/reduction.hpp
         utils/reshape.cpp
         utils/reshape.hpp
+        utils/rnn/activation_functions.cpp
+        utils/rnn/activation_functions.hpp
         utils/variadic.hpp)
 
 set(ONNX_IMPORT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "")

@@ -35,7 +35,7 @@ namespace ngraph
         /// \param atol Absolute tolerance
         /// \returns true if shapes match and for all elements, |a_i-b_i| <= atol + rtol*|b_i|.
         template <typename T>
-        typename std::enable_if<std::is_signed<T>::value, ::testing::AssertionResult>::type
+        typename std::enable_if<std::is_floating_point<T>::value, ::testing::AssertionResult>::type
             all_close(const std::vector<T>& a,
                       const std::vector<T>& b,
                       T rtol = static_cast<T>(1e-5),
@@ -70,7 +70,7 @@ namespace ngraph
         /// \param atol Absolute tolerance
         /// \returns true if shapes match and for all elements, |a_i-b_i| <= atol + rtol*|b_i|.
         template <typename T>
-        typename std::enable_if<std::is_unsigned<T>::value, ::testing::AssertionResult>::type
+        typename std::enable_if<std::is_integral<T>::value, ::testing::AssertionResult>::type
             all_close(const std::vector<T>& a,
                       const std::vector<T>& b,
                       T rtol = static_cast<T>(1e-5),
