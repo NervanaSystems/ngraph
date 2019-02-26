@@ -428,13 +428,13 @@ static void
     writer << "}\n";
 }
 
-static void generate_class_declarations(codegen::CodeWriter& writer)
+static void generate_class_declarations(CodeWriter& writer)
 {
     writer << "// Declare all classes\n";
     writer << "struct CPURuntimeContextCG;\n";
 }
 
-static void generate_runtime_context_class(codegen::CodeWriter& writer)
+static void generate_runtime_context_class(CodeWriter& writer)
 {
     writer <<
 #include "ngraph/runtime/cpu/pregenerated_src/cpu_cg_runtime_context.hpp"

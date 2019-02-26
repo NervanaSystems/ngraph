@@ -628,7 +628,7 @@ void runtime::intelgpu::do_max_avg_pool_operation(cldnn::topology& topology,
     const string entry_point_name = "op_pool_" + to_string(is_max_pool) + "_" + output_name;
     const string type_name = get_opencl_type_name(output_type);
     const string init_accumulator = is_max_pool ? "-FLT_MAX" : def_val;
-    codegen::CodeWriter writer;
+    CodeWriter writer;
     vector<size_t> gws;
 
     const Shape input_data(input_shape.cbegin() + 2, input_shape.cend());
@@ -1668,7 +1668,7 @@ void runtime::intelgpu::do_quantize_operation(cldnn::topology& topology,
     const string entry_point_name = "quantize_" + output_name;
     const string real_type_str = get_opencl_type_name(input0_type);
     const string quant_type_str = get_opencl_type_name(output_type);
-    codegen::CodeWriter writer;
+    CodeWriter writer;
     vector<size_t> gws;
 
     gen_func_def(writer,
@@ -1796,7 +1796,7 @@ void runtime::intelgpu::do_dequantize_operation(cldnn::topology& topology,
 {
     const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
     const string entry_point_name = "dequantize_" + output_name;
-    codegen::CodeWriter writer;
+    CodeWriter writer;
     vector<size_t> gws;
 
     gen_func_def(writer,
