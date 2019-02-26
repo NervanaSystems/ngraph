@@ -49,9 +49,9 @@ ExternalProject_Get_Property(MLSL INSTALL_DIR)
 target_include_directories(libmlsl SYSTEM INTERFACE ${SOURCE_DIR}/include)
 
 set(MLSL_LINK_LIBRARIES
-    ${INSTALL_DIR}/intel64/lib/thread/libmlsl.so
-    ${INSTALL_DIR}/intel64/lib/thread/libmpi.so
-    ${INSTALL_DIR}/intel64/lib/thread/libfabric.so)
+    ${INSTALL_DIR}/intel64/lib/thread/${CMAKE_SHARED_LIBRARY_PREFIX}mlsl${CMAKE_SHARED_LIBRARY_SUFFIX}
+    ${INSTALL_DIR}/intel64/lib/thread/${CMAKE_SHARED_LIBRARY_PREFIX}mpi${CMAKE_SHARED_LIBRARY_SUFFIX}
+    ${INSTALL_DIR}/intel64/lib/thread/${CMAKE_SHARED_LIBRARY_PREFIX}fabric${CMAKE_SHARED_LIBRARY_SUFFIX})
 
 target_link_libraries(libmlsl PRIVATE INTERFACE ${MLSL_LINK_LIBRARIES})
 add_dependencies(libmlsl MLSL)
