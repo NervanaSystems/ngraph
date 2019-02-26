@@ -44,6 +44,7 @@
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/pad.hpp"
+#include "ngraph/op/passthrough.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/replace_slice.hpp"
@@ -945,6 +946,11 @@ private:
             break;
         }
         case OP_TYPEID::Parameter: break;
+        case OP_TYPEID::Passthrough:
+        {
+            const op::Passthrough* passthrough = static_cast<const op::Passthrough*>(&node);
+            throw unsupported_op{"Unsupported operation language: " + passthrough->language()};
+        }
         case OP_TYPEID::Pad:
         {
             const op::Pad* pad = static_cast<const op::Pad*>(&node);

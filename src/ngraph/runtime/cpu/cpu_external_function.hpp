@@ -33,7 +33,7 @@
 
 #if !defined(NGRAPH_DEX_ONLY)
 
-#include "ngraph/codegen/code_writer.hpp"
+#include "ngraph/code_writer.hpp"
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/codegen/execution_engine.hpp"
 
@@ -64,7 +64,7 @@ namespace ngraph
 #if !defined(NGRAPH_DEX_ONLY)
 
             using OpFunction = std::function<void(CPU_ExternalFunction* external_function,
-                                                  codegen::CodeWriter&,
+                                                  CodeWriter&,
                                                   const ngraph::Node*,
                                                   const std::vector<TensorViewWrapper>& inputs,
                                                   const std::vector<TensorViewWrapper>& outputs)>;
@@ -218,16 +218,16 @@ namespace ngraph
                 bool computes_result(Node* node);
                 void release_function() { m_function = nullptr; }
 #if !defined(NGRAPH_DEX_ONLY)
-                void emit_debug_function_entry(codegen::CodeWriter& writer,
+                void emit_debug_function_entry(CodeWriter& writer,
                                                Node* node,
                                                const std::vector<TensorViewWrapper>& in,
                                                const std::vector<TensorViewWrapper>& out);
-                void emit_debug_function_exit(codegen::CodeWriter& writer,
+                void emit_debug_function_exit(CodeWriter& writer,
                                               Node* node,
                                               const std::vector<TensorViewWrapper>& in,
                                               const std::vector<TensorViewWrapper>& out);
                 void handle_output_alias(
-                    codegen::CodeWriter& writer,
+                    CodeWriter& writer,
                     const Node&,
                     const std::unordered_map<descriptor::Tensor*, std::vector<size_t>>&);
 
@@ -258,6 +258,13 @@ namespace ngraph
                 bool m_is_compiled;
 #endif
                 bool m_direct_execution;
+
+                /// Function that initializes the context used in codegen mode.
+                InitContextFuncCG m_compiled_init_ctx_func;
+
+                /// Function that destroys the context used in codegen mode.
+                DestroyContextFuncCG m_compiled_destroy_ctx_func;
+
                 EntryPoint m_compiled_function;
                 std::unordered_map<std::string, std::string> m_variable_name_map;
                 std::unordered_map<std::string, std::pair<std::size_t, std::size_t>>
