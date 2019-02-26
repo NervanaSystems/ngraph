@@ -18,7 +18,7 @@
 #include <CPP/custom_gpu_primitive.hpp>
 #include <CPP/reshape.hpp>
 
-#include "ngraph/runtime/intelgpu/code_writer.hpp"
+#include "ngraph/code_writer.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_broadcast.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
@@ -42,7 +42,7 @@ static void do_sum_to_scalar_operation(cldnn::topology& topology,
     const string output_type_str = runtime::intelgpu::get_opencl_type_name(output_type);
     const size_t main_loop_count = shape_size(input_shape);
     const size_t vect_channels = 32;
-    codegen::CodeWriter writer;
+    CodeWriter writer;
     vector<size_t> gws = {32};
     vector<size_t> lws = {vect_channels};
 
@@ -113,7 +113,7 @@ void runtime::intelgpu::do_bcast_sum_operation(cldnn::topology& topology,
 {
     string function_name = is_bcast ? "broadcast_" : "sum_";
     function_name += output_name;
-    codegen::CodeWriter writer;
+    CodeWriter writer;
     vector<size_t> gws;
 
     runtime::intelgpu::gen_func_def(writer,
@@ -196,7 +196,7 @@ void runtime::intelgpu::do_max_min_operation(cldnn::topology& topology,
     const size_t input_size = shape_size<Shape>(input_shape);
     const string& init_value = get_opencl_type_min_max_value(output_type, !is_min);
     const string& operation = is_min ? " < " : " > ";
-    codegen::CodeWriter writer;
+    CodeWriter writer;
 
     runtime::intelgpu::gen_func_def(writer,
                                     function_name,
@@ -277,7 +277,7 @@ void runtime::intelgpu::do_product_operation(cldnn::topology& topology,
 {
     const string function_name = "product_" + output_name;
     const size_t input_size = shape_size<Shape>(input_shape);
-    codegen::CodeWriter writer;
+    CodeWriter writer;
 
     runtime::intelgpu::gen_func_def(writer,
                                     function_name,
