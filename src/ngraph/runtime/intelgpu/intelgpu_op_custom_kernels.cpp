@@ -1489,7 +1489,7 @@ void runtime::intelgpu::do_custom_unary_operation(cldnn::topology& topology,
 
         // do the operation with the same type
         writer << intermidiate_type << " output_var = " << operation_name
-               << "(input_var); //Type: " << get_opencl_type_name(input_type) << "\n";
+               << "; //Type: " << get_opencl_type_name(input_type) << "\n";
 
         // convert to destination type
         writer << "output" << access_dims(output_shape) << " = convert_"
