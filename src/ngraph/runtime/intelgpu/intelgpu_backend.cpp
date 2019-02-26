@@ -1159,13 +1159,13 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::Relu:
         {
-            string zero_const = "convert_" + get_opencl_type_name(get_output_type(op)) + "(0)";
+            const string zero_const = "convert_" + get_opencl_type_name(get_output_type(op)) + "(0)";
             do_universal_unary(topology, op, "max(" + zero_const + ", input_var)", activation_relu);
             break;
         }
         case OP_TYPEID::Sigmoid:
         {
-            string one_const = "convert_" + get_opencl_type_name(get_output_type(op)) + "(1)";
+            const string one_const = "convert_" + get_opencl_type_name(get_output_type(op)) + "(1)";
             do_universal_unary(topology,
                                op,
                                one_const + " / (" + one_const + " + exp(-input_var))",
