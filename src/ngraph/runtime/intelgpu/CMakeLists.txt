@@ -40,9 +40,5 @@ if (NGRAPH_INTELGPU_ENABLE)
                 SOVERSION ${NGRAPH_API_VERSION})
     endif()
 
-    set_target_properties(intelgpu_backend
-        PROPERTIES
-            LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
-
     install(TARGETS intelgpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()

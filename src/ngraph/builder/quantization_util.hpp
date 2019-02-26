@@ -249,6 +249,33 @@ namespace ngraph
 
                 return max_abs_range / target_range;
             }
+
+            void
+                check_concat(const NodeVector& args, const NodeVector& mins, const NodeVector& maxs)
+            {
+                auto size = args.size();
+                if (size != mins.size() || size != maxs.size())
+                {
+                    throw ngraph_error("Min and Max node vectors must be of same length");
+                }
+                for (size_t i = 0; i < size; i++)
+                {
+                    auto min = mins[i];
+                    auto max = maxs[i];
+                    auto type = min->get_element_type();
+                    if (type != max->get_element_type())
+                    {
+                        throw ngraph_error("check_concat: min and max must have same type");
+                    }
+
+                    if (min->get_shape() != Shape{1} || min->get_shape() != Shape{1})
+                    {
+                        throw ngraph_error("check_concat: min and max must have same shape " +
+                                           vector_to_string(min->get_shape()) +
+                                           vector_to_string(max->get_shape()));
+                    }
+                }
+            }
         }
     }
 }

@@ -29,7 +29,6 @@ ExternalProject_Add(
     PREFIX json
     GIT_REPOSITORY ${JSON_GIT_REPO_URL}
     GIT_TAG ${JSON_GIT_LABEL}
-    ${NGRAPH_GIT_ARGS}
     # Disable install step
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""

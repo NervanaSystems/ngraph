@@ -70,6 +70,7 @@ set (SRC
     op/experimental/quantized_conv_relu.cpp
     op/experimental/quantized_conv.cpp
     op/experimental/quantized_max_pool.cpp
+    op/experimental/quantized_concat.cpp
     op/experimental/shape_of.cpp
     op/floor.cpp
     op/get_output_element.cpp
