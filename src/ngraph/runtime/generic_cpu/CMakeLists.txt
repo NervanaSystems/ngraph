@@ -28,7 +28,6 @@ if (NGRAPH_GENERIC_CPU_ENABLE)
     endif()
     target_link_libraries(gcpu_backend PRIVATE ngraph libeigen hybrid_base interpreter_backend)
     target_compile_options(gcpu_backend PUBLIC -fopenmp)
-    set_target_properties(gcpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 
     install(TARGETS gcpu_backend
         LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"

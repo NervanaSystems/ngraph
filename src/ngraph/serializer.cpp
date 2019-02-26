@@ -1176,6 +1176,7 @@ static shared_ptr<ngraph::Function>
                 node->add_control_dependency(node_map.at(name));
             }
 
+            node->set_name(node_name);
             node_map[node_name] = node;
 
             // Typically, it could be unsafe to change the name of a node since it may break nameing
@@ -1238,7 +1239,7 @@ static shared_ptr<ngraph::Function>
 static json write(const Node& n, bool binary_constant_data)
 {
     json node;
-    node["name"] = n.get_name();
+    node["name"] = n.get_friendly_name();
     node["op"] = n.description();
     // TODO Multiple outputs
     json inputs = json::array();
