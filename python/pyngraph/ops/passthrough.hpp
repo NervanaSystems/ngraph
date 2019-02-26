@@ -16,20 +16,8 @@
 
 #pragma once
 
-#include <cstddef>
+#include <pybind11/pybind11.h>
 
-namespace ngraph
-{
-    class Distributed
-    {
-    public:
-        Distributed();
-        ~Distributed();
-        int get_size() const;
-        int get_rank() const;
+namespace py = pybind11;
 
-    private:
-        bool m_init_comm = false;
-        void finalize();
-    };
-}
+void regclass_pyngraph_op_Passthrough(py::module m);
