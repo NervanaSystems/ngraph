@@ -24,8 +24,15 @@ Invoking these passes is fairly straightforward:
 
 #. Create a "pass manager" object. 
 #. Populate it with the desired pass(es). 
-#. Invoke the pass manager with a pointer to your unoptimized graph, and it’ll return a pointer 
-   to an optimized graph.
+#. Invoke the pass manager with a pointer to your unoptimized graph, and 
+   it will return a pointer to an optimized graph.
+
+
+.. literalinclude:: ../../../../../test/cpu_fusion.cpp
+   :language: cpp
+   :lines: 2085-2092
+   :linenos: 
+
 
 nGraph Core includes a large library of hardware-agnostic passes useful 
 for almost any kind of hardware backend. Some of these passes are likely familiar 
