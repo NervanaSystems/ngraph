@@ -1402,7 +1402,7 @@ NGRAPH_TEST(${BACKEND_NAME}, convert_float64_int32)
     auto result = backend->create_tensor(element::i32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<int>{0,
                            std::numeric_limits<int>::lowest(),
                            std::numeric_limits<int>::lowest(),
@@ -1432,7 +1432,7 @@ NGRAPH_TEST(${BACKEND_NAME}, convert_float32_int32)
     auto result = backend->create_tensor(element::i32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<int>{0,
                            std::numeric_limits<int>::lowest(),
                            std::numeric_limits<int>::lowest(),
