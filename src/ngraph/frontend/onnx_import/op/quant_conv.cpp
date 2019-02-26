@@ -59,11 +59,11 @@ namespace ngraph
                     std::shared_ptr<ngraph::Node>
                         make_ng_quant_conv(const std::shared_ptr<ngraph::Node>& data,
                                            const std::shared_ptr<ngraph::Node>& filters,
-                                           const ngraph::Strides& strides,
-                                           const ngraph::Strides& filter_dilations,
-                                           const ngraph::CoordinateDiff& padding_below,
-                                           const ngraph::CoordinateDiff& padding_above,
-                                           const ngraph::Strides& data_dilations,
+                                           const Strides& strides,
+                                           const Strides& filter_dilations,
+                                           const CoordinateDiff& padding_below,
+                                           const CoordinateDiff& padding_above,
+                                           const Strides& data_dilations,
                                            int groups,
                                            const OpScale& op_scale,
                                            const OpZeroPoint& op_zero_point)
@@ -78,7 +78,7 @@ namespace ngraph
                             // TODO: ensure n_data_channels % groups = 0
                             std::size_t data_group_size{n_data_channels / groups};
                             std::size_t filters_group_size{n_filters_channels / groups};
-                            ngraph::NodeVector convolution_nodes;
+                            NodeVector convolution_nodes;
 
                             // initial bounds for splice
                             std::vector<std::size_t> data_lower_bounds(data->get_shape().size());
@@ -137,19 +137,18 @@ namespace ngraph
                         make_ng_quant_conv_bias(const std::shared_ptr<ngraph::Node>& data,
                                                 const std::shared_ptr<ngraph::Node>& filters,
                                                 const std::shared_ptr<ngraph::Node>& bias,
-                                                const ngraph::Strides& strides,
-                                                const ngraph::Strides& filter_dilations,
-                                                const ngraph::CoordinateDiff& padding_below,
-                                                const ngraph::CoordinateDiff& padding_above,
-                                                const ngraph::Strides& data_dilations,
+                                                const Strides& strides,
+                                                const Strides& filter_dilations,
+                                                const CoordinateDiff& padding_below,
+                                                const CoordinateDiff& padding_above,
+                                                const Strides& data_dilations,
                                                 int groups,
                                                 const OpScale& op_scale,
                                                 const OpZeroPoint& op_zero_point)
                     {
                         if (groups > 1)
                         {
-                            throw ngraph::onnx_import::error::NotSupported(
-                                "No support for quantized group conv+bias.");
+                            throw error::NotSupported("No support for quantized group conv+bias.");
                         }
                         else
                         {
@@ -170,9 +169,9 @@ namespace ngraph
 
                 } // namespace
 
-                ngraph::NodeVector quant_conv(const ngraph::onnx_import::Node& node)
+                NodeVector quant_conv(const Node& node)
                 {
-                    const ngraph::NodeVector& inputs = node.get_ng_inputs();
+                    const NodeVector& inputs = node.get_ng_inputs();
                     auto data = inputs.at(0);
                     auto filters = inputs.at(3);
 
@@ -193,14 +192,12 @@ namespace ngraph
                                            (groups <= filters->get_shape().at(0))))
                         << "incorrect value of 'group' attribute: " << groups;
 
-                    ngraph::Strides strides = ngraph::onnx_import::convpool::get_strides(node);
-                    ngraph::Strides filter_dilations =
-                        ngraph::onnx_import::convpool::get_dilations(node);
-                    ngraph::Strides data_dilations = ngraph::Strides(
-                        ngraph::onnx_import::convpool::get_kernel_shape(node).size(), 1UL);
-                    auto paddings = ngraph::onnx_import::convpool::get_pads(node);
-                    const ngraph::CoordinateDiff& padding_below = paddings.first;
-                    const ngraph::CoordinateDiff& padding_above = paddings.second;
+                    Strides strides = convpool::get_strides(node);
+                    Strides filter_dilations = convpool::get_dilations(node);
+                    Strides data_dilations = Strides(convpool::get_kernel_shape(node).size(), 1UL);
+                    auto paddings = convpool::get_pads(node);
+                    const CoordinateDiff& padding_below = paddings.first;
+                    const CoordinateDiff& padding_above = paddings.second;
 
                     std::shared_ptr<ngraph::Node> conv_node = nullptr;
 

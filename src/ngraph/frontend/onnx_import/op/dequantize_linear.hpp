@@ -27,7 +27,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                ngraph::NodeVector dequantize_linear(const ngraph::onnx_import::Node& node);
+                NodeVector dequantize_linear(const Node& node);
 
             } // namespace set_1
 

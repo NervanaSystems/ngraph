@@ -33,26 +33,26 @@ namespace ngraph
         {
             namespace set_1
             {
-                ngraph::NodeVector quantize_linear(const ngraph::onnx_import::Node& node)
+                NodeVector quantize_linear(const Node& node)
                 {
-                    ngraph::NodeVector inputs{node.get_ng_inputs()};
+                    NodeVector inputs{node.get_ng_inputs()};
                     std::shared_ptr<ngraph::Node> x = inputs.at(0);
                     std::shared_ptr<ngraph::Node> y_scale = inputs.at(1);
                     std::shared_ptr<ngraph::Node> y_zero_point = inputs.at(2);
 
                     bool has_axis = false;
-                    ngraph::Shape x_shape = x->get_shape();
-                    ngraph::Shape y_scale_shape = y_scale->get_shape();
-                    ngraph::Shape y_zero_point_shape = y_zero_point->get_shape();
-                    ngraph::AxisSet axis_set{};
+                    Shape x_shape = x->get_shape();
+                    Shape y_scale_shape = y_scale->get_shape();
+                    Shape y_zero_point_shape = y_zero_point->get_shape();
+                    AxisSet axis_set{};
 
                     try
                     {
                         std::int64_t axis = node.get_attribute_value<std::int64_t>("axis");
-                        axis_set = ngraph::AxisSet{static_cast<std::size_t>(axis)};
+                        axis_set = AxisSet{static_cast<std::size_t>(axis)};
                         has_axis = true;
                     }
-                    catch (const ngraph::onnx_import::error::node::UnknownAttribute&)
+                    catch (const error::node::UnknownAttribute&)
                     {
                     }
 
