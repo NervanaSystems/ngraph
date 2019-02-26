@@ -16,7 +16,7 @@
 
 #include <CPP/custom_gpu_primitive.hpp>
 
-#include "ngraph/runtime/intelgpu/code_writer.hpp"
+#include "ngraph/code_writer.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_convolution.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
@@ -114,7 +114,7 @@ void runtime::intelgpu::do_convolution_operation(cldnn::topology& topology,
     const Shape input_data(input_shape.cbegin() + 2, input_shape.cend());
     const Shape filter_data(filter_shape.cbegin() + 2, filter_shape.cend());
     const Shape output_data(output_shape.cbegin() + 2, output_shape.cend());
-    codegen::CodeWriter writer;
+    CodeWriter writer;
     vector<size_t> gws;
 
     writer << "__kernel void " << entry_point_name << "(const __global " << kernel_type_name
