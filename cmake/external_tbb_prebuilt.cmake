@@ -53,7 +53,7 @@ if (WIN32)
     ExternalProject_Add_Step(
         ext_tbb
         CopyTBB
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${INSTALL_DIR}/bin/intel64/vc14/${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${INSTALL_DIR}/bin/intel64/vc14/${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}
         COMMENT "Move tbb shared libraries to ngraph build directory"
         DEPENDEES download
         )
@@ -61,7 +61,7 @@ if (WIN32)
     ExternalProject_Add_Step(
         ext_tbb
         CopyTBBIMP
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${INSTALL_DIR}/lib/intel64/vc14/${TBB_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX} ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${INSTALL_DIR}/lib/intel64/vc14/${TBB_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX} ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${TBB_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX}
         COMMENT "Move tbb libraries to ngraph build directory"
         DEPENDEES download
         )
@@ -75,7 +75,7 @@ elseif(APPLE)
     )
 
     add_custom_command(TARGET ext_tbb POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${INSTALL_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${INSTALL_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_SHARED_LIBRARY_PREFIX}${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}
         COMMENT "Move tbb libraries to ngraph build directory"
     )
 
