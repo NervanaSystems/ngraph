@@ -23,9 +23,63 @@
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/broadcast.hpp"
-#include "ngraph/op/parameter.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "reshape.hpp"
+
+/// \brief Calculate the output shape of numpy-style broadcast operation for two shapes.
+///
+/// This function finds the maximum tensor shape that will be the result of element-wise operation
+/// that will be applied to the input shapes.
+///
+/// \param target_shape Current target shape.
+/// \param input_shape Input shape for which a common shape should be found
+/// \return New target shape as shape ready to broadcast padded input shape
+ngraph::Shape calculate_output_shape(ngraph::Shape target_shape, ngraph::Shape input_shape)
+{
+    ngraph::Shape result;
+    auto accumulator_rank = target_shape.size();
+    auto input_rank = input_shape.size();
+    auto max_rank = std::max(accumulator_rank, input_rank);
+
+    // left-pad the accumulator with ones
+    target_shape.insert(std::begin(target_shape), max_rank - accumulator_rank, 1);
+    // left-pad the input_shape with ones
+    input_shape.insert(std::begin(input_shape), max_rank - input_rank, 1);
+
+    for (std::size_t index = 0; index < max_rank; ++index)
+    {
+        result.push_back(std::max(target_shape.at(index), input_shape.at(index)));
+    }
+
+    return result;
+};
+
+/// \brief Calculate the output shape of numpy-style broadcast operation for all input shapes.
+///
+/// This function finds the maximum tensor shape that will be the result of element-wise operation
+/// that will be applied to the input shapes vector. The function also prepares the shape of each input
+/// for the element-wise operation by left-padding those shapes so that their rank is equal to
+/// the target_shape's rank.
+///
+/// \param input_shapes A vector of input shapes for which a common shape should be found
+/// \return A pair that contains the target shape as its first object and a vector of padded
+///         input shapes ready to be broadcasted as the second object
+static std::pair<ngraph::Shape, std::vector<ngraph::Shape>>
+    get_numpy_broadcast_shapes(const std::vector<ngraph::Shape>& input_shapes)
+{
+    ngraph::Shape target_shape = std::accumulate(
+        std::begin(input_shapes), std::end(input_shapes), ngraph::Shape{}, calculate_output_shape);
+
+    std::vector<ngraph::Shape> full_shapes;
+    for (const ngraph::Shape& input : input_shapes)
+    {
+        ngraph::Shape padded_shape{input};
+        padded_shape.insert(std::begin(padded_shape), target_shape.size() - padded_shape.size(), 1);
+        full_shapes.push_back(std::move(padded_shape));
+    }
+
+    return {target_shape, full_shapes};
+}
 
 /// \brief Calculate the output shape of numpy-style broadcast operation for all input nodes.
 ///
@@ -42,23 +96,9 @@ static std::pair<ngraph::Shape, std::vector<ngraph::Shape>>
 {
     auto shape_left_fold = [](ngraph::Shape accumulator,
                               const std::shared_ptr<ngraph::Node>& input) {
-        ngraph::Shape result;
         auto input_shape = input->get_shape();
-        auto accumulator_rank = accumulator.size();
-        auto input_rank = input_shape.size();
-        auto max_rank = std::max(accumulator_rank, input_rank);
 
-        // left-pad the accumulator with ones
-        accumulator.insert(std::begin(accumulator), max_rank - accumulator_rank, 1);
-        // left-pad the input_shape with ones
-        input_shape.insert(std::begin(input_shape), max_rank - input_rank, 1);
-
-        for (std::size_t index = 0; index < max_rank; ++index)
-        {
-            result.push_back(std::max(accumulator.at(index), input_shape.at(index)));
-        }
-
-        return result;
+        return calculate_output_shape(accumulator, input_shape);
     };
 
     ngraph::Shape target_shape =
@@ -159,16 +199,10 @@ namespace ngraph
         {
             const auto& left_shape = left->get_shape();
             const auto& right_shape = right->get_shape();
-            // Make temporary Parameters to pass shapes into broadcast function.
-            std::shared_ptr<ngraph::Node> left_parameter = std::make_shared<ngraph::op::Parameter>(
-                element::boolean,
-                Shape{std::begin(left_shape), std::next(std::end(left_shape), -2)});
-            std::shared_ptr<ngraph::Node> right_parameter = std::make_shared<ngraph::op::Parameter>(
-                element::boolean,
-                Shape{std::begin(right_shape), std::next(std::end(right_shape), -2)});
             // Broadcast only _stack of matrices_ axes.
-            const auto& numpy_shapes =
-                get_numpy_broadcast_shapes({left_parameter, right_parameter});
+            const auto& numpy_shapes = get_numpy_broadcast_shapes(
+                {Shape{std::begin(left_shape), std::next(std::end(left_shape), -2)},
+                 Shape{std::begin(right_shape), std::next(std::end(right_shape), -2)}});
 
             // Prepare tensors output shapes with broadcasted _stack of matrices_ axes.
             auto left_output_shape = numpy_shapes.first;
