@@ -112,7 +112,7 @@ opset versions starting from `1` to `6` and to the latest opset version.
 |------|-----------------|--------|--------|---------|
 | Erf | (9) | 284 | 442 | Need separate kernel for this in nGraph core. |
 | Pad | 1-2- | 273 | 416 | Not fully supported. |
-| LSTM | 1-7- | | 430 | Not fully supported. |
+| LSTM | 1-7- | | 476 | Mixed sequences length not supported yet. |
 | MaxUnpool | (9) | 286, 289 | 447 | |
 | LpPool | - | 291 | 437 | Unsupported by nGraph - only max/avg pooling ops. Need separate kernel. |
 | Multinomial | - | 199 | 435 | Lack of PRNG in nGraph. |
