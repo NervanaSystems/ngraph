@@ -40,7 +40,7 @@
 static std::pair<ngraph::Shape, std::vector<ngraph::Shape>>
     get_numpy_broadcast_shapes(const ngraph::NodeVector& inputs)
 {
-    auto shape_left_fold = [](ngraph::Shape& accumulator,
+    auto shape_left_fold = [](ngraph::Shape accumulator,
                               const std::shared_ptr<ngraph::Node>& input) {
         ngraph::Shape result;
         auto input_shape = input->get_shape();
@@ -130,7 +130,7 @@ namespace ngraph
 {
     namespace onnx_import
     {
-        NodeVector numpy_style_broadcast(NodeVector inputs)
+        NodeVector numpy_style_broadcast(const NodeVector& inputs)
         {
             if (inputs.size() <= 1)
             {
