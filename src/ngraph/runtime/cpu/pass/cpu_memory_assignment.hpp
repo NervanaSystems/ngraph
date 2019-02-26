@@ -68,6 +68,8 @@ private:
     // liveness analysis to build new and free list for each node
     void liveness_analysis(std::list<std::shared_ptr<Node>>& ops);
 
+    size_t get_bufferID(descriptor::Tensor* tensor);
+
     size_t m_alignment;
     bool m_disable_memory_sharing;
     std::set<descriptor::Tensor*> m_tensor_caching;

@@ -202,6 +202,9 @@ namespace ngraph
                 std::string emit_op_as_function(const Node&, const std::string& function_name);
                 std::string strip_comments(const std::string&);
 
+                std::unordered_set<descriptor::Tensor*>&
+                    get_tensor_set(descriptor::Tensor* output_tensor);
+
                 std::unique_ptr<codegen::Compiler> m_compiler;
                 std::unique_ptr<codegen::ExecutionEngine> m_execution_engine;
 
@@ -269,7 +272,7 @@ namespace ngraph
                 std::unordered_map<descriptor::Tensor*, size_t> tensor_to_bufferID;
                 std::unordered_map<std::string, std::string> tensor_alias;
 
-                // tenor pointer and its offset into the memory allocated for intermediates
+                // tensor pointer and its offset into the memory allocated for intermediates
                 // used to calculate the correct address at runtime
                 std::list<std::pair<std::reference_wrapper<void*>, size_t>> intermediates_offsets;
                 // tensor pointer, input index, offset into the input, and if the input is stale
