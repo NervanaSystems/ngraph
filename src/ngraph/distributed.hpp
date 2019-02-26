@@ -29,7 +29,7 @@ namespace ngraph
         int get_rank() const;
 
     private:
-        bool this_init_comm;
+        bool m_init_comm = false;
         void finalize();
     };
 }
