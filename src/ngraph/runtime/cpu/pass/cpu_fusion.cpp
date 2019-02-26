@@ -2075,7 +2075,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconcat()
     // Pattern matcher looks for concats with exact number of inputs
     inputs.push_back(std::make_shared<pattern::op::Label>(element::f32, shape));
     // Concat2, Concat3, ... Concat6
-    for (size_t i = 0; i <= 5; i++)
+    for (size_t i = 0; i < 5; i++)
     {
         inputs.push_back(std::make_shared<pattern::op::Label>(element::f32, shape));
         concats.push_back(std::make_shared<op::Concat>(inputs, 0));
