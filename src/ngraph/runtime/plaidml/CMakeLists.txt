@@ -37,6 +37,7 @@ set(SRC
     plaidml_ops_local_response_norm.cpp
     plaidml_ops_logical.cpp
     plaidml_ops_one_hot.cpp
+    plaidml_ops_passthrough.cpp
     plaidml_ops_pool.cpp
     plaidml_ops_reduce.cpp
     plaidml_ops_replace_slice.cpp
@@ -44,7 +45,6 @@ set(SRC
     plaidml_ops_reverse.cpp
     plaidml_ops_slice.cpp
     plaidml_ops_softmax.cpp
-    plaidml_ops_tile.cpp
     plaidml_ops_transcendental.cpp
     plaidml_ops_winograd.cpp
     plaidml_pass_concat_elision.cpp

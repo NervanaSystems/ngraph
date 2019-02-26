@@ -204,6 +204,7 @@ sources = [
     'pyngraph/ops/or.cpp',
     'pyngraph/ops/pad.cpp',
     'pyngraph/ops/parameter.cpp',
+    'pyngraph/ops/passthrough.cpp',
     'pyngraph/ops/power.cpp',
     'pyngraph/ops/regmodule_pyngraph_op.cpp',
     'pyngraph/ops/relu.cpp',

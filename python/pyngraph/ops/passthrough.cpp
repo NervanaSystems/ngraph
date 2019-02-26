@@ -14,22 +14,22 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
-#include <cstddef>
+#include "ngraph/op/passthrough.hpp"
+#include "pyngraph/ops/passthrough.hpp"
 
-namespace ngraph
+namespace py = pybind11;
+
+void regclass_pyngraph_op_Passthrough(py::module m)
 {
-    class Distributed
-    {
-    public:
-        Distributed();
-        ~Distributed();
-        int get_size() const;
-        int get_rank() const;
-
-    private:
-        bool m_init_comm = false;
-        void finalize();
-    };
+    py::class_<ngraph::op::Passthrough, std::shared_ptr<ngraph::op::Passthrough>, ngraph::Node>
+        pass{m, "Passthrough"};
+    pass.doc() = "ngraph.impl.op.Passthrough wraps ngraph::op::Passthrough";
+    pass.def(py::init<const std::string&,
+                      const std::string&,
+                      const std::string&,
+                      const ngraph::NodeVector&,
+                      std::vector<std::tuple<ngraph::element::Type, ngraph::PartialShape>>>());
 }

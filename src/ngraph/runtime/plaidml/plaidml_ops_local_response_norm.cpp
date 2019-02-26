@@ -37,8 +37,8 @@ void ngraph::runtime::plaidml::ImplLRN::Apply()
     auto rank = dim_limit - 2;
     auto distance = op().get_nsize() / 2;
     std::ostringstream div_expr;
-    div_expr << "I / pow(" << op().get_bias() << ".0 + ((" << op().get_alpha() << ".0 / "
-             << op().get_nsize() << ".0) * S), " << op().get_beta() << ".0)";
+    div_expr << "I / pow(" << op().get_bias() << " + ((" << op().get_alpha() << " / "
+             << op().get_nsize() << ") * S), " << op().get_beta() << ")";
     set_output(
         start_tile_function()
             .add(builder::Input{op_input(), "I"}.add_dims({"N", "C"}).add_dims("D", 0, rank))
