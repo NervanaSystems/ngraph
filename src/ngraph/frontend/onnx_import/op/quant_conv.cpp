@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "ngraph/builder/quantization/quantized_linear_convolution.hpp"
+#include "ngraph/coordinate_diff.hpp"
 #include "ngraph/frontend/onnx_import/exceptions.hpp"
 #include "ngraph/frontend/onnx_import/op/conv.hpp"
 #include "ngraph/frontend/onnx_import/utils/broadcasting.hpp"
@@ -30,6 +31,7 @@
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/slice.hpp"
+#include "ngraph/strides.hpp"
 #include "quant_conv.hpp"
 
 namespace ngraph
