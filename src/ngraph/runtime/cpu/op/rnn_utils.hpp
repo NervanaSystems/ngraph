@@ -17,19 +17,24 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 
 namespace ngraph
 {
-    class Distributed
+    namespace runtime
     {
-    public:
-        Distributed();
-        ~Distributed();
-        int get_size() const;
-        int get_rank() const;
-
-    private:
-        bool m_init_comm = false;
-        void finalize();
-    };
+        namespace cpu
+        {
+            namespace rnn_utils
+            {
+                // TODO(pruthvi): Populate this enums based of addition of new MKLDNN RNN variants
+                enum rnntype
+                {
+                    vanilla_rnn,
+                    vanilla_gru,
+                    vanilla_lstm
+                };
+            }
+        }
+    }
 }

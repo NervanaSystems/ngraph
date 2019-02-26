@@ -382,7 +382,7 @@ setup(
     name='ngraph-core',
     description='nGraph - Intel\'s graph compiler and runtime for Neural Networks',
     version=__version__,
-    author='Intel',
+    author='Intel Corporation',
     author_email='intelnervana@intel.com',
     url='https://github.com/NervanaSystems/ngraph/',
     license='License :: OSI Approved :: Apache Software License',
