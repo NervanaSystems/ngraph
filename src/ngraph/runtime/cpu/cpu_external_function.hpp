@@ -177,7 +177,8 @@ namespace ngraph
 
             private:
                 // Register passes that are common to codegen and DEX
-                void register_common_passes(ngraph::pass::Manager& pass_manager);
+                void register_common_passes(ngraph::pass::Manager& pass_manager,
+                                            ngraph::pass::PassConfig& pass_config);
 
                 bool computes_result(Node* node);
                 void release_function() { m_function = nullptr; }

@@ -452,7 +452,7 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
 
     ngraph::pass::Manager pass_manager;
-    register_common_passes(pass_manager);
+    register_common_passes(pass_manager, pass_config);
     unordered_map<Node*, Node*> node_function_map;
     string common_function_string;
     auto femitter = bind(&ngraph::runtime::cpu::CPU_ExternalFunction::emit_op_as_function,
@@ -461,13 +461,6 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
                          placeholders::_2);
     pass_manager.register_pass<ngraph::pass::CommonFunctionCollection>(
         femitter, node_function_map, common_function_string);
-    pass_manager.register_pass<ngraph::pass::PropagateCacheability>(
-        runtime::cpu::get_annotations_factory());
-    pass_manager.register_pass<runtime::cpu::pass::CPUMemoryAssignment>(
-        bufferID_to_tensorSets,
-        tensor_to_bufferID,
-        size_t(s_memory_pool_alignment),
-        !pass_config.get_reuse_memory());
     pass_manager.run_passes(m_function);
 
     unordered_map<shared_ptr<Function>, list<shared_ptr<Node>>> function_ordered_ops;
@@ -1112,9 +1105,10 @@ using namespace ngraph::runtime;
 
 #endif // !defined(NGRAPH_DEX_ONLY)
 
-void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Manager& pass_manager)
+void runtime::cpu::CPU_ExternalFunction::register_common_passes(
+    ngraph::pass::Manager& pass_manager, ngraph::pass::PassConfig& pass_config)
 {
-    auto pass_map = pass_manager.get_pass_config().get_enables();
+    auto pass_map = pass_config.get_enables();
 
     REGISTER_KNOBBED_PASS(LikeReplacement, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(NopElimination, true, ngraph::pass);
@@ -1147,6 +1141,12 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
     REGISTER_KNOBBED_PASS(CPUPostLayoutOptimizations, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(CPUMemoryOptimization, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(GetOutputElementElimination, false, ngraph::pass);
+    REGISTER_KNOBBED_PASS_WITH_ARGS(
+        PropagateCacheability, true, ngraph::pass, runtime::cpu::get_annotations_factory());
+    bool reuse_memory = pass_config.get_pass_attribute("CPUMemoryAssignment::ReuseMemory") ||
+                        pass_config.get_pass_attribute("ReuseMemory");
+    pass_manager.register_pass<runtime::cpu::pass::CPUMemoryAssignment>(
+        bufferID_to_tensorSets, tensor_to_bufferID, size_t(s_memory_pool_alignment), !reuse_memory);
     pass_manager.get_state().set_visualize_tree_ops_map(runtime::cpu::get_visualize_tree_ops_map());
 }
 
@@ -1183,14 +1183,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
     static StaticInitializers s_static_initializers(s_debug_dir);
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
     ngraph::pass::Manager pass_manager;
-    register_common_passes(pass_manager);
-    pass_manager.register_pass<ngraph::pass::PropagateCacheability>(
-        runtime::cpu::get_annotations_factory());
-    pass_manager.register_pass<runtime::cpu::pass::CPUMemoryAssignment>(
-        bufferID_to_tensorSets,
-        tensor_to_bufferID,
-        size_t(s_memory_pool_alignment),
-        !pass_config.get_reuse_memory());
+    register_common_passes(pass_manager, pass_config);
     pass_manager.run_passes(m_function, false);
 
     // Store layouts assigned for arguments
