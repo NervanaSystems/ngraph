@@ -70,8 +70,10 @@ ngraph::Shape calculate_broadcast_shape(ngraph::Shape left_shape, ngraph::Shape 
 static std::pair<ngraph::Shape, std::vector<ngraph::Shape>>
     get_numpy_broadcast_shapes(const std::vector<ngraph::Shape>& input_shapes)
 {
-    ngraph::Shape target_shape = std::accumulate(
-        std::begin(input_shapes), std::end(input_shapes), ngraph::Shape{}, calculate_broadcast_shape);
+    ngraph::Shape target_shape = std::accumulate(std::begin(input_shapes),
+                                                 std::end(input_shapes),
+                                                 ngraph::Shape{},
+                                                 calculate_broadcast_shape);
 
     std::vector<ngraph::Shape> full_shapes;
     for (const ngraph::Shape& input : input_shapes)
