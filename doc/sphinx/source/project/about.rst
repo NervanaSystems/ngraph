@@ -165,7 +165,7 @@ new Core ops should be infrequent and that most functionality instead gets
 added with new functions that build sub-graphs from existing core ops.   
 
 For a more detailed dive into how custom bridge code can be implemented, see our 
-documentation on how to :doc:`../howto/execute`. To learn how TensorFlow and 
+documentation on how to :doc:`../core/constructing-graphs/execute`. To learn how TensorFlow and 
 MXNet currently make use of custom bridge code, see the section on 
 :doc:`../frameworks/index`.
 
@@ -183,7 +183,7 @@ Framework bridge code is *not* the only way to connect a model (function graph)
 to nGraph's :doc:`../ops/index`. We've also built an importer for models that 
 have been exported from a framework and saved as serialized file, such as ONNX. 
 To learn how to convert such serialized files to an nGraph model, please see 
-the :doc:`../howto/import` documentation.  
+the :doc:`../core/constructing-graphs/import` documentation.  
 
 
 .. _whats_next:

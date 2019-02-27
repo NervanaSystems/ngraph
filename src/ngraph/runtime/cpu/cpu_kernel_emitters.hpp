@@ -17,7 +17,7 @@
 #pragma once
 
 #include "ngraph/axis_vector.hpp"
-#include "ngraph/codegen/code_writer.hpp"
+#include "ngraph/code_writer.hpp"
 #include "ngraph/coordinate.hpp"
 #include "ngraph/shape.hpp"
 
@@ -29,14 +29,14 @@ namespace ngraph
         {
             namespace kernel
             {
-                void emit_broadcast(codegen::CodeWriter& writer,
+                void emit_broadcast(CodeWriter& writer,
                                     const std::string& element_type,
                                     const std::string& arg0, // replacement context
                                     const std::string& out,
                                     const Shape& arg0_shape,
                                     const Shape& out_shape,
                                     const AxisSet& broadcast_axes);
-                void emit_concat(codegen::CodeWriter& writer,
+                void emit_concat(CodeWriter& writer,
                                  const std::string& element_type,
                                  const std::vector<std::string>& args,
                                  const std::string& out,
@@ -44,7 +44,7 @@ namespace ngraph
                                  const Shape& out_shape,
                                  const size_t concatenation_axis);
 
-                void emit_replace_slice(codegen::CodeWriter& writer,
+                void emit_replace_slice(CodeWriter& writer,
                                         const std::string& element_type,
                                         const std::string& arg0, // replacement context
                                         const std::string& arg1, // replacement value
@@ -54,7 +54,7 @@ namespace ngraph
                                         const Coordinate& lower_bounds,
                                         const Coordinate& upper_bounds,
                                         const Strides& strides);
-                void emit_replace_slice_inplace(codegen::CodeWriter& writer,
+                void emit_replace_slice_inplace(CodeWriter& writer,
                                                 const std::string& element_type,
                                                 const std::string& arg0, // replacement context
                                                 const std::string& arg1, // replacement value
@@ -63,7 +63,7 @@ namespace ngraph
                                                 const Coordinate& lower_bounds,
                                                 const Coordinate& upper_bounds,
                                                 const Strides& strides);
-                void emit_slice(codegen::CodeWriter& writer,
+                void emit_slice(CodeWriter& writer,
                                 const std::string& element_type,
                                 const std::string& arg0, // replacement context
                                 const std::string& out,
@@ -72,21 +72,21 @@ namespace ngraph
                                 const Coordinate& lower_bounds,
                                 const Coordinate& upper_bounds,
                                 const Strides& strides);
-                void emit_reshape(codegen::CodeWriter& writer,
+                void emit_reshape(CodeWriter& writer,
                                   const std::string& element_type,
                                   const std::string& arg0, // replacement context
                                   const std::string& out,
                                   const Shape& arg0_shape,
                                   const Shape& out_shape,
                                   const AxisVector& arg0_axis_order);
-                void emit_sum(codegen::CodeWriter& writer,
+                void emit_sum(CodeWriter& writer,
                               const std::string& element_type,
                               const std::string& arg0, // replacement context
                               const std::string& out,
                               const Shape& arg0_shape,
                               const Shape& out_shape,
                               const AxisSet& reduction_axes);
-                void emit_reduce(codegen::CodeWriter& writer,
+                void emit_reduce(CodeWriter& writer,
                                  const std::string& element_type,
                                  const std::string& arg0, // replacement context
                                  const std::string& arg1,

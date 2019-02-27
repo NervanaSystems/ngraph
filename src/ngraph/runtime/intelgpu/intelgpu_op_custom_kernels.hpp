@@ -18,7 +18,7 @@
 
 #include <CPP/topology.hpp>
 
-#include "ngraph/runtime/intelgpu/code_writer.hpp"
+#include "ngraph/code_writer.hpp"
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/axis_vector.hpp"
@@ -245,14 +245,14 @@ namespace ngraph
                                     const AxisSet& axis = {},
                                     bool is_reversed = false);
             std::vector<size_t>
-                generate_loops(codegen::CodeWriter& writer, const Shape& shape, bool is_begin);
+                generate_loops(CodeWriter& writer, const Shape& shape, bool is_begin);
             std::vector<size_t>
-                generate_loops_w_axes(codegen::CodeWriter& writer,
+                generate_loops_w_axes(CodeWriter& writer,
                                       const Shape& shape,
                                       bool is_begin,
                                       const AxisSet& axis = {},
                                       const std::string& expression = std::string());
-            void gen_func_def(codegen::CodeWriter& writer,
+            void gen_func_def(CodeWriter& writer,
                               const std::string& entry_point_name,
                               const std::vector<std::string>& input_types,
                               const std::vector<Shape>& input_shapes,

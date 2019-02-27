@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <fstream>
@@ -1864,6 +1865,91 @@ TEST(onnx_${BACKEND_NAME}, model_top_k)
     EXPECT_TRUE(test::all_close(expected_indices_output, indices_output));
 }
 
+TEST(onnx_${BACKEND_NAME}, model_lstm_fwd_with_clip)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/lstm_fwd_with_clip.onnx"));
+
+    Inputs inputs{};
+    // X
+    inputs.emplace_back(std::vector<float>{-0.455351, -0.276391, -0.185934, -0.269585});
+
+    // W
+    inputs.emplace_back(std::vector<float>{-0.494659f,
+                                           0.0453352f,
+                                           -0.487793f,
+                                           0.417264f,
+                                           -0.0175329f,
+                                           0.489074f,
+                                           -0.446013f,
+                                           0.414029f,
+                                           -0.0091708f,
+                                           -0.255364f,
+                                           -0.106952f,
+                                           -0.266717f,
+                                           -0.0888852f,
+                                           -0.428709f,
+                                           -0.283349f,
+                                           0.208792f});
+
+    // R
+    inputs.emplace_back(std::vector<float>{0.146626f,
+                                           -0.0620289f,
+                                           -0.0815302f,
+                                           0.100482f,
+                                           -0.219535f,
+                                           -0.306635f,
+                                           -0.28515f,
+                                           -0.314112f,
+                                           -0.228172f,
+                                           0.405972f,
+                                           0.31576f,
+                                           0.281487f,
+                                           -0.394864f,
+                                           0.42111f,
+                                           -0.386624f,
+                                           -0.390225f});
+
+    // B
+    inputs.emplace_back(std::vector<float>{0.381619f,
+                                           0.0323954f,
+                                           -0.14449f,
+                                           0.420804f,
+                                           -0.258721f,
+                                           0.45056f,
+                                           -0.250755f,
+                                           0.0967895f,
+                                           0.0f,
+                                           0.0f,
+                                           0.0f,
+                                           0.0f,
+                                           0.0f,
+                                           0.0f,
+                                           0.0f,
+                                           0.0f});
+    // P
+    inputs.emplace_back(std::vector<float>{0.2345f, 0.5235f, 0.4378f, 0.3475f, 0.8927f, 0.3456f});
+
+    Outputs expected_output{};
+    // Y_data
+    expected_output.emplace_back(
+        std::vector<float>{-0.02280854f, 0.02744377f, -0.03516197f, 0.03875681f});
+    // Y_h_data
+    expected_output.emplace_back(std::vector<float>{-0.03516197f, 0.03875681f});
+    // Y_c_data
+    expected_output.emplace_back(std::vector<float>{-0.07415761f, 0.07395997f});
+
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+
+    EXPECT_TRUE(outputs.size() == expected_output.size());
+    for (std::size_t i{0}; i < expected_output.size(); ++i)
+    {
+        // We have to enlarge tolerance bits to 3 - it's only one bit more than default value.
+        // The discrepancies may occur at most on 7th decimal position.
+        EXPECT_TRUE(test::all_close_f(expected_output.at(i), outputs.at(i), 3));
+    }
+}
+
 TEST(onnx_${BACKEND_NAME}, model_missing_input)
 {
     onnx_import::register_operator(
@@ -1970,6 +2056,65 @@ TEST(onnx_${BACKEND_NAME}, model_sign)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
+TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p0)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/global_lp_pool_p0.onnx"));
+
+    std::vector<std::vector<std::int64_t>> inputs{std::vector<std::int64_t>{
+        1, 0, -4, 0, 2, 1, -6, 1, 0, 0, 0, 0, -7, 1, -1, 0, -1, 8, 0, 10, 9, 0, 0, 5}};
+
+    std::vector<std::vector<std::int64_t>> expected_outputs{std::vector<std::int64_t>{6, 8}};
+
+    std::vector<std::vector<std::int64_t>> outputs{execute(function, inputs, "${BACKEND_NAME}")};
+
+    EXPECT_TRUE(test::all_close(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p1)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/global_lp_pool_p1.onnx"));
+
+    Inputs inputs{std::vector<float>(2 * 3 * 4)};
+    std::iota(std::begin(inputs.front()), std::end(inputs.front()), 0.f);
+
+    Outputs expected_outputs{std::vector<float>{66.f, 210.f}};
+
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p2)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/global_lp_pool_p2.onnx"));
+
+    Inputs inputs{std::vector<float>(2 * 3 * 4)};
+    std::iota(std::begin(inputs.front()), std::end(inputs.front()), 0.f);
+
+    Outputs expected_outputs{std::vector<float>{22.494444f, 61.789967f}};
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p3)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/global_lp_pool_p3.onnx"));
+
+    Inputs inputs{std::vector<float>(2 * 3 * 4)};
+    std::iota(std::begin(inputs.front()), std::end(inputs.front()), 0.f);
+
+    Outputs expected_outputs{std::vector<float>{16.331620904278438f, 41.56697946707537f}};
+
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
 TEST(onnx_${BACKEND_NAME}, model_one_hot_with_axis)
 {
     auto function = onnx_import::import_onnx_model(
@@ -2005,9 +2150,6 @@ TEST(onnx_${BACKEND_NAME}, model_where)
     auto function =
         onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/where.onnx"));
 
-    using Inputs = std::vector<std::vector<int>>;
-    using Outputs = std::vector<std::vector<int>>;
-
     // conditions tensor - 3x3x3
     auto condition = std::vector<int>{
         {0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0}};
@@ -2017,16 +2159,16 @@ TEST(onnx_${BACKEND_NAME}, model_where)
     // 3x1 tensor of "2"
     auto x2 = std::vector<int>{2, 2, 2};
 
-    Inputs inputs;
+    std::vector<std::vector<int>> inputs;
     inputs.push_back(std::move(condition));
     inputs.push_back(std::move(x1));
     inputs.push_back(std::move(x2));
 
     // y = 3x3x3
-    Outputs expected_outputs{
+    std::vector<std::vector<int>> expected_outputs{
         {2, 1, 2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2}};
 
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+    std::vector<std::vector<int>> outputs{execute(function, inputs, "${BACKEND_NAME}")};
 
     EXPECT_EQ(expected_outputs.front(), outputs.front());
 }

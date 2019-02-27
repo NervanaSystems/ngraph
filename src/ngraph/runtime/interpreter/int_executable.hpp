@@ -44,6 +44,7 @@
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/pad.hpp"
+#include "ngraph/op/passthrough.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/replace_slice.hpp"
@@ -58,6 +59,7 @@
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/runtime/hybrid/op/function_call.hpp"
 #include "ngraph/runtime/interpreter/node_wrapper.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/acos.hpp"
@@ -185,7 +187,6 @@ private:
                    const std::vector<std::shared_ptr<HostTensor>>& args)
     {
         const Node& node = node_wrapper.get_node();
-        std::string node_op = node.description();
 
 // We want to check that every OP_TYPEID enumeration is included in the list.
 // These GCC flags enable compile-time checking so that if an enumeration
@@ -740,6 +741,29 @@ private:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
+        case OP_TYPEID::FunctionCall:
+        {
+            auto f = static_cast<const runtime::hybrid::op::FunctionCall*>(&node);
+            auto backend = f->get_backend();
+            auto executable = f->get_executable();
+
+            std::vector<std::shared_ptr<Tensor>> outputs;
+            std::vector<std::shared_ptr<Tensor>> inputs;
+            for (const std::shared_ptr<HostTensor>& t : out)
+            {
+                auto backend_tensor = backend->create_tensor(
+                    t->get_element_type(), t->get_shape(), t->get_data_ptr());
+                outputs.push_back(backend_tensor);
+            }
+            for (const std::shared_ptr<HostTensor>& t : args)
+            {
+                auto backend_tensor = backend->create_tensor(
+                    t->get_element_type(), t->get_shape(), t->get_data_ptr());
+                inputs.push_back(backend_tensor);
+            }
+            executable->call(outputs, inputs);
+            break;
+        }
         case OP_TYPEID::Floor:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -922,6 +946,11 @@ private:
             break;
         }
         case OP_TYPEID::Parameter: break;
+        case OP_TYPEID::Passthrough:
+        {
+            const op::Passthrough* passthrough = static_cast<const op::Passthrough*>(&node);
+            throw unsupported_op{"Unsupported operation language: " + passthrough->language()};
+        }
         case OP_TYPEID::Pad:
         {
             const op::Pad* pad = static_cast<const op::Pad*>(&node);
