@@ -28,27 +28,30 @@
 
 /// \brief Calculate the output shape of numpy-style broadcast operation for two shapes.
 ///
-/// This function finds the maximum tensor shape that will be the result of element-wise operation
-/// that will be applied to the input shapes.
+/// more info:
+/// https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html#general-broadcasting-rules
+/// example:
+/// left: [3, 1, 10] right: [5, 1]
+/// return: [3, 5, 10]
 ///
-/// \param target_shape Current target shape.
-/// \param input_shape Input shape for which a common shape should be found
-/// \return New target shape as shape ready to broadcast padded input shape
-ngraph::Shape calculate_output_shape(ngraph::Shape target_shape, ngraph::Shape input_shape)
+/// \param left_shape First input shape.
+/// \param right_shape Second input Shape.
+/// \return Broadcast shape of input shapes.
+ngraph::Shape calculate_broadcast_shape(ngraph::Shape left_shape, ngraph::Shape right_shape)
 {
     ngraph::Shape result;
-    auto accumulator_rank = target_shape.size();
-    auto input_rank = input_shape.size();
-    auto max_rank = std::max(accumulator_rank, input_rank);
+    auto left_rank = left_shape.size();
+    auto right_rank = right_shape.size();
+    auto max_rank = std::max(left_rank, right_rank);
 
-    // left-pad the accumulator with ones
-    target_shape.insert(std::begin(target_shape), max_rank - accumulator_rank, 1);
-    // left-pad the input_shape with ones
-    input_shape.insert(std::begin(input_shape), max_rank - input_rank, 1);
+    // left-pad the left_shape with ones
+    left_shape.insert(std::begin(left_shape), max_rank - left_rank, 1);
+    // left-pad the right_shape with ones
+    right_shape.insert(std::begin(right_shape), max_rank - right_rank, 1);
 
     for (std::size_t index = 0; index < max_rank; ++index)
     {
-        result.push_back(std::max(target_shape.at(index), input_shape.at(index)));
+        result.push_back(std::max(left_shape.at(index), right_shape.at(index)));
     }
 
     return result;
@@ -59,7 +62,7 @@ ngraph::Shape calculate_output_shape(ngraph::Shape target_shape, ngraph::Shape i
 /// This function finds the maximum tensor shape that will be the result of element-wise operation
 /// that will be applied to the input shapes vector. The function also prepares the shape of each input
 /// for the element-wise operation by left-padding those shapes so that their rank is equal to
-/// the target_shape's rank.
+/// the left_shape's rank.
 ///
 /// \param input_shapes A vector of input shapes for which a common shape should be found
 /// \return A pair that contains the target shape as its first object and a vector of padded
@@ -68,7 +71,7 @@ static std::pair<ngraph::Shape, std::vector<ngraph::Shape>>
     get_numpy_broadcast_shapes(const std::vector<ngraph::Shape>& input_shapes)
 {
     ngraph::Shape target_shape = std::accumulate(
-        std::begin(input_shapes), std::end(input_shapes), ngraph::Shape{}, calculate_output_shape);
+        std::begin(input_shapes), std::end(input_shapes), ngraph::Shape{}, calculate_broadcast_shape);
 
     std::vector<ngraph::Shape> full_shapes;
     for (const ngraph::Shape& input : input_shapes)
@@ -83,36 +86,20 @@ static std::pair<ngraph::Shape, std::vector<ngraph::Shape>>
 
 /// \brief Calculate the output shape of numpy-style broadcast operation for all input nodes.
 ///
-/// This function finds the maximum tensor shape that will be the result of element-wise operation
-/// that will be applied to the inputs vector. The function also prepares the shape of each input
-/// for the element-wise operation by left-padding those shapes so that their rank is equal to
-/// the target_shape's rank.
-///
 /// \param inputs A vector of input nodes for which a common shape should be found
 /// \return A pair that contains the target shape as its first object and a vector of padded
 ///         input shapes ready to be broadcasted as the second object
 static std::pair<ngraph::Shape, std::vector<ngraph::Shape>>
     get_numpy_broadcast_shapes(const ngraph::NodeVector& inputs)
 {
-    auto shape_left_fold = [](ngraph::Shape accumulator,
-                              const std::shared_ptr<ngraph::Node>& input) {
-        auto input_shape = input->get_shape();
+    std::vector<ngraph::Shape> input_shapes;
 
-        return calculate_output_shape(accumulator, input_shape);
-    };
-
-    ngraph::Shape target_shape =
-        std::accumulate(std::begin(inputs), std::end(inputs), ngraph::Shape{}, shape_left_fold);
-
-    std::vector<ngraph::Shape> full_shapes;
-    for (const std::shared_ptr<ngraph::Node>& input : inputs)
+    for (const auto& input : inputs)
     {
-        ngraph::Shape padded_shape = input->get_shape();
-        padded_shape.insert(std::begin(padded_shape), target_shape.size() - padded_shape.size(), 1);
-        full_shapes.push_back(std::move(padded_shape));
+        input_shapes.push_back(input->get_shape());
     }
 
-    return {target_shape, full_shapes};
+    return get_numpy_broadcast_shapes(input_shapes);
 }
 
 /// \brief      Broadcast input node.
@@ -296,7 +283,7 @@ namespace ngraph
         {
             std::vector<std::size_t> result(output_shape.size() - input_shape.size());
             // Populate the result vector with monotonic increasing series from 0 until
-            // output_shape_size, excluding values in range [start_match_axis, start_match_axis + input_shape.size()
+            // output_shape_size, excluding values in range [start_match_axis, start_match_axis + right_shape.size()
             std::iota(std::begin(result), std::begin(result) + start_match_axis, 0);
             std::iota(std::begin(result) + start_match_axis,
                       std::end(result),
