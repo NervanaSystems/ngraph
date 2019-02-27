@@ -1193,7 +1193,7 @@ static shared_ptr<ngraph::Function>
                 node->add_control_dependency(node_map.at(name));
             }
 
-            node->set_name(node_name);
+            node->set_friendly_name(node_name);
             node_map[node_name] = node;
         }
         catch (...)
