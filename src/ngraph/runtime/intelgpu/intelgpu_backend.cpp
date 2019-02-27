@@ -1677,7 +1677,8 @@ shared_ptr<runtime::Executable>
                 (pad_below.size() > 2) || (pad_above.size() > 2) || (data_dilation.size() > 2) ||
                 (data_dilation.at(0) != 1) || (data_dilation.at(1) != 1) ||
                 (win_dilation.size() > 2) || (win_dilation.at(0) != 1) ||
-                (win_dilation.at(1) != 1) || (get_output_type(op) != element::f32))
+                (win_dilation.at(1) != 1) || (get_output_type(op) != element::f32) ||
+                ((pad_below.at(0) == pad_above.at(0)) && (pad_below.at(1) == pad_above.at(1))))
             {
                 do_convolution_operation(topology,
                                          get_input_name(op, 1),
@@ -1706,19 +1707,21 @@ shared_ptr<runtime::Executable>
 
                 if ((pad_below.at(0) == pad_above.at(0)) && (pad_below.at(1) == pad_above.at(1)))
                 {
-                    input_offset_xy = pad_below.at(0) - 1;
+                    // symmetric padding case temporally excluded (custom kernel executed) due to stability issues
+                    const CoordinateDiff& pad_below_for = conv_op->get_padding_below_forward();
+                    input_offset_xy = -pad_below_for.at(0);
                 }
                 else
                 {
                     // Different input padding for operation workarounded by adding aux layer
-                    const cldnn::tensor crop_pad_above(0, 0, -pad_below.at(1), -pad_below.at(0));
-                    const cldnn::tensor crop_pad_below(0, 0, -pad_above.at(1), -pad_above.at(0));
+                    const cldnn::tensor crop_pad_below(0, 0, -pad_below.at(1), -pad_below.at(0));
+                    const cldnn::tensor crop_pad_above(0, 0, -pad_above.at(1), -pad_above.at(0));
                     op_input_name += "_cropped";
 
                     const cldnn::crop cldnn_crop(op_input_name,
                                                  get_input_name(op, 1),
-                                                 crop_pad_above,
                                                  crop_pad_below,
+                                                 crop_pad_above,
                                                  cldnn::crop_borders_t());
                     topology.add(cldnn_crop);
                 }
