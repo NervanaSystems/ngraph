@@ -32,6 +32,7 @@
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
+#include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
@@ -667,6 +668,206 @@ TEST(cpu_test, convolution_large_padding)
     auto int_f = make_function();
     auto cpu_f = make_function();
     compare_backends(int_f, cpu_f, "INTERPRETER", "CPU", 1e-4, 1e-4);
+}
+
+#if 0
+static std::shared_ptr<Function> make_function(const std::string& file_name)
+{
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, file_name);
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    return func;
+}
+
+TEST(cpu_test, memory_reuse_mxnet_densenet121)
+{
+    const std::string file_name("mxnet/mxnet_densenet121_inference_batch1_float32.json");
+    auto cpu_f = make_function(file_name);
+
+    test::Uniform<float> rng(-1.0f, 1.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    // without memory reuse
+    auto cpu_results = execute(cpu_f, args, "CPU");
+
+    auto cpu_f_new = make_function(file_name);
+    auto cpu_results_new = execute(cpu_f_new, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), cpu_results_new.at(i), 1.0e-4f, 1.0e-4f));
+    }
+
+    // with memory reuse
+    auto backend = runtime::Backend::create("CPU");
+    auto parms = cpu_f->get_parameters();
+    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> arg_tensors(args.size());
+    for (size_t i = 0; i < args.size(); i++)
+    {
+        auto t = backend->create_tensor(parms.at(i)->get_element_type(), parms.at(i)->get_shape());
+        copy_data(t, args.at(i));
+        arg_tensors.at(i) = t;
+    }
+
+    auto results = cpu_f->get_results();
+    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> result_tensors(results.size());
+
+    for (size_t i = 0; i < results.size(); i++)
+    {
+        result_tensors.at(i) =
+            backend->create_tensor(results.at(i)->get_element_type(), results.at(i)->get_shape());
+    }
+
+    ngraph::pass::PassConfig pass_config;
+    pass_config.set_pass_attribute("CPUMemoryAssignment::ReuseMemory", true);
+    auto cpu_backend = std::unique_ptr<runtime::cpu::CPU_Backend>(
+        static_cast<runtime::cpu::CPU_Backend*>(backend.release()));
+
+    auto cpu_f_new_reuse = make_function(file_name);
+
+    shared_ptr<runtime::Executable> handle = cpu_backend->compile(cpu_f_new_reuse, pass_config);
+    for (auto it = 0; it < 2; it++)
+    {
+        handle->call_with_validate(result_tensors, arg_tensors);
+
+        std::vector<std::vector<float>> cpu_results_new_reuse;
+        for (auto rt : result_tensors)
+        {
+            cpu_results_new_reuse.push_back(read_vector<float>(rt));
+        }
+
+        for (size_t i = 0; i < cpu_results.size(); i++)
+        {
+            EXPECT_TRUE(
+                test::all_close(cpu_results.at(i), cpu_results_new_reuse.at(i), 1.0e-4f, 1.0e-4f));
+        }
+    }
+}
+#endif
+
+TEST(cpu_test, memory_reuse_destructive_oi_relu)
+{
+    auto shape_a = Shape{2, 5};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto B = make_shared<op::Parameter>(element::f32, shape_a);
+    auto C = make_shared<op::Parameter>(element::f32, shape_a);
+    auto add = make_shared<op::Add>(A, B);
+    auto relu = make_shared<op::Relu>(add);
+    auto subtract = make_shared<op::Subtract>(C, relu);
+    auto shape_rt = Shape{2, 5};
+    auto f = make_shared<Function>(subtract, ParameterVector{A, B, C});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 8, -8, 17, -0.5, 1, 8, -8, 17, -0.5});
+    auto b = backend->create_tensor(element::f32, shape_a);
+    copy_data(b, vector<float>{1, 2, 3, 4, 0.5, 1, 8, -8, 17, -0.5});
+    auto c = backend->create_tensor(element::f32, shape_a);
+    copy_data(c, vector<float>{2, 10, 0, 21, 0, 2, 16, 0, 34, 0});
+    auto result = backend->create_tensor(element::f32, shape_rt);
+    vector<float> expected{0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+    shared_ptr<runtime::Executable> handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b, c});
+    EXPECT_EQ(read_vector<float>(result), expected);
+}
+
+TEST(cpu_test, memory_reuse_cacheable_no_destructive_oi_relu)
+{
+    auto shape_a = Shape{2, 5};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a, true);
+    auto B = make_shared<op::Parameter>(element::f32, shape_a, true);
+    auto C = make_shared<op::Parameter>(element::f32, shape_a);
+    auto add = make_shared<op::Add>(A, B);
+    auto relu = make_shared<op::Relu>(add);
+    auto subtract = make_shared<op::Subtract>(C, relu);
+    auto shape_rt = Shape{2, 5};
+    auto f = make_shared<Function>(subtract, ParameterVector{A, B, C});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 8, -8, 17, -0.5, 1, 8, -8, 17, -0.5});
+    auto b = backend->create_tensor(element::f32, shape_a);
+    copy_data(b, vector<float>{1, 2, 3, 4, 0.5, 1, 8, -8, 17, -0.5});
+    auto c = backend->create_tensor(element::f32, shape_a);
+    copy_data(c, vector<float>{2, 10, 0, 21, 0, 2, 16, 0, 34, 0});
+    auto result = backend->create_tensor(element::f32, shape_rt);
+    vector<float> expected{0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+    shared_ptr<runtime::Executable> handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b, c});
+    EXPECT_EQ(read_vector<float>(result), expected);
+
+    a->set_stale(false);
+    b->set_stale(false);
+    handle->call_with_validate({result}, {a, b, c});
+    EXPECT_EQ(read_vector<float>(result), expected);
+}
+
+TEST(cpu_test, memory_reuse_in_place_concat_after_in_place_slice)
+{
+    Shape shape_a{4, 4};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto B = make_shared<op::Slice>(A, Coordinate{0, 0}, Coordinate{2, 4});
+    auto D = make_shared<op::Slice>(B, Coordinate{1, 0}, Coordinate{2, 4});
+    auto E = make_shared<op::Slice>(A, Coordinate{2, 0}, Coordinate{3, 4});
+    auto r = make_shared<op::Concat>(NodeVector{B, D, E}, 0);
+    auto f = make_shared<Function>(r, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
+    auto result = backend->create_tensor(element::f32, shape_a);
+
+    shared_ptr<runtime::Executable> handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+
+    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 5, 6, 7, 8, 9, 10, 11, 12}),
+              read_vector<float>(result));
+}
+
+TEST(cpu_test, memory_reuse_in_place_slice_after_in_place_concat)
+{
+    Shape shape{1, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto add1 = make_shared<op::Add>(A, B);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto D = make_shared<op::Parameter>(element::f32, shape);
+    auto add2 = make_shared<op::Add>(C, D);
+    auto subtract = make_shared<op::Subtract>(C, A);
+    auto concat = make_shared<op::Concat>(NodeVector{add1, add2, subtract}, 0);
+    Shape shape_r{2, 1};
+    auto slice = make_shared<op::Slice>(concat, Coordinate{0, 0}, Coordinate{2, 1});
+    auto f = make_shared<Function>(slice, ParameterVector{A, B, C, D});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a, vector<float>{1});
+    auto b = backend->create_tensor(element::f32, shape);
+    copy_data(b, vector<float>{2});
+    auto c = backend->create_tensor(element::f32, shape);
+    copy_data(c, vector<float>{3});
+    auto d = backend->create_tensor(element::f32, shape);
+    copy_data(d, vector<float>{4});
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    shared_ptr<runtime::Executable> handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b, c, d});
+    EXPECT_EQ((vector<float>{3, 7}), read_vector<float>(result));
 }
 
 TEST(cpu_test, convert_inplace)

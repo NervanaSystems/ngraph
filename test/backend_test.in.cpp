@@ -2861,7 +2861,7 @@ NGRAPH_TEST(${BACKEND_NAME}, computation_reuse)
     Shape shape_a{1, 16, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{32, 16, 1, 1};
-    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto B = make_shared<op::Parameter>(element::f32, shape_b, true);
     Shape shape_r{1, 32, 2, 2};
     auto conv = make_shared<op::Convolution>(A,
                                              B,
