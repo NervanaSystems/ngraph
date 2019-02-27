@@ -168,9 +168,9 @@ endif()
 
 macro (NORMALIZE_BOOL VAL)
     if (${VAL})
-        set(${VAL} TRUE)
+        set(${VAL} ON)
     else()
-        set(${VAL} FALSE)
+        set(${VAL} OFF)
     endif()
 endmacro()
 
