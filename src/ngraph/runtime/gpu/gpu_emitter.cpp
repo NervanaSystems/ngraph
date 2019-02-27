@@ -86,6 +86,7 @@
 #include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/parameter.hpp"
+#include "ngraph/op/passthrough.hpp"
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
@@ -854,6 +855,11 @@ std::string runtime::gpu::GPU_Emitter::emit_Pad(EMIT_ARGS)
 std::string runtime::gpu::GPU_Emitter::emit_Parameter(EMIT_ARGS)
 {
     return "";
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_Passthrough(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_Power(EMIT_ARGS)

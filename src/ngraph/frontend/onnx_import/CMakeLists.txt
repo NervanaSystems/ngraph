@@ -100,6 +100,8 @@ add_library(onnx_import STATIC
         op/less.hpp
         op/log.hpp
         op/log_softmax.hpp
+        op/lp_pool.cpp
+        op/lp_pool.hpp
         op/lrn.cpp
         op/lrn.hpp
         op/lstm.cpp
@@ -180,9 +182,14 @@ add_library(onnx_import STATIC
         utils/common.hpp
         utils/convpool.cpp
         utils/convpool.hpp
+        utils/norm.cpp
+        utils/norm.hpp
+        utils/reduction.cpp
         utils/reduction.hpp
         utils/reshape.cpp
         utils/reshape.hpp
+        utils/rnn/activation_functions.cpp
+        utils/rnn/activation_functions.hpp
         utils/variadic.hpp)
 
 set(ONNX_IMPORT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "")

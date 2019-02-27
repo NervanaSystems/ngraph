@@ -94,6 +94,7 @@ set (SRC
     op/or.cpp
     op/pad.cpp
     op/parameter.cpp
+    op/passthrough.cpp
     op/power.cpp
     op/product.cpp
     op/quantize.cpp
