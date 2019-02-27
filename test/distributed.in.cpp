@@ -51,7 +51,7 @@ TEST(distributed_${BACKEND_NAME}, allreduce)
             v.begin(), v.end(), v.begin(), std::bind1st(std::multiplies<float>(), comm_size));
 
         auto handle = backend->compile(f);
-        backend->call_with_validate(handle, {result}, {a});
+        handle->call_with_validate({result}, {a});
         EXPECT_EQ(v, read_vector<float>(result));
     }
 }

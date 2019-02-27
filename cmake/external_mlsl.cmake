@@ -22,7 +22,7 @@ include(ExternalProject)
 #------------------------------------------------------------------------------
 
 set(MLSL_GIT_URL https://github.com/intel/MLSL)
-set(MLSL_GIT_TAG d1bcc74cccdd86cae8841dab67723c811ddbd592)
+set(MLSL_GIT_TAG 98a683cb861514259480aff2e54c8fce4bec67e5)
 
 find_program(MAKE_EXE NAMES gmake nmake make)
 
@@ -31,7 +31,6 @@ ExternalProject_Add(
     PREFIX MLSL
     GIT_REPOSITORY ${MLSL_GIT_URL}
     GIT_TAG ${MLSL_GIT_TAG}
-    ${NGRAPH_GIT_ARGS}
     UPDATE_COMMAND ""
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ${MAKE_EXE} -j 1 ENABLE_INTERNAL_ENV_UPDATE=1
