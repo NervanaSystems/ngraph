@@ -31,7 +31,7 @@ across all workers, and then update the weights.
 How? (Generic frameworks)
 =========================
 
-* :doc:`../howto/distribute-train`
+* :doc:`../core/constructing-graphs/distribute-train`
 
 To synchronize gradients across all workers, the essential operation for data 
 parallel training, due to its simplicity and scalability over parameter servers, 
@@ -46,9 +46,8 @@ find it worthwhile to experiment with different modes or variations of
 distributed training. Deployments using nGraph Library with supported backends 
 can be configured to train with data parallelism and will soon work with model 
 parallelism. Distributing workloads is increasingly important, as more data and 
-bigger models mean the ability to :doc:`../howto/distribute-train` work with 
-larger and larger datasets, or to work with models having many layers that 
-aren't designed to fit to a single device.  
+bigger models mean the ability to :doc:`../core/constructing-graphs/distribute-train` 
+work with larger and larger datasets, or to work with models having many layers that aren't designed to fit to a single device.  
 
 Distributed training with data parallelism splits the data and each worker 
 node has the same model; during each iteration, the gradients are aggregated 

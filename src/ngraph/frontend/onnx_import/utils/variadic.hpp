@@ -77,7 +77,7 @@ namespace ngraph
                 // Templated binary operation - Creates Add, Minimum, Maximum, etc.
                 auto binary_operation = [](const std::shared_ptr<ngraph::Node>& arg0,
                                            const std::shared_ptr<ngraph::Node>& arg1) {
-                    NodeVector args{numpy_style_broadcast_for_binary_operation(arg0, arg1)};
+                    NodeVector args{numpy_style_broadcast({arg0, arg1})};
                     return std::make_shared<T>(args.at(0), args.at(1));
                 };
 
