@@ -45,24 +45,25 @@ as needed:
 
 .. code-block:: console 
 
-   -- NGRAPH_TOOLS_ENABLE:            TRUE
-   -- NGRAPH_CPU_ENABLE:              FALSE
-   -- NGRAPH_INTELGPU_ENABLE:         FALSE
-   -- NGRAPH_GPU_ENABLE:              FALSE
-   -- NGRAPH_INTERPRETER_ENABLE:      TRUE
-   -- NGRAPH_NOP_ENABLE:              TRUE
-   -- NGRAPH_GPUH_ENABLE:             FALSE
-   -- NGRAPH_GENERIC_CPU_ENABLE:      FALSE
-   -- NGRAPH_DISTRIBUTED_MLSL_ENABLE: FALSE
-   -- NGRAPH_DISTRIBUTED_OMPI_ENABLE: FALSE
-   -- NGRAPH_DEBUG_ENABLE:            FALSE
-   -- NGRAPH_ONNX_IMPORT_ENABLE:      FALSE
-   -- NGRAPH_DEX_ONLY:                FALSE
-   -- NGRAPH_CODE_COVERAGE_ENABLE:    FALSE
-   -- NGRAPH_LIB_VERSIONING_ENABLE:   FALSE
-   -- NGRAPH_PYTHON_BUILD_ENABLE:     FALSE
-   -- NGRAPH_USE_PREBUILT_LLVM:       TRUE
-   -- NGRAPH_PLAIDML_ENABLE:          FALSE
+   -- NGRAPH_UNIT_TEST_ENABLE:         ON
+   -- NGRAPH_TOOLS_ENABLE:             ON
+   -- NGRAPH_CPU_ENABLE:               ON
+   -- NGRAPH_INTELGPU_ENABLE:          OFF
+   -- NGRAPH_GPU_ENABLE:               OFF
+   -- NGRAPH_INTERPRETER_ENABLE:       ON
+   -- NGRAPH_NOP_ENABLE:               ON
+   -- NGRAPH_GPUH_ENABLE:              OFF
+   -- NGRAPH_GENERIC_CPU_ENABLE:       OFF
+   -- NGRAPH_DISTRIBUTED_MLSL_ENABLE:  OFF
+   -- NGRAPH_DISTRIBUTED_OMPI_ENABLE:  OFF
+   -- NGRAPH_DEBUG_ENABLE:             OFF
+   -- NGRAPH_ONNX_IMPORT_ENABLE:       OFF
+   -- NGRAPH_DEX_ONLY:                 OFF
+   -- NGRAPH_CODE_COVERAGE_ENABLE:     OFF
+   -- NGRAPH_LIB_VERSIONING_ENABLE:    OFF
+   -- NGRAPH_PYTHON_BUILD_ENABLE:      OFF
+   -- NGRAPH_USE_PREBUILT_LLVM:        OFF
+   -- NGRAPH_PLAIDML_ENABLE:           OFF
 
 
 .. important:: The default :program:`cmake` procedure (no build flags) will  
