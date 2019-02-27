@@ -39,13 +39,9 @@ bool ngraph::pass::PropagateCacheability::run_on_function(std::shared_ptr<Functi
                 op_annotations = op_annotations_factory();
                 op->set_op_annotations(op_annotations);
             }
-            if (std::dynamic_pointer_cast<op::Constant>(node))
+            if (node->is_parameter())
             {
-                op_annotations->set_cacheable(true);
-                NGRAPH_DEBUG << "propagate cacheability: cacheability is 1";
-            }
-            else if (auto parameter = std::dynamic_pointer_cast<op::Parameter>(node))
-            {
+                auto parameter = std::static_pointer_cast<op::Parameter>(node);
                 op_annotations->set_cacheable(parameter->get_cacheable());
                 NGRAPH_DEBUG << "propagate cacheability: cacheability is "
                              << parameter->get_cacheable();

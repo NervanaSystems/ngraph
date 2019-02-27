@@ -114,13 +114,18 @@ bool Node::is_constant() const
     return false;
 }
 
+const std::string& Node::description() const
+{
+    return m_node_type;
+}
+
 const std::string& Node::get_friendly_name() const
 {
-    if (m_name.empty())
+    if (m_friendly_name.empty())
     {
         return m_unique_name;
     }
-    return m_name;
+    return m_friendly_name;
 }
 
 const std::string& Node::get_name() const
@@ -128,11 +133,11 @@ const std::string& Node::get_name() const
     return m_unique_name;
 }
 
-void Node::set_name(const string& name)
+void Node::set_friendly_name(const string& name)
 {
-    if (m_name.empty())
+    if (m_friendly_name.empty())
     {
-        m_name = name;
+        m_friendly_name = name;
     }
     else
     {
