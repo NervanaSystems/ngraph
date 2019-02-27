@@ -22,6 +22,8 @@
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
+using AllocateFunc = void* (*)(void*, size_t, size_t);
+using DestroyFunc = void (*)(void*, void*);
 
 namespace mkl
 {
@@ -45,6 +47,7 @@ namespace ngraph
         namespace cpu
         {
             class CPUAllocator;
+            extern CPUAllocator& GetCPUAllocator();
         }
     }
 }
@@ -52,18 +55,24 @@ namespace ngraph
 class ngraph::runtime::cpu::CPUAllocator
 {
 public:
-    CPUAllocator(size_t size);
-    CPUAllocator();
-    ~CPUAllocator();
+    CPUAllocator(AllocateFunc allocator, DestroyFunc deallocator, size_t alignment);
+    //~CPUAllocator();
+
+    void* cpu_malloc(size_t size);
+    void cpu_free(void* ptr);
 
 private:
-    void* m_buffer;
-    size_t m_byte_size;
+    AllocateFunc m_framework_allocator;
+    DestroyFunc m_framework_deallocator;
+    size_t m_alignment;
 
     static inline void* MallocHook(size_t size)
     {
-        void* ptr = static_cast<void*>(ngraph_malloc(size));
-        return ptr;
+        ngraph::runtime::cpu::GetCPUAllocator().cpu_malloc(size);
     }
-    static inline void FreeHook(void* ptr) { ngraph_free(ptr); }
+
+    static inline void FreeHook(void* ptr)
+    {
+        ngraph::runtime::cpu::GetCPUAllocator().cpu_free(ptr);
+    }
 };

@@ -15,16 +15,55 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/cpu/cpu_mkl_allocator.hpp"
+#include <string>
+#include "ngraph/except.hpp"
 
-ngraph::runtime::cpu::CPUAllocator::CPUAllocator()
-    : m_buffer(nullptr)
-    , m_byte_size(0)
+ngraph::runtime::cpu::CPUAllocator::CPUAllocator(AllocateFunc allocator,
+                                                 DestroyFunc deallocator,
+                                                 size_t alignment)
+    : m_framework_allocator(allocator)
+    , m_framework_deallocator(deallocator)
+    , m_alignment(alignment)
 {
-}
-
-ngraph::runtime::cpu::CPUAllocator::CPUAllocator(size_t size)
-{
-    m_byte_size = size;
     mkl::i_malloc = MallocHook;
     mkl::i_free = FreeHook;
+}
+
+void* ngraph::runtime::cpu::CPUAllocator::cpu_malloc(size_t size)
+{
+    void* ptr;
+    if (m_framework_allocator != nullptr)
+    {
+        ptr = m_framework_allocator(nullptr, m_alignment, size);
+    }
+    else
+    {
+        ptr = malloc(size);
+    }
+
+    // check for exception
+    if (size != 0 && !ptr)
+    {
+        throw ngraph_error("malloc failed to allocate memory of size " + std::to_string(size));
+        throw std::bad_alloc();
+    }
+    return ptr;
+}
+
+void ngraph::runtime::cpu::CPUAllocator::cpu_free(void* ptr)
+{
+    if (m_framework_deallocator && ptr)
+    {
+        m_framework_deallocator(nullptr, ptr);
+    }
+    else if (ptr)
+    {
+        free(ptr);
+    }
+}
+
+ngraph::runtime::cpu::CPUAllocator& ngraph::runtime::cpu::GetCPUAllocator()
+{
+    static ngraph::runtime::cpu::CPUAllocator cpu_allocator(nullptr, nullptr, 4096);
+    return cpu_allocator;
 }
