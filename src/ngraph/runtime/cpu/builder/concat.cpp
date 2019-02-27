@@ -92,29 +92,31 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto concat_pd = mkldnn_emitter->get_concat_desc(node, nargs);
                     std::vector<mkldnn::memory::desc> inputs_data_desc;
-                    for (size_t i = 0; i < args.size(); i++)
+                    for (size_t i = 0; i < nargs; i++)
                     {
                         inputs_data_desc.push_back(mkldnn_utils::get_input_mkldnn_md(node, i));
                     }
-
-                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-
-                    size_t concat_dim =
-                        (dynamic_cast<const ngraph::op::Concat*>(node))->get_concatenation_axis();
-                    auto concat_index =
-                        mkldnn_emitter->build_concat(inputs_data_desc, result_desc, concat_dim);
+                    // Concat needs number of inputs plus 2 primitives; those two are for result and concat.
+                    auto concat_index = mkldnn_emitter->reserve_primitive_space(nargs + 2);
                     auto& deps = mkldnn_emitter->get_primitive_deps(concat_index);
 
-                    auto functor = [&, arg_tensors, nargs, concat_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        for (size_t i = 0; i < nargs; i++)
-                        {
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[i], arg_tensors[i]);
-                        }
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[nargs], out_tensor);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, concat_index);
-                    };
+                    auto functor =
+                        [&, concat_pd, inputs_data_desc, arg_tensors, nargs, concat_index](
+                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                            if (ctx->first_iteration)
+                            {
+                                mkldnn_emitter->build_concat(
+                                    concat_pd, inputs_data_desc, concat_index);
+                            }
+                            for (size_t i = 0; i < nargs; i++)
+                            {
+                                cpu::mkldnn_utils::set_memory_ptr(ctx, deps[i], arg_tensors[i]);
+                            }
+                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[nargs], out_tensor);
+                            cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, concat_index);
+                        };
 
                     functors.emplace_back(functor);
                 }
