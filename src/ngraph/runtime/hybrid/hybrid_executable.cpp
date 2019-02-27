@@ -31,17 +31,6 @@
 using namespace ngraph;
 using namespace std;
 
-static void node_modifiers(const Node& node, vector<string>& attributes)
-{
-    vector<string> colors = {"\"#A0FFA0\"", "\"#FFF790\""};
-    if (node.get_placement_index() < colors.size())
-    {
-        string color = colors[node.get_placement_index()];
-        attributes.push_back("style=filled");
-        attributes.push_back("fillcolor=" + color);
-    }
-}
-
 runtime::hybrid::HybridExecutable::HybridExecutable(
     const std::vector<std::shared_ptr<runtime::Backend>>& backend_list,
     const shared_ptr<Function>& func,
@@ -51,49 +40,21 @@ runtime::hybrid::HybridExecutable::HybridExecutable(
     , m_backend_list{backend_list}
     , m_debug_enabled{debug_enabled}
 {
+    // Run placement pass
+    ngraph::pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::hybrid::pass::DefaultPlacement>(m_backend_list);
+    pass_manager.register_pass<runtime::hybrid::pass::FixGetOutputElement>();
+    pass_manager.register_pass<runtime::hybrid::pass::Liveness>();
+    pass_manager.register_pass<runtime::hybrid::pass::Dump>("graph.dump");
+    // pass_manager.register_pass<runtime::hybrid::pass::MemoryLayout>();
+    if (m_debug_enabled)
     {
-        // Run placement pass
-        ngraph::pass::Manager pass_manager;
-        pass_manager.register_pass<runtime::hybrid::pass::DefaultPlacement>(m_backend_list);
-        pass_manager.register_pass<runtime::hybrid::pass::FixGetOutputElement>();
-        pass_manager.register_pass<runtime::hybrid::pass::Liveness>();
-        pass_manager.register_pass<runtime::hybrid::pass::Dump>("graph.dump");
-        // pass_manager.register_pass<runtime::hybrid::pass::MemoryLayout>();
-        if (m_debug_enabled)
-        {
-            pass_manager.register_pass<ngraph::pass::VisualizeTree>("graph.png", node_modifiers);
-        }
-        pass_manager.run_passes(m_function);
-
-        // Split function to sub_functions
-        tie(m_sub_functions, m_map_parameter_to_result) =
-            runtime::hybrid::split_function_by_placement(m_function);
-
-        // Compile subfunctions in corresponding backends
-        size_t subfunction_number = 0;
-        for (shared_ptr<Function>& sub_function : m_sub_functions)
-        {
-            size_t placement = sub_function->get_placement();
-            if (m_debug_enabled)
-            {
-                string name = "subfunction_" + to_string(subfunction_number++);
-                ngraph::pass::Manager pm;
-                pm.register_pass<ngraph::pass::VisualizeTree>(name + ".png", node_modifiers);
-                pm.register_pass<runtime::hybrid::pass::Dump>(name + ".dump");
-                pm.run_passes(sub_function);
-            }
-            auto backend = m_backend_list[placement];
-            shared_ptr<Executable> exec = backend->compile(sub_function);
-            m_executable_map[sub_function] = exec;
-
-            // Compile will replace nodes so we need to make one more pass through all
-            // ops to reset placement
-            for (auto op : sub_function->get_ops())
-            {
-                op->set_placement_index(placement);
-            }
-        }
+        pass_manager.register_pass<ngraph::pass::VisualizeTree>("graph.png", node_modifiers);
     }
+    pass_manager.run_passes(m_function);
+
+    runtime::hybrid::rewrite_function(m_function, m_backend_list);
+    m_executable = backend_list[0]->compile(m_function);
 
     set_parameters_and_results(*func);
 }
@@ -105,7 +66,7 @@ bool runtime::hybrid::HybridExecutable::call(const vector<shared_ptr<runtime::Te
 
     using node_map_t = unordered_map<shared_ptr<Node>, shared_ptr<runtime::Tensor>>;
 
-    // Parameter and result node in sub_function maps to one Tensor
+    // Parameter and result node in m_function maps to one Tensor
     node_map_t map_node_to_tensor;
     for (size_t i = 0; i < inputs.size(); ++i)
     {
@@ -116,85 +77,80 @@ bool runtime::hybrid::HybridExecutable::call(const vector<shared_ptr<runtime::Te
         map_node_to_tensor[m_function->get_results()[i]] = outputs[i];
     }
 
-    // Call subfunctions
-    for (const shared_ptr<Function>& sub_function : m_sub_functions)
-    {
-        // Init backend
-        size_t placement = sub_function->get_placement();
-        auto backend = m_backend_list[placement];
+    // Init backend
+    size_t placement = m_function->get_placement();
+    auto backend = m_backend_list[placement];
 
-        // Prepare parameter Tensors
-        vector<shared_ptr<runtime::Tensor>> parameters;
-        for (const shared_ptr<op::Parameter>& parameter_node : sub_function->get_parameters())
+    // Prepare parameter Tensors
+    vector<shared_ptr<runtime::Tensor>> parameters;
+    for (const shared_ptr<op::Parameter>& parameter_node : m_function->get_parameters())
+    {
+        auto it = map_node_to_tensor.find(parameter_node);
+        if (it != map_node_to_tensor.end())
         {
-            auto it = map_node_to_tensor.find(parameter_node);
-            if (it != map_node_to_tensor.end())
+            if (it->second->get_parent() == backend.get())
             {
-                if (it->second->get_parent() == backend.get())
-                {
-                    parameters.push_back(it->second);
-                }
-                else
-                {
-                    auto parameter = backend->create_tensor(parameter_node->get_element_type(),
-                                                            parameter_node->get_shape());
-                    parameter->copy_from(*(it->second));
-                    parameters.push_back(parameter);
-                }
+                parameters.push_back(it->second);
             }
             else
             {
-                // Handle temporary tensors that go between subgraphs
-                auto result_node = m_map_parameter_to_result.at(parameter_node);
-                auto result = map_node_to_tensor.at(result_node);
                 auto parameter = backend->create_tensor(parameter_node->get_element_type(),
                                                         parameter_node->get_shape());
-                parameter->copy_from(*result);
-                map_node_to_tensor[parameter_node] = parameter;
+                parameter->copy_from(*(it->second));
                 parameters.push_back(parameter);
             }
         }
-
-        // Prepare result Tensors
-        vector<shared_ptr<runtime::Tensor>> results;
-        map<runtime::Tensor*, runtime::Tensor*> copy_back;
-        for (const shared_ptr<op::Result>& result_node : sub_function->get_results())
+        else
         {
-            auto it = map_node_to_tensor.find(result_node);
-            if (it != map_node_to_tensor.end())
+            // Handle temporary tensors that go between subgraphs
+            auto result_node = m_map_parameter_to_result.at(parameter_node);
+            auto result = map_node_to_tensor.at(result_node);
+            auto parameter = backend->create_tensor(parameter_node->get_element_type(),
+                                                    parameter_node->get_shape());
+            parameter->copy_from(*result);
+            map_node_to_tensor[parameter_node] = parameter;
+            parameters.push_back(parameter);
+        }
+    }
+
+    // Prepare result Tensors
+    vector<shared_ptr<runtime::Tensor>> results;
+    map<runtime::Tensor*, runtime::Tensor*> copy_back;
+    for (const shared_ptr<op::Result>& result_node : m_function->get_results())
+    {
+        auto it = map_node_to_tensor.find(result_node);
+        if (it != map_node_to_tensor.end())
+        {
+            if (it->second->get_parent() == backend.get())
             {
-                if (it->second->get_parent() == backend.get())
-                {
-                    results.push_back(it->second);
-                }
-                else
-                {
-                    auto result = backend->create_tensor(result_node->get_element_type(),
-                                                         result_node->get_shape());
-                    results.push_back(result);
-                    copy_back.insert({result.get(), it->second.get()});
-                }
+                results.push_back(it->second);
             }
             else
             {
-                // Handle temporary tensors that go between subgraphs
                 auto result = backend->create_tensor(result_node->get_element_type(),
                                                      result_node->get_shape());
-                map_node_to_tensor[result_node] = result;
                 results.push_back(result);
+                copy_back.insert({result.get(), it->second.get()});
             }
         }
-
-        // Call
-        auto exec = m_executable_map[sub_function];
-        exec->call(results, parameters);
-
-        // Need to copy any results to the correct device
-        for (const auto& p : copy_back)
+        else
         {
-            p.second->copy_from(*p.first);
+            // Handle temporary tensors that go between subgraphs
+            auto result =
+                backend->create_tensor(result_node->get_element_type(), result_node->get_shape());
+            map_node_to_tensor[result_node] = result;
+            results.push_back(result);
         }
     }
+
+    m_executable->call(results, parameters);
+
+    // Need to copy any results to the correct device
+    for (const auto& p : copy_back)
+    {
+        p.second->copy_from(*p.first);
+    }
+
     return rc;
 }
 

@@ -256,12 +256,13 @@ NGRAPH_TEST(${BACKEND_NAME}, floor_int32)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::i32, shape);
-    copy_data(a, vector<int32_t>{-2, -136314880, 0, 4});
+    copy_data(a, vector<int32_t>{-2, -136314888, 0x40000010, 0x40000001});
     auto result = backend->create_tensor(element::i32, shape);
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<int32_t>{-2, -136314880, 0, 4}), read_vector<int32_t>(result));
+    EXPECT_EQ((vector<int32_t>{-2, -136314888, 0x40000010, 0x40000001}),
+              read_vector<int32_t>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, log)
