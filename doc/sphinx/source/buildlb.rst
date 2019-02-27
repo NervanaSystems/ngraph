@@ -225,16 +225,10 @@ according to those conventions. These scripts require the command
 Testing the build 
 =================
 
-We use the `googletest framework`_ from Google for unit tests. The ``cmake`` 
-command automatically downloaded a copy of the needed ``gtest`` files when 
-it configured the build directory.
-
-To perform unit tests on the install:
-
-#. Create and configure the build directory as described in our 
-   :doc:`buildlb` guide.
-
-#. Enter the build directory and run ``make check``:
+We use the `googletest framework`_ from Google for unit tests. The 
+``NGRAPH_UNIT_TEST_ENABLE`` build flag is enabled by default when building
+with cmake, so to perform unit tests, simply enter the build directory and 
+run ``make check``:
    
    .. code-block:: console
 
@@ -246,8 +240,8 @@ Adding framework support
 ========================
 
 After building and installing nGraph on your system, there are two likely 
-paths for what you'll want to do next: either compile a framework to run a DL 
-training model, or load an import of an "already-trained" model for inference 
+paths for what you'll want to do next: either compile a framework to run a 
+DL model, or load an import of an "already-trained" model for inference 
 on an Intel nGraph-enabled backend.
 
 For the former case, this early |version|, :doc:`frameworks/index`, 
