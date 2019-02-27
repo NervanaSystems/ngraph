@@ -285,7 +285,7 @@ namespace ngraph
         {
             std::vector<std::size_t> result(output_shape.size() - input_shape.size());
             // Populate the result vector with monotonic increasing series from 0 until
-            // output_shape_size, excluding values in range [start_match_axis, start_match_axis + right_shape.size()
+            // output_shape_size, excluding values in range [start_match_axis, start_match_axis + input_shape.size()
             std::iota(std::begin(result), std::begin(result) + start_match_axis, 0);
             std::iota(std::begin(result) + start_match_axis,
                       std::end(result),
