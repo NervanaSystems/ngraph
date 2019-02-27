@@ -30,6 +30,7 @@
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/dequantize.hpp"
+#include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -38,6 +39,7 @@
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/relu.hpp"
+#include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tanh.hpp"
@@ -66,6 +68,7 @@
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
+#include "ngraph/runtime/cpu/op/rnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/runtime/cpu/op/update_slice.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
@@ -162,7 +165,7 @@ TEST(cpu_fusion, gemm_cpu_broadcast_row)
     copy_data(b, dataB);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     vector<float> expected{11, 30, 38, 111};
     EXPECT_EQ(read_vector<float>(result), expected);
 }
@@ -194,7 +197,7 @@ TEST(cpu_fusion, gemm_cpu_broadcast_column)
     copy_data(b, dataB);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     vector<float> expected{11, 29, 39, 111};
     EXPECT_EQ(read_vector<float>(result), expected);
 }
@@ -230,7 +233,7 @@ TEST(cpu_fusion, gemm_cpu_broadcast_matrix)
     copy_data(b, dataB);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     vector<float> expected{10, 28, 37, 109};
     ASSERT_TRUE(read_vector<float>(result) == expected);
 }
@@ -263,7 +266,7 @@ TEST(cpu_fusion, gemm_cpu_no_bias)
     copy_data(b, dataB);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     vector<float> expected{9, 27, 36, 108};
     ASSERT_TRUE(read_vector<float>(result) == expected);
 }
@@ -637,9 +640,8 @@ TEST(cpu_fusion, conv_bias_fprop_n1c1h3w3)
         convolution_bias, ParameterVector{conv_test.data, conv_test.weights, conv_test.bias});
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle,
-                                {conv_test.result_val},
-                                {conv_test.data_val, conv_test.weights_val, conv_test.bias_val});
+    handle->call_with_validate({conv_test.result_val},
+                               {conv_test.data_val, conv_test.weights_val, conv_test.bias_val});
     auto result_vec = read_vector<float>(conv_test.result_val);
 
     EXPECT_TRUE(
@@ -668,8 +670,9 @@ TEST(cpu_fusion, conv_bias_bprop_n1c1h3w3)
     auto df = make_shared<Function>(
         NodeVector{d_data, d_weights, d_bias},
         ParameterVector{conv_test.data, conv_test.weights, conv_test.bias, conv_test.delta});
-    backend->call_with_validate(
-        backend->compile(df),
+    auto handle = backend->compile(df);
+    handle->call_with_validate(
+
         {conv_test.d_data_val, conv_test.d_weights_val, conv_test.d_bias_val},
         {conv_test.data_val, conv_test.weights_val, conv_test.bias_val, conv_test.delta_val});
 
@@ -772,14 +775,13 @@ TEST(cpu_fusion, batchnorm_fprop_relu_b1c2h2w2)
     auto result_variance_bnr = backend->create_tensor(element::f32, var_shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle,
-                                {bn_output,
-                                 result_mean,
-                                 result_variance,
-                                 bn_output_bnr,
-                                 result_mean_bnr,
-                                 result_variance_bnr},
-                                {input_t, gamma_t, beta_t});
+    handle->call_with_validate({bn_output,
+                                result_mean,
+                                result_variance,
+                                bn_output_bnr,
+                                result_mean_bnr,
+                                result_variance_bnr},
+                               {input_t, gamma_t, beta_t});
 
     EXPECT_TRUE(test::all_close(read_vector<float>(bn_output), read_vector<float>(bn_output_bnr)));
     EXPECT_TRUE(
@@ -1302,8 +1304,8 @@ std::vector<shared_ptr<runtime::Tensor>> rnn_matrix_fusion_eval(const size_t tim
     copy_data(data_tensor, data_val);
     copy_data(weights_tensor, weights_val);
     copy_data(bias_tensor, bias_val);
-    backend->call_with_validate(
-        backend->compile(func), result_tensors, {data_tensor, weights_tensor, bias_tensor});
+    auto handle = backend->compile(func);
+    handle->call_with_validate(result_tensors, {data_tensor, weights_tensor, bias_tensor});
     return result_tensors;
 }
 
@@ -1497,7 +1499,7 @@ TEST(cpu_fusion, backwards_maxpool_with_indices_n4_c1_hw4_2x2_max)
     }
 
     auto handle = backend->compile(df);
-    backend->call_with_validate(handle, {output}, {input, ep});
+    handle->call_with_validate({output}, {input, ep});
     ASSERT_TRUE(read_vector<float>(output) == expected);
 }
 
@@ -1522,7 +1524,7 @@ TEST(cpu_fusion, loop_kernel_one_input_one_output_halide)
     vector<float> expected{0, 4, 0, 4};
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
 
     EXPECT_TRUE(test::all_close(read_vector<float>(result), expected));
 }
@@ -1555,7 +1557,8 @@ TEST(cpu_fusion, loop_kernel_two_input_two_output_halide)
     vector<float> expected_relu{0, 4, 0, 4};
     vector<float> expected_add{4, 4, 4, 4};
 
-    backend->call_with_validate(f, {result_relu, result_add}, {a, b});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result_relu, result_add}, {a, b});
 
     EXPECT_TRUE(test::all_close(read_vector<float>(result_relu), expected_relu));
 }
@@ -1583,7 +1586,7 @@ TEST(cpu_fusion, loop_kernel_embedded_graph_halide)
     copy_data(b, dataB);
     vector<float> expected{-2, -6, -4, -8};
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ(read_vector<float>(result), expected);
 }
 
@@ -1609,7 +1612,7 @@ TEST(cpu_fusion, loop_kernel_two_inputs_one_output_halide)
     vector<float> expected{2, 6, 4, 8};
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
 
     EXPECT_EQ(read_vector<float>(result), expected);
 }
@@ -1662,7 +1665,7 @@ TEST(cpu_fusion, loop_kernel_multiple_outputs_halide)
     copy_data(d, dataD);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {r1, r2, r3}, {a, b, c, d});
+    handle->call_with_validate({r1, r2, r3}, {a, b, c, d});
 
     vector<float> expected1{5, 11, 5, 17};
     vector<float> expected2{2, 7, 5, 14};
@@ -1725,9 +1728,9 @@ TEST(cpu_fusion, loop_kernel_copy_with_new_args)
     copy_data(d, dataD);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {r1, r2, r3}, {a, b, c, d});
-    backend->call_with_validate(
-        backend->compile(copy_f), {copy_r1, copy_r2, copy_r3}, {a, b, c, d});
+    handle->call_with_validate({r1, r2, r3}, {a, b, c, d});
+    auto h1 = backend->compile(copy_f);
+    h1->call_with_validate({copy_r1, copy_r2, copy_r3}, {a, b, c, d});
 
     EXPECT_EQ(read_vector<int>(r1), read_vector<int>(copy_r1));
     EXPECT_EQ(read_vector<int>(r2), read_vector<int>(copy_r2));
@@ -2161,8 +2164,9 @@ TEST(cpu_fusion, group_convolution)
         backend->create_tensor(element::f32, shape_ur, erv.data()));
     auto upper_result = std::dynamic_pointer_cast<ngraph::runtime::cpu::CPUTensorView>(
         backend->create_tensor(element::f32, shape_ur, erv.data() + erv.size() / 2));
-    backend->call_with_validate(
-        backend->compile(f), {group_result, lower_result, upper_result}, {a_, b_, c_, d_, e_, f_});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({group_result, lower_result, upper_result},
+                               {a_, b_, c_, d_, e_, f_});
     ASSERT_EQ(rv, erv);
 }
 
@@ -2179,6 +2183,9 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
     const int num_rnn_cell_states = 2;
     const int rnn_direction = 1;
     const int num_of_rnn_fused_layer = 1;
+    ngraph::runtime::cpu::rnn_utils::rnntype rnn_type =
+        ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_lstm;
+
     auto rnn_node = make_shared<op::Rnn>(src_layer,
                                          src_iter,
                                          weights_layer,
@@ -2189,7 +2196,9 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
                                          src_seq_length,
                                          num_rnn_cell_states,
                                          rnn_direction,
-                                         num_of_rnn_fused_layer);
+                                         num_of_rnn_fused_layer,
+                                         rnn_type);
+
     auto rnn_ht_output = make_shared<op::GetOutputElement>(rnn_node, 0);
     auto rnn_ct_output = make_shared<op::GetOutputElement>(rnn_node, 1);
 
@@ -2217,8 +2226,8 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
     copy_data(weights_iter_t, vector<float>(400 * 100, 1));
     copy_data(biases_t, vector<float>(400, 1));
 
-    backend->call_with_validate(
-        backend->compile(func),
+    auto handle = backend->compile(func);
+    handle->call_with_validate(
         {result_ht, result_ct},
         {src_layer_t, src_iter_t, weights_layer_t, weights_iter_t, biases_t});
     vector<float> expected_ht(10 * 100, 0.964028f);
@@ -2593,7 +2602,7 @@ void sigmoid_multiply_fusion_forward_compute(runtime::Backend* backend,
     auto mul_node = input_0_node * input_1_node;
     auto func = make_shared<Function>(mul_node, input_params);
     auto handle = backend->compile(func);
-    backend->call_with_validate(handle, {result_tensor}, input_tensors);
+    handle->call_with_validate({result_tensor}, input_tensors);
     EXPECT_TRUE(test::all_close(read_vector<float>(result_tensor), expected));
 }
 
@@ -2787,8 +2796,8 @@ void sigmoid_multiply_fusion_backward_compute(runtime::Backend* backend,
     auto d_input_0 = adjoints.backprop_node(input_0_adjoint);
     auto d_input_1 = adjoints.backprop_node(input_1_adjoint);
     auto df = make_shared<Function>(NodeVector{d_input_0, d_input_1}, back_params);
-    backend->call_with_validate(
-        backend->compile(df), {d_input_0_tensor, d_input_1_tensor}, input_tensors);
+    auto handle = backend->compile(df);
+    handle->call_with_validate({d_input_0_tensor, d_input_1_tensor}, input_tensors);
     EXPECT_TRUE(test::all_close(read_vector<float>(d_input_0_tensor), expected_0));
     EXPECT_TRUE(test::all_close(read_vector<float>(d_input_1_tensor), expected_1));
 }
@@ -3589,11 +3598,138 @@ TEST(cpu_quant_fusion, qconvb_relu)
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
+    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:0", 1);
+    auto cpu1_results = execute(cpu_f1, args, "CPU");
+    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:1", 1);
+    auto cpu2_results = execute(cpu_f2, args, "CPU");
+    EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
+}
+
+TEST(cpu_quant_fusion, qavg_pool)
+{
+    auto make_function = []() {
+        Shape shape_input{1, 2, 4, 4};
+        auto input = std::make_shared<op::Parameter>(element::f32, shape_input);
+        auto input_scale = op::Constant::create(element::f32, Shape{}, {2.0f});
+        auto weights_scale = op::Constant::create(element::f32, Shape{}, {2.0f});
+        auto int8_zero = op::Constant::create(element::i8, Shape{}, {0});
+        auto uint8_zero = op::Constant::create(element::u8, Shape{}, {0});
+
+        op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+        auto q_input = std::make_shared<op::Quantize>(
+            input, input_scale, uint8_zero, element::u8, AxisSet{}, round_mode);
+        auto dq = std::make_shared<op::Dequantize>(
+            q_input, input_scale, uint8_zero, element::f32, AxisSet{});
+        auto avg_pool = std::make_shared<op::AvgPool>(dq, Shape{2, 2});
+        return make_shared<Function>(NodeVector{avg_pool}, ParameterVector{input});
+    };
+
+    auto cpu_f1 = make_function();
+    auto cpu_f2 = make_function();
+
+    test::Uniform<float> rng(4.0f, 4.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f1->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
 
     set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:0", 1);
     auto cpu1_results = execute(cpu_f1, args, "CPU");
     set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:1", 1);
     auto cpu2_results = execute(cpu_f2, args, "CPU");
+    EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
+}
+
+TEST(cpu_quant_fusion, qmax_pool)
+{
+    auto make_function = []() {
+        Shape shape_input{1, 2, 4, 4};
+        auto input = std::make_shared<op::Parameter>(element::f32, shape_input);
+        auto input_scale = op::Constant::create(element::f32, Shape{}, {2.0f});
+        auto weights_scale = op::Constant::create(element::f32, Shape{}, {2.0f});
+        auto int8_zero = op::Constant::create(element::i8, Shape{}, {0});
+        auto uint8_zero = op::Constant::create(element::u8, Shape{}, {0});
+
+        op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+        auto q_input = std::make_shared<op::Quantize>(
+            input, input_scale, uint8_zero, element::u8, AxisSet{}, round_mode);
+        auto dq = std::make_shared<op::Dequantize>(
+            q_input, input_scale, uint8_zero, element::f32, AxisSet{});
+        auto maxpool = std::make_shared<op::MaxPool>(dq, Shape{2, 2});
+        return make_shared<Function>(NodeVector{maxpool}, ParameterVector{input});
+    };
+
+    auto cpu_f1 = make_function();
+    auto cpu_f2 = make_function();
+
+    test::Uniform<float> rng(1.0f, 10.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f1->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:0", 1);
+    auto cpu1_results = execute(cpu_f1, args, "CPU");
+    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:1", 1);
+    auto cpu2_results = execute(cpu_f2, args, "CPU");
+    EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
+}
+
+TEST(cpu_quant_fusion, qconcat)
+{
+    auto make_function = []() {
+        auto get_input_slice = [](std::shared_ptr<op::Parameter>& input) {
+            auto input_scale = op::Constant::create(element::f32, Shape{}, {2.0f});
+            auto int8_zero = op::Constant::create(element::i8, Shape{}, {0});
+            auto uint8_zero = op::Constant::create(element::u8, Shape{}, {0});
+
+            op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+            auto q_input = std::make_shared<op::Quantize>(
+                input, input_scale, uint8_zero, element::u8, AxisSet{}, round_mode);
+            auto dq = std::make_shared<op::Dequantize>(
+                q_input, input_scale, uint8_zero, element::f32, AxisSet{});
+            return dq;
+        };
+
+        NodeVector concat_inputs, concats;
+        ParameterVector inputs;
+        Shape shape_input{1, 2, 4, 4};
+        inputs.push_back(std::make_shared<op::Parameter>(element::f32, shape_input));
+        concat_inputs.push_back(get_input_slice(inputs.back()));
+        // Concat2  -- Concat7
+        for (size_t i = 0; i < 6; i++)
+        {
+            inputs.push_back(std::make_shared<op::Parameter>(element::f32, shape_input));
+            concat_inputs.push_back(get_input_slice(inputs.back()));
+            concats.push_back(std::make_shared<op::Concat>(concat_inputs, 0));
+        }
+        return make_shared<Function>(concats, inputs);
+    };
+
+    auto cpu_f1 = make_function();
+    auto cpu_f2 = make_function();
+
+    test::Uniform<float> rng(2.0f, 2.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f1->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:0", 1);
+    auto cpu1_results = execute(cpu_f1, args, "CPU");
+    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:1", 1);
+    auto cpu2_results = execute(cpu_f2, args, "CPU");
+    // Expect Concat2 -- Concat6 to be fused and not Concat7
+    ASSERT_EQ(count_ops_of_type<op::QuantizedConcat>(cpu_f2), 5);
     EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
 }
 
@@ -3806,4 +3942,47 @@ TEST(cpu_quant_fusion, qconvba)
     set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:1", 1);
     auto cpu2_results = execute(cpu_f2, args, "CPU");
     EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
+}
+
+TEST(cpu_fusion, fuse_bi_directional_rnn)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
+    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
+    pass_manager.register_pass<runtime::cpu::pass::MultiLayerRNNFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::BiDirectionalRnn>();
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/lstm_bi_directional.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    pass_manager.run_passes(func);
+    // Bidirectional graph pass will folds the reverse seq
+    auto rev_seq_ops = get_ops_of_type<op::Reverse>(func);
+    auto rnn_ops = get_ops_of_type<op::Rnn>(func);
+    EXPECT_EQ(rev_seq_ops.size(), 0);
+    // fuse two bi-directional rnn layers in to one MKLDNN Op
+    EXPECT_EQ(rnn_ops.size(), 1);
+}
+
+TEST(cpu_fusion, bi_rnn_interpreter_vs_cpu)
+{
+    const std::string file_name("mxnet/lstm_bi_directional.json");
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < int_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+    }
 }

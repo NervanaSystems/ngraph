@@ -90,10 +90,11 @@ namespace ngraph
             auto c_vec = read_vector<T>(c_arg);
             fill(c_vec.begin(), c_vec.end(), static_cast<T>(0));
 
-            static std::unordered_map<std::shared_ptr<Function>, runtime::Handle>
+            static std::unordered_map<std::shared_ptr<Function>,
+                                      std::shared_ptr<runtime::Executable>>
                 s_compiled_functions;
             auto it = s_compiled_functions.find(df);
-            runtime::Handle df_handle;
+            std::shared_ptr<runtime::Executable> df_handle;
             if (it == s_compiled_functions.end())
             {
                 df_handle = backend->compile(df);
@@ -113,7 +114,7 @@ namespace ngraph
                 write_vector(c_arg, c_vec);
 
                 // call modified df/dX* = f'(c, cached)
-                backend->call_with_validate(df_handle, df_output_args, df_input_args);
+                df_handle->call_with_validate(df_output_args, df_input_args);
 
                 // reset the adjoint element
                 c_vec[i] = 0;
@@ -212,10 +213,11 @@ namespace ngraph
                 s_clone_fwd_map[f] = clone_function(*fprop_cache.fprop);
             }
             auto clone_fwd = s_clone_fwd_map[f];
-            static std::unordered_map<std::shared_ptr<Function>, runtime::Handle>
+            static std::unordered_map<std::shared_ptr<Function>,
+                                      std::shared_ptr<runtime::Executable>>
                 s_compiled_functions;
             auto it = s_compiled_functions.find(clone_fwd);
-            runtime::Handle clone_fwd_handle;
+            std::shared_ptr<runtime::Executable> clone_fwd_handle;
             if (it == s_compiled_functions.end())
             {
                 clone_fwd_handle = backend->compile(clone_fwd);
@@ -226,7 +228,7 @@ namespace ngraph
                 clone_fwd_handle = it->second;
             }
 
-            backend->call_with_validate(clone_fwd_handle, mod_f_output_args, f_input_args);
+            clone_fwd_handle->call_with_validate(mod_f_output_args, f_input_args);
 
             // call modfied f'(c, cached) to get df/dX*
             if (!s_clone_bwd_map[f])

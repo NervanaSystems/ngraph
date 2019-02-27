@@ -52,6 +52,7 @@
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
+#include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
@@ -245,7 +246,7 @@ namespace ngraph
             }
 #endif
 
-            static void emitCblasSgemmBatch(codegen::CodeWriter& writer,
+            static void emitCblasSgemmBatch(CodeWriter& writer,
                                             const Shape& shape_a,
                                             const Shape& shape_b,
                                             const Shape& shape_c,
@@ -333,7 +334,7 @@ namespace ngraph
                                      const Shape& shape_c,
                                      const std::vector<TensorViewWrapper>& args,
                                      const std::vector<TensorViewWrapper>& out,
-                                     codegen::CodeWriter& writer)
+                                     CodeWriter& writer)
             {
                 writer.block_begin();
 
@@ -587,7 +588,7 @@ namespace ngraph
 
             template <typename T>
             void CPU_Emitter::emitBatchNorm(CPU_ExternalFunction* external_function,
-                                            codegen::CodeWriter& writer,
+                                            CodeWriter& writer,
                                             const ngraph::Node* node,
                                             const std::vector<TensorViewWrapper>& args,
                                             const std::vector<TensorViewWrapper>& out,
@@ -1071,7 +1072,7 @@ namespace ngraph
 
                     size_t concat_index = 0;
                     size_t concat_dim =
-                        (dynamic_cast<const ngraph::op::Concat*>(node))->get_concatenation_axis();
+                        (static_cast<const ngraph::op::Concat*>(node))->get_concatenation_axis();
                     concat_index =
                         mkldnn_emitter->build_concat(inputs_data_desc, result_desc, concat_dim);
                     auto& deps = mkldnn_emitter->get_primitive_deps(concat_index);
@@ -1090,7 +1091,7 @@ namespace ngraph
                 else
                 {
                     auto axis =
-                        (dynamic_cast<const ngraph::op::Concat*>(node))->get_concatenation_axis();
+                        (static_cast<const ngraph::op::Concat*>(node))->get_concatenation_axis();
 
                     std::vector<std::string> arg_names;
                     std::vector<Shape> arg_shapes;
@@ -1775,7 +1776,7 @@ namespace ngraph
                                          const std::vector<TensorViewWrapper>& out,
                                          size_t reduction_axis,
                                          const char* kernel_name,
-                                         codegen::CodeWriter& writer)
+                                         CodeWriter& writer)
             {
                 if (out[0].get_element_type() != element::i64 &&
                     out[0].get_element_type() != element::i32)
@@ -4037,6 +4038,44 @@ namespace ngraph
                     writer << "            {" << join(quantize->get_axes()) << "},\n";
                     writer << "            static_cast<ngraph::op::Quantize::RoundMode>("
                            << static_cast<int>(quantize->get_round_mode()) << "));\n";
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedConcat)
+            {
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    std::vector<mkldnn::memory::desc> inputs_data_desc;
+                    for (size_t i = 0; i < args.size(); i++)
+                    {
+                        inputs_data_desc.push_back(mkldnn_utils::get_input_mkldnn_md(node, i));
+                    }
+
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+
+                    size_t concat_index = 0;
+                    size_t concat_dim = (static_cast<const ngraph::op::QuantizedConcat*>(node))
+                                            ->get_concatenation_axis();
+                    concat_index =
+                        mkldnn_emitter->build_concat(inputs_data_desc, result_desc, concat_dim);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(concat_index);
+                    size_t i;
+                    for (i = 0; i < args.size(); i++)
+                    {
+                        writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[i])
+                               << ", " << args[i].get_name() << ");\n";
+                    }
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[i])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(concat_index) << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error("unsupported parameters for QuantizedConcat via DEX");
                 }
             }
 

@@ -765,14 +765,40 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::MaxPool:
         {
+            arguments_check(op, 1, 1);
+
             const shared_ptr<op::MaxPool> max_pool = static_pointer_cast<op::MaxPool>(op);
 
-            do_pooling_operation(topology,
-                                 op,
-                                 max_pool->get_window_shape(),
-                                 max_pool->get_window_movement_strides(),
-                                 max_pool->get_padding_below(),
-                                 cldnn::pooling_mode::max);
+            if ((get_input_shape(op).size() > 4) || (get_output_type(op) != element::f32) ||
+                !max_pool->get_padding_below().empty() || !max_pool->get_padding_above().empty())
+            {
+                const shared_ptr<Node> def_val = max_pool->get_default_value();
+                const shared_ptr<op::Constant> def_const =
+                    static_pointer_cast<op::Constant>(def_val);
+                const vector<std::string>& values = def_const->get_value_strings();
+
+                do_max_avg_pool_operation(topology,
+                                          get_input_name(op),
+                                          get_input_shape(op),
+                                          get_output_name(op),
+                                          get_output_shape(op),
+                                          get_output_type(op),
+                                          max_pool->get_window_shape(),
+                                          max_pool->get_window_movement_strides(),
+                                          max_pool->get_padding_below(),
+                                          false,
+                                          values.at(0),
+                                          true);
+            }
+            else
+            {
+                do_pooling_operation(topology,
+                                     op,
+                                     max_pool->get_window_shape(),
+                                     max_pool->get_window_movement_strides(),
+                                     max_pool->get_padding_below(),
+                                     cldnn::pooling_mode::max);
+            }
             break;
         }
         case OP_TYPEID::MaxPoolBackprop:
@@ -804,17 +830,45 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::AvgPool:
         {
-            const shared_ptr<op::AvgPool> avg_pool = static_pointer_cast<op::AvgPool>(op);
-            const cldnn::pooling_mode mode = avg_pool->get_include_padding_in_avg_computation()
-                                                 ? cldnn::pooling_mode::average
-                                                 : cldnn::pooling_mode::average_no_padding;
+            arguments_check(op, 1, 1);
 
-            do_pooling_operation(topology,
-                                 op,
-                                 avg_pool->get_window_shape(),
-                                 avg_pool->get_window_movement_strides(),
-                                 avg_pool->get_padding_below(),
-                                 mode);
+            const shared_ptr<op::AvgPool> avg_pool = static_pointer_cast<op::AvgPool>(op);
+
+            if ((get_input_shape(op).size() > 4) || (get_output_type(op) != element::f32) ||
+                avg_pool->get_include_padding_in_avg_computation() ||
+                !avg_pool->get_padding_below().empty() || !avg_pool->get_padding_above().empty())
+            {
+                const shared_ptr<Node> def_val = avg_pool->get_default_value();
+                const shared_ptr<op::Constant> def_const =
+                    static_pointer_cast<op::Constant>(def_val);
+                const vector<std::string>& values = def_const->get_value_strings();
+
+                do_max_avg_pool_operation(topology,
+                                          get_input_name(op),
+                                          get_input_shape(op),
+                                          get_output_name(op),
+                                          get_output_shape(op),
+                                          get_output_type(op),
+                                          avg_pool->get_window_shape(),
+                                          avg_pool->get_window_movement_strides(),
+                                          avg_pool->get_padding_below(),
+                                          avg_pool->get_include_padding_in_avg_computation(),
+                                          values.at(0),
+                                          false);
+            }
+            else
+            {
+                const cldnn::pooling_mode mode = avg_pool->get_include_padding_in_avg_computation()
+                                                     ? cldnn::pooling_mode::average
+                                                     : cldnn::pooling_mode::average_no_padding;
+
+                do_pooling_operation(topology,
+                                     op,
+                                     avg_pool->get_window_shape(),
+                                     avg_pool->get_window_movement_strides(),
+                                     avg_pool->get_padding_below(),
+                                     mode);
+            }
             break;
         }
         case OP_TYPEID::AvgPoolBackprop:
@@ -825,8 +879,8 @@ shared_ptr<runtime::Executable>
                 static_pointer_cast<op::AvgPoolBackprop>(op);
 
             do_avg_pool_backprop_operation(topology,
-                                           get_input_name(op, 0),
-                                           get_input_shape(op, 0),
+                                           get_input_name(op),
+                                           get_input_shape(op),
                                            get_output_name(op),
                                            get_output_shape(op),
                                            get_output_type(op),
@@ -1029,16 +1083,6 @@ shared_ptr<runtime::Executable>
                           values.at(0));
             break;
         }
-        case OP_TYPEID::Relu:
-        {
-            do_cldnn_unary(topology, op, activation_relu);
-            break;
-        }
-        case OP_TYPEID::Sigmoid:
-        {
-            do_cldnn_unary(topology, op, activation_logistic);
-            break;
-        }
         case OP_TYPEID::ReluBackprop:
         {
             arguments_check(op, 2, 1);
@@ -1054,88 +1098,104 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::Abs:
         {
-            do_universal_unary(topology, op, "fabs", activation_abs);
+            do_universal_unary(topology, op, "fabs(input_var)", activation_abs);
             break;
         }
         case OP_TYPEID::Sqrt:
         {
-            do_universal_unary(topology, op, "sqrt", activation_sqrt);
+            do_universal_unary(topology, op, "sqrt(input_var)", activation_sqrt);
             break;
         }
         case OP_TYPEID::Tanh:
         {
-            do_universal_unary(topology, op, "tanh", activation_hyperbolic_tan);
+            do_universal_unary(topology, op, "tanh(input_var)", activation_hyperbolic_tan);
             break;
         }
         case OP_TYPEID::Sin:
         {
-            do_universal_unary(topology, op, "sin", activation_sin);
+            do_universal_unary(topology, op, "sin(input_var)", activation_sin);
             break;
         }
         case OP_TYPEID::Asin:
         {
-            do_universal_unary(topology, op, "asin", activation_asin);
+            do_universal_unary(topology, op, "asin(input_var)", activation_asin);
             break;
         }
         case OP_TYPEID::Sinh:
         {
-            do_universal_unary(topology, op, "sinh", activation_sinh);
+            do_universal_unary(topology, op, "sinh(input_var)", activation_sinh);
             break;
         }
         case OP_TYPEID::Cos:
         {
-            do_universal_unary(topology, op, "cos", activation_cos);
+            do_universal_unary(topology, op, "cos(input_var)", activation_cos);
             break;
         }
         case OP_TYPEID::Acos:
         {
-            do_universal_unary(topology, op, "acos", activation_acos);
+            do_universal_unary(topology, op, "acos(input_var)", activation_acos);
             break;
         }
         case OP_TYPEID::Cosh:
         {
-            do_universal_unary(topology, op, "cosh", activation_cosh);
+            do_universal_unary(topology, op, "cosh(input_var)", activation_cosh);
             break;
         }
         case OP_TYPEID::Log:
         {
-            do_universal_unary(topology, op, "log", activation_log);
+            do_universal_unary(topology, op, "log(input_var)", activation_log);
             break;
         }
         case OP_TYPEID::Exp:
         {
-            do_universal_unary(topology, op, "exp", activation_exp);
+            do_universal_unary(topology, op, "exp(input_var)", activation_exp);
             break;
         }
         case OP_TYPEID::Negative:
         {
             const cldnn_activation_additional_params param = {-1.f, 0.f};
-            do_universal_unary(topology, op, "-", activation_linear, param);
+            do_universal_unary(topology, op, "-(input_var)", activation_linear, param);
+            break;
+        }
+        case OP_TYPEID::Relu:
+        {
+            const string zero_const =
+                "convert_" + get_opencl_type_name(get_output_type(op)) + "(0)";
+            do_universal_unary(topology, op, "max(" + zero_const + ", input_var)", activation_relu);
+            break;
+        }
+        case OP_TYPEID::Sigmoid:
+        {
+            const string one_const = "convert_" + get_opencl_type_name(get_output_type(op)) + "(1)";
+            do_universal_unary(topology,
+                               op,
+                               one_const + " / (" + one_const + " + exp(-input_var))",
+                               activation_logistic);
             break;
         }
         case OP_TYPEID::Atan:
         {
-            do_custom_unary(topology, op, "atan");
+            do_custom_unary(topology, op, "atan(input_var)");
             break;
         }
         case OP_TYPEID::Ceiling:
         {
-            do_custom_unary(topology, op, "ceil");
+            do_custom_unary(topology, op, "ceil(input_var)");
             break;
         }
         case OP_TYPEID::Floor:
         {
-            do_custom_unary(topology, op, "floor");
+            do_custom_unary(topology, op, "floor(input_var)");
             break;
         }
         case OP_TYPEID::Sign:
         {
-            do_custom_unary(topology, op, "sign");
+            do_custom_unary(topology, op, "sign(input_var)");
             break;
         }
         case OP_TYPEID::Tan:
         {
-            do_custom_unary(topology, op, "tan");
+            do_custom_unary(topology, op, "tan(input_var)");
             break;
         }
         case OP_TYPEID::SigmoidBackprop:
@@ -1858,6 +1918,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::StopGradient:
         case OP_TYPEID::TopK:
         case OP_TYPEID::EmbeddingLookup:
+        case OP_TYPEID::Passthrough:
         {
             throw unsupported_op("Unsupported op '" + op->description() +
                                  "' in IntelGPU back end.");

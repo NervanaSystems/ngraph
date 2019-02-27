@@ -59,7 +59,7 @@ set(SRC
     zero_dim_tensor_elimination.cpp
 )
 
-if(NGRAPH_TOOLS_ENABLE)
+if(NOT WIN32 AND NGRAPH_TOOLS_ENABLE)
     list(APPEND SRC tools.cpp)
 endif()
 

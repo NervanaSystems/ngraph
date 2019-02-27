@@ -40,7 +40,6 @@ ExternalProject_Add(
     PREFIX cldnn
     GIT_REPOSITORY ${CLDNN_GIT_REPO_URL}
     GIT_TAG ${CLDNN_GIT_LABEL}
-    ${NGRAPH_GIT_ARGS}
     # Disable install step
     INSTALL_COMMAND ""
     UPDATE_COMMAND ""
