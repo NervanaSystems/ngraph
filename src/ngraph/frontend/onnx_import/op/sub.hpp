@@ -45,8 +45,7 @@ namespace ngraph
             {
                 inline NodeVector sub(const Node& node)
                 {
-                    NodeVector ng_inputs{
-                        numpy_style_broadcast_for_binary_operation(node.get_ng_inputs())};
+                    NodeVector ng_inputs{numpy_style_broadcast(node.get_ng_inputs())};
                     return {
                         std::make_shared<ngraph::op::Subtract>(ng_inputs.at(0), ng_inputs.at(1))};
                 }
