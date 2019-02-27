@@ -1071,7 +1071,28 @@ namespace ngraph
                     auto rnn_cell_n_states =
                         static_cast<unsigned long>(rnn_node->get_num_cell_states());
 
-                    if (out[0].get_shape().size() == 2 && (out[0].get_shape()[1] != feature_size))
+                    auto get_mkldnn_rnn_cell_type = [&]() {
+                        switch (rnn_node->get_rnn_type())
+                        {
+                        case rnn_utils::rnntype::vanilla_rnn: return mkldnn::algorithm::vanilla_rnn;
+                        case rnn_utils::rnntype::vanilla_gru: return mkldnn::algorithm::vanilla_gru;
+                        case rnn_utils::rnntype::vanilla_lstm:
+                            return mkldnn::algorithm::vanilla_lstm;
+                        default: throw ngraph_error("unsupported mkldnn rnn algorithm");
+                        }
+                    };
+
+                    auto get_mkldnn_rnn_direction = [&]() {
+                        switch (direction)
+                        {
+                        case 1: return mkldnn::rnn_direction::unidirectional_left2right;
+                        case 2: return mkldnn::rnn_direction::bidirectional_concat;
+                        default: throw ngraph_error("unsupported mkldnn rnn direction");
+                        }
+                    };
+
+                    if (out[0].get_shape().size() == 2 &&
+                        (out[0].get_shape()[1] != direction * feature_size))
                     {
                         throw ngraph_error(
                             "input slc{ht} feature size is not equal to output dlc{ht} feature "
@@ -1102,7 +1123,7 @@ namespace ngraph
                     Shape wei_iter_tz{
                         num_fused_layers, direction, feature_size, rnn_cell_n_gates, feature_size};
                     Shape bias_tz{num_fused_layers, direction, rnn_cell_n_gates, feature_size};
-                    Shape dst_layer_tz{src_sequence_length_max, batch, feature_size};
+                    Shape dst_layer_tz{src_sequence_length_max, batch, direction * feature_size};
                     Shape dst_iter_tz{
                         num_fused_layers, direction, rnn_cell_n_states, batch, feature_size};
 
@@ -1122,18 +1143,17 @@ namespace ngraph
                     auto dst_iter_desc = build_memory_descriptor(
                         dst_iter_tz, out[1].get_element_type(), mkldnn::memory::format::ldsnc);
 
-                    mkldnn::rnn_cell::desc rnn_cell(mkldnn::algorithm::vanilla_lstm);
-                    return mkldnn::rnn_forward::desc(
-                        mkldnn::prop_kind::forward_training,
-                        rnn_cell,
-                        mkldnn::rnn_direction::unidirectional_left2right,
-                        src_layer_desc,
-                        src_iter_desc,
-                        weights_layer_desc,
-                        weights_iter_desc,
-                        bias_desc,
-                        dst_layer_desc,
-                        dst_iter_desc);
+                    mkldnn::rnn_cell::desc rnn_cell_desc(get_mkldnn_rnn_cell_type());
+                    return mkldnn::rnn_forward::desc(mkldnn::prop_kind::forward_training,
+                                                     rnn_cell_desc,
+                                                     get_mkldnn_rnn_direction(),
+                                                     src_layer_desc,
+                                                     src_iter_desc,
+                                                     weights_layer_desc,
+                                                     weights_iter_desc,
+                                                     bias_desc,
+                                                     dst_layer_desc,
+                                                     dst_iter_desc);
                 }
 
                 template <typename OP>
