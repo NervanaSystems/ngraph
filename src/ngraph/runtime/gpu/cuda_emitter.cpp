@@ -21,7 +21,7 @@
 #include <string>
 #include <vector>
 
-#include "ngraph/codegen/code_writer.hpp"
+#include "ngraph/code_writer.hpp"
 #include "ngraph/runtime/gpu/cuda_emitter.hpp"
 #include "ngraph/runtime/gpu/cudnn_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
@@ -116,7 +116,7 @@ size_t runtime::gpu::CUDAEmitter::build_concat(const std::string& dtype,
     auto compiled_kernel_1 = m_ctx->compiled_kernel_pool->get(kernel_name_1.str());
     if (compiled_kernel_1 == nullptr && input_num >= split_input_size)
     {
-        codegen::CodeWriter writer;
+        CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
         CudaKernelBuilder::get_concat_op(writer, kernel_name_1.str(), dtype, split_input_size);
         compiled_kernel_1 =
@@ -125,7 +125,7 @@ size_t runtime::gpu::CUDAEmitter::build_concat(const std::string& dtype,
     auto compiled_kernel_2 = m_ctx->compiled_kernel_pool->get(kernel_name_2.str());
     if (compiled_kernel_2 == nullptr && residue != 0)
     {
-        codegen::CodeWriter writer;
+        CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
         CudaKernelBuilder::get_concat_op(writer, kernel_name_2.str(), dtype, residue);
         compiled_kernel_2 =
@@ -281,7 +281,7 @@ size_t runtime::gpu::CUDAEmitter::build_topk(const std::vector<element::Type>& d
     auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name.str());
     if (compiled_kernel == nullptr)
     {
-        codegen::CodeWriter writer;
+        CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
         runtime::gpu::CudaKernelBuilder::get_topk(
             writer, kernel_name.str(), dtypes_string, compute_max, args, use_malloc);
@@ -372,7 +372,7 @@ size_t runtime::gpu::CUDAEmitter::build_onehot(const std::array<std::string, 2>&
     auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name.str());
     if (compiled_kernel == nullptr)
     {
-        codegen::CodeWriter writer;
+        CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
         CudaKernelBuilder::get_onehot_op(writer, kernel_name.str(), dtypes);
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
@@ -441,7 +441,7 @@ size_t runtime::gpu::CUDAEmitter::build_reverse(const std::array<std::string, 2>
     auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name.str());
     if (compiled_kernel == nullptr)
     {
-        codegen::CodeWriter writer;
+        CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
         CudaKernelBuilder::get_reverse_op(writer, kernel_name.str(), dtypes);
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
@@ -539,7 +539,7 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const std::vector<std::string>& dtyp
     auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name.str());
     if (compiled_kernel == nullptr)
     {
-        codegen::CodeWriter writer;
+        CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
         CudaKernelBuilder::get_pad_op(writer, kernel_name.str(), args, rank);
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
@@ -626,7 +626,7 @@ size_t runtime::gpu::CUDAEmitter::build_pad_fill(const std::vector<std::string>&
     auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name.str());
     if (compiled_kernel == nullptr)
     {
-        codegen::CodeWriter writer;
+        CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
         CudaKernelBuilder::get_pad_fill_op(writer, kernel_name.str(), args, rank);
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
@@ -711,7 +711,7 @@ size_t runtime::gpu::CUDAEmitter::build_reshape(const std::array<std::string, 2>
     auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name.str());
     if (compiled_kernel == nullptr)
     {
-        codegen::CodeWriter writer;
+        CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
         CudaKernelBuilder::get_reshape_op(writer, kernel_name.str(), args, dtypes, rank);
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
@@ -796,7 +796,7 @@ size_t runtime::gpu::CUDAEmitter::build_reshape_2d(const std::array<std::string,
     auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name.str());
     if (compiled_kernel == nullptr)
     {
-        codegen::CodeWriter writer;
+        CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
         CudaKernelBuilder::get_reshape_op_2d(
             writer, kernel_name.str(), args, dtypes[1], block_size);
@@ -886,7 +886,7 @@ size_t runtime::gpu::CUDAEmitter::build_reshape_3d(const std::array<std::string,
     auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name.str());
     if (compiled_kernel == nullptr)
     {
-        codegen::CodeWriter writer;
+        CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
         CudaKernelBuilder::get_reshape_op_3d(
             writer, kernel_name.str(), args, dtypes[1], input_order, block_size);
@@ -947,7 +947,7 @@ size_t runtime::gpu::CUDAEmitter::build_slice(const std::array<std::string, 2>& 
     auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name.str());
     if (compiled_kernel == nullptr)
     {
-        codegen::CodeWriter writer;
+        CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
         CudaKernelBuilder::get_slice_op(writer, kernel_name.str(), dtypes, output_shape.size());
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
@@ -1035,7 +1035,7 @@ size_t runtime::gpu::CUDAEmitter::build_reverse_sequence(const std::array<std::s
     auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name.str());
     if (compiled_kernel == nullptr)
     {
-        codegen::CodeWriter writer;
+        CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
         CudaKernelBuilder::get_reverse_sequence_op(
             writer, kernel_name.str(), dtypes, batch_axis, sequence_axis, output_shape.size());
@@ -1112,7 +1112,7 @@ size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const std::array<std::string
     auto compiled_kernel = m_ctx->compiled_kernel_pool->get(hash);
     if (compiled_kernel == nullptr)
     {
-        codegen::CodeWriter writer;
+        CodeWriter writer;
         CudaKernelBuilder::get_max_pool_1d(
             writer, kernel_name, dtypes, input_width, output_width, window_width, window_stride);
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
@@ -1242,7 +1242,7 @@ size_t runtime::gpu::CUDAEmitter::build_avg_pool(const std::array<std::string, 2
     auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name);
     if (compiled_kernel == nullptr)
     {
-        codegen::CodeWriter writer;
+        CodeWriter writer;
         CudaKernelBuilder::get_avg_pool(writer, kernel_name, dtypes, include_pad);
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
     }
@@ -1357,7 +1357,7 @@ size_t runtime::gpu::CUDAEmitter::build_elementwise_n_to_1(const std::vector<std
     auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name.str());
     if (compiled_kernel == nullptr)
     {
-        codegen::CodeWriter writer;
+        CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
         if (kernel)
         {
@@ -1429,7 +1429,7 @@ size_t runtime::gpu::CUDAEmitter::build_memset(const std::string& dtype, uint32_
     auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name.str());
     if (compiled_kernel == nullptr)
     {
-        codegen::CodeWriter writer;
+        CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
         CudaKernelBuilder::get_memset_op(writer, kernel_name.str(), dtype, args);
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
@@ -1500,7 +1500,7 @@ size_t runtime::gpu::CUDAEmitter::build_cudnn_bn_inv_var(const std::vector<std::
     auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name.str());
     if (compiled_kernel == nullptr)
     {
-        codegen::CodeWriter writer;
+        CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
         CudaKernelBuilder::get_cudnn_bn_inv_var_op(writer, kernel_name.str(), args);
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
@@ -1721,7 +1721,7 @@ size_t runtime::gpu::CUDAEmitter::build_softmax(const std::vector<element::Type>
         auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name);
         if (compiled_kernel == nullptr)
         {
-            codegen::CodeWriter writer;
+            CodeWriter writer;
             CudaKernelBuilder::add_pod_typedefs(writer);
             runtime::gpu::CudaKernelBuilder::get_softmax_op(
                 writer, kernel_name, args, dtypes_str, non_reduce_rank, reduce_rank);
@@ -1779,7 +1779,7 @@ size_t runtime::gpu::CUDAEmitter::build_softmax(const std::vector<element::Type>
         auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name);
         if (compiled_kernel == nullptr)
         {
-            codegen::CodeWriter writer;
+            CodeWriter writer;
             CudaKernelBuilder::add_pod_typedefs(writer);
             runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(
                 writer, kernel_name, args, dtypes_str, non_reduce_rank, reduce_rank, block_size_x);
@@ -1883,7 +1883,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_nd(const std::vector<element::
     auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name);
     if (compiled_kernel == nullptr)
     {
-        codegen::CodeWriter writer;
+        CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
         if (kernel)
         {
@@ -1957,7 +1957,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_scalar(const std::vector<eleme
     auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name);
     if (compiled_kernel == nullptr)
     {
-        codegen::CodeWriter writer;
+        CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
         if (kernel)
         {
@@ -2027,7 +2027,7 @@ size_t
     // if the kernel has not been compiled, build it
     if (compiled_kernel == nullptr)
     {
-        codegen::CodeWriter writer;
+        CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
         if (kernel)
         {
@@ -2289,7 +2289,7 @@ size_t
     auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name.str());
     if (compiled_kernel == nullptr)
     {
-        codegen::CodeWriter writer;
+        CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
         if (kernel)
         {
@@ -2408,7 +2408,7 @@ size_t runtime::gpu::CUDAEmitter::build_broadcast(const std::array<std::string, 
     auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name);
     if (compiled_kernel == nullptr)
     {
-        codegen::CodeWriter writer;
+        CodeWriter writer;
         runtime::gpu::CudaKernelBuilder::get_broadcast_op(
             writer, kernel_name, dtypes[0], args, result_shape.size());
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
@@ -2789,7 +2789,7 @@ size_t runtime::gpu::CUDAEmitter::build_convolution(const std::array<std::string
     auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name);
     if (compiled_kernel == nullptr)
     {
-        codegen::CodeWriter writer;
+        CodeWriter writer;
         runtime::gpu::CudaKernelBuilder::get_convolution_forward(writer,
                                                                  kernel_name,
                                                                  dtypes,
@@ -2842,7 +2842,7 @@ size_t runtime::gpu::CUDAEmitter::build_convolution(const std::array<std::string
     return this->m_primitive_emitter->insert(std::move(conv));
 }
 
-void runtime::gpu::CUDAEmitter::print_tensor_from_gpu(codegen::CodeWriter& writer,
+void runtime::gpu::CUDAEmitter::print_tensor_from_gpu(CodeWriter& writer,
                                                       const std::string& tensor_name,
                                                       NVShape shape)
 {
