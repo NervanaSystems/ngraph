@@ -43,6 +43,7 @@ public:
 
     std::shared_ptr<Backend> get_backend() const;
     std::shared_ptr<Executable> get_executable() const;
+    std::shared_ptr<Function> get_function() const;
 
 private:
     std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;

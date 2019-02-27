@@ -52,3 +52,8 @@ shared_ptr<runtime::Executable> runtime::hybrid::op::FunctionCall::get_executabl
 {
     return m_executable;
 }
+
+shared_ptr<Function> runtime::hybrid::op::FunctionCall::get_function() const
+{
+    return m_function;
+}

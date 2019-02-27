@@ -234,7 +234,17 @@ void runtime::hybrid::rewrite_function(const shared_ptr<Function>& f,
 void runtime::hybrid::node_modifiers(const Node& node, vector<string>& attributes)
 {
     vector<string> colors = {"\"#A0FFA0\"", "\"#FFF790\""};
-    if (node.get_placement_index() < colors.size())
+    auto fc = dynamic_cast<const hybrid::op::FunctionCall*>(&node);
+    if (fc != nullptr)
+    {
+        string fill_color = colors[fc->get_function()->get_placement()];
+        string outline_color = colors[node.get_placement_index()];
+        attributes.push_back("style=filled");
+        attributes.push_back("fillcolor=" + fill_color);
+        attributes.push_back("color=" + outline_color);
+        attributes.push_back("penwidth=3");
+    }
+    else if (node.get_placement_index() < colors.size())
     {
         string color = colors[node.get_placement_index()];
         attributes.push_back("style=filled");
