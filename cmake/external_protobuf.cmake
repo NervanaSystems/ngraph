@@ -21,14 +21,15 @@ include(ExternalProject)
 # Download and install Google Protobuf ...
 #------------------------------------------------------------------------------
 
-set(PROTOBUF_GIT_REPO_URL https://github.com/google/protobuf.git)
-set(PROTOBUF_GIT_BRANCH origin/3.5.x)
+# This version of PROTOBUF is required by Microsoft ONNX Runtime.
+set(NGRAPH_PROTOBUF_GIT_REPO_URL "https://github.com/google/protobuf.git")
+set(NGRAPH_PROTOBUF_GIT_BRANCH "origin/3.5.x")
 
 ExternalProject_Add(
     ext_protobuf
     PREFIX protobuf
-    GIT_REPOSITORY ${PROTOBUF_GIT_REPO_URL}
-    GIT_TAG ${PROTOBUF_GIT_BRANCH}
+    GIT_REPOSITORY ${NGRAPH_PROTOBUF_GIT_REPO_URL}
+    GIT_TAG ${NGRAPH_PROTOBUF_GIT_BRANCH}
     UPDATE_COMMAND ""
     PATCH_COMMAND ""
     CONFIGURE_COMMAND ./autogen.sh COMMAND ./configure --prefix=${EXTERNAL_PROJECTS_ROOT}/protobuf --disable-shared CXX=${CMAKE_CXX_COMPILER} CXXFLAGS=-fPIC
