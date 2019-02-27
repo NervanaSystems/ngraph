@@ -44,10 +44,11 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | Elu | 1-6- |
 | Equal | 1-7 | 
 | Exp | 1-6- | 
-| Flatten | 1-(9) | 
+| Flatten | 1-9- | 
 | Floor | 1-6- | 
 | Gemm | 1-6-7-9 | 
-| GlobalAveragePool | 1- | 
+| GlobalAveragePool | 1- |
+| GlobalLpPool | 1-2- |
 | GlobalMaxPool | 1- | 
 | Greater | 1-7-9 | 
 | HardSigmoid | 1-6- | 
@@ -65,6 +66,7 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | Mul | 1-6-7- | 
 | Neg | 1-6- | 
 | Not | 1- | 
+| OneHot | (9) | Only static version
 | Or | 1-7- | 
 | PRelu | 1-6-7-9 |
 | Pow | 1-7- | 
@@ -109,11 +111,11 @@ opset versions starting from `1` to `6` and to the latest opset version.
 ### Lack of support in nGraph
 | Name | Opset supported | NGCORE | NGONNX | Comment |
 |------|-----------------|--------|--------|---------|
-| Erf | (9) | 284 | 442 | Need separate kernel for this in nGraph core. |
+| Erf | (9) | 284 | 489 | Need separate kernel for this in nGraph core. |
 | Pad | 1-2- | 273 | 416 | Not fully supported. |
-| LSTM | 1-7- | | 430 | Not fully supported. |
+| LSTM | 1-7- | | 476 | Mixed sequences length not supported yet. |
 | MaxUnpool | (9) | 286, 289 | 447 | |
-| LpPool | - | 291 | 437 | Unsupported by nGraph - only max/avg pooling ops. Need separate kernel. |
+| LpPool | - | 291 | 488 | Unsupported by nGraph - only max/avg pooling ops. Need separate kernel. |
 | Multinomial | - | 199 | 435 | Lack of PRNG in nGraph. |
 | RandomNormal | - | 199 | 434 | Lack of PRNG in nGraph. |
 | RandomNormalLike | - | 199 | 434 | Lack of PRNG in nGraph. |
@@ -129,7 +131,6 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | If | - | | 432 | At this moment probably impossible. |
 | IsNaN | (9) | | 440 | Hacky way is to generate constant nodes with representations of NaN and compare with them. |
 | Loop | - | | 432 | Static loops with some preconditions may be possible, however no idea how to pass graph (proto?) as a _body_ attribute. (what about graph contains `Loop`?) |
-| OneHot | (9) | | 453 | Furhter analysis needed. Unclear nGraph doc of `OneHot` op. |
 | Scan | - |  | 433 | Further analysis needed. - determine whether it is possible to import graph passed by op attribute. |
 
 ### Dynamic operators
@@ -139,9 +140,10 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | ConstantOfShape | (9) | 286 | 445 | Dynamic shape input. |
 | Expand | - | NGRAPH-3289 | 367 | Dynamic op. |
 | Gather | - | NGRAPH-3291 | 369, | Dynamic op.  |
+| OneHot | (9) | NGCORE-339 | 486 | Dynamic output shape
 | Tile | - | NGRAPH-3292 | 368 | Dynamic op. |
 | Upsample | (7) | 287 | 441 | Dynamic op. |
-| MaxRoiPool | - | 288 | 437 | Dynamic op - Need dynamic slicing. Beside just use _slice/op/concat_ pattern. |
+| MaxRoiPool | - | 288 | 487 | Dynamic op - Need dynamic slicing. Beside just use _slice/op/concat_ pattern. |
 | Reshape | 1-5- | NGRAPH-3290 | 357 | Lack of support for dynamic shape input. Only as a Constant or as an Initializer. |
 | Scatter | (9) | 289 | 446 | Dynamic indices input. |
 
@@ -150,7 +152,6 @@ opset versions starting from `1` to `6` and to the latest opset version.
 |------|-----------------|--------|--------|---------|
 | Cast | 1-6- | | 427 | Errors while casting to bool |
 | EyeLike | (9) | | 439 | Make constant node. |
-| GlobalLpPool | - | | 437 | Probably use _slice/op/concat_ pattern. |
 | Hardmax | - | | 431 | Use make constant and Argmax. See `test_ops_unary.py::test_hardmax()` |
 | LpNormalization | - | | 436 | Just an equation. Only Lp{1,2} need to be supported. |
 | InstanceNormalization | - | | 436 | Just an equation. For per channel computation may _slice/op/concat_ pattern need to be used. |

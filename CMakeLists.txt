@@ -40,8 +40,8 @@ include(var_functions)
 
 NGRAPH_GET_VERSION_LABEL()
 
-string(REGEX MATCH "([0-9?]+)\.([0-9?]+)\.([0-9?]+)" NGRAPH_VERSION_SHORT "${NGRAPH_VERSION_LABEL}")
-string(REGEX MATCH "([0-9?]+)\.([0-9?]+)" NGRAPH_API_VERSION "${NGRAPH_VERSION_LABEL}")
+string(REGEX MATCH "([0-9?]+)\\.([0-9?]+)\\.([0-9?]+)" NGRAPH_VERSION_SHORT "${NGRAPH_VERSION_LABEL}")
+string(REGEX MATCH "([0-9?]+)\\.([0-9?]+)" NGRAPH_API_VERSION "${NGRAPH_VERSION_LABEL}")
 string(REGEX MATCH "[^v](.*)" NGRAPH_VERSION "${NGRAPH_VERSION_LABEL}")
 string(REPLACE "." ";" NGRAPH_VERSION_PARTS "${NGRAPH_VERSION_SHORT}")
 list(GET NGRAPH_VERSION_PARTS 0 NGRAPH_VERSION_MAJOR)
@@ -74,6 +74,31 @@ endif()
 
 if ("${CMAKE_GENERATOR}" MATCHES "^Visual Studio.*$")
     set(MSVS TRUE)
+endif()
+
+if (APPLE AND (NOT CMAKE_OSX_SYSROOT))
+    execute_process(COMMAND sw_vers -productVersion
+        OUTPUT_VARIABLE OSX_FULL_VERSION
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+    string(REGEX REPLACE "^([0-9]+\\.[0-9]+).*$" "\\1"
+        OSX_SHORT_VERSION "${OSX_FULL_VERSION}")
+
+    if(NOT (OSX_SHORT_VERSION VERSION_LESS 10.14))
+        # Xcode is installed
+        set(XCODE_ISYSROOT /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX${OSX_SHORT_VERSION}.sdk)
+        message(STATUS "Trying Xcode sdk at ${XCODE_ISYSROOT}.")
+        if(NOT EXISTS ${XCODE_ISYSROOT})
+            # Command line tools only
+            set(XCODE_ISYSROOT /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk)
+            message(STATUS "Trying command line tool sdk at ${XCODE_ISYSROOT}.")
+            if(NOT EXISTS ${XCODE_ISYSROOT})
+                message(FATAL_ERROR "Cannot find macos sdk.")
+            endif()
+        endif()
+        message(STATUS "Setting CMAKE_OSX_SYSROOT for macos ${OSX_SHORT_VERSION} to ${XCODE_ISYSROOT}")
+        set(CMAKE_OSX_SYSROOT ${XCODE_ISYSROOT})
+    endif()
 endif()
 
 # Setup CMAKE_ARGS to be forwarded to External Projects
@@ -126,11 +151,11 @@ if (NGRAPH_GPUH_ENABLE)
 endif()
 
 if (NGRAPH_DISTRIBUTED_MLSL_ENABLE AND NGRAPH_DISTRIBUTED_OMPI_ENABLE)
-    message(FATAL_ERROR 
+    message(FATAL_ERROR
                 "Does not support the use of two distributed libraries simultaneously.\n"
                 "If CPU only backend recommend Intel MLSL by setting NGRAPH_DISTRIBUTED_MLSL_ENABLE flag to true.\n"
                 "For all other backends use OpenMPI by setting NGRAPH_DISTRIBUTED_OMPI_ENABLE flag to true.\n")
-elseif(NGRAPH_DISTRIBUTED_MLSL_ENABLE  OR NGRAPH_DISTRIBUTED_OMPI_ENABLE) 
+elseif(NGRAPH_DISTRIBUTED_MLSL_ENABLE  OR NGRAPH_DISTRIBUTED_OMPI_ENABLE)
     set(NGRAPH_DISTRIBUTED_ENABLE TRUE)
 else()
     set(NGRAPH_DISTRIBUTED_ENABLE FALSE)
@@ -311,19 +336,16 @@ if(NGRAPH_DEBUG_ENABLE)
     add_definitions(-DNGRAPH_DEBUG_ENABLE)
 endif()
 
-if(NOT (${CMAKE_VERSION} VERSION_LESS 3.6))
-    set(NGRAPH_GIT_ARGS GIT_SHALLOW 1)
-    message(STATUS "nGraph using git shallow copy.")
-endif()
-
 #-----------------------------------------------------------------------------------------------
 # External projects install directory
 #-----------------------------------------------------------------------------------------------
 
 set(NGRAPH_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/src/ngraph)
-if (WIN32)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+set(NGRAPH_LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR}/${CMAKE_CFG_INTDIR})
+if(WIN32)
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+    set(NGRAPH_ARCHIVE_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR}/${CMAKE_CFG_INTDIR})
     set(CMAKE_PDB_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 endif()
