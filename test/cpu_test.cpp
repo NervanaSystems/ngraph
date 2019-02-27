@@ -726,7 +726,7 @@ TEST(cpu_test, memory_reuse_mxnet_densenet121)
     }
 
     ngraph::pass::PassConfig pass_config;
-    pass_config.set_reuse_memory(true);
+    pass_config.set_pass_attribute("CPUMemoryAssignment::ReuseMemory", true);
     auto cpu_backend = std::unique_ptr<runtime::cpu::CPU_Backend>(
         static_cast<runtime::cpu::CPU_Backend*>(backend.release()));
 
