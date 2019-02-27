@@ -223,19 +223,27 @@ else()
         )
 endif()
 
-ExternalProject_Add_Step(
-    ext_mkldnn
-    CopyMKLDNN
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${MKLDNN_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}
-    COMMENT "Copy mkldnn runtime libraries to ngraph build directory."
-    DEPENDEES install
-    )
-
 if(WIN32)
+    ExternalProject_Add_Step(
+        ext_mkldnn
+        CopyMKLDNN
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/mkldnn/bin/${MKLDNN_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}
+        COMMENT "Copy mkldnn runtime libraries to ngraph build directory."
+        DEPENDEES install
+        )
+
     ExternalProject_Add_Step(
         ext_mkldnn
         CopyMKLDNNIMP
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${MKLDNN_IMPLIB} ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${MKLDNN_IMPLIB}
+        COMMENT "Copy mkldnn runtime libraries to ngraph build directory."
+        DEPENDEES install
+        )
+else()
+    ExternalProject_Add_Step(
+        ext_mkldnn
+        CopyMKLDNN
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/mkldnn/${CMAKE_INSTALL_LIBDIR}/${MKLDNN_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}
         COMMENT "Copy mkldnn runtime libraries to ngraph build directory."
         DEPENDEES install
         )
