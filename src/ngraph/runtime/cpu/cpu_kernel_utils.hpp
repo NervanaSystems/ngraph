@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/codegen/code_writer.hpp"
+#include "ngraph/code_writer.hpp"
 #include "ngraph/coordinate_transform.hpp"
 
 namespace ngraph
@@ -40,7 +40,7 @@ namespace ngraph
                 std::string emit_nd_sizes(CoordinateTransform& trans);
                 std::string emit_nd_index(CoordinateTransform& trans,
                                           const std::vector<std::string>& index_vars);
-                void emit_pointwise_copy(codegen::CodeWriter& writer,
+                void emit_pointwise_copy(CodeWriter& writer,
                                          const std::string& element_type,
                                          const std::string& source_buffer,
                                          const std::string& dest_buffer,

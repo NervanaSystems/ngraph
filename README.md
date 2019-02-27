@@ -10,7 +10,6 @@
 
 ## Quick start
 
-
 To begin using nGraph with popular frameworks to accelerate deep learning 
 workloads on CPU for inference, please refer to the links below. 
 
@@ -20,11 +19,21 @@ workloads on CPU for inference, please refer to the links below.
 | MXNet* 1.3                 | [Pip install](https://github.com/NervanaSystems/ngraph-mxnet#Installation) or [Build from source](https://github.com/NervanaSystems/ngraph-mxnet#building-with-ngraph-support)| 18 [Validated workloads]   
 | ONNX 1.3                   | [Pip install](https://github.com/NervanaSystems/ngraph-onnx#installation)                          | 14 [Validated workloads] 
 
-:exclamation: :exclamation: :exclamation: Note that the ``pip`` package option 
-works only with Ubuntu 16.04 or greater and Intel® Xeon® CPUs. CPUs without 
-Intel® Advanced Vector Extensions 512 (Intel® AVX-512) will not run these 
-packages; the alternative is to build from source. Wider support for other 
-CPUs will be offered starting in early 2019 :exclamation: :exclamation: :exclamation:
+
+#### Python wheels for nGraph 
+
+The Python wheels for nGraph have been tested and are supported on the following 
+64-bit systems
+
+* Ubuntu 16.04 or later
+* CentOS 7.6
+* Debian 10
+* macOS 10.14.3 (Mojave)
+
+:exclamation: Note that the ``pip`` package option works only Intel® Xeon® CPUs. 
+CPUs without Intel® Advanced Vector Extensions 512 (Intel® AVX-512) will not run 
+these packages; the alternative is to build from source. Wider support for other 
+CPUs will be offered in later releases.  
 
 Frameworks using nGraph Compiler stack to execute workloads have shown 
 [**up to 45X**](https://ai.intel.com/ngraph-compiler-stack-beta-release/) 

@@ -111,12 +111,18 @@ public:
     {
         construct_qconv_relu(true);
         construct_qconv_relu(false);
+        construct_qavg_pool();
+        construct_qmax_pool();
+        construct_qconcat();
         construct_qconvb_add();
         construct_dq_q();
     }
 
 private:
     void construct_qconv_relu(bool with_bias);
+    void construct_qavg_pool();
+    void construct_qmax_pool();
+    void construct_qconcat();
     void construct_dq_q();
     void construct_qconvb_add();
 };

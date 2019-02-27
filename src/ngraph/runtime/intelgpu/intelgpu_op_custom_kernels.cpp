@@ -135,7 +135,7 @@ string runtime::intelgpu::access_dims(const Shape& dimentions,
     return buffer.str();
 }
 
-void runtime::intelgpu::gen_func_def(codegen::CodeWriter& writer,
+void runtime::intelgpu::gen_func_def(CodeWriter& writer,
                                      const string& entry_point_name,
                                      const vector<string>& input_types,
                                      const vector<Shape>& input_shapes,
@@ -157,9 +157,8 @@ void runtime::intelgpu::gen_func_def(codegen::CodeWriter& writer,
     writer << ", __global " << output_type << " output" << array_dims(output_shape) << ")\n";
 }
 
-vector<size_t> runtime::intelgpu::generate_loops(codegen::CodeWriter& writer,
-                                                 const Shape& shape,
-                                                 bool is_begin)
+vector<size_t>
+    runtime::intelgpu::generate_loops(CodeWriter& writer, const Shape& shape, bool is_begin)
 {
     const size_t cldnn_gws_lim = 3;
     vector<size_t> gws;
@@ -200,7 +199,7 @@ vector<size_t> runtime::intelgpu::generate_loops(codegen::CodeWriter& writer,
     return gws;
 }
 
-vector<size_t> runtime::intelgpu::generate_loops_w_axes(codegen::CodeWriter& writer,
+vector<size_t> runtime::intelgpu::generate_loops_w_axes(CodeWriter& writer,
                                                         const Shape& shape,
                                                         bool is_begin,
                                                         const AxisSet& axis,
@@ -327,7 +326,7 @@ void runtime::intelgpu::do_pad_operation(cldnn::topology& topology,
 {
     const string entry_point_name = "op_pad_" + output_name;
     const size_t cldnn_gws_lim = 3;
-    codegen::CodeWriter writer;
+    CodeWriter writer;
     vector<size_t> gws;
 
     // The kernel name and parameters
@@ -413,7 +412,7 @@ void runtime::intelgpu::do_pad_operation(cldnn::topology& topology,
     topology.add(op_pad);
 }
 
-static void gen_window_loop(codegen::CodeWriter& writer,
+static void gen_window_loop(CodeWriter& writer,
                             const Shape& output_shape,
                             const Shape& win_shape,
                             const Shape& win_stride,
@@ -471,26 +470,31 @@ void runtime::intelgpu::do_max_pool_backprop_operation(cldnn::topology& topology
                                                        const Shape& pad_below)
 {
     const string entry_point_name = "op_max_pool_backprop_" + output_name;
+    const string type_name = get_opencl_type_name(output_type);
     const Shape delta_data(delta_shape.cbegin() + 2, delta_shape.cend());
     const Shape output_data(output_shape.cbegin() + 2, output_shape.cend());
-    codegen::CodeWriter writer;
+    CodeWriter writer;
     vector<size_t> gws;
 
     // The kernel name and parameters
-    gen_func_def(
-        writer, entry_point_name, {2, "float"}, {input_shape, delta_shape}, "float", output_shape);
+    gen_func_def(writer,
+                 entry_point_name,
+                 {2, type_name},
+                 {input_shape, delta_shape},
+                 type_name,
+                 output_shape);
 
     writer.block_begin();
     {
         // Main loop over delta input array
         writer << "const uint i0 = get_global_id(0);";
         gws.push_back(delta_shape.at(0));
-        writer << "// for (uint i0 = 0; i0 < " << delta_shape.at(0) << "; ++i0)\n";
+        writer << "/*trip count " << delta_shape.at(0) << "*/\n";
         writer.block_begin();
         {
             writer << "const uint i1 = get_global_id(1);";
             gws.push_back(delta_shape.at(1));
-            writer << "// for (uint i1 = 0; i1 < " << delta_shape.at(1) << "; ++i1)\n";
+            writer << "/*trip count " << delta_shape.at(1) << "*/\n";
             writer.block_begin();
             {
                 // Initialization output
@@ -509,7 +513,7 @@ void runtime::intelgpu::do_max_pool_backprop_operation(cldnn::topology& topology
                 {
                     writer << "[j" << i << "]";
                 }
-                writer << " = 0.0f;\n";
+                writer << " = 0;\n";
 
                 // Closing brackets for Initialization loop
                 for (auto const& i : output_data)
@@ -533,7 +537,9 @@ void runtime::intelgpu::do_max_pool_backprop_operation(cldnn::topology& topology
                 {
                     writer << "uint save_i" << i + 2 << " = 0;\n";
                 }
-                writer << "float max_elem = FLT_MIN;\n"
+                writer << type_name
+                       << " max_elem = " << get_opencl_type_min_max_value(output_type, true)
+                       << ";\n"
                        << "uint elem_exists = 0;\n";
 
                 // Loop over window shape
@@ -541,7 +547,7 @@ void runtime::intelgpu::do_max_pool_backprop_operation(cldnn::topology& topology
                 gen_window_loop(writer, output_shape, win_shape, win_stride, pad_below, true);
 
                 {
-                    writer << "const float max_local = input0[i0][i1]";
+                    writer << "const " << type_name << " max_local = input0[i0][i1]";
                     // additional dimensions for input
                     for (size_t i = 0; i < win_shape.size(); ++i)
                     {
@@ -606,6 +612,169 @@ void runtime::intelgpu::do_max_pool_backprop_operation(cldnn::topology& topology
     topology.add(op_max_pool_backprop);
 }
 
+void runtime::intelgpu::do_max_avg_pool_operation(cldnn::topology& topology,
+                                                  const string& input_name,
+                                                  const Shape& input_shape,
+                                                  const string& output_name,
+                                                  const Shape& output_shape,
+                                                  const element::Type& output_type,
+                                                  const Shape& win_shape,
+                                                  const Shape& win_stride,
+                                                  const Shape& pad_below,
+                                                  bool include_padding,
+                                                  const string& def_val,
+                                                  bool is_max_pool)
+{
+    const string entry_point_name = "op_pool_" + to_string(is_max_pool) + "_" + output_name;
+    const string type_name = get_opencl_type_name(output_type);
+    const string init_accumulator = is_max_pool ? "-FLT_MAX" : def_val;
+    CodeWriter writer;
+    vector<size_t> gws;
+
+    const Shape input_data(input_shape.cbegin() + 2, input_shape.cend());
+    const Shape output_data(output_shape.cbegin() + 2, output_shape.cend());
+
+    // The kernel name and parameters
+    gen_func_def(writer, entry_point_name, {type_name}, {input_shape}, type_name, output_shape);
+
+    writer.block_begin();
+    { // Main function body
+
+        writer << "//Window:" << win_shape << " Stride: " << win_stride << "\n"
+               << "//padding included:" << include_padding << "\n"
+               << "//init value:" << def_val << "\n\n";
+
+        writer << "const uint N_dim = get_global_id(0);/*trip count " << input_shape.at(0)
+               << "*/\n";
+        gws.push_back(output_shape.at(0));
+        writer << "const uint C_dim = get_global_id(1);/*trip count " << input_shape.at(1)
+               << "*/\n";
+        gws.push_back(output_shape.at(1));
+
+        // Loops over output dimensions
+        size_t var_idx = 0;
+        for (auto i = output_data.begin(); i != output_data.end(); ++i)
+        {
+            writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << *i << "; ++i"
+                   << var_idx << ")\n";
+            writer.block_begin();
+
+            ++var_idx;
+        }
+
+        writer << type_name << " accumulator = " << init_accumulator << ";\n"
+               << "uint element_count = 0;\n\n";
+
+        // Loop over window
+        writer << "// Over window iterations\n";
+
+        var_idx = 0;
+        for (auto const i : win_shape)
+        {
+            writer << "for (uint f" << var_idx << " = 0; f" << var_idx << " < " << i << "; ++f"
+                   << var_idx << ")\n";
+            writer.block_begin();
+
+            writer << "uint input_idx" << var_idx << " = (i" << var_idx << " * "
+                   << win_stride.at(var_idx) << " /*win_stride*/"
+                   << ") + (f" << var_idx << ")"
+                   << " - " << pad_below.at(var_idx) << " /*pad_below*/;\n";
+            ++var_idx;
+        }
+
+        // Generate conditionals
+        writer << "if (";
+        var_idx = 0;
+        for (auto const& i : input_data)
+        {
+            if (var_idx)
+            {
+                writer << " && ";
+            }
+
+            writer << "(input_idx" << var_idx << " < " << i << ")";
+
+            ++var_idx;
+        }
+        writer << ")\n";
+        writer.block_begin();
+        {
+            // Output element calculation
+            if (is_max_pool)
+            {
+                writer << "accumulator = max(accumulator, input0[N_dim][C_dim]"
+                       << access_dims(win_shape, "input_idx") << ");\n";
+            }
+            else
+            {
+                writer << "accumulator += input0[N_dim][C_dim]"
+                       << access_dims(win_shape, "input_idx") << ";\n";
+            }
+            writer << "++element_count;\n";
+        }
+        writer.block_end();
+
+        if (include_padding)
+        {
+            writer << "else\n";
+            writer.block_begin();
+            {
+                // Output element calculation
+                writer << "accumulator += " << def_val << ";\n"
+                       << "++element_count;\n";
+            }
+            writer.block_end();
+        }
+
+        // End of conditional generation
+
+        // Closing brackets for window loop
+        for (auto const& i : win_shape)
+        {
+            writer.block_end();
+        }
+
+        writer << "\nif (element_count)\n";
+        writer.block_begin();
+        {
+            writer << "output[N_dim][C_dim]" << access_dims(output_data) << " = accumulator";
+            if (!is_max_pool)
+            {
+                writer << " / element_count";
+            }
+            writer << ";\n";
+        }
+        writer.block_end();
+
+        writer << "else\n";
+        writer.block_begin();
+        {
+            writer << "output[N_dim][C_dim]" << access_dims(output_data) << " = "
+                   << init_accumulator << ";\n";
+        }
+        writer.block_end();
+
+        // Closing brackets for output dimensions
+        for (const auto i : output_data)
+        {
+            writer.block_end();
+        }
+
+    } // Main function body
+    writer.block_end();
+
+    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const cldnn::custom_gpu_primitive op_avg_pool(output_name,
+                                                  {input_name},
+                                                  {writer.get_code()},
+                                                  entry_point_name,
+                                                  get_kernel_args(1, 1),
+                                                  "",
+                                                  layout,
+                                                  gws);
+    topology.add(op_avg_pool);
+}
+
 void runtime::intelgpu::do_avg_pool_backprop_operation(cldnn::topology& topology,
                                                        const string& delta_name,
                                                        const Shape& delta_shape,
@@ -618,7 +787,8 @@ void runtime::intelgpu::do_avg_pool_backprop_operation(cldnn::topology& topology
                                                        const bool include_padding)
 {
     const string entry_point_name = "op_avg_pool_backprop_" + output_name;
-    codegen::CodeWriter writer;
+    const string type_name = get_opencl_type_name(output_type);
+    CodeWriter writer;
     vector<size_t> gws;
 
     const Shape delta_data(delta_shape.cbegin() + 2, delta_shape.cend());
@@ -627,22 +797,22 @@ void runtime::intelgpu::do_avg_pool_backprop_operation(cldnn::topology& topology
     size_t win_elems_size = shape_size<Shape>(win_shape);
 
     // The kernel name and parameters
-    gen_func_def(writer, entry_point_name, {"float"}, {delta_shape}, "float", output_shape);
+    gen_func_def(writer, entry_point_name, {type_name}, {delta_shape}, type_name, output_shape);
 
     writer.block_begin();
     {
         writer << "size_t win_elems_size = " << win_elems_size << ";\n";
-        writer << "float computed_val = 0.0f;\n";
+        writer << type_name << " computed_val = 0.0;\n";
 
         // Main loop over delta input array
         writer << "const uint i0 = get_global_id(0);";
         gws.push_back(delta_shape.at(0));
-        writer << "// for (uint i0 = 0; i0 < " << delta_shape.at(0) << "; ++i0)\n";
+        writer << "/*trip count " << delta_shape.at(0) << "*/\n";
         writer.block_begin();
         {
             writer << "const uint i1 = get_global_id(1);";
             gws.push_back(delta_shape.at(1));
-            writer << "// for (uint i1 = 0; i1 < " << delta_shape.at(1) << "; ++i1)\n";
+            writer << "/*trip count " << delta_shape.at(1) << "*/\n";
             writer.block_begin();
             {
                 // Initialization output
@@ -661,7 +831,7 @@ void runtime::intelgpu::do_avg_pool_backprop_operation(cldnn::topology& topology
                 {
                     writer << "[j" << i << "]";
                 }
-                writer << " = 0.0f;\n";
+                writer << " = 0;\n";
 
                 // Closing brackets for Initialization loop
                 for (auto const& i : output_data)
@@ -757,7 +927,7 @@ void runtime::intelgpu::do_dot_operation(cldnn::topology& topology,
     const size_t input0_axes = input0_shape.size() - reduction_axes_count;
     size_t var_idx = reduction_axes_count;
     Shape reduction_shape;
-    codegen::CodeWriter writer;
+    CodeWriter writer;
     vector<size_t> gws;
 
     for (auto it = input1_shape.begin(); (it != input1_shape.end()) && (var_idx > 0); ++it)
@@ -874,7 +1044,7 @@ void runtime::intelgpu::do_slice_operation(cldnn::topology& topology,
 {
     const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
     const string entry_point_name = "slice_" + output_name;
-    codegen::CodeWriter writer;
+    CodeWriter writer;
     vector<size_t> gws;
 
     gen_func_def(writer,
@@ -921,7 +1091,7 @@ void runtime::intelgpu::do_select_operation(cldnn::topology& topology,
 {
     const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
     const string entry_point_name = "select_" + output_name;
-    codegen::CodeWriter writer;
+    CodeWriter writer;
     vector<size_t> gws;
 
     gen_func_def(writer,
@@ -969,7 +1139,7 @@ void runtime::intelgpu::do_logic_kernel(cldnn::topology& topology,
 {
     const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
     const string entry_point_name = "logic_" + output_name;
-    codegen::CodeWriter writer;
+    CodeWriter writer;
     vector<size_t> gws;
 
     gen_func_def(writer,
@@ -1017,7 +1187,7 @@ void runtime::intelgpu::do_eltwise_kernel(cldnn::topology& topology,
 {
     const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
     const string entry_point_name = "eltwise_" + output_name;
-    codegen::CodeWriter writer;
+    CodeWriter writer;
     vector<size_t> gws;
 
     gen_func_def(writer,
@@ -1080,7 +1250,7 @@ void runtime::intelgpu::do_reverse_operation(cldnn::topology& topology,
 {
     const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
     const string entry_point_name = "reverse_" + output_name;
-    codegen::CodeWriter writer;
+    CodeWriter writer;
     vector<size_t> gws;
 
     gen_func_def(writer, entry_point_name, {"float"}, {input_shape}, "float", output_shape);
@@ -1116,7 +1286,7 @@ void runtime::intelgpu::do_not_operation(cldnn::topology& topology,
 {
     const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
     const string entry_point_name = "logic_" + output_name;
-    codegen::CodeWriter writer;
+    CodeWriter writer;
     vector<size_t> gws;
 
     gen_func_def(writer, entry_point_name, {"char"}, {input_shape}, "char", output_shape);
@@ -1154,7 +1324,7 @@ void runtime::intelgpu::do_one_hot_operation(cldnn::topology& topology,
 {
     const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
     const string entry_point_name = "one_hot_" + output_name;
-    codegen::CodeWriter writer;
+    CodeWriter writer;
     vector<size_t> gws;
 
     gen_func_def(writer,
@@ -1219,7 +1389,7 @@ void runtime::intelgpu::do_convert_operation(cldnn::topology& topology,
     const string entry_point_name = "convert_" + output_name;
     const string& input_type_name = get_opencl_type_name(input_type);
     const string& output_type_name = get_opencl_type_name(output_type);
-    codegen::CodeWriter writer;
+    CodeWriter writer;
     vector<size_t> gws;
 
     gen_func_def(
@@ -1257,7 +1427,7 @@ void runtime::intelgpu::do_sigmoid_backprop_operation(cldnn::topology& topology,
                                                       const element::Type& output_type)
 {
     const string entry_point_name = "op_sigmoid_backprop_" + output_name;
-    codegen::CodeWriter writer;
+    CodeWriter writer;
     vector<size_t> gws;
 
     gen_func_def(
@@ -1299,7 +1469,7 @@ void runtime::intelgpu::do_custom_unary_operation(cldnn::topology& topology,
 {
     const string entry_point_name = "op_custom_unary_" + output_name;
     const string intermidiate_type = input_type.size() < 8 ? "float" : "double";
-    codegen::CodeWriter writer;
+    CodeWriter writer;
     vector<size_t> gws;
 
     gen_func_def(writer,
@@ -1318,7 +1488,7 @@ void runtime::intelgpu::do_custom_unary_operation(cldnn::topology& topology,
 
         // do the operation with the same type
         writer << intermidiate_type << " output_var = " << operation_name
-               << "(input_var); //Type: " << get_opencl_type_name(input_type) << "\n";
+               << "; //Type: " << get_opencl_type_name(input_type) << "\n";
 
         // convert to destination type
         writer << "output" << access_dims(output_shape) << " = convert_"
@@ -1352,7 +1522,7 @@ void runtime::intelgpu::do_arg_max_min_operation(cldnn::topology& topology,
 {
     const string operation_name = is_max ? "max" : "min";
     const string entry_point_name = "op_arg_" + operation_name + "_" + output_name;
-    codegen::CodeWriter writer;
+    CodeWriter writer;
     vector<size_t> gws;
 
     const string operation_sign = is_max ? " > " : " < ";
@@ -1434,7 +1604,7 @@ void runtime::intelgpu::do_reshape_operation(cldnn::topology& topology,
     const string& input_type_name = get_opencl_type_name(input_type);
     const string& output_type_name = get_opencl_type_name(output_type);
     const size_t dst_shape_size = shape_size(output_shape);
-    codegen::CodeWriter writer;
+    CodeWriter writer;
 
     gen_func_def(writer,
                  entry_point_name,
@@ -1498,7 +1668,7 @@ void runtime::intelgpu::do_quantize_operation(cldnn::topology& topology,
     const string entry_point_name = "quantize_" + output_name;
     const string real_type_str = get_opencl_type_name(input0_type);
     const string quant_type_str = get_opencl_type_name(output_type);
-    codegen::CodeWriter writer;
+    CodeWriter writer;
     vector<size_t> gws;
 
     gen_func_def(writer,
@@ -1626,7 +1796,7 @@ void runtime::intelgpu::do_dequantize_operation(cldnn::topology& topology,
 {
     const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
     const string entry_point_name = "dequantize_" + output_name;
-    codegen::CodeWriter writer;
+    CodeWriter writer;
     vector<size_t> gws;
 
     gen_func_def(writer,
