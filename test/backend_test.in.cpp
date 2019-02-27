@@ -1204,6 +1204,23 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_zero_length_1d_middle)
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), read_vector<float>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, concat_zero_zero)
+{
+    Shape shape{0};
+    auto constant_1 = op::Constant::create(element::f32, shape, {1});
+    auto concat_1 = make_shared<op::Concat>(NodeVector{constant_1, constant_1}, 0);
+
+    auto f = make_shared<Function>(concat_1, ParameterVector{});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    auto result = backend->create_tensor(element::f32, shape);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {});
+
+    EXPECT_EQ(vector<float>{}, read_vector<float>(result));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, concat_zero_length_4d_middle)
 {
     Shape shape_a{2, 2, 1, 1};
