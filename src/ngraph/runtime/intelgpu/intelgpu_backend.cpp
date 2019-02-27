@@ -609,8 +609,15 @@ shared_ptr<runtime::Executable>
                 }
             }
 
-            const cldnn::concatenation cldnn_concat(get_output_name(op), inputs, cldnn_axis);
-            topology.add(cldnn_concat);
+            if (inputs.empty())
+            {
+                do_equal_propagation(topology, get_input_name(op), get_output_name(op));
+            }
+            else
+            {
+                const cldnn::concatenation cldnn_concat(get_output_name(op), inputs, cldnn_axis);
+                topology.add(cldnn_concat);
+            }
             break;
         }
         case OP_TYPEID::Softmax:
