@@ -16,29 +16,8 @@
 
 #pragma once
 
-#include "core/node.hpp"
-#include "ngraph/node_vector.hpp"
-#include "ngraph/op/or.hpp"
-#include "utils/broadcasting.hpp"
+#include <pybind11/pybind11.h>
 
-namespace ngraph
-{
-    namespace onnx_import
-    {
-        namespace op
-        {
-            namespace set_1
-            {
-                inline NodeVector logical_or(const Node& node)
-                {
-                    NodeVector ng_inputs{numpy_style_broadcast(node.get_ng_inputs())};
-                    return {std::make_shared<ngraph::op::Or>(ng_inputs.at(0), ng_inputs.at(1))};
-                }
+namespace py = pybind11;
 
-            } // namespace set_1
-
-        } //namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+void regclass_pyngraph_op_Passthrough(py::module m);

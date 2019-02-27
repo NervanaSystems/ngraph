@@ -16,7 +16,7 @@
 
 #include <CPP/custom_gpu_primitive.hpp>
 
-#include "ngraph/runtime/intelgpu/code_writer.hpp"
+#include "ngraph/code_writer.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_func_call.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
@@ -37,7 +37,7 @@ void runtime::intelgpu::do_all_any_op(cldnn::topology& topology,
     const string entry_point_name = "custom_op_all_any_" + output_name;
     const string kernel_type_name = get_opencl_type_name(output_type);
     const size_t input_size = shape_size<Shape>(input0_shape);
-    codegen::CodeWriter writer;
+    CodeWriter writer;
 
     // The kernel name and parameters
     gen_func_def(writer,

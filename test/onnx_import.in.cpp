@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <fstream>
@@ -2051,6 +2052,65 @@ TEST(onnx_${BACKEND_NAME}, model_sign)
     Outputs expected_outputs{std::vector<float>{-1.0f, -1.0f, 0.0f, 1.0f, 1.0f}};
 
     Outputs outputs{execute<float>(function, inputs, "${BACKEND_NAME}")};
+
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p0)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/global_lp_pool_p0.onnx"));
+
+    std::vector<std::vector<std::int64_t>> inputs{std::vector<std::int64_t>{
+        1, 0, -4, 0, 2, 1, -6, 1, 0, 0, 0, 0, -7, 1, -1, 0, -1, 8, 0, 10, 9, 0, 0, 5}};
+
+    std::vector<std::vector<std::int64_t>> expected_outputs{std::vector<std::int64_t>{6, 8}};
+
+    std::vector<std::vector<std::int64_t>> outputs{execute(function, inputs, "${BACKEND_NAME}")};
+
+    EXPECT_TRUE(test::all_close(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p1)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/global_lp_pool_p1.onnx"));
+
+    Inputs inputs{std::vector<float>(2 * 3 * 4)};
+    std::iota(std::begin(inputs.front()), std::end(inputs.front()), 0.f);
+
+    Outputs expected_outputs{std::vector<float>{66.f, 210.f}};
+
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p2)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/global_lp_pool_p2.onnx"));
+
+    Inputs inputs{std::vector<float>(2 * 3 * 4)};
+    std::iota(std::begin(inputs.front()), std::end(inputs.front()), 0.f);
+
+    Outputs expected_outputs{std::vector<float>{22.494444f, 61.789967f}};
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p3)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/global_lp_pool_p3.onnx"));
+
+    Inputs inputs{std::vector<float>(2 * 3 * 4)};
+    std::iota(std::begin(inputs.front()), std::end(inputs.front()), 0.f);
+
+    Outputs expected_outputs{std::vector<float>{16.331620904278438f, 41.56697946707537f}};
+
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
 
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
