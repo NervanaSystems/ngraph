@@ -22,14 +22,14 @@ include(ExternalProject)
 #------------------------------------------------------------------------------
 
 # This version of PROTOBUF is required by Microsoft ONNX Runtime.
-set(NGRAPH_PROTOBUF_GIT_REPO_URL "https://github.com/google/protobuf.git")
-set(NGRAPH_PROTOBUF_GIT_BRANCH "origin/3.5.x")
+set(NGRAPH_PROTOBUF_GIT_REPO_URL "https://github.com/protocolbuffers/protobuf")
+set(NGRAPH_PROTOBUF_GIT_TAG "v3.5.2")
 
 ExternalProject_Add(
     ext_protobuf
     PREFIX protobuf
     GIT_REPOSITORY ${NGRAPH_PROTOBUF_GIT_REPO_URL}
-    GIT_TAG ${NGRAPH_PROTOBUF_GIT_BRANCH}
+    GIT_TAG ${NGRAPH_PROTOBUF_GIT_TAG}
     UPDATE_COMMAND ""
     PATCH_COMMAND ""
     CONFIGURE_COMMAND ./autogen.sh COMMAND ./configure --prefix=${EXTERNAL_PROJECTS_ROOT}/protobuf --disable-shared CXX=${CMAKE_CXX_COMPILER} CXXFLAGS=-fPIC
