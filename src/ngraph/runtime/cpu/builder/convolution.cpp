@@ -188,7 +188,7 @@ namespace ngraph
                 auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
                 auto& arg3_tensor = external_function->get_tensor_data(args[3].get_name());
                 auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
-                size_t arg3_size = args[3].get_size();
+                size_t arg3_size = node->get_inputs()[3].get_tensor().size();
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -229,7 +229,7 @@ namespace ngraph
                 auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
                 auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
                 auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
-                size_t arg2_size = args[2].get_size();
+                size_t arg2_size = node->get_inputs()[2].get_tensor().size();
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
