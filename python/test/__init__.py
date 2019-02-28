@@ -16,5 +16,5 @@
 
 # test.BACKEND_NAME is a configuration variable determining which
 # nGraph backend tests will use. It's set during pytest configuration time.
-# See `pytest_configure` in `conftest.py` for more details.
+# See `pytest_configure` hook in `conftest.py` for more details.
 BACKEND_NAME = None
