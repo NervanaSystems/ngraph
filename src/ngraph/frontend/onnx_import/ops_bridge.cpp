@@ -218,7 +218,7 @@ namespace ngraph
             REGISTER_OPERATOR("Abs", 1, abs);
             REGISTER_OPERATOR("Acos", 1, acos);
             REGISTER_OPERATOR("Acosh", 1, acosh);
-            REGISTER_OPERATOR("Add", 1, add);
+            REGISTER_OPERATOR("Add", 1, sub);
             REGISTER_OPERATOR("Add", 7, add);
             REGISTER_OPERATOR("And", 1, logical_and);
             REGISTER_OPERATOR("ArgMin", 1, argmin);
