@@ -59,7 +59,7 @@ set(SRC
     zero_dim_tensor_elimination.cpp
 )
 
-if(NGRAPH_TOOLS_ENABLE)
+if(NOT WIN32 AND NGRAPH_TOOLS_ENABLE)
     list(APPEND SRC tools.cpp)
 endif()
 
@@ -241,7 +241,7 @@ endif()
 
 if (NGRAPH_INTERPRETER_ENABLE)
     target_compile_definitions(unit-test PRIVATE NGRAPH_INTERPRETER_ENABLE)
-    target_link_libraries(unit-test PRIVATE interpreter_backend hybrid_base)
+    target_link_libraries(unit-test PRIVATE interpreter_backend)
 endif()
 
 if (NGRAPH_GPU_ENABLE)

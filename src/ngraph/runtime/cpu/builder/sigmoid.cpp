@@ -42,15 +42,17 @@ namespace ngraph
                 auto out_shape = out[0].get_shape();
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                auto out_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-
-                auto sigmoid_index = mkldnn_emitter->build_sigmoid_forward(input_desc, out_desc);
-
+                auto sigmoid_desc = mkldnn_emitter->get_sigmoid_forward_desc(node, false);
+                // Sigmoid needs 3 primitives: input, result, and eltwise_forward.
+                auto sigmoid_index = mkldnn_emitter->reserve_primitive_space(3);
                 auto& deps = mkldnn_emitter->get_primitive_deps(sigmoid_index);
 
-                auto functor = [&, sigmoid_index](CPURuntimeContext* ctx,
-                                                  CPUExecutionContext* ectx) {
+                auto functor = [&, sigmoid_desc, sigmoid_index](CPURuntimeContext* ctx,
+                                                                CPUExecutionContext* ectx) {
+                    if (ctx->first_iteration)
+                    {
+                        mkldnn_emitter->build_sigmoid_forward(sigmoid_desc, sigmoid_index);
+                    }
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
                     cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, sigmoid_index);
@@ -72,17 +74,18 @@ namespace ngraph
                 auto out_shape = out[0].get_shape();
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-
-                auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                auto delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
-                auto out_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-
-                size_t sigmoid_index =
-                    mkldnn_emitter->build_sigmoid_backward(input_desc, delta_desc, out_desc);
-
+                auto fwd_desc = mkldnn_emitter->get_sigmoid_forward_desc(node, true);
+                auto bwd_desc = mkldnn_emitter->get_sigmoid_backward_desc(node);
+                // SigmoidBackprop needs 4 primitives: input, delta, result, and eltwise_backward.
+                size_t sigmoid_index = mkldnn_emitter->reserve_primitive_space(4);
                 auto& deps = mkldnn_emitter->get_primitive_deps(sigmoid_index);
-                auto functor = [&, sigmoid_index](CPURuntimeContext* ctx,
-                                                  CPUExecutionContext* ectx) {
+
+                auto functor = [&, bwd_desc, fwd_desc, sigmoid_index](CPURuntimeContext* ctx,
+                                                                      CPUExecutionContext* ectx) {
+                    if (ctx->first_iteration)
+                    {
+                        mkldnn_emitter->build_sigmoid_backward(bwd_desc, fwd_desc, sigmoid_index);
+                    }
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out_tensor);

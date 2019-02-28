@@ -75,6 +75,7 @@
 #include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/parameter.hpp"
+#include "ngraph/op/passthrough.hpp"
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
@@ -943,6 +944,22 @@ static shared_ptr<ngraph::Function>
                     make_shared<op::Parameter>(element_type, read_partial_shape(shape), cacheable);
                 break;
             }
+            case OP_TYPEID::Passthrough:
+            {
+                std::vector<json> outputs_js = node_js.at("output_shapes");
+                std::vector<std::tuple<element::Type, PartialShape>> outputs;
+                for (auto output_js : outputs_js)
+                {
+                    outputs.emplace_back(read_element_type(output_js.at("element_type")),
+                                         read_partial_shape(output_js.at("shape")));
+                }
+                node = make_shared<op::Passthrough>(node_js.at("logical_type"),
+                                                    node_js.at("language"),
+                                                    node_js.at("function"),
+                                                    args,
+                                                    std::move(outputs));
+                break;
+            }
             case OP_TYPEID::Power:
             {
                 node = make_shared<op::Power>(args[0], args[1]);
@@ -1176,12 +1193,8 @@ static shared_ptr<ngraph::Function>
                 node->add_control_dependency(node_map.at(name));
             }
 
+            node->set_friendly_name(node_name);
             node_map[node_name] = node;
-
-            // Typically, it could be unsafe to change the name of a node since it may break nameing
-            // uniqueness. However, it could sometimes be helpful to use the original name from
-            // the serialization for debugging.
-            // node->set_name(node_name);
         }
         catch (...)
         {
@@ -1238,7 +1251,7 @@ static shared_ptr<ngraph::Function>
 static json write(const Node& n, bool binary_constant_data)
 {
     json node;
-    node["name"] = n.get_name();
+    node["name"] = n.get_friendly_name();
     node["op"] = n.description();
     // TODO Multiple outputs
     json inputs = json::array();
@@ -1554,6 +1567,23 @@ static json write(const Node& n, bool binary_constant_data)
         node["shape"] = write_partial_shape(tmp->get_output_partial_shape(0));
         node["cacheable"] = tmp->get_cacheable();
         node["element_type"] = write_element_type(tmp->get_element_type());
+        break;
+    }
+    case OP_TYPEID::Passthrough:
+    {
+        auto tmp = dynamic_cast<const op::Passthrough*>(&n);
+        node["logical_type"] = tmp->logical_type();
+        node["language"] = tmp->language();
+        node["function"] = tmp->function();
+        std::vector<json> outputs_js;
+        for (const auto& output_shape : tmp->output_shapes())
+        {
+            json output_js;
+            output_js["element_type"] = write_element_type(std::get<0>(output_shape));
+            output_js["shape"] = write_partial_shape(std::get<1>(output_shape));
+            outputs_js.emplace_back(std::move(output_js));
+        }
+        node["output_shapes"] = std::move(outputs_js);
         break;
     }
     case OP_TYPEID::Product:

@@ -61,6 +61,7 @@
 #include "pyngraph/ops/or.hpp"
 #include "pyngraph/ops/pad.hpp"
 #include "pyngraph/ops/parameter.hpp"
+#include "pyngraph/ops/passthrough.hpp"
 #include "pyngraph/ops/power.hpp"
 #include "pyngraph/ops/product.hpp"
 #include "pyngraph/ops/relu.hpp"

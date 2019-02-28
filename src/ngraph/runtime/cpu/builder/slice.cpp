@@ -84,17 +84,22 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-
-                    auto slice_index = mkldnn_emitter->build_slice(
-                        input_desc, result_desc, lower_bounds, out_shape);
+                    // Slice needs 3 primitives: input, result, and reorder.
+                    auto slice_index = mkldnn_emitter->reserve_primitive_space(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(slice_index);
 
-                    auto functor = [&, slice_index](CPURuntimeContext* ctx,
-                                                    CPUExecutionContext* ectx) {
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, slice_index);
-                    };
+                    auto functor =
+                        [&, input_desc, result_desc, lower_bounds, out_shape, slice_index](
+                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                            if (ctx->first_iteration)
+                            {
+                                mkldnn_emitter->build_slice(
+                                    input_desc, result_desc, lower_bounds, out_shape, slice_index);
+                            }
+                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg_tensor);
+                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
+                            cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, slice_index);
+                        };
 
                     functors.emplace_back(functor);
                 }
