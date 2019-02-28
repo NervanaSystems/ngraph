@@ -5,8 +5,8 @@ nGraph Library for backends
 ###########################
 
 This section details how to build the C++ version of the nGraph Library, which 
-is targeted towared developers working on kernel-specific operations / optimizations 
-for their custom backends. 
+is targeted toward developers working on kernel-specific operations, 
+optimizations, or on deep learning solutions that leverage custom backends. 
 
 * :ref:`ubuntu`
 * :ref:`centos`
