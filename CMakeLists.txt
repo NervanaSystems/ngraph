@@ -159,7 +159,7 @@ if (NGRAPH_DISTRIBUTED_ENABLE)
             set(NGRAPH_DISTRIBUTED_MLSL_ENABLE TRUE)
         else()
             message(FATAL_ERROR
-                    "-DNGRAPH_DISTRIBUTED_ENABLE=MLSL can be used when Intel CPU backend is only enabled.\n"
+                    "-DNGRAPH_DISTRIBUTED_ENABLE=MLSL to be used, if Intel CPU is the only backend enabled.\n"
                     "Use -DNGRAPH_DISTRIBUTED_ENABLE=OMPI for all other situations.\n")
         endif()
     elseif("${NGRAPH_DISTRIBUTED_ENABLE}" STREQUAL  "OMPI")
