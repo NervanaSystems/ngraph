@@ -23,6 +23,7 @@
 
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
+#include "ngraph/runtime/cpu/cpu_mkl_allocator.hpp"
 #include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
@@ -57,7 +58,10 @@ namespace ngraph
                 CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction> external_function,
                               InitContextFuncCG compiled_init_ctx_func,
                               DestroyContextFuncCG compiled_destroy_ctx_func,
-                              EntryPoint compiled_function);
+                              EntryPoint compiled_function,
+                              AllocateFunc& framework_allocator,
+                              DestroyFunc& framework_deallocator);
+
                 ~CPU_CallFrame();
 
                 /// \brief Invoke the function with values matching the signature of the function.
@@ -84,6 +88,10 @@ namespace ngraph
                 std::shared_ptr<CPU_ExternalFunction> m_external_function;
 
                 CPURuntimeContext* ctx = nullptr;
+
+                // memeber function pointers to hold the framework allocators
+                AllocateFunc m_framework_allocator;
+                DestroyFunc m_framework_deallocator;
 
                 /* Codegen specific */
 

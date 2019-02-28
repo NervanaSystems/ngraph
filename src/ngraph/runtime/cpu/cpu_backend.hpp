@@ -22,6 +22,7 @@
 #include "cpu_backend_visibility.h"
 #include "ngraph/pass/pass_config.hpp"
 #include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/cpu/cpu_mkl_allocator.hpp"
 
 namespace ngraph
 {
@@ -37,7 +38,9 @@ namespace ngraph
             public:
                 std::shared_ptr<CPU_CallFrame>
                     make_call_frame(const std::shared_ptr<CPU_ExternalFunction>& external_function,
-                                    ngraph::pass::PassConfig& pass_config);
+                                    ngraph::pass::PassConfig& pass_config,
+                                    AllocateFunc& framework_allocator,
+                                    DestroyFunc& framework_deallocator);
 
                 std::shared_ptr<ngraph::runtime::Tensor>
                     create_tensor(const ngraph::element::Type& element_type,
@@ -55,7 +58,9 @@ namespace ngraph
                 std::shared_ptr<ngraph::runtime::Executable>
                     compile(std::shared_ptr<Function> func,
                             ngraph::pass::PassConfig& pass_config,
-                            bool enable_performance_counters = false);
+                            bool enable_performance_counters = false,
+                            AllocateFunc framework_allocator = nullptr,
+                            DestroyFunc framework_deallocator = nullptr);
 
                 void remove_compiled_function(std::shared_ptr<Executable> exec) override;
 
@@ -72,7 +77,9 @@ namespace ngraph
             public:
                 CPU_Executable(std::shared_ptr<Function> func,
                                ngraph::pass::PassConfig& pass_config,
-                               bool performance_counters_enabled);
+                               bool performance_counters_enabled,
+                               AllocateFunc& framework_allocator,
+                               DestroyFunc& framework_deallocator);
                 bool call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                           const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
 

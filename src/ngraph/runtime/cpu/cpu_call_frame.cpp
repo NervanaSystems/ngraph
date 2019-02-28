@@ -33,8 +33,12 @@ using namespace ngraph;
 runtime::cpu::CPU_CallFrame::CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction> external_function,
                                            InitContextFuncCG compiled_init_ctx_func,
                                            DestroyContextFuncCG compiled_destroy_ctx_func,
-                                           EntryPoint compiled_function)
+                                           EntryPoint compiled_function,
+                                           AllocateFunc& framework_allocator,
+                                           DestroyFunc& framework_deallocator)
     : m_external_function(external_function)
+    , m_framework_allocator(framework_allocator)
+    , m_framework_deallocator(framework_deallocator)
     , m_compiled_init_ctx_func(compiled_init_ctx_func)
     , m_compiled_destroy_ctx_func(compiled_destroy_ctx_func)
     , m_compiled_function(compiled_function)
@@ -140,8 +144,10 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
 
     // Create temporary buffer pools
     size_t alignment = runtime::cpu::CPU_ExternalFunction::s_memory_pool_alignment;
-    ngraph::runtime::cpu::CPUAllocator::framework_allocator = nullptr;
-    ngraph::runtime::cpu::CPUAllocator::framework_deallocator = nullptr;
+
+    // assign the passed memory allocators
+    ngraph::runtime::cpu::CPUAllocator::framework_allocator = m_framework_allocator;
+    ngraph::runtime::cpu::CPUAllocator::framework_deallocator = m_framework_deallocator;
     ngraph::runtime::cpu::CPUAllocator::alignment = alignment;
 
     for (auto buffer_size : m_external_function->get_memory_buffer_sizes())

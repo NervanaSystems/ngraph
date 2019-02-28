@@ -45,6 +45,7 @@
 #include "ngraph/pass/pass_config.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
+#include "ngraph/runtime/cpu/cpu_mkl_allocator.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 #include "ngraph/runtime/cpu/mkldnn_emitter.hpp"
 #include "ngraph/runtime/performance_counter.hpp"
@@ -100,7 +101,9 @@ namespace ngraph
                                      bool release_function = true);
                 ~CPU_ExternalFunction();
                 std::shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
-                    make_call_frame(ngraph::pass::PassConfig& pass_config);
+                    make_call_frame(ngraph::pass::PassConfig& pass_config,
+                                    AllocateFunc& framework_allocator,
+                                    DestroyFunc& framework_deallocator);
 
                 const LayoutDescriptorPtrs& get_parameter_layout_descriptors();
                 const LayoutDescriptorPtrs& get_result_layout_descriptors();

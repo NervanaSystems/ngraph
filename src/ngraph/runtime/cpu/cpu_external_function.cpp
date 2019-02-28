@@ -141,6 +141,7 @@
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
+#include "ngraph/runtime/cpu/cpu_mkl_allocator.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
@@ -1701,7 +1702,9 @@ void*& runtime::cpu::CPU_ExternalFunction::get_tensor_data(const std::string& na
 }
 
 shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
-    runtime::cpu::CPU_ExternalFunction::make_call_frame(ngraph::pass::PassConfig& pass_config)
+    runtime::cpu::CPU_ExternalFunction::make_call_frame(ngraph::pass::PassConfig& pass_config,
+                                                        AllocateFunc& framework_allocator,
+                                                        DestroyFunc& framework_deallocator)
 {
 #if !defined(NGRAPH_DEX_ONLY)
     if (!m_is_compiled && !m_direct_execution)
@@ -1718,7 +1721,9 @@ shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
     return make_shared<ngraph::runtime::cpu::CPU_CallFrame>(shared_from_this(),
                                                             m_compiled_init_ctx_func,
                                                             m_compiled_destroy_ctx_func,
-                                                            m_compiled_function);
+                                                            m_compiled_function,
+                                                            framework_allocator,
+                                                            framework_deallocator);
 }
 
 const runtime::cpu::LayoutDescriptorPtrs&
