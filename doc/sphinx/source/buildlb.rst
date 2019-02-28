@@ -1,8 +1,12 @@
 .. buildlb.rst:
 
-######################
-Build the C++ Library 
-######################
+###########################
+nGraph Library for backends 
+###########################
+
+This section details how to build the C++ version of the nGraph Library, which 
+is targeted towared developers working on kernel-specific operations / optimizations 
+for their custom backends. 
 
 * :ref:`ubuntu`
 * :ref:`centos`
