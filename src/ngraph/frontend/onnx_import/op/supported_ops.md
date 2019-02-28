@@ -21,7 +21,7 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | Abs | 1-6- |
 | Acos | 7- |
 | Acosh | 9- |
-| Add | 1-7- |
+| Add | (1-6-)7- | Legacy broadcasting rules not supported. (NGONNX-496)
 | And | 1-7- |
 | ArgMax | 1- |
 | ArgMin | 1- |
@@ -39,14 +39,14 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | ConvTranspose | 1- | 
 | Cos | 7- |
 | Cosh | 9- |
-| Div | 1-6-7- | 
+| Div | (1-6-)7- | Legacy broadcasting rules not supported. (NGONNX-496)
 | Dropout | 1-6-7- | Only for inference.
 | Elu | 1-6- |
 | Equal | 1-7 | 
 | Exp | 1-6- | 
 | Flatten | 1-9- | 
 | Floor | 1-6- | 
-| Gemm | 1-6-7-9 | 
+| Gemm | 1-6-7-9 | Some tests failing (NGONNX-494)
 | GlobalAveragePool | 1- |
 | GlobalLpPool | 1-2- |
 | GlobalMaxPool | 1- | 
@@ -63,7 +63,7 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | MaxPool | 1-8- | 
 | Mean | 1-6-8- | 
 | Min | 1-6-8- |
-| Mul | 1-6-7- | 
+| Mul | (1-6-)7- | Legacy broadcasting rules not supported. (NGONNX-496)
 | Neg | 1-6- | 
 | Not | 1- | 
 | OneHot | (9) | Only static version
@@ -96,7 +96,7 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | Split | 1-2- | 
 | Sqrt | 1-6- | 
 | Squeeze | 1- | 
-| Sub | 1-6-7- | 
+| Sub | (1-6-)7- | Legacy broadcasting rules not supported. (NGONNX-496)
 | Sum | 1-6-8- |
 | Tan | 7- |
 | Tanh | 1-6- |
@@ -112,7 +112,7 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | Name | Opset supported | NGCORE | NGONNX | Comment |
 |------|-----------------|--------|--------|---------|
 | Erf | (9) | 284 | 489 | Need separate kernel for this in nGraph core. |
-| Pad | 1-2- | 273 | 416 | Not fully supported. |
+| Pad | 1-2- | 273 | 416, 498 | Not fully supported. |
 | LSTM | 1-7- | | 476 | Mixed sequences length not supported yet. |
 | MaxUnpool | (9) | 286, 289 | 447 | |
 | LpPool | - | 291 | 488 | Unsupported by nGraph - only max/avg pooling ops. Need separate kernel. |
@@ -150,6 +150,7 @@ opset versions starting from `1` to `6` and to the latest opset version.
 ### Able to implement or WIP
 | Name | Opset supported | NGCORE | NGONNX | Comment |
 |------|-----------------|--------|--------|---------|
+| Add, Sub, Mul, Div | 1-6 | | | We currently don't support legacy broadcasting rules for binary ops. |
 | Cast | 1-6- | | 427 | Errors while casting to bool |
 | EyeLike | (9) | | 439 | Make constant node. |
 | Hardmax | - | | 431 | Use make constant and Argmax. See `test_ops_unary.py::test_hardmax()` |
