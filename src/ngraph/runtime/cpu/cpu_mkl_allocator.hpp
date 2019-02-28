@@ -60,18 +60,18 @@ public:
     CPUAllocator();
     ~CPUAllocator();
 
-    static AllocateFunc m_framework_allocator;
-    static DestroyFunc m_framework_deallocator;
-    static size_t m_alignment;
+    static AllocateFunc framework_allocator;
+    static DestroyFunc framework_deallocator;
+    static size_t alignment;
 
 private:
     static inline void* MallocHook(size_t size)
     {
-        ngraph::runtime::cpu::cpu_malloc(size, m_alignment, m_framework_allocator);
+        ngraph::runtime::cpu::cpu_malloc(size, alignment, framework_allocator);
     }
 
     static inline void FreeHook(void* ptr)
     {
-        ngraph::runtime::cpu::cpu_free(ptr, m_framework_deallocator);
+        ngraph::runtime::cpu::cpu_free(ptr, framework_deallocator);
     }
 };

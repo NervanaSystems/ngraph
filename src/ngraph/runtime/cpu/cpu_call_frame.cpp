@@ -126,10 +126,13 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
 
     // Create temporary buffer pools
     size_t alignment = runtime::cpu::CPU_ExternalFunction::s_memory_pool_alignment;
-    CPUAllocator cpu_allocator(nullptr, nullptr, alignment);
+    ngraph::runtime::cpu::CPUAllocator::framework_allocator = nullptr;
+    ngraph::runtime::cpu::CPUAllocator::framework_deallocator = nullptr;
+    ngraph::runtime::cpu::CPUAllocator::alignment = alignment;
+
     for (auto buffer_size : m_external_function->get_memory_buffer_sizes())
     {
-        auto buffer = new CPUAlignedBuffer(buffer_size, alignment, cpu_allocator);
+        auto buffer = new CPUAlignedBuffer(buffer_size, alignment);
         ctx->memory_buffers.push_back(buffer);
     }
     const auto& mkldnn_emitter = m_external_function->get_mkldnn_emitter();

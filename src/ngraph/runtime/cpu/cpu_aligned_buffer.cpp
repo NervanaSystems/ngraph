@@ -22,20 +22,10 @@
 
 using namespace ngraph;
 
-runtime::cpu::CPUAlignedBuffer::CPUAlignedBuffer()
-    : m_cpu_allocator(nullptr, nullptr, 0)
-    , m_allocated_buffer(nullptr)
-    , m_aligned_buffer(nullptr)
-    , m_byte_size(0)
-{
-}
-
-runtime::cpu::CPUAlignedBuffer::CPUAlignedBuffer(size_t byte_size,
-                                                 size_t alignment,
-                                                 ngraph::runtime::cpu::CPUAllocator& cpu_allocator)
+runtime::cpu::CPUAlignedBuffer::CPUAlignedBuffer(size_t byte_size, size_t alignment)
 {
     m_byte_size = byte_size;
-    AllocateFunc allocator = ngraph::runtime::cpu::CPUAllocator::m_framework_allocator;
+    AllocateFunc allocator = ngraph::runtime::cpu::CPUAllocator::framework_allocator;
     if (m_byte_size > 0)
     {
         size_t allocation_size = m_byte_size + alignment;
@@ -58,7 +48,7 @@ runtime::cpu::CPUAlignedBuffer::CPUAlignedBuffer(size_t byte_size,
 
 runtime::cpu::CPUAlignedBuffer::~CPUAlignedBuffer()
 {
-    DestroyFunc deallocator = ngraph::runtime::cpu::CPUAllocator::m_framework_deallocator;
+    DestroyFunc deallocator = ngraph::runtime::cpu::CPUAllocator::framework_deallocator;
     if (m_allocated_buffer != nullptr)
     {
         ngraph::runtime::cpu::cpu_free(m_allocated_buffer, deallocator);

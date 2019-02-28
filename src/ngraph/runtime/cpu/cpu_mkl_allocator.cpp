@@ -17,14 +17,17 @@
 #include "ngraph/runtime/cpu/cpu_mkl_allocator.hpp"
 #include <string>
 #include "ngraph/except.hpp"
+#include "ngraph/runtime/cpu/cpu_external_function.hpp"
 
 ngraph::runtime::cpu::CPUAllocator::CPUAllocator()
 {
 }
 
-AllocateFunc ngraph::runtime::cpu::CPUAllocator::m_framework_allocator = nullptr;
-DestroyFunc ngraph::runtime::cpu::CPUAllocator::m_framework_deallocator = nullptr;
-size_t ngraph::runtime::cpu::CPUAllocator::m_alignment = 4096;
+AllocateFunc ngraph::runtime::cpu::CPUAllocator::framework_allocator = nullptr;
+DestroyFunc ngraph::runtime::cpu::CPUAllocator::framework_deallocator = nullptr;
+size_t ngraph::runtime::cpu::CPUAllocator::alignment =
+    ngraph::runtime::cpu::CPU_ExternalFunction::s_memory_pool_alignment;
+;
 
 ngraph::runtime::cpu::CPUAllocator::CPUAllocator(AllocateFunc allocator,
                                                  DestroyFunc deallocator,
