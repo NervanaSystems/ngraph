@@ -16,26 +16,30 @@
 
 #include <memory>
 
-#include "ngraph/runtime/aligned_buffer.hpp"
+#include "ngraph/runtime/cpu/cpu_aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_mkl_allocator.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
 
-runtime::AlignedBuffer::AlignedBuffer()
-    : m_allocated_buffer(nullptr)
+runtime::cpu::CPUAlignedBuffer::CPUAlignedBuffer()
+    : m_cpu_allocator(nullptr, nullptr, 0)
+    , m_allocated_buffer(nullptr)
     , m_aligned_buffer(nullptr)
     , m_byte_size(0)
 {
 }
 
-runtime::AlignedBuffer::AlignedBuffer(size_t byte_size, size_t alignment)
+runtime::cpu::CPUAlignedBuffer::CPUAlignedBuffer(size_t byte_size,
+                                                 size_t alignment,
+                                                 ngraph::runtime::cpu::CPUAllocator& cpu_allocator)
 {
     m_byte_size = byte_size;
+    m_cpu_allocator = cpu_allocator;
     if (m_byte_size > 0)
     {
         size_t allocation_size = m_byte_size + alignment;
-        m_allocated_buffer = static_cast<char*>(ngraph_malloc(allocation_size));
+        m_allocated_buffer = static_cast<char*>(m_cpu_allocator.cpu_malloc(allocation_size));
         m_aligned_buffer = m_allocated_buffer;
         size_t mod = size_t(m_aligned_buffer) % alignment;
 
@@ -51,10 +55,10 @@ runtime::AlignedBuffer::AlignedBuffer(size_t byte_size, size_t alignment)
     }
 }
 
-runtime::AlignedBuffer::~AlignedBuffer()
+runtime::cpu::CPUAlignedBuffer::~CPUAlignedBuffer()
 {
     if (m_allocated_buffer != nullptr)
     {
-        ngraph_free(m_allocated_buffer);
+        m_cpu_allocator.cpu_free(m_allocated_buffer);
     }
 }

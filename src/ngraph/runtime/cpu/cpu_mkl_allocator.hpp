@@ -47,7 +47,6 @@ namespace ngraph
         namespace cpu
         {
             class CPUAllocator;
-            extern CPUAllocator& GetCPUAllocator();
         }
     }
 }
@@ -56,17 +55,18 @@ class ngraph::runtime::cpu::CPUAllocator
 {
 public:
     CPUAllocator(AllocateFunc allocator, DestroyFunc deallocator, size_t alignment);
-    //~CPUAllocator();
+    CPUAllocator();
+    ~CPUAllocator();
 
     void* cpu_malloc(size_t size);
     void cpu_free(void* ptr);
 
 private:
+    size_t m_alignment;
     AllocateFunc m_framework_allocator;
     DestroyFunc m_framework_deallocator;
-    size_t m_alignment;
 
-    static inline void* MallocHook(size_t size)
+    /*static inline void* MallocHook(size_t size)
     {
         ngraph::runtime::cpu::GetCPUAllocator().cpu_malloc(size);
     }
@@ -74,5 +74,5 @@ private:
     static inline void FreeHook(void* ptr)
     {
         ngraph::runtime::cpu::GetCPUAllocator().cpu_free(ptr);
-    }
+    }*/
 };

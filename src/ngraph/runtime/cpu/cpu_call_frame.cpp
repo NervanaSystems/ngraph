@@ -17,6 +17,7 @@
 #include <algorithm>
 
 #include "ngraph/runtime/aligned_buffer.hpp"
+#include "ngraph/runtime/cpu/cpu_aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
@@ -113,7 +114,6 @@ void runtime::cpu::CPU_CallFrame::propagate_layouts(
 void runtime::cpu::CPU_CallFrame::setup_runtime_context()
 {
     ctx = new CPURuntimeContext;
-
     ctx->pc = 0;
     ctx->op_durations = nullptr;
     if (runtime::cpu::IsTracingEnabled())
@@ -126,9 +126,10 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
 
     // Create temporary buffer pools
     size_t alignment = runtime::cpu::CPU_ExternalFunction::s_memory_pool_alignment;
+    CPUAllocator cpu_allocator(nullptr, nullptr, alignment);
     for (auto buffer_size : m_external_function->get_memory_buffer_sizes())
     {
-        auto buffer = new AlignedBuffer(buffer_size, alignment);
+        auto buffer = new CPUAlignedBuffer(buffer_size, alignment, cpu_allocator);
         ctx->memory_buffers.push_back(buffer);
     }
     const auto& mkldnn_emitter = m_external_function->get_mkldnn_emitter();

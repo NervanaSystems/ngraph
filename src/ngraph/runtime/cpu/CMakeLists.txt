@@ -17,6 +17,7 @@
 include(FindOpenMP)
 
 set(SRC
+    cpu_aligned_buffer.cpp
     cpu_backend.cpp
     cpu_builder.cpp
     cpu_call_frame.cpp

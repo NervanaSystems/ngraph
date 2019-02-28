@@ -39,9 +39,11 @@ namespace ngraph
 {
     namespace runtime
     {
-        class AlignedBuffer;
+        namespace cpu
+        {
+            class CPUAlignedBuffer;
+        }
     }
-
     class State;
 }
 
@@ -62,7 +64,7 @@ namespace ngraph
                 bool* p_en;
                 bool first_iteration;
                 mkldnn::primitive* const* mkldnn_primitives;
-                std::vector<AlignedBuffer*> memory_buffers;
+                std::vector<CPUAlignedBuffer*> memory_buffers;
                 char* const* mkldnn_workspaces;
                 tbb::flow::graph* G;
                 tbb::global_control* c;

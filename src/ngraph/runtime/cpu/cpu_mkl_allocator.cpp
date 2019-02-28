@@ -18,6 +18,13 @@
 #include <string>
 #include "ngraph/except.hpp"
 
+ngraph::runtime::cpu::CPUAllocator::CPUAllocator()
+    : m_framework_allocator(nullptr)
+    , m_framework_deallocator(nullptr)
+    , m_alignment(0)
+{
+}
+
 ngraph::runtime::cpu::CPUAllocator::CPUAllocator(AllocateFunc allocator,
                                                  DestroyFunc deallocator,
                                                  size_t alignment)
@@ -25,8 +32,8 @@ ngraph::runtime::cpu::CPUAllocator::CPUAllocator(AllocateFunc allocator,
     , m_framework_deallocator(deallocator)
     , m_alignment(alignment)
 {
-    mkl::i_malloc = MallocHook;
-    mkl::i_free = FreeHook;
+    //    mkl::i_malloc = MallocHook;
+    //    mkl::i_free = FreeHook;
 }
 
 void* ngraph::runtime::cpu::CPUAllocator::cpu_malloc(size_t size)
@@ -62,8 +69,6 @@ void ngraph::runtime::cpu::CPUAllocator::cpu_free(void* ptr)
     }
 }
 
-ngraph::runtime::cpu::CPUAllocator& ngraph::runtime::cpu::GetCPUAllocator()
+ngraph::runtime::cpu::CPUAllocator::~CPUAllocator()
 {
-    static ngraph::runtime::cpu::CPUAllocator cpu_allocator(nullptr, nullptr, 4096);
-    return cpu_allocator;
 }

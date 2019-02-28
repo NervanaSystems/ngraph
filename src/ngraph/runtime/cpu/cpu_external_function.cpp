@@ -132,6 +132,7 @@
 #include "ngraph/pass/reshape_sinking.hpp"
 #include "ngraph/pass/zero_dim_tensor_elimination.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
+#include "ngraph/runtime/cpu/cpu_aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
