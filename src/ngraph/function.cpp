@@ -118,7 +118,7 @@ const std::string& Function::get_name() const
     return m_unique_name;
 }
 
-void Function::set_name(const string& name)
+void Function::set_friendly_name(const string& name)
 {
     if (m_name.empty())
     {

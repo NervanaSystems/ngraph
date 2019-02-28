@@ -79,8 +79,9 @@ namespace ngraph
                     std::shared_ptr<ngraph::Node> one_hot = std::make_shared<ngraph::op::Convert>(
                         std::make_shared<ngraph::op::OneHot>(indices, output_shape, axis),
                         values->get_element_type());
-                    on_value = numpy_style_broadcast_for_binary_operation(one_hot, on_value)[1];
-                    off_value = numpy_style_broadcast_for_binary_operation(one_hot, off_value)[1];
+                    auto broadcasted_values = numpy_style_broadcast({one_hot, on_value, off_value});
+                    on_value = broadcasted_values[1];
+                    off_value = broadcasted_values[2];
                     one_hot = one_hot * (on_value - off_value) + off_value;
                     return {one_hot};
                 }

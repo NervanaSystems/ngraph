@@ -14,34 +14,22 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "code_writer.hpp"
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
-using namespace std;
-using namespace ngraph;
+#include "ngraph/op/passthrough.hpp"
+#include "pyngraph/ops/passthrough.hpp"
 
-codegen::CodeWriter::CodeWriter()
-    : indent(0)
-    , m_pending_indent(true)
-    , m_temporary_name_count(0)
+namespace py = pybind11;
+
+void regclass_pyngraph_op_Passthrough(py::module m)
 {
-}
-
-string codegen::CodeWriter::get_code() const
-{
-    return m_ss.str();
-}
-
-void codegen::CodeWriter::operator+=(const std::string& s)
-{
-    *this << s;
-}
-
-std::string codegen::CodeWriter::generate_temporary_name(std::string prefix)
-{
-    std::stringstream ss;
-
-    ss << prefix << m_temporary_name_count;
-    m_temporary_name_count++;
-
-    return ss.str();
+    py::class_<ngraph::op::Passthrough, std::shared_ptr<ngraph::op::Passthrough>, ngraph::Node>
+        pass{m, "Passthrough"};
+    pass.doc() = "ngraph.impl.op.Passthrough wraps ngraph::op::Passthrough";
+    pass.def(py::init<const std::string&,
+                      const std::string&,
+                      const std::string&,
+                      const ngraph::NodeVector&,
+                      std::vector<std::tuple<ngraph::element::Type, ngraph::PartialShape>>>());
 }

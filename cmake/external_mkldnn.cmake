@@ -16,6 +16,11 @@
 
 include(ExternalProject)
 
+# Includes blas 3.8.0 in mkldnn 
+set(NGRAPH_MKLDNN_VERSION "v0.18-rc")
+set(NGRAPH_MKLDNN_SUB_VERSION "2019.0.3.20190125")
+set(NGRAPH_MKLDNN_GIT_TAG "08bd90c")
+
 #------------------------------------------------------------------------------
 # Fetch and install MKL-DNN
 #------------------------------------------------------------------------------
@@ -53,8 +58,8 @@ endif()
 
 # This section sets up MKL as an external project to be used later by MKLDNN
 
-set(MKLURLROOT "https://github.com/intel/mkl-dnn/releases/download/v0.18-rc/")
-set(MKLVERSION "2019.0.3.20190125")
+set(MKLURLROOT "https://github.com/intel/mkl-dnn/releases/download/${NGRAPH_MKLDNN_VERSION}/")
+set(MKLVERSION ${NGRAPH_MKLDNN_SUB_VERSION})
 if (LINUX)
     set(MKLPACKAGE "mklml_lnx_${MKLVERSION}.tgz")
     set(MKL_SHA1_HASH 968318286897da5ffd225f0851aec18f02b347f8)
@@ -144,7 +149,7 @@ else()
 endif()
 
 set(MKLDNN_GIT_REPO_URL https://github.com/intel/mkl-dnn)
-set(MKLDNN_GIT_TAG "08bd90c")
+set(MKLDNN_GIT_TAG ${NGRAPH_MKLDNN_GIT_TAG})
 set(MKLDNN_PATCH_FILE mkldnn.patch)
 set(MKLDNN_LIBS ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${MKLDNN_LIB})
 
@@ -226,7 +231,7 @@ endif()
 ExternalProject_Add_Step(
     ext_mkldnn
     CopyMKLDNN
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${MKLDNN_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/mkldnn/${CMAKE_INSTALL_LIBDIR}/${MKLDNN_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}
     COMMENT "Copy mkldnn runtime libraries to ngraph build directory."
     DEPENDEES install
     )
@@ -235,7 +240,7 @@ if(WIN32)
     ExternalProject_Add_Step(
         ext_mkldnn
         CopyMKLDNNIMP
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${MKLDNN_IMPLIB} ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/mkldnn/${CMAKE_INSTALL_LIBDIR}/${MKLDNN_IMPLIB} ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}
         COMMENT "Copy mkldnn runtime libraries to ngraph build directory."
         DEPENDEES install
         )
