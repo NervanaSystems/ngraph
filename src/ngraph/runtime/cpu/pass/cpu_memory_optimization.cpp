@@ -62,8 +62,9 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
 {
     for (auto n : function->get_ordered_ops())
     {
-        if (auto concat = std::dynamic_pointer_cast<op::Concat>(n))
+        if (n->description() == "Concat")
         {
+            auto concat = std::static_pointer_cast<op::Concat>(n);
             auto shape = concat->get_input_shape(0);
             auto axis = concat->get_concatenation_axis();
             auto product = 1;
@@ -119,8 +120,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
 
                 const auto& output = input.get_output();
                 auto arg = output.get_node();
-                if (std::dynamic_pointer_cast<op::Constant>(arg) ||
-                    std::dynamic_pointer_cast<op::Parameter>(arg))
+                if (arg->is_constant() || arg->is_parameter())
                 {
                     NGRAPH_DEBUG << "cpu_memory_optimization: " << arg->get_name()
                                  << ": constant or parameter, no in place concat";
@@ -130,7 +130,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
 
                 NGRAPH_ASSERT(arg->get_output_size() == 1);
 
-                if (!std::dynamic_pointer_cast<op::Concat>(arg))
+                if (arg->description() != "Concat")
                 {
                     if (arg->is_op())
                     {
@@ -154,7 +154,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                     for (auto output_input : output.get_inputs())
                     {
                         auto user = output_input->get_node();
-                        if (std::dynamic_pointer_cast<op::Concat>(user))
+                        if (user->description() == "Concat")
                         {
                             concat_count++;
                             if (concat_count == 2)
@@ -225,8 +225,9 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
 
     for (auto n : function->get_ordered_ops())
     {
-        if (auto slice = std::dynamic_pointer_cast<op::Slice>(n))
+        if (n->description() == "Slice")
         {
+            auto slice = std::static_pointer_cast<op::Slice>(n);
             auto in_shape = slice->get_input_shape(0);
             auto out_shape = slice->get_output_shape(0);
             auto strides = slice->get_strides();
@@ -235,30 +236,10 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
             auto upper_bounds = slice->get_upper_bounds();
 
             auto arg = slice->get_argument(0);
-
             if (arg->is_constant())
             {
                 NGRAPH_DEBUG << "cpu_memory_optimization: " << arg->get_name()
                              << ": constant, no in place slice";
-                continue;
-            }
-
-            bool no_in_place_slice = false;
-            if (arg->is_parameter())
-            {
-                for (auto user : slice->get_users())
-                {
-                    if (user->is_output())
-                    {
-                        NGRAPH_DEBUG << "cpu_memory_optimization: slice between function input and "
-                                        "output, no in place slice";
-                        no_in_place_slice = true;
-                        break;
-                    }
-                }
-            }
-            if (no_in_place_slice)
-            {
                 continue;
             }
 
