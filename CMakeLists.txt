@@ -145,16 +145,30 @@ option(NGRAPH_PYTHON_BUILD_ENABLE "Enable build nGraph python package wheel" FAL
 option(NGRAPH_PLAIDML_ENABLE "Enable the PlaidML backend" ${PLAIDML_FOUND})
 option(NGRAPH_DISTRIBUTED_ENABLE "Enable distributed training using MLSL/OpenMPI" OFF)
 
+if  (   NGRAPH_CPU_ENABLE
+            AND
+        ((NOT NGRAPH_GPU_ENABLE) AND (NOT NGRAPH_GPUH_ENABLE) 
+          AND (NOT NGRAPH_GENERIC_CPU_ENABLE) AND (NOT NGRAPH_INTELGPU_ENABLE)
+        )
+    )
+    set(NGRAPH_INTEL_CPU_ONLY_ENABLE ON)
+endif()
+
 if (NGRAPH_DISTRIBUTED_ENABLE)
     if ("${NGRAPH_DISTRIBUTED_ENABLE}" STREQUAL "MLSL")
-        set(NGRAPH_DISTRIBUTED_MLSL_ENABLE TRUE)
+        if (NGRAPH_INTEL_CPU_ONLY_ENABLE)
+            set(NGRAPH_DISTRIBUTED_MLSL_ENABLE TRUE)
+        else()
+            message(FATAL_ERROR
+                    "-DNGRAPH_DISTRIBUTED_ENABLE=MLSL can be used when Intel CPU backend is only enabled.\n"
+                    "Use -DNGRAPH_DISTRIBUTED_ENABLE=OMPI for all other situations.\n")
+        endif()
     elseif("${NGRAPH_DISTRIBUTED_ENABLE}" STREQUAL  "OMPI")
         set(NGRAPH_DISTRIBUTED_OMPI_ENABLE TRUE)
     else()
         message(FATAL_ERROR
-                    "Invalid arguments passed to NGRAPH_DISTRIBUTED_ENABLE .\n"
-                    "If CPU only backend recommend Intel MLSL by setting -DNGRAPH_DISTRIBUTED_ENABLE=MLSL .\n"
-                    "For all other backends use OpenMPI by setting -DNGRAPH_DISTRIBUTED_ENABLE=OMPI.\n")
+                    "Invalid arguments passed to NGRAPH_DISTRIBUTED_ENABLE, must select  one of  MLSL, OMPI or OFF.\n"
+                    "If using Intel CPU only backend, recommend Intel MLSL by setting -DNGRAPH_DISTRIBUTED_ENABLE=MLSL .\n")
     endif()
 endif()
 
