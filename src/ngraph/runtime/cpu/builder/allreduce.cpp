@@ -49,12 +49,23 @@ std::string get_timestamp()
     // convert to broken time
     std::tm bt = *std::localtime(&timer);
 
-    std::ostringstream oss;
-    oss << std::put_time(&bt, "%H:%M:%S"); // HH:MM:SS
-    oss << '.' << std::setfill('0') << std::setw(3) << ns.count();
+    std::ostringstream timestamp;
+    timestamp << std::put_time(&bt, "%H:%M:%S"); // HH:MM:SS
+    timestamp << '.' << std::setfill('0') << std::setw(3) << ns.count();
 
-    return oss.str();
+    return timestamp.str();
 }
+
+// This function will be executed only once during startup (loading of the DSO)
+static bool CheckLoggingLevel()
+{
+    if (std::getenv("NGRAPH_DIST_DISABLE_LOGGING") != nullptr)
+    {
+        return true;
+    }
+    return false;
+}
+bool DISABLE_LOGGING = CheckLoggingLevel();
 
 inline void LogPrintf(const char* fmt, ...)
 {
@@ -71,7 +82,9 @@ inline void LogPrintf(const char* fmt, ...)
     ngraph::Distributed dist;
     std::printf("%s [RANK: %d]: %s\n", get_timestamp().c_str(), dist.get_rank(), buf.data());
 }
-#define NGRAPH_DIST_DEBUG(fmt, ...) LogPrintf(fmt, ##__VA_ARGS__)
+#define NGRAPH_DIST_DEBUG(fmt, ...)                                                                \
+    if (!DISABLE_LOGGING)                                                                          \
+    LogPrintf(fmt, ##__VA_ARGS__)
 
 using namespace std;
 using namespace ngraph;

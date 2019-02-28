@@ -216,7 +216,6 @@ namespace ngraph
                 std::unordered_set<descriptor::Tensor*>&
                     get_tensor_set(descriptor::Tensor* output_tensor);
 
-
                 std::shared_ptr<ngraph::Function> m_function;
                 bool m_release_function;
                 bool m_emit_timing;
