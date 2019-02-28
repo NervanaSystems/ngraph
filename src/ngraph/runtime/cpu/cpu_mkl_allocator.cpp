@@ -19,29 +19,29 @@
 #include "ngraph/except.hpp"
 
 ngraph::runtime::cpu::CPUAllocator::CPUAllocator()
-    : m_framework_allocator(nullptr)
-    , m_framework_deallocator(nullptr)
-    , m_alignment(0)
 {
 }
+
+AllocateFunc ngraph::runtime::cpu::CPUAllocator::m_framework_allocator = nullptr;
+DestroyFunc ngraph::runtime::cpu::CPUAllocator::m_framework_deallocator = nullptr;
+size_t ngraph::runtime::cpu::CPUAllocator::m_alignment = 4096;
 
 ngraph::runtime::cpu::CPUAllocator::CPUAllocator(AllocateFunc allocator,
                                                  DestroyFunc deallocator,
                                                  size_t alignment)
-    : m_framework_allocator(allocator)
-    , m_framework_deallocator(deallocator)
-    , m_alignment(alignment)
 {
-    //    mkl::i_malloc = MallocHook;
-    //    mkl::i_free = FreeHook;
+    mkl::i_malloc = MallocHook;
+    mkl::i_free = FreeHook;
 }
 
-void* ngraph::runtime::cpu::CPUAllocator::cpu_malloc(size_t size)
+void* ngraph::runtime::cpu::cpu_malloc(size_t size,
+                                       size_t alignment,
+                                       AllocateFunc framework_allocator)
 {
     void* ptr;
-    if (m_framework_allocator != nullptr)
+    if (framework_allocator != nullptr)
     {
-        ptr = m_framework_allocator(nullptr, m_alignment, size);
+        ptr = framework_allocator(nullptr, alignment, size);
     }
     else
     {
@@ -57,11 +57,11 @@ void* ngraph::runtime::cpu::CPUAllocator::cpu_malloc(size_t size)
     return ptr;
 }
 
-void ngraph::runtime::cpu::CPUAllocator::cpu_free(void* ptr)
+void ngraph::runtime::cpu::cpu_free(void* ptr, DestroyFunc framework_deallocator)
 {
-    if (m_framework_deallocator && ptr)
+    if (framework_deallocator && ptr)
     {
-        m_framework_deallocator(nullptr, ptr);
+        framework_deallocator(nullptr, ptr);
     }
     else if (ptr)
     {

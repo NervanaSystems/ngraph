@@ -35,11 +35,12 @@ runtime::cpu::CPUAlignedBuffer::CPUAlignedBuffer(size_t byte_size,
                                                  ngraph::runtime::cpu::CPUAllocator& cpu_allocator)
 {
     m_byte_size = byte_size;
-    m_cpu_allocator = cpu_allocator;
+    AllocateFunc allocator = ngraph::runtime::cpu::CPUAllocator::m_framework_allocator;
     if (m_byte_size > 0)
     {
         size_t allocation_size = m_byte_size + alignment;
-        m_allocated_buffer = static_cast<char*>(m_cpu_allocator.cpu_malloc(allocation_size));
+        m_allocated_buffer = static_cast<char*>(
+            ngraph::runtime::cpu::cpu_malloc(allocation_size, alignment, allocator));
         m_aligned_buffer = m_allocated_buffer;
         size_t mod = size_t(m_aligned_buffer) % alignment;
 
@@ -57,8 +58,9 @@ runtime::cpu::CPUAlignedBuffer::CPUAlignedBuffer(size_t byte_size,
 
 runtime::cpu::CPUAlignedBuffer::~CPUAlignedBuffer()
 {
+    DestroyFunc deallocator = ngraph::runtime::cpu::CPUAllocator::m_framework_deallocator;
     if (m_allocated_buffer != nullptr)
     {
-        m_cpu_allocator.cpu_free(m_allocated_buffer);
+        ngraph::runtime::cpu::cpu_free(m_allocated_buffer, deallocator);
     }
 }
