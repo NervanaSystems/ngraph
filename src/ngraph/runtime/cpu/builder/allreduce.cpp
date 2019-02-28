@@ -152,7 +152,7 @@ namespace ngraph
                 call_seq++;
 
                 auto functor = [&, id, count, data_type, func_name, node_friendly_name, node_name](
-                                   CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                     NGRAPH_DIST_DEBUG("AllReduce Execute[%d]: Function: %s  Node: %s %s Size: %d",
                                       id,
                                       func_name.c_str(),
