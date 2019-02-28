@@ -115,7 +115,7 @@ NGRAPH_TEST(${BACKEND_NAME}, node_name)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = A + B;
-    C->set_name("a node name");
+    C->set_friendly_name("a node name");
     auto f = make_shared<Function>(C, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -1204,6 +1204,23 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_zero_length_1d_middle)
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), read_vector<float>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, concat_zero_zero)
+{
+    Shape shape{0};
+    auto constant_1 = op::Constant::create(element::f32, shape, {1});
+    auto concat_1 = make_shared<op::Concat>(NodeVector{constant_1, constant_1}, 0);
+
+    auto f = make_shared<Function>(concat_1, ParameterVector{});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    auto result = backend->create_tensor(element::f32, shape);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {});
+
+    EXPECT_EQ(vector<float>{}, read_vector<float>(result));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, concat_zero_length_4d_middle)
 {
     Shape shape_a{2, 2, 1, 1};
@@ -1374,12 +1391,12 @@ NGRAPH_TEST(${BACKEND_NAME}, convert_int32_float32)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::i32, shape);
-    copy_data(a, vector<int32_t>{1, 2, 3, 4});
+    copy_data(a, vector<int32_t>{281, 2, 3, 4});
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(result));
+    EXPECT_EQ((vector<float>{281, 2, 3, 4}), read_vector<float>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, convert_uint16_float32)
@@ -1781,7 +1798,7 @@ NGRAPH_TEST(${BACKEND_NAME}, scalar_constant_float32)
 
 NGRAPH_TEST(${BACKEND_NAME}, scalar_constant_int64)
 {
-    auto r = op::Constant::create(element::i64, Shape{}, {2112});
+    auto r = op::Constant::create(element::i64, Shape{}, {0x4000000000000001});
     auto f = make_shared<Function>(r, ParameterVector{});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -1791,7 +1808,7 @@ NGRAPH_TEST(${BACKEND_NAME}, scalar_constant_int64)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {});
-    EXPECT_EQ(vector<int64_t>{2112}, read_vector<int64_t>(result));
+    EXPECT_EQ(vector<int64_t>{0x4000000000000001}, read_vector<int64_t>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_float32)
@@ -1812,18 +1829,16 @@ NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_float32)
 
 NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_int64)
 {
-    Shape shape{2, 2};
-    auto r = op::Constant::create(element::i64, shape, {2112, 1848, 1776, 1964});
+    Shape shape{2};
+    auto r = op::Constant::create(element::i64, shape, {0x4000000000000001, 0x4000000000000002});
     auto f = make_shared<Function>(r, ParameterVector{});
-
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
     // Create some tensors for input/output
     auto result = backend->create_tensor(element::i64, shape);
-
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {});
-    EXPECT_EQ((vector<int64_t>{2112, 1848, 1776, 1964}), read_vector<int64_t>(result));
+    EXPECT_EQ((vector<int64_t>{0x4000000000000001, 0x4000000000000002}),
+              read_vector<int64_t>(result));
 }
 
 // TODO: Kahan sum only works in limited cases with CPU / Interpreter backend
@@ -2846,7 +2861,7 @@ NGRAPH_TEST(${BACKEND_NAME}, computation_reuse)
     Shape shape_a{1, 16, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{32, 16, 1, 1};
-    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto B = make_shared<op::Parameter>(element::f32, shape_b, true);
     Shape shape_r{1, 32, 2, 2};
     auto conv = make_shared<op::Convolution>(A,
                                              B,

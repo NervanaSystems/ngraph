@@ -42,6 +42,8 @@ set(SRC
     builder/concat.cpp
     builder/convert.cpp
     builder/convert_layout.cpp
+    builder/quantized_conv.cpp
+    builder/quantized_concat.cpp
     builder/convolution.cpp
     builder/dot.cpp
     builder/embedding_lookup.cpp
@@ -107,6 +109,7 @@ set(SRC
     pass/cpu_layout.cpp
     pass/cpu_loop_kernel_fusion.cpp
     pass/cpu_mat_fusion.cpp
+    pass/cpu_memory_assignment.cpp
     pass/cpu_memory_optimization.cpp
     pass/cpu_post_layout_optimizations.cpp
     pass/cpu_rnn_fusion.cpp
@@ -189,12 +192,11 @@ if (NGRAPH_CPU_ENABLE)
     endif()
 
     add_dependencies(cpu_backend ext_mkldnn ext_eigen)
-    target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libeigen libjson libtbb)
+    target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libmkl libeigen libjson libtbb)
     if (NOT NGRAPH_DEX_ONLY)
         target_link_libraries(cpu_backend PUBLIC codegen)
     endif()
     target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)
-    set_target_properties(cpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
     if (NOT APPLE AND NOT MSVS)
         # CPU backend uses third-party libraries like Eigen that might be linked in and
         # exported by other DSOs as well. In the absence of versioning, this could lead to the
@@ -204,7 +206,5 @@ if (NGRAPH_CPU_ENABLE)
         set_property(TARGET cpu_backend APPEND PROPERTY LINK_FLAGS "-Wl,-Bsymbolic-functions -Wl,--exclude-libs=ALL")
     endif()
 
-    if (NOT WIN32)
-        install(TARGETS cpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
-    endif()
+    install(TARGETS cpu_backend DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()

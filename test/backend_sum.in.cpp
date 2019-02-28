@@ -403,6 +403,28 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_3d_to_scalar)
               read_vector<float>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, sum_3d_to_scalar_int32)
+{
+    Shape shape_a{3, 3, 3};
+    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    Shape shape_rt{};
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1, 2}), ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::i32, shape_a);
+    copy_data(a, vector<int32_t>{0x40000001, 10, 19, 4,  13, 22, 7,  16, 25, 2,  11, 20, 5, 14,
+                                 23,         8,  17, 26, 3,  12, 21, 6,  15, 24, 9,  18, 27});
+    auto result = backend->create_tensor(element::i32, shape_rt);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_EQ((vector<int32_t>{0x40000001 + 10 + 19 + 4 + 13 + 22 + 7 + 16 + 25 + 2 + 11 + 20 + 5 +
+                               14 + 23 + 8 + 17 + 26 + 3 + 12 + 21 + 6 + 15 + 24 + 9 + 18 + 27}),
+              read_vector<int32_t>(result));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, sum_3d_eliminate_zero_dim)
 {
     Shape shape_a{3, 0, 2};
@@ -527,6 +549,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_trivial_in_double)
 
 #if NGRAPH_INTERPRETER_ENABLE
 
+#ifndef _WIN32
 NGRAPH_TEST(${BACKEND_NAME}, sum_stable_acc)
 {
     std::string backend_name = "${BACKEND_NAME}";
@@ -558,6 +581,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_stable_acc)
     EXPECT_TRUE(
         test::all_close_f(ref_results.at(0), bk_results.at(0), DEFAULT_FLOAT_TOLERANCE_BITS + 1));
 }
+#endif
 
 NGRAPH_TEST(${BACKEND_NAME}, sum_stable_acc_double)
 {
@@ -618,6 +642,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_stable_simple_float)
         test::all_close_f(ref_results.at(0), bk_results.at(0), DEFAULT_FLOAT_TOLERANCE_BITS - 1));
 }
 
+#ifndef _WIN32
 NGRAPH_TEST(${BACKEND_NAME}, sum_stable_simple_double)
 {
     std::string backend_name = "${BACKEND_NAME}";
@@ -661,4 +686,6 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_stable_simple_double)
 
     EXPECT_TRUE(test::all_close(ref_results.at(0), bk_results.at(0), 0.0, 2.0));
 }
+#endif
+
 #endif

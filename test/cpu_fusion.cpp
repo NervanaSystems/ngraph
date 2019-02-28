@@ -30,6 +30,7 @@
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/dequantize.hpp"
+#include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -38,6 +39,7 @@
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/relu.hpp"
+#include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tanh.hpp"
@@ -66,6 +68,7 @@
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
+#include "ngraph/runtime/cpu/op/rnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/runtime/cpu/op/update_slice.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
@@ -2180,6 +2183,9 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
     const int num_rnn_cell_states = 2;
     const int rnn_direction = 1;
     const int num_of_rnn_fused_layer = 1;
+    ngraph::runtime::cpu::rnn_utils::rnntype rnn_type =
+        ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_lstm;
+
     auto rnn_node = make_shared<op::Rnn>(src_layer,
                                          src_iter,
                                          weights_layer,
@@ -2190,7 +2196,9 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
                                          src_seq_length,
                                          num_rnn_cell_states,
                                          rnn_direction,
-                                         num_of_rnn_fused_layer);
+                                         num_of_rnn_fused_layer,
+                                         rnn_type);
+
     auto rnn_ht_output = make_shared<op::GetOutputElement>(rnn_node, 0);
     auto rnn_ct_output = make_shared<op::GetOutputElement>(rnn_node, 1);
 
@@ -3590,11 +3598,138 @@ TEST(cpu_quant_fusion, qconvb_relu)
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
+    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:0", 1);
+    auto cpu1_results = execute(cpu_f1, args, "CPU");
+    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:1", 1);
+    auto cpu2_results = execute(cpu_f2, args, "CPU");
+    EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
+}
+
+TEST(cpu_quant_fusion, qavg_pool)
+{
+    auto make_function = []() {
+        Shape shape_input{1, 2, 4, 4};
+        auto input = std::make_shared<op::Parameter>(element::f32, shape_input);
+        auto input_scale = op::Constant::create(element::f32, Shape{}, {2.0f});
+        auto weights_scale = op::Constant::create(element::f32, Shape{}, {2.0f});
+        auto int8_zero = op::Constant::create(element::i8, Shape{}, {0});
+        auto uint8_zero = op::Constant::create(element::u8, Shape{}, {0});
+
+        op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+        auto q_input = std::make_shared<op::Quantize>(
+            input, input_scale, uint8_zero, element::u8, AxisSet{}, round_mode);
+        auto dq = std::make_shared<op::Dequantize>(
+            q_input, input_scale, uint8_zero, element::f32, AxisSet{});
+        auto avg_pool = std::make_shared<op::AvgPool>(dq, Shape{2, 2});
+        return make_shared<Function>(NodeVector{avg_pool}, ParameterVector{input});
+    };
+
+    auto cpu_f1 = make_function();
+    auto cpu_f2 = make_function();
+
+    test::Uniform<float> rng(4.0f, 4.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f1->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
 
     set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:0", 1);
     auto cpu1_results = execute(cpu_f1, args, "CPU");
     set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:1", 1);
     auto cpu2_results = execute(cpu_f2, args, "CPU");
+    EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
+}
+
+TEST(cpu_quant_fusion, qmax_pool)
+{
+    auto make_function = []() {
+        Shape shape_input{1, 2, 4, 4};
+        auto input = std::make_shared<op::Parameter>(element::f32, shape_input);
+        auto input_scale = op::Constant::create(element::f32, Shape{}, {2.0f});
+        auto weights_scale = op::Constant::create(element::f32, Shape{}, {2.0f});
+        auto int8_zero = op::Constant::create(element::i8, Shape{}, {0});
+        auto uint8_zero = op::Constant::create(element::u8, Shape{}, {0});
+
+        op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+        auto q_input = std::make_shared<op::Quantize>(
+            input, input_scale, uint8_zero, element::u8, AxisSet{}, round_mode);
+        auto dq = std::make_shared<op::Dequantize>(
+            q_input, input_scale, uint8_zero, element::f32, AxisSet{});
+        auto maxpool = std::make_shared<op::MaxPool>(dq, Shape{2, 2});
+        return make_shared<Function>(NodeVector{maxpool}, ParameterVector{input});
+    };
+
+    auto cpu_f1 = make_function();
+    auto cpu_f2 = make_function();
+
+    test::Uniform<float> rng(1.0f, 10.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f1->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:0", 1);
+    auto cpu1_results = execute(cpu_f1, args, "CPU");
+    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:1", 1);
+    auto cpu2_results = execute(cpu_f2, args, "CPU");
+    EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
+}
+
+TEST(cpu_quant_fusion, qconcat)
+{
+    auto make_function = []() {
+        auto get_input_slice = [](std::shared_ptr<op::Parameter>& input) {
+            auto input_scale = op::Constant::create(element::f32, Shape{}, {2.0f});
+            auto int8_zero = op::Constant::create(element::i8, Shape{}, {0});
+            auto uint8_zero = op::Constant::create(element::u8, Shape{}, {0});
+
+            op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+            auto q_input = std::make_shared<op::Quantize>(
+                input, input_scale, uint8_zero, element::u8, AxisSet{}, round_mode);
+            auto dq = std::make_shared<op::Dequantize>(
+                q_input, input_scale, uint8_zero, element::f32, AxisSet{});
+            return dq;
+        };
+
+        NodeVector concat_inputs, concats;
+        ParameterVector inputs;
+        Shape shape_input{1, 2, 4, 4};
+        inputs.push_back(std::make_shared<op::Parameter>(element::f32, shape_input));
+        concat_inputs.push_back(get_input_slice(inputs.back()));
+        // Concat2  -- Concat7
+        for (size_t i = 0; i < 6; i++)
+        {
+            inputs.push_back(std::make_shared<op::Parameter>(element::f32, shape_input));
+            concat_inputs.push_back(get_input_slice(inputs.back()));
+            concats.push_back(std::make_shared<op::Concat>(concat_inputs, 0));
+        }
+        return make_shared<Function>(concats, inputs);
+    };
+
+    auto cpu_f1 = make_function();
+    auto cpu_f2 = make_function();
+
+    test::Uniform<float> rng(2.0f, 2.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f1->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:0", 1);
+    auto cpu1_results = execute(cpu_f1, args, "CPU");
+    set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:1", 1);
+    auto cpu2_results = execute(cpu_f2, args, "CPU");
+    // Expect Concat2 -- Concat6 to be fused and not Concat7
+    ASSERT_EQ(count_ops_of_type<op::QuantizedConcat>(cpu_f2), 5);
     EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
 }
 
@@ -3807,4 +3942,47 @@ TEST(cpu_quant_fusion, qconvba)
     set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:1", 1);
     auto cpu2_results = execute(cpu_f2, args, "CPU");
     EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
+}
+
+TEST(cpu_fusion, fuse_bi_directional_rnn)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
+    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
+    pass_manager.register_pass<runtime::cpu::pass::MultiLayerRNNFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::BiDirectionalRnn>();
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/lstm_bi_directional.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    pass_manager.run_passes(func);
+    // Bidirectional graph pass will folds the reverse seq
+    auto rev_seq_ops = get_ops_of_type<op::Reverse>(func);
+    auto rnn_ops = get_ops_of_type<op::Rnn>(func);
+    EXPECT_EQ(rev_seq_ops.size(), 0);
+    // fuse two bi-directional rnn layers in to one MKLDNN Op
+    EXPECT_EQ(rnn_ops.size(), 1);
+}
+
+TEST(cpu_fusion, bi_rnn_interpreter_vs_cpu)
+{
+    const std::string file_name("mxnet/lstm_bi_directional.json");
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < int_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+    }
 }

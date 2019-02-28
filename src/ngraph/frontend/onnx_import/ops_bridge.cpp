@@ -46,6 +46,7 @@
 #include "op/cosh.hpp"
 #include "op/depth_to_space.hpp"
 #include "op/div.hpp"
+#include "op/dropout.hpp"
 #include "op/elu.hpp"
 #include "op/equal.hpp"
 #include "op/exp.hpp"
@@ -61,6 +62,7 @@
 #include "op/less.hpp"
 #include "op/log.hpp"
 #include "op/log_softmax.hpp"
+#include "op/lp_pool.hpp"
 #include "op/lrn.hpp"
 #include "op/lstm.hpp"
 #include "op/matmul.hpp"
@@ -239,7 +241,7 @@ namespace ngraph
             REGISTER_OPERATOR("DepthToSpace", 1, depth_to_space);
             REGISTER_OPERATOR("Div", 1, div);
             REGISTER_OPERATOR("Div", 7, div);
-            REGISTER_OPERATOR("Dropout", 1, identity);
+            REGISTER_OPERATOR("Dropout", 1, dropout);
             REGISTER_OPERATOR("Elu", 1, elu);
             REGISTER_OPERATOR("Equal", 1, equal);
             REGISTER_OPERATOR("Exp", 1, exp);
@@ -247,6 +249,7 @@ namespace ngraph
             REGISTER_OPERATOR("Floor", 1, floor);
             REGISTER_OPERATOR("Gemm", 1, gemm);
             REGISTER_OPERATOR("GlobalAveragePool", 1, global_average_pool);
+            REGISTER_OPERATOR("GlobalLpPool", 1, global_lp_pool);
             REGISTER_OPERATOR("GlobalMaxPool", 1, global_max_pool);
             REGISTER_OPERATOR("Greater", 1, greater);
             REGISTER_OPERATOR("HardSigmoid", 1, hard_sigmoid);

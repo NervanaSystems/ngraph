@@ -18,7 +18,7 @@
 
 #include <CPP/topology.hpp>
 
-#include "ngraph/runtime/intelgpu/code_writer.hpp"
+#include "ngraph/code_writer.hpp"
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/axis_vector.hpp"
@@ -57,6 +57,19 @@ namespace ngraph
                                                 const Shape& win_shape,
                                                 const Shape& win_stride,
                                                 const Shape& pad_below);
+
+            void do_max_avg_pool_operation(cldnn::topology& topology,
+                                           const std::string& input_name,
+                                           const Shape& input_shape,
+                                           const std::string& output_name,
+                                           const Shape& output_shape,
+                                           const element::Type& output_type,
+                                           const Shape& win_shape,
+                                           const Shape& win_stride,
+                                           const Shape& pad_below,
+                                           bool include_padding,
+                                           const std::string& def_val,
+                                           bool is_max_pool);
 
             void do_avg_pool_backprop_operation(cldnn::topology& topology,
                                                 const std::string& delta_name,
@@ -232,14 +245,14 @@ namespace ngraph
                                     const AxisSet& axis = {},
                                     bool is_reversed = false);
             std::vector<size_t>
-                generate_loops(codegen::CodeWriter& writer, const Shape& shape, bool is_begin);
+                generate_loops(CodeWriter& writer, const Shape& shape, bool is_begin);
             std::vector<size_t>
-                generate_loops_w_axes(codegen::CodeWriter& writer,
+                generate_loops_w_axes(CodeWriter& writer,
                                       const Shape& shape,
                                       bool is_begin,
                                       const AxisSet& axis = {},
                                       const std::string& expression = std::string());
-            void gen_func_def(codegen::CodeWriter& writer,
+            void gen_func_def(CodeWriter& writer,
                               const std::string& entry_point_name,
                               const std::vector<std::string>& input_types,
                               const std::vector<Shape>& input_shapes,
