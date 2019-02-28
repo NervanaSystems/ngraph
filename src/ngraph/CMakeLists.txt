@@ -172,6 +172,19 @@ set (SRC
     cpio.cpp
     )
 
+set(SRC ${SRC}
+    runtime/hybrid/hybrid_backend.cpp
+    runtime/hybrid/hybrid_executable.cpp
+    runtime/hybrid/hybrid_util.cpp
+    runtime/hybrid/op/function_call.cpp
+    runtime/hybrid/pass/default_placement.cpp
+    runtime/hybrid/pass/dump.cpp
+    runtime/hybrid/pass/fix_get_output_element.cpp
+    runtime/hybrid/pass/liveness.cpp
+    runtime/hybrid/pass/memory_layout.cpp
+    )
+
+
 if(NGRAPH_DISTRIBUTED_ENABLE)
     list(APPEND SRC distributed.cpp)
 endif()
