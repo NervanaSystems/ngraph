@@ -12095,3 +12095,56 @@ TEST(type_prop, all_partial_rank_static_dynamic_axes_oob)
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
+
+TEST(type_prop, DISABLED_benchmark_type_prop_add)
+{
+    auto p1 = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    auto p2 = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+
+    constexpr size_t num_iterations = 1000000;
+    size_t total_nanosec = 0;
+
+    stopwatch sw;
+
+    for (size_t i = 0; i < num_iterations; i++)
+    {
+        sw.start();
+        auto n = make_shared<op::Add>(p1, p2);
+        sw.stop();
+
+        total_nanosec += sw.get_nanoseconds();
+    }
+
+    std::cout.imbue(std::locale(""));
+    std::cout << "Constructed " << std::fixed << num_iterations << " Add ops in " << std::fixed
+              << total_nanosec << " ns" << std::endl;
+}
+
+TEST(type_prop, DISABLED_benchmark_type_prop_convolution)
+{
+    auto d = make_shared<op::Parameter>(element::f32, Shape{64, 3, 224, 224});
+    auto f = make_shared<op::Parameter>(element::f32, Shape{64, 3, 7, 7});
+    auto strides = Strides{1, 1};
+    auto dilation = Strides{1, 1};
+    auto padding_below = CoordinateDiff{1, 1};
+    auto padding_above = CoordinateDiff{1, 1};
+
+    constexpr size_t num_iterations = 1000000;
+    size_t total_nanosec = 0;
+
+    stopwatch sw;
+
+    for (size_t i = 0; i < num_iterations; i++)
+    {
+        sw.start();
+        auto n =
+            make_shared<op::Convolution>(d, f, strides, dilation, padding_below, padding_above);
+        sw.stop();
+
+        total_nanosec += sw.get_nanoseconds();
+    }
+
+    std::cout.imbue(std::locale(""));
+    std::cout << "Constructed " << std::fixed << num_iterations << " Convolution ops in "
+              << std::fixed << total_nanosec << " ns" << std::endl;
+}
