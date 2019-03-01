@@ -1918,6 +1918,8 @@ string runtime::cpu::CPU_ExternalFunction::strip_comments(const string& s)
     return out.str();
 }
 
+#endif
+
 std::unordered_set<descriptor::Tensor*>&
     runtime::cpu::CPU_ExternalFunction::get_tensor_set(descriptor::Tensor* output_tensor)
 {
@@ -1928,5 +1930,3 @@ std::unordered_set<descriptor::Tensor*>&
     NGRAPH_ASSERT(output_buffer_it != bufferID_to_tensorSets.end());
     return output_buffer_it->second.second;
 }
-
-#endif
