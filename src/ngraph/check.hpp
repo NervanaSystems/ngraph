@@ -64,13 +64,13 @@ namespace ngraph
     };
 }
 
-#define CHECK(exc_class, ctx, check, args...)                                                      \
+#define CHECK(exc_class, ctx, check, ...)                                                          \
     do                                                                                             \
     {                                                                                              \
         if (!(check))                                                                              \
         {                                                                                          \
             ::std::stringstream ss;                                                                \
-            write_all_to_stream(ss, args);                                                         \
+            write_all_to_stream(ss, __VA_ARGS__);                                                  \
             throw exc_class(                                                                       \
                 (::ngraph::CheckLocInfo{__FILE__, __LINE__, #check}), (ctx), ss.str());            \
         }                                                                                          \

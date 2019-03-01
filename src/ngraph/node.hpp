@@ -328,5 +328,5 @@ namespace ngraph
     NGRAPH_FAIL_STREAM_WITH_LOC(::ngraph::NodeValidationError,                                     \
                                 ::ngraph::node_validation_assertion_string(node))
 
-#define NODE_VALIDATION_CHECK(node, cond, args...)                                                 \
-    CHECK(::NodeValidationFailure, (node), (cond), args)
+#define NODE_VALIDATION_CHECK(node, cond, ...)                                                     \
+    CHECK(::NodeValidationFailure, (node), (cond), __VA_ARGS__)
