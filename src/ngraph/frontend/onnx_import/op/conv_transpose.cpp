@@ -171,15 +171,19 @@ namespace ngraph
                         }
                         for (int i = 0; i < num_spatial_dims; ++i)
                         {
-                            padding_below[i] = (strides[i] * (data_shape[i + 2] - 1) +
-                                                dilations[i] * (weights_shape[i + 2] - 1) -
-                                                data_dilation_strides[i] *
-                                                    (output_shape[i] - output_padding[i] - 1)) /
-                                               2;
-                            if (static_cast<int>(padding_below[i]) < 0)
+                            padding_below[i] = strides[i] * (data_shape[i + 2] - 1) +
+                                               dilations[i] * (weights_shape[i + 2] - 1) -
+                                               data_dilation_strides[i] *
+                                                   (output_shape[i] - output_padding[i] - 1);
+                            if (padding_below[i] < 0)
                             {
-                                output_padding[i] = -static_cast<int>(padding_below[i]);
-                                padding_below[i] = 0;
+                                // (int) -9 / 2 = -5 but we need -4
+                                // (int) -9 --> 9 / 2 = 4 --> -4
+                                padding_below[i] = -(-padding_below[i] / 2);
+                            }
+                            else
+                            {
+                                padding_below[i] /= 2;
                             }
                             padding_above[i] = padding_below[i];
                             data_batch_shape[i + 2] = output_shape[i];
@@ -187,7 +191,7 @@ namespace ngraph
                     }
                     else
                     {
-                        for (int i = 0; i < num_spatial_dims && output_shape.empty(); ++i)
+                        for (int i = 0; i < num_spatial_dims; ++i)
                         {
                             // Calculating spatial dims of data output shape for ngraph conv backprop op
                             // | s(ds-1) + d(ws-1) - pb - pa |
