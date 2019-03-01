@@ -16,6 +16,8 @@
 
 include(ExternalProject)
 
+set(NGRAPH_LLVM_VERSION 5.0.2)
+
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     if (DEFINED NGRAPH_USE_CXX_ABI)
         set(COMPILE_FLAGS "-D_GLIBCXX_USE_CXX11_ABI=${NGRAPH_USE_CXX_ABI}")
@@ -25,7 +27,7 @@ endif()
 ExternalProject_Add(
     ext_clang
     PREFIX clang
-    URL http://releases.llvm.org/5.0.2/cfe-5.0.2.src.tar.xz
+    URL http://releases.llvm.org/${NGRAPH_LLVM_VERSION}/cfe-${NGRAPH_LLVM_VERSION}.src.tar.xz
     URL_HASH SHA1=6581765ec52f8a6354ab56a8e55a8cac1aa5e388
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
@@ -40,7 +42,7 @@ set(CLANG_SOURCE_DIR ${SOURCE_DIR})
 ExternalProject_Add(
     ext_openmp
     PREFIX openmp
-    URL http://releases.llvm.org/5.0.2/openmp-5.0.2.src.tar.xz
+    URL http://releases.llvm.org/${NGRAPH_LLVM_VERSION}/openmp-${NGRAPH_LLVM_VERSION}.src.tar.xz
     URL_HASH SHA1=0e78a7646b63e074e31b6a65e15446af0bdf3c07
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
@@ -69,7 +71,7 @@ ExternalProject_Add(
     ext_llvm
     PREFIX llvm
     DEPENDS ext_clang ext_openmp
-    URL http://releases.llvm.org/5.0.2/llvm-5.0.2.src.tar.xz
+    URL http://releases.llvm.org/${NGRAPH_LLVM_VERSION}/llvm-${NGRAPH_LLVM_VERSION}.src.tar.xz
     URL_HASH SHA1=576d005305335049b89608d897d7ec184d99c6e1
     CMAKE_GENERATOR ${CMAKE_GENERATOR}
     CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
@@ -179,7 +181,7 @@ set(LLVM_LINK_LIBS
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMDemangle${CMAKE_STATIC_LIBRARY_SUFFIX}
 )
 
-if(NOT WIN32)
+if(LINUX OR APPLE)
     set(LLVM_LINK_LIBS ${LLVM_LINK_LIBS} m)
 endif()
 
