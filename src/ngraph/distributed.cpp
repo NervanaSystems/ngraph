@@ -33,7 +33,7 @@ ngraph::Distributed::Distributed()
     if (!MLSL::Environment::GetEnv().IsInitialized())
     {
         MLSL::Environment::GetEnv().Init(nullptr, nullptr);
-        this_init_comm = true;
+        m_init_comm = true;
     }
 #elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
     int flag = 0;
@@ -41,7 +41,7 @@ ngraph::Distributed::Distributed()
     if (!flag)
     {
         MPI_Init(NULL, NULL);
-        this_init_comm = true;
+        m_init_comm = true;
     }
 #else
     throw ngraph_error("Distributed Library not supported/mentioned");
@@ -50,7 +50,7 @@ ngraph::Distributed::Distributed()
 
 ngraph::Distributed::~Distributed()
 {
-    if (this_init_comm == true)
+    if (m_init_comm == true)
     {
         finalize();
     }

@@ -4,7 +4,7 @@
 # Default rule: @diyessi gets everything.
 *                                   @diyessi
 
-/cmake/                             @rkimballn1 @silee2
+/cmake/                             @rkimballn1 @silee2 @aslepko
 
 /.ci/                               @aslepko
 /.ci/travis/                        @aslepko @postrational
