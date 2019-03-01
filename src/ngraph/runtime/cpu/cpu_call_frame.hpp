@@ -26,19 +26,27 @@
 #include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
+class CPURuntimeContextCG;
+
 namespace ngraph
 {
     namespace runtime
     {
         namespace cpu
         {
-            class CPU_CallFrame;
             class CPU_ExternalFunction;
             class CPU_Debugger;
 
-            using EntryPoint_t = void(void** inputs, void** outputs, CPURuntimeContext* ctx);
+            using InitContextFuncTy = CPURuntimeContextCG*();
+            using DestroyContextFuncTy = void(CPURuntimeContextCG*);
+            using EntryPointTy = void(void** inputs,
+                                      void** outputs,
+                                      CPURuntimeContext* ctx,
+                                      CPURuntimeContextCG* cg_ctx);
 
-            using EntryPoint = std::function<EntryPoint_t>;
+            using InitContextFuncCG = std::function<InitContextFuncTy>;
+            using DestroyContextFuncCG = std::function<DestroyContextFuncTy>;
+            using EntryPoint = std::function<EntryPointTy>;
 
             // Compile and execute graphs
             class CPU_CallFrame
@@ -47,6 +55,8 @@ namespace ngraph
                 friend class CPU_Debugger;
 
                 CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction> external_function,
+                              InitContextFuncCG compiled_init_ctx_func,
+                              DestroyContextFuncCG compiled_destroy_ctx_func,
                               EntryPoint compiled_function);
                 ~CPU_CallFrame();
 
@@ -60,6 +70,7 @@ namespace ngraph
                                        const LayoutDescriptorPtrs& layouts) const;
 
                 void setup_runtime_context();
+                void setup_cg_runtime_context();
                 void cleanup_runtime_context();
 
             protected:
@@ -71,8 +82,21 @@ namespace ngraph
                                 const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
 
                 std::shared_ptr<CPU_ExternalFunction> m_external_function;
+
+                CPURuntimeContext* ctx = nullptr;
+
+                /* Codegen specific */
+
+                /// Function that initializes the context used in codegen mode.
+                InitContextFuncCG m_compiled_init_ctx_func;
+
+                /// Function that destroys the context used in codegen mode.
+                DestroyContextFuncCG m_compiled_destroy_ctx_func;
+
                 EntryPoint m_compiled_function;
-                CPURuntimeContext* ctx;
+
+                /// Execution context used in codegen mode.
+                CPURuntimeContextCG* cg_ctx = nullptr;
             };
         }
     }

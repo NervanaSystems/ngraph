@@ -138,7 +138,7 @@ namespace ngraph
 
                         // Expand sub_dot result with single empty outermost axis, in order to
                         // later concatenate sub_dots at this axis.
-                        small_dots.at(g) = reshape::add_empty_axes(sub_dot);
+                        small_dots.at(g) = reshape::expand_dims(sub_dot);
                     }
 
                     // Concatenate sub_dots on groups axis.

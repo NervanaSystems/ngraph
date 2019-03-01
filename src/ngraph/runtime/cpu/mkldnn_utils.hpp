@@ -34,8 +34,9 @@ namespace ngraph
             namespace mkldnn_utils
             {
                 extern mkldnn::engine global_cpu_engine;
+#ifndef _WIN32
                 extern "C" void mkl_serv_free_buffers();
-
+#endif
                 mkldnn::memory::format
                     CreateNativeDataFormat(const ngraph::runtime::cpu::LayoutDescriptor& layout);
                 mkldnn::memory::format CreateNativeDataFormat(const Shape& shape);
