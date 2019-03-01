@@ -287,7 +287,7 @@
         __register_##OP##_cf_builder()                                                             \
         {                                                                                          \
             GetGlobalCFDispatcherCPU().insert({type_index(typeid(ngraph::op::OP)),                 \
-                                            &runtime::cpu::Builder::CFbuild<ngraph::op::OP>});     \
+                                               &runtime::cpu::Builder::CFbuild<ngraph::op::OP>});  \
         }                                                                                          \
     } __register_##OP##_cf_builder_instance;
 

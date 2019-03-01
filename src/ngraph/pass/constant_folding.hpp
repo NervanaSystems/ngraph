@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -40,9 +41,18 @@ public:
         QUANTIZE
     };
 
-    ConstantFolding()
+    ConstantFolding(ngraph::Backend backend = ngraph::Backend::ANY)
         : GraphRewrite()
     {
+        switch (backend)
+        {
+        // non-cpu backends could use its own kernel or cpu kernel for constant folding
+        case (ngraph::Backend::CPU):
+            m_cfmap = GetGlobalCFDispatcherCPU();
+            break;
+        // default to use reference kernel
+        default: break;
+        }
         construct_constant_reshape();
         construct_constant_broadcast();
         construct_constant_pad();
@@ -54,9 +64,19 @@ public:
 
     //this allows to specify the order in which matchers will be run
     //and also allows to register the same matcher more than once
-    ConstantFolding(const std::vector<CFTransformations>& transformations)
+    ConstantFolding(const std::vector<CFTransformations>& transformations,
+                    ngraph::Backend backend = ngraph::Backend::ANY)
         : GraphRewrite()
     {
+        switch (backend)
+        {
+        // non-cpu backends could use its own kernel or cpu kernel for constant folding
+        case (ngraph::Backend::CPU):
+            m_cfmap = GetGlobalCFDispatcherCPU();
+            break;
+        // default to use reference kernel
+        default: break;
+        }
         for (auto cft : transformations)
         {
             switch (cft)
@@ -80,4 +100,7 @@ private:
     void construct_constant_binary();
     void construct_constant_quantize();
     void construct_constant_dequantize();
+
+    ngraph::BuildCFMap& m_cfmap = GetGlobalCFDispatcher();
+    ;
 };
