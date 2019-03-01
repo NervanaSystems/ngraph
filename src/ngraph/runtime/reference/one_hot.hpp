@@ -27,8 +27,6 @@ namespace ngraph
     {
         namespace reference
         {
-            // NOTE: Execution throws `std::range_error` if either a non-integral value or an out-of-bounds
-            // value is detected in the input tensor.
             template <typename T>
             void one_hot(const T* arg,
                          T* out,

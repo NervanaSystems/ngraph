@@ -40,7 +40,7 @@ namespace ngraph
                     memset(out, 0, sizeof(ElementType) * element_count);
                     auto pos_raw = (static_cast<ElementType*>(arg))[0];
                     size_t pos = pos_raw;
-                    // if (pos < element_count)
+                    if (pos < element_count)
                     {
                         (static_cast<ElementType*>(out))[pos] = 1;
                     }
