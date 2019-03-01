@@ -19,7 +19,7 @@ producer_name: "ngraph ONNXImporter"
     name: "A"
     type {
       tensor_type {
-        elem_type: FLOAT
+        elem_type: 1 
         shape {
           dim {
             dim_value: 1
@@ -32,7 +32,7 @@ producer_name: "ngraph ONNXImporter"
     name: "B"
     type {
       tensor_type {
-        elem_type: FLOAT
+        elem_type: 1
         shape {
           dim {
             dim_value: 1
@@ -45,7 +45,7 @@ producer_name: "ngraph ONNXImporter"
     name: "C"
     type {
       tensor_type {
-        elem_type: FLOAT
+        elem_type: 1
         shape {
           dim {
             dim_value: 1
@@ -58,7 +58,7 @@ producer_name: "ngraph ONNXImporter"
     name: "Y"
     type {
       tensor_type {
-        elem_type: FLOAT
+        elem_type: 1
         shape {
           dim {
             dim_value: 1

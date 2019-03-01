@@ -8,7 +8,7 @@ graph {
       name: "value"
       t {
         dims: 3
-        data_type: INT64
+        data_type: 7
         int64_data: 2
         int64_data: 6
         int64_data: 2
@@ -28,7 +28,7 @@ graph {
     name: "data"
     type {
       tensor_type {
-        elem_type: FLOAT
+        elem_type: 1
         shape {
           dim {
             dim_value: 2
@@ -47,7 +47,7 @@ graph {
     name: "reshaped"
     type {
       tensor_type {
-        elem_type: FLOAT
+        elem_type: 1
         shape {
         }
       }

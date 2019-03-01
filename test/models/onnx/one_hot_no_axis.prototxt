@@ -11,7 +11,7 @@ graph {
   name: "test_onehot_without_axis"
   initializer {
     dims: 1
-    data_type: INT64
+    data_type: 7
     int64_data: 12
     name: "depth"
   }
@@ -19,7 +19,7 @@ graph {
     name: "indices"
     type {
       tensor_type {
-        elem_type: INT64
+        elem_type: 7
         shape {
           dim {
             dim_value: 3
@@ -32,7 +32,7 @@ graph {
     name: "depth"
     type {
       tensor_type {
-        elem_type: INT64
+        elem_type: 7
         shape {
           dim {
             dim_value: 1
@@ -45,7 +45,7 @@ graph {
     name: "values"
     type {
       tensor_type {
-        elem_type: INT64
+        elem_type: 7
         shape {
           dim {
             dim_value: 2
@@ -58,7 +58,7 @@ graph {
     name: "y"
     type {
       tensor_type {
-        elem_type: INT32
+        elem_type: 6
         shape {
           dim {
             dim_value: 3

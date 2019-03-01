@@ -36,7 +36,7 @@ graph {
     name: "Input4"
     type {
       tensor_type {
-        elem_type: FLOAT
+        elem_type: 1
         shape {
           dim {
             dim_value: 1
@@ -55,7 +55,7 @@ graph {
     name: "Input5"
     type {
       tensor_type {
-        elem_type: FLOAT
+        elem_type: 1
         shape {
           dim {
             dim_value: 1
@@ -74,7 +74,7 @@ graph {
     name: "Input3"
     type {
       tensor_type {
-        elem_type: FLOAT
+        elem_type: 1
         shape {
           dim {
             dim_value: 1
@@ -93,7 +93,7 @@ graph {
     name: "Plus9_Output_0"
     type {
       tensor_type {
-        elem_type: FLOAT
+        elem_type: 1
         shape {
           dim {
             dim_value: 1
@@ -112,7 +112,7 @@ graph {
     name: "ElementTimes6_Output_0"
     type {
       tensor_type {
-        elem_type: FLOAT
+        elem_type: 1
         shape {
           dim {
             dim_value: 1
