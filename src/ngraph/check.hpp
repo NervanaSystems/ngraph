@@ -64,14 +64,16 @@ namespace ngraph
     };
 }
 
+// TODO(amprocte): refactor so we don't have to introduce a locally-scoped variable and risk
+// shadowing here.
 #define CHECK(exc_class, ctx, check, ...)                                                          \
     do                                                                                             \
     {                                                                                              \
         if (!(check))                                                                              \
         {                                                                                          \
-            ::std::stringstream ss;                                                                \
-            write_all_to_stream(ss, __VA_ARGS__);                                                  \
+            ::std::stringstream ss___;                                                             \
+            write_all_to_stream(ss___, __VA_ARGS__);                                               \
             throw exc_class(                                                                       \
-                (::ngraph::CheckLocInfo{__FILE__, __LINE__, #check}), (ctx), ss.str());            \
+                (::ngraph::CheckLocInfo{__FILE__, __LINE__, #check}), (ctx), ss___.str());         \
         }                                                                                          \
     } while (0)
