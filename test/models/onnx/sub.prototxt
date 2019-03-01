@@ -1,6 +1,5 @@
 ir_version: 3
-producer_name: "CNTK"
-producer_version: "CNTK_VERSION"
+producer_name: "nGraph ONNX Importer"
 model_version: 1
 graph {
   node {

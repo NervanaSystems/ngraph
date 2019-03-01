@@ -1,5 +1,5 @@
 ir_version: 3
-producer_name: "ngraph ONNXImporter"
+producer_name: "nGraph ONNX Importer"
   node {
     input: "A"
     input: "B"
@@ -19,7 +19,7 @@ producer_name: "ngraph ONNXImporter"
     name: "A"
     type {
       tensor_type {
-        elem_type: 1 
+        elem_type: 1
         shape {
           dim {
             dim_value: 1

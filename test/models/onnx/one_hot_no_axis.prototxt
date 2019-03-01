@@ -1,5 +1,5 @@
 ir_version: 3
-producer_name: "backend-test"
+producer_name: "nGraph ONNX Importer"
 graph {
   node {
     input: "indices"

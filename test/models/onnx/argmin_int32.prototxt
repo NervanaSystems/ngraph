@@ -1,3 +1,5 @@
+ir_version: 3
+producer_name: "nGraph ONNX Importer"
 graph {
   node {
     input: "data"
