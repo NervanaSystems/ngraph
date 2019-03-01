@@ -42,16 +42,16 @@ namespace ngraph
     std::string get_timestamp();
     void LogPrintf(const char* fmt, ...);
     extern bool DISABLE_LOGGING;
-#define NGRAPH_DEBUG_PRINT(fmt, args...)                                                           \
+#define NGRAPH_DEBUG_PRINT(fmt, ...)                                                               \
     do                                                                                             \
     {                                                                                              \
         if (!DISABLE_LOGGING)                                                                      \
         {                                                                                          \
-            LogPrintf(fmt, args);                                                                  \
+            LogPrintf(fmt, __VA_ARGS__);                                                           \
         }                                                                                          \
     } while (0)
 #else
-#define NGRAPH_DEBUG_PRINT(fmt, args...)
+#define NGRAPH_DEBUG_PRINT(fmt, ...)
 #endif
     class ConstString
     {
