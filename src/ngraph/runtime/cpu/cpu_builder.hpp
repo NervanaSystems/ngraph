@@ -232,6 +232,32 @@
     };                                                                                             \
     functors.emplace_back(functor);
 
+#define BUILD_UNARY_ELEMWISE_CF_FUNCTOR(OP)                                                        \
+    std::function<void(void*, void*, size_t, int)> kernel;                                         \
+                                                                                                   \
+    SELECT_KERNEL(kernel, node->get_input_element_type(0), OP);                                    \
+                                                                                                   \
+    auto element_count = shape_size(node->get_shape());                                            \
+                                                                                                   \
+    auto functor = [&, kernel, element_count](const std::vector<void*> inputs,                     \
+                                              std::vector<void*> outputs) {                        \
+        kernel(inputs[0], outputs[0], element_count, 0);                                           \
+    };                                                                                             \
+    return functor;
+
+#define BUILD_BINARY_ELEMWISE_CF_FUNCTOR(OP)                                                       \
+    std::function<void(void*, void*, void*, size_t, int)> kernel;                                  \
+                                                                                                   \
+    SELECT_KERNEL(kernel, node->get_input_element_type(0), OP);                                    \
+                                                                                                   \
+    auto element_count = shape_size(node->get_shape());                                            \
+                                                                                                   \
+    auto functor = [&, kernel, element_count](const std::vector<void*> inputs,                     \
+                                              std::vector<void*> outputs) {                        \
+        kernel(inputs[0], inputs[1], outputs[0], element_count, 0);                                \
+    };                                                                                             \
+    return functor;
+
 #define REGISTER_OP_BUILDER(OP)                                                                    \
     static struct __register_##OP##_builder                                                        \
     {                                                                                              \
@@ -252,6 +278,29 @@
                  &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::OP>});                    \
         }                                                                                          \
     } __register_##OP##_builder_instance;
+
+#define BUILDER_CF_DECL(op_name) CFbuild<op_name>(const ngraph::Node* node)
+
+#define REGISTER_CF_BUILDER(OP)                                                                    \
+    static struct __register_##OP##_cf_builder                                                     \
+    {                                                                                              \
+        __register_##OP##_cf_builder()                                                             \
+        {                                                                                          \
+            GetGlobalCFDispatcherCPU().insert({type_index(typeid(ngraph::op::OP)),                 \
+                                            &runtime::cpu::Builder::CFbuild<ngraph::op::OP>});     \
+        }                                                                                          \
+    } __register_##OP##_cf_builder_instance;
+
+#define REGISTER_CPU_CF_BUILDER(OP)                                                                \
+    static struct __register_##OP##_cf_builder                                                     \
+    {                                                                                              \
+        __register_##OP##_cf_builder()                                                             \
+        {                                                                                          \
+            GetGlobalCFDispatcherCPU().insert(                                                     \
+                {type_index(typeid(ngraph::runtime::cpu::op::OP)),                                 \
+                 &runtime::cpu::Builder::CFbuild<ngraph::runtime::cpu::op::OP>});                  \
+        }                                                                                          \
+    } __register_##OP##_cf_builder_instance;
 
 namespace ngraph
 {
@@ -280,6 +329,13 @@ namespace ngraph
                 {
                     throw unsupported_op("Unimplemented op '" + node->description() +
                                          "' in CPU builder");
+                }
+
+                template <typename OP>
+                static CFFunctionTy CFbuild(const ngraph::Node* node)
+                {
+                    throw unsupported_op("Unimplemented op '" + node->description() +
+                                         "' for constant folding in CPU builder");
                 }
 
                 static void nop(CPU_ExternalFunction* external_function,

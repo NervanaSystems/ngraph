@@ -523,3 +523,9 @@ AxisVector ngraph::get_permutation_to_default_order(const AxisVector& axis_order
     }
     return out;
 }
+
+BuildCFMap& ngraph::GetGlobalCFDispatcherCPU()
+{
+    static BuildCFMap build_cf_dispatcher{};
+    return build_cf_dispatcher;
+}

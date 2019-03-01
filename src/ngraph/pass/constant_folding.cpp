@@ -49,6 +49,7 @@
 #include "ngraph/runtime/reference/relu.hpp"
 #include "ngraph/runtime/reference/reshape.hpp"
 #include "ngraph/runtime/reference/subtract.hpp"
+#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -60,11 +61,27 @@ shared_ptr<op::Constant> make_constant_reshape(shared_ptr<op::Constant> constant
     auto out_shape = reshape->get_shape();
     vector<T> out_vec(shape_size(out_shape));
 
-    runtime::reference::reshape<T>(constant->get_vector<T>().data(),
-                                   out_vec.data(),
-                                   constant->get_shape(),
-                                   reshape->get_input_order(),
-                                   out_shape);
+    auto handler = GetGlobalCFDispatcherCPU().find(type_index(typeid(ngraph::op::Reshape)));
+    if (handler != GetGlobalCFDispatcherCPU().end())
+    {
+        vector<T> in_vec = constant->get_vector<T>();
+
+        vector<void*> inputs;
+        inputs.push_back(in_vec.data());
+        vector<void*> outputs;
+        outputs.push_back(out_vec.data());
+
+        auto func = handler->second(reshape.get());
+        func(inputs, outputs);
+    }
+    else
+    {
+        runtime::reference::reshape<T>(constant->get_vector<T>().data(),
+                                       out_vec.data(),
+                                       constant->get_shape(),
+                                       reshape->get_input_order(),
+                                       out_shape);
+    }
 
     return make_shared<op::Constant>(constant->get_element_type(), out_shape, out_vec);
 }
@@ -77,14 +94,32 @@ shared_ptr<op::Constant> make_constant_pad(shared_ptr<op::Constant> constant,
     vector<T> out_vec(shape_size(out_shape));
     auto pad_value = std::static_pointer_cast<op::Constant>(pad->get_argument(1));
 
-    runtime::reference::pad<T>(constant->get_vector<T>().data(),
-                               pad_value->get_vector<T>().data(),
-                               out_vec.data(),
-                               constant->get_shape(),
-                               out_shape,
-                               pad->get_padding_below(),
-                               pad->get_padding_above(),
-                               pad->get_padding_interior());
+    auto handler = GetGlobalCFDispatcherCPU().find(type_index(typeid(ngraph::op::Pad)));
+    if (handler != GetGlobalCFDispatcherCPU().end())
+    {
+        vector<T> in_vec1 = constant->get_vector<T>();
+        vector<T> in_vec2 = pad_value->get_vector<T>();
+
+        vector<void*> inputs;
+        inputs.push_back(in_vec1.data());
+        inputs.push_back(in_vec2.data());
+        vector<void*> outputs;
+        outputs.push_back(out_vec.data());
+
+        auto func = handler->second(pad.get());
+        func(inputs, outputs);
+    }
+    else
+    {
+        runtime::reference::pad<T>(constant->get_vector<T>().data(),
+                                   pad_value->get_vector<T>().data(),
+                                   out_vec.data(),
+                                   constant->get_shape(),
+                                   out_shape,
+                                   pad->get_padding_below(),
+                                   pad->get_padding_above(),
+                                   pad->get_padding_interior());
+    }
 
     return make_shared<op::Constant>(constant->get_element_type(), out_shape, out_vec);
 }
@@ -151,6 +186,8 @@ void ngraph::pass::ConstantFolding::construct_constant_reshape()
     auto constant_reshape_callback = [constant_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_reshape_callback against node = "
                      << m.get_match_root()->get_name();
+        //        std::cout << "In callback for constant_reshape_callback against node = "
+        //                     << m.get_match_root()->get_name() << std::endl;
 
         auto pattern_map = m.get_pattern_map();
 
@@ -198,11 +235,27 @@ shared_ptr<op::Constant> make_constant_broadcast(shared_ptr<op::Constant> consta
     auto out_shape = broadcast->get_shape();
     vector<T> out_vec(shape_size(out_shape));
 
-    runtime::reference::broadcast<T>(constant->get_vector<T>().data(),
-                                     out_vec.data(),
-                                     constant->get_shape(),
-                                     out_shape,
-                                     broadcast->get_broadcast_axes());
+    auto handler = GetGlobalCFDispatcherCPU().find(type_index(typeid(ngraph::op::Broadcast)));
+    if (handler != GetGlobalCFDispatcherCPU().end())
+    {
+        vector<T> in_vec = constant->get_vector<T>();
+
+        vector<void*> inputs;
+        inputs.push_back(in_vec.data());
+        vector<void*> outputs;
+        outputs.push_back(out_vec.data());
+
+        auto func = handler->second(broadcast.get());
+        func(inputs, outputs);
+    }
+    else
+    {
+        runtime::reference::broadcast<T>(constant->get_vector<T>().data(),
+                                         out_vec.data(),
+                                         constant->get_shape(),
+                                         out_shape,
+                                         broadcast->get_broadcast_axes());
+    }
 
     return make_shared<op::Constant>(constant->get_element_type(), out_shape, out_vec);
 }
@@ -264,48 +317,98 @@ shared_ptr<op::Constant> make_constant_binary(shared_ptr<op::Constant> a,
 {
     auto out_shape = binary->get_shape();
     vector<T> out_vec(shape_size(out_shape));
+    vector<T> in_vec1 = a->get_vector<T>();
+    vector<T> in_vec2 = b->get_vector<T>();
+
+    vector<void*> inputs;
+    inputs.push_back(in_vec1.data());
+    inputs.push_back(in_vec2.data());
+    vector<void*> outputs;
+    outputs.push_back(out_vec.data());
 
     if (std::dynamic_pointer_cast<op::Add>(binary))
     {
-        runtime::reference::add<T>(a->get_vector<T>().data(),
-                                   b->get_vector<T>().data(),
-                                   out_vec.data(),
-                                   shape_size(out_shape));
+        auto handler = GetGlobalCFDispatcherCPU().find(type_index(typeid(ngraph::op::Add)));
+        if (handler != GetGlobalCFDispatcherCPU().end())
+        {
+            auto func = handler->second(binary.get());
+            func(inputs, outputs);
+        }
+        else
+        {
+            runtime::reference::add<T>(
+                in_vec1.data(), in_vec2.data(), out_vec.data(), shape_size(out_shape));
+        }
     }
     else if (std::dynamic_pointer_cast<op::Subtract>(binary))
     {
-        runtime::reference::subtract<T>(a->get_vector<T>().data(),
-                                        b->get_vector<T>().data(),
-                                        out_vec.data(),
-                                        shape_size(out_shape));
+        auto handler = GetGlobalCFDispatcherCPU().find(type_index(typeid(ngraph::op::Subtract)));
+        if (handler != GetGlobalCFDispatcherCPU().end())
+        {
+            auto func = handler->second(binary.get());
+            func(inputs, outputs);
+        }
+        else
+        {
+            runtime::reference::subtract<T>(
+                in_vec1.data(), in_vec2.data(), out_vec.data(), shape_size(out_shape));
+        }
     }
     else if (std::dynamic_pointer_cast<op::Multiply>(binary))
     {
-        runtime::reference::multiply<T>(a->get_vector<T>().data(),
-                                        b->get_vector<T>().data(),
-                                        out_vec.data(),
-                                        shape_size(out_shape));
+        auto handler = GetGlobalCFDispatcherCPU().find(type_index(typeid(ngraph::op::Multiply)));
+        if (handler != GetGlobalCFDispatcherCPU().end())
+        {
+            auto func = handler->second(binary.get());
+            func(inputs, outputs);
+        }
+        else
+        {
+            runtime::reference::multiply<T>(
+                in_vec1.data(), in_vec2.data(), out_vec.data(), shape_size(out_shape));
+        }
     }
     else if (std::dynamic_pointer_cast<op::Divide>(binary))
     {
-        runtime::reference::divide<T>(a->get_vector<T>().data(),
-                                      b->get_vector<T>().data(),
-                                      out_vec.data(),
-                                      shape_size(out_shape));
+        auto handler = GetGlobalCFDispatcherCPU().find(type_index(typeid(ngraph::op::Divide)));
+        if (handler != GetGlobalCFDispatcherCPU().end())
+        {
+            auto func = handler->second(binary.get());
+            func(inputs, outputs);
+        }
+        else
+        {
+            runtime::reference::divide<T>(
+                in_vec1.data(), in_vec2.data(), out_vec.data(), shape_size(out_shape));
+        }
     }
     else if (std::dynamic_pointer_cast<op::Minimum>(binary))
     {
-        runtime::reference::minimum<T>(a->get_vector<T>().data(),
-                                       b->get_vector<T>().data(),
-                                       out_vec.data(),
-                                       shape_size(out_shape));
+        auto handler = GetGlobalCFDispatcherCPU().find(type_index(typeid(ngraph::op::Minimum)));
+        if (handler != GetGlobalCFDispatcherCPU().end())
+        {
+            auto func = handler->second(binary.get());
+            func(inputs, outputs);
+        }
+        else
+        {
+            runtime::reference::minimum<T>(
+                in_vec1.data(), in_vec2.data(), out_vec.data(), shape_size(out_shape));
+        }
     }
     else if (std::dynamic_pointer_cast<op::Maximum>(binary))
     {
-        runtime::reference::maximum<T>(a->get_vector<T>().data(),
-                                       b->get_vector<T>().data(),
-                                       out_vec.data(),
-                                       shape_size(out_shape));
+        auto handler = GetGlobalCFDispatcherCPU().find(type_index(typeid(ngraph::op::Maximum)));
+        if (handler != GetGlobalCFDispatcherCPU().end())
+        {
+            auto func = handler->second(binary.get());
+            func(inputs, outputs);
+        }
+        else
+        {
+            runtime::reference::maximum<T>(
+                in_vec1.data(), in_vec2.data(), out_vec.data(), shape_size(out_shape));
+        }
     }
     else
     {
@@ -394,21 +497,51 @@ shared_ptr<op::Constant> make_constant_unary(shared_ptr<op::Constant> constant,
 {
     auto out_shape = unary->get_shape();
     vector<T> out_vec(shape_size(out_shape));
+    vector<T> in_vec = constant->get_vector<T>();
+
+    vector<void*> inputs;
+    inputs.push_back(in_vec.data());
+    vector<void*> outputs;
+    outputs.push_back(out_vec.data());
 
     if (std::dynamic_pointer_cast<op::Abs>(unary))
     {
-        runtime::reference::abs<T>(
-            constant->get_vector<T>().data(), out_vec.data(), shape_size(out_shape));
+        auto handler = GetGlobalCFDispatcherCPU().find(type_index(typeid(ngraph::op::Abs)));
+        if (handler != GetGlobalCFDispatcherCPU().end())
+        {
+            auto func = handler->second(unary.get());
+            func(inputs, outputs);
+        }
+        else
+        {
+            runtime::reference::abs<T>(in_vec.data(), out_vec.data(), shape_size(out_shape));
+        }
     }
     else if (std::dynamic_pointer_cast<op::Negative>(unary))
     {
-        runtime::reference::negate<T>(
-            constant->get_vector<T>().data(), out_vec.data(), shape_size(out_shape));
+        auto handler = GetGlobalCFDispatcherCPU().find(type_index(typeid(ngraph::op::Negative)));
+        if (handler != GetGlobalCFDispatcherCPU().end())
+        {
+            auto func = handler->second(unary.get());
+            func(inputs, outputs);
+        }
+        else
+        {
+            runtime::reference::negate<T>(in_vec.data(), out_vec.data(), shape_size(out_shape));
+        }
     }
     else if (std::dynamic_pointer_cast<op::Relu>(unary))
     {
-        runtime::reference::relu<T>(
-            constant->get_vector<T>().data(), out_vec.data(), shape_size(out_shape));
+        auto handler = GetGlobalCFDispatcherCPU().find(type_index(typeid(ngraph::op::Relu)));
+        if (handler != GetGlobalCFDispatcherCPU().end())
+        {
+            auto func = handler->second(unary.get());
+            func(inputs, outputs);
+        }
+        else
+        {
+            runtime::reference::relu<T>(in_vec.data(), out_vec.data(), shape_size(out_shape));
+        }
     }
     else
     {
@@ -427,7 +560,7 @@ void ngraph::pass::ConstantFolding::construct_constant_unary()
         std::make_shared<pattern::op::Any>(constant_label, is_uea, NodeVector{constant_label});
 
     auto constant_unary_callback = [constant_label](pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In callback for constant_reshape_callback against node = "
+        NGRAPH_DEBUG << "In callback for constant_unary_callback against node = "
                      << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
