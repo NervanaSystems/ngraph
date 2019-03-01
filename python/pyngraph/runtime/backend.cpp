@@ -23,6 +23,13 @@
 
 namespace py = pybind11;
 
+static std::shared_ptr<ngraph::runtime::Executable> compile(ngraph::runtime::Backend* self,
+                                                            std::shared_ptr<ngraph::Function> func)
+{
+    bool enable_performance_data = false;
+    return self->compile(func, enable_performance_data);
+}
+
 void regclass_pyngraph_runtime_Backend(py::module m)
 {
     py::class_<ngraph::runtime::Backend, std::unique_ptr<ngraph::runtime::Backend>> backend(
@@ -34,8 +41,5 @@ void regclass_pyngraph_runtime_Backend(py::module m)
                 (std::shared_ptr<ngraph::runtime::Tensor>(ngraph::runtime::Backend::*)(
                     const ngraph::element::Type&, const ngraph::Shape&)) &
                     ngraph::runtime::Backend::create_tensor);
-    backend.def("compile",
-                (std::shared_ptr<ngraph::runtime::Executable>(ngraph::runtime::Backend::*)(
-                    std::shared_ptr<ngraph::Function>)) &
-                    ngraph::runtime::Backend::compile);
+    backend.def("compile", &compile);
 }
