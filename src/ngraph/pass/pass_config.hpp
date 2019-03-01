@@ -42,7 +42,6 @@ public:
     void set_pass_attribute(std::string name, bool enable);
     bool get_pass_attribute(std::string name);
     CompilationMode get_compilation_mode() const { return m_compilation_mode; }
-    void set_compilation_mode(CompilationMode mode) { m_compilation_mode = mode; }
 private:
     std::map<std::string, bool> m_pass_enables;
     std::map<std::string, bool> m_pass_attributes;

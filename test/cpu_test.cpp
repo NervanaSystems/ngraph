@@ -909,8 +909,7 @@ TEST(cpu_test, abc_codegen)
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
-    ngraph::pass::PassConfig pass_config;
-    pass_config.set_compilation_mode(ngraph::pass::CompilationMode::CODEGEN);
+    ngraph::pass::PassConfig pass_config{ngraph::pass::CompilationMode::CODEGEN};
     auto handle = backend->compile(f, pass_config);
     handle->call_with_validate({result}, {a, b, c});
     EXPECT_EQ(read_vector<float>(result),
