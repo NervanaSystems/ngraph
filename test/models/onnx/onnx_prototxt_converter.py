@@ -18,11 +18,11 @@
 Supports files with only '.onnx' or '.prototxt' extensions.
 
 Usage:
-  onnx2prototxt.py <input_file> <output_file>
+  onnx_prototxt_converter.py INPUT_FILE [OUTPUT_FILE]
 
 Arguments:
-  <input_file>   The path for the input model file.
-  <output_file>  The path for the converted model file.
+  INPUT_FILE   The path for the input model file.
+  OUTPUT_FILE  The path for the converted model file.
 
 Options:
   -h --help            show this help message and exit
@@ -53,10 +53,22 @@ def _is_txt_file(path):
     # check file extension
     return os.path.splitext(path)[1] == PROTOTXT_SUFFX
 
+_ext_map = {
+    '.onnx': '.prototxt',
+    '.prototxt': '.onnx',
+}
+
+def _get_output_file_path(path, extension):
+    return path + _ext_map[extension]
+
 if __name__ == '__main__':
     args = docopt(__doc__)
-    input_file_path = args['<input_file>']
-    output_file_path = args['<output_file>']
+    print(args)
+    input_file_path = args['INPUT_FILE']
+    if not args['OUTPUT_FILE']:
+        output_file_path = _get_output_file_path(*os.path.splitext(input_file_path))
+    else:
+        output_file_path = args['OUTPUT_FILE']
 
     if not os.path.exists(input_file_path):
         sys.exit('ERROR: Provided input model path does not exists: {}'.format(input_file_path))
