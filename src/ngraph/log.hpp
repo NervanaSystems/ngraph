@@ -16,13 +16,43 @@
 
 #pragma once
 
+#include <chrono>
+#include <cstdarg>
 #include <deque>
 #include <functional>
+#include <iomanip>
+#include <locale>
 #include <sstream>
 #include <stdexcept>
+#if defined(__linux) || defined(__APPLE__)
+#include <sys/time.h>
+#include <unistd.h>
+#endif
+#include <vector>
+
+#if NGRAPH_DISTRIBUTED_OMPI_ENABLE
+#include "ngraph/distributed.hpp"
+#endif
+
+using namespace std::chrono;
 
 namespace ngraph
 {
+#if defined(__linux) || defined(__APPLE__)
+    std::string get_timestamp();
+    void LogPrintf(const char* fmt, ...);
+    extern bool DISABLE_LOGGING;
+#define NGRAPH_DEBUG_PRINT(fmt, args...)                                                           \
+    do                                                                                             \
+    {                                                                                              \
+        if (!DISABLE_LOGGING)                                                                      \
+        {                                                                                          \
+            LogPrintf(fmt, args);                                                                  \
+        }                                                                                          \
+    } while (0)
+#else
+#define NGRAPH_DEBUG_PRINT(fmt, args...)
+#endif
     class ConstString
     {
     public:

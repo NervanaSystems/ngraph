@@ -21,70 +21,9 @@
 #include <mpi.h>
 #endif
 
+#include "ngraph/log.hpp"
 #include "ngraph/op/allreduce.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
-
-#include <cstdarg>
-#include <iomanip>
-#include <locale>
-#include <sys/time.h>
-#include <unistd.h> /*for CLOCK_REALTIME? */
-
-#include "ngraph/distributed.hpp"
-
-std::string get_timestamp()
-{
-    using namespace std::chrono;
-
-    // get current time
-    auto now = system_clock::now();
-
-    // get number of nanoseconds for the current second
-    // (remainder after division into seconds)
-    auto ns = duration_cast<nanoseconds>(now.time_since_epoch()) % 1000000;
-
-    // convert to std::time_t in order to convert to std::tm (broken time)
-    auto timer = system_clock::to_time_t(now);
-
-    // convert to broken time
-    std::tm bt = *std::localtime(&timer);
-
-    std::ostringstream timestamp;
-    timestamp << std::put_time(&bt, "%H:%M:%S"); // HH:MM:SS
-    timestamp << '.' << std::setfill('0') << std::setw(3) << ns.count();
-
-    return timestamp.str();
-}
-
-// This function will be executed only once during startup (loading of the DSO)
-static bool CheckLoggingLevel()
-{
-    if (std::getenv("NGRAPH_DIST_DISABLE_LOGGING") != nullptr)
-    {
-        return true;
-    }
-    return false;
-}
-bool DISABLE_LOGGING = CheckLoggingLevel();
-
-inline void LogPrintf(const char* fmt, ...)
-{
-    va_list args1;
-    va_start(args1, fmt);
-    va_list args2;
-    va_copy(args2, args1);
-
-    std::vector<char> buf(1 + std::vsnprintf(nullptr, 0, fmt, args1));
-    va_end(args1);
-    std::vsnprintf(buf.data(), buf.size(), fmt, args2);
-    va_end(args2);
-
-    ngraph::Distributed dist;
-    std::printf("%s [RANK: %d]: %s\n", get_timestamp().c_str(), dist.get_rank(), buf.data());
-}
-#define NGRAPH_DIST_DEBUG(fmt, ...)                                                                \
-    if (!DISABLE_LOGGING)                                                                          \
-    LogPrintf(fmt, ##__VA_ARGS__)
 
 using namespace std;
 using namespace ngraph;
@@ -106,7 +45,7 @@ namespace ngraph
                 auto count = static_cast<int>(out[0].get_size());
 
                 auto external_function_name = external_function->get_function_name();
-                NGRAPH_DIST_DEBUG(
+                NGRAPH_DEBUG_PRINT(
                     "AllReduce Queued[%d]: Function: %s Node: %s %s Size: "
                     "%d",
                     call_seq,
@@ -153,12 +92,12 @@ namespace ngraph
 
                 auto functor = [&, id, count, data_type, func_name, node_friendly_name, node_name](
                     CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                    NGRAPH_DIST_DEBUG("AllReduce Execute[%d]: Function: %s  Node: %s %s Size: %d",
-                                      id,
-                                      func_name.c_str(),
-                                      node_name.c_str(),
-                                      node_friendly_name.c_str(),
-                                      count);
+                    NGRAPH_DEBUG_PRINT("AllReduce Execute[%d]: Function: %s  Node: %s %s Size: %d",
+                                       id,
+                                       func_name.c_str(),
+                                       node_name.c_str(),
+                                       node_friendly_name.c_str(),
+                                       count);
                     MPI_Allreduce(
                         arg_tensor, out_tensor, count, data_type, MPI_SUM, MPI_COMM_WORLD);
                 };

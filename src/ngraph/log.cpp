@@ -69,3 +69,58 @@ LogHelper::~LogHelper()
     }
     // Logger::log_item(m_stream.str());
 }
+
+#if defined(__linux) || defined(__APPLE__)
+std::string ngraph::get_timestamp()
+{
+    // get current time
+    auto now = system_clock::now();
+
+    // get number of nanoseconds for the current second
+    // (remainder after division into seconds)
+    auto ns = duration_cast<nanoseconds>(now.time_since_epoch()) % 1000000;
+
+    // convert to std::time_t in order to convert to std::tm (broken time)
+    auto timer = system_clock::to_time_t(now);
+
+    // convert to broken time
+    std::tm bt = *std::localtime(&timer);
+
+    std::ostringstream timestamp;
+    timestamp << std::put_time(&bt, "%H:%M:%S"); // HH:MM:SS
+    timestamp << '.' << std::setfill('0') << std::setw(3) << ns.count();
+
+    return timestamp.str();
+}
+
+void ngraph::LogPrintf(const char* fmt, ...)
+{
+    va_list args1;
+    va_start(args1, fmt);
+    va_list args2;
+    va_copy(args2, args1);
+
+    std::vector<char> buf(1 + std::vsnprintf(nullptr, 0, fmt, args1));
+    va_end(args1);
+    std::vsnprintf(buf.data(), buf.size(), fmt, args2);
+    va_end(args2);
+
+#if NGRAPH_DISTRIBUTED_OMPI_ENABLE
+    ngraph::Distributed dist;
+    std::printf("%s [RANK: %d]: %s\n", get_timestamp().c_str(), dist.get_rank(), buf.data());
+#else
+    std::printf("%s %s\n", get_timestamp().c_str(), buf.data());
+#endif
+}
+
+// This function will be executed only once during startup (loading of the DSO)
+static bool CheckLoggingLevel()
+{
+    if (std::getenv("NGRAPH_DISABLE_LOGGING") != nullptr)
+    {
+        return true;
+    }
+    return false;
+}
+bool ngraph::DISABLE_LOGGING = CheckLoggingLevel();
+#endif
