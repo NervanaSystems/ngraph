@@ -72,7 +72,7 @@ namespace ngraph
         if (!(check))                                                                              \
         {                                                                                          \
             ::std::stringstream ss___;                                                             \
-            write_all_to_stream(ss___, __VA_ARGS__);                                               \
+            ::ngraph::write_all_to_stream(ss___, __VA_ARGS__);                                     \
             throw exc_class(                                                                       \
                 (::ngraph::CheckLocInfo{__FILE__, __LINE__, #check}), (ctx), ss___.str());         \
         }                                                                                          \
