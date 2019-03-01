@@ -995,10 +995,12 @@ namespace ngraph
                             auto default_format = arg0_shape.size() == 4
                                                       ? mkldnn::memory::format::nchw
                                                       : mkldnn::memory::format::ncdhw;
-                            auto default_desc = mkldnn_utils::create_default_mkldnn_md(
+                            auto default_desc_i = mkldnn_utils::create_default_mkldnn_md(
                                 node.get(), 0, false, default_format);
-                            i_mds.push_back(default_desc);
-                            o_mds.push_back(default_desc);
+                            auto default_desc_o = mkldnn_utils::create_default_mkldnn_md(
+                                node.get(), 0, true, default_format);
+                            i_mds.push_back(default_desc_i);
+                            o_mds.push_back(default_desc_o);
                         }
                         else
                         {
@@ -1165,13 +1167,27 @@ namespace ngraph
                             auto default_format = arg0_shape.size() == 4
                                                       ? mkldnn::memory::format::nchw
                                                       : mkldnn::memory::format::ncdhw;
-                            auto default_desc = mkldnn_utils::create_default_mkldnn_md(
+                            auto default_desc_i = mkldnn_utils::create_default_mkldnn_md(
                                 node.get(), 0, false, default_format);
-                            i_mds.push_back(default_desc);
-                            o_mds.push_back(default_desc);
+                            auto default_desc_o = mkldnn_utils::create_default_mkldnn_md(
+                                node.get(), 0, true, default_format);
+                            i_mds.push_back(default_desc_i);
+                            o_mds.push_back(default_desc_o);
                             if (pk == prop_kind::forward_training)
                             {
-                                o_mds.push_back(default_desc);
+                                o_mds.push_back(
+                                    pooling_forward::primitive_desc({pk,
+                                                                     algorithm_enumerator,
+                                                                     default_desc_i,
+                                                                     result_desc,
+                                                                     mkldnn_filter_strides,
+                                                                     mkldnn_filter_shape,
+                                                                     mkldnn_padding_below,
+                                                                     mkldnn_padding_above,
+                                                                     padding_kind::zero},
+                                                                    executor::global_cpu_engine)
+                                        .workspace_primitive_desc()
+                                        .desc());
                             }
                         }
                         else

@@ -897,7 +897,7 @@ TEST(cpu_test, rotated_pooling)
         auto input_shape = is_4d ? Shape{2, 4, 4, 1} : Shape{2, 4, 4, 4, 1};
         auto rotate_order = is_4d ? AxisVector{3, 0, 1, 2} : AxisVector{4, 0, 1, 2, 3};
         auto pool_shape = is_4d ? Shape{1, 2, 4, 4} : Shape{1, 2, 4, 4, 4};
-        auto window_shape = is_4d ? Shape{1, 1} : Shape{1, 1, 1};
+        auto window_shape = is_4d ? Shape{2, 2} : Shape{2, 2, 2};
         auto input = make_shared<op::Parameter>(element::f32, input_shape); // C, H, W, N
         auto transpose = make_shared<op::Reshape>(input, rotate_order, pool_shape);
         if (avgpool)
