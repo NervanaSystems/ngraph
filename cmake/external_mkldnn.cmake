@@ -16,7 +16,7 @@
 
 include(ExternalProject)
 
-# Includes blas 3.8.0 in mkldnn 
+# Includes blas 3.8.0 in mkldnn
 set(NGRAPH_MKLDNN_VERSION "v0.18-rc")
 set(NGRAPH_MKLDNN_SUB_VERSION "2019.0.3.20190125")
 set(NGRAPH_MKLDNN_GIT_TAG "08bd90c")
@@ -54,6 +54,10 @@ if(MKLDNN_INCLUDE_DIR AND MKLDNN_LIB_DIR)
 
     install(FILES ${MKLDNN_LIB_DIR}/${MKLDNN_LIB} ${MKLML_LIB_DIR}/${MKLML_LIB} ${MKLML_LIB_DIR}/${OMP_LIB}  DESTINATION ${NGRAPH_INSTALL_LIB})
     return()
+endif()
+
+if(LINUX)
+    find_program(PATCH_ELF patchelf)
 endif()
 
 # This section sets up MKL as an external project to be used later by MKLDNN
@@ -102,13 +106,24 @@ ExternalProject_Get_Property(ext_mkl source_dir)
 set(MKL_ROOT ${EXTERNAL_PROJECTS_ROOT}/mkldnn/src/external/mkl)
 set(MKL_SOURCE_DIR ${source_dir})
 
-ExternalProject_Add_Step(
-    ext_mkl
-    CopyMKL
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${MKL_SOURCE_DIR}/lib/${MKLML_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}
-    COMMENT "Copy mklml runtime libraries to ngraph build directory."
-    DEPENDEES download
-    )
+if(LINUX)
+    ExternalProject_Add_Step(
+        ext_mkl
+        CopyMKL
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${MKL_SOURCE_DIR}/lib/${MKLML_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}
+        COMMAND ${PATCH_ELF} --force-rpath --set-rpath "$ORIGIN" ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLML_LIB}
+        COMMENT "Copy mklml runtime libraries to ngraph build directory."
+        DEPENDEES download
+        )
+else()
+    ExternalProject_Add_Step(
+        ext_mkl
+        CopyMKL
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${MKL_SOURCE_DIR}/lib/${MKLML_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}
+        COMMENT "Copy mklml runtime libraries to ngraph build directory."
+        DEPENDEES download
+        )
+endif()
 
 ExternalProject_Add_Step(
     ext_mkl
