@@ -990,8 +990,21 @@ namespace ngraph
                     }
                     catch (const mkldnn::error& e)
                     {
-                        throw ngraph_error("MKLDNN Unsupported pooling layout" +
-                                           to_string(input_desc.data.format) + e.message);
+                        if (arg0_shape.size() == 4 || arg0_shape.size() == 5)
+                        {
+                            auto default_format = arg0_shape.size() == 4
+                                                      ? mkldnn::memory::format::nchw
+                                                      : mkldnn::memory::format::ncdhw;
+                            auto default_desc = mkldnn_utils::create_default_mkldnn_md(
+                                node.get(), 0, false, default_format);
+                            i_mds.push_back(default_desc);
+                            o_mds.push_back(default_desc);
+                        }
+                        else
+                        {
+                            throw ngraph_error("MKLDNN Unsupported pooling layout" +
+                                               to_string(input_desc.data.format) + e.message);
+                        }
                     }
                 }
 
@@ -1147,8 +1160,25 @@ namespace ngraph
                     }
                     catch (const mkldnn::error& e)
                     {
-                        throw ngraph_error("MKLDNN Unsupported pooling fwd layout" +
-                                           to_string(input_desc.data.format) + e.message);
+                        if (arg0_shape.size() == 4 || arg0_shape.size() == 5)
+                        {
+                            auto default_format = arg0_shape.size() == 4
+                                                      ? mkldnn::memory::format::nchw
+                                                      : mkldnn::memory::format::ncdhw;
+                            auto default_desc = mkldnn_utils::create_default_mkldnn_md(
+                                node.get(), 0, false, default_format);
+                            i_mds.push_back(default_desc);
+                            o_mds.push_back(default_desc);
+                            if (pk == prop_kind::forward_training)
+                            {
+                                o_mds.push_back(default_desc);
+                            }
+                        }
+                        else
+                        {
+                            throw ngraph_error("MKLDNN Unsupported pooling fwd layout" +
+                                               to_string(input_desc.data.format) + e.message);
+                        }
                     }
                 }
 
