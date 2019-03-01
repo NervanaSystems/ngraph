@@ -58,12 +58,8 @@ set(NGRAPH_INCLUDE_PATH
 )
 
 if (APPLE)
-    # Suppress an OS X-specific warning.
-    if (POLICY CMP0042)
-        cmake_policy(SET CMP0042 NEW)
-    else()
-        set(MACOS_RPATH ON)
-    endif()
+    # Enable MACOS_RPATH by default.
+    cmake_policy(SET CMP0042 NEW)
 endif()
 
 project (ngraph)
@@ -243,6 +239,7 @@ if (LINUX)
     else()
         set(CMAKE_INSTALL_RPATH "$ORIGIN")
     endif()
+    set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 endif()
 
 #-----------------------------------------------------------------------------------------------

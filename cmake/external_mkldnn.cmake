@@ -190,12 +190,8 @@ if (WIN32)
         EXCLUDE_FROM_ALL TRUE
         )
 else()
-    if(APPLE)
-        set(MKLDNN_RPATH @loader_path)
-    elseif(LINUX)
-        set(MKLDNN_RPATH $$ORIGIN)
-    else()
-        message(FATAL_ERROR "mkl-dnn: Unsupported target")
+    if(LINUX)
+        set(MKLDNN_RPATH "-DCMAKE_INSTALL_RPATH=${CMAKE_INSTALL_RPATH}")
     endif()
     ExternalProject_Add(
         ext_mkldnn
@@ -221,7 +217,7 @@ else()
             -DWITH_TEST=FALSE
             -DWITH_EXAMPLE=FALSE
             -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/mkldnn
-            -DCMAKE_INSTALL_RPATH=${MKLDNN_RPATH}
+            ${MKLDNN_RPATH}
             -DMKLDNN_ENABLE_CONCURRENT_EXEC=ON
             -DMKLROOT=${MKL_ROOT}
             -DMKLDNN_LIB_VERSIONING_ENABLE=${NGRAPH_LIB_VERSIONING_ENABLE}
