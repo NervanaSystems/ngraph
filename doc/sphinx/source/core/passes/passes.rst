@@ -103,9 +103,10 @@ group before finally concatenating the result back together.
    wide to fit legibly on the illustration.  
 
 The group convolution fusion is able to replace each of those giant subgraphs 
-with a single CPU group convolution node. This ends up being a win in several 
-ways: 
+with a single CPU group convolution node. This ends up being beneficial in 
+several ways: 
 
-* sheer node count, 
-* mappability to MKL-DNN (which has an accelerated group convolution implementation), 
-* elimination of unnecessary temporaries, and so on.
+* Reduces sheer node count, 
+* Provides mappability to MKL-DNN, which has an accelerated group convolution implementation, and 
+* Eliminates unnecessary temporary nodes, 
+* ... and so on.

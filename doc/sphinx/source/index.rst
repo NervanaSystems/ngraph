@@ -51,7 +51,7 @@ nGraph Compiler stack
    
 .. toctree::
    :maxdepth: 1
-   :caption: Backend support
+   :caption: Backend Support
 
    backend-support/index.rst
    backend-support/cpp-api.rst
@@ -66,7 +66,7 @@ nGraph Compiler stack
 
 .. toctree::
    :maxdepth: 1
-   :caption: Diagnostics and visualization
+   :caption: Diagnostics and Visualization
 
    diagnostics/nbench.rst
    diagnostics/performance-profile.rst
@@ -86,10 +86,10 @@ nGraph Compiler stack
 
    project/release-notes.rst
    project/contribution-guide.rst
+   project/governance.rst
+   project/doc-contributor-README.rst
    project/index.rst 
    glossary.rst
-   project/doc-contributor-README.rst
-
 
 Indices and tables
 ==================
@@ -97,12 +97,3 @@ Indices and tables
    * :ref:`search`
    * :ref:`genindex`
 
-
-
-.. _nGraph ONNX companion tool: https://github.com/NervanaSystems/ngraph-onnx
-.. _ONNX: http://onnx.ai
-.. _Movidius: https://www.movidius.com/
-.. _contributions: https://github.com/NervanaSystems/ngraph#how-to-contribute
-.. _TensorFlow bridge to nGraph: https://github.com/NervanaSystems/ngraph-tf/blob/master/README.md
-.. _Compiling MXNet with nGraph: https://github.com/NervanaSystems/ngraph-mxnet/blob/master/README.md
-.. _ecosystem: https://github.com/NervanaSystems/ngraph/blob/master/ecosystem-overview.md
