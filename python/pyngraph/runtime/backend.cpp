@@ -17,6 +17,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include "ngraph/pass/pass_config.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "pyngraph/runtime/backend.hpp"
@@ -36,6 +37,10 @@ void regclass_pyngraph_runtime_Backend(py::module m)
                     ngraph::runtime::Backend::create_tensor);
     backend.def("compile",
                 (std::shared_ptr<ngraph::runtime::Executable>(ngraph::runtime::Backend::*)(
-                    std::shared_ptr<ngraph::Function>)) &
+                    std::shared_ptr<ngraph::Function>, bool)) &
+                    ngraph::runtime::Backend::compile);
+    backend.def("compile",
+                (std::shared_ptr<ngraph::runtime::Executable>(ngraph::runtime::Backend::*)(
+                    std::shared_ptr<ngraph::Function>, ngraph::pass::PassConfig&, bool)) &
                     ngraph::runtime::Backend::compile);
 }
