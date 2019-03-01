@@ -106,7 +106,7 @@ void ngraph::LogPrintf(const char* fmt, ...)
     std::vsnprintf(buf.data(), buf.size(), fmt, args2);
     va_end(args2);
 
-#if NGRAPH_DISTRIBUTED_OMPI_ENABLE
+#ifdef NGRAPH_DISTRIBUTED_OMPI_ENABLE
     ngraph::Distributed dist;
     std::printf("%s [RANK: %d]: %s\n", get_timestamp().c_str(), dist.get_rank(), buf.data());
 #else
