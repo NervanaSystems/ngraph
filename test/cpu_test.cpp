@@ -56,8 +56,8 @@ public:
     }
 };
 
-static void compare_backends(std::shared_ptr<Function>& f1,
-                             std::shared_ptr<Function>& f2,
+static void compare_backends(const std::shared_ptr<Function>& f1,
+                             const std::shared_ptr<Function>& f2,
                              const string backend1,
                              const string backend2,
                              float rtol = 1e-5,
@@ -889,4 +889,32 @@ TEST(cpu_test, convert_inplace)
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<int8_t>{1, 2, 3, -2}), read_vector<int8_t>(result));
+}
+
+TEST(cpu_test, rotated_pooling)
+{
+    auto make_f = [&](bool is_4d, bool avgpool) {
+        auto input_shape = is_4d ? Shape{2, 4, 4, 1} : Shape{2, 4, 4, 4, 1};
+        auto rotate_order = is_4d ? AxisVector{3, 0, 1, 2} : AxisVector{4, 0, 1, 2, 3};
+        auto pool_shape = is_4d ? Shape{1, 2, 4, 4} : Shape{1, 2, 4, 4, 4};
+        auto window_shape = is_4d ? Shape{2, 2} : Shape{2, 2, 2};
+        auto input = make_shared<op::Parameter>(element::f32, input_shape); // C, H, W, N
+        auto transpose = make_shared<op::Reshape>(input, rotate_order, pool_shape);
+        if (avgpool)
+        {
+            return make_shared<Function>(make_shared<op::AvgPool>(transpose, window_shape),
+                                         ParameterVector{input});
+        }
+        else
+        {
+            return make_shared<Function>(make_shared<op::MaxPool>(transpose, window_shape),
+                                         ParameterVector{input});
+        }
+    };
+
+    compare_backends(make_f(true, true), make_f(true, true), "INTERPRETER", "CPU");   // 4D AvgPool
+    compare_backends(make_f(true, false), make_f(true, false), "INTERPRETER", "CPU"); // 4D MaxPool
+    compare_backends(make_f(false, true), make_f(false, true), "INTERPRETER", "CPU"); // 5D AvgPool
+    compare_backends(
+        make_f(false, false), make_f(false, false), "INTERPRETER", "CPU"); // 5D MaxPool
 }
