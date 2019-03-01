@@ -17,7 +17,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/pass/pass_config.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "pyngraph/runtime/backend.hpp"
