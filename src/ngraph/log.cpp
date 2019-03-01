@@ -27,6 +27,7 @@
 
 using namespace std;
 using namespace ngraph;
+using namespace std::chrono;
 
 void ngraph::default_logger_handler_func(const string& s)
 {
