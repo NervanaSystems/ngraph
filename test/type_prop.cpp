@@ -2218,7 +2218,7 @@ void test_binary(std::string node_type,
             // Should have thrown, so fail if it didn't
             FAIL() << "Incompatible view arguments not detected.";
         }
-        catch (const NodeValidationError& error)
+        catch (const NodeValidationFailure& error)
         {
             EXPECT_HAS_SUBSTRING(error.what(), std::string("Argument shapes are inconsistent"));
         }
@@ -2237,7 +2237,7 @@ void test_binary(std::string node_type,
             // Should have thrown, so fail if it didn't
             FAIL() << "Incompatible view arguments not detected.";
         }
-        catch (const NodeValidationError& error)
+        catch (const NodeValidationFailure& error)
         {
             EXPECT_HAS_SUBSTRING(error.what(),
                                  std::string("Argument element types are inconsistent"));
@@ -2310,7 +2310,7 @@ void test_binary_logical(std::string node_type,
             // Should have thrown, so fail if it didn't
             FAIL() << "Incompatible view arguments not detected.";
         }
-        catch (const NodeValidationError& error)
+        catch (const NodeValidationFailure& error)
         {
             EXPECT_HAS_SUBSTRING(error.what(), std::string("Argument shapes are inconsistent"));
         }
@@ -2329,7 +2329,7 @@ void test_binary_logical(std::string node_type,
             // Should have thrown, so fail if it didn't
             FAIL() << "Incompatible view arguments not detected.";
         }
-        catch (const NodeValidationError& error)
+        catch (const NodeValidationFailure& error)
         {
             EXPECT_HAS_SUBSTRING(error.what(),
                                  std::string("Argument element types are inconsistent"));
@@ -2463,7 +2463,7 @@ TEST(type_prop, binary_arithmetic_bad_argument_element_types)
         // Should have thrown, so fail if it didn't
         FAIL() << "Did not detect incorrect element types for arithmetic operator";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Arguments cannot have boolean element type"));
@@ -2483,7 +2483,7 @@ TEST(type_prop, unary_arithmetic_bad_argument_element_types)
         // Should have thrown, so fail if it didn't
         FAIL() << "Did not detect incorrect element types for arithmetic operator";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Arguments cannot have boolean element type"));
@@ -10030,7 +10030,7 @@ TEST(type_prop, binary_elementwise_arithmetic_left_rank_static_dynamic_inconsist
         auto add = make_shared<op::Add>(a, b);
         FAIL() << "Inconsistent partial shapes not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), "Argument shapes are inconsistent");
     }
@@ -10050,7 +10050,7 @@ TEST(type_prop, binary_elementwise_arithmetic_right_rank_static_dynamic_inconsis
         auto add = make_shared<op::Add>(a, b);
         FAIL() << "Inconsistent partial shapes not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), "Argument shapes are inconsistent");
     }
@@ -10070,7 +10070,7 @@ TEST(type_prop, binary_elementwise_arithmetic_both_rank_static_dynamic_inconsist
         auto add = make_shared<op::Add>(a, b);
         FAIL() << "Inconsistent partial shapes not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), "Argument shapes are inconsistent");
     }
@@ -10090,7 +10090,7 @@ TEST(type_prop, binary_elementwise_arithmetic_left_rank_static_dynamic_different
         auto add = make_shared<op::Add>(a, b);
         FAIL() << "Inconsistent partial shapes not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), "Argument shapes are inconsistent");
     }
@@ -10110,7 +10110,7 @@ TEST(type_prop, binary_elementwise_arithmetic_right_rank_static_dynamic_differen
         auto add = make_shared<op::Add>(a, b);
         FAIL() << "Inconsistent partial shapes not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), "Argument shapes are inconsistent");
     }
@@ -10130,7 +10130,7 @@ TEST(type_prop, binary_elementwise_arithmetic_both_rank_static_dynamic_different
         auto add = make_shared<op::Add>(a, b);
         FAIL() << "Inconsistent partial shapes not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), "Argument shapes are inconsistent");
     }
