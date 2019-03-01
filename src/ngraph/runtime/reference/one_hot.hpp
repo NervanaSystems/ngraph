@@ -54,14 +54,14 @@ namespace ngraph
 
                     if (std::floor(val) < val || std::floor(val) > val)
                     {
-                        throw(std::range_error("One-hot: non-integral value in input"));
+                        continue;
                     }
 
                     size_t one_hot_pos = static_cast<size_t>(val);
 
                     if (one_hot_pos >= out_shape[one_hot_axis])
                     {
-                        throw(std::range_error("One-hot: value is out of category range"));
+                        continue;
                     }
 
                     Coordinate one_hot_coord = inject(input_coord, one_hot_axis, one_hot_pos);
