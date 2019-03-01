@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,42 +16,40 @@
 
 #pragma once
 
-#include <tuple>
-#include <vector>
-
-#include <plaidml/plaidml++.h>
-
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/backend.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace plaidml
+        namespace hybrid
         {
             namespace op
             {
-                /// An op directly representing PlaidML Tile code.
-                class Tile;
+                class FunctionCall;
             }
         }
     }
 }
 
-class ngraph::runtime::plaidml::op::Tile final : public Node
+class ngraph::runtime::hybrid::op::FunctionCall : public ngraph::op::Op
 {
 public:
-    Tile(const std::string& node_type,
-         vertexai::plaidml::function function,
-         const NodeVector& args,
-         std::vector<std::tuple<element::Type, PartialShape>> outputs);
+    FunctionCall(const NodeVector& outputs,
+                 const NodeVector& inputs,
+                 std::shared_ptr<Function> function,
+                 std::shared_ptr<Backend> backend);
 
-    void validate_and_infer_types() final;
+    std::shared_ptr<Backend> get_backend() const;
+    std::shared_ptr<Executable> get_executable() const;
+    std::shared_ptr<Function> get_function() const;
 
-    std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const final;
-
-    vertexai::plaidml::function func() const { return m_function; }
 private:
-    vertexai::plaidml::function m_function;
-    std::vector<std::tuple<element::Type, PartialShape>> m_output_shapes;
+    std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+
+    const NodeVector m_outputs;
+    std::shared_ptr<Function> m_function;
+    std::shared_ptr<Backend> m_backend;
+    std::shared_ptr<Executable> m_executable;
 };

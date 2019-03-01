@@ -43,19 +43,17 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto input_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-
-                    auto lrn_index =
-                        mkldnn_emitter->build_lrn_forward(input_data_desc,
-                                                          result_desc,
-                                                          static_cast<float>(lrn->get_alpha()),
-                                                          static_cast<float>(lrn->get_beta()),
-                                                          static_cast<float>(lrn->get_bias()),
-                                                          static_cast<int>(lrn->get_nsize()));
-
+                    auto lrn_desc = mkldnn_emitter->get_lrn_forward_desc(node);
+                    // LRN needs 3 primitives: input, result, and lrn_forward.
+                    auto lrn_index = mkldnn_emitter->reserve_primitive_space(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(lrn_index);
-                    functor = [&, lrn_index](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+
+                    functor = [&, lrn_desc, lrn_index](CPURuntimeContext* ctx,
+                                                       CPUExecutionContext* ectx) {
+                        if (ctx->first_iteration)
+                        {
+                            mkldnn_emitter->build_lrn_forward(lrn_desc, lrn_index);
+                        }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, lrn_index);

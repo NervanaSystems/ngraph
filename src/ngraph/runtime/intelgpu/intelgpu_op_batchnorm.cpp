@@ -20,7 +20,7 @@
 #include <CPP/scale.hpp>
 #include <CPP/split.hpp>
 
-#include "ngraph/runtime/intelgpu/code_writer.hpp"
+#include "ngraph/code_writer.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_batchnorm.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
@@ -65,7 +65,7 @@ void runtime::intelgpu::do_create_mean(cldnn::topology& topology,
     const string entry_point_name = "create_mean_" + output_name;
     const size_t output_counts = shape_size<Shape>(input_shape) / input_shape.at(channel_axis);
     const string kernel_data_type = get_opencl_type_name(output_type);
-    codegen::CodeWriter writer;
+    CodeWriter writer;
 
     writer << "__kernel void " << entry_point_name << "( const __global " << kernel_data_type
            << " input" << array_dims(input_shape) << ", __global " << kernel_data_type << " output"
@@ -141,7 +141,7 @@ void runtime::intelgpu::do_create_variance(cldnn::topology& topology,
     const string entry_point_name = "create_variance_" + output_name;
     const size_t output_counts = shape_size<Shape>(input_shape) / input_shape.at(channel_axis);
     const string kernel_data_type = get_opencl_type_name(output_type);
-    codegen::CodeWriter writer;
+    CodeWriter writer;
 
     writer << "__kernel void " << entry_point_name << "( const __global " << kernel_data_type
            << " input" << array_dims(input_shape) << ", const __global " << kernel_data_type
@@ -221,7 +221,7 @@ void runtime::intelgpu::do_batch_norm_operation(cldnn::topology& topology,
     const vector<size_t> gws(input_shape.begin(), input_shape.begin() + 2);
     const string entry_point_name = "batch_norm_" + output_name;
     const string kernel_data_type = get_opencl_type_name(output_type);
-    codegen::CodeWriter writer;
+    CodeWriter writer;
 
     // The kernel name and parameters
     writer << "__attribute__((reqd_work_group_size(1,1,1)))\n"
@@ -293,7 +293,7 @@ void runtime::intelgpu::do_create_variance_back(cldnn::topology& topology,
     const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, channel_shape);
     const string entry_point_name = "create_variance_back_" + output_name;
     const string kernel_data_type = get_opencl_type_name(output_type);
-    codegen::CodeWriter writer;
+    CodeWriter writer;
     vector<size_t> gws;
 
     writer << "__kernel void " << entry_point_name << "(const __global " << kernel_data_type
@@ -374,7 +374,7 @@ void runtime::intelgpu::do_batch_norm_backprop_operation(cldnn::topology& topolo
     const string entry_point_name = "batch_norm_backprop_" + output_name;
     const size_t r_axes_size = shape_size(shape) / shape_size(channel_shape);
     const string kernel_data_type = get_opencl_type_name(type);
-    codegen::CodeWriter writer;
+    CodeWriter writer;
     vector<size_t> gws;
 
     writer << "__kernel void " << entry_point_name << "(const __global " << kernel_data_type
