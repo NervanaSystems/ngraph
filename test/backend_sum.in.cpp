@@ -52,7 +52,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_trivial)
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(result));
 }
 
@@ -72,7 +72,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_trivial_5d)
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                              1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}),
               read_vector<float>(result));
@@ -92,7 +92,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_to_scalar)
     auto result = backend->create_tensor(element::f32, Shape{});
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{10}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -122,7 +122,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_large_1d_to_scalar)
     auto result = backend->create_tensor(element::f32, Shape{});
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
 
     EXPECT_TRUE(
         test::all_close_f(vector<float>{static_cast<float>(r)}, read_vector<float>(result)));
@@ -143,7 +143,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_matrix_columns)
     auto result = backend->create_tensor(element::f32, shape_rt);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{9, 12}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -172,8 +172,10 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_matrix_6d)
     copy_data(a_wrk, inp_data);
     copy_data(a_ref, inp_data);
 
-    backend_wrk->call_with_validate(backend_wrk->compile(f), {result_wrk}, {a_wrk});
-    backend_ref->call_with_validate(backend_ref->compile(f), {result_ref}, {a_ref});
+    auto handle_wrk = backend_wrk->compile(f);
+    auto handle_ref = backend_ref->compile(f);
+    handle_wrk->call_with_validate({result_wrk}, {a_wrk});
+    handle_ref->call_with_validate({result_ref}, {a_ref});
 
     EXPECT_EQ(read_vector<float>(result_ref), read_vector<float>(result_wrk));
 }
@@ -193,7 +195,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_matrix_rows)
     auto result = backend->create_tensor(element::f32, shape_rt);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{3, 7, 11}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -217,7 +219,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_matrix_rows_zero)
     copy_data(result, vector<float>({3, 3, 3}));
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{0, 0, 0}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -242,7 +244,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_matrix_cols_zero)
     copy_data(result, vector<float>({3, 3}));
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{0, 0}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -266,7 +268,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_vector_zero)
     copy_data(result, vector<float>({3}));
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{0}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -290,7 +292,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_matrix_to_scalar_zero_by_zero)
     copy_data(result, vector<float>({3}));
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{0}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -314,7 +316,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_3d_to_matrix_most_sig)
     auto result = backend->create_tensor(element::f32, shape_rt);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{1 + 10 + 19,
                              2 + 11 + 20,
                              3 + 12 + 21,
@@ -343,7 +345,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_3d_to_matrix_least_sig)
     auto result = backend->create_tensor(element::f32, shape_rt);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{1 + 2 + 3,
                              4 + 5 + 6,
                              7 + 8 + 9,
@@ -372,7 +374,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_3d_to_vector)
     auto result = backend->create_tensor(element::f32, shape_rt);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{1 + 10 + 19 + 4 + 13 + 22 + 7 + 16 + 25,
                              2 + 11 + 20 + 5 + 14 + 23 + 8 + 17 + 26,
                              3 + 12 + 21 + 6 + 15 + 24 + 9 + 18 + 27}),
@@ -395,10 +397,32 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_3d_to_scalar)
     auto result = backend->create_tensor(element::f32, shape_rt);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{1 + 10 + 19 + 4 + 13 + 22 + 7 + 16 + 25 + 2 + 11 + 20 + 5 + 14 + 23 +
                              8 + 17 + 26 + 3 + 12 + 21 + 6 + 15 + 24 + 9 + 18 + 27}),
               read_vector<float>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, sum_3d_to_scalar_int32)
+{
+    Shape shape_a{3, 3, 3};
+    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    Shape shape_rt{};
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1, 2}), ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::i32, shape_a);
+    copy_data(a, vector<int32_t>{0x40000001, 10, 19, 4,  13, 22, 7,  16, 25, 2,  11, 20, 5, 14,
+                                 23,         8,  17, 26, 3,  12, 21, 6,  15, 24, 9,  18, 27});
+    auto result = backend->create_tensor(element::i32, shape_rt);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_EQ((vector<int32_t>{0x40000001 + 10 + 19 + 4 + 13 + 22 + 7 + 16 + 25 + 2 + 11 + 20 + 5 +
+                               14 + 23 + 8 + 17 + 26 + 3 + 12 + 21 + 6 + 15 + 24 + 9 + 18 + 27}),
+              read_vector<int32_t>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, sum_3d_eliminate_zero_dim)
@@ -419,7 +443,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_3d_eliminate_zero_dim)
     copy_data(result, vector<float>{2112, 2112, 2112, 2112, 2112, 2112});
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{0, 0, 0, 0, 0, 0}), read_vector<float>(result));
 }
 
@@ -441,7 +465,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_3d_eliminate_zero_dim_int32)
     copy_data(result, vector<int32_t>{2112, 2112, 2112, 2112, 2112, 2112});
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<int32_t>{0, 0, 0, 0, 0, 0}), read_vector<int32_t>(result));
 }
 
@@ -461,7 +485,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_5d_to_scalar)
     auto result = backend->create_tensor(element::f32, shape_rt);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ(std::vector<float>{243.}, read_vector<float>(result));
 }
 
@@ -481,7 +505,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_5d_to_scalar_int32)
     auto result = backend->create_tensor(element::i32, shape_rt);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ(std::vector<int32_t>{243}, read_vector<int32_t>(result));
 }
 
@@ -500,7 +524,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_2d_to_scalar_int8)
     auto result = backend->create_tensor(element::i8, shape_rt);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ(std::vector<int8_t>{45}, read_vector<int8_t>(result));
 }
 
@@ -519,12 +543,13 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_trivial_in_double)
     auto result = backend->create_tensor(element::f64, rshape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<double>{30, 22, 26}), read_vector<double>(result));
 }
 
 #if NGRAPH_INTERPRETER_ENABLE
 
+#ifndef _WIN32
 NGRAPH_TEST(${BACKEND_NAME}, sum_stable_acc)
 {
     std::string backend_name = "${BACKEND_NAME}";
@@ -556,6 +581,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_stable_acc)
     EXPECT_TRUE(
         test::all_close_f(ref_results.at(0), bk_results.at(0), DEFAULT_FLOAT_TOLERANCE_BITS + 1));
 }
+#endif
 
 NGRAPH_TEST(${BACKEND_NAME}, sum_stable_acc_double)
 {
@@ -616,6 +642,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_stable_simple_float)
         test::all_close_f(ref_results.at(0), bk_results.at(0), DEFAULT_FLOAT_TOLERANCE_BITS - 1));
 }
 
+#ifndef _WIN32
 NGRAPH_TEST(${BACKEND_NAME}, sum_stable_simple_double)
 {
     std::string backend_name = "${BACKEND_NAME}";
@@ -659,4 +686,6 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_stable_simple_double)
 
     EXPECT_TRUE(test::all_close(ref_results.at(0), bk_results.at(0), 0.0, 2.0));
 }
+#endif
+
 #endif

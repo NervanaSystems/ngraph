@@ -71,9 +71,21 @@ namespace ngraph
         /// Check that there is a single result and return it.
         std::shared_ptr<Node> get_result() const;
 
-        const std::string& get_friendly_name() const;
+        /// \brief Get the unique name of the function.
+        /// \returns A const reference to the function's unique name.
         const std::string& get_name() const;
-        void set_name(const std::string& name);
+
+        /// \brief Sets a friendly name for a function. This does not overwrite the unique name
+        ///        of the function and is retrieved via get_friendly_name(). Used mainly for debugging.
+        ///        The friendly name may be set exactly once.
+        /// \param name is the friendly name to set
+        void set_friendly_name(const std::string& name);
+
+        /// \brief Gets the friendly name for a function. If no friendly name has been set via
+        ///        set_friendly_name then the function's unique name is returned.
+        /// \returns A const reference to the function's friendly name.
+        const std::string& get_friendly_name() const;
+
         std::list<std::shared_ptr<Node>> get_ops(bool include_control_deps = true) const;
         std::list<std::shared_ptr<Node>> get_ordered_ops(bool include_control_deps = true) const;
         friend std::ostream& operator<<(std::ostream&, const Function&);

@@ -16,7 +16,7 @@
 
 #include <CPP/custom_gpu_primitive.hpp>
 
-#include "ngraph/runtime/intelgpu/code_writer.hpp"
+#include "ngraph/code_writer.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_convolution.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
@@ -109,16 +109,18 @@ void runtime::intelgpu::do_convolution_operation(cldnn::topology& topology,
                                                  bool reverse_filter)
 {
     const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const string kernel_type_name = get_opencl_type_name(output_type);
     const string entry_point_name = "convolution_" + output_name;
     const Shape input_data(input_shape.cbegin() + 2, input_shape.cend());
     const Shape filter_data(filter_shape.cbegin() + 2, filter_shape.cend());
     const Shape output_data(output_shape.cbegin() + 2, output_shape.cend());
-    codegen::CodeWriter writer;
+    CodeWriter writer;
     vector<size_t> gws;
 
-    writer << "__kernel void " << entry_point_name << "(const __global float input"
-           << array_dims(input_shape) << ", const __global float filter" << array_dims(filter_shape)
-           << ", __global float output" << array_dims(output_shape) << ")\n";
+    writer << "__kernel void " << entry_point_name << "(const __global " << kernel_type_name
+           << " input" << array_dims(input_shape) << ", const __global " << kernel_type_name
+           << " filter" << array_dims(filter_shape) << ", __global " << kernel_type_name
+           << " output" << array_dims(output_shape) << ")\n";
 
     writer.block_begin();
     { // Main function body
@@ -152,7 +154,7 @@ void runtime::intelgpu::do_convolution_operation(cldnn::topology& topology,
                         ++var_idx;
                     }
 
-                    writer << "float result = 0.0f;\n\n"
+                    writer << kernel_type_name << " result = 0.0;\n\n"
                            << "// Loop over input_channel\n"
                            << "for (uint input_channel = 0; input_channel < "
                            << input_shape.at(input_channel_axis_data) << "; ++input_channel)\n";
@@ -221,7 +223,7 @@ void runtime::intelgpu::do_convolution_operation(cldnn::topology& topology,
                             writer << ")\n";
                             writer.block_begin();
                             {
-                                writer << "float input_elem = " << input_order
+                                writer << kernel_type_name << " input_elem = " << input_order
                                        << array_dim(input_data, "input_idx_data_dilation") << ";\n";
 
                                 // Output element calculation

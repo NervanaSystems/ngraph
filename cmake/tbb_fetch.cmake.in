@@ -24,8 +24,7 @@ ExternalProject_Add(
     ext_tbb
     PREFIX tbb
     GIT_REPOSITORY ${TBB_GIT_REPO_URL}
-    GIT_TAG ${TBB_GIT_TAG}
-    ${NGRAPH_GIT_ARGS}
+    GIT_TAG "${NGRAPH_TBB_VERSION}"
     SOURCE_DIR "${TBB_ROOT}"
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""

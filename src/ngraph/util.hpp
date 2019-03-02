@@ -244,6 +244,13 @@ namespace ngraph
     // default, other backends could add their own map
     BuildCFMap& GetGlobalCFDispatcher();
 
+    enum class CPUTensorRole
+    {
+        INPUT,
+        CONSTANT,
+        OUTPUT,
+        INTERMEDIATE
+    };
 } // end namespace ngraph
 
 std::ostream& operator<<(std::ostream& os, const ngraph::NodeVector& nv);

@@ -33,7 +33,7 @@
 
 #if !defined(NGRAPH_DEX_ONLY)
 
-#include "ngraph/codegen/code_writer.hpp"
+#include "ngraph/code_writer.hpp"
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/codegen/execution_engine.hpp"
 
@@ -49,6 +49,7 @@
 #include "ngraph/runtime/cpu/mkldnn_emitter.hpp"
 #include "ngraph/runtime/performance_counter.hpp"
 #include "ngraph/state/state.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -64,7 +65,7 @@ namespace ngraph
 #if !defined(NGRAPH_DEX_ONLY)
 
             using OpFunction = std::function<void(CPU_ExternalFunction* external_function,
-                                                  codegen::CodeWriter&,
+                                                  CodeWriter&,
                                                   const ngraph::Node*,
                                                   const std::vector<TensorViewWrapper>& inputs,
                                                   const std::vector<TensorViewWrapper>& outputs)>;
@@ -95,18 +96,11 @@ namespace ngraph
                 friend class CPU_Executable;
 
             public:
-                enum class CPUTensorRole
-                {
-                    INPUT,
-                    CONSTANT,
-                    OUTPUT,
-                    INTERMEDIATE
-                };
-
                 CPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
                                      bool release_function = true);
                 ~CPU_ExternalFunction();
-                std::shared_ptr<ngraph::runtime::cpu::CPU_CallFrame> make_call_frame();
+                std::shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
+                    make_call_frame(ngraph::pass::PassConfig& pass_config);
 
                 const LayoutDescriptorPtrs& get_parameter_layout_descriptors();
                 const LayoutDescriptorPtrs& get_result_layout_descriptors();
@@ -132,7 +126,6 @@ namespace ngraph
                 static constexpr size_t s_memory_pool_alignment = 4096;
 
                 std::vector<CPUKernelFunctor>& get_functors() { return functors; }
-                std::unordered_map<std::string, void*>& get_tensor_data() { return tensor_data; }
                 void*& get_tensor_data(const std::string& name);
                 std::function<void(CPURuntimeContext*, std::vector<void*>&, std::vector<void*>&)>&
                     get_executor()
@@ -172,11 +165,11 @@ namespace ngraph
 #endif
 
             protected:
-                void build();
+                void build(ngraph::pass::PassConfig& pass_config);
 
 #if !defined(NGRAPH_DEX_ONLY)
 
-                void compile();
+                void compile(ngraph::pass::PassConfig& pass_config);
 
 #endif
 
@@ -184,51 +177,22 @@ namespace ngraph
 
             private:
                 // Register passes that are common to codegen and DEX
-                void register_common_passes(ngraph::pass::Manager& pass_manager);
-
-                // For non-destructive passthrough kernels, propagate function
-                // constant buffers to internal ops
-                void propagate_in_place_constant(ngraph::descriptor::Output* output,
-                                                 std::string input_name,
-                                                 bool dex);
-                // For non-destructive passthrough kernels, propagate function
-                // input buffers to internal ops
-                void propagate_in_place_input(ngraph::descriptor::Output* output,
-                                              std::string input_name,
-                                              bool dex);
-                // For in-place kernels, propagate function output buffers to
-                // internal ops
-                void propagate_in_place_output(ngraph::descriptor::Output* res_src_output,
-                                               std::string output_name,
-                                               bool dex);
-
-                // Find in-place concat ops and set appropriate memory pool offset for its arguments
-                void process_in_place_concat(std::list<std::shared_ptr<Node>> nodes);
-
-                // For a chain of concat ops, propagate memory pool offsets
-                void propagate_in_place_concat(std::shared_ptr<ngraph::op::Concat> concat);
-
-                // Find in-place slice ops and set appropriate memory pool offset for its output
-                void process_in_place_slice(std::list<std::shared_ptr<Node>> nodes);
-
-                // propagate slice when its arg comes from function input
-                void propagate_in_place_slice(ngraph::descriptor::Output* output,
-                                              size_t input_index,
-                                              size_t input_offset);
+                void register_common_passes(ngraph::pass::Manager& pass_manager,
+                                            ngraph::pass::PassConfig& pass_config);
 
                 bool computes_result(Node* node);
                 void release_function() { m_function = nullptr; }
 #if !defined(NGRAPH_DEX_ONLY)
-                void emit_debug_function_entry(codegen::CodeWriter& writer,
+                void emit_debug_function_entry(CodeWriter& writer,
                                                Node* node,
                                                const std::vector<TensorViewWrapper>& in,
                                                const std::vector<TensorViewWrapper>& out);
-                void emit_debug_function_exit(codegen::CodeWriter& writer,
+                void emit_debug_function_exit(CodeWriter& writer,
                                               Node* node,
                                               const std::vector<TensorViewWrapper>& in,
                                               const std::vector<TensorViewWrapper>& out);
                 void handle_output_alias(
-                    codegen::CodeWriter& writer,
+                    CodeWriter& writer,
                     const Node&,
                     const std::unordered_map<descriptor::Tensor*, std::vector<size_t>>&);
 
@@ -249,6 +213,8 @@ namespace ngraph
                 // so they don't get freed before we are done with them
                 std::vector<std::shared_ptr<Node>> m_active_constants;
 #endif
+                std::unordered_set<descriptor::Tensor*>&
+                    get_tensor_set(descriptor::Tensor* output_tensor);
 
                 std::shared_ptr<ngraph::Function> m_function;
                 bool m_release_function;
@@ -259,12 +225,21 @@ namespace ngraph
                 bool m_is_compiled;
 #endif
                 bool m_direct_execution;
+
+                /// Function that initializes the context used in codegen mode.
+                InitContextFuncCG m_compiled_init_ctx_func;
+
+                /// Function that destroys the context used in codegen mode.
+                DestroyContextFuncCG m_compiled_destroy_ctx_func;
+
                 EntryPoint m_compiled_function;
                 std::unordered_map<std::string, std::string> m_variable_name_map;
                 std::unordered_map<std::string, std::pair<std::size_t, std::size_t>>
                     m_variable_input_index_offset_map;
+                std::unordered_map<std::string, std::pair<std::size_t, std::size_t>>
+                    m_variable_output_index_offset_map;
 
-                std::unordered_map<std::string, CPUTensorRole> m_tensor_roles;
+                std::unordered_map<std::string, ngraph::CPUTensorRole> m_tensor_roles;
 
                 LayoutDescriptorPtrs parameter_layout_descriptors;
                 LayoutDescriptorPtrs result_layout_descriptors;
@@ -284,15 +259,33 @@ namespace ngraph
                     executor;
                 std::unordered_map<std::string, void*> tensor_data;
                 std::unordered_map<std::string, bool> tensor_stale;
+                // Each tensor is put into one buffer set.
+                // All the tensors in the same buffer set share the same memory buffer.
+                // bufferID_to_tensorSets maps bufferID to the pair of CPUTensorRole and buffer set.
+                // CPUTensorRole is INPUT, CONSTANT, OUTPUT, or INTERMEDIATE,
+                // which tells from where the memory buffer comes.
+                std::unordered_map<
+                    size_t,
+                    std::pair<ngraph::CPUTensorRole, std::unordered_set<descriptor::Tensor*>>>
+                    bufferID_to_tensorSets;
+                // tensor_to_bufferID maps tensor to the ID of the buffer set it belongs to.
+                std::unordered_map<descriptor::Tensor*, size_t> tensor_to_bufferID;
                 std::unordered_map<std::string, std::string> tensor_alias;
-                std::unordered_map<std::string, size_t> function_input_name_index;
+
+                // tensor pointer and its offset into the memory allocated for intermediates
+                // used to calculate the correct address at runtime
                 std::list<std::pair<std::reference_wrapper<void*>, size_t>> intermediates_offsets;
+                // tensor pointer, input index, offset into the input, and if the input is stale
+                // used to calculate the correct address at runtime
+                std::list<std::tuple<std::reference_wrapper<void*>,
+                                     size_t,
+                                     size_t,
+                                     std::reference_wrapper<bool>>>
+                    function_input_index_offset;
+                // tensor pointer, output index, and offset into the output
+                // used to calculate the correct address at runtime
                 std::list<std::tuple<std::reference_wrapper<void*>, size_t, size_t>>
-                    intermediate_input_index_offset;
-                std::list<
-                    std::tuple<std::reference_wrapper<void*>, size_t, std::reference_wrapper<bool>>>
-                    function_input_index;
-                std::list<std::pair<std::reference_wrapper<void*>, size_t>> function_output_index;
+                    function_output_index_offset;
                 std::unordered_map<std::string, std::shared_ptr<CPU_ExternalFunction>> callees;
                 bool m_is_built;
                 std::vector<runtime::PerformanceCounter> m_perf_counters;
