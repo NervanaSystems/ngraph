@@ -706,7 +706,22 @@ bool runtime::cpu::mkldnn_utils::can_use_mkldnn_batchnorm_fprop(const ngraph::No
         return false;
     }
 }
+bool runtime::cpu::mkldnn_utils::can_use_conv_auto()
+{
+#if defined(MKLDNN_VERSION_MAJOR) || defined(MKLDNN_VERSION_MINOR) || defined(MKLDNN_VERSION_PATCH)
+    auto mkldnn_version = mkldnn_version();
+    if (mkldnn_version->major >= 0 && mkldnn_version->minor >= 18 && mkldnn_version->patch >= 0)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+#endif
 
+    return false;
+}
 bool runtime::cpu::mkldnn_utils::can_use_mkldnn_batchnorm_bprop(const ngraph::Node* node)
 {
     auto input_rank = node->get_input_shape(2).size();
