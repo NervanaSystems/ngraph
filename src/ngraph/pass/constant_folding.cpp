@@ -56,13 +56,14 @@ using namespace ngraph;
 
 template <class T>
 shared_ptr<op::Constant> make_constant_reshape(shared_ptr<op::Constant> constant,
-                                               shared_ptr<op::Reshape> reshape)
+                                               shared_ptr<op::Reshape> reshape,
+                                               ngraph::BuildCFMap& m_cfmap)
 {
     auto out_shape = reshape->get_shape();
     vector<T> out_vec(shape_size(out_shape));
 
-    auto handler = GetGlobalCFDispatcherCPU().find(type_index(typeid(ngraph::op::Reshape)));
-    if (handler != GetGlobalCFDispatcherCPU().end())
+    auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Reshape)));
+    if (handler != m_cfmap.end())
     {
         vector<T> in_vec = constant->get_vector<T>();
 
@@ -88,14 +89,15 @@ shared_ptr<op::Constant> make_constant_reshape(shared_ptr<op::Constant> constant
 
 template <class T>
 shared_ptr<op::Constant> make_constant_pad(shared_ptr<op::Constant> constant,
-                                           shared_ptr<op::Pad> pad)
+                                           shared_ptr<op::Pad> pad,
+                                           ngraph::BuildCFMap& m_cfmap)
 {
     auto out_shape = pad->get_shape();
     vector<T> out_vec(shape_size(out_shape));
     auto pad_value = std::static_pointer_cast<op::Constant>(pad->get_argument(1));
 
-    auto handler = GetGlobalCFDispatcherCPU().find(type_index(typeid(ngraph::op::Pad)));
-    if (handler != GetGlobalCFDispatcherCPU().end())
+    auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Pad)));
+    if (handler != m_cfmap.end())
     {
         vector<T> in_vec1 = constant->get_vector<T>();
         vector<T> in_vec2 = pad_value->get_vector<T>();
@@ -138,7 +140,7 @@ void ngraph::pass::ConstantFolding::construct_constant_pad()
     auto pad = make_shared<op::Pad>(
         constant_label, pad_value_label, padding_below, padding_above, padding_interior);
 
-    auto constant_pad_callback = [constant_label](pattern::Matcher& m) {
+    auto constant_pad_callback = [&, constant_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_pad_callback against node = "
                      << m.get_match_root()->get_name();
 
@@ -150,22 +152,26 @@ void ngraph::pass::ConstantFolding::construct_constant_pad()
         auto type = constant_match->get_element_type();
         if (type == element::i32)
         {
-            replace_node(m.get_match_root(), make_constant_pad<int>(constant_match, pad_match));
+            replace_node(m.get_match_root(),
+                         make_constant_pad<int>(constant_match, pad_match, m_cfmap));
             return true;
         }
         else if (type == element::i8)
         {
-            replace_node(m.get_match_root(), make_constant_pad<int8_t>(constant_match, pad_match));
+            replace_node(m.get_match_root(),
+                         make_constant_pad<int8_t>(constant_match, pad_match, m_cfmap));
             return true;
         }
         else if (type == element::f32)
         {
-            replace_node(m.get_match_root(), make_constant_pad<float>(constant_match, pad_match));
+            replace_node(m.get_match_root(),
+                         make_constant_pad<float>(constant_match, pad_match, m_cfmap));
             return true;
         }
         else if (type == element::f64)
         {
-            replace_node(m.get_match_root(), make_constant_pad<double>(constant_match, pad_match));
+            replace_node(m.get_match_root(),
+                         make_constant_pad<double>(constant_match, pad_match, m_cfmap));
             return true;
         }
 
@@ -183,11 +189,9 @@ void ngraph::pass::ConstantFolding::construct_constant_reshape()
         element::f32, Shape{2, 4}, pattern::has_class<op::Constant>());
     auto reshape = make_shared<op::Reshape>(constant_label, AxisVector{0, 1}, Shape{2, 4, 1});
 
-    auto constant_reshape_callback = [constant_label](pattern::Matcher& m) {
+    auto constant_reshape_callback = [&, constant_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_reshape_callback against node = "
                      << m.get_match_root()->get_name();
-        //        std::cout << "In callback for constant_reshape_callback against node = "
-        //                     << m.get_match_root()->get_name() << std::endl;
 
         auto pattern_map = m.get_pattern_map();
 
@@ -198,25 +202,25 @@ void ngraph::pass::ConstantFolding::construct_constant_reshape()
         if (type == element::i32)
         {
             replace_node(m.get_match_root(),
-                         make_constant_reshape<int>(constant_match, reshape_match));
+                         make_constant_reshape<int>(constant_match, reshape_match, m_cfmap));
             return true;
         }
         else if (type == element::i8)
         {
             replace_node(m.get_match_root(),
-                         make_constant_reshape<int8_t>(constant_match, reshape_match));
+                         make_constant_reshape<int8_t>(constant_match, reshape_match, m_cfmap));
             return true;
         }
         else if (type == element::f32)
         {
             replace_node(m.get_match_root(),
-                         make_constant_reshape<float>(constant_match, reshape_match));
+                         make_constant_reshape<float>(constant_match, reshape_match, m_cfmap));
             return true;
         }
         else if (type == element::f64)
         {
             replace_node(m.get_match_root(),
-                         make_constant_reshape<double>(constant_match, reshape_match));
+                         make_constant_reshape<double>(constant_match, reshape_match, m_cfmap));
             return true;
         }
 
@@ -230,13 +234,14 @@ void ngraph::pass::ConstantFolding::construct_constant_reshape()
 
 template <class T>
 shared_ptr<op::Constant> make_constant_broadcast(shared_ptr<op::Constant> constant,
-                                                 shared_ptr<op::Broadcast> broadcast)
+                                                 shared_ptr<op::Broadcast> broadcast,
+                                                 ngraph::BuildCFMap& m_cfmap)
 {
     auto out_shape = broadcast->get_shape();
     vector<T> out_vec(shape_size(out_shape));
 
-    auto handler = GetGlobalCFDispatcherCPU().find(type_index(typeid(ngraph::op::Broadcast)));
-    if (handler != GetGlobalCFDispatcherCPU().end())
+    auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Broadcast)));
+    if (handler != m_cfmap.end())
     {
         vector<T> in_vec = constant->get_vector<T>();
 
@@ -267,7 +272,7 @@ void ngraph::pass::ConstantFolding::construct_constant_broadcast()
 
     auto broadcast = make_shared<op::Broadcast>(constant_label, Shape{2, 4}, AxisSet{1});
 
-    auto constant_broadcast_callback = [constant_label](pattern::Matcher& m) {
+    auto constant_broadcast_callback = [&, constant_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_broadcast_callback against node = "
                      << m.get_match_root()->get_name();
 
@@ -280,25 +285,25 @@ void ngraph::pass::ConstantFolding::construct_constant_broadcast()
         if (type == element::i32)
         {
             replace_node(m.get_match_root(),
-                         make_constant_broadcast<int>(constant_match, broadcast_match));
+                         make_constant_broadcast<int>(constant_match, broadcast_match, m_cfmap));
             return true;
         }
         else if (type == element::i8)
         {
             replace_node(m.get_match_root(),
-                         make_constant_broadcast<int8_t>(constant_match, broadcast_match));
+                         make_constant_broadcast<int8_t>(constant_match, broadcast_match, m_cfmap));
             return true;
         }
         else if (type == element::f32)
         {
             replace_node(m.get_match_root(),
-                         make_constant_broadcast<float>(constant_match, broadcast_match));
+                         make_constant_broadcast<float>(constant_match, broadcast_match, m_cfmap));
             return true;
         }
         else if (type == element::f64)
         {
             replace_node(m.get_match_root(),
-                         make_constant_broadcast<double>(constant_match, broadcast_match));
+                         make_constant_broadcast<double>(constant_match, broadcast_match, m_cfmap));
             return true;
         }
 
@@ -313,7 +318,8 @@ void ngraph::pass::ConstantFolding::construct_constant_broadcast()
 template <class T>
 shared_ptr<op::Constant> make_constant_binary(shared_ptr<op::Constant> a,
                                               shared_ptr<op::Constant> b,
-                                              shared_ptr<Node> binary)
+                                              shared_ptr<Node> binary,
+                                              ngraph::BuildCFMap& m_cfmap)
 {
     auto out_shape = binary->get_shape();
     vector<T> out_vec(shape_size(out_shape));
@@ -328,8 +334,8 @@ shared_ptr<op::Constant> make_constant_binary(shared_ptr<op::Constant> a,
 
     if (std::dynamic_pointer_cast<op::Add>(binary))
     {
-        auto handler = GetGlobalCFDispatcherCPU().find(type_index(typeid(ngraph::op::Add)));
-        if (handler != GetGlobalCFDispatcherCPU().end())
+        auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Add)));
+        if (handler != m_cfmap.end())
         {
             auto func = handler->second(binary.get());
             func(inputs, outputs);
@@ -342,8 +348,8 @@ shared_ptr<op::Constant> make_constant_binary(shared_ptr<op::Constant> a,
     }
     else if (std::dynamic_pointer_cast<op::Subtract>(binary))
     {
-        auto handler = GetGlobalCFDispatcherCPU().find(type_index(typeid(ngraph::op::Subtract)));
-        if (handler != GetGlobalCFDispatcherCPU().end())
+        auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Subtract)));
+        if (handler != m_cfmap.end())
         {
             auto func = handler->second(binary.get());
             func(inputs, outputs);
@@ -356,8 +362,8 @@ shared_ptr<op::Constant> make_constant_binary(shared_ptr<op::Constant> a,
     }
     else if (std::dynamic_pointer_cast<op::Multiply>(binary))
     {
-        auto handler = GetGlobalCFDispatcherCPU().find(type_index(typeid(ngraph::op::Multiply)));
-        if (handler != GetGlobalCFDispatcherCPU().end())
+        auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Multiply)));
+        if (handler != m_cfmap.end())
         {
             auto func = handler->second(binary.get());
             func(inputs, outputs);
@@ -370,8 +376,8 @@ shared_ptr<op::Constant> make_constant_binary(shared_ptr<op::Constant> a,
     }
     else if (std::dynamic_pointer_cast<op::Divide>(binary))
     {
-        auto handler = GetGlobalCFDispatcherCPU().find(type_index(typeid(ngraph::op::Divide)));
-        if (handler != GetGlobalCFDispatcherCPU().end())
+        auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Divide)));
+        if (handler != m_cfmap.end())
         {
             auto func = handler->second(binary.get());
             func(inputs, outputs);
@@ -384,8 +390,8 @@ shared_ptr<op::Constant> make_constant_binary(shared_ptr<op::Constant> a,
     }
     else if (std::dynamic_pointer_cast<op::Minimum>(binary))
     {
-        auto handler = GetGlobalCFDispatcherCPU().find(type_index(typeid(ngraph::op::Minimum)));
-        if (handler != GetGlobalCFDispatcherCPU().end())
+        auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Minimum)));
+        if (handler != m_cfmap.end())
         {
             auto func = handler->second(binary.get());
             func(inputs, outputs);
@@ -398,8 +404,8 @@ shared_ptr<op::Constant> make_constant_binary(shared_ptr<op::Constant> a,
     }
     else if (std::dynamic_pointer_cast<op::Maximum>(binary))
     {
-        auto handler = GetGlobalCFDispatcherCPU().find(type_index(typeid(ngraph::op::Maximum)));
-        if (handler != GetGlobalCFDispatcherCPU().end())
+        auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Maximum)));
+        if (handler != m_cfmap.end())
         {
             auto func = handler->second(binary.get());
             func(inputs, outputs);
@@ -436,7 +442,7 @@ void ngraph::pass::ConstantFolding::construct_constant_binary()
     auto is_bea = pattern::has_class<op::util::BinaryElementwiseArithmetic>();
     auto bea = std::make_shared<pattern::op::Any>(a, is_bea, NodeVector{a, b});
 
-    auto constant_binary_callback = [a, b](pattern::Matcher& m) {
+    auto constant_binary_callback = [&, a, b](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_binary_callback against node = "
                      << m.get_match_root()->get_name();
 
@@ -455,25 +461,25 @@ void ngraph::pass::ConstantFolding::construct_constant_binary()
         if (type == element::i32)
         {
             replace_node(m.get_match_root(),
-                         make_constant_binary<int>(a_match, b_match, binary_match));
+                         make_constant_binary<int>(a_match, b_match, binary_match, m_cfmap));
             return true;
         }
         else if (type == element::i8)
         {
             replace_node(m.get_match_root(),
-                         make_constant_binary<int8_t>(a_match, b_match, binary_match));
+                         make_constant_binary<int8_t>(a_match, b_match, binary_match, m_cfmap));
             return true;
         }
         else if (type == element::f32)
         {
             replace_node(m.get_match_root(),
-                         make_constant_binary<float>(a_match, b_match, binary_match));
+                         make_constant_binary<float>(a_match, b_match, binary_match, m_cfmap));
             return true;
         }
         else if (type == element::f64)
         {
             replace_node(m.get_match_root(),
-                         make_constant_binary<double>(a_match, b_match, binary_match));
+                         make_constant_binary<double>(a_match, b_match, binary_match, m_cfmap));
             return true;
         }
 
@@ -493,7 +499,8 @@ bool is_supported_unary_op(std::shared_ptr<Node> n)
 
 template <class T>
 shared_ptr<op::Constant> make_constant_unary(shared_ptr<op::Constant> constant,
-                                             shared_ptr<Node> unary)
+                                             shared_ptr<Node> unary,
+                                             ngraph::BuildCFMap& m_cfmap)
 {
     auto out_shape = unary->get_shape();
     vector<T> out_vec(shape_size(out_shape));
@@ -506,8 +513,8 @@ shared_ptr<op::Constant> make_constant_unary(shared_ptr<op::Constant> constant,
 
     if (std::dynamic_pointer_cast<op::Abs>(unary))
     {
-        auto handler = GetGlobalCFDispatcherCPU().find(type_index(typeid(ngraph::op::Abs)));
-        if (handler != GetGlobalCFDispatcherCPU().end())
+        auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Abs)));
+        if (handler != m_cfmap.end())
         {
             auto func = handler->second(unary.get());
             func(inputs, outputs);
@@ -519,8 +526,8 @@ shared_ptr<op::Constant> make_constant_unary(shared_ptr<op::Constant> constant,
     }
     else if (std::dynamic_pointer_cast<op::Negative>(unary))
     {
-        auto handler = GetGlobalCFDispatcherCPU().find(type_index(typeid(ngraph::op::Negative)));
-        if (handler != GetGlobalCFDispatcherCPU().end())
+        auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Negative)));
+        if (handler != m_cfmap.end())
         {
             auto func = handler->second(unary.get());
             func(inputs, outputs);
@@ -532,8 +539,8 @@ shared_ptr<op::Constant> make_constant_unary(shared_ptr<op::Constant> constant,
     }
     else if (std::dynamic_pointer_cast<op::Relu>(unary))
     {
-        auto handler = GetGlobalCFDispatcherCPU().find(type_index(typeid(ngraph::op::Relu)));
-        if (handler != GetGlobalCFDispatcherCPU().end())
+        auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Relu)));
+        if (handler != m_cfmap.end())
         {
             auto func = handler->second(unary.get());
             func(inputs, outputs);
@@ -559,7 +566,7 @@ void ngraph::pass::ConstantFolding::construct_constant_unary()
     auto uea =
         std::make_shared<pattern::op::Any>(constant_label, is_uea, NodeVector{constant_label});
 
-    auto constant_unary_callback = [constant_label](pattern::Matcher& m) {
+    auto constant_unary_callback = [&, constant_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_unary_callback against node = "
                      << m.get_match_root()->get_name();
 
@@ -576,25 +583,26 @@ void ngraph::pass::ConstantFolding::construct_constant_unary()
         auto type = constant_match->get_element_type();
         if (type == element::i32)
         {
-            replace_node(m.get_match_root(), make_constant_unary<int>(constant_match, unary_match));
+            replace_node(m.get_match_root(),
+                         make_constant_unary<int>(constant_match, unary_match, m_cfmap));
             return true;
         }
         else if (type == element::i8)
         {
             replace_node(m.get_match_root(),
-                         make_constant_unary<int8_t>(constant_match, unary_match));
+                         make_constant_unary<int8_t>(constant_match, unary_match, m_cfmap));
             return true;
         }
         else if (type == element::f32)
         {
             replace_node(m.get_match_root(),
-                         make_constant_unary<float>(constant_match, unary_match));
+                         make_constant_unary<float>(constant_match, unary_match, m_cfmap));
             return true;
         }
         else if (type == element::f64)
         {
             replace_node(m.get_match_root(),
-                         make_constant_unary<double>(constant_match, unary_match));
+                         make_constant_unary<double>(constant_match, unary_match, m_cfmap));
             return true;
         }
 
