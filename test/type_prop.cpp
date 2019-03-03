@@ -212,7 +212,7 @@ TEST(type_prop, batchnorm_training_rank_less_than_2)
         auto bc = make_shared<op::BatchNormTraining>(dummy, dummy, dummy, 0.001);
         FAIL() << "BatchNorm c-tor should throw for tensors whose rank is less than 2";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Input argument must have rank of at least 2"));
@@ -233,7 +233,7 @@ TEST(type_prop, batchnorm_training_zero_channel_check)
         auto bc = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, 0.001);
         FAIL() << "BatchNorm c-tor should throw for tensors w/ zero-dimension channels";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), std::string("Channel count must be at least 1"));
     }
@@ -254,7 +254,7 @@ TEST(type_prop, batchnorm_training_et_check)
         auto bc = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, 0.001);
         FAIL() << "BatchNorm c-tor should throw for different element types";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), std::string("Input element types do not match"));
     }
@@ -275,7 +275,7 @@ TEST(type_prop, batchnorm_training_shape_check)
         auto bc = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, 0.001);
         FAIL() << "BatchNorm c-tor should throw if gamma and beta shapes don't match";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), std::string("Shapes for gamma/beta do not match"));
     }
@@ -300,7 +300,7 @@ TEST(type_prop, batchnorm_training_backprop_et_check)
             data_batch, gamma, beta, mean, variance, delta, 0.001);
         FAIL() << "Deduced type should disagree with c-tor arguments";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), std::string("Input element types do not match"));
     }
@@ -325,7 +325,7 @@ TEST(type_prop, batchnorm_training_backprop_shape_check)
             data_batch, gamma, beta, mean, variance, delta, 0.001);
         FAIL() << "Deduced type should disagree with c-tor arguments";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Shapes for gamma/beta/mean/variance do not match"));
@@ -443,7 +443,7 @@ TEST(type_prop, batchnorm_inference_partial_input_rank_static_dynamic_zero_chann
             make_shared<op::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
         FAIL() << "Zero channel count not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), std::string("Channel count must be at least 1"));
     }
@@ -506,7 +506,7 @@ TEST(type_prop, batchnorm_inference_partial_input_rank_dynamic_some_rank_static_
             make_shared<op::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
         FAIL() << "Wrong gamma/beta/mean/variance shape not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -545,7 +545,7 @@ TEST(type_prop,
             make_shared<op::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
         FAIL() << "Inconsistent gamma/beta/mean/variance shape not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Shapes for gamma/beta/mean/variance do not match"));
@@ -583,7 +583,7 @@ TEST(type_prop,
             make_shared<op::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
         FAIL() << "Inconsistent gamma/beta/mean/variance channel count not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Shapes for gamma/beta/mean/variance do not match"));
@@ -649,7 +649,7 @@ TEST(type_prop,
             make_shared<op::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
         FAIL() << "Inconsistent input/gamma/beta/mean/variance channel count not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Input channel dimension (4) does not match "
@@ -759,7 +759,7 @@ TEST(type_prop, batchnorm_training_partial_input_rank_static_dynamic_zero_channe
         auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
         FAIL() << "Zero channel count not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), std::string("Channel count must be at least 1"));
     }
@@ -813,7 +813,7 @@ TEST(type_prop, batchnorm_training_partial_input_rank_dynamic_some_rank_static_d
         auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
         FAIL() << "Wrong gamma/beta shape not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Shape for gamma/beta ({?,?}) does not have rank 1"));
@@ -844,7 +844,7 @@ TEST(type_prop,
         auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
         FAIL() << "Inconsistent gamma/beta shape not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), std::string("Shapes for gamma/beta do not match"));
     }
@@ -874,7 +874,7 @@ TEST(type_prop,
         auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
         FAIL() << "Inconsistent gamma/beta channel count not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), std::string("Shapes for gamma/beta do not match"));
     }
@@ -930,7 +930,7 @@ TEST(type_prop,
         auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
         FAIL() << "Inconsistent input/gamma/beta channel count not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -1049,7 +1049,7 @@ TEST(type_prop, batchnorm_training_backprop_partial_input_rank_static_dynamic_ze
             data_batch, gamma, beta, mean, variance, delta, epsilon);
         FAIL() << "Zero channel count not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), std::string("Channel count must be at least 1"));
     }
@@ -1160,7 +1160,7 @@ TEST(type_prop, batchnorm_training_backprop_partial_delta_rank_static_dynamic_ze
             data_batch, gamma, beta, mean, variance, delta, epsilon);
         FAIL() << "Zero channel count not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), std::string("Channel count must be at least 1"));
     }
@@ -1237,7 +1237,7 @@ TEST(
             data_batch, gamma, beta, mean, variance, delta, epsilon);
         FAIL() << "Wrong gamma/beta/mean/variance shape not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -1280,7 +1280,7 @@ TEST(
             data_batch, gamma, beta, mean, variance, delta, epsilon);
         FAIL() << "Wrong gamma/beta/mean/variance shape not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Shapes for gamma/beta/mean/variance do not match"));
@@ -1322,7 +1322,7 @@ TEST(
             data_batch, gamma, beta, mean, variance, delta, epsilon);
         FAIL() << "nconsistent gamma/beta/mean/variance channel count not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Shapes for gamma/beta/mean/variance do not match"));
@@ -1400,7 +1400,7 @@ TEST(
             data_batch, gamma, beta, mean, variance, delta, epsilon);
         FAIL() << "Inconsistent delta/gamma/beta/mean/variance channel count not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Input channel dimension (4) does not match "
@@ -2218,7 +2218,7 @@ void test_binary(std::string node_type,
             // Should have thrown, so fail if it didn't
             FAIL() << "Incompatible view arguments not detected.";
         }
-        catch (const NodeValidationError& error)
+        catch (const NodeValidationFailure& error)
         {
             EXPECT_HAS_SUBSTRING(error.what(), std::string("Argument shapes are inconsistent"));
         }
@@ -2237,7 +2237,7 @@ void test_binary(std::string node_type,
             // Should have thrown, so fail if it didn't
             FAIL() << "Incompatible view arguments not detected.";
         }
-        catch (const NodeValidationError& error)
+        catch (const NodeValidationFailure& error)
         {
             EXPECT_HAS_SUBSTRING(error.what(),
                                  std::string("Argument element types are inconsistent"));
@@ -2310,7 +2310,7 @@ void test_binary_logical(std::string node_type,
             // Should have thrown, so fail if it didn't
             FAIL() << "Incompatible view arguments not detected.";
         }
-        catch (const NodeValidationError& error)
+        catch (const NodeValidationFailure& error)
         {
             EXPECT_HAS_SUBSTRING(error.what(), std::string("Argument shapes are inconsistent"));
         }
@@ -2329,7 +2329,7 @@ void test_binary_logical(std::string node_type,
             // Should have thrown, so fail if it didn't
             FAIL() << "Incompatible view arguments not detected.";
         }
-        catch (const NodeValidationError& error)
+        catch (const NodeValidationFailure& error)
         {
             EXPECT_HAS_SUBSTRING(error.what(),
                                  std::string("Argument element types are inconsistent"));
@@ -2463,7 +2463,7 @@ TEST(type_prop, binary_arithmetic_bad_argument_element_types)
         // Should have thrown, so fail if it didn't
         FAIL() << "Did not detect incorrect element types for arithmetic operator";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Arguments cannot have boolean element type"));
@@ -2483,7 +2483,7 @@ TEST(type_prop, unary_arithmetic_bad_argument_element_types)
         // Should have thrown, so fail if it didn't
         FAIL() << "Did not detect incorrect element types for arithmetic operator";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Arguments cannot have boolean element type"));
@@ -5420,7 +5420,7 @@ TEST(type_prop, conv_invalid_element_type_mismatch)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with element type mismatch not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Element types for data batch and filters do not match"));
@@ -5443,7 +5443,7 @@ TEST(type_prop, conv_invalid_0d_input)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 0D input not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Data batch and filters must have rank of at least 3 "
@@ -5468,7 +5468,7 @@ TEST(type_prop, conv_invalid_1d_input)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 1D input not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Data batch and filters must have rank of at least 3 "
@@ -5493,7 +5493,7 @@ TEST(type_prop, conv_invalid_2d_input)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 2D input not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Data batch and filters must have rank of at least 3 "
@@ -5518,7 +5518,7 @@ TEST(type_prop, conv_invalid_0_batch_size)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0 batch size not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), std::string("Batch size is zero"));
     }
@@ -5540,7 +5540,7 @@ TEST(type_prop, conv_invalid_0_input_channels)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0 input channels not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -5564,7 +5564,7 @@ TEST(type_prop, conv_invalid_wrong_number_of_filter_dimensions_too_many)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with too many filter dimensions not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), std::string("Data batch and filters rank do not match"));
     }
@@ -5586,7 +5586,7 @@ TEST(type_prop, conv_invalid_wrong_number_of_filter_dimensions_too_few)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with too few filter dimensions not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), std::string("Data batch and filters rank do not match"));
     }
@@ -5608,7 +5608,7 @@ TEST(type_prop, conv_invalid_0_output_channels)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0 output channels not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), std::string("Filter output channel count is zero"));
     }
@@ -5630,7 +5630,7 @@ TEST(type_prop, conv_invalid_input_channel_mismatch)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with channel count mismatch not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -5655,7 +5655,7 @@ TEST(type_prop, conv_invalid_movement_stride_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong movement stride rank not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -5684,7 +5684,7 @@ TEST(type_prop, conv_invalid_window_dilation_stride_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong window dilation stride rank not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -5719,7 +5719,7 @@ TEST(type_prop, conv_invalid_data_dilation_stride_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong data dilation stride rank not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -5753,7 +5753,7 @@ TEST(type_prop, conv_invalid_padding_below_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong padding-below rank not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -5787,7 +5787,7 @@ TEST(type_prop, conv_invalid_padding_above_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong padding-above rank not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -5821,7 +5821,7 @@ TEST(type_prop, conv_invalid_input_spatial_size_negative_after_padding)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with negative-length post-padding spatial axis not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Data shape after padding and dilation has dimension less "
@@ -5850,7 +5850,7 @@ TEST(type_prop, conv_invalid_input_spatial_size_zero_after_padding)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with zero-length post-padding spatial axis not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Data shape after padding and dilation has dimension less "
@@ -5874,7 +5874,7 @@ TEST(type_prop, conv_invalid_input_spatial_size_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with zero-length spatial axis not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Data shape after padding and dilation has "
@@ -5898,7 +5898,7 @@ TEST(type_prop, conv_invalid_window_size_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with zero-length window axis not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -5922,7 +5922,7 @@ TEST(type_prop, conv_invalid_window_dilation_stride_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong 0-length window dilation stride axis not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -5952,7 +5952,7 @@ TEST(type_prop, conv_invalid_data_dilation_stride_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong 0-length data dilation stride axis not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -5976,7 +5976,7 @@ TEST(type_prop, conv_invalid_dilated_window_too_large)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with oversized dilated window not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Window after dilation has dimension (dim: 9) larger than "
@@ -6000,7 +6000,7 @@ TEST(type_prop, conv_invalid_movement_stride_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong 0-length movement stride axis not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -6062,7 +6062,7 @@ TEST(type_prop, conv_partial_rank_dynamic_rank_dynamic_window_strides_rank_wrong
 
         FAIL() << "Window stride rank mismatch not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -6103,7 +6103,7 @@ TEST(type_prop, conv_partial_rank_dynamic_rank_dynamic_window_strides_dim_zero)
 
         FAIL() << "Window stride with dimension zero not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -6140,7 +6140,7 @@ TEST(type_prop, conv_partial_rank_dynamic_rank_dynamic_window_dilation_rank_wron
 
         FAIL() << "Window dilation rank mismatch not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -6181,7 +6181,7 @@ TEST(type_prop, conv_partial_rank_dynamic_rank_dynamic_window_dilation_dim_zero)
 
         FAIL() << "Window dilation with dimension zero not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -6218,7 +6218,7 @@ TEST(type_prop, conv_partial_rank_dynamic_rank_dynamic_padding_below_rank_wrong)
 
         FAIL() << "Padding below rank mismatch not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -6259,7 +6259,7 @@ TEST(type_prop, conv_partial_rank_dynamic_rank_dynamic_padding_above_rank_wrong)
 
         FAIL() << "Padding above rank mismatch not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -6300,7 +6300,7 @@ TEST(type_prop, conv_partial_rank_dynamic_rank_dynamic_data_dilation_rank_wrong)
 
         FAIL() << "Data dilation rank mismatch not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -6341,7 +6341,7 @@ TEST(type_prop, conv_partial_rank_dynamic_rank_dynamic_data_dilation_dim_zero)
 
         FAIL() << "Data dilation with dimension zero not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -6403,7 +6403,7 @@ TEST(type_prop, conv_partial_rank_static_dynamic_rank_dynamic_data_batch_rank_wr
 
         FAIL() << "Data batch rank mismatch not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -6473,7 +6473,7 @@ TEST(type_prop, conv_partial_rank_static_dynamic_rank_dynamic_batch_size_known_z
 
         FAIL() << "Zero batch size not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), std::string("Batch size is zero"));
     }
@@ -6535,7 +6535,7 @@ TEST(type_prop, conv_partial_rank_static_dynamic_rank_dynamic_input_channel_coun
 
         FAIL() << "Zero input channel count not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -6599,7 +6599,7 @@ TEST(type_prop, conv_partial_rank_dynamic_rank_static_dynamic_output_channel_cou
 
         FAIL() << "Zero output channel count not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), std::string("Filter output channel count is zero"));
     }
@@ -6659,7 +6659,7 @@ TEST(type_prop, conv_partial_rank_dynamic_rank_static_dynamic_input_channel_coun
 
         FAIL() << "Zero input channel count not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -6721,7 +6721,7 @@ TEST(type_prop, conv_partial_rank_static_dynamic_rank_static_dynamic_arg_ranks_m
 
         FAIL() << "Argument rank mismatch not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Data batch and filters rank do not match (data batch "
@@ -6786,7 +6786,7 @@ TEST(type_prop, conv_partial_rank_static_dynamic_rank_static_dynamic_input_chann
 
         FAIL() << "Input channel count mismatch not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -6879,7 +6879,7 @@ TEST(
 
         FAIL() << "Oversize filter not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Window after dilation has dimension (dim: 201) larger "
@@ -7002,7 +7002,7 @@ TEST(
 
         FAIL() << "Oversize filter after window dilation not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Window after dilation has dimension (dim: 201) larger "
@@ -7041,7 +7041,7 @@ TEST(
 
         FAIL() << "Zero dimension in data batch not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Data shape after padding and dilation has "
@@ -7108,7 +7108,7 @@ TEST(
 
         FAIL() << "Zero padded dimension in data batch not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Data shape after padding and dilation has "
@@ -7147,7 +7147,7 @@ TEST(
 
         FAIL() << "Negative padded dimension in data batch not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Data shape after padding and dilation has dimension less "
@@ -7302,7 +7302,7 @@ TEST(type_prop, max_pool_invalid_0d_input)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 0D input not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), std::string("Data batch must have rank of at least 3"));
     }
@@ -7324,7 +7324,7 @@ TEST(type_prop, max_pool_invalid_1d_input)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 1D input not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), std::string("Data batch must have rank of at least 3"));
     }
@@ -7346,7 +7346,7 @@ TEST(type_prop, max_pool_invalid_2d_input)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 2D input not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), std::string("Data batch must have rank of at least 3"));
     }
@@ -7368,7 +7368,7 @@ TEST(type_prop, max_pool_invalid_0_batch_size)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0 batch size not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), std::string("Batch size is zero"));
     }
@@ -7390,7 +7390,7 @@ TEST(type_prop, max_pool_invalid_0_channels)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0 channels not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), std::string("Channel count is zero"));
     }
@@ -7412,7 +7412,7 @@ TEST(type_prop, max_pool_invalid_wrong_number_of_window_dimensions_too_many)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with too many window dimensions not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -7439,7 +7439,7 @@ TEST(type_prop, max_pool_invalid_wrong_number_of_window_dimensions_too_few)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with too few window dimensions not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -7467,7 +7467,7 @@ TEST(type_prop, max_pool_invalid_movement_stride_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong movement stride rank not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -7494,7 +7494,7 @@ TEST(type_prop, max_pool_invalid_input_data_size_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with zero-length spatial axis not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Data shape after padding and dilation has "
@@ -7518,7 +7518,7 @@ TEST(type_prop, max_pool_invalid_window_size_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with zero-length window axis not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -7542,7 +7542,7 @@ TEST(type_prop, max_pool_invalid_dilated_too_large)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with oversized window not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Window after dilation has dimension (dim: 9) larger than "
@@ -7567,7 +7567,7 @@ TEST(type_prop, max_pool_invalid_movement_stride_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0-length movement stride axis not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -7611,7 +7611,7 @@ TEST(type_prop, max_pool_partial_rank_dynamic_attrib_rank_mismatch)
             param, window_shape, window_movement_strides, padding_below, padding_above);
         FAIL() << "Mismatch of attribute ranks not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -7675,7 +7675,7 @@ TEST(type_prop, max_pool_partial_rank_static_dynamic_attrib_rank_mismatch)
             param, window_shape, window_movement_strides, padding_below, padding_above);
         FAIL() << "Mismatch of attribute ranks not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -7706,7 +7706,7 @@ TEST(type_prop, max_pool_partial_rank_static_dynamic_window_not_too_big)
             param, window_shape, window_movement_strides, padding_below, padding_above);
         FAIL() << "Oversized window not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Window after dilation has dimension (dim: 9) larger than "
@@ -8371,7 +8371,7 @@ TEST(type_prop, avg_pool_invalid_0d_input)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 0D input not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              "Data batch must have rank of at least 3 (one batch axis, one "
@@ -8395,7 +8395,7 @@ TEST(type_prop, avg_pool_invalid_1d_input)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 1D input not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              "Data batch must have rank of at least 3 (one batch axis, one "
@@ -8419,7 +8419,7 @@ TEST(type_prop, avg_pool_invalid_2d_input)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 2D input not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              "Data batch must have rank of at least 3 (one batch axis, one "
@@ -8443,7 +8443,7 @@ TEST(type_prop, avg_pool_invalid_0_batch_size)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0 batch size not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), "Batch size is zero");
     }
@@ -8465,7 +8465,7 @@ TEST(type_prop, avg_pool_invalid_0_channels)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0 channels not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), "Channel count is zero");
     }
@@ -8487,7 +8487,7 @@ TEST(type_prop, avg_pool_invalid_wrong_number_of_window_dimensions_too_many)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with too many window dimensions not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              "Ranks for data item shape (data batch has shape {6,2,10,10}, so data "
@@ -8513,7 +8513,7 @@ TEST(type_prop, avg_pool_invalid_wrong_number_of_window_dimensions_too_few)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with too few window dimensions not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              "Ranks for data item shape (data batch has shape {6,2,10,10}, so data "
@@ -8540,7 +8540,7 @@ TEST(type_prop, avg_pool_invalid_movement_stride_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong movement stride rank not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              "Ranks for data item shape (data batch has shape {6,2,10,10}, so data "
@@ -8570,7 +8570,7 @@ TEST(type_prop, avg_pool_invalid_padding_below_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong below-padding rank not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              "Ranks for data item shape (data batch has shape {6,2,10,10}, so data "
@@ -8600,7 +8600,7 @@ TEST(type_prop, avg_pool_invalid_padding_above_rank)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong above-padding rank not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              "Ranks for data item shape (data batch has shape {6,2,10,10}, so data "
@@ -8626,7 +8626,7 @@ TEST(type_prop, avg_pool_invalid_input_item_size_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with zero-length spatial axis not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -8650,7 +8650,7 @@ TEST(type_prop, avg_pool_invalid_window_size_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with zero-length window axis not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              "Window after dilation has dimension less than 1 (dim: 0) at axis 1");
@@ -8673,7 +8673,7 @@ TEST(type_prop, avg_pool_invalid_dilated_too_large)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with oversized window not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              "Window after dilation has dimension (dim: 9) larger than the data "
@@ -8712,7 +8712,7 @@ TEST(type_prop, avg_pool_invalid_movement_stride_0)
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0-length movement stride axis not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              "Window strides (Strides{0, 1}) has zero dimension at axis 0");
@@ -8765,7 +8765,7 @@ TEST(type_prop, avg_pool_partial_rank_dynamic_attrib_rank_mismatch)
                                            include_padding_in_average);
         FAIL() << "Mismatch of attribute ranks not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -8844,7 +8844,7 @@ TEST(type_prop, avg_pool_partial_rank_static_dynamic_attrib_rank_mismatch)
                                            include_padding_in_average);
         FAIL() << "Mismatch of attribute ranks not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -8880,7 +8880,7 @@ TEST(type_prop, avg_pool_partial_rank_static_dynamic_window_not_too_big)
                                            include_padding_in_average);
         FAIL() << "Oversized window not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Window after dilation has dimension (dim: 9) larger than "
@@ -8935,7 +8935,7 @@ TEST(type_prop, avg_pool_partial_rank_static_dynamic_window_in_padding)
                                            include_padding_in_average);
         FAIL() << "Window in padding not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Window after dilation has dimension (dim: 9) larger than "
@@ -10030,7 +10030,7 @@ TEST(type_prop, binary_elementwise_arithmetic_left_rank_static_dynamic_inconsist
         auto add = make_shared<op::Add>(a, b);
         FAIL() << "Inconsistent partial shapes not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), "Argument shapes are inconsistent");
     }
@@ -10050,7 +10050,7 @@ TEST(type_prop, binary_elementwise_arithmetic_right_rank_static_dynamic_inconsis
         auto add = make_shared<op::Add>(a, b);
         FAIL() << "Inconsistent partial shapes not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), "Argument shapes are inconsistent");
     }
@@ -10070,7 +10070,7 @@ TEST(type_prop, binary_elementwise_arithmetic_both_rank_static_dynamic_inconsist
         auto add = make_shared<op::Add>(a, b);
         FAIL() << "Inconsistent partial shapes not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), "Argument shapes are inconsistent");
     }
@@ -10090,7 +10090,7 @@ TEST(type_prop, binary_elementwise_arithmetic_left_rank_static_dynamic_different
         auto add = make_shared<op::Add>(a, b);
         FAIL() << "Inconsistent partial shapes not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), "Argument shapes are inconsistent");
     }
@@ -10110,7 +10110,7 @@ TEST(type_prop, binary_elementwise_arithmetic_right_rank_static_dynamic_differen
         auto add = make_shared<op::Add>(a, b);
         FAIL() << "Inconsistent partial shapes not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), "Argument shapes are inconsistent");
     }
@@ -10130,7 +10130,7 @@ TEST(type_prop, binary_elementwise_arithmetic_both_rank_static_dynamic_different
         auto add = make_shared<op::Add>(a, b);
         FAIL() << "Inconsistent partial shapes not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), "Argument shapes are inconsistent");
     }
@@ -12094,4 +12094,57 @@ TEST(type_prop, all_partial_rank_static_dynamic_axes_oob)
     {
         FAIL() << "Deduced type check failed for unexpected reason";
     }
+}
+
+TEST(type_prop, DISABLED_benchmark_type_prop_add)
+{
+    auto p1 = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    auto p2 = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+
+    constexpr size_t num_iterations = 1000000;
+    size_t total_nanosec = 0;
+
+    stopwatch sw;
+
+    for (size_t i = 0; i < num_iterations; i++)
+    {
+        sw.start();
+        auto n = make_shared<op::Add>(p1, p2);
+        sw.stop();
+
+        total_nanosec += sw.get_nanoseconds();
+    }
+
+    std::cout.imbue(std::locale(""));
+    std::cout << "Constructed " << std::fixed << num_iterations << " Add ops in " << std::fixed
+              << total_nanosec << " ns" << std::endl;
+}
+
+TEST(type_prop, DISABLED_benchmark_type_prop_convolution)
+{
+    auto d = make_shared<op::Parameter>(element::f32, Shape{64, 3, 224, 224});
+    auto f = make_shared<op::Parameter>(element::f32, Shape{64, 3, 7, 7});
+    auto strides = Strides{1, 1};
+    auto dilation = Strides{1, 1};
+    auto padding_below = CoordinateDiff{1, 1};
+    auto padding_above = CoordinateDiff{1, 1};
+
+    constexpr size_t num_iterations = 1000000;
+    size_t total_nanosec = 0;
+
+    stopwatch sw;
+
+    for (size_t i = 0; i < num_iterations; i++)
+    {
+        sw.start();
+        auto n =
+            make_shared<op::Convolution>(d, f, strides, dilation, padding_below, padding_above);
+        sw.stop();
+
+        total_nanosec += sw.get_nanoseconds();
+    }
+
+    std::cout.imbue(std::locale(""));
+    std::cout << "Constructed " << std::fixed << num_iterations << " Convolution ops in "
+              << std::fixed << total_nanosec << " ns" << std::endl;
 }
