@@ -62,6 +62,7 @@
 #include "ngraph/runtime/generic_cpu/kernel/broadcast.hpp"
 #include "ngraph/runtime/generic_cpu/kernel/dot.hpp"
 #include "ngraph/runtime/generic_cpu/kernel/reshape.hpp"
+#include "ngraph/runtime/generic_cpu/kernel/sum.hpp"
 #include "ngraph/runtime/generic_cpu/node_wrapper.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/interpreter/node_wrapper.hpp"
@@ -1267,11 +1268,11 @@ private:
         case OP_TYPEID::Sum:
         {
             const op::Sum* sum = static_cast<const op::Sum*>(&node);
-            reference::sum<T>(static_cast<const T*>(args[0]),
-                              static_cast<T*>(out[0]),
-                              node.get_input_shape(0),
-                              node.get_output_shape(0),
-                              sum->get_reduction_axes());
+            gcpu::kernel::sum<T>(static_cast<const T*>(args[0]),
+                                 static_cast<T*>(out[0]),
+                                 node.get_input_shape(0),
+                                 node.get_output_shape(0),
+                                 sum->get_reduction_axes());
             break;
         }
         case OP_TYPEID::Tan:
