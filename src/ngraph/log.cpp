@@ -18,7 +18,6 @@
 #include <condition_variable>
 #include <ctime>
 #include <functional>
-#include <iomanip>
 #include <iostream>
 #include <mutex>
 #include <thread>
@@ -27,7 +26,6 @@
 
 using namespace std;
 using namespace ngraph;
-using namespace std::chrono;
 
 void ngraph::default_logger_handler_func(const string& s)
 {
@@ -75,20 +73,24 @@ LogHelper::~LogHelper()
 std::string ngraph::get_timestamp()
 {
     // get current time
-    auto now = system_clock::now();
+    auto now = std::chrono::system_clock::now();
 
     // get number of nanoseconds for the current second
     // (remainder after division into seconds)
-    auto ns = duration_cast<nanoseconds>(now.time_since_epoch()) % 1000000;
+    auto ns =
+        std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()) % 1000000;
 
     // convert to std::time_t in order to convert to std::tm (broken time)
-    auto timer = system_clock::to_time_t(now);
+    auto timer = std::chrono::system_clock::to_time_t(now);
 
     // convert to broken time
-    std::tm bt = *std::localtime(&timer);
+    std::tm* bt = std::localtime(&timer);
+
+    char buffer[256];
+    strftime(buffer, sizeof(buffer), "%H:%M:%S", bt);
 
     std::ostringstream timestamp;
-    timestamp << std::put_time(&bt, "%H:%M:%S"); // HH:MM:SS
+    timestamp << buffer;
     timestamp << '.' << std::setfill('0') << std::setw(3) << ns.count();
 
     return timestamp.str();
