@@ -353,28 +353,34 @@ const PartialShape& Node::get_input_partial_shape(size_t i) const
     return m_inputs.at(i).get_partial_shape();
 }
 
-descriptor::Input* Node::get_input_from(const shared_ptr<Node>& src)
+std::vector<descriptor::Input*> Node::get_inputs_from(const shared_ptr<Node>& src)
 {
+    std::vector<descriptor::Input*> results;
+
     for (size_t i = 0; i < this->get_input_size(); ++i)
     {
         if (this->get_argument(i) == src)
         {
-            return &(this->get_inputs().at(i));
+            results.push_back(&(this->get_inputs().at(i)));
         }
     }
-    throw ngraph_error("Error: src is not one of self's input Node");
+
+    return results;
 }
 
-descriptor::Output* Node::get_output_to(const shared_ptr<Node>& dst)
+std::vector<descriptor::Output*> Node::get_outputs_to(const shared_ptr<Node>& dst)
 {
+    std::vector<descriptor::Output*> results;
+
     for (size_t i = 0; i < dst->get_input_size(); ++i)
     {
         if (dst->get_argument(i).get() == this)
         {
-            return &(dst->get_inputs().at(i).get_output());
+            results.push_back(&(dst->get_inputs().at(i).get_output()));
         }
     }
-    throw ngraph_error("Error: dst is not one of self's output Node");
+
+    return results;
 }
 
 NodeVector Node::get_users(bool check_is_used) const

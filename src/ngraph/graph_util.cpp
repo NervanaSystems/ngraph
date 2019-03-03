@@ -344,8 +344,14 @@ pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
     par_node->set_placement(dst_node->get_placement());
 
     // Fix input / output among src, dst and par
-    descriptor::Input* dst_input = dst_node->get_input_from(src_node);
-    descriptor::Output* src_output = src_node->get_output_to(dst_node);
+    std::vector<descriptor::Input*> dst_inputs = dst_node->get_inputs_from(src_node);
+    NGRAPH_ASSERT(dst_inputs.size() == 1);
+    descriptor::Input* dst_input = dst_inputs[0];
+
+    std::vector<descriptor::Output*> src_outputs = src_node->get_outputs_to(dst_node);
+    NGRAPH_ASSERT(src_outputs.size() == 1);
+    descriptor::Output* src_output = src_outputs[0];
+
     src_output->remove_input(dst_input);    // Remove [0]
     dst_input->replace_output(par_node, 0); // Remove [0] (again), add [8], remove [1], add [9]
 
@@ -401,8 +407,14 @@ void ngraph::insert_new_node_between(const shared_ptr<Node>& src_node,
                                      const shared_ptr<Node>& new_node)
 {
     // Fix input / output
-    descriptor::Input* dst_input = dst_node->get_input_from(src_node);
-    descriptor::Output* src_output = src_node->get_output_to(dst_node);
+    std::vector<descriptor::Input*> dst_inputs = dst_node->get_inputs_from(src_node);
+    NGRAPH_ASSERT(dst_inputs.size() == 1);
+    descriptor::Input* dst_input = dst_inputs[0];
+
+    std::vector<descriptor::Output*> src_outputs = src_node->get_outputs_to(dst_node);
+    NGRAPH_ASSERT(src_outputs.size() == 1);
+    descriptor::Output* src_output = src_outputs[0];
+
     src_output->remove_input(dst_input);    // Remove [0]
     dst_input->replace_output(new_node, 0); // Remove [0] (again), add [8], remove [1], add [9]
 }

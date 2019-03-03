@@ -250,7 +250,8 @@ TEST(copy, parameter)
 
     ASSERT_TRUE(nullptr != new_node);
     ASSERT_TRUE(new_node->get_arguments().size() == 0);
-    ASSERT_TRUE(node->has_same_type(new_node));
+    ASSERT_EQ(node->get_element_type(), new_node->get_element_type());
+    ASSERT_EQ(node->get_shape(), new_node->get_shape());
 }
 
 TEST(copy, power)

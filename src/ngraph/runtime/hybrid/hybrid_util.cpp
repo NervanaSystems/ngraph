@@ -178,8 +178,15 @@ void runtime::hybrid::rewrite_function(const shared_ptr<Function>& f,
                             // Since this input is from outside the cluster we need to create
                             // a new Parameter node placed in the cluster instead of this external
                             // node
-                            descriptor::Output* source_output = input->get_output_to(node);
-                            descriptor::Input* target_input = node->get_input_from(input);
+                            std::vector<descriptor::Output*> source_outputs =
+                                input->get_outputs_to(node);
+                            NGRAPH_ASSERT(source_outputs.size() == 1);
+                            descriptor::Output* source_output = source_outputs[0];
+
+                            std::vector<descriptor::Input*> target_inputs =
+                                node->get_inputs_from(input);
+                            NGRAPH_ASSERT(target_inputs.size() == 1);
+                            descriptor::Input* target_input = target_inputs[0];
 
                             auto new_parameter = make_shared<ngraph::op::Parameter>(
                                 source_output->get_element_type(), source_output->get_shape());
@@ -221,7 +228,12 @@ void runtime::hybrid::rewrite_function(const shared_ptr<Function>& f,
                     auto old_source = cluster_outputs[i];
                     auto new_source = fc;
                     auto target = function_call_outputs[i];
-                    descriptor::Input* target_input = target->get_input_from(old_source);
+
+                    std::vector<descriptor::Input*> target_inputs =
+                        target->get_inputs_from(old_source);
+                    NGRAPH_ASSERT(target_inputs.size() == 1);
+                    descriptor::Input* target_input = target_inputs[0];
+
                     descriptor::Output& new_output = new_source->get_outputs()[i];
                     target_input->replace_output(new_output);
                 }

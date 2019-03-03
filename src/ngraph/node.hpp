@@ -207,13 +207,13 @@ namespace ngraph
         /// Set device placement
         void set_placement_index(size_t placement);
 
-        /// Get input descriptor that is connected to src
-        descriptor::Input* get_input_from(const std::shared_ptr<Node>& src);
+        /// Get input descriptors that are connected to src
+        std::vector<descriptor::Input*> get_inputs_from(const std::shared_ptr<Node>& src);
 
-        /// Get ouput descriptor that outputs to dst
-        descriptor::Output* get_output_to(const std::shared_ptr<Node>& dst);
+        /// Get output descriptors that are connected to dst
+        std::vector<descriptor::Output*> get_outputs_to(const std::shared_ptr<Node>& dst);
 
-        /// Get all the nodes that uses the current node
+        /// Get all the nodes tha uses the current node
         NodeVector get_users(bool check_is_used = false) const;
 
         virtual std::shared_ptr<Node> get_default_value() const { return nullptr; }
@@ -221,10 +221,22 @@ namespace ngraph
         bool operator<(const Node& other) const { return m_instance_id < other.m_instance_id; }
         static const size_t placement_invalid = -1;
 
-        const std::unordered_set<descriptor::Tensor*>& get_liveness_new_list() const { return m_liveness_new_list; }
-        void set_liveness_new_list(const std::unordered_set<descriptor::Tensor*>& list) { m_liveness_new_list = list; }
-        const std::unordered_set<descriptor::Tensor*>& get_liveness_free_list() const { return m_liveness_free_list; }
-        void set_liveness_free_list(const std::unordered_set<descriptor::Tensor*>& list) { m_liveness_free_list = list; }
+        const std::unordered_set<descriptor::Tensor*>& get_liveness_new_list() const
+        {
+            return m_liveness_new_list;
+        }
+        void set_liveness_new_list(const std::unordered_set<descriptor::Tensor*>& list)
+        {
+            m_liveness_new_list = list;
+        }
+        const std::unordered_set<descriptor::Tensor*>& get_liveness_free_list() const
+        {
+            return m_liveness_free_list;
+        }
+        void set_liveness_free_list(const std::unordered_set<descriptor::Tensor*>& list)
+        {
+            m_liveness_free_list = list;
+        }
 
     protected:
         /// Throws if the node is invalid.
@@ -247,7 +259,6 @@ namespace ngraph
 
     private:
         virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
-        
         std::unordered_set<descriptor::Tensor*> m_liveness_new_list;
         std::unordered_set<descriptor::Tensor*> m_liveness_free_list;
 

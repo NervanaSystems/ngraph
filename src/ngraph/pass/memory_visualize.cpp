@@ -66,7 +66,8 @@ bool pass::MemoryVisualize::run_on_module(vector<shared_ptr<ngraph::Function>>& 
             size_t temp_max_size = 0;
             for (shared_ptr<Node> node : nodes)
             {
-                tensors.insert(node->get_liveness_new_list().begin(), node->get_liveness_new_list().end());
+                tensors.insert(node->get_liveness_new_list().begin(),
+                               node->get_liveness_new_list().end());
             }
             for (descriptor::Tensor* tensor : tensors)
             {
