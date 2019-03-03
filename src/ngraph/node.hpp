@@ -275,19 +275,6 @@ namespace ngraph
         size_t m_placement_index = placement_invalid;
     };
 
-    class NodeValidationError : public AssertionFailure
-    {
-    public:
-        NodeValidationError(std::string what)
-            : AssertionFailure(what)
-        {
-        }
-        NodeValidationError(const char* what)
-            : AssertionFailure(what)
-        {
-        }
-    };
-
     class NodeValidationFailure : public CheckFailure
     {
     public:
@@ -321,12 +308,5 @@ namespace ngraph
     void check_new_args_count(const Node* node, const NodeVector& new_args);
 } // namespace ngraph
 
-#define NODE_VALIDATION_ASSERT(node, cond)                                                         \
-    NGRAPH_ASSERT_STREAM_WITH_LOC(                                                                 \
-        ::ngraph::NodeValidationError, cond, ::ngraph::node_validation_assertion_string(node))
-#define NODE_VALIDATION_FAIL(node)                                                                 \
-    NGRAPH_FAIL_STREAM_WITH_LOC(::ngraph::NodeValidationError,                                     \
-                                ::ngraph::node_validation_assertion_string(node))
-
 #define NODE_VALIDATION_CHECK(node, cond, ...)                                                     \
-    CHECK(::NodeValidationFailure, (node), (cond), __VA_ARGS__)
+    CHECK(::ngraph::NodeValidationFailure, (node), (cond), __VA_ARGS__)
