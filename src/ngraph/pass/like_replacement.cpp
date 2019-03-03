@@ -32,9 +32,7 @@
 
 #define TI(x) std::type_index(typeid(x))
 
-#define HANDLER_DECL(x) static bool x(const std::shared_ptr<ngraph::Node>& node)
-
-HANDLER_DECL(replace_broadcast_like)
+static bool replace_broadcast_like(const std::shared_ptr<ngraph::Node>& node)
 {
     // Replace a broadcast like with the broadcast to eliminate the pseudo-dependency on the "like" argument
     auto broadcast_like = std::static_pointer_cast<ngraph::op::BroadcastLike>(node);

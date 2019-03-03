@@ -32,9 +32,7 @@
 
 #define TI(x) std::type_index(typeid(x))
 
-#define HANDLER_DECL(x) static bool x(const std::shared_ptr<ngraph::Node>& node)
-
-HANDLER_DECL(eliminate_pad)
+static bool eliminate_pad(const std::shared_ptr<ngraph::Node>& node)
 {
     auto pad = std::static_pointer_cast<ngraph::op::Pad>(node);
     if (pad->get_input_shape(0) == pad->get_output_shape(0))
@@ -45,7 +43,7 @@ HANDLER_DECL(eliminate_pad)
     return false;
 }
 
-HANDLER_DECL(eliminate_sum)
+static bool eliminate_sum(const std::shared_ptr<ngraph::Node>& node)
 {
     auto sum = std::static_pointer_cast<ngraph::op::Sum>(node);
     if (sum->get_reduction_axes().empty())
@@ -56,7 +54,7 @@ HANDLER_DECL(eliminate_sum)
     return false;
 }
 
-HANDLER_DECL(eliminate_convert)
+static bool eliminate_convert(const std::shared_ptr<ngraph::Node>& node)
 {
     auto convert = std::static_pointer_cast<ngraph::op::Convert>(node);
     if (convert->get_convert_element_type() == convert->get_argument(0)->get_element_type())
@@ -67,7 +65,7 @@ HANDLER_DECL(eliminate_convert)
     return false;
 }
 
-HANDLER_DECL(eliminate_slice)
+static bool eliminate_slice(const std::shared_ptr<ngraph::Node>& node)
 {
     auto slice = std::static_pointer_cast<ngraph::op::Slice>(node);
     if (slice->get_input_shape(0) == slice->get_output_shape(0))
@@ -78,7 +76,7 @@ HANDLER_DECL(eliminate_slice)
     return false;
 }
 
-HANDLER_DECL(replace_broadcast_like)
+static bool replace_broadcast_like(const std::shared_ptr<ngraph::Node>& node)
 {
     // Replace a broadcast like with the broadcast to eliminate the pseudo-dependency on the "like" argument
     auto broadcast_like = std::static_pointer_cast<ngraph::op::BroadcastLike>(node);
@@ -90,7 +88,7 @@ HANDLER_DECL(replace_broadcast_like)
     return true;
 }
 
-HANDLER_DECL(eliminate_broadcast)
+static bool eliminate_broadcast(const std::shared_ptr<ngraph::Node>& node)
 {
     auto broadcast = std::static_pointer_cast<ngraph::op::Broadcast>(node);
     if (broadcast->get_input_shape(0) == broadcast->get_output_shape(0))
@@ -101,7 +99,7 @@ HANDLER_DECL(eliminate_broadcast)
     return false;
 }
 
-HANDLER_DECL(eliminate_stop_gradient)
+static bool eliminate_stop_gradient(const std::shared_ptr<ngraph::Node>& node)
 {
     ngraph::replace_node(node, node->get_argument(0));
     return true;
