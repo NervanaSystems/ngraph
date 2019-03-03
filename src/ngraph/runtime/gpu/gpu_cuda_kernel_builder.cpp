@@ -920,6 +920,7 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
         writer << "uint32_t non_reduce_idx = blockIdx.x;\n";
         writer << "uint32_t blocksize = blockDim.x;\n";
         writer << "uint32_t tid = threadIdx.x;\n";
+        writer << "uint32_t real_count = 0;\n";
 #ifdef USE_RAND
         writer << "uint64_t rand_num = tid;\n";
         writer << "uint32_t rand_num_32;\n";
@@ -969,6 +970,7 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
             writer << "input_i = in2[input_idx];\n";
             writer << "sdata[blocksize + reduce_idx] = input_i;\n";
             writer << "r_sum += input_i;\n";
+            writer << "real_count++;\n";
 #ifdef USE_RAND
             writer.block_end();
             writer << "reduce_idx += blocksize;\n";
@@ -1052,7 +1054,7 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
         writer << "if(tid == 0)\n";
         writer.block_begin();
         {
-            writer << "r_mean = r_sum / static_cast<" << data_type << ">(reduce_count);\n";
+            writer << "r_mean = r_sum / static_cast<" << data_type << ">(real_count);\n";
             writer << "sdata[0] = r_mean;\n";
             writer << " out3[non_reduce_idx] = r_mean;\n";
             writer << " out1[non_reduce_idx] = r_mean * factor + out1[non_reduce_idx] * (1.0 - "
@@ -1167,7 +1169,7 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
         writer << "if(tid == 0)\n";
         writer.block_begin();
         {
-            writer << "r_var = r_sum / static_cast<" << data_type << ">(reduce_count);\n";
+            writer << "r_var = r_sum / static_cast<" << data_type << ">(real_count);\n";
             writer << "inv_sqrt_var = 1.0 / sqrtf(r_var + eps);\n";
             writer << "sdata[0] = inv_sqrt_var;\n";
             writer << " out4[non_reduce_idx] = inv_sqrt_var;\n";
