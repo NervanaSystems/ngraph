@@ -65,10 +65,6 @@ namespace ngraph
                                                          size_t i);
     const NodeVector& check_single_output_args(const NodeVector& args);
 
-    const std::shared_ptr<Node>& check_single_output_arg(const std::shared_ptr<Node>& node,
-                                                         size_t i);
-    const NodeVector& check_single_output_args(const NodeVector& args);
-
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
     /// or a (possibly empty) tuple of values.
@@ -86,22 +82,8 @@ namespace ngraph
                                             const std::shared_ptr<Node>& dst_node,
                                             const std::shared_ptr<Node>& new_node);
 
-        friend class ngraph::pass::GetOutputElementElimination;
+        //friend class ngraph::pass::GetOutputElementElimination;
 
-    protected:
-        /// Throws if the node is invalid.
-        virtual void validate_and_infer_types();
-
-        // Called in constructors during transition
-        void constructor_validate_and_infer_types();
-
-        std::tuple<element::Type, PartialShape> validate_and_infer_elementwise_args();
-        void validate_and_infer_elementwise_arithmetic();
-        void validate_and_infer_elementwise_logical();
-
-        Node(const std::string& node_type, const NodeVector& arguments, size_t output_size = 1);
-
-        virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
     public:
         virtual ~Node();
         void revalidate_and_infer_types() { validate_and_infer_types(); }
@@ -127,19 +109,6 @@ namespace ngraph
         ///        set_friendly_name then the node's unique name is returned.
         /// \returns A const reference to the node's friendly name.
         const std::string& get_friendly_name() const;
-
-        /// Return true if this has the same implementing class as node. This
-        /// will be used by the pattern matcher when comparing a pattern
-        /// graph against the graph.
-        bool is_same_op_type(const std::shared_ptr<Node>& node) const
-        {
-            Node* n = node.get();
-            return std::type_index(typeid(*this)) == std::type_index(typeid(*n));
-        }
-
-        void set_output_type(size_t i,
-                             const element::Type& element_type,
-                             const PartialShape& pshape);
 
         bool is_parameter() const;
         virtual bool is_output() const;
@@ -218,9 +187,6 @@ namespace ngraph
         /// Returns the partial shape of input i
         const PartialShape& get_input_partial_shape(size_t i) const;
 
-        std::unordered_set<descriptor::Tensor*> liveness_new_list;
-        std::unordered_set<descriptor::Tensor*> liveness_free_list;
-
         virtual NodeVector get_arguments() const;
 
         std::shared_ptr<Node> get_argument(size_t index) const;
@@ -228,9 +194,6 @@ namespace ngraph
         virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const = 0;
 
         virtual std::vector<std::shared_ptr<Function>> get_functions() const;
-
-        /// True if this and node have one output with same element type and shape
-        bool has_same_type(std::shared_ptr<const Node> node) const;
 
         /// Get device placement
         Placement get_placement() const;
@@ -258,15 +221,43 @@ namespace ngraph
         bool operator<(const Node& other) const { return m_instance_id < other.m_instance_id; }
         static const size_t placement_invalid = -1;
 
+        const std::unordered_set<descriptor::Tensor*>& get_liveness_new_list() const { return m_liveness_new_list; }
+        void set_liveness_new_list(const std::unordered_set<descriptor::Tensor*>& list) { m_liveness_new_list = list; }
+        const std::unordered_set<descriptor::Tensor*>& get_liveness_free_list() const { return m_liveness_free_list; }
+        void set_liveness_free_list(const std::unordered_set<descriptor::Tensor*>& list) { m_liveness_free_list = list; }
+
     protected:
-        std::set<std::shared_ptr<Node>> m_control_dependencies;
+        /// Throws if the node is invalid.
+        virtual void validate_and_infer_types();
+
+        // Called in constructors during transition
+        void constructor_validate_and_infer_types();
+
+        std::tuple<element::Type, PartialShape> validate_and_infer_elementwise_args();
+        void validate_and_infer_elementwise_arithmetic();
+        void validate_and_infer_elementwise_logical();
+
+        Node(const std::string& node_type, const NodeVector& arguments, size_t output_size = 1);
+
         void set_output_size(size_t n);
+
+        void set_output_type(size_t i,
+                             const element::Type& element_type,
+                             const PartialShape& pshape);
+
+    private:
+        virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
+        
+        std::unordered_set<descriptor::Tensor*> m_liveness_new_list;
+        std::unordered_set<descriptor::Tensor*> m_liveness_free_list;
+
+        std::set<std::shared_ptr<Node>> m_control_dependencies;
 
         const std::string m_node_type;
         size_t m_instance_id;
         std::string m_friendly_name;
         const std::string m_unique_name;
-        static std::atomic<size_t> m_next_instance_id;
+        static std::atomic<size_t> s_next_instance_id;
         std::deque<descriptor::Input> m_inputs;
         std::deque<descriptor::Output> m_outputs;
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;

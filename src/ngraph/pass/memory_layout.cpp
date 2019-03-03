@@ -66,11 +66,11 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
 
                         // For destructive kernel, this should be the last use
                         // Non-destructive kernels can pass through if memory sharing is disabled
-                        if ((node->liveness_free_list.count(input) != 0 ||
+                        if ((node->get_liveness_free_list().count(input) != 0 ||
                              std::dynamic_pointer_cast<op::GetOutputElement>(node) ||
                              (m_disable_memory_sharing && !oi_pair.destructive &&
                               !input_node->is_parameter() && !input_node->is_constant())) &&
-                            node->liveness_new_list.count(output) != 0)
+                            node->get_liveness_new_list().count(output) != 0)
 
                         {
                             NGRAPH_DEBUG << "Reusing " << input->get_name() << " for "
@@ -83,7 +83,7 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
             }
         }
 
-        for (descriptor::Tensor* tensor : node->liveness_new_list)
+        for (descriptor::Tensor* tensor : node->get_liveness_new_list())
         {
             size_t offset = in_place_outputs.count(tensor)
                                 ? in_place_outputs.at(tensor)->get_pool_offset()
@@ -93,7 +93,7 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
 
         if (!m_disable_memory_sharing)
         {
-            for (const descriptor::Tensor* tensor : node->liveness_free_list)
+            for (const descriptor::Tensor* tensor : node->get_liveness_free_list())
             {
                 if (reused_inputs.count(tensor) == 0)
                 {

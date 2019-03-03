@@ -142,5 +142,5 @@ std::shared_ptr<Node> op::Pad::get_default_value() const
         axes.insert(i);
     }
     return std::make_shared<op::Broadcast>(
-        m_inputs.at(1).get_output().get_node(), get_shape(), axes);
+        get_inputs().at(1).get_output().get_node(), get_shape(), axes);
 }

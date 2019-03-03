@@ -66,7 +66,7 @@ bool pass::MemoryVisualize::run_on_module(vector<shared_ptr<ngraph::Function>>& 
             size_t temp_max_size = 0;
             for (shared_ptr<Node> node : nodes)
             {
-                tensors.insert(node->liveness_new_list.begin(), node->liveness_new_list.end());
+                tensors.insert(node->get_liveness_new_list().begin(), node->get_liveness_new_list().end());
             }
             for (descriptor::Tensor* tensor : tensors)
             {
@@ -104,7 +104,7 @@ unordered_set<const descriptor::Tensor*>
     for (shared_ptr<Node> exop : nodes)
     {
         size_t size = 0;
-        for (const descriptor::Tensor* tensor : exop->liveness_new_list)
+        for (const descriptor::Tensor* tensor : exop->get_liveness_new_list())
         {
             liveness_list.insert(tensor);
             size += tensor->size();
@@ -139,12 +139,12 @@ void pass::MemoryVisualize::draw_tensor_weight(ostream& file, const list<shared_
     size_t i = 0;
     for (shared_ptr<Node> exop : nodes)
     {
-        for (const descriptor::Tensor* tensor : exop->liveness_new_list)
+        for (const descriptor::Tensor* tensor : exop->get_liveness_new_list())
         {
             age_list[tensor] = i;
             generator_op[tensor] = exop;
         }
-        for (const descriptor::Tensor* tensor : exop->liveness_free_list)
+        for (const descriptor::Tensor* tensor : exop->get_liveness_free_list())
         {
             size_t start = age_list[tensor];
             age_list[tensor] = (i - start);
@@ -239,11 +239,11 @@ void pass::MemoryVisualize::draw_op_influence(ostream& file, const list<shared_p
 int pass::MemoryVisualize::compute_op_weight(const shared_ptr<Node> exop)
 {
     int mass = 0;
-    for (const descriptor::Tensor* tensor : exop->liveness_new_list)
+    for (const descriptor::Tensor* tensor : exop->get_liveness_new_list())
     {
         mass += static_cast<int>(tensor->size());
     }
-    for (const descriptor::Tensor* tensor : exop->liveness_free_list)
+    for (const descriptor::Tensor* tensor : exop->get_liveness_free_list())
     {
         mass -= static_cast<int>(tensor->size());
     }

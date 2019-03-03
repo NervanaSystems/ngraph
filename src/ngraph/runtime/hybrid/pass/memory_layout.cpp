@@ -42,13 +42,13 @@ bool runtime::hybrid::pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Fun
     ngraph::pass::MemoryManager mm(m_alignment, false);
     for (shared_ptr<Node> node : function->get_ordered_ops())
     {
-        for (descriptor::Tensor* tensor : node->liveness_new_list)
+        for (descriptor::Tensor* tensor : node->get_liveness_new_list())
         {
             size_t offset = mm.allocate(tensor->size());
             tensor->set_pool_offset(offset);
         }
 
-        for (const descriptor::Tensor* tensor : node->liveness_free_list)
+        for (const descriptor::Tensor* tensor : node->get_liveness_free_list())
         {
             mm.free(tensor->get_pool_offset());
         }

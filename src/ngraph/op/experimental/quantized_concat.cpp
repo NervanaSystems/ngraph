@@ -33,7 +33,7 @@ op::QuantizedConcat::QuantizedConcat(const NodeVector& args, size_t concatenatio
 
 void op::QuantizedConcat::validate_and_infer_types()
 {
-    NODE_VALIDATION_ASSERT(this, m_inputs.size() >= 1) << "At least one argument required.";
+    NODE_VALIDATION_ASSERT(this, get_input_size() >= 1) << "At least one argument required.";
 
     PartialShape inputs_shape_scheme{PartialShape::dynamic()};
     element::Type inputs_et{element::dynamic};

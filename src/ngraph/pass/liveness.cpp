@@ -72,8 +72,6 @@ bool pass::Liveness::run_on_function(shared_ptr<ngraph::Function> function)
     for (auto it = ops.rbegin(); it != ops.rend(); it++)
     {
         const shared_ptr<Node>& node = *it;
-        node->liveness_new_list.clear();
-        node->liveness_free_list.clear();
         unordered_set<descriptor::Tensor*> input_tensor_decls;
         for (descriptor::Input& input_decl : node->get_inputs())
         {
@@ -123,8 +121,8 @@ bool pass::Liveness::run_on_function(shared_ptr<ngraph::Function> function)
                 currently_live.erase(currently_live_it);
             }
         }
-        node->liveness_free_list = free_tensor_decls;
-        node->liveness_new_list = new_tensor_decls;
+        node->set_liveness_free_list(free_tensor_decls);
+        node->set_liveness_new_list(new_tensor_decls);
     }
 
     return false;

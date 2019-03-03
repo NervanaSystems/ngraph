@@ -30,11 +30,11 @@
 using namespace std;
 using namespace ngraph;
 
-atomic<size_t> Node::m_next_instance_id(0);
+atomic<size_t> Node::s_next_instance_id(0);
 
 Node::Node(const std::string& node_type, const NodeVector& arguments, size_t output_size)
     : m_node_type(node_type)
-    , m_instance_id(m_next_instance_id.fetch_add(1))
+    , m_instance_id(s_next_instance_id.fetch_add(1))
     , m_unique_name(description() + "_" + to_string(m_instance_id))
 {
     // Add this node as a user of each argument.
@@ -351,23 +351,6 @@ const Shape& Node::get_input_shape(size_t i) const
 const PartialShape& Node::get_input_partial_shape(size_t i) const
 {
     return m_inputs.at(i).get_partial_shape();
-}
-
-bool Node::has_same_type(std::shared_ptr<const Node> node) const
-{
-    if (get_output_size() != node->get_output_size())
-    {
-        return false;
-    }
-    for (size_t i = 0; i < get_output_size(); ++i)
-    {
-        if (get_output_element_type(i) != node->get_output_element_type(i) ||
-            get_output_shape(i) != node->get_output_shape(i))
-        {
-            return false;
-        }
-    }
-    return true;
 }
 
 descriptor::Input* Node::get_input_from(const shared_ptr<Node>& src)
