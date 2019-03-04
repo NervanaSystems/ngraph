@@ -20,6 +20,7 @@
 
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/executable.hpp"
+#include "ngraph/pass/pass_config.hpp"
 #include "ngraph/runtime/performance_counter.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -82,6 +83,14 @@ public:
     /// \returns compiled function or nullptr on failure
     virtual std::shared_ptr<Executable> compile(std::shared_ptr<Function> func,
                                                 bool enable_performance_data = false) = 0;
+
+    /// \brief Compiles a Function.
+    /// \param func The function to compile
+    /// \param pass_config Configuration object for defining compilation options
+    /// \returns compiled function or nullptr on failure
+    virtual std::shared_ptr<Executable> compile(std::shared_ptr<Function> func,
+                                                ngraph::pass::PassConfig& pass_config,
+                                                bool enable_performance_data = false);
 
     /// \brief Test if a backend is capable of supporting an op
     /// \param node is the op to test.
