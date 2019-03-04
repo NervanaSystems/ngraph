@@ -96,7 +96,7 @@ namespace ngraph
             result_list.push_back(node_map[independent_node]);
             independent_nodes.pop_front();
 
-            for (auto user : independent_node->get_users())
+            for (const std::shared_ptr<Node>& user : independent_node->get_users())
             {
                 if (--node_dependency_count[user.get()] == 0)
                 {
@@ -173,7 +173,7 @@ namespace ngraph
             result_list.push_back(node_map[independent_node]);
             independent_nodes.pop_front();
 
-            for (auto user : independent_node->get_users())
+            for (const std::shared_ptr<Node>& user : independent_node->get_users())
             {
                 if (--node_dependency_count[user.get()] == 0)
                 {
