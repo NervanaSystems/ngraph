@@ -478,7 +478,7 @@ private:
             switch (type.get_type_enum())
             {
             case element::Type_t::boolean:
-                reference::convert<T>(
+                reference::convert_to_bool<T>(
                     args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<char>(), element_count);
                 break;
             case element::Type_t::f32:
