@@ -54,7 +54,10 @@ if(NGRAPH_DISTRIBUTED_ENABLE)
         list(APPEND HEADER_SEARCH_DEFINES MLSL_HEADER_PATH="${MLSL_INCLUDE_DIR}")
     elseif(NGRAPH_DISTRIBUTED_OMPI_ENABLE)
         find_package(MPI REQUIRED)
-        add_definitions(-DMPI_HEADER_PATH="${MPI_PATH}")
+        # MPI_C_INCLUDE_PATH might have a list of directories separated by a semicolon
+        # Escape the semicolon to prevent cmake from interpreting the string as a list
+        string(REPLACE ";" "\\\;" MPI_C_INCLUDE_PATH_ESCAPED "${MPI_C_INCLUDE_PATH}")
+        list(APPEND HEADER_SEARCH_DEFINES MPI_HEADER_PATH="${MPI_C_INCLUDE_PATH_ESCAPED}")
     else()
         message(FATAL_ERROR "Distributed Library not supported/mentioned")
     endif()
