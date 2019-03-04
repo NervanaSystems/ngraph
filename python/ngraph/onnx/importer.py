@@ -22,12 +22,14 @@ try:
     import onnx
     from google.protobuf.message import DecodeError
 except ImportError:
-    raise NgraphError('pip install onnx')
+    raise NgraphError('nGraph requires the ONNX package to import ONNX models. '
+                      'Please install using: `pip install onnx`')
 
 try:
     from ngraph.impl import onnx_import
 except ImportError:
-    raise NgraphError('build with NGRAPH_ONNX_IMPORT_ENABLE option')
+    raise NgraphError('nGraph should be built with the NGRAPH_ONNX_IMPORT_ENABLE option '
+                      'to support importing ONNX models.')
 
 
 def import_onnx_model(onnx_protobuf):  # type: (onnx.ModelProto) -> List[Function]
@@ -53,6 +55,6 @@ def import_onnx_file(filename):  # type: (str) -> List[Function]
     try:
         onnx_protobuf = onnx.load(filename)
     except DecodeError:
-        raise UserInputError('The provided file doesn\'t contain a properly formatted ONNX model.')
+        raise UserInputError('The provided file does not contain a properly formatted ONNX model.')
 
     return onnx_import.import_onnx_model(onnx_protobuf.SerializeToString())
