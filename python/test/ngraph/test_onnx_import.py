@@ -20,7 +20,7 @@ import numpy as np
 from test.ngraph.util import get_runtime
 
 try:
-    from ngraph.impl.onnx_import import import_onnx_model_file
+    from ngraph.onnx import import_onnx_model_file
 
     def test_import_onnx_function():
         model_path = os.path.join(os.path.dirname(__file__), 'models/add_abc.onnx')
