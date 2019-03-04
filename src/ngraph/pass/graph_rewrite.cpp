@@ -105,9 +105,9 @@ static const vector<regex> initialize_fusion_regexes()
         const auto sregexes = split(nsf, ';');
 
         transform(sregexes.begin(),
-                       sregexes.end(),
-                       back_inserter(regexes),
-                       [](const string& c) -> regex { return regex(c); });
+                  sregexes.end(),
+                  back_inserter(regexes),
+                  [](const string& c) -> regex { return regex(c); });
     }
     return regexes;
 }

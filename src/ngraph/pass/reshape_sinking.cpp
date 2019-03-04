@@ -57,7 +57,7 @@ static string describe_reshape(shared_ptr<Node> node)
 }
 
 static shared_ptr<op::Reshape> combine_reshapes(shared_ptr<op::Reshape> r1,
-                                                     shared_ptr<op::Reshape> r2)
+                                                shared_ptr<op::Reshape> r2)
 {
     auto default_order = ngraph::get_default_order(r1->get_shape());
     auto perm_r1 = apply_permutation(default_order, r1->get_input_order());
@@ -66,8 +66,7 @@ static shared_ptr<op::Reshape> combine_reshapes(shared_ptr<op::Reshape> r1,
     return rreshape;
 }
 
-static void
-    insert_reshape(shared_ptr<Node> target, shared_ptr<Node> reshape, size_t input_index)
+static void insert_reshape(shared_ptr<Node> target, shared_ptr<Node> reshape, size_t input_index)
 {
     auto arg = target->get_inputs().at(input_index).get_output().get_node();
     auto new_reshape = reshape->copy_with_new_args({arg});
@@ -187,8 +186,8 @@ void swim(descriptor::Input* input, shared_ptr<op::Reshape> reshape)
 
                 auto new_arg_shape =
                     ngraph::apply_permutation(broadcast_input->get_shape(), new_source_axis_order);
-                broadcast_input = make_shared<op::Reshape>(
-                    broadcast_input, new_source_axis_order, new_arg_shape);
+                broadcast_input =
+                    make_shared<op::Reshape>(broadcast_input, new_source_axis_order, new_arg_shape);
             }
 
             auto new_broadcast = make_shared<op::Broadcast>(
@@ -352,8 +351,7 @@ static void sink_slice(shared_ptr<op::Slice> n,
     auto new_lower = ngraph::apply_permutation(n->get_lower_bounds(), def_order);
     auto new_upper = ngraph::apply_permutation(n->get_upper_bounds(), def_order);
     auto new_strides = ngraph::apply_permutation(n->get_strides(), def_order);
-    auto new_slice =
-        make_shared<op::Slice>(dummy_correct_shape, new_lower, new_upper, new_strides);
+    auto new_slice = make_shared<op::Slice>(dummy_correct_shape, new_lower, new_upper, new_strides);
     ngraph::replace_node(dummy_correct_shape, n->get_argument(0));
     NGRAPH_DEBUG << "Replacing " << n->get_name() << " with " << new_slice->get_name();
     ngraph::replace_node(n, new_slice);
@@ -363,9 +361,8 @@ static void sink_slice(shared_ptr<op::Slice> n,
     reorders[new_slice] = new_reshape;
 }
 
-static void sink_pad(shared_ptr<op::Pad> n,
-                     ReshapeMap& reorders,
-                     set<shared_ptr<Node>>& reshapes_to_delete)
+static void
+    sink_pad(shared_ptr<op::Pad> n, ReshapeMap& reorders, set<shared_ptr<Node>>& reshapes_to_delete)
 {
     auto arg_reshape = reorders.at(n->get_argument(0));
     auto order = arg_reshape->get_input_order();
@@ -397,11 +394,11 @@ static void sink_quantize(shared_ptr<op::Quantize> quantize,
     AxisSet axes_in_def_order =
         get_quantization_axes_in_default_order(arg_reshape, quantize->get_axes());
     auto new_quantize = make_shared<op::Quantize>(quantize->get_argument(0),
-                                                       quantize->get_argument(1),
-                                                       quantize->get_argument(2),
-                                                       quantize->get_element_type(),
-                                                       axes_in_def_order,
-                                                       quantize->get_round_mode());
+                                                  quantize->get_argument(1),
+                                                  quantize->get_argument(2),
+                                                  quantize->get_element_type(),
+                                                  axes_in_def_order,
+                                                  quantize->get_round_mode());
 
     ngraph::replace_node(quantize, new_quantize);
     reorders[new_quantize] = arg_reshape;
@@ -464,10 +461,10 @@ static void sink_dequantize(shared_ptr<op::Dequantize> dequantize,
     AxisSet axes_in_def_order =
         get_quantization_axes_in_default_order(arg_reshape, dequantize->get_axes());
     auto new_dequantize = make_shared<op::Dequantize>(dequantize->get_argument(0),
-                                                           dequantize->get_argument(1),
-                                                           dequantize->get_argument(2),
-                                                           dequantize->get_element_type(),
-                                                           axes_in_def_order);
+                                                      dequantize->get_argument(1),
+                                                      dequantize->get_argument(2),
+                                                      dequantize->get_element_type(),
+                                                      axes_in_def_order);
 
     ngraph::replace_node(dequantize, new_dequantize);
     reorders[new_dequantize] = arg_reshape;

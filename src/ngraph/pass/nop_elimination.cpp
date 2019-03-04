@@ -83,11 +83,10 @@ static bool replace_broadcast_like(const std::shared_ptr<Node>& node)
 {
     // Replace a broadcast like with the broadcast to eliminate the pseudo-dependency on the "like" argument
     auto broadcast_like = std::static_pointer_cast<op::BroadcastLike>(node);
-    replace_node(
-        node,
-        std::make_shared<op::Broadcast>(broadcast_like->get_argument(0),
-                                                broadcast_like->get_broadcast_shape(),
-                                                broadcast_like->get_broadcast_axes()));
+    replace_node(node,
+                 std::make_shared<op::Broadcast>(broadcast_like->get_argument(0),
+                                                 broadcast_like->get_broadcast_shape(),
+                                                 broadcast_like->get_broadcast_axes()));
     return true;
 }
 
@@ -108,8 +107,7 @@ static bool eliminate_stop_gradient(const std::shared_ptr<Node>& node)
     return true;
 }
 
-static const std::unordered_map<std::type_index,
-                                std::function<bool(const std::shared_ptr<Node>&)>>
+static const std::unordered_map<std::type_index, std::function<bool(const std::shared_ptr<Node>&)>>
     dispatcher{{TI(op::Pad), &eliminate_pad},
                {TI(op::Sum), &eliminate_sum},
                {TI(op::Convert), &eliminate_convert},

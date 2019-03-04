@@ -129,12 +129,10 @@ static bool cse_reduction(shared_ptr<Node> a, shared_ptr<Node> b)
            ar_a->get_reduction_axes() == ar_b->get_reduction_axes();
 }
 
-static unordered_map<type_index,
-                          function<bool(shared_ptr<Node>, shared_ptr<Node>)>>
+static unordered_map<type_index, function<bool(shared_ptr<Node>, shared_ptr<Node>)>>
     initialize_ops_to_cse_handlers()
 {
-    return unordered_map<type_index,
-                              function<bool(shared_ptr<Node>, shared_ptr<Node>)>>(
+    return unordered_map<type_index, function<bool(shared_ptr<Node>, shared_ptr<Node>)>>(
         {{TI(op::Abs), cse_unarywise},
          {TI(op::Acos), cse_unarywise},
          {TI(op::Asin), cse_unarywise},
@@ -169,16 +167,14 @@ static unordered_map<type_index,
          {TI(op::Broadcast), cse_broadcast}});
 }
 
-static unordered_map<type_index,
-                          function<bool(shared_ptr<Node>, shared_ptr<Node>)>>
+static unordered_map<type_index, function<bool(shared_ptr<Node>, shared_ptr<Node>)>>
     ops_to_cse_handlers = initialize_ops_to_cse_handlers();
 
 class NodeKey
 {
 public:
     NodeKey(shared_ptr<Node> n,
-            unordered_map<type_index,
-                               function<bool(shared_ptr<Node>, shared_ptr<Node>)>>&
+            unordered_map<type_index, function<bool(shared_ptr<Node>, shared_ptr<Node>)>>&
                 backend_handlers)
         : m_node(n)
         , m_backend_handlers(backend_handlers)
@@ -217,8 +213,7 @@ public:
 
 private:
     shared_ptr<Node> m_node;
-    unordered_map<type_index,
-                       function<bool(shared_ptr<Node>, shared_ptr<Node>)>>&
+    unordered_map<type_index, function<bool(shared_ptr<Node>, shared_ptr<Node>)>>&
         m_backend_handlers;
 };
 
@@ -259,8 +254,7 @@ namespace std
     };
 }
 
-bool ngraph::pass::CommonSubexpressionElimination::run_on_function(
-    shared_ptr<ngraph::Function> f)
+bool ngraph::pass::CommonSubexpressionElimination::run_on_function(shared_ptr<ngraph::Function> f)
 {
     bool replaced = false;
     unordered_map<NodeKey, shared_ptr<Node>> expressions{};

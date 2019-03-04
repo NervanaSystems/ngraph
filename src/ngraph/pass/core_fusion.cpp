@@ -129,8 +129,7 @@ void pass::CoreFusion::construct_sigmoid()
         return true;
     };
 
-    auto m = std::make_shared<pattern::Matcher>(
-        divide_1_over_exp, callback, "CoreFusion.Sigmoid");
+    auto m = std::make_shared<pattern::Matcher>(divide_1_over_exp, callback, "CoreFusion.Sigmoid");
     this->add_matcher(m);
 }
 
@@ -182,8 +181,7 @@ void pass::CoreFusion::construct_sigmoid_bprop()
         return true;
     };
 
-    auto m =
-        std::make_shared<pattern::Matcher>(negative_2, callback, "CoreFusion.SigmoidBprop");
+    auto m = std::make_shared<pattern::Matcher>(negative_2, callback, "CoreFusion.SigmoidBprop");
     this->add_matcher(m);
 }
 
@@ -375,8 +373,7 @@ void pass::CoreFusion::construct_conv_affine_folding()
 
         };
 
-    auto m =
-        std::make_shared<pattern::Matcher>(add, callback, "CoreFusion.ConvAffineFolding");
+    auto m = std::make_shared<pattern::Matcher>(add, callback, "CoreFusion.ConvAffineFolding");
     this->add_matcher(m);
 }
 

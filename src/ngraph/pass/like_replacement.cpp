@@ -41,17 +41,15 @@ HANDLER_DECL(replace_broadcast_like)
 {
     // Replace a broadcast like with the broadcast to eliminate the pseudo-dependency on the "like" argument
     auto broadcast_like = static_pointer_cast<op::BroadcastLike>(node);
-    replace_node(
-        node,
-        make_shared<op::Broadcast>(broadcast_like->get_argument(0),
-                                                broadcast_like->get_broadcast_shape(),
-                                                broadcast_like->get_broadcast_axes()));
+    replace_node(node,
+                 make_shared<op::Broadcast>(broadcast_like->get_argument(0),
+                                            broadcast_like->get_broadcast_shape(),
+                                            broadcast_like->get_broadcast_axes()));
     return true;
 }
 
-static const unordered_map<type_index,
-                                function<bool(const shared_ptr<Node>&)>>
-    dispatcher{{TI(op::BroadcastLike), &replace_broadcast_like}};
+static const unordered_map<type_index, function<bool(const shared_ptr<Node>&)>> dispatcher{
+    {TI(op::BroadcastLike), &replace_broadcast_like}};
 
 bool pass::LikeReplacement::run_on_function(shared_ptr<Function> function)
 {
