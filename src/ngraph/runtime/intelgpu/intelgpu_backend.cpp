@@ -589,34 +589,70 @@ shared_ptr<runtime::Executable>
                 arguments_check(op, 1, 1);
             }
 
-            // All input shapes must be the same
-            // if shape is empty (means Shape{}) in this case treat its size as 1
-            const size_t ngraph_tensor_dims =
-                get_input_shape(op).empty() ? 1 : get_input_shape(op).size();
             const shared_ptr<op::Concat> concat_op = static_pointer_cast<op::Concat>(op);
             const size_t ngraph_concat_axis = concat_op->get_concatenation_axis();
-            vector<cldnn::primitive_id> inputs;
 
-            cldnn::concatenation::concatenation_axis cldnn_axis =
-                intelgpu_space::get_cldnn_axis(ngraph_tensor_dims, ngraph_concat_axis);
-
-            for (auto const& input : op->get_inputs())
+            if (!shape_size(get_output_shape(op)) || (get_input_type(op) != element::f32) ||
+                get_output_shape(op).size() > 4)
             {
-                const Shape& input_shape = input.get_shape();
-                if (shape_size(input_shape))
+                vector<string> input_names;
+                vector<Shape> input_shapes;
+
+                for (auto const& input : op->get_inputs())
                 {
-                    inputs.push_back(input.get_tensor().get_name());
+                    const Shape& input_shape = input.get_tensor().get_shape();
+                    if (shape_size(input_shape))
+                    {
+                        input_names.push_back(input.get_tensor().get_name());
+                        input_shapes.push_back(input_shape);
+                    }
                 }
-            }
 
-            if (inputs.empty())
-            {
-                do_equal_propagation(topology, get_input_name(op), get_output_name(op));
+                if (input_names.empty())
+                {
+                    do_equal_propagation(topology, get_input_name(op), get_output_name(op));
+                }
+                else
+                {
+                    do_concat_operation(topology,
+                                        input_names,
+                                        input_shapes,
+                                        get_output_name(op),
+                                        get_output_shape(op),
+                                        get_output_type(op),
+                                        ngraph_concat_axis);
+                }
             }
             else
             {
-                const cldnn::concatenation cldnn_concat(get_output_name(op), inputs, cldnn_axis);
-                topology.add(cldnn_concat);
+                // All input shapes must be the same
+                // if shape is empty (means Shape{}) in this case treat its size as 1
+                const size_t ngraph_tensor_dims =
+                    get_input_shape(op).empty() ? 1 : get_input_shape(op).size();
+                vector<cldnn::primitive_id> inputs;
+
+                cldnn::concatenation::concatenation_axis cldnn_axis =
+                    intelgpu_space::get_cldnn_axis(ngraph_tensor_dims, ngraph_concat_axis);
+
+                for (auto const& input : op->get_inputs())
+                {
+                    const Shape& input_shape = input.get_shape();
+                    if (shape_size(input_shape))
+                    {
+                        inputs.push_back(input.get_tensor().get_name());
+                    }
+                }
+
+                if (inputs.empty())
+                {
+                    do_equal_propagation(topology, get_input_name(op), get_output_name(op));
+                }
+                else
+                {
+                    const cldnn::concatenation cldnn_concat(
+                        get_output_name(op), inputs, cldnn_axis);
+                    topology.add(cldnn_concat);
+                }
             }
             break;
         }

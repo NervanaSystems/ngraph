@@ -102,6 +102,14 @@ namespace ngraph
                                     const Coordinate& uppper_bounds,
                                     const Strides& strides);
 
+            void do_concat_operation(cldnn::topology& topology,
+                                     const std::vector<std::string>& input_names,
+                                     const std::vector<Shape>& input_shapes,
+                                     const std::string& output_name,
+                                     const Shape& output_shape,
+                                     const element::Type& output_type,
+                                     size_t concat_axis);
+
             void do_select_operation(cldnn::topology& topology,
                                      const std::string& input0_name,
                                      const Shape& input0_shape,
