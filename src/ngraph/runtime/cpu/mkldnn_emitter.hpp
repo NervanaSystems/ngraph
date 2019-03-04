@@ -1360,9 +1360,9 @@ namespace ngraph
                     auto in_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto in_delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
                     auto out_weights_delta_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    mkldnn::algorithm convolution_algo = mkldnn_utils::can_use_conv_auto()
-                                                             ? mkldnn::algorithm::convolution_auto
-                                                             : convolution_algo;
+                    mkldnn::algorithm convolution_algo =
+                        mkldnn_utils::can_use_conv_auto() ? mkldnn::algorithm::convolution_auto
+                                                          : mkldnn::algorithm::convolution_direct;
 
                     if (has_bias<OP>())
                     {
@@ -1409,9 +1409,9 @@ namespace ngraph
                         window_dilation_strides_adjusted.push_back(s - 1);
                     }
 
-                    mkldnn::algorithm convolution_algo = mkldnn_utils::can_use_conv_auto()
-                                                             ? mkldnn::algorithm::convolution_auto
-                                                             : convolution_algo;
+                    mkldnn::algorithm convolution_algo =
+                        mkldnn_utils::can_use_conv_auto() ? mkldnn::algorithm::convolution_auto
+                                                          : mkldnn::algorithm::convolution_direct;
                     if (std::is_same<OP, ngraph::op::ConvolutionBackpropData>())
                     {
                         auto weights_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
