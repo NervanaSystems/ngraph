@@ -24,14 +24,17 @@
 #include "ngraph/pattern/op/any_of.hpp"
 #include "ngraph/pattern/op/label.hpp"
 
-ngraph::pass::PrefixReshapeElimination::PrefixReshapeElimination()
+using namespace std;
+using namespace ngraph;
+
+pass::PrefixReshapeElimination::PrefixReshapeElimination()
 {
-    auto src_op = std::make_shared<pattern::op::Label>(
-        element::i8, Shape{}, [](std::shared_ptr<Node>) { return true; });
-    auto reshape_op = std::make_shared<pattern::op::Any>(
+    auto src_op = make_shared<pattern::op::Label>(
+        element::i8, Shape{}, [](shared_ptr<Node>) { return true; });
+    auto reshape_op = make_shared<pattern::op::Any>(
         element::i8,
         Shape{},
-        [](std::shared_ptr<Node> node) {
+        [](shared_ptr<Node> node) {
             op::Reshape* reshape = dynamic_cast<op::Reshape*>(node.get());
             if (!reshape)
             {
@@ -46,14 +49,14 @@ ngraph::pass::PrefixReshapeElimination::PrefixReshapeElimination()
 
             // Make sure that logical dimension sizes match.
             const Shape& src_shape = reshape->get_input_shape(0);
-            for (std::size_t idx = 0; idx < reshape->get_output_shape().size(); ++idx)
+            for (size_t idx = 0; idx < reshape->get_output_shape().size(); ++idx)
             {
-                std::size_t src_size = 1;
+                size_t src_size = 1;
                 if (idx < src_shape.size())
                 {
                     src_size = src_shape.at(src_shape.size() - 1 - idx);
                 }
-                std::size_t dest_size =
+                size_t dest_size =
                     reshape->get_output_shape().at(reshape->get_output_shape().size() - 1 - idx);
                 if (dest_size != src_size)
                 {
@@ -64,10 +67,10 @@ ngraph::pass::PrefixReshapeElimination::PrefixReshapeElimination()
             return true;
         },
         NodeVector{src_op});
-    auto target_op = std::make_shared<pattern::op::AnyOf>(
+    auto target_op = make_shared<pattern::op::AnyOf>(
         element::i8,
         Shape{},
-        [](std::shared_ptr<Node> node) {
+        [](shared_ptr<Node> node) {
             return pattern::has_class<op::Reshape>()(node) ||
                    pattern::has_class<op::util::UnaryElementwiseArithmetic>()(node) ||
                    pattern::has_class<op::util::BinaryElementwiseArithmetic>()(node);
@@ -78,5 +81,5 @@ ngraph::pass::PrefixReshapeElimination::PrefixReshapeElimination()
         replace_node(m.get_matched_nodes().at(1), m.get_matched_nodes().at(2));
         return true;
     };
-    add_matcher(std::make_shared<pattern::Matcher>(target_op, callback));
+    add_matcher(make_shared<pattern::Matcher>(target_op, callback));
 }
