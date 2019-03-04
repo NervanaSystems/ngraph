@@ -1419,40 +1419,49 @@ NGRAPH_TEST(${BACKEND_NAME}, convert_uint16_float32)
 
 NGRAPH_TEST(${BACKEND_NAME}, convert_int32_bool)
 {
-    Shape shape{2, 2};
+    Shape shape{2, 3};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto f =
         make_shared<Function>(make_shared<op::Convert>(A, element::boolean), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
+    int32_t lowest = std::numeric_limits<int32_t>::lowest();
+    int32_t max = std::numeric_limits<int32_t>::max();
+
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::i32, shape);
-    copy_data(a, vector<int32_t>{1, 2, 3, 4});
+    copy_data(a, vector<int32_t>{0, 12, 23, 0, lowest, max});
     auto result = backend->create_tensor(element::boolean, shape);
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<char>{1, 2, 3, 4}), read_vector<char>(result));
+    EXPECT_EQ((vector<char>{0, 1, 1, 0, 1, 1}), read_vector<char>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, convert_float32_bool)
 {
-    Shape shape{2, 2};
+    Shape shape{3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f =
         make_shared<Function>(make_shared<op::Convert>(A, element::boolean), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
+    float lowest = std::numeric_limits<float>::lowest();
+    float max = std::numeric_limits<float>::max();
+    float min = std::numeric_limits<float>::min();
+    float pos_inf = std::numeric_limits<float>::infinity();
+    float neg_inf = -std::numeric_limits<float>::infinity();
+
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape);
-    copy_data(a, vector<float>{1, 2, 3, 4});
+    copy_data(a, vector<float>{0.f, 1.5745f, 0.12352f, 0.f, lowest, max, min, pos_inf, neg_inf});
     auto result = backend->create_tensor(element::boolean, shape);
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<char>{1, 2, 3, 4}), read_vector<char>(result));
+    EXPECT_EQ((vector<char>{0, 1, 1, 0, 1, 1, 1, 1, 1}), read_vector<char>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, slice_scalar)
