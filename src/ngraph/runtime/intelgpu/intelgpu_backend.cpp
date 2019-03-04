@@ -86,6 +86,7 @@
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
+#include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
@@ -555,11 +556,35 @@ shared_ptr<runtime::Executable>
                 do_reverse_operation(topology,
                                      get_input_name(op),
                                      get_input_shape(op),
+                                     get_input_type(op),
                                      get_output_name(op),
                                      get_output_shape(op),
                                      get_output_type(op),
                                      reversed_axes);
             }
+            break;
+        }
+        case OP_TYPEID::ReverseSequence:
+        {
+            arguments_check(op, 2, 1);
+
+            const shared_ptr<op::ReverseSequence> revseq_op =
+                static_pointer_cast<op::ReverseSequence>(op);
+            const size_t batch_axis = revseq_op->get_batch_axis();
+            const size_t seq_axis = revseq_op->get_sequence_axis();
+
+            do_reverse_sequence_operation(topology,
+                                          get_input_name(op, 0),
+                                          get_input_shape(op, 0),
+                                          get_input_type(op, 0),
+                                          get_input_name(op, 1),
+                                          get_input_shape(op, 1),
+                                          get_input_type(op, 1),
+                                          get_output_name(op),
+                                          get_output_shape(op),
+                                          get_output_type(op),
+                                          seq_axis,
+                                          batch_axis);
             break;
         }
         case OP_TYPEID::Convert:
@@ -1922,7 +1947,6 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::QuantizedMaxPool:
         case OP_TYPEID::ReplaceSlice:
         case OP_TYPEID::GenerateMask:
-        case OP_TYPEID::ReverseSequence:
         case OP_TYPEID::ScalarConstantLike:
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::StopGradient:
