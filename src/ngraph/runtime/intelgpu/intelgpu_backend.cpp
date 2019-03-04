@@ -458,7 +458,7 @@ shared_ptr<runtime::Executable>
         {
             arguments_check(op, 0, 1);
 
-            const string& element_name = op->get_output_tensor_ptr()->get_name();
+            const string& element_name = op->get_output_tensor_ptr(0)->get_name();
             const cldnn::layout element_layout =
                 IntelGPULayout::create_cldnn_layout(op->get_element_type(), op->get_shape());
 

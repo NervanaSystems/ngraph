@@ -190,7 +190,7 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
     auto reshape =
         std::make_shared<ngraph::op::Reshape>(input, AxisVector{0, 1, 2, 3}, Shape{1, 1, 1, 1});
     auto lt_desc =
-        std::make_shared<runtime::cpu::LayoutDescriptor>(*reshape->get_output_tensor_ptr());
+        std::make_shared<runtime::cpu::LayoutDescriptor>(*reshape->get_output_tensor_ptr(0));
     auto cvt_lt = std::make_shared<runtime::cpu::op::ConvertLayout>(reshape, lt_desc);
 
     pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
@@ -241,7 +241,7 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
         }
         auto rotated_md = runtime::cpu::mkldnn_utils::rotate_blocked_md(out_md, inverse_order);
         auto rotated_lt_desc = std::make_shared<runtime::cpu::LayoutDescriptor>(
-            *reshape_m->get_argument(0)->get_output_tensor_ptr());
+            *reshape_m->get_argument(0)->get_output_tensor_ptr(0));
         rotated_lt_desc->set_mkldnn_md(rotated_md);
 
         auto cvt_lt_n = std::make_shared<runtime::cpu::op::ConvertLayout>(
@@ -251,9 +251,9 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
         auto reshape_n =
             std::make_shared<ngraph::op::Reshape>(cvt_lt_n, reshape_order, cvt_lt_m->get_shape());
         auto reshape_n_layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(
-            *reshape_n->get_output_tensor_ptr());
+            *reshape_n->get_output_tensor_ptr(0));
         reshape_n_layout->set_mkldnn_md(out_md);
-        reshape_n->get_output_tensor_ptr()->set_tensor_layout(reshape_n_layout);
+        reshape_n->get_output_tensor_ptr(0)->set_tensor_layout(reshape_n_layout);
         reshape_n->set_op_annotations(reshape_m->get_op_annotations());
 
         ngraph::replace_node(cvt_lt_m, reshape_n);

@@ -78,11 +78,13 @@ namespace ngraph
                             inputs.emplace_back(subgraph_params[tensor_name]);
                         }
                     }
-                    halide_functions[op->get_output_tensor_ptr()->get_name()] =
+                    NGRAPH_ASSERT(op->get_output_size() == 1);
+                    halide_functions[op->get_output_tensor_ptr(0)->get_name()] =
                         generators.at(TI(*op))(inputs);
                 }
 
-                auto out_tensor_name = hs->get_ops().back()->get_output_tensor_ptr()->get_name();
+                NGRAPH_ASSERT(op->get_output_size() == 1);
+                auto out_tensor_name = hs->get_ops().back()->get_output_tensor_ptr(0)->get_name();
                 auto& functors = external_function->get_functors();
                 auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
                 auto& terminal_func = halide_functions[out_tensor_name];

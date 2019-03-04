@@ -40,7 +40,7 @@ void ngraph::runtime::plaidml::ImplParameter::Apply()
     vp::placeholder ph{build()->io_dim_override ? build()->io_dim_override_count
                                                 : op().get_output_shape(0).size()};
     std::string name = std::string{"I"} + std::to_string(build()->input_names.size());
-    descriptor::Tensor* tv = op().get_output_tensor_ptr().get();
+    descriptor::Tensor* tv = op().get_output_tensor_ptr(0).get();
     build()->bindings.emplace(tv, TensorInfo{ph, TensorContents::DATA});
     build()->composer.input(name, ph);
     build()->input_names.emplace(tv, std::move(name));
@@ -52,7 +52,7 @@ void ngraph::runtime::plaidml::ImplResult::Apply()
     check_inputs(1);
     check_outputs(1);
     std::string name = std::string{"O"} + std::to_string(build()->output_names.size());
-    descriptor::Tensor* tv = op().get_output_tensor_ptr().get();
+    descriptor::Tensor* tv = op().get_output_tensor_ptr(0).get();
     build()->composer.output(name, op_input());
     build()->output_names.emplace(tv, std::move(name));
 }

@@ -1626,7 +1626,7 @@ namespace ngraph
                             }
 
                             auto output_tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(
-                                node->get_output_tensor_ptr()->get_tensor_layout());
+                                node->get_output_tensor_ptr(0)->get_tensor_layout());
                             // TODO (jbobba): For now non-MKLDNN layouts are always in row-major format
                             // Enable this once we support non row-major strided formats
                             // output_tvl->set_strides(output_strides);

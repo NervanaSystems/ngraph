@@ -72,28 +72,12 @@ namespace ngraph
     {
         // So Adjoints can call generate_adjoints
         friend class autodiff::Adjoints;
-        friend class descriptor::Input;
-        friend void replace_node_users_arguments(std::shared_ptr<Node> target,
-                                                 std::shared_ptr<Node> replacement);
-        friend std::pair<std::shared_ptr<op::Result>, std::shared_ptr<op::Parameter>>
-            insert_result_parameter_split(const std::shared_ptr<Node>& src_node,
-                                          const std::shared_ptr<Node>& dst_node);
-        friend void insert_new_node_between(const std::shared_ptr<Node>& src_node,
-                                            const std::shared_ptr<Node>& dst_node,
-                                            const std::shared_ptr<Node>& new_node);
-
-        //friend class ngraph::pass::GetOutputElementElimination;
-
     public:
         virtual ~Node();
-        void revalidate_and_infer_types() { validate_and_infer_types(); }
-        // Called after transition
-        void delayed_validate_and_infer_types();
 
-        /// \brief Get the string name for the type of the node, such as `Add` or `Multiply`.
-        ///        The class name, must not contain spaces as it is used for codegen.
-        /// \returns A const reference to the node's type name
-        const std::string& description() const;
+        //===
+        // NAMES/IDS
+        //===
 
         /// \brief Get the unique name of the node.
         /// \returns A const reference to the node's unique name.
@@ -110,21 +94,44 @@ namespace ngraph
         /// \returns A const reference to the node's friendly name.
         const std::string& get_friendly_name() const;
 
+        size_t get_instance_id() const { return m_instance_id; }
+        /// Use instance ids for comparison instead of memory addresses to improve determinism
+        bool operator<(const Node& other) const { return m_instance_id < other.m_instance_id; }
+        //===
+        // VALIDATION
+        //===
+        void revalidate_and_infer_types() { validate_and_infer_types(); }
+        // Called after transition
+        void delayed_validate_and_infer_types();
+
+        //===
+        // NODE TYPES
+        //===
+
+        /// \brief Get the string name for the type of the node, such as `Add` or `Multiply`.
+        ///        The class name, must not contain spaces as it is used for codegen.
+        /// \returns A const reference to the node's type name
+        const std::string& description() const;
+
         bool is_parameter() const;
+        // Should be is_result():
         virtual bool is_output() const;
         virtual bool is_constant() const;
         virtual bool is_null() const { return false; }
         virtual bool is_op() const { return false; }
         virtual bool is_commutative() { return false; }
-        size_t get_instance_id() const { return m_instance_id; }
+        //===
+        // PRETTY PRINTING
+        //===
         friend std::ostream& operator<<(std::ostream&, const Node&);
+        // TODO: change the virtuals to just something to pretty-print attributes
         virtual std::ostream& write_short_description(std::ostream&) const;
         virtual std::ostream& write_long_description(std::ostream&) const;
+        // TODO: method to return long_desc, short_desc?
 
-        // TODO: Deprecate
-        std::deque<descriptor::Input>& get_inputs() { return m_inputs; }
-        // TODO: Deprecate
-        const std::deque<descriptor::Input>& get_inputs() const { return m_inputs; }
+        //===
+        // OUTPUTS
+        //===
         // Deprecated
         // TODO: Remove from unit tests.
         std::deque<descriptor::Output>& get_outputs();
@@ -132,24 +139,11 @@ namespace ngraph
         // TODO: Remove from unit tests.
         const std::deque<descriptor::Output>& get_outputs() const;
 
-        /// Get control dependencies registered on the node
-        const std::set<std::shared_ptr<Node>>& get_control_dependencies() const;
-
-        void add_control_dependency(std::shared_ptr<Node> node);
-
-        void remove_control_dependency(std::shared_ptr<Node> node)
-        {
-            m_control_dependencies.erase(node);
-        }
-
-        /// Returns the number of outputs on the for the node.
+        /// Returns the number of outputs from this node.
         size_t get_output_size() const;
 
-        /// Returns the element type for output i
+        /// Returns the element type for output i.
         const element::Type& get_output_element_type(size_t i) const;
-
-        /// Checks that there is exactly one output and returns its element type
-        const element::Type& get_element_type() const;
 
         /// Returns the shape for output i
         const Shape& get_output_shape(size_t i) const;
@@ -157,24 +151,27 @@ namespace ngraph
         /// Returns the partial shape for output i
         const PartialShape& get_output_partial_shape(size_t i) const;
 
-        /// Checks that there is exactly one output and returns its shape
-        const Shape& get_shape() const;
-
         /// Returns the tensor for output i
         descriptor::Tensor& get_output_tensor(size_t i) const;
-
-        /// Checks that there is exactly one output and returns its tensor.
-        descriptor::Tensor& get_output_tensor() const;
 
         /// Returns the tensor of output i
         std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr(size_t i) const;
 
-        /// Checks that there is exactly one output and returns its tensor.
-        std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr() const;
+        // DEPRECATED: Assumes only one output
+        /// Checks that there is exactly one output and returns its element type
+        const element::Type& get_element_type() const;
 
-        /// Returns the set of inputs using output i
-        const std::set<descriptor::Input*>& get_output_inputs(size_t i) const;
+        // DEPRECATED: Assumes only one output
+        /// Checks that there is exactly one output and returns its shape
+        const Shape& get_shape() const;
 
+        //===
+        // INPUTS
+        //===
+        // TODO: Deprecate
+        std::deque<descriptor::Input>& get_inputs() { return m_inputs; }
+        // TODO: Deprecate
+        const std::deque<descriptor::Input>& get_inputs() const { return m_inputs; }
         /// Returns the number of inputs for the op
         size_t get_input_size() const;
 
@@ -187,13 +184,50 @@ namespace ngraph
         /// Returns the partial shape of input i
         const PartialShape& get_input_partial_shape(size_t i) const;
 
+        // virtual just because GetOutputElement wants to override...
         virtual NodeVector get_arguments() const;
 
+        // Should probably be deprecated in favor of something like "get_input_src_node".
         std::shared_ptr<Node> get_argument(size_t index) const;
 
-        virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const = 0;
+        //===
+        // RELATING OUTPUTS AND INPUTS
+        //===
 
+        /// Returns the set of inputs using output i
+        const std::set<descriptor::Input*>& get_output_inputs(size_t i) const;
+
+        /// Get input descriptors that are connected from src to this
+        std::vector<descriptor::Input*> get_inputs_from(const std::shared_ptr<Node>& src);
+
+        /// Get output descriptors that are connected from this to dst
+        std::vector<descriptor::Output*> get_outputs_to(const std::shared_ptr<Node>& dst);
+
+        /// Get all the nodes that use the current node
+        NodeVector get_users(bool check_is_used = false) const;
+
+        //===
+        // CONTROL DEPS
+        //===
+
+        /// Get control dependencies registered on the node
+        const std::set<std::shared_ptr<Node>>& get_control_dependencies() const;
+
+        void add_control_dependency(std::shared_ptr<Node> node);
+
+        void remove_control_dependency(std::shared_ptr<Node> node)
+        {
+            m_control_dependencies.erase(node);
+        }
+
+        //===
+        // EMBEDDED FUNCTIONS
+        //===
         virtual std::vector<std::shared_ptr<Function>> get_functions() const;
+
+        //===
+        // PLACEMENT
+        //===
 
         /// Get device placement
         Placement get_placement() const;
@@ -207,20 +241,11 @@ namespace ngraph
         /// Set device placement
         void set_placement_index(size_t placement);
 
-        /// Get input descriptors that are connected to src
-        std::vector<descriptor::Input*> get_inputs_from(const std::shared_ptr<Node>& src);
-
-        /// Get output descriptors that are connected to dst
-        std::vector<descriptor::Output*> get_outputs_to(const std::shared_ptr<Node>& dst);
-
-        /// Get all the nodes tha uses the current node
-        NodeVector get_users(bool check_is_used = false) const;
-
-        virtual std::shared_ptr<Node> get_default_value() const { return nullptr; }
-        /// Use instance ids for comparison instead of memory addresses to improve determinism
-        bool operator<(const Node& other) const { return m_instance_id < other.m_instance_id; }
         static const size_t placement_invalid = -1;
 
+        //===
+        // LIVENESS
+        //===
         const std::unordered_set<descriptor::Tensor*>& get_liveness_new_list() const
         {
             return m_liveness_new_list;
@@ -238,7 +263,18 @@ namespace ngraph
             m_liveness_free_list = list;
         }
 
+        //===
+        // COPYING
+        //===
+        virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const = 0;
+
+        //===
+        // DEFAULT VALUES FOR ZERODIMELIMINATION
+        //===
+        virtual std::shared_ptr<Node> get_default_value() const { return nullptr; }
     protected:
+        Node(const std::string& node_type, const NodeVector& arguments, size_t output_size = 1);
+
         /// Throws if the node is invalid.
         virtual void validate_and_infer_types();
 
@@ -248,8 +284,6 @@ namespace ngraph
         std::tuple<element::Type, PartialShape> validate_and_infer_elementwise_args();
         void validate_and_infer_elementwise_arithmetic();
         void validate_and_infer_elementwise_logical();
-
-        Node(const std::string& node_type, const NodeVector& arguments, size_t output_size = 1);
 
         void set_output_size(size_t n);
 
@@ -274,6 +308,10 @@ namespace ngraph
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
         Placement m_placement = Placement::DEFAULT;
         size_t m_placement_index = placement_invalid;
+        
+        Node(const Node&) = delete;
+        Node(Node&&) = delete;
+        Node& operator=(const Node&) = delete;
     };
 
     class NodeValidationError : public AssertionFailure

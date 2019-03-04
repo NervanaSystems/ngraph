@@ -81,7 +81,7 @@ vector<PerfShape> to_perf_shape(shared_ptr<Function> f,
             throw runtime_error(os.str());
         }
 
-        Shape shape = node->get_outputs()[0].get_shape();
+        Shape shape = node->get_output_shape(0);
         result.push_back(PerfShape(p, shape));
     }
     return result;
@@ -180,7 +180,7 @@ element::Type get_op_element_type(const Node& op)
     }
     else
     {
-        type = op.get_outputs().at(0).get_element_type();
+        type = op.get_output_element_type(0);
     }
     return type;
 }
@@ -359,7 +359,7 @@ OPTIONS
                 {
                     string name = node->get_name();
                     string op_name = name.substr(0, name.find('_'));
-                    string shape_name = "{" + join(node->get_outputs()[0].get_shape()) + "}";
+                    string shape_name = "{" + join(node->get_output_shape(0)) + "}";
                     op_list[op_name + shape_name]++;
                     auto et = get_op_element_type(*node);
                     string type_string = et.c_type_string();
@@ -367,8 +367,8 @@ OPTIONS
 
                     if (op_name == "Constant")
                     {
-                        const Shape& shape = node->get_outputs()[0].get_shape();
-                        size_t const_size = node->get_outputs()[0].get_element_type().size();
+                        const Shape& shape = node->get_output_shape(0);
+                        size_t const_size = node->get_output_element_type(0).size();
                         if (shape.size() == 0)
                         {
                             total_constant_bytes += const_size;
@@ -376,7 +376,7 @@ OPTIONS
                         else
                         {
                             total_constant_bytes +=
-                                (const_size * shape_size(node->get_outputs()[0].get_shape()));
+                                (const_size * shape_size(node->get_output_shape(0)));
                         }
                     }
                 }

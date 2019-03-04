@@ -270,7 +270,7 @@ void runtime::gpu::GPUInternalFunction::build_functions()
         for (size_t i = 0; i < current_function->get_output_size(); ++i)
         {
             shared_ptr<Node> op = current_function->get_output_op(i);
-            shared_ptr<descriptor::Tensor> tv = op->get_output_tensor_ptr();
+            shared_ptr<descriptor::Tensor> tv = op->get_output_tensor_ptr(0);
             string type = tv->get_element_type().c_type_string();
             stringstream ss;
             ss << "((" << type << "*)(outputs[" << i << "]))";

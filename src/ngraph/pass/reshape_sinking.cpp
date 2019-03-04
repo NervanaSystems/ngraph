@@ -236,7 +236,7 @@ static void materialize_shapes(std::shared_ptr<Node> n,
                                std::set<std::shared_ptr<Node>>& reshapes_to_delete)
 {
     //skip multiple output nodes and deal with GOEs exclusively
-    if (n->get_outputs().size() > 1)
+    if (n->get_output_size() > 1)
     {
         return;
     }

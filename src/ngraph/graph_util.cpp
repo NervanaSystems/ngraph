@@ -150,16 +150,14 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
     }
 
     // Fix input/output descriptors
-    assert(target->get_outputs().size() == replacement->get_outputs().size());
+    NGRAPH_ASSERT(target->get_output_size() == replacement->get_output_size());
 
     // For each of target's output O with replacement output O_rep:
     //     For each O's connected downstream input I:
     //         Change I's connected upstream output to O_rep
-    for (size_t i = 0; i < target->get_outputs().size(); i++)
+    for (size_t i = 0; i < target->get_output_size(); i++)
     {
-        auto& target_output = target->get_outputs().at(i);
-        std::set<ngraph::descriptor::Input*> copy_inputs{begin(target_output.get_inputs()),
-                                                         end(target_output.get_inputs())};
+        std::set<ngraph::descriptor::Input*> copy_inputs = target->get_output_inputs(i);
         for (auto input : copy_inputs)
         {
             input->replace_output(replacement->get_outputs().at(i));

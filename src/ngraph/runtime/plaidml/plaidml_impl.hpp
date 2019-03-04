@@ -127,7 +127,8 @@ namespace ngraph
                 void set_output(vertexai::plaidml::variable var,
                                 TensorContents contents = TensorContents::DATA)
                 {
-                    m_build->bindings.emplace(op().get_output_tensor_ptr().get(),
+                    NGRAPH_ASSERT(op().get_output_size() == 1);
+                    m_build->bindings.emplace(op().get_output_tensor_ptr(0).get(),
                                               TensorInfo{std::move(var), contents});
                 }
 

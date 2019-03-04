@@ -97,11 +97,8 @@ namespace ngraph
                     }
                     //TODO: this needs to be extended to support multi-output ops inside
                     //a subgraph
-                    if (op->get_outputs().size() > 1)
-                    {
-                        throw ngraph_error("no multi-output ops in a LoopKernel");
-                    }
-                    halide_functions[op->get_output_tensor_ptr()->get_name()] =
+                    NGRAPH_ASSERT(op->get_output_size() == 1) << "no multi-output ops in a LoopKernel";
+                    halide_functions[op->get_output_tensor_ptr(0)->get_name()] =
                         generators.at(TI(*op))(inputs);
                 }
 
@@ -114,8 +111,9 @@ namespace ngraph
                 Halide::Var x;
                 for (size_t i = 0; i < output_nodes.size(); i++)
                 {
+                    NGRAPH_ASSERT(output_nodes.at(i)->get_output_size() == 1);
                     auto result_func =
-                        halide_functions[output_nodes.at(i)->get_output_tensor_ptr()->get_name()];
+                        halide_functions[output_nodes.at(i)->get_output_tensor_ptr(0)->get_name()];
                     results.push_back((result_func(x) + 0));
                     auto& out_tensor = external_function->get_tensor_data(out[i].get_name());
                     buffers_data.push_back(

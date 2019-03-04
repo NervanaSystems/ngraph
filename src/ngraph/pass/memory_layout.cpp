@@ -59,7 +59,7 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
                 {
                     for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
                     {
-                        auto output = &node->get_outputs().at(oi_pair.output).get_tensor();
+                        auto output = &node->get_output_tensor(oi_pair.output);
                         auto input = &node->get_inputs().at(oi_pair.input).get_tensor();
                         auto input_node =
                             node->get_inputs().at(oi_pair.input).get_output().get_node();

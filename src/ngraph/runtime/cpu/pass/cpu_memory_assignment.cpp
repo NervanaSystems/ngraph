@@ -90,14 +90,15 @@ void runtime::cpu::pass::CPUMemoryAssignment::process_in_place_concat(
                     // start from the last concat
                     if (found_last_concat)
                     {
-                        auto output_tensor = &concat->get_output_tensor();
+                        auto output_tensor = &concat->get_output_tensor(0);
                         auto output_bufferID = get_bufferID(output_tensor);
 
                         auto offset = output_tensor->get_pool_offset();
                         size_t arg_index = 0;
                         for (auto arg : concat->get_arguments())
                         {
-                            auto input_tensor = &arg->get_output_tensor();
+                            NGRAPH_ASSERT(arg->get_output_size() == 1);
+                            auto input_tensor = &arg->get_output_tensor(0);
                             auto input_bufferID = get_bufferID(input_tensor);
                             // same set, in place concat allowed
                             if (input_bufferID == output_bufferID)
@@ -143,14 +144,15 @@ void runtime::cpu::pass::CPUMemoryAssignment::propagate_in_place_concat(
 {
     if (op->description() == "Concat")
     {
-        auto output_tensor = &op->get_output_tensor();
+        auto output_tensor = &op->get_output_tensor(0);
         auto output_bufferID = get_bufferID(output_tensor);
 
         auto offset = output_tensor->get_pool_offset();
         size_t arg_index = 0;
         for (auto arg : op->get_arguments())
         {
-            auto input_tensor = &arg->get_output_tensor();
+            NGRAPH_ASSERT(arg->get_output_size() == 1);
+            auto input_tensor = &arg->get_output_tensor(0);
             auto input_bufferID = get_bufferID(input_tensor);
             // same set, in place concat allowed
             if (input_bufferID == output_bufferID)
@@ -251,7 +253,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::process_in_place_slice(
                     auto index = input->get_output().get_index();
                     auto input_tensor = &arg->get_output_tensor(index);
                     auto input_bufferID = get_bufferID(input_tensor);
-                    auto output_tensor = &slice->get_output_tensor();
+                    auto output_tensor = &slice->get_output_tensor(0);
                     auto output_bufferID = get_bufferID(output_tensor);
 
                     // same set, in place slice allowed
@@ -366,7 +368,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(list<shared
         const shared_ptr<Node>& node = *it;
         if (node->is_parameter())
         {
-            auto output_tensor = &node->get_output_tensor();
+            auto output_tensor = &node->get_output_tensor(0);
             auto ele = std::pair<CPUTensorRole, unordered_set<descriptor::Tensor*>>(
                 CPUTensorRole::INPUT, unordered_set<descriptor::Tensor*>({output_tensor}));
             m_bufferID_to_tensorSets[count] = ele;
@@ -375,7 +377,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(list<shared
         }
         else if (node->is_constant())
         {
-            auto output_tensor = &node->get_output_tensor();
+            auto output_tensor = &node->get_output_tensor(0);
             auto ele = std::pair<CPUTensorRole, unordered_set<descriptor::Tensor*>>(
                 CPUTensorRole::CONSTANT, unordered_set<descriptor::Tensor*>({output_tensor}));
             m_bufferID_to_tensorSets[count] = ele;
@@ -384,7 +386,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(list<shared
         }
         else if (node->is_output())
         {
-            auto output_tensor = &node->get_output_tensor();
+            auto output_tensor = &node->get_output_tensor(0);
             auto input_tensor = &node->get_inputs().at(0).get_tensor();
             auto bufferID = get_bufferID(input_tensor);
             NGRAPH_ASSERT(bufferID <= count);
@@ -425,7 +427,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(list<shared
                     // in place concat
                     if (node->description() == "Concat")
                     {
-                        auto output_tensor = &node->get_output_tensor();
+                        auto output_tensor = &node->get_output_tensor(0);
                         auto ele = std::pair<CPUTensorRole, unordered_set<descriptor::Tensor*>>(
                             CPUTensorRole::INTERMEDIATE,
                             unordered_set<descriptor::Tensor*>({output_tensor}));
@@ -447,7 +449,8 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(list<shared
                             // no in-place concat if arg is in in_place_slice_chain,
                             // because in-place slice before in-place concat cannot use the memory buffer of concat.
                             // in-place slice after in-place concat can use the memory buffer of concat.
-                            auto input_tensor = &arg->get_output_tensor();
+                            NGRAPH_ASSERT(arg->get_output_size() == 1);
+                            auto input_tensor = &arg->get_output_tensor(0);
                             if (in_place_slice_chain.find(input_tensor) !=
                                 in_place_slice_chain.end())
                             {

@@ -112,7 +112,7 @@ bool runtime::intelgpu::IntelGPUExecutable::call(const vector<shared_ptr<runtime
         shared_ptr<runtime::intelgpu::IntelGPUTensorView> tv =
             static_pointer_cast<runtime::intelgpu::IntelGPUTensorView>(inputs[i]);
         const ParameterVector& input_params = get_parameters();
-        const string& tensor_name = input_params[i]->get_output_tensor().get_name();
+        const string& tensor_name = input_params[i]->get_output_tensor(0).get_name();
         m_cldnn_network->set_input_data(tensor_name, *tv->get_data_ptr());
     }
 

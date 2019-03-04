@@ -48,7 +48,7 @@ static bool verify_no_internal_zero_length_ops(std::shared_ptr<ngraph::Function>
     std::set<std::shared_ptr<Node>> zero_length_nodes;
     for (auto n : f->get_ordered_ops())
     {
-        if (n->is_output() || n->is_parameter() || n->get_outputs().size() > 1)
+        if (n->is_output() || n->is_parameter() || n->get_output_size() > 1)
         {
             continue;
         }
@@ -89,7 +89,7 @@ bool ngraph::pass::ZeroDimTensorElimination::run_on_function(std::shared_ptr<ngr
         // if any `GetOutputElement` is zero-length
         // we replace it w/ a signalling constant
         // so we don't have to deal w/ multi-output nodes directly
-        if (n->is_output() || n->is_parameter() || n->get_outputs().size() > 1)
+        if (n->is_output() || n->is_parameter() || n->get_output_size() > 1)
         {
             continue;
         }
@@ -134,7 +134,7 @@ bool ngraph::pass::ZeroDimTensorElimination::run_on_function(std::shared_ptr<ngr
 
         auto arg = n->get_inputs().at(0).get_output().get_node();
 
-        if (arg->get_outputs().size() != 1 || !has_zero_dim(arg))
+        if (arg->get_output_size() != 1 || !has_zero_dim(arg))
         {
             continue;
         }

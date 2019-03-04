@@ -57,7 +57,7 @@ void op::GetOutputElement::generate_adjoints(autodiff::Adjoints& adjoints, const
 
 NodeVector op::get_output_elements(const shared_ptr<Node>& mon)
 {
-    NodeVector goes(mon->get_outputs().size());
+    NodeVector goes(mon->get_output_size());
 
     for (auto goe_input : mon->get_output_inputs(0))
     {

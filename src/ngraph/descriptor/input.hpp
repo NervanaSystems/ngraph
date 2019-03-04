@@ -31,8 +31,6 @@ namespace ngraph
         // Describes a tensor that is an input to an op, directly or indirectly via a tuple
         class Input
         {
-            friend class Node;
-
         public:
             /// \param node The node that owns this input
             /// \param index The position of this this tensor in all input tensors

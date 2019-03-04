@@ -626,7 +626,7 @@ using namespace ngraph::runtime;
                 writer << "static " << type << "* " << tv->get_name() << " = ((" << type << "*)("
                        << c->get_data_ptr() << "));\n";
 
-                auto output_tensor = &node->get_output_tensor();
+                auto output_tensor = &node->get_output_tensor(0);
                 auto tensor_set = get_tensor_set(output_tensor);
                 // process all tensors in the set containing the output tensor of the constant
                 for (auto& ele_t : tensor_set)
@@ -661,7 +661,7 @@ using namespace ngraph::runtime;
         set<string> output_names;
         for (shared_ptr<Node> op : current_function->get_results())
         {
-            shared_ptr<descriptor::Tensor> tv = op->get_output_tensor_ptr();
+            shared_ptr<descriptor::Tensor> tv = op->get_output_tensor_ptr(0);
             output_names.insert(tv->get_name());
         }
         set<descriptor::Tensor*> constants;
@@ -790,7 +790,7 @@ using namespace ngraph::runtime;
         for (size_t i = 0; i < current_function->get_output_size(); ++i)
         {
             shared_ptr<Node> op = current_function->get_output_op(i);
-            auto output_tensor = &op->get_output_tensor();
+            auto output_tensor = &op->get_output_tensor(0);
             auto tensor_set = get_tensor_set(output_tensor);
             // process all tensors in the set containing the output tensor of the result
             for (auto& ele_t : tensor_set)
@@ -1246,7 +1246,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
     {
         if (node->is_constant())
         {
-            auto output_tensor = &node->get_output_tensor();
+            auto output_tensor = &node->get_output_tensor(0);
             tensor_data[output_tensor->get_name()] =
                 const_cast<void*>(static_pointer_cast<ngraph::op::Constant>(node)->get_data_ptr());
             auto tensor_set = get_tensor_set(output_tensor);
@@ -1285,7 +1285,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
     for (size_t i = 0; i < m_function->get_output_size(); ++i)
     {
         shared_ptr<Node> op = m_function->get_output_op(i);
-        auto output_tensor = &op->get_output_tensor();
+        auto output_tensor = &op->get_output_tensor(0);
         auto tensor_set = get_tensor_set(output_tensor);
 
         // process all tensors in the set containing the output tensor of the result

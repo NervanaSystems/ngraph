@@ -36,7 +36,8 @@ static bool cse_convertlayout(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
 
     // gets the tensor layout from the given node
     auto get_tensor_layout = [](std::shared_ptr<Node> node) {
-        auto tensor = node->get_output_tensor_ptr();
+        NGRAPH_ASSERT(node->get_output_size() == 1)
+        auto tensor = node->get_output_tensor_ptr(0);
         auto cpu_tl =
             static_cast<ngraph::runtime::cpu::LayoutDescriptor*>(tensor->get_tensor_layout().get());
         return cpu_tl;

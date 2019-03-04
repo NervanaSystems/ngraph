@@ -41,7 +41,7 @@ Node::Node(const std::string& node_type, const NodeVector& arguments, size_t out
     size_t i = 0;
     for (auto arg : arguments)
     {
-        for (descriptor::Output& output : arg->get_outputs())
+        for (descriptor::Output& output : arg->m_outputs)
         {
             m_inputs.emplace_back(this, i++, output);
         }
@@ -169,7 +169,7 @@ std::shared_ptr<Node> Node::get_argument(size_t index) const
 {
     for (auto& i : get_inputs())
     {
-        NGRAPH_ASSERT(i.get_output().get_node()->get_outputs().size() == 1)
+        NGRAPH_ASSERT(i.get_output().get_node()->get_output_size() == 1)
             << "child " << i.get_output().get_node()->get_name() << " has multiple outputs";
     }
     return m_inputs.at(index).get_output().get_node();
@@ -188,9 +188,7 @@ NodeVector Node::get_arguments() const
     NodeVector result;
     for (auto& i : get_inputs())
     {
-        {
-            result.push_back(i.get_output().get_node());
-        }
+        result.push_back(i.get_output().get_node());
     }
     return result;
 }
@@ -248,7 +246,7 @@ std::ostream& Node::write_long_description(std::ostream& out) const
     }
     out << ") -> (";
     sep = "";
-    for (const auto& o : get_outputs())
+    for (const auto& o : m_outputs)
     {
         out << sep << pretty_element_type(o.get_element_type()) << o.get_partial_shape();
         sep = ", ";
@@ -304,16 +302,6 @@ shared_ptr<descriptor::Tensor> Node::get_output_tensor_ptr(size_t i) const
     return m_outputs.at(i).get_tensor_ptr();
 }
 
-shared_ptr<descriptor::Tensor> Node::get_output_tensor_ptr() const
-{
-    if (get_output_size() != 1)
-    {
-        throw ngraph_error(
-            "get_output_tensor_ptr() must be called on a node with exactly one output.");
-    }
-    return get_output_tensor_ptr(0);
-}
-
 const std::set<descriptor::Input*>& Node::get_output_inputs(size_t i) const
 {
     return m_outputs.at(i).get_inputs();
@@ -322,15 +310,6 @@ const std::set<descriptor::Input*>& Node::get_output_inputs(size_t i) const
 descriptor::Tensor& Node::get_output_tensor(size_t i) const
 {
     return m_outputs.at(i).get_tensor();
-}
-
-descriptor::Tensor& Node::get_output_tensor() const
-{
-    if (get_output_size() != 1)
-    {
-        throw ngraph_error("get_output_tensor() must be called on a node with exactly one output.");
-    }
-    return get_output_tensor(0);
 }
 
 size_t Node::get_input_size() const
