@@ -104,6 +104,12 @@ namespace ngraph
                 {
                     convert<InputElementType, uint64_t>(input, output, count, arena);
                 }
+
+                template <typename InputElementType>
+                void convert_to_bool(void* input, void* output, size_t count, int arena)
+                {
+                    convert<InputElementType, bool>(input, output, count, arena);
+                }
             }
         }
     }

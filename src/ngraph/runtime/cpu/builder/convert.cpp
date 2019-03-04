@@ -42,7 +42,7 @@ namespace ngraph
                 if (out[0].get_element_type() == element::boolean)
                 {
                     SELECT_KERNEL(
-                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_i8);
+                        kernel, args[0].get_element_type(), runtime::cpu::kernel::convert_to_bool);
                 }
                 else if (out[0].get_element_type() == element::f32)
                 {
