@@ -727,12 +727,10 @@ TEST(cpu_test, memory_reuse_mxnet_densenet121)
 
     ngraph::pass::PassConfig pass_config;
     pass_config.set_pass_attribute("CPUMemoryAssignment::ReuseMemory", true);
-    auto cpu_backend = std::unique_ptr<runtime::cpu::CPU_Backend>(
-        static_cast<runtime::cpu::CPU_Backend*>(backend.release()));
 
     auto cpu_f_new_reuse = make_function(file_name);
 
-    shared_ptr<runtime::Executable> handle = cpu_backend->compile(cpu_f_new_reuse, pass_config);
+    shared_ptr<runtime::Executable> handle = backend->compile(cpu_f_new_reuse, pass_config);
     for (auto it = 0; it < 2; it++)
     {
         handle->call_with_validate(result_tensors, arg_tensors);
@@ -889,6 +887,41 @@ TEST(cpu_test, convert_inplace)
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<int8_t>{1, 2, 3, -2}), read_vector<int8_t>(result));
+}
+
+TEST(cpu_test, abc_codegen)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::Tensor> c = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::f32, shape);
+
+    copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
+    copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
+    copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
+
+    ngraph::pass::PassConfig pass_config{ngraph::pass::CompilationMode::CODEGEN};
+    auto handle = backend->compile(f, pass_config);
+    handle->call_with_validate({result}, {a, b, c});
+    EXPECT_EQ(read_vector<float>(result),
+              (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
+
+    handle->call_with_validate({result}, {b, a, c});
+    EXPECT_EQ(read_vector<float>(result),
+              (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
+
+    handle->call_with_validate({result}, {a, c, b});
+    EXPECT_EQ(read_vector<float>(result),
+              (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
 }
 
 TEST(cpu_test, rotated_pooling)
