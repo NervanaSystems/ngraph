@@ -64,6 +64,18 @@ TEST(onnx_${BACKEND_NAME}, model_add_abc)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
+TEST(onnx_${BACKEND_NAME}, model_binary_add_abc)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/add_abc.onnx"));
+
+    Inputs inputs{{1}, {2}, {3}};
+    Outputs expected_outputs{{6}};
+
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
 TEST(onnx_${BACKEND_NAME}, model_add_abc_initializers)
 {
     auto function = onnx_import::import_onnx_model(
@@ -2220,6 +2232,19 @@ TEST(onnx_${BACKEND_NAME}, import_malformed_model)
     {
         onnx_import::import_onnx_model(
             file_util::path_join(SERIALIZED_ZOO, "onnx/malformed.prototxt"));
+    }
+    catch (const std::runtime_error& exc)
+    {
+        EXPECT_EQ(exc.what(), std::string{"Failure parsing data from the provided input stream"});
+    }
+}
+
+TEST(onnx_${BACKEND_NAME}, import_binary_malformed_model)
+{
+    try
+    {
+        onnx_import::import_onnx_model(
+            file_util::path_join(SERIALIZED_ZOO, "onnx/malformed.onnx"));
     }
     catch (const std::runtime_error& exc)
     {
