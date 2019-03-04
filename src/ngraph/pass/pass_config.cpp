@@ -23,7 +23,8 @@ using namespace std;
 using namespace ngraph;
 
 // TODO: Add file-based configuration support
-pass::PassConfig::PassConfig()
+pass::PassConfig::PassConfig(pass::CompilationMode mode)
+    : m_compilation_mode(mode)
 {
     /**
     * Parses the semi-colon separated environment string passed through NGRAPH_PASS_ENABLES
