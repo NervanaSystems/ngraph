@@ -804,8 +804,8 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
                                                         rnn_right_to_left](pattern::Matcher& m) {
 
         auto pattern_map = m.get_pattern_map();
-        auto rnn_ltor_node = std::dynamic_pointer_cast<op::Rnn>(pattern_map[rnn_left_to_right]);
-        auto rnn_rtol_node = std::dynamic_pointer_cast<op::Rnn>(pattern_map[rnn_right_to_left]);
+        auto rnn_ltor_node = std::static_pointer_cast<op::Rnn>(pattern_map[rnn_left_to_right]);
+        auto rnn_rtol_node = std::static_pointer_cast<op::Rnn>(pattern_map[rnn_right_to_left]);
 
         if (rnn_ltor_node->get_src_sequence_length() != rnn_rtol_node->get_src_sequence_length())
         {
