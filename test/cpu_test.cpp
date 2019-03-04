@@ -922,6 +922,7 @@ TEST(cpu_test, abc_codegen)
     handle->call_with_validate({result}, {a, c, b});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
+}
 
 TEST(cpu_test, rotated_pooling)
 {
