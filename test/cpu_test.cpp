@@ -775,6 +775,7 @@ TEST(cpu_test, memory_reuse_destructive_oi_relu)
 
     shared_ptr<runtime::Executable> handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b, c});
+    ASSERT_NE(handle, nullptr);
     EXPECT_EQ(read_vector<float>(result), expected);
 }
 
@@ -802,6 +803,7 @@ TEST(cpu_test, memory_reuse_cacheable_no_destructive_oi_relu)
     vector<float> expected{0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
     shared_ptr<runtime::Executable> handle = backend->compile(f);
+    ASSERT_NE(handle, nullptr);
     handle->call_with_validate({result}, {a, b, c});
     EXPECT_EQ(read_vector<float>(result), expected);
 
@@ -864,6 +866,7 @@ TEST(cpu_test, memory_reuse_in_place_slice_after_in_place_concat)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     shared_ptr<runtime::Executable> handle = backend->compile(f);
+    ASSERT_NE(handle, nullptr);
     handle->call_with_validate({result}, {a, b, c, d});
     EXPECT_EQ((vector<float>{3, 7}), read_vector<float>(result));
 }
