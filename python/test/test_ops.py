@@ -35,6 +35,7 @@ from ngraph.impl.op import Concat, Select
 from ngraph.impl.op import Reverse, MaxPool, ReplaceSlice, Slice
 from ngraph.impl.op import Convolution, ConvolutionBackpropData, ConvolutionBackpropFilters
 
+import test
 
 def binary_op(op_str, a, b):
 
@@ -116,7 +117,7 @@ def binary_op_exec(op_str):
     B = Parameter(element_type, shape)
     parameter_list = [A, B]
     function = Function(NodeVector([binary_op(op_str, A, B)]), parameter_list, 'test')
-    backend = Backend.create(pytest.config.getoption('backend'))
+    backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, shape)
     b = backend.create_tensor(element_type, shape)
@@ -146,7 +147,7 @@ def binary_op_comparison(op_str):
     B = Parameter(element_type, shape)
     parameter_list = [A, B]
     function = Function(NodeVector([binary_op(op_str, A, B)]), parameter_list, 'test')
-    backend = Backend.create(pytest.config.getoption('backend'))
+    backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, shape)
     b = backend.create_tensor(element_type, shape)
@@ -245,7 +246,7 @@ def test_add_with_mul():
     C = Parameter(element_type, shape)
     parameter_list = [A, B, C]
     function = Function(NodeVector([Multiply(Add(A, B), C)]), parameter_list, 'test')
-    backend = Backend.create(pytest.config.getoption('backend'))
+    backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, shape)
     b = backend.create_tensor(element_type, shape)
@@ -358,7 +359,7 @@ def unary_op_exec(op_str, input_list):
     A = Parameter(element_type, shape)
     parameter_list = [A]
     function = Function(NodeVector([unary_op(op_str, A)]), parameter_list, 'test')
-    backend = Backend.create(pytest.config.getoption('backend'))
+    backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, shape)
     result = backend.create_tensor(element_type, shape)
@@ -479,7 +480,7 @@ def test_tanh():
     unary_op_exec(op_str, input_list)
 
 
-@pytest.config.gpu_skip(reason="Not implemented")
+@pytest.mark.skip_on_gpu
 def test_reverse():
     input_list = [[-1, 0], [0.5, 1]]
     op_str = 'Reverse'
@@ -492,7 +493,7 @@ def test_not():
     A = Parameter(element_type, shape)
     parameter_list = [A]
     function = Function(NodeVector([Not(A)]), parameter_list, 'test')
-    backend = Backend.create(pytest.config.getoption('backend'))
+    backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, shape)
     result = backend.create_tensor(Type.boolean, shape)
@@ -518,7 +519,7 @@ def test_sum():
     A = Parameter(element_type, shape)
     parameter_list = [A]
     function = Function(NodeVector([Sum(A, AxisSet({1}))]), parameter_list, 'test')
-    backend = Backend.create(pytest.config.getoption('backend'))
+    backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, shape)
     result = backend.create_tensor(element_type, Shape([1]))
@@ -545,7 +546,7 @@ def test_reshape():
     A = Parameter(element_type, shape)
     parameter_list = [A]
     function = Function(NodeVector([Reshape(A, AxisVector([0, 1]), Shape([3, 2]))]), parameter_list, 'test')
-    backend = Backend.create(pytest.config.getoption('backend'))
+    backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, shape)
     result = backend.create_tensor(element_type, Shape([3, 2]))
@@ -572,7 +573,7 @@ def test_convert():
     parameter_list = [A]
     # f32 to boolean
     function = Function(NodeVector([Convert(A, Type.boolean)]), parameter_list, 'test')
-    backend = Backend.create(pytest.config.getoption('backend'))
+    backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, shape)
     result = backend.create_tensor(Type.boolean, shape)
@@ -591,7 +592,7 @@ def test_convert():
 
     # f32 to i32
     function = Function(NodeVector([Convert(A, Type.i32)]), parameter_list, 'test')
-    backend = Backend.create(pytest.config.getoption('backend'))
+    backend = Backend.create(test.BACKEND_NAME)
 
     result = backend.create_tensor(Type.i32, shape)
 
@@ -615,7 +616,7 @@ def test_broadcast():
     A = Parameter(element_type, Shape([3]))
     parameter_list = [A]
     function = Function(NodeVector([Broadcast(A, Shape([3, 3]), AxisSet({0}))]), parameter_list, 'test')
-    backend = Backend.create(pytest.config.getoption('backend'))
+    backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, Shape([3]))
     result = backend.create_tensor(element_type, Shape([3, 3]))
@@ -641,7 +642,7 @@ def test_constant():
     parameter_list = []
     function = Function(NodeVector([Constant(element_type, Shape([3, 3]), list(range(9)))]),
                         parameter_list, 'test')
-    backend = Backend.create(pytest.config.getoption('backend'))
+    backend = Backend.create(test.BACKEND_NAME)
 
     result = backend.create_tensor(element_type, Shape([3, 3]))
 
@@ -662,7 +663,7 @@ def test_onehot():
     A = Parameter(element_type, Shape([3]))
     parameter_list = [A]
     function = Function(NodeVector([OneHot(A, Shape([3, 3]), 0)]), parameter_list, 'test')
-    backend = Backend.create(pytest.config.getoption('backend'))
+    backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, Shape([3]))
     result = backend.create_tensor(element_type, Shape([3, 3]))
@@ -681,7 +682,7 @@ def test_onehot():
     assert np.allclose(result_arr, result_arr_ref)
 
 
-@pytest.config.gpu_skip(reason="Not implemented")
+@pytest.mark.skip_on_gpu
 def test_concat():
 
     element_type = Type.f32
@@ -691,7 +692,7 @@ def test_concat():
     parameter_list = [A, B, C]
     axis = 0
     function = Function(NodeVector([Concat(NodeVector([A, B, C]), axis)]), parameter_list, 'test')
-    backend = Backend.create(pytest.config.getoption('backend'))
+    backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, Shape([1, 2]))
     b = backend.create_tensor(element_type, Shape([1, 2]))
@@ -716,7 +717,7 @@ def test_concat():
     assert np.allclose(result_arr, result_arr_ref)
 
 
-@pytest.config.gpu_skip(reason="Not implemented")
+@pytest.mark.skip_on_gpu
 def test_axisset():
 
     set_axisset = AxisSet({1, 2, 3})
@@ -733,7 +734,7 @@ def test_axisset():
     assert set(tuple_axisset) == set(set_axisset)
 
 
-@pytest.config.gpu_skip(reason="Not implemented")
+@pytest.mark.skip_on_gpu
 def test_select():
 
     element_type = Type.f32
@@ -743,7 +744,7 @@ def test_select():
     parameter_list = [A, B, C]
 
     function = Function(NodeVector([Select(A, B, C)]), parameter_list, 'test')
-    backend = Backend.create(pytest.config.getoption('backend'))
+    backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(Type.boolean, Shape([1, 2]))
     b = backend.create_tensor(element_type, Shape([1, 2]))
@@ -765,7 +766,7 @@ def test_select():
     assert np.allclose(result_arr, result_arr_ref)
 
 
-@pytest.config.gpu_skip(reason="Not implemented")
+@pytest.mark.skip_on_gpu
 def test_slice():
 
     element_type = Type.f32
@@ -779,7 +780,7 @@ def test_slice():
 
     function = Function(NodeVector([Slice(A, Coordinate(lower_bounds),
                                    Coordinate(upper_bounds))]), parameter_list, 'test')
-    backend = Backend.create(pytest.config.getoption('backend'))
+    backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, shape)
     result = backend.create_tensor(element_type, Shape([4, 4]))
@@ -802,7 +803,7 @@ def test_slice():
 
     function = Function(NodeVector([Slice(A, Coordinate(lower_bounds), Coordinate(upper_bounds),
                         Strides(strides))]), parameter_list, 'test')
-    backend = Backend.create(pytest.config.getoption('backend'))
+    backend = Backend.create(test.BACKEND_NAME)
 
     result = backend.create_tensor(element_type, Shape([4, 2]))
     result_arr = np.zeros(8, dtype=np.float32).reshape(4, 2)
@@ -817,7 +818,7 @@ def test_slice():
     assert np.allclose(result_arr, result_arr_ref)
 
 
-@pytest.config.gpu_skip(reason="Not implemented")
+@pytest.mark.skip_on_gpu
 def test_replace_slice():
 
     element_type = Type.f32
@@ -832,7 +833,7 @@ def test_replace_slice():
 
     function = Function(NodeVector([ReplaceSlice(A, B, Coordinate(lower_bounds),
                         Coordinate(upper_bounds))]), parameter_list, 'test')
-    backend = Backend.create(pytest.config.getoption('backend'))
+    backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, Shape([6, 4]))
     b = backend.create_tensor(element_type, Shape([3, 2]))
@@ -860,7 +861,7 @@ def test_replace_slice():
     function = Function(NodeVector([ReplaceSlice(A, B, Coordinate(lower_bounds),
                         Coordinate(upper_bounds), Strides(strides))]),
                         parameter_list, 'test')
-    backend = Backend.create(pytest.config.getoption('backend'))
+    backend = Backend.create(test.BACKEND_NAME)
 
     handle = backend.compile(function)
     handle.call([result], [a, b])
@@ -872,7 +873,7 @@ def test_replace_slice():
     assert np.allclose(result_arr, result_arr_ref)
 
 
-@pytest.config.gpu_skip(reason="Not implemented")
+@pytest.mark.skip_on_gpu
 def test_max_pool():
 
     #test 1d
@@ -885,7 +886,7 @@ def test_max_pool():
     window_shape = [3]
 
     function = Function(NodeVector([MaxPool(A, Shape(window_shape))]), parameter_list, 'test')
-    backend = Backend.create(pytest.config.getoption('backend'))
+    backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, shape)
     result = backend.create_tensor(element_type, Shape([1, 1, 8]))
@@ -905,7 +906,7 @@ def test_max_pool():
     strides = [2]
 
     function = Function(NodeVector([MaxPool(A, Shape(window_shape), Strides(strides))]), parameter_list, 'test')
-    backend = Backend.create(pytest.config.getoption('backend'))
+    backend = Backend.create(test.BACKEND_NAME)
 
     size = 4
     result = backend.create_tensor(element_type, Shape([1, 1, size]))
@@ -929,7 +930,7 @@ def test_max_pool():
     window_shape = [3, 3]
 
     function = Function(NodeVector([MaxPool(A, Shape(window_shape))]), parameter_list, 'test')
-    backend = Backend.create(pytest.config.getoption('backend'))
+    backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, shape)
     result = backend.create_tensor(element_type, Shape([1, 1, 8, 8]))
@@ -949,7 +950,7 @@ def test_max_pool():
     strides = [2, 2]
 
     function = Function(NodeVector([MaxPool(A, Shape(window_shape), Strides(strides))]), parameter_list, 'test')
-    backend = Backend.create(pytest.config.getoption('backend'))
+    backend = Backend.create(test.BACKEND_NAME)
 
     size = 4
     result = backend.create_tensor(element_type, Shape([1, 1, size, size]))
@@ -964,7 +965,7 @@ def test_max_pool():
     assert np.allclose(result_arr, result_arr_ref)
 
 
-@pytest.config.gpu_skip(reason="Not implemented")
+@pytest.mark.skip_on_gpu
 def convolution2d(image, filterit, strides=(1, 1), dilation=(1, 1), padding_below=(0, 0),
                   padding_above=(0, 0), data_dilation=(1, 1)):
 
@@ -1007,7 +1008,7 @@ def convolution2d(image, filterit, strides=(1, 1), dilation=(1, 1), padding_belo
     return result
 
 
-@pytest.config.gpu_skip(reason="Not implemented")
+@pytest.mark.skip_on_gpu
 def test_convolution():
 
     element_type = Type.f32
@@ -1027,7 +1028,7 @@ def test_convolution():
     result_arr = np.zeros(196, dtype=np.float32).reshape(1, 1, 14, 14)
 
     function = Function(NodeVector([Convolution(A, B)]), parameter_list, 'test')
-    backend = Backend.create(pytest.config.getoption('backend'))
+    backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, image_shape)
     b = backend.create_tensor(element_type, filter_shape)
@@ -1045,7 +1046,7 @@ def test_convolution():
     assert np.allclose(result_arr, result_arr_ref)
 
 
-@pytest.config.gpu_skip(reason="Not implemented")
+@pytest.mark.skip_on_gpu
 def test_convolution_with_strides():
 
     element_type = Type.f32
@@ -1061,7 +1062,7 @@ def test_convolution_with_strides():
     strides = [2, 2]
 
     function = Function(NodeVector([Convolution(A, B, Strides(strides))]), parameter_list, 'test')
-    backend = Backend.create(pytest.config.getoption('backend'))
+    backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, image_shape)
     b = backend.create_tensor(element_type, filter_shape)
@@ -1080,7 +1081,7 @@ def test_convolution_with_strides():
     assert np.allclose(result_arr, result_arr_ref)
 
 
-@pytest.config.gpu_skip(reason="Not implemented")
+@pytest.mark.skip_on_gpu
 def test_convolution_with_filter_dilation():
 
     element_type = Type.f32
@@ -1096,7 +1097,7 @@ def test_convolution_with_filter_dilation():
     dilation = [2, 2]
 
     function = Function(NodeVector([Convolution(A, B, Strides(strides), Strides(dilation))]), parameter_list, 'test')
-    backend = Backend.create(pytest.config.getoption('backend'))
+    backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, image_shape)
     b = backend.create_tensor(element_type, filter_shape)
@@ -1116,7 +1117,7 @@ def test_convolution_with_filter_dilation():
     assert np.allclose(result_arr, result_arr_ref)
 
 
-@pytest.config.gpu_skip(reason="Not implemented")
+@pytest.mark.skip_on_gpu
 def test_convolution_with_padding():
 
     element_type = Type.f32
@@ -1137,7 +1138,7 @@ def test_convolution_with_padding():
     function = Function(NodeVector([Convolution(A, B, Strides(strides), Strides(dilation),
                         CoordinateDiff(padding_below), CoordinateDiff(padding_above))]),
                         parameter_list, 'test')
-    backend = Backend.create(pytest.config.getoption('backend'))
+    backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, image_shape)
     b = backend.create_tensor(element_type, filter_shape)
@@ -1176,7 +1177,7 @@ def test_convolution_with_padding():
     function = Function(NodeVector([Convolution(A, B, Strides(strides), Strides(dilation),
                         CoordinateDiff(padding_below), CoordinateDiff(padding_above))]),
                         parameter_list, 'test')
-    backend = Backend.create(pytest.config.getoption('backend'))
+    backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, image_shape)
     b = backend.create_tensor(element_type, filter_shape)
@@ -1197,7 +1198,7 @@ def test_convolution_with_padding():
     assert np.allclose(result_arr, result_arr_ref)
 
 
-@pytest.config.gpu_skip(reason="Not implemented")
+@pytest.mark.skip_on_gpu
 def test_convolution_with_data_dilation():
 
     element_type = Type.f32
@@ -1218,7 +1219,7 @@ def test_convolution_with_data_dilation():
     function = Function(NodeVector([Convolution(A, B, Strides(strides), Strides(dilation),
                                     CoordinateDiff(padding_below), CoordinateDiff(padding_above),
                                     Strides(data_dilation))]), parameter_list, 'test')
-    backend = Backend.create(pytest.config.getoption('backend'))
+    backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, image_shape)
     b = backend.create_tensor(element_type, filter_shape)
@@ -1239,7 +1240,7 @@ def test_convolution_with_data_dilation():
     assert np.allclose(result_arr, result_arr_ref)
 
 
-@pytest.config.gpu_skip(reason="Not implemented")
+@pytest.mark.skip_on_gpu
 def test_convolutionBackpropData():
 
     element_type = Type.f32
@@ -1266,7 +1267,7 @@ def test_convolutionBackpropData():
     function = Function(NodeVector([ConvolutionBackpropData(image_shape, A, B, Strides(window_strides), Strides(window_dilation),
                                      CoordinateDiff(padding_below), CoordinateDiff(padding_above),
                                      Strides(data_dilation))]), parameter_list, 'test')
-    backend = Backend.create(pytest.config.getoption('backend'))
+    backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, filter_shape)
     b = backend.create_tensor(element_type, output_shape)
@@ -1295,7 +1296,7 @@ def test_convolutionBackpropData():
     assert np.allclose(result_arr, result_arr_ref)
 
 
-@pytest.config.gpu_skip(reason="Not implemented")
+@pytest.mark.skip_on_gpu
 def test_convolutionBackpropFilters():
 
     element_type = Type.f32
@@ -1322,7 +1323,7 @@ def test_convolutionBackpropFilters():
     function = Function(NodeVector([ConvolutionBackpropFilters(A, filter_shape, B, Strides(window_strides), Strides(window_dilation),
                                      CoordinateDiff(padding_below),CoordinateDiff(padding_above),
                                      Strides(data_dilation))]), parameter_list, 'test')
-    backend = Backend.create(pytest.config.getoption('backend'))
+    backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, image_shape)
     b = backend.create_tensor(element_type, output_shape)
