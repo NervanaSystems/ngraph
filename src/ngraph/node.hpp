@@ -329,4 +329,4 @@ namespace ngraph
                                 ::ngraph::node_validation_assertion_string(node))
 
 #define NODE_VALIDATION_CHECK(node, cond, ...)                                                     \
-    CHECK(::NodeValidationFailure, (node), (cond), __VA_ARGS__)
+    NGRAPH_CHECK(::NodeValidationFailure, (node), (cond), __VA_ARGS__)
