@@ -606,7 +606,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::liveness_analysis(
     for (auto it = ops.begin(); it != ops.end(); it++)
     {
         const shared_ptr<Node>& node = *it;
-        node->liveness_new_list.clear();
+        std::unordered_set<descriptor::Tensor*> liveness_new_list;
 
         for (size_t i = 0; i < node->get_output_size(); ++i)
         {
@@ -614,17 +614,19 @@ void runtime::cpu::pass::CPUMemoryAssignment::liveness_analysis(
             auto bufferID = get_bufferID(tensor);
             if (allocated_sets.find(bufferID) == allocated_sets.end())
             {
-                node->liveness_new_list.insert(tensor);
+                liveness_new_list.insert(tensor);
                 allocated_sets.insert(bufferID);
             }
         }
+
+        node->set_liveness_new_list(liveness_new_list);
     }
 
     // backward pass to build liveness_free_list
     for (auto it = ops.rbegin(); it != ops.rend(); it++)
     {
         const shared_ptr<Node>& node = *it;
-        node->liveness_free_list.clear();
+        std::unordered_set<descriptor::Tensor*> liveness_free_list;
 
         for (descriptor::Input& input_decl : node->get_inputs())
         {
@@ -632,10 +634,12 @@ void runtime::cpu::pass::CPUMemoryAssignment::liveness_analysis(
             auto bufferID = get_bufferID(tensor);
             if (freed_sets.find(bufferID) == freed_sets.end())
             {
-                node->liveness_free_list.insert(tensor);
+                liveness_free_list.insert(tensor);
                 freed_sets.insert(bufferID);
             }
         }
+
+        node->set_liveness_free_list(liveness_free_list);
     }
 }
 
@@ -700,8 +704,9 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                     auto input_tensor = &node->get_inputs().at(oi_pair.input).get_tensor();
                     auto input_node = node->get_inputs().at(oi_pair.input).get_output().get_node();
 
-                    if (oi_pair.destructive && node->liveness_free_list.count(input_tensor) != 0 &&
-                        node->liveness_new_list.count(output_tensor) != 0)
+                    if (oi_pair.destructive &&
+                        node->get_liveness_free_list().count(input_tensor) != 0 &&
+                        node->get_liveness_new_list().count(output_tensor) != 0)
                     {
                         if (input_node->is_op())
                         {
@@ -794,7 +799,7 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
             }
         }
 
-        for (descriptor::Tensor* tensor : node->liveness_new_list)
+        for (descriptor::Tensor* tensor : node->get_liveness_new_list())
         {
             if (no_new.find(tensor) != no_new.end())
             {
@@ -831,7 +836,7 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
         // when reusing memory, free when done
         if (!m_disable_memory_sharing && node->is_op())
         {
-            for (descriptor::Tensor* tensor : node->liveness_free_list)
+            for (descriptor::Tensor* tensor : node->get_liveness_free_list())
             {
                 if (no_free.find(tensor) != no_free.end())
                 {

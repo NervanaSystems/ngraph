@@ -678,10 +678,10 @@ using namespace ngraph::runtime;
         size_t worst_case_tmp_size = 0;
         for (shared_ptr<Node> node : ordered_ops)
         {
-            if (node->liveness_new_list.size() > 0)
+            if (node->get_liveness_new_list().size() > 0)
             {
                 temporaries_used = true;
-                for (descriptor::Tensor* tensor : node->liveness_new_list)
+                for (descriptor::Tensor* tensor : node->get_liveness_new_list())
                 {
                     worst_case_tmp_size += tensor->size();
                 }

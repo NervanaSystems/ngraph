@@ -72,6 +72,7 @@ namespace ngraph
     {
         // So Adjoints can call generate_adjoints
         friend class autodiff::Adjoints;
+
     public:
         virtual ~Node();
 
@@ -308,7 +309,7 @@ namespace ngraph
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
         Placement m_placement = Placement::DEFAULT;
         size_t m_placement_index = placement_invalid;
-        
+
         Node(const Node&) = delete;
         Node(Node&&) = delete;
         Node& operator=(const Node&) = delete;
