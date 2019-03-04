@@ -22,7 +22,8 @@
 using namespace ngraph;
 
 // TODO: Add file-based configuration support
-ngraph::pass::PassConfig::PassConfig()
+ngraph::pass::PassConfig::PassConfig(ngraph::pass::CompilationMode mode)
+    : m_compilation_mode(mode)
 {
     /**
     * Parses the semi-colon separated environment string passed through NGRAPH_PASS_ENABLES

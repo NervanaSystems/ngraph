@@ -309,4 +309,4 @@ namespace ngraph
 } // namespace ngraph
 
 #define NODE_VALIDATION_CHECK(node, cond, ...)                                                     \
-    CHECK(::ngraph::NodeValidationFailure, (node), (cond), __VA_ARGS__)
+    NGRAPH_CHECK(::ngraph::NodeValidationFailure, (node), (cond), __VA_ARGS__)
