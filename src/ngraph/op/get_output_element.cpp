@@ -22,7 +22,7 @@ using namespace std;
 using namespace ngraph;
 
 op::GetOutputElement::GetOutputElement(const shared_ptr<Node>& arg, size_t n)
-    : Op("GetOutputElement", {arg})
+    : Op("GetOutputElement", NodeVector{arg})
     , m_n{n}
 {
     constructor_validate_and_infer_types();

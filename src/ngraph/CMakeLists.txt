@@ -37,6 +37,8 @@ set (SRC
     log.cpp
     ngraph.cpp
     node.cpp
+    node_input.cpp
+    node_output.cpp
     op/abs.cpp
     op/acos.cpp
     op/add.cpp

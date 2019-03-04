@@ -49,6 +49,22 @@ Node::Node(const std::string& node_type, const NodeVector& arguments, size_t out
     set_output_size(output_size);
 }
 
+Node::Node(const std::string& node_type,
+           const std::vector<NodeOutput>& arguments,
+           size_t output_size)
+    : m_node_type(node_type)
+    , m_instance_id(s_next_instance_id.fetch_add(1))
+    , m_unique_name(description() + "_" + to_string(m_instance_id))
+{
+    // Add this node as a user of each argument.
+    size_t i = 0;
+    for (auto arg : arguments)
+    {
+        m_inputs.emplace_back(this, i++, arg.get_node()->get_outputs().at(arg.get_index()));
+    }
+    set_output_size(output_size);
+}
+
 // While we are still doing validation and type inference in the constructor, this is true
 // The #define can be commented out to debug doing validation/inference after construction.
 // When that is working, these two functions will be removed.
@@ -407,15 +423,6 @@ const std::shared_ptr<Node>& ngraph::check_single_output_arg(const std::shared_p
     NGRAPH_ASSERT(node->get_output_size() == 1) << "Argument " << i << node
                                                 << " must produce exactly one value.";
     return node;
-}
-
-const NodeVector& ngraph::check_single_output_args(const NodeVector& args)
-{
-    for (size_t i = 0; i < args.size(); ++i)
-    {
-        ngraph::check_single_output_arg(args.at(i), i);
-    }
-    return args;
 }
 
 std::tuple<element::Type, PartialShape> Node::validate_and_infer_elementwise_args()

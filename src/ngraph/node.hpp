@@ -63,7 +63,8 @@ namespace ngraph
 
     const std::shared_ptr<Node>& check_single_output_arg(const std::shared_ptr<Node>& node,
                                                          size_t i);
-    const NodeVector& check_single_output_args(const NodeVector& args);
+
+    class NodeOutput;
 
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
@@ -275,6 +276,9 @@ namespace ngraph
         virtual std::shared_ptr<Node> get_default_value() const { return nullptr; }
     protected:
         Node(const std::string& node_type, const NodeVector& arguments, size_t output_size = 1);
+        Node(const std::string& node_type,
+             const std::vector<NodeOutput>& arguments,
+             size_t output_size = 1);
 
         /// Throws if the node is invalid.
         virtual void validate_and_infer_types();

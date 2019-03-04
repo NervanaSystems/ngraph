@@ -14,24 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <algorithm>
-#include <memory>
-#include <sstream>
-
-#include "ngraph/node_output.hpp"
-#include "ngraph/node_vector.hpp"
-#include "ngraph/op/op.hpp"
-#include "ngraph/type/element_type.hpp"
+#include "ngraph/node_input.hpp"
 
 using namespace ngraph;
-using namespace std;
-
-op::Op::Op(const std::string& node_type, const NodeVector& args)
-    : Node(node_type, args)
-{
-}
-
-op::Op::Op(const std::string& node_type, const std::vector<NodeOutput>& args)
-    : Node(node_type, args)
-{
-}

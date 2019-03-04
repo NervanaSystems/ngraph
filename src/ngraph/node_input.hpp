@@ -14,24 +14,29 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <algorithm>
-#include <memory>
-#include <sstream>
+#pragma once
 
-#include "ngraph/node_output.hpp"
-#include "ngraph/node_vector.hpp"
-#include "ngraph/op/op.hpp"
-#include "ngraph/type/element_type.hpp"
+#include "ngraph/descriptor/input.hpp"
+#include "ngraph/node.hpp"
 
-using namespace ngraph;
-using namespace std;
-
-op::Op::Op(const std::string& node_type, const NodeVector& args)
-    : Node(node_type, args)
+namespace ngraph
 {
-}
+    class NodeInput
+    {
+    public:
+        NodeInput(Node* node, size_t index)
+            : m_node(node)
+            , m_index(index)
+        {
+        }
 
-op::Op::Op(const std::string& node_type, const std::vector<NodeOutput>& args)
-    : Node(node_type, args)
-{
-}
+        Node* get_node() { return m_node; }
+        size_t get_index() { return m_index; }
+        const element::Type& get_element_type() { return m_node->get_input_element_type(m_index); }
+        const Shape& get_shape() { return m_node->get_input_shape(m_index); }
+        const PartialShape& get_partial_shape() { return m_node->get_input_partial_shape(m_index); }
+    private:
+        Node* const m_node;
+        const size_t m_index;
+    };
+} // namespace ngraph

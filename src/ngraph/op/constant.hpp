@@ -41,7 +41,7 @@ namespace ngraph
             ///        of values must match the size of the shape.
             template <typename T>
             Constant(const element::Type& type, Shape shape, const std::vector<T>& values)
-                : Node("Constant", {})
+                : Node("Constant", NodeVector{})
                 , m_element_type(type)
                 , m_shape(shape)
                 , m_data(ngraph::aligned_alloc(m_element_type.size(),
@@ -71,7 +71,7 @@ namespace ngraph
             /// \param shape The shape of the tensor constant.
             /// \param values A list of string values to use as the constant data.
             Constant(const element::Type& type, Shape shape, const std::vector<std::string>& values)
-                : Node("Constant", {})
+                : Node("Constant", NodeVector{})
                 , m_element_type(type)
                 , m_shape(shape)
                 , m_data(ngraph::aligned_alloc(m_element_type.size(),
@@ -94,7 +94,7 @@ namespace ngraph
             /// \param shape The shape of the tensor constant.
             /// \param data A void* to constant data.
             Constant(const element::Type& type, const Shape& shape, const void* data)
-                : Node("Constant", {})
+                : Node("Constant", NodeVector{})
                 , m_element_type(type)
                 , m_shape(shape)
                 , m_data(nullptr)

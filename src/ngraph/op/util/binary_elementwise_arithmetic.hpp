@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "ngraph/node_output.hpp"
 #include "ngraph/op/op.hpp"
 
 namespace ngraph
@@ -51,8 +52,8 @@ namespace ngraph
                 /// \param arg0 Node that produces the first input tensor.
                 /// \param arg1 Node that produces the second input tensor.
                 BinaryElementwiseArithmetic(const std::string& node_type,
-                                            const std::shared_ptr<Node>& arg0,
-                                            const std::shared_ptr<Node>& arg1);
+                                            NodeOutput arg0,
+                                            NodeOutput arg1);
 
                 void validate_and_infer_types() override;
             };
