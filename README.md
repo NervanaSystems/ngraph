@@ -65,9 +65,8 @@ section.
 While the ecosystem shown above is all functioning, we have validated 
 performance for deep learning inference on CPU processors such as Intel® Xeon®. 
 Please refer to the [Release notes] to learn more. The Gold release 
-is targeted for April 2019; it will feature broader workload coverage, 
-including quantized graphs, and more detail on our advanced support for 
-``int8``. 
+is targeted for June 2019; it will feature broader workload coverage 
+including quantized graphs (int8) and will implement support for dynamic shapes. 
 
 Our documentation has extensive information about how to use nGraph Compiler 
 stack to create an nGraph computational graph, integrate custom frameworks, 
