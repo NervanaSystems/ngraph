@@ -1868,7 +1868,7 @@ TEST(onnx_${BACKEND_NAME}, model_top_k)
 TEST(onnx_${BACKEND_NAME}, model_lstm_fwd_with_clip)
 {
     auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/lstm_fwd_with_clip.onnx"));
+        file_util::path_join(SERIALIZED_ZOO, "onnx/lstm_fwd_with_clip.prototxt"));
 
     Inputs inputs{};
     // X
@@ -2059,7 +2059,7 @@ TEST(onnx_${BACKEND_NAME}, model_sign)
 TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p0)
 {
     auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/global_lp_pool_p0.onnx"));
+        file_util::path_join(SERIALIZED_ZOO, "onnx/global_lp_pool_p0.prototxt"));
 
     std::vector<std::vector<std::int64_t>> inputs{std::vector<std::int64_t>{
         1, 0, -4, 0, 2, 1, -6, 1, 0, 0, 0, 0, -7, 1, -1, 0, -1, 8, 0, 10, 9, 0, 0, 5}};
@@ -2074,7 +2074,7 @@ TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p0)
 TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p1)
 {
     auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/global_lp_pool_p1.onnx"));
+        file_util::path_join(SERIALIZED_ZOO, "onnx/global_lp_pool_p1.prototxt"));
 
     Inputs inputs{std::vector<float>(2 * 3 * 4)};
     std::iota(std::begin(inputs.front()), std::end(inputs.front()), 0.f);
@@ -2089,7 +2089,7 @@ TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p1)
 TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p2)
 {
     auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/global_lp_pool_p2.onnx"));
+        file_util::path_join(SERIALIZED_ZOO, "onnx/global_lp_pool_p2.prototxt"));
 
     Inputs inputs{std::vector<float>(2 * 3 * 4)};
     std::iota(std::begin(inputs.front()), std::end(inputs.front()), 0.f);
@@ -2103,7 +2103,7 @@ TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p2)
 TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p3)
 {
     auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/global_lp_pool_p3.onnx"));
+        file_util::path_join(SERIALIZED_ZOO, "onnx/global_lp_pool_p3.prototxt"));
 
     Inputs inputs{std::vector<float>(2 * 3 * 4)};
     std::iota(std::begin(inputs.front()), std::end(inputs.front()), 0.f);
