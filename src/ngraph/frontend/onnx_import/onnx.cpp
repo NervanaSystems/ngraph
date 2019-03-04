@@ -56,14 +56,14 @@ namespace ngraph
         std::shared_ptr<Function> import_onnx_model(std::istream& sin, const Weights& weights)
         {
             onnx::ModelProto model_proto;
-            // Try parsing input in binary format
+            // Try parsing input as a binary protobuf message
             if (!model_proto.ParseFromIstream(&sin))
             {
-                // Rewind to the beginning end clear stream state.
+                // Rewind to the beginning and clear stream state.
                 sin.clear();
                 sin.seekg(0);
                 google::protobuf::io::IstreamInputStream iistream(&sin);
-                // Try parsing input in text format
+                // Try parsing input as a prototxt message
                 if (!google::protobuf::TextFormat::Parse(&iistream, &model_proto))
                 {
                     throw detail::error::stream_parse{sin};

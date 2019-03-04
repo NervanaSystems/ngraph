@@ -13,9 +13,11 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 # *****************************************************************************
-"""Converts protobuf files from binary format into text format and vice-versa.
+"""Converts protobuf files from binary message format into prototxt format and vice-versa.
 
-Supports files with only '.onnx' or '.prototxt' extensions.
+Supports files with only '.onnx' or '.prototxt' extensions. Application may accept only single
+argument denoting input file. In that case it converts it to the second message format based on the
+extension of argument.
 
 Usage:
   onnx_prototxt_converter.py INPUT_FILE [OUTPUT_FILE]
