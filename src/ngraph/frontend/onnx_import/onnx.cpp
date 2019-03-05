@@ -17,7 +17,6 @@
 #include <fstream>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/text_format.h>
-#include <google/protobuf/stubs/logging.h>
 #include <memory>
 
 #include "core/graph.hpp"
@@ -63,8 +62,6 @@ namespace ngraph
                 // Rewind to the beginning and clear stream state.
                 sin.clear();
                 sin.seekg(0);
-                // Instantiate LogSilencer in order to inhibit printing parsing errors to stderr.
-                google::protobuf::LogSilencer log_silencer;
                 google::protobuf::io::IstreamInputStream iistream(&sin);
                 // Try parsing input as a prototxt message
                 if (!google::protobuf::TextFormat::Parse(&iistream, &model_proto))
