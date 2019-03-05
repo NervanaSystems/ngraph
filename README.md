@@ -30,11 +30,6 @@ The Python wheels for nGraph have been tested and are supported on the following
 * Debian 10
 * macOS 10.14.3 (Mojave)
 
-:exclamation: Note that the ``pip`` package option works only Intel® Xeon® CPUs. 
-CPUs without Intel® Advanced Vector Extensions 512 (Intel® AVX-512) will not run 
-these packages; the alternative is to build from source. Wider support for other 
-CPUs will be offered in later releases.  
-
 Frameworks using nGraph Compiler stack to execute workloads have shown 
 [**up to 45X**](https://ai.intel.com/ngraph-compiler-stack-beta-release/) 
 performance boost when compared to native framework implementations. We've also 
@@ -55,11 +50,13 @@ We strongly believe in providing freedom, performance, and ease-of-use to AI
 developers. 
 
 The diagram below shows what deep learning frameworks and hardware targets
-we support. More details on these current and future plans are in the [ecosystem]
-section. 
+we support. NNP-L (Neural Network Processor for Learning) & NNP-I 
+(Neural Network Processor for Inference) refer to Intel's next generation deep 
+learning accelators for training and inference respectively. More details on 
+these current and future plans are in the [ecosystem] section. 
 
 
-![nGraph wireframe][ngraph_wireframes_with_notice]
+![](doc/sphinx/source/graphics/main_diagram_fw_hw.png)
 
 
 While the ecosystem shown above is all functioning, we have validated 
@@ -108,6 +105,7 @@ to improve it:
 [pull request]: https://github.com/NervanaSystems/ngraph/pulls
 [how to import]: https://ngraph.nervanasys.com/docs/latest/howto/import.html
 [ngraph_wireframes_with_notice]: doc/sphinx/source/graphics/readme_stack.png "nGraph wireframe"
+[ngraph_diagram_with fw_hw]: doc/sphinx/source/graphics/main_diagram_fw_hw.png "nGraph stack with current framework & backend support"
 [ngraph-compiler-stack-readme]: doc/sphinx/source/graphics/ngraph-compiler-stack-readme.png "nGraph Compiler Stack"
 [build-status]: https://travis-ci.org/NervanaSystems/ngraph/branches
 [build-status-badge]: https://travis-ci.org/NervanaSystems/ngraph.svg?branch=master
