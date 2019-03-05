@@ -26,7 +26,7 @@
 #include <sstream>
 #include <string>
 #include <typeindex>
-//#include <typeinfo>
+#include <typeinfo>
 #include <unordered_map>
 #include <vector>
 

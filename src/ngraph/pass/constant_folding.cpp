@@ -344,105 +344,52 @@ shared_ptr<op::Constant> make_constant_binary(shared_ptr<op::Constant> a,
     vector<void*> outputs;
     outputs.push_back(out_vec.data());
 
-    if (std::dynamic_pointer_cast<op::Add>(binary))
+    auto& node = *binary;
+    if (!m_cfmap.empty())
     {
-        if (!m_cfmap.empty())
-        {
-            auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Add)));
-            NGRAPH_ASSERT(handler != m_cfmap.end()) << "constant folding map should have add entry";
-            auto func = handler->second(binary.get());
-            func(inputs, outputs);
-        }
-        else
+        auto handler = m_cfmap.find(type_index(typeid(node)));
+        NGRAPH_ASSERT(handler != m_cfmap.end()) << "constant folding map should have entry for "
+                                                << binary->get_name();
+        auto func = handler->second(binary.get());
+        func(inputs, outputs);
+    }
+    else
+    {
+        if (std::dynamic_pointer_cast<op::Add>(binary))
         {
             runtime::reference::add<T>(
                 a->get_data_ptr<T>(), b->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
-    }
-    else if (std::dynamic_pointer_cast<op::Subtract>(binary))
-    {
-        if (!m_cfmap.empty())
-        {
-            auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Subtract)));
-            NGRAPH_ASSERT(handler != m_cfmap.end())
-                << "constant folding map should have subtract entry";
-            auto func = handler->second(binary.get());
-            func(inputs, outputs);
-        }
-        else
+        else if (std::dynamic_pointer_cast<op::Subtract>(binary))
         {
             runtime::reference::subtract<T>(
                 a->get_data_ptr<T>(), b->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
-    }
-    else if (std::dynamic_pointer_cast<op::Multiply>(binary))
-    {
-        if (!m_cfmap.empty())
-        {
-            auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Multiply)));
-            NGRAPH_ASSERT(handler != m_cfmap.end())
-                << "constant folding map should have multiply entry";
-            auto func = handler->second(binary.get());
-            func(inputs, outputs);
-        }
-        else
+        else if (std::dynamic_pointer_cast<op::Multiply>(binary))
         {
             runtime::reference::multiply<T>(
                 a->get_data_ptr<T>(), b->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
-    }
-    else if (std::dynamic_pointer_cast<op::Divide>(binary))
-    {
-        if (!m_cfmap.empty())
-        {
-            auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Divide)));
-            NGRAPH_ASSERT(handler != m_cfmap.end())
-                << "constant folding map should have divide entry";
-            auto func = handler->second(binary.get());
-            func(inputs, outputs);
-        }
-        else
+        else if (std::dynamic_pointer_cast<op::Divide>(binary))
         {
             runtime::reference::divide<T>(
                 a->get_data_ptr<T>(), b->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
-    }
-    else if (std::dynamic_pointer_cast<op::Minimum>(binary))
-    {
-        if (!m_cfmap.empty())
-        {
-            auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Minimum)));
-            NGRAPH_ASSERT(handler != m_cfmap.end())
-                << "constant folding map should have minimum entry";
-            auto func = handler->second(binary.get());
-            func(inputs, outputs);
-        }
-        else
+        else if (std::dynamic_pointer_cast<op::Minimum>(binary))
         {
             runtime::reference::minimum<T>(
                 a->get_data_ptr<T>(), b->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
-    }
-    else if (std::dynamic_pointer_cast<op::Maximum>(binary))
-    {
-        if (!m_cfmap.empty())
-        {
-            auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Maximum)));
-            NGRAPH_ASSERT(handler != m_cfmap.end())
-                << "constant folding map should have maximum entry";
-            auto func = handler->second(binary.get());
-            func(inputs, outputs);
-        }
-        else
+        else if (std::dynamic_pointer_cast<op::Maximum>(binary))
         {
             runtime::reference::maximum<T>(
                 a->get_data_ptr<T>(), b->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
-    }
-    else
-    {
-        NGRAPH_ASSERT(false)
-            << "make_constant_binary must be consistent with is_supported_binary_op";
+        else
+        {
+            NGRAPH_ASSERT(false)
+                << "make_constant_binary must be consistent with is_supported_binary_op";
+        }
     }
 
     return make_shared<op::Constant>(a->get_element_type(), out_shape, out_vec);
@@ -533,56 +480,36 @@ shared_ptr<op::Constant> make_constant_unary(shared_ptr<op::Constant> constant,
     vector<void*> outputs;
     outputs.push_back(out_vec.data());
 
-    if (std::dynamic_pointer_cast<op::Abs>(unary))
+    auto& node = *unary;
+    if (!m_cfmap.empty())
     {
-        if (!m_cfmap.empty())
-        {
-            auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Abs)));
-            NGRAPH_ASSERT(handler != m_cfmap.end()) << "constant folding map should have abs entry";
-            auto func = handler->second(unary.get());
-            func(inputs, outputs);
-        }
-        else
+        auto handler = m_cfmap.find(type_index(typeid(node)));
+        NGRAPH_ASSERT(handler != m_cfmap.end()) << "constant folding map should have entry for "
+                                                << unary->get_name();
+        auto func = handler->second(unary.get());
+        func(inputs, outputs);
+    }
+    else
+    {
+        if (std::dynamic_pointer_cast<op::Abs>(unary))
         {
             runtime::reference::abs<T>(
                 constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
-    }
-    else if (std::dynamic_pointer_cast<op::Negative>(unary))
-    {
-        if (!m_cfmap.empty())
-        {
-            auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Negative)));
-            NGRAPH_ASSERT(handler != m_cfmap.end())
-                << "constant folding map should have negative entry";
-            auto func = handler->second(unary.get());
-            func(inputs, outputs);
-        }
-        else
+        else if (std::dynamic_pointer_cast<op::Negative>(unary))
         {
             runtime::reference::negate<T>(
                 constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
-    }
-    else if (std::dynamic_pointer_cast<op::Relu>(unary))
-    {
-        if (!m_cfmap.empty())
-        {
-            auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Relu)));
-            NGRAPH_ASSERT(handler != m_cfmap.end())
-                << "constant folding map should have relu entry";
-            auto func = handler->second(unary.get());
-            func(inputs, outputs);
-        }
-        else
+        else if (std::dynamic_pointer_cast<op::Relu>(unary))
         {
             runtime::reference::relu<T>(
                 constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
-    }
-    else
-    {
-        NGRAPH_ASSERT(false) << "must be consistent with is_supported_unary_op";
+        else
+        {
+            NGRAPH_ASSERT(false) << "must be consistent with is_supported_unary_op";
+        }
     }
 
     return make_shared<op::Constant>(constant->get_element_type(), out_shape, out_vec);
