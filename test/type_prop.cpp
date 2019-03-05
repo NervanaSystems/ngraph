@@ -204,6 +204,64 @@ TEST(type_prop, broadcast_partial_rank_static_dynamic_shape_mismatch_wrong_size)
     }
 }
 
+
+TEST(type_prop, dyn_broadcast_shape_wrong_rank)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto bc_shape = make_shared<op::Parameter>(element::i64, Shape{1, 1});
+    auto bc_axes = make_shared<op::Parameter>(element::i64, Shape{1});
+
+    try
+    {
+        auto bc = make_shared<op::DynBroadcast>(arg, bc_shape, bc_axes);
+        FAIL() << "Output shape mismatch (wrong rank) not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "DynBroadcast shape has incorrect rank");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, dyn_broadcast_axes_wrong_rank)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto bc_shape = make_shared<op::Parameter>(element::i64, Shape{1});
+    auto bc_axes = make_shared<op::Parameter>(element::i64, Shape{2, 2});
+
+    try
+    {
+        auto bc = make_shared<op::DynBroadcast>(arg, bc_shape, bc_axes);
+        FAIL() << "Output axes mismatch (wrong rank) not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "DynBroadcast axes has incorrect rank");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, dyn_broadcast_output_partial_shape_dynamic)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto bc_shape = make_shared<op::Parameter>(element::i64, Shape{1});
+    auto bc_axes = make_shared<op::Parameter>(element::i64, Shape{2});
+
+    auto bc = make_shared<op::DynBroadcast>(arg, bc_shape, bc_axes);
+    ASSERT_TRUE(bc->get_output_partial_shape(0).is_dynamic());
+}
+
+
 TEST(type_prop, batchnorm_training_rank_less_than_2)
 {
     auto dummy = make_shared<op::Parameter>(element::f32, Shape{1});
