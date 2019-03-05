@@ -17,12 +17,15 @@
 #include "ngraph/pass/pass.hpp"
 #include "ngraph/pass/manager.hpp"
 
-ngraph::pass::ManagerState& ngraph::pass::PassBase::get_state()
+using namespace std;
+using namespace ngraph;
+
+pass::ManagerState& pass::PassBase::get_state()
 {
     return *m_state;
 }
 
-void ngraph::pass::PassBase::set_state(ManagerState& state)
+void pass::PassBase::set_state(ManagerState& state)
 {
     m_state = &state;
 }
