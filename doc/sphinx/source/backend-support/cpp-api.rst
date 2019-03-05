@@ -33,11 +33,12 @@ How to use?
    The execution interface for nGraph 
 
 
-The nGraph execution API for ``Executable`` objects is a simple, five-method interface; each backend implements the following five functions.
+The nGraph execution API for ``Executable`` objects is a simple, five-method 
+interface; each backend implements the following five functions:
 
 
 * The ``create_tensor()`` method allows the bridge to create tensor objects 
-  in host memory or an accelerator’s memory.
+  in host memory or an accelerator's memory.
 * The ``write()`` and ``read()`` methods are used to transfer raw data into 
   and out of tensors that reside in off-host memory.
 * The ``compile()`` method instructs the backend to prepare an nGraph function 
