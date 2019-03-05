@@ -59,11 +59,12 @@
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/pattern/matcher.hpp"
 
+using namespace std;
 using namespace ngraph;
 
-#define TI(x) std::type_index(typeid(x))
+#define TI(x) type_index(typeid(x))
 
-static bool cse_constant(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
+static bool cse_constant(shared_ptr<Node> a, shared_ptr<Node> b)
 {
     NGRAPH_DEBUG << "In cse_constant for " << a->get_name() << " and " << b->get_name();
 
@@ -72,44 +73,44 @@ static bool cse_constant(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
         return false;
     }
 
-    auto ca = std::static_pointer_cast<op::Constant>(a);
-    auto cb = std::static_pointer_cast<op::Constant>(b);
+    auto ca = static_pointer_cast<op::Constant>(a);
+    auto cb = static_pointer_cast<op::Constant>(b);
 
     size_t size = shape_size(a->get_shape()) * a->get_element_type().size();
 
     return !memcmp(ca->get_data_ptr(), cb->get_data_ptr(), size);
 }
 
-static bool cse_reshape(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
+static bool cse_reshape(shared_ptr<Node> a, shared_ptr<Node> b)
 {
     NGRAPH_DEBUG << "In cse_reshape for " << a->get_name() << " and " << b->get_name();
 
-    auto reshape_a = std::static_pointer_cast<ngraph::op::Reshape>(a);
-    auto reshape_b = std::static_pointer_cast<ngraph::op::Reshape>(b);
+    auto reshape_a = static_pointer_cast<ngraph::op::Reshape>(a);
+    auto reshape_b = static_pointer_cast<ngraph::op::Reshape>(b);
 
     return (a->get_argument(0) == b->get_argument(0)) &&
            (reshape_a->get_input_order() == reshape_b->get_input_order()) &&
            (reshape_a->get_output_shape() == reshape_b->get_output_shape());
 }
-static bool cse_broadcast(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
+static bool cse_broadcast(shared_ptr<Node> a, shared_ptr<Node> b)
 {
     NGRAPH_DEBUG << "In cse_broadcast for " << a->get_name() << " and " << b->get_name();
 
-    auto broadcast_a = std::static_pointer_cast<ngraph::op::Broadcast>(a);
-    auto broadcast_b = std::static_pointer_cast<ngraph::op::Broadcast>(b);
+    auto broadcast_a = static_pointer_cast<ngraph::op::Broadcast>(a);
+    auto broadcast_b = static_pointer_cast<ngraph::op::Broadcast>(b);
 
     return (a->get_argument(0) == b->get_argument(0)) &&
            (broadcast_a->get_broadcast_axes() == broadcast_b->get_broadcast_axes()) &&
            (broadcast_a->get_broadcast_shape() == broadcast_b->get_broadcast_shape());
 }
-static bool cse_unarywise(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
+static bool cse_unarywise(shared_ptr<Node> a, shared_ptr<Node> b)
 {
     NGRAPH_DEBUG << "In cse_unarywise for " << a->get_name() << " and " << b->get_name();
 
     return a->get_argument(0) == b->get_argument(0);
 }
 
-static bool cse_binarywise(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
+static bool cse_binarywise(shared_ptr<Node> a, shared_ptr<Node> b)
 {
     NGRAPH_DEBUG << "In cse_binary for " << a->get_name() << " and " << b->get_name();
 
@@ -117,23 +118,21 @@ static bool cse_binarywise(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
            (a->get_argument(1) == b->get_argument(0) && a->get_argument(0) == b->get_argument(1));
 }
 
-static bool cse_reduction(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
+static bool cse_reduction(shared_ptr<Node> a, shared_ptr<Node> b)
 {
     NGRAPH_DEBUG << "In cse_reduction for " << a->get_name() << " and " << b->get_name();
 
-    auto ar_a = std::static_pointer_cast<op::util::ArithmeticReduction>(a);
-    auto ar_b = std::static_pointer_cast<op::util::ArithmeticReduction>(b);
+    auto ar_a = static_pointer_cast<op::util::ArithmeticReduction>(a);
+    auto ar_b = static_pointer_cast<op::util::ArithmeticReduction>(b);
 
     return ar_a->get_argument(0) == ar_b->get_argument(0) &&
            ar_a->get_reduction_axes() == ar_b->get_reduction_axes();
 }
 
-static std::unordered_map<std::type_index,
-                          std::function<bool(std::shared_ptr<Node>, std::shared_ptr<Node>)>>
+static unordered_map<type_index, function<bool(shared_ptr<Node>, shared_ptr<Node>)>>
     initialize_ops_to_cse_handlers()
 {
-    return std::unordered_map<std::type_index,
-                              std::function<bool(std::shared_ptr<Node>, std::shared_ptr<Node>)>>(
+    return unordered_map<type_index, function<bool(shared_ptr<Node>, shared_ptr<Node>)>>(
         {{TI(op::Abs), cse_unarywise},
          {TI(op::Acos), cse_unarywise},
          {TI(op::Asin), cse_unarywise},
@@ -168,23 +167,21 @@ static std::unordered_map<std::type_index,
          {TI(op::Broadcast), cse_broadcast}});
 }
 
-static std::unordered_map<std::type_index,
-                          std::function<bool(std::shared_ptr<Node>, std::shared_ptr<Node>)>>
+static unordered_map<type_index, function<bool(shared_ptr<Node>, shared_ptr<Node>)>>
     ops_to_cse_handlers = initialize_ops_to_cse_handlers();
 
 class NodeKey
 {
 public:
-    NodeKey(std::shared_ptr<Node> n,
-            std::unordered_map<std::type_index,
-                               std::function<bool(std::shared_ptr<Node>, std::shared_ptr<Node>)>>&
+    NodeKey(shared_ptr<Node> n,
+            unordered_map<type_index, function<bool(shared_ptr<Node>, shared_ptr<Node>)>>&
                 backend_handlers)
         : m_node(n)
         , m_backend_handlers(backend_handlers)
     {
     }
 
-    std::shared_ptr<Node> get_node() const { return m_node; }
+    shared_ptr<Node> get_node() const { return m_node; }
     bool operator==(const NodeKey& other) const
     {
         Node& p_this = *m_node.get();
@@ -215,9 +212,8 @@ public:
     }
 
 private:
-    std::shared_ptr<Node> m_node;
-    std::unordered_map<std::type_index,
-                       std::function<bool(std::shared_ptr<Node>, std::shared_ptr<Node>)>>&
+    shared_ptr<Node> m_node;
+    unordered_map<type_index, function<bool(shared_ptr<Node>, shared_ptr<Node>)>>&
         m_backend_handlers;
 };
 
@@ -226,15 +222,15 @@ namespace std
     template <>
     struct hash<NodeKey>
     {
-        std::size_t operator()(const NodeKey& k) const
+        size_t operator()(const NodeKey& k) const
         {
             Node& p_this = *k.get_node().get();
             auto ti = TI(p_this);
 
-            std::hash<std::type_index> type_hash_compute{};
+            hash<type_index> type_hash_compute{};
             auto type_hash = type_hash_compute(ti);
 
-            std::vector<size_t> arg_ids;
+            vector<size_t> arg_ids;
 
             arg_ids.push_back(type_hash);
 
@@ -244,7 +240,7 @@ namespace std
             // specify how to compute hash for each op?
             if (p_this.is_commutative())
             {
-                std::sort(begin(cargs), end(cargs));
+                sort(begin(cargs), end(cargs));
             }
 
             for (auto arg : cargs)
@@ -258,11 +254,10 @@ namespace std
     };
 }
 
-bool ngraph::pass::CommonSubexpressionElimination::run_on_function(
-    std::shared_ptr<ngraph::Function> f)
+bool ngraph::pass::CommonSubexpressionElimination::run_on_function(shared_ptr<ngraph::Function> f)
 {
     bool replaced = false;
-    std::unordered_map<NodeKey, std::shared_ptr<Node>> expressions{};
+    unordered_map<NodeKey, shared_ptr<Node>> expressions{};
 
     for (auto n : f->get_ordered_ops())
     {
@@ -279,7 +274,7 @@ bool ngraph::pass::CommonSubexpressionElimination::run_on_function(
         }
         else
         {
-            expressions.insert(std::make_pair(n_key, n));
+            expressions.insert(make_pair(n_key, n));
         }
     }
 
