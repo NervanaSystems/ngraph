@@ -1,4 +1,4 @@
-# nGraph Compiler Stack (Beta)
+![](doc/sphinx/source/graphics/ngraph_logo_small.png) # nGraph Compiler Stack (Beta)
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/NervanaSystems/ngraph/blob/master/LICENSE) [![Build Status][build-status-badge]][build-status] 
 
