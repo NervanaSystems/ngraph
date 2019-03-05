@@ -38,8 +38,8 @@ seen performance boosts running workloads that are not included on the list of
 
 Additionally we have integrated nGraph with [PlaidML] to provide deep learning 
 performance acceleration on Intel, nVidia, & AMD GPUs. More details on current 
-architecture of nGraph stack can be found in [Architecture and features], and 
-recent changes to the stack are explained in [Release Notes].
+architecture of the nGraph Compiler stack can be found in [Architecture and features],
+and recent changes to the stack are explained in [Release Notes].
 
 ## What is nGraph Compiler? 
 
