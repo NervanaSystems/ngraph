@@ -30,6 +30,7 @@
 
 #include "ngraph/assertion.hpp"
 #include "ngraph/autodiff/adjoints.hpp"
+#include "ngraph/check.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/descriptor/tensor.hpp"
@@ -287,6 +288,17 @@ namespace ngraph
         }
     };
 
+    class NodeValidationFailure : public CheckFailure
+    {
+    public:
+        NodeValidationFailure(const CheckLocInfo& check_loc_info,
+                              const Node* node,
+                              const std::string& explanation)
+            : CheckFailure(check_loc_info, node_validation_assertion_string(node), explanation)
+        {
+        }
+    };
+
     class NodeDescription
     {
     public:
@@ -315,3 +327,6 @@ namespace ngraph
 #define NODE_VALIDATION_FAIL(node)                                                                 \
     NGRAPH_FAIL_STREAM_WITH_LOC(::ngraph::NodeValidationError,                                     \
                                 ::ngraph::node_validation_assertion_string(node))
+
+#define NODE_VALIDATION_CHECK(node, cond, ...)                                                     \
+    NGRAPH_CHECK(::NodeValidationFailure, (node), (cond), __VA_ARGS__)

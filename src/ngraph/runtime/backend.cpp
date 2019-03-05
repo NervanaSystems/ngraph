@@ -39,6 +39,14 @@ vector<string> runtime::Backend::get_registered_devices()
     return BackendManager::get_registered_backends();
 }
 
+std::shared_ptr<runtime::Executable>
+    runtime::Backend::compile(std::shared_ptr<Function> func,
+                              ngraph::pass::PassConfig& pass_config,
+                              bool enable_performance_data)
+{
+    return compile(func, enable_performance_data);
+}
+
 bool runtime::Backend::is_supported(const Node& node) const
 {
     // The default behavior is that a backend does not support any ops. If this is not the case
