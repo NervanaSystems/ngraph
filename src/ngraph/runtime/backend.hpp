@@ -19,8 +19,8 @@
 #include <memory>
 
 #include "ngraph/function.hpp"
-#include "ngraph/runtime/executable.hpp"
 #include "ngraph/pass/pass_config.hpp"
+#include "ngraph/runtime/executable.hpp"
 #include "ngraph/runtime/performance_counter.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
