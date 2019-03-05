@@ -449,10 +449,12 @@ namespace ngraph
                                                                   mkldnn_padding_above,
                                                                   padding_kind::zero));
                             }
-
-                            throw ngraph_error(
-                                "setting layouts on Convolution failed with MKLDNN error: " +
-                                e.message);
+                            else
+                            {
+                                throw ngraph_error(
+                                    "setting layouts on Convolution failed with MKLDNN error: " +
+                                    e.message);
+                            }
                         }
                     }
                     else
@@ -504,10 +506,12 @@ namespace ngraph
                                                                   mkldnn_padding_above,
                                                                   padding_kind::zero));
                             }
-
-                            throw ngraph_error(
-                                "setting layouts on Convolution failed with MKLDNN error: " +
-                                e.message);
+                            else
+                            {
+                                throw ngraph_error(
+                                    "setting layouts on Convolution failed with MKLDNN error: " +
+                                    e.message);
+                            }
                         }
                     }
                     convolution_forward::primitive_desc prim_desc(*fwd_desc, cpu_engine);
