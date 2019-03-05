@@ -223,26 +223,12 @@ namespace ngraph
     **/
     FpropCache cache_fprop(std::shared_ptr<Function> fprop, std::shared_ptr<Function> bprop);
 
-    // constant folding functions
-    enum class Backend
-    {
-        CPU,
-        GENERICCPU,
-        GPU,
-        INTELGPU,
-        ANY
-    };
-    using CFFunctionTy =
+    // node executor
+    using NodeExecutorTy =
         std::function<void(const std::vector<void*> inputs, std::vector<void*> outputs)>;
-    using BuildCFFunction = std::function<CFFunctionTy(const ngraph::Node*)>;
+    using BuildNodeExecutor = std::function<NodeExecutorTy(const ngraph::Node*)>;
 
-    using BuildCFMap = std::unordered_map<std::type_index, BuildCFFunction>;
-
-    // build the map to use cpu kernel for constant folding
-    BuildCFMap& GetGlobalCFDispatcherCPU();
-
-    // default, other backends could add their own map
-    BuildCFMap& GetGlobalCFDispatcher();
+    using BuildNodeExecutorMap = std::unordered_map<std::type_index, BuildNodeExecutor>;
 
     enum class CPUTensorRole
     {

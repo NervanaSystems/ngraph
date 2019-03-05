@@ -370,55 +370,55 @@ namespace ngraph
             }
 
             template <>
-            CFFunctionTy Builder::BUILDER_CF_DECL(ngraph::op::Add)
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Add)
             {
                 BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::add);
             }
 
             template <>
-            CFFunctionTy Builder::BUILDER_CF_DECL(ngraph::op::Subtract)
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Subtract)
             {
                 BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::subtract);
             }
 
             template <>
-            CFFunctionTy Builder::BUILDER_CF_DECL(ngraph::op::Multiply)
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Multiply)
             {
                 BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::multiply);
             }
 
             template <>
-            CFFunctionTy Builder::BUILDER_CF_DECL(ngraph::op::Divide)
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Divide)
             {
                 BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::divide);
             }
 
             template <>
-            CFFunctionTy Builder::BUILDER_CF_DECL(ngraph::op::Minimum)
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Minimum)
             {
                 BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::minimum);
             }
 
             template <>
-            CFFunctionTy Builder::BUILDER_CF_DECL(ngraph::op::Maximum)
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Maximum)
             {
                 BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::maximum);
             }
 
             template <>
-            CFFunctionTy Builder::BUILDER_CF_DECL(ngraph::op::Abs)
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Abs)
             {
                 BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::abs);
             }
 
             template <>
-            CFFunctionTy Builder::BUILDER_CF_DECL(ngraph::op::Negative)
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Negative)
             {
                 BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::negative);
             }
 
             template <>
-            CFFunctionTy Builder::BUILDER_CF_DECL(ngraph::op::Relu)
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Relu)
             {
                 BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::abs);
             }
@@ -435,6 +435,12 @@ namespace ngraph
                      &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::HalideOp>}};
 
                 return build_dispatcher;
+            }
+
+            BuildNodeExecutorMap& GetGlobalCFDispatcherCPU()
+            {
+                static BuildNodeExecutorMap build_cf_dispatcher_cpu{};
+                return build_cf_dispatcher_cpu;
             }
 
             REGISTER_OP_BUILDER(Constant);

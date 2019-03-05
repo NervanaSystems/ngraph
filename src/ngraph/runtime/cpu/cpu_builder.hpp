@@ -318,6 +318,9 @@ namespace ngraph
 
             BuildOpMap& GetGlobalBuildDispatcher();
 
+            // build the map to use cpu kernel for node execution
+            BuildNodeExecutorMap& GetGlobalCFDispatcherCPU();
+
             class Builder
             {
             public:
@@ -332,7 +335,7 @@ namespace ngraph
                 }
 
                 template <typename OP>
-                static CFFunctionTy CFbuild(const ngraph::Node* node)
+                static NodeExecutorTy CFbuild(const ngraph::Node* node)
                 {
                     throw unsupported_op("Unimplemented op '" + node->description() +
                                          "' for constant folding in CPU builder");

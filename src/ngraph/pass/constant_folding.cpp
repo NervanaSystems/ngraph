@@ -57,27 +57,23 @@ using namespace ngraph;
 template <class T>
 shared_ptr<op::Constant> make_constant_reshape(shared_ptr<op::Constant> constant,
                                                shared_ptr<op::Reshape> reshape,
-                                               ngraph::BuildCFMap& m_cfmap)
+                                               NodeExecutorTy func)
 {
     auto out_shape = reshape->get_shape();
     vector<T> out_vec(shape_size(out_shape));
 
-    auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Reshape)));
-    if (handler != m_cfmap.end())
+    if (func != nullptr)
     {
-        vector<T> in_vec = constant->get_vector<T>();
-
         vector<void*> inputs;
-        inputs.push_back(in_vec.data());
+        inputs.push_back(const_cast<void*>(constant->get_data_ptr()));
         vector<void*> outputs;
         outputs.push_back(out_vec.data());
 
-        auto func = handler->second(reshape.get());
         func(inputs, outputs);
     }
     else
     {
-        runtime::reference::reshape<T>(constant->get_vector<T>().data(),
+        runtime::reference::reshape<T>(constant->get_data_ptr<T>(),
                                        out_vec.data(),
                                        constant->get_shape(),
                                        reshape->get_input_order(),
@@ -90,31 +86,27 @@ shared_ptr<op::Constant> make_constant_reshape(shared_ptr<op::Constant> constant
 template <class T>
 shared_ptr<op::Constant> make_constant_pad(shared_ptr<op::Constant> constant,
                                            shared_ptr<op::Pad> pad,
-                                           ngraph::BuildCFMap& m_cfmap)
+                                           NodeExecutorTy func)
 {
     auto out_shape = pad->get_shape();
     vector<T> out_vec(shape_size(out_shape));
     auto pad_value = std::static_pointer_cast<op::Constant>(pad->get_argument(1));
 
-    auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Pad)));
-    if (handler != m_cfmap.end())
+    if (func != nullptr)
     {
-        vector<T> in_vec1 = constant->get_vector<T>();
-        vector<T> in_vec2 = pad_value->get_vector<T>();
-
         vector<void*> inputs;
-        inputs.push_back(in_vec1.data());
-        inputs.push_back(in_vec2.data());
+        inputs.push_back(const_cast<void*>(constant->get_data_ptr()));
+        inputs.push_back(const_cast<void*>(pad_value->get_data_ptr()));
+
         vector<void*> outputs;
         outputs.push_back(out_vec.data());
 
-        auto func = handler->second(pad.get());
         func(inputs, outputs);
     }
     else
     {
-        runtime::reference::pad<T>(constant->get_vector<T>().data(),
-                                   pad_value->get_vector<T>().data(),
+        runtime::reference::pad<T>(constant->get_data_ptr<T>(),
+                                   pad_value->get_data_ptr<T>(),
                                    out_vec.data(),
                                    constant->get_shape(),
                                    out_shape,
@@ -149,29 +141,37 @@ void ngraph::pass::ConstantFolding::construct_constant_pad()
         auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
         auto pad_match = static_pointer_cast<op::Pad>(m.get_match_root());
 
+        NodeExecutorTy func = nullptr;
+        if (!m_cfmap.empty())
+        {
+            auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Pad)));
+            NGRAPH_ASSERT(handler != m_cfmap.end()) << "constant folding map should have pad entry";
+            func = handler->second(pad_match.get());
+        }
+
         auto type = constant_match->get_element_type();
         if (type == element::i32)
         {
             replace_node(m.get_match_root(),
-                         make_constant_pad<int>(constant_match, pad_match, m_cfmap));
+                         make_constant_pad<int>(constant_match, pad_match, func));
             return true;
         }
         else if (type == element::i8)
         {
             replace_node(m.get_match_root(),
-                         make_constant_pad<int8_t>(constant_match, pad_match, m_cfmap));
+                         make_constant_pad<int8_t>(constant_match, pad_match, func));
             return true;
         }
         else if (type == element::f32)
         {
             replace_node(m.get_match_root(),
-                         make_constant_pad<float>(constant_match, pad_match, m_cfmap));
+                         make_constant_pad<float>(constant_match, pad_match, func));
             return true;
         }
         else if (type == element::f64)
         {
             replace_node(m.get_match_root(),
-                         make_constant_pad<double>(constant_match, pad_match, m_cfmap));
+                         make_constant_pad<double>(constant_match, pad_match, func));
             return true;
         }
 
@@ -198,29 +198,38 @@ void ngraph::pass::ConstantFolding::construct_constant_reshape()
         auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
         auto reshape_match = static_pointer_cast<op::Reshape>(m.get_match_root());
 
+        NodeExecutorTy func = nullptr;
+        if (!m_cfmap.empty())
+        {
+            auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Reshape)));
+            NGRAPH_ASSERT(handler != m_cfmap.end())
+                << "constant folding map should have reshape entry";
+            func = handler->second(reshape_match.get());
+        }
+
         auto type = constant_match->get_element_type();
         if (type == element::i32)
         {
             replace_node(m.get_match_root(),
-                         make_constant_reshape<int>(constant_match, reshape_match, m_cfmap));
+                         make_constant_reshape<int>(constant_match, reshape_match, func));
             return true;
         }
         else if (type == element::i8)
         {
             replace_node(m.get_match_root(),
-                         make_constant_reshape<int8_t>(constant_match, reshape_match, m_cfmap));
+                         make_constant_reshape<int8_t>(constant_match, reshape_match, func));
             return true;
         }
         else if (type == element::f32)
         {
             replace_node(m.get_match_root(),
-                         make_constant_reshape<float>(constant_match, reshape_match, m_cfmap));
+                         make_constant_reshape<float>(constant_match, reshape_match, func));
             return true;
         }
         else if (type == element::f64)
         {
             replace_node(m.get_match_root(),
-                         make_constant_reshape<double>(constant_match, reshape_match, m_cfmap));
+                         make_constant_reshape<double>(constant_match, reshape_match, func));
             return true;
         }
 
@@ -235,27 +244,23 @@ void ngraph::pass::ConstantFolding::construct_constant_reshape()
 template <class T>
 shared_ptr<op::Constant> make_constant_broadcast(shared_ptr<op::Constant> constant,
                                                  shared_ptr<op::Broadcast> broadcast,
-                                                 ngraph::BuildCFMap& m_cfmap)
+                                                 NodeExecutorTy func)
 {
     auto out_shape = broadcast->get_shape();
     vector<T> out_vec(shape_size(out_shape));
 
-    auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Broadcast)));
-    if (handler != m_cfmap.end())
+    if (func != nullptr)
     {
-        vector<T> in_vec = constant->get_vector<T>();
-
         vector<void*> inputs;
-        inputs.push_back(in_vec.data());
+        inputs.push_back(const_cast<void*>(constant->get_data_ptr()));
         vector<void*> outputs;
         outputs.push_back(out_vec.data());
 
-        auto func = handler->second(broadcast.get());
         func(inputs, outputs);
     }
     else
     {
-        runtime::reference::broadcast<T>(constant->get_vector<T>().data(),
+        runtime::reference::broadcast<T>(constant->get_data_ptr<T>(),
                                          out_vec.data(),
                                          constant->get_shape(),
                                          out_shape,
@@ -281,29 +286,38 @@ void ngraph::pass::ConstantFolding::construct_constant_broadcast()
         auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
         auto broadcast_match = static_pointer_cast<op::Broadcast>(m.get_match_root());
 
+        NodeExecutorTy func = nullptr;
+        if (!m_cfmap.empty())
+        {
+            auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Broadcast)));
+            NGRAPH_ASSERT(handler != m_cfmap.end())
+                << "constant folding map should have broadcast entry";
+            func = handler->second(broadcast_match.get());
+        }
+
         auto type = constant_match->get_element_type();
         if (type == element::i32)
         {
             replace_node(m.get_match_root(),
-                         make_constant_broadcast<int>(constant_match, broadcast_match, m_cfmap));
+                         make_constant_broadcast<int>(constant_match, broadcast_match, func));
             return true;
         }
         else if (type == element::i8)
         {
             replace_node(m.get_match_root(),
-                         make_constant_broadcast<int8_t>(constant_match, broadcast_match, m_cfmap));
+                         make_constant_broadcast<int8_t>(constant_match, broadcast_match, func));
             return true;
         }
         else if (type == element::f32)
         {
             replace_node(m.get_match_root(),
-                         make_constant_broadcast<float>(constant_match, broadcast_match, m_cfmap));
+                         make_constant_broadcast<float>(constant_match, broadcast_match, func));
             return true;
         }
         else if (type == element::f64)
         {
             replace_node(m.get_match_root(),
-                         make_constant_broadcast<double>(constant_match, broadcast_match, m_cfmap));
+                         make_constant_broadcast<double>(constant_match, broadcast_match, func));
             return true;
         }
 
@@ -319,101 +333,110 @@ template <class T>
 shared_ptr<op::Constant> make_constant_binary(shared_ptr<op::Constant> a,
                                               shared_ptr<op::Constant> b,
                                               shared_ptr<Node> binary,
-                                              ngraph::BuildCFMap& m_cfmap)
+                                              ngraph::BuildNodeExecutorMap& m_cfmap)
 {
     auto out_shape = binary->get_shape();
     vector<T> out_vec(shape_size(out_shape));
-    vector<T> in_vec1 = a->get_vector<T>();
-    vector<T> in_vec2 = b->get_vector<T>();
 
     vector<void*> inputs;
-    inputs.push_back(in_vec1.data());
-    inputs.push_back(in_vec2.data());
+    inputs.push_back(const_cast<void*>(a->get_data_ptr()));
+    inputs.push_back(const_cast<void*>(b->get_data_ptr()));
     vector<void*> outputs;
     outputs.push_back(out_vec.data());
 
     if (std::dynamic_pointer_cast<op::Add>(binary))
     {
-        auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Add)));
-        if (handler != m_cfmap.end())
+        if (!m_cfmap.empty())
         {
+            auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Add)));
+            NGRAPH_ASSERT(handler != m_cfmap.end()) << "constant folding map should have add entry";
             auto func = handler->second(binary.get());
             func(inputs, outputs);
         }
         else
         {
             runtime::reference::add<T>(
-                in_vec1.data(), in_vec2.data(), out_vec.data(), shape_size(out_shape));
+                a->get_data_ptr<T>(), b->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
     }
     else if (std::dynamic_pointer_cast<op::Subtract>(binary))
     {
-        auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Subtract)));
-        if (handler != m_cfmap.end())
+        if (!m_cfmap.empty())
         {
+            auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Subtract)));
+            NGRAPH_ASSERT(handler != m_cfmap.end())
+                << "constant folding map should have subtract entry";
             auto func = handler->second(binary.get());
             func(inputs, outputs);
         }
         else
         {
             runtime::reference::subtract<T>(
-                in_vec1.data(), in_vec2.data(), out_vec.data(), shape_size(out_shape));
+                a->get_data_ptr<T>(), b->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
     }
     else if (std::dynamic_pointer_cast<op::Multiply>(binary))
     {
-        auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Multiply)));
-        if (handler != m_cfmap.end())
+        if (!m_cfmap.empty())
         {
+            auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Multiply)));
+            NGRAPH_ASSERT(handler != m_cfmap.end())
+                << "constant folding map should have multiply entry";
             auto func = handler->second(binary.get());
             func(inputs, outputs);
         }
         else
         {
             runtime::reference::multiply<T>(
-                in_vec1.data(), in_vec2.data(), out_vec.data(), shape_size(out_shape));
+                a->get_data_ptr<T>(), b->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
     }
     else if (std::dynamic_pointer_cast<op::Divide>(binary))
     {
-        auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Divide)));
-        if (handler != m_cfmap.end())
+        if (!m_cfmap.empty())
         {
+            auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Divide)));
+            NGRAPH_ASSERT(handler != m_cfmap.end())
+                << "constant folding map should have divide entry";
             auto func = handler->second(binary.get());
             func(inputs, outputs);
         }
         else
         {
             runtime::reference::divide<T>(
-                in_vec1.data(), in_vec2.data(), out_vec.data(), shape_size(out_shape));
+                a->get_data_ptr<T>(), b->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
     }
     else if (std::dynamic_pointer_cast<op::Minimum>(binary))
     {
-        auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Minimum)));
-        if (handler != m_cfmap.end())
+        if (!m_cfmap.empty())
         {
+            auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Minimum)));
+            NGRAPH_ASSERT(handler != m_cfmap.end())
+                << "constant folding map should have minimum entry";
             auto func = handler->second(binary.get());
             func(inputs, outputs);
         }
         else
         {
             runtime::reference::minimum<T>(
-                in_vec1.data(), in_vec2.data(), out_vec.data(), shape_size(out_shape));
+                a->get_data_ptr<T>(), b->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
     }
     else if (std::dynamic_pointer_cast<op::Maximum>(binary))
     {
-        auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Maximum)));
-        if (handler != m_cfmap.end())
+        if (!m_cfmap.empty())
         {
+            auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Maximum)));
+            NGRAPH_ASSERT(handler != m_cfmap.end())
+                << "constant folding map should have maximum entry";
             auto func = handler->second(binary.get());
             func(inputs, outputs);
         }
         else
         {
             runtime::reference::maximum<T>(
-                in_vec1.data(), in_vec2.data(), out_vec.data(), shape_size(out_shape));
+                a->get_data_ptr<T>(), b->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
     }
     else
@@ -500,54 +523,61 @@ bool is_supported_unary_op(std::shared_ptr<Node> n)
 template <class T>
 shared_ptr<op::Constant> make_constant_unary(shared_ptr<op::Constant> constant,
                                              shared_ptr<Node> unary,
-                                             ngraph::BuildCFMap& m_cfmap)
+                                             ngraph::BuildNodeExecutorMap& m_cfmap)
 {
     auto out_shape = unary->get_shape();
     vector<T> out_vec(shape_size(out_shape));
-    vector<T> in_vec = constant->get_vector<T>();
 
     vector<void*> inputs;
-    inputs.push_back(in_vec.data());
+    inputs.push_back(const_cast<void*>(constant->get_data_ptr()));
     vector<void*> outputs;
     outputs.push_back(out_vec.data());
 
     if (std::dynamic_pointer_cast<op::Abs>(unary))
     {
-        auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Abs)));
-        if (handler != m_cfmap.end())
+        if (!m_cfmap.empty())
         {
+            auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Abs)));
+            NGRAPH_ASSERT(handler != m_cfmap.end()) << "constant folding map should have abs entry";
             auto func = handler->second(unary.get());
             func(inputs, outputs);
         }
         else
         {
-            runtime::reference::abs<T>(in_vec.data(), out_vec.data(), shape_size(out_shape));
+            runtime::reference::abs<T>(
+                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
     }
     else if (std::dynamic_pointer_cast<op::Negative>(unary))
     {
-        auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Negative)));
-        if (handler != m_cfmap.end())
+        if (!m_cfmap.empty())
         {
+            auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Negative)));
+            NGRAPH_ASSERT(handler != m_cfmap.end())
+                << "constant folding map should have negative entry";
             auto func = handler->second(unary.get());
             func(inputs, outputs);
         }
         else
         {
-            runtime::reference::negate<T>(in_vec.data(), out_vec.data(), shape_size(out_shape));
+            runtime::reference::negate<T>(
+                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
     }
     else if (std::dynamic_pointer_cast<op::Relu>(unary))
     {
-        auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Relu)));
-        if (handler != m_cfmap.end())
+        if (!m_cfmap.empty())
         {
+            auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Relu)));
+            NGRAPH_ASSERT(handler != m_cfmap.end())
+                << "constant folding map should have relu entry";
             auto func = handler->second(unary.get());
             func(inputs, outputs);
         }
         else
         {
-            runtime::reference::relu<T>(in_vec.data(), out_vec.data(), shape_size(out_shape));
+            runtime::reference::relu<T>(
+                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
     }
     else

@@ -41,18 +41,10 @@ public:
         QUANTIZE
     };
 
-    ConstantFolding(ngraph::Backend backend = ngraph::Backend::ANY)
+    ConstantFolding(const ngraph::BuildNodeExecutorMap& cfmap = ngraph::BuildNodeExecutorMap())
         : GraphRewrite()
     {
-        switch (backend)
-        {
-        // non-cpu backends could use its own kernel or cpu kernel for constant folding
-        case (ngraph::Backend::CPU):
-            m_cfmap = GetGlobalCFDispatcherCPU();
-            break;
-        // default to use reference kernel
-        default: break;
-        }
+        m_cfmap = cfmap;
         construct_constant_reshape();
         construct_constant_broadcast();
         construct_constant_pad();
@@ -65,18 +57,10 @@ public:
     //this allows to specify the order in which matchers will be run
     //and also allows to register the same matcher more than once
     ConstantFolding(const std::vector<CFTransformations>& transformations,
-                    ngraph::Backend backend = ngraph::Backend::ANY)
+                    const ngraph::BuildNodeExecutorMap& cfmap = ngraph::BuildNodeExecutorMap())
         : GraphRewrite()
     {
-        switch (backend)
-        {
-        // non-cpu backends could use its own kernel or cpu kernel for constant folding
-        case (ngraph::Backend::CPU):
-            m_cfmap = GetGlobalCFDispatcherCPU();
-            break;
-        // default to use reference kernel
-        default: break;
-        }
+        m_cfmap = cfmap;
         for (auto cft : transformations)
         {
             switch (cft)
@@ -101,6 +85,5 @@ private:
     void construct_constant_quantize();
     void construct_constant_dequantize();
 
-    ngraph::BuildCFMap& m_cfmap = GetGlobalCFDispatcher();
-    ;
+    ngraph::BuildNodeExecutorMap m_cfmap;
 };

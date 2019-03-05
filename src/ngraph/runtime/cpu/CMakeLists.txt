@@ -38,7 +38,6 @@ set(SRC
     builder/argmax.cpp
     builder/batch_norm.cpp
     builder/broadcast.cpp
-    builder/broadcast_const_folding.cpp
     builder/bounded_relu.cpp
     builder/concat.cpp
     builder/convert.cpp
@@ -58,7 +57,6 @@ set(SRC
     builder/one_hot.cpp
     builder/relu.cpp
     builder/pad.cpp
-    builder/pad_const_folding.cpp
     builder/product.cpp
     builder/reduce_function.cpp
     builder/replace_slice.cpp
@@ -67,7 +65,6 @@ set(SRC
     builder/quantized_conv.cpp
     builder/quantized_max_pool.cpp
     builder/reshape.cpp
-    builder/reshape_const_folding.cpp
     builder/reverse.cpp
     builder/reverse_sequence.cpp
     builder/rnn.cpp
