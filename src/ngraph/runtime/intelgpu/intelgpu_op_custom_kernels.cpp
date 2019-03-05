@@ -1385,6 +1385,7 @@ void runtime::intelgpu::do_eltwise_kernel(cldnn::topology& topology,
 void runtime::intelgpu::do_reverse_operation(cldnn::topology& topology,
                                              const string& input_name,
                                              const Shape& input_shape,
+                                             const element::Type& input_type,
                                              const string& output_name,
                                              const Shape& output_shape,
                                              const element::Type& output_type,
@@ -1395,7 +1396,12 @@ void runtime::intelgpu::do_reverse_operation(cldnn::topology& topology,
     CodeWriter writer;
     vector<size_t> gws;
 
-    gen_func_def(writer, entry_point_name, {"float"}, {input_shape}, "float", output_shape);
+    gen_func_def(writer,
+                 entry_point_name,
+                 {get_opencl_type_name(input_type)},
+                 {input_shape},
+                 get_opencl_type_name(output_type),
+                 output_shape);
 
     writer.block_begin();
     {
@@ -1417,6 +1423,100 @@ void runtime::intelgpu::do_reverse_operation(cldnn::topology& topology,
                                                  layout,
                                                  gws);
     topology.add(op_reverse);
+}
+
+void runtime::intelgpu::do_reverse_sequence_operation(cldnn::topology& topology,
+                                                      const string& input0_name,
+                                                      const Shape& input0_shape,
+                                                      const element::Type& input0_type,
+                                                      const string& input1_name,
+                                                      const Shape& input1_shape,
+                                                      const element::Type& input1_type,
+                                                      const string& output_name,
+                                                      const Shape& output_shape,
+                                                      const element::Type& output_type,
+                                                      const size_t reversed_axis,
+                                                      const size_t batch_axis)
+{
+    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const string entry_point_name = "reverse_sequence_" + output_name;
+    CodeWriter writer;
+    vector<size_t> gws;
+
+    gen_func_def(writer,
+                 entry_point_name,
+                 {get_opencl_type_name(input0_type), get_opencl_type_name(input1_type)},
+                 {input0_shape, input1_shape},
+                 get_opencl_type_name(output_type),
+                 output_shape);
+
+    writer.block_begin();
+    {
+        writer << "//reversed_axis:" << reversed_axis << "\n";
+        writer << "//batch_axis:" << batch_axis << "\n\n";
+
+        gws = generate_loops(writer, output_shape, true);
+
+        writer << get_opencl_type_name(input1_type) << " orig_seq_index = "
+               << "input1[i" << batch_axis << "];\n";
+        writer << "if (orig_seq_index == 0)\n";
+        writer.block_begin();
+        {
+            writer << "orig_seq_index = 1;\n";
+        }
+        writer.block_end();
+
+        writer << get_opencl_type_name(input1_type) << " sequence_index;\n";
+        writer << "if (i" << reversed_axis << " < orig_seq_index)\n";
+        writer.block_begin();
+        {
+            writer << "sequence_index = orig_seq_index - i" << reversed_axis << " - 1;\n";
+        }
+        writer.block_end();
+        writer << "else\n";
+        writer.block_begin();
+        {
+            writer << "sequence_index = i" << reversed_axis << ";\n";
+        }
+        writer.block_end();
+
+        writer << "output" << access_dims(output_shape) << " = input0";
+
+        if (output_shape.empty())
+        {
+            writer << "[0]";
+        }
+        else
+        {
+            size_t var_idx = 0;
+            for (auto const& i : output_shape)
+            {
+                if (var_idx == reversed_axis)
+                {
+                    writer << "[sequence_index]";
+                }
+                else
+                {
+                    writer << "[i" << var_idx << "]";
+                }
+                ++var_idx;
+            }
+        }
+        writer << ";\n";
+
+        generate_loops(writer, output_shape, false);
+    }
+    writer.block_end();
+
+    const cldnn::custom_gpu_primitive op_reverse_seq(output_name,
+                                                     {input0_name, input1_name},
+                                                     {writer.get_code()},
+                                                     entry_point_name,
+                                                     get_kernel_args(2, 1),
+                                                     "",
+                                                     layout,
+                                                     gws);
+    topology.add(op_reverse_seq);
 }
 
 void runtime::intelgpu::do_not_operation(cldnn::topology& topology,
