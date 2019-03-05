@@ -12,7 +12,6 @@ deep learning frameworks and backends currently are functioning.
 
 ![](doc/sphinx/source/graphics/arch_simple_pad.png)
 
-
 #### Bridge
 
 Starting from the top of the stack, nGraph receives a computational graph
