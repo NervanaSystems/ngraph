@@ -34,12 +34,9 @@ Frameworks using nGraph Compiler stack to execute workloads have shown
 [**up to 45X**](https://ai.intel.com/ngraph-compiler-stack-beta-release/) 
 performance boost when compared to native framework implementations. We've also 
 seen performance boosts running workloads that are not included on the list of 
-[Validated workloads], thanks to our powerful subgraph pattern matching.
+[Validated workloads], thanks to nGraph's powerful subgraph pattern matching.
 
-Additional work is also being done via [PlaidML] which will feature running 
-compute for Deep Learning with GPU accleration. See our 
-[Architecture and features] for what the stack looks like today and watch our 
-[Release Notes] for recent changes.
+Additionally we have integrated nGraph with [PlaidML] to provide deep learning performance acceleration on Intel, nVidia, & AMD GPUs. More details on current architecture of nGraph stack can be found in [Architecture and features], and recent changes to the stack are explained in [Release Notes].
 
 
 ## What is nGraph Compiler? 
@@ -49,8 +46,8 @@ using any deep learning framework with a variety of hardware targets.
 We strongly believe in providing freedom, performance, and ease-of-use to AI 
 developers. 
 
-The diagram below shows what deep learning frameworks and hardware targets
-we support. NNP-L (Neural Network Processor for Learning) & NNP-I 
+The diagram below shows deep learning frameworks and hardware targets
+supported by nGraph. NNP-L (Neural Network Processor for Learning) & NNP-I 
 (Neural Network Processor for Inference) refer to Intel's next generation deep 
 learning accelators for training and inference respectively. More details on 
 these current and future plans are in the [ecosystem] section. 
@@ -60,10 +57,10 @@ these current and future plans are in the [ecosystem] section.
 
 
 While the ecosystem shown above is all functioning, we have validated 
-performance for deep learning inference on CPU processors such as Intel® Xeon®. 
-Please refer to the [Release notes] to learn more. The Gold release 
-is targeted for June 2019; it will feature broader workload coverage 
-including quantized graphs (int8) and will implement support for dynamic shapes. 
+performance for deep learning inference on CPU processors such as Intel® Xeon® 
+for the Beta release of nGraph. The Gold release is targeted for June 2019; it 
+will feature broader workload coverage including quantized graphs (int8) and 
+will implement support for dynamic shapes. 
 
 Our documentation has extensive information about how to use nGraph Compiler 
 stack to create an nGraph computational graph, integrate custom frameworks, 
