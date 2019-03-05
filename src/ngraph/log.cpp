@@ -87,6 +87,7 @@ std::string ngraph::get_timestamp()
     char buffer[256];
     buffer[0] = 0;
     std::tm* bt = std::localtime(&timer);
+
     if (bt)
     {
         strftime(buffer, sizeof(buffer), "%H:%M:%S", bt);
