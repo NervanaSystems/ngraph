@@ -39,29 +39,26 @@
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/util.hpp"
 
+using namespace std;
 using namespace ngraph;
 
-#define TI(x) std::type_index(typeid(x))
+#define TI(x) type_index(typeid(x))
 
-extern template ngraph::Shape ngraph::apply_permutation<ngraph::Shape>(ngraph::Shape input,
-                                                                       ngraph::AxisVector order);
+extern template Shape ngraph::apply_permutation<Shape>(Shape input, AxisVector order);
 template <typename T>
-static std::shared_ptr<pattern::Matcher>
-    create_binary_matcher(std::shared_ptr<pattern::op::Label> label,
-                          std::shared_ptr<pattern::op::Label> const_label)
+static shared_ptr<pattern::Matcher>
+    create_binary_matcher(shared_ptr<pattern::op::Label> label,
+                          shared_ptr<pattern::op::Label> const_label)
 {
-    auto bcst =
-        std::make_shared<pattern::op::Skip>(const_label, pattern::has_class<op::Broadcast>());
-    auto bcst_label = std::make_shared<pattern::op::Label>(bcst, nullptr, NodeVector{bcst});
-    auto matcher =
-        std::make_shared<pattern::Matcher>(std::make_shared<T>(label, bcst_label), nullptr);
+    auto bcst = make_shared<pattern::op::Skip>(const_label, pattern::has_class<op::Broadcast>());
+    auto bcst_label = make_shared<pattern::op::Label>(bcst, nullptr, NodeVector{bcst});
+    auto matcher = make_shared<pattern::Matcher>(make_shared<T>(label, bcst_label), nullptr);
     return matcher;
 }
 
-static std::shared_ptr<pattern::op::Label>
-    get_broadcast_label(std::shared_ptr<pattern::Matcher> matcher)
+static shared_ptr<pattern::op::Label> get_broadcast_label(shared_ptr<pattern::Matcher> matcher)
 {
-    return std::dynamic_pointer_cast<pattern::op::Label>(matcher->get_pattern()->get_argument(1));
+    return dynamic_pointer_cast<pattern::op::Label>(matcher->get_pattern()->get_argument(1));
 }
 
 //`simplify_concat` identifies slices-concat sequences
@@ -75,23 +72,21 @@ static std::shared_ptr<pattern::op::Label>
 // +-------+  |    +----------+    |  +-----------+
 //            +----+slice(0..n/2)---+
 //                 +----------+
-static bool simplify_concat(std::shared_ptr<Node> n)
+static bool simplify_concat(shared_ptr<Node> n)
 {
     NGRAPH_DEBUG << "In simplify_concat for " << n->get_name();
 
-    std::shared_ptr<Node> branch_tip;
+    shared_ptr<Node> branch_tip;
 
-    auto ltip = std::make_shared<pattern::op::Label>(element::i32, Shape{2, 1});
+    auto ltip = make_shared<pattern::op::Label>(element::i32, Shape{2, 1});
 
-    auto pslice =
-        std::make_shared<op::Slice>(ltip, Coordinate{0, 0}, Coordinate{2, 1}, Strides{1, 1});
+    auto pslice = make_shared<op::Slice>(ltip, Coordinate{0, 0}, Coordinate{2, 1}, Strides{1, 1});
 
-    auto lslice = std::make_shared<pattern::op::Label>(pslice, nullptr, NodeVector{pslice});
+    auto lslice = make_shared<pattern::op::Label>(pslice, nullptr, NodeVector{pslice});
 
-    auto skip_reshape =
-        std::make_shared<pattern::op::Skip>(lslice, pattern::has_class<op::Reshape>());
+    auto skip_reshape = make_shared<pattern::op::Skip>(lslice, pattern::has_class<op::Reshape>());
 
-    auto matcher = std::make_shared<pattern::Matcher>(skip_reshape, nullptr);
+    auto matcher = make_shared<pattern::Matcher>(skip_reshape, nullptr);
 
     Coordinate prev_lower_bounds;
     Shape prev_slice_shape;
@@ -104,7 +99,7 @@ static bool simplify_concat(std::shared_ptr<Node> n)
             return false;
         }
 
-        auto slice = std::static_pointer_cast<op::Slice>(matcher->get_pattern_map()[lslice]);
+        auto slice = static_pointer_cast<op::Slice>(matcher->get_pattern_map()[lslice]);
         if (branch_tip)
         {
             if (branch_tip != matcher->get_pattern_map()[ltip])
@@ -153,9 +148,9 @@ static bool simplify_concat(std::shared_ptr<Node> n)
         }
 
         //check that no other node uses slices and reshapes
-        if (auto rcarg = std::dynamic_pointer_cast<op::Reshape>(carg))
+        if (auto rcarg = dynamic_pointer_cast<op::Reshape>(carg))
         {
-            auto default_shape = ngraph::get_default_order(rcarg->get_argument(0)->get_shape());
+            auto default_shape = get_default_order(rcarg->get_argument(0)->get_shape());
             if (default_shape != rcarg->get_input_order())
             {
                 NGRAPH_DEBUG << carg->get_name() << " reshape also does transposes";
@@ -170,11 +165,11 @@ static bool simplify_concat(std::shared_ptr<Node> n)
         }
     }
 
-    auto concat = std::static_pointer_cast<op::Concat>(n);
+    auto concat = static_pointer_cast<op::Concat>(n);
     size_t concat_axis = concat->get_concatenation_axis();
 
     auto slice_shape = branch_tip->get_users(true).at(0)->get_shape();
-    size_t slice_axis = std::numeric_limits<size_t>::max();
+    size_t slice_axis = numeric_limits<size_t>::max();
 
     auto btip_shape = branch_tip->get_shape();
 
@@ -191,7 +186,7 @@ static bool simplify_concat(std::shared_ptr<Node> n)
     {
         if (btip_shape[i] != slice_shape[i])
         {
-            if (slice_axis != std::numeric_limits<size_t>::max())
+            if (slice_axis != numeric_limits<size_t>::max())
             {
                 // multi-axis slice + concat do not cancel
                 return false;
@@ -200,19 +195,18 @@ static bool simplify_concat(std::shared_ptr<Node> n)
         }
     }
 
-    if (slice_axis == std::numeric_limits<size_t>::max())
+    if (slice_axis == numeric_limits<size_t>::max())
     {
         return false;
     }
     auto replacement = branch_tip;
     if (btip_shape != n->get_shape())
     {
-        auto default_order = ngraph::get_default_order(btip_shape);
+        auto default_order = get_default_order(btip_shape);
         if (concat_axis == slice_axis)
         {
             // logical reshape only
-            replacement =
-                std::make_shared<op::Reshape>(branch_tip, default_order, concat->get_shape());
+            replacement = make_shared<op::Reshape>(branch_tip, default_order, concat->get_shape());
         }
         else
         {
@@ -221,30 +215,29 @@ static bool simplify_concat(std::shared_ptr<Node> n)
 
             if (btip_shape.size() >= transposed_shape.size())
             {
-                AxisVector order = ngraph::get_default_order(btip_shape);
+                AxisVector order = get_default_order(btip_shape);
                 auto ax = order[slice_axis];
                 order[slice_axis] = order[concat_axis];
                 order[concat_axis] = ax;
-                replacement = std::make_shared<op::Reshape>(branch_tip, order, transposed_shape);
+                replacement = make_shared<op::Reshape>(branch_tip, order, transposed_shape);
             }
             else if (btip_shape.size() < transposed_shape.size())
             {
                 // intermediate logical reshape
-                AxisVector order = ngraph::get_default_order(transposed_shape);
+                AxisVector order = get_default_order(transposed_shape);
                 auto ax = order[slice_axis];
                 order[slice_axis] = order[concat_axis];
                 order[concat_axis] = ax;
-                auto output_shape = ngraph::apply_permutation(transposed_shape, order);
+                auto output_shape = apply_permutation(transposed_shape, order);
                 auto logical_reshape =
-                    std::make_shared<op::Reshape>(branch_tip, default_order, output_shape);
+                    make_shared<op::Reshape>(branch_tip, default_order, output_shape);
                 // transpose to final concatenated shape
-                replacement =
-                    std::make_shared<op::Reshape>(logical_reshape, order, transposed_shape);
+                replacement = make_shared<op::Reshape>(logical_reshape, order, transposed_shape);
             }
         }
     }
 
-    ngraph::replace_node(n, replacement);
+    replace_node(n, replacement);
     return true;
 }
 
@@ -255,15 +248,13 @@ static bool simplify_concat(std::shared_ptr<Node> n)
 //a * broadcast(0) -> broadcast(0)
 //a * 1 -> a
 //a * broadcast(1) -> a
-static bool simplify_multiply(std::shared_ptr<Node> n)
+static bool simplify_multiply(shared_ptr<Node> n)
 {
     NGRAPH_DEBUG << "In simplify_multiply for " << n->get_name();
-    auto iconst = ngraph::make_zero(element::i32, Shape{});
-    auto label = std::make_shared<pattern::op::Label>(iconst);
-    auto const_label_zero =
-        std::make_shared<pattern::op::Label>(iconst, ngraph::is_zero, NodeVector{iconst});
-    auto const_label_one =
-        std::make_shared<pattern::op::Label>(iconst, ngraph::is_one, NodeVector{iconst});
+    auto iconst = make_zero(element::i32, Shape{});
+    auto label = make_shared<pattern::op::Label>(iconst);
+    auto const_label_zero = make_shared<pattern::op::Label>(iconst, is_zero, NodeVector{iconst});
+    auto const_label_one = make_shared<pattern::op::Label>(iconst, is_one, NodeVector{iconst});
 
     auto matcher_const_zero = create_binary_matcher<op::Multiply>(label, const_label_zero);
     auto matcher_const_one = create_binary_matcher<op::Multiply>(label, const_label_one);
@@ -273,7 +264,7 @@ static bool simplify_multiply(std::shared_ptr<Node> n)
         auto bcst_label = get_broadcast_label(matcher_const_zero);
         auto bcst_or_cnst = matcher_const_zero->get_pattern_map()[bcst_label];
         NGRAPH_DEBUG << " Replacing " << n->get_name() << " with " << bcst_or_cnst->get_name();
-        ngraph::replace_node(n, bcst_or_cnst);
+        replace_node(n, bcst_or_cnst);
         return true;
     }
 
@@ -281,7 +272,7 @@ static bool simplify_multiply(std::shared_ptr<Node> n)
     {
         auto x = matcher_const_one->get_pattern_map()[label];
         NGRAPH_DEBUG << " Replacing " << n->get_name() << " with " << x->get_name();
-        ngraph::replace_node(n, x);
+        replace_node(n, x);
         return true;
     }
 
@@ -293,12 +284,12 @@ static bool simplify_multiply(std::shared_ptr<Node> n)
 //
 //a + 0 -> a
 //a + broadcast(0) -> a
-static bool simplify_add(std::shared_ptr<Node> n)
+static bool simplify_add(shared_ptr<Node> n)
 {
     NGRAPH_DEBUG << "In simplify_add for " << n->get_name();
-    auto iconst = ngraph::make_zero(element::i32, Shape{});
-    auto label = std::make_shared<pattern::op::Label>(iconst);
-    auto const_label = std::make_shared<pattern::op::Label>(iconst, nullptr, NodeVector{iconst});
+    auto iconst = make_zero(element::i32, Shape{});
+    auto label = make_shared<pattern::op::Label>(iconst);
+    auto const_label = make_shared<pattern::op::Label>(iconst, nullptr, NodeVector{iconst});
     auto matcher = create_binary_matcher<op::Add>(label, const_label);
 
     if (matcher->match(n))
@@ -309,10 +300,10 @@ static bool simplify_add(std::shared_ptr<Node> n)
         NGRAPH_DEBUG << "Node " << n->get_name() << " matched \" arg + 0 \" \n"
                      << " arg : " << x->get_name() << " , const : " << cnst->get_name();
 
-        if (ngraph::is_zero(cnst))
+        if (is_zero(cnst))
         {
             NGRAPH_DEBUG << " Replacing " << n->get_name() << " with " << x->get_name();
-            ngraph::replace_node(n, x);
+            replace_node(n, x);
             return true;
         }
         else
@@ -324,16 +315,16 @@ static bool simplify_add(std::shared_ptr<Node> n)
 }
 
 //`simplify_log` optimizes `log(exp(x)/y)` into `x - log(y)`
-static bool simplify_log(std::shared_ptr<Node> n)
+static bool simplify_log(shared_ptr<Node> n)
 {
-    if (auto div = std::dynamic_pointer_cast<op::Divide>(n->get_argument(0)))
+    if (auto div = dynamic_pointer_cast<op::Divide>(n->get_argument(0)))
     {
-        if (auto exp = std::dynamic_pointer_cast<op::Exp>(div->get_argument(0)))
+        if (auto exp = dynamic_pointer_cast<op::Exp>(div->get_argument(0)))
         {
             auto denom = div->get_argument(1);
-            auto diff = std::make_shared<op::Subtract>(exp->get_argument(0),
-                                                       std::make_shared<op::Log>(denom));
-            ngraph::replace_node(n, diff);
+            auto diff =
+                make_shared<op::Subtract>(exp->get_argument(0), make_shared<op::Log>(denom));
+            replace_node(n, diff);
             return true;
         }
     }
@@ -353,16 +344,15 @@ static size_t reduction_shape_size(const AxisSet& axes, const Shape& shape)
 }
 
 template <typename T>
-static std::shared_ptr<Node>
-    multiply_by(element::Type type, size_t multiplier, std::shared_ptr<op::Constant> cnst)
+static shared_ptr<Node>
+    multiply_by(element::Type type, size_t multiplier, shared_ptr<op::Constant> cnst)
 {
     T sum_cnst = static_cast<T>(cnst->get_vector<T>().at(0) * multiplier);
     return op::Constant::create<T>(type, Shape{}, {sum_cnst});
 }
 
 template <typename T>
-static std::shared_ptr<Node>
-    pow_by(element::Type type, size_t multiplier, std::shared_ptr<op::Constant> cnst)
+static shared_ptr<Node> pow_by(element::Type type, size_t multiplier, shared_ptr<op::Constant> cnst)
 {
     T prod = static_cast<T>(1);
     T val = cnst->get_vector<T>().at(0);
@@ -373,7 +363,7 @@ static std::shared_ptr<Node>
     return op::Constant::create<T>(type, Shape{}, {prod});
 }
 
-static std::shared_ptr<Node> get_sum_constant(std::shared_ptr<op::Constant> cnst, size_t multiplier)
+static shared_ptr<Node> get_sum_constant(shared_ptr<op::Constant> cnst, size_t multiplier)
 {
     if (cnst->get_element_type() == element::i32)
     {
@@ -395,8 +385,7 @@ static std::shared_ptr<Node> get_sum_constant(std::shared_ptr<op::Constant> cnst
     return nullptr;
 }
 
-static std::shared_ptr<Node> get_prod_constant(std::shared_ptr<op::Constant> cnst,
-                                               size_t multiplier)
+static shared_ptr<Node> get_prod_constant(shared_ptr<op::Constant> cnst, size_t multiplier)
 {
     if (cnst->get_element_type() == element::i32)
     {
@@ -423,21 +412,20 @@ static std::shared_ptr<Node> get_prod_constant(std::shared_ptr<op::Constant> cns
 //where constant2's values are equal to scalar_constant * shape_size(reduction_axes)
 //product(broadcast(scalar_constant), reduction_axes = ...) -> constant2 (or scalar constant)
 //where constant2's values are equal to scalar_constant ^ shape_size(reduction_axes)
-template <typename T,
-          std::shared_ptr<Node> (*F)(std::shared_ptr<op::Constant> cnst, size_t multiplier)>
-static bool simplify_reduction(std::shared_ptr<Node> n)
+template <typename T, shared_ptr<Node> (*F)(shared_ptr<op::Constant> cnst, size_t multiplier)>
+static bool simplify_reduction(shared_ptr<Node> n)
 {
     NGRAPH_DEBUG << "In simplify_reduction for " << n->get_name();
-    auto reduction = std::static_pointer_cast<T>(n);
+    auto reduction = static_pointer_cast<T>(n);
 
-    auto broadcast = std::dynamic_pointer_cast<op::Broadcast>(n->get_argument(0));
+    auto broadcast = dynamic_pointer_cast<op::Broadcast>(n->get_argument(0));
     if (!broadcast)
     {
         NGRAPH_DEBUG << n->get_name() << " isn't Broadcast";
         return false;
     }
 
-    auto cnst = std::dynamic_pointer_cast<op::Constant>(broadcast->get_argument(0));
+    auto cnst = dynamic_pointer_cast<op::Constant>(broadcast->get_argument(0));
     if (!cnst || cnst->get_shape().size() > 0 /*not a scalar*/)
     {
         NGRAPH_DEBUG << broadcast->get_argument(0)->get_name() << " isn't a scalar constant";
@@ -456,39 +444,35 @@ static bool simplify_reduction(std::shared_ptr<Node> n)
 
     if (reduction->get_shape().size() > 0)
     {
-        ngraph::AxisSet axes{};
+        AxisSet axes{};
         for (size_t i = 0; i < reduction->get_shape().size(); i++)
         {
             axes.insert(i);
         }
-        reduction_cnst =
-            std::make_shared<op::Broadcast>(reduction_cnst, reduction->get_shape(), axes);
+        reduction_cnst = make_shared<op::Broadcast>(reduction_cnst, reduction->get_shape(), axes);
     }
 
-    ngraph::replace_node(n, reduction_cnst);
+    replace_node(n, reduction_cnst);
     return true;
 }
 
-static std::unordered_map<std::type_index, std::function<bool(std::shared_ptr<Node>)>>
-    initialize_ops_to_simplifiers()
+static unordered_map<type_index, function<bool(shared_ptr<Node>)>> initialize_ops_to_simplifiers()
 {
-    return std::unordered_map<std::type_index, std::function<bool(std::shared_ptr<Node>)>>(
+    return unordered_map<type_index, function<bool(shared_ptr<Node>)>>(
         {{TI(op::Add), simplify_add},
          {TI(op::Multiply), simplify_multiply},
          {TI(op::Concat), simplify_concat},
          {TI(op::Sum),
-          std::function<bool(std::shared_ptr<Node>)>{
-              simplify_reduction<op::Sum, get_sum_constant>}},
+          function<bool(shared_ptr<Node>)>{simplify_reduction<op::Sum, get_sum_constant>}},
          {TI(op::Product),
-          std::function<bool(std::shared_ptr<Node>)>{
-              simplify_reduction<op::Product, get_prod_constant>}},
+          function<bool(shared_ptr<Node>)>{simplify_reduction<op::Product, get_prod_constant>}},
          {TI(op::Log), simplify_log}});
 }
 
-static std::unordered_map<std::type_index, std::function<bool(std::shared_ptr<Node>)>>
-    ops_to_simplifiers = initialize_ops_to_simplifiers();
+static unordered_map<type_index, function<bool(shared_ptr<Node>)>> ops_to_simplifiers =
+    initialize_ops_to_simplifiers();
 
-bool ngraph::pass::AlgebraicSimplification::run_on_function(std::shared_ptr<ngraph::Function> f)
+bool pass::AlgebraicSimplification::run_on_function(shared_ptr<Function> f)
 {
     bool replaced = false;
     for (auto n : f->get_ordered_ops())
