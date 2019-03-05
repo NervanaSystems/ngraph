@@ -22,6 +22,7 @@
 #include "exceptions.hpp"
 #include "ngraph/axis_set.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/convert.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/shape.hpp"
 #include "quantize_linear.hpp"
@@ -79,6 +80,12 @@ namespace ngraph
                             << "y_scale must be a scalar if no axis is provided.";
                         ASSERT_VALID_ARGUMENT(node, y_zero_point_shape.size() == 0)
                             << "y_zero_point must be a scalar if no axis is provided.";
+                    }
+
+                    if (x->get_element_type() != y_zero_point->get_element_type())
+                    {
+                        y_zero_point = std::make_shared<ngraph::op::Convert>(y_zero_point,
+                                                                             x->get_element_type());
                     }
 
                     return {std::make_shared<ngraph::op::Dequantize>(
