@@ -76,6 +76,15 @@ namespace ngraph
                 bool can_use_mkldnn_batchnorm_fprop(const ngraph::Node* node);
                 bool can_use_mkldnn_batchnorm_bprop(const ngraph::Node* node);
                 bool can_use_conv_auto();
+
+                /** Intel(R) MKL-DNN Version type */
+                /* typedef struct {
+                    int    major;
+                    int    minor;
+                    int    patch;
+                    const char *hash;
+                } mkldnn_version_t; */
+                const mkldnn_version_t* get_mkldnn_version();
                 bool use_mkldnn_kernel(const ngraph::Node* node);
                 void assign_mkldnn_kernel(Node* node);
 
