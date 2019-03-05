@@ -38,32 +38,6 @@
 
 namespace ngraph
 {
-    namespace pass
-    {
-        class GetOutputElementElimination;
-    }
-    namespace op
-    {
-        class Parameter;
-        class Result;
-    } // namespace op
-
-    void replace_node_users_arguments(std::shared_ptr<Node> target,
-                                      std::shared_ptr<Node> replacement);
-
-    std::pair<std::shared_ptr<op::Result>, std::shared_ptr<op::Parameter>>
-        insert_result_parameter_split(const std::shared_ptr<Node>& src_node,
-                                      const std::shared_ptr<Node>& dst_node);
-
-    void insert_new_node_between(const std::shared_ptr<Node>& src_node,
-                                 const std::shared_ptr<Node>& dst_node,
-                                 const std::shared_ptr<Node>& new_node);
-
-    std::string node_validation_assertion_string(const Node* node);
-
-    const std::shared_ptr<Node>& check_single_output_arg(const std::shared_ptr<Node>& node,
-                                                         size_t i);
-
     class NodeOutput;
 
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
@@ -322,19 +296,9 @@ namespace ngraph
         Node& operator=(const Node&) = delete;
     };
 
-    class NodeValidationError : public AssertionFailure
-    {
-    public:
-        NodeValidationError(std::string what)
-            : AssertionFailure(what)
-        {
-        }
-        NodeValidationError(const char* what)
-            : AssertionFailure(what)
-        {
-        }
-    };
-
+    //===
+    // UTIL FOR PRETTY PRINTING
+    //===
     class NodeDescription
     {
     public:
@@ -354,7 +318,28 @@ namespace ngraph
         bool m_is_short;
     };
 
+    //===
+    // UTIL FOR VALIDATION
+    //===
+    class NodeValidationError : public AssertionFailure
+    {
+    public:
+        NodeValidationError(std::string what)
+            : AssertionFailure(what)
+        {
+        }
+        NodeValidationError(const char* what)
+            : AssertionFailure(what)
+        {
+        }
+    };
+
+    std::string node_validation_assertion_string(const Node* node);
+
+    const std::shared_ptr<Node>& check_single_output_arg(const std::shared_ptr<Node>& node,
+                                                         size_t i);
     void check_new_args_count(const Node* node, const NodeVector& new_args);
+
 } // namespace ngraph
 
 #define NODE_VALIDATION_ASSERT(node, cond)                                                         \
