@@ -30,9 +30,13 @@ op::GetOutputElement::GetOutputElement(const shared_ptr<Node>& arg, size_t n)
 
 void op::GetOutputElement::validate_and_infer_types()
 {
-    NODE_VALIDATION_ASSERT(this, m_n < get_input_size())
-        << "Output at index " << m_n << " requested, but node has only " << get_input_size()
-        << " inputs.";
+    NODE_VALIDATION_CHECK(this,
+                          m_n < get_input_size(),
+                          "Output at index ",
+                          m_n,
+                          " requested, but node has only ",
+                          get_input_size(),
+                          " inputs.");
 
     set_output_type(0, get_input_element_type(m_n), get_input_partial_shape(m_n));
 }

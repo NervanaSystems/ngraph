@@ -1058,8 +1058,23 @@ namespace ngraph
                     }
                     catch (const mkldnn::error& e)
                     {
-                        throw ngraph_error("MKLDNN Unsupported pooling layout" +
-                                           to_string(input_desc.data.format) + e.message);
+                        if (arg0_shape.size() == 4 || arg0_shape.size() == 5)
+                        {
+                            auto default_format = arg0_shape.size() == 4
+                                                      ? mkldnn::memory::format::nchw
+                                                      : mkldnn::memory::format::ncdhw;
+                            auto default_desc_i = mkldnn_utils::create_default_mkldnn_md(
+                                node.get(), 0, false, default_format);
+                            auto default_desc_o = mkldnn_utils::create_default_mkldnn_md(
+                                node.get(), 0, true, default_format);
+                            i_mds.push_back(default_desc_i);
+                            o_mds.push_back(default_desc_o);
+                        }
+                        else
+                        {
+                            throw ngraph_error("MKLDNN Unsupported pooling layout" +
+                                               to_string(input_desc.data.format) + e.message);
+                        }
                     }
                 }
 
@@ -1215,8 +1230,39 @@ namespace ngraph
                     }
                     catch (const mkldnn::error& e)
                     {
-                        throw ngraph_error("MKLDNN Unsupported pooling fwd layout" +
-                                           to_string(input_desc.data.format) + e.message);
+                        if (arg0_shape.size() == 4 || arg0_shape.size() == 5)
+                        {
+                            auto default_format = arg0_shape.size() == 4
+                                                      ? mkldnn::memory::format::nchw
+                                                      : mkldnn::memory::format::ncdhw;
+                            auto default_desc_i = mkldnn_utils::create_default_mkldnn_md(
+                                node.get(), 0, false, default_format);
+                            auto default_desc_o = mkldnn_utils::create_default_mkldnn_md(
+                                node.get(), 0, true, default_format);
+                            i_mds.push_back(default_desc_i);
+                            o_mds.push_back(default_desc_o);
+                            if (pk == prop_kind::forward_training)
+                            {
+                                o_mds.push_back(
+                                    pooling_forward::primitive_desc({pk,
+                                                                     algorithm_enumerator,
+                                                                     default_desc_i,
+                                                                     result_desc,
+                                                                     mkldnn_filter_strides,
+                                                                     mkldnn_filter_shape,
+                                                                     mkldnn_padding_below,
+                                                                     mkldnn_padding_above,
+                                                                     padding_kind::zero},
+                                                                    executor::global_cpu_engine)
+                                        .workspace_primitive_desc()
+                                        .desc());
+                            }
+                        }
+                        else
+                        {
+                            throw ngraph_error("MKLDNN Unsupported pooling fwd layout" +
+                                               to_string(input_desc.data.format) + e.message);
+                        }
                     }
                 }
 
