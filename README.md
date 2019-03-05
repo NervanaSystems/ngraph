@@ -50,9 +50,9 @@ providing freedom, performance, and ease-of-use to AI developers.
 The diagram below shows deep learning frameworks and hardware targets
 supported by nGraph. NNP-L (Neural Network Processor for Learning) & NNP-I 
 (Neural Network Processor for Inference) refer to Intel's next generation deep 
-learning accelators for training and inference respectively. Currently supported
-deep learning frameworks & backends as well as future plans are outlined the 
-[ecosystem] section. 
+learning accelators for training and inference respectively. Future plans 
+for supporting addtional deep learning frameworks and backends are outlined in
+the [ecosystem] section. 
 
 
 ![](doc/sphinx/source/graphics/main_diagram_fw_hw.png)
