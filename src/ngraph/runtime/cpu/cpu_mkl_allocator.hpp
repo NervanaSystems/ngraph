@@ -20,6 +20,7 @@
 #include <cstdint>
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/except.hpp"
 
 using namespace ngraph;
 using AllocateFunc = void* (*)(void*, size_t, size_t);
@@ -44,6 +45,9 @@ namespace ngraph
 {
     namespace runtime
     {
+        class Allocator;
+        class SystemAllocator;
+        class FrameworkAllocator;
         namespace cpu
         {
             class CPUAllocator;
@@ -56,22 +60,94 @@ namespace ngraph
 class ngraph::runtime::cpu::CPUAllocator
 {
 public:
-    CPUAllocator(AllocateFunc allocator, DestroyFunc deallocator, size_t alignment);
+    CPUAllocator(ngraph::runtime::Allocator* alloctor);
     CPUAllocator();
     ~CPUAllocator();
 
-    static AllocateFunc framework_allocator;
-    static DestroyFunc framework_deallocator;
-    static size_t alignment;
+    void* malloc(size_t size);
+    void free(void* ptr);
 
 private:
-    static inline void* MallocHook(size_t size)
+
+    std::unique_ptr<ngraph::runtime::Allocator> m_allocator;
+    
+};
+
+
+// Abstarct class for the allocator 
+class  ngraph::runtime::Allocator
+{
+    public:
+        virtual void* cpu_malloc(void*, size_t size, size_t alignment) = 0;
+        virtual void cpu_free(void* ptr, void*) = 0;
+
+};
+
+
+class  ngraph::runtime::SystemAllocator : public  ngraph::runtime::Allocator
+{
+
+    public:
+        SystemAllocator(size_t alignment);
+        ~SystemAllocator();
+
+    void* cpu_malloc(void*, size_t size, size_t alignment) override 
     {
-        ngraph::runtime::cpu::cpu_malloc(size, alignment, framework_allocator);
+        void *ptr = malloc(size);
+         
+        // check for exception
+        if (size != 0 && !ptr)
+        {
+            throw ngraph_error("malloc failed to allocate memory of size " + std::to_string(size));
+            throw std::bad_alloc();
+        }
+        return ptr;
+    }   
+
+    void cpu_free(void* ptr, void*) override
+    {
+        if (ptr)
+        {
+            free(ptr);
+        }
     }
 
-    static inline void FreeHook(void* ptr)
+    private:
+        size_t m_alignment;
+};
+
+
+class  ngraph::runtime::FrameworkAllocator : public ngraph::runtime::Allocator
+{
+
+    public:
+    FrameworkAllocator(AllocateFunc allocator, DestroyFunc deallocator, size_t alignment);
+    ~FrameworkAllocator();
+    
+    void* cpu_malloc(void*, size_t size, size_t alignment) override 
     {
-        ngraph::runtime::cpu::cpu_free(ptr, framework_deallocator);
+        void *ptr =  m_allocator(nullptr, alignment, size);
+         
+        // check for exception
+        if (size != 0 && !ptr)
+        {
+            throw ngraph_error("malloc failed to allocate memory of size " + std::to_string(size));
+            throw std::bad_alloc();
+        }
+        return ptr;
+    }   
+
+    void cpu_free(void* ptr, void*) override
+    {
+        if (ptr)
+        {
+            m_deallocator(nullptr, ptr);
+        }
     }
+
+    private:
+    AllocateFunc m_allocator;
+    DestroyFunc m_deallocator;
+    size_t m_alignment;
+
 };

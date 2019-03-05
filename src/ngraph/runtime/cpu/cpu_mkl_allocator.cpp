@@ -14,64 +14,48 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/cpu/cpu_mkl_allocator.hpp"
 #include <string>
-#include "ngraph/except.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
+#include "ngraph/runtime/cpu/cpu_mkl_allocator.hpp"
 
 ngraph::runtime::cpu::CPUAllocator::CPUAllocator()
 {
 }
 
-AllocateFunc ngraph::runtime::cpu::CPUAllocator::framework_allocator = nullptr;
-DestroyFunc ngraph::runtime::cpu::CPUAllocator::framework_deallocator = nullptr;
-size_t ngraph::runtime::cpu::CPUAllocator::alignment =
-    ngraph::runtime::cpu::CPU_ExternalFunction::s_memory_pool_alignment;
-;
-
-ngraph::runtime::cpu::CPUAllocator::CPUAllocator(AllocateFunc allocator,
-                                                 DestroyFunc deallocator,
-                                                 size_t alignment)
+ngraph::runtime::cpu::CPUAllocator::CPUAllocator(ngraph::runtime::Allocator* allocator)
+: m_allocator(allocator)
 {
-    mkl::i_malloc = MallocHook;
-    mkl::i_free = FreeHook;
-}
-
-void* ngraph::runtime::cpu::cpu_malloc(size_t size,
-                                       size_t alignment,
-                                       AllocateFunc framework_allocator)
-{
-    void* ptr;
-    if (framework_allocator != nullptr)
-    {
-        ptr = framework_allocator(nullptr, alignment, size);
-    }
-    else
-    {
-        ptr = malloc(size);
-    }
-
-    // check for exception
-    if (size != 0 && !ptr)
-    {
-        throw ngraph_error("malloc failed to allocate memory of size " + std::to_string(size));
-        throw std::bad_alloc();
-    }
-    return ptr;
-}
-
-void ngraph::runtime::cpu::cpu_free(void* ptr, DestroyFunc framework_deallocator)
-{
-    if (framework_deallocator && ptr)
-    {
-        framework_deallocator(nullptr, ptr);
-    }
-    else if (ptr)
-    {
-        free(ptr);
-    }
+    
 }
 
 ngraph::runtime::cpu::CPUAllocator::~CPUAllocator()
 {
 }
+
+void* ngraph::runtime::cpu::cpuAllocator::malloc(size_t size)
+{
+    m_allocator->cpu_malloc(size);
+}
+
+void ngraph::runtime::cpu::cpuAllocator::free(void* ptr)
+{
+     m_allocator->cpu_free(ptr);
+}
+
+ngraph::runtime::SystemAllocator::SystemAllocator(size_t alignment)
+: m_alignment(alignment)
+{
+
+}
+
+ngraph::runtime::FrameworkAllocator::FrameworkAllocator(AllocateFunc allocator, DestroyFunc deallocator, size_t alignment)
+:   m_allocator(allocator)
+,   m_deallocator(deallocator)
+,   m_alignment(alignment)
+{
+
+
+}
+
+
+

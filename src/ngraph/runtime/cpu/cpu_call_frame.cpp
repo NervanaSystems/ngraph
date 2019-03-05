@@ -146,13 +146,23 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
     size_t alignment = runtime::cpu::CPU_ExternalFunction::s_memory_pool_alignment;
 
     // assign the passed memory allocators
-    ngraph::runtime::cpu::CPUAllocator::framework_allocator = m_framework_allocator;
+    /*ngraph::runtime::cpu::CPUAllocator::framework_allocator = m_framework_allocator;
     ngraph::runtime::cpu::CPUAllocator::framework_deallocator = m_framework_deallocator;
     ngraph::runtime::cpu::CPUAllocator::alignment = alignment;
-
+    */
+    std::unique_ptr<ngraph::runtime::cpu::CPUAllocator> alloctor = nullptr;
+    if (m_framework_allocator && m_framework_deallocator)
+    {
+        alloctor = new ngraph::runtime::cpu::CPUAllocator(ngraph::runtime::FrameworkAllocator(m_framework_allocator, m_framework_deallocator, s_memory_pool_alignment));
+    }
+    else
+    {
+        allocator =  new ngraph::runtime::cpu::CPUAllocator(ngraph::runtime::SystemAllocator(s_memory_pool_alignment)); 
+    }
+     
     for (auto buffer_size : m_external_function->get_memory_buffer_sizes())
     {
-        auto buffer = new CPUAlignedBuffer(buffer_size, alignment);
+        auto buffer = new CPUAlignedBuffer(buffer_size, alignment, allocator);
         ctx->memory_buffers.push_back(buffer);
     }
     const auto& mkldnn_emitter = m_external_function->get_mkldnn_emitter();
