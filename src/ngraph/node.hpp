@@ -187,9 +187,11 @@ namespace ngraph
         const PartialShape& get_input_partial_shape(size_t i) const;
 
         // virtual just because GetOutputElement wants to override...
+        // TODO: make non-virtual
+        // TODO: rename to something like "get_input_src_nodes", or deprecate.
         virtual NodeVector get_arguments() const;
 
-        // Should probably be deprecated in favor of something like "get_input_src_node".
+        // TODO: rename to something like "get_input_src_node".
         std::shared_ptr<Node> get_argument(size_t index) const;
 
         //===
@@ -206,6 +208,7 @@ namespace ngraph
         std::vector<descriptor::Output*> get_outputs_to(const std::shared_ptr<Node>& dst);
 
         /// Get all the nodes that use the current node
+        // TODO: decide if this should also include control dependents.
         NodeVector get_users(bool check_is_used = false) const;
 
         //===
