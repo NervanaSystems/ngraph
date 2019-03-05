@@ -29,6 +29,9 @@ RUN apt-get update && apt-get install -y \
 RUN pip install --upgrade pip setuptools wheel
 RUN pip install tox
 
+# ONNX dependencies
+RUN apt-get -y install protobuf-compiler libprotobuf-dev
+
 # Prepare nGraph
 COPY . /root/ngraph
 RUN mkdir /root/ngraph/build
