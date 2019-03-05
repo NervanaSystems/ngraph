@@ -154,7 +154,8 @@ namespace ngraph
             {
                 it->second = std::move(fn);
                 NGRAPH_WARN << "Overwriting existing operator: "
-                            << domain + "." + name + ":" + std::to_string(version);
+                            << (domain.empty() ? "ai.onnx" : domain)
+                            << "." + name + ":" + std::to_string(version);
             }
         }
 

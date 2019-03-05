@@ -43,13 +43,17 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    auto leaky_relu_index =
-                        mkldnn_emitter->build_leaky_relu(input_desc, result_desc, alpha);
+                    auto leaky_relu_desc = mkldnn_emitter->get_leaky_relu_desc(node);
+                    // LeakyRelu needs 3 primitives: input, result, and eltwise_forward.
+                    auto leaky_relu_index = mkldnn_emitter->reserve_primitive_space(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(leaky_relu_index);
-                    auto functor = [&, leaky_relu_index](CPURuntimeContext* ctx,
-                                                         CPUExecutionContext* ectx) {
+
+                    auto functor = [&, leaky_relu_desc, leaky_relu_index](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        if (ctx->first_iteration)
+                        {
+                            mkldnn_emitter->build_leaky_relu(leaky_relu_desc, leaky_relu_index);
+                        }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], input_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, leaky_relu_index);

@@ -23,17 +23,27 @@ namespace ngraph
     namespace pass
     {
         class PassConfig;
+        enum class CompilationMode
+        {
+            DEX,    // Fast compilation using precompiled kernels
+            CODEGEN // Slower compilation for potentially faster code
+        };
     }
 }
 
 class ngraph::pass::PassConfig
 {
 public:
-    PassConfig();
-    const std::map<std::string, bool>& get_enables() { return m_enables; }
+    PassConfig(CompilationMode mode = CompilationMode::DEX);
+    const std::map<std::string, bool>& get_enables() { return m_pass_enables; }
     void set_pass_enable(std::string name, bool enable);
     bool get_pass_enable(std::string name);
-
+    const std::map<std::string, bool>& get_pass_attributes() { return m_pass_attributes; }
+    void set_pass_attribute(std::string name, bool enable);
+    bool get_pass_attribute(std::string name);
+    CompilationMode get_compilation_mode() const { return m_compilation_mode; }
 private:
-    std::map<std::string, bool> m_enables;
+    std::map<std::string, bool> m_pass_enables;
+    std::map<std::string, bool> m_pass_attributes;
+    CompilationMode m_compilation_mode;
 };

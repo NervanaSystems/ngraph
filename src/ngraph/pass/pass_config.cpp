@@ -19,9 +19,12 @@
 #include "ngraph/log.hpp"
 #include "ngraph/util.hpp"
 
+using namespace std;
 using namespace ngraph;
 
-ngraph::pass::PassConfig::PassConfig()
+// TODO: Add file-based configuration support
+pass::PassConfig::PassConfig(pass::CompilationMode mode)
+    : m_compilation_mode(mode)
 {
     /**
     * Parses the semi-colon separated environment string passed through NGRAPH_PASS_ENABLES
@@ -30,36 +33,78 @@ ngraph::pass::PassConfig::PassConfig()
     * E.g., NGRAPH_PASS_ENABLES="CoreFusion:0;LikeReplacement:1;CPUCollapseDims" would
     *       set disables on CoreFusion and enables on LikeReplacement and CPUCollapseDims
     **/
-    const char* env_str = std::getenv("NGRAPH_PASS_ENABLES");
+    const char* env_str = getenv("NGRAPH_PASS_ENABLES");
     if (env_str)
     {
-        std::stringstream ss;
+        stringstream ss;
         ss << env_str;
         while (ss.good())
         {
-            std::string substr;
-            std::getline(ss, substr, ';');
+            string substr;
+            getline(ss, substr, ';');
             auto split_str = split(substr, ':', false);
             switch (split_str.size())
             {
-            case 1: m_enables.emplace(split_str[0], true); break;
-            case 2: m_enables.emplace(split_str[0], parse_string<bool>(split_str[1])); break;
-            default: throw ngraph_error("Unexpected string in get_pass_enables: " + substr);
+            case 1: m_pass_enables.emplace(split_str[0], true); break;
+            case 2: m_pass_enables.emplace(split_str[0], parse_string<bool>(split_str[1])); break;
+            default: throw ngraph_error("Unexpected string in NGRAPH_PASS_ENABLES: " + substr);
+            }
+        }
+    }
+    /**
+    * Parses the semi-colon separated environment string passed through NGRAPH_PASS_ATTRIBUTES
+    * and returns the pass attributes and whether they should be enabled or disabled in the
+    * provided unordered_map. Naming of pass attributes is up to the backends
+    * E.g., NGRAPH_PASS_ATTRIBUTES="OptimizeForMemory=0;MemoryAssignment::ReuseMemory=1;UseDefaultLayouts"
+    * would set false on "OptimizeForMemory", true on "MemoryAssignment::ReuseMemory" and true on
+    * "UseDefaultLayouts"
+    **/
+    env_str = getenv("NGRAPH_PASS_ATTRIBUTES");
+    if (env_str)
+    {
+        stringstream ss;
+        ss << env_str;
+        while (ss.good())
+        {
+            string substr;
+            getline(ss, substr, ';');
+            auto split_str = split(substr, '=', false);
+            switch (split_str.size())
+            {
+            case 1: m_pass_attributes.emplace(split_str[0], true); break;
+            case 2:
+                m_pass_attributes.emplace(split_str[0], parse_string<bool>(split_str[1]));
+                break;
+            default: throw ngraph_error("Unexpected string in NGRAPH_PASS_ATTRIBUTES: " + substr);
             }
         }
     }
 }
 
-void ngraph::pass::PassConfig::set_pass_enable(std::string name, bool enable)
+void pass::PassConfig::set_pass_enable(string name, bool enable)
 {
-    m_enables[name] = enable;
+    m_pass_enables[name] = enable;
 }
 
-bool ngraph::pass::PassConfig::get_pass_enable(std::string name)
+bool pass::PassConfig::get_pass_enable(string name)
 {
-    if (m_enables.find(name) == m_enables.end())
+    if (m_pass_enables.find(name) == m_pass_enables.end())
     {
         return false;
     }
-    return m_enables[name];
+    return m_pass_enables[name];
+}
+
+void pass::PassConfig::set_pass_attribute(string name, bool enable)
+{
+    m_pass_attributes[name] = enable;
+}
+
+bool pass::PassConfig::get_pass_attribute(string name)
+{
+    if (m_pass_attributes.find(name) == m_pass_attributes.end())
+    {
+        return false;
+    }
+    return m_pass_attributes[name];
 }

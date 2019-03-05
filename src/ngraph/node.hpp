@@ -30,6 +30,7 @@
 
 #include "ngraph/assertion.hpp"
 #include "ngraph/autodiff/adjoints.hpp"
+#include "ngraph/check.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/descriptor/tensor.hpp"
@@ -108,11 +109,26 @@ namespace ngraph
         // Called after transition
         void delayed_validate_and_infer_types();
 
-        /// The class name, must not contain spaces
-        std::string description() const { return m_node_type; }
-        const std::string& get_friendly_name() const;
+        /// \brief Get the string name for the type of the node, such as `Add` or `Multiply`.
+        ///        The class name, must not contain spaces as it is used for codegen.
+        /// \returns A const reference to the node's type name
+        const std::string& description() const;
+
+        /// \brief Get the unique name of the node.
+        /// \returns A const reference to the node's unique name.
         const std::string& get_name() const;
-        void set_name(const std::string& name);
+
+        /// \brief Sets a friendly name for a node. This does not overwrite the unique name
+        ///        of the node and is retrieved via get_friendly_name(). Used mainly for debugging.
+        ///        The friendly name may be set exactly once.
+        /// \param name is the friendly name to set
+        void set_friendly_name(const std::string& name);
+
+        /// \brief Gets the friendly name for a node. If no friendly name has been set via
+        ///        set_friendly_name then the node's unique name is returned.
+        /// \returns A const reference to the node's friendly name.
+        const std::string& get_friendly_name() const;
+
         /// Return true if this has the same implementing class as node. This
         /// will be used by the pattern matcher when comparing a pattern
         /// graph against the graph.
@@ -247,9 +263,9 @@ namespace ngraph
         std::set<std::shared_ptr<Node>> m_control_dependencies;
         void set_output_size(size_t n);
 
-        std::string m_node_type;
+        const std::string m_node_type;
         size_t m_instance_id;
-        std::string m_name;
+        std::string m_friendly_name;
         const std::string m_unique_name;
         static std::atomic<size_t> m_next_instance_id;
         std::deque<descriptor::Input> m_inputs;
@@ -268,6 +284,17 @@ namespace ngraph
         }
         NodeValidationError(const char* what)
             : AssertionFailure(what)
+        {
+        }
+    };
+
+    class NodeValidationFailure : public CheckFailure
+    {
+    public:
+        NodeValidationFailure(const CheckLocInfo& check_loc_info,
+                              const Node* node,
+                              const std::string& explanation)
+            : CheckFailure(check_loc_info, node_validation_assertion_string(node), explanation)
         {
         }
     };
@@ -300,3 +327,6 @@ namespace ngraph
 #define NODE_VALIDATION_FAIL(node)                                                                 \
     NGRAPH_FAIL_STREAM_WITH_LOC(::ngraph::NodeValidationError,                                     \
                                 ::ngraph::node_validation_assertion_string(node))
+
+#define NODE_VALIDATION_CHECK(node, cond, ...)                                                     \
+    NGRAPH_CHECK(::NodeValidationFailure, (node), (cond), __VA_ARGS__)

@@ -51,9 +51,10 @@ namespace
 }
 
 shared_ptr<runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_Backend::make_call_frame(
-    const shared_ptr<runtime::cpu::CPU_ExternalFunction>& external_function)
+    const shared_ptr<runtime::cpu::CPU_ExternalFunction>& external_function,
+    ngraph::pass::PassConfig& pass_config)
 {
-    return external_function->make_call_frame();
+    return external_function->make_call_frame(pass_config);
 }
 
 shared_ptr<runtime::Tensor>
@@ -71,6 +72,15 @@ shared_ptr<runtime::Tensor> runtime::cpu::CPU_Backend::create_tensor(
 shared_ptr<runtime::Executable>
     runtime::cpu::CPU_Backend::compile(shared_ptr<Function> func, bool performance_counters_enabled)
 {
+    ngraph::pass::PassConfig pass_config;
+    return compile(func, pass_config, performance_counters_enabled);
+}
+
+shared_ptr<runtime::Executable>
+    runtime::cpu::CPU_Backend::compile(shared_ptr<Function> func,
+                                       ngraph::pass::PassConfig& pass_config,
+                                       bool performance_counters_enabled)
+{
     shared_ptr<runtime::Executable> rc;
     auto it = m_exec_map.find(func);
     if (it != m_exec_map.end())
@@ -79,13 +89,14 @@ shared_ptr<runtime::Executable>
     }
     else
     {
-        rc = make_shared<CPU_Executable>(func, performance_counters_enabled);
+        rc = make_shared<CPU_Executable>(func, pass_config, performance_counters_enabled);
         m_exec_map.insert({func, rc});
     }
     return rc;
 }
 
 runtime::cpu::CPU_Executable::CPU_Executable(shared_ptr<Function> func,
+                                             ngraph::pass::PassConfig& pass_config,
                                              bool performance_counters_enabled)
 {
     FunctionInstance& instance = m_function_instance;
@@ -93,7 +104,7 @@ runtime::cpu::CPU_Executable::CPU_Executable(shared_ptr<Function> func,
     {
         instance.m_external_function = make_shared<CPU_ExternalFunction>(func);
         instance.m_external_function->m_emit_timing = performance_counters_enabled;
-        auto cf = instance.m_external_function->make_call_frame();
+        auto cf = instance.m_external_function->make_call_frame(pass_config);
         instance.m_call_frame = dynamic_pointer_cast<CPU_CallFrame>(cf);
     }
     set_parameters_and_results(*func);
