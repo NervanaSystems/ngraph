@@ -36,8 +36,10 @@ performance boost when compared to native framework implementations. We've also
 seen performance boosts running workloads that are not included on the list of 
 [Validated workloads], thanks to nGraph's powerful subgraph pattern matching.
 
-Additionally we have integrated nGraph with [PlaidML] to provide deep learning performance acceleration on Intel, nVidia, & AMD GPUs. More details on current architecture of nGraph stack can be found in [Architecture and features], and recent changes to the stack are explained in [Release Notes].
-
+Additionally we have integrated nGraph with [PlaidML] to provide deep learning 
+performance acceleration on Intel, nVidia, & AMD GPUs. More details on current 
+architecture of nGraph stack can be found in [Architecture and features], and 
+recent changes to the stack are explained in [Release Notes].
 
 ## What is nGraph Compiler? 
 
@@ -49,8 +51,9 @@ developers.
 The diagram below shows deep learning frameworks and hardware targets
 supported by nGraph. NNP-L (Neural Network Processor for Learning) & NNP-I 
 (Neural Network Processor for Inference) refer to Intel's next generation deep 
-learning accelators for training and inference respectively. More details on 
-these current and future plans are in the [ecosystem] section. 
+learning accelators for training and inference respectively. Currently supported
+deep learning frameworks & backends as well as future plans are outlined the 
+[ecosystem] section. 
 
 
 ![](doc/sphinx/source/graphics/main_diagram_fw_hw.png)
