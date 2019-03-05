@@ -43,10 +43,9 @@ recent changes to the stack are explained in [Release Notes].
 
 ## What is nGraph Compiler? 
 
-nGraph Compiler aims to accelerate developing and deploying AI workloads 
-using any deep learning framework with a variety of hardware targets. 
-We strongly believe in providing freedom, performance, and ease-of-use to AI 
-developers. 
+nGraph Compiler aims to accelerate developing AI workloads using any deep learning
+framework and deploying to a variety of hardware targets. We strongly believe in 
+providing freedom, performance, and ease-of-use to AI developers. 
 
 The diagram below shows deep learning frameworks and hardware targets
 supported by nGraph. NNP-L (Neural Network Processor for Learning) & NNP-I 
