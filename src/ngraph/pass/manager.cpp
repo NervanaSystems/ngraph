@@ -35,7 +35,7 @@
 using namespace std;
 using namespace ngraph;
 
-ngraph::pass::Manager::Manager()
+pass::Manager::Manager()
 {
     static const auto nevt = std::getenv("NGRAPH_ENABLE_VISUALIZE_TRACING");
     if (nevt)
@@ -49,15 +49,15 @@ ngraph::pass::Manager::Manager()
     }
 }
 
-ngraph::pass::Manager::~Manager()
+pass::Manager::~Manager()
 {
 }
 
-void ngraph::pass::Manager::initialize_default_passes()
+void pass::Manager::initialize_default_passes()
 {
 }
 
-void ngraph::pass::Manager::run_passes(shared_ptr<Function> func, bool transitive)
+void pass::Manager::run_passes(shared_ptr<Function> func, bool transitive)
 {
     bool profile_enabled = getenv("NGRAPH_PROFILE_PASS_ENABLE") != nullptr;
 
@@ -167,7 +167,7 @@ void ngraph::pass::Manager::run_passes(shared_ptr<Function> func, bool transitiv
     }
 }
 
-ngraph::pass::ManagerState& ngraph::pass::Manager::get_state()
+pass::ManagerState& pass::Manager::get_state()
 {
     return m_state;
 }
