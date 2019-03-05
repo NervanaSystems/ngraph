@@ -33,6 +33,8 @@
 using namespace std;
 using namespace ngraph;
 
+#define TI(x) type_index(typeid(x))
+
 static bool replace_broadcast_like(const std::shared_ptr<ngraph::Node>& node)
 {
     // Replace a broadcast like with the broadcast to eliminate the pseudo-dependency on the "like" argument
