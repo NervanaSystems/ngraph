@@ -51,13 +51,6 @@ namespace ngraph
                         std::shared_ptr<ngraph::Node> output_scale;
                     };
 
-                    struct OpZeroPoint
-                    {
-                        std::shared_ptr<ngraph::Node> data_zero_point;
-                        std::shared_ptr<ngraph::Node> filter_zero_point;
-                        std::shared_ptr<ngraph::Node> output_zero_point;
-                    };
-
                     std::shared_ptr<ngraph::Node>
                         make_ng_quant_conv(const std::shared_ptr<ngraph::Node>& data,
                                            const std::shared_ptr<ngraph::Node>& filters,
@@ -67,8 +60,7 @@ namespace ngraph
                                            const CoordinateDiff& padding_above,
                                            const Strides& data_dilations,
                                            int groups,
-                                           const OpScale& op_scale,
-                                           const OpZeroPoint& op_zero_point)
+                                           const OpScale& op_scale)
                     {
                         if (groups > 1)
                         {
@@ -145,8 +137,7 @@ namespace ngraph
                                                 const CoordinateDiff& padding_above,
                                                 const Strides& data_dilations,
                                                 int groups,
-                                                const OpScale& op_scale,
-                                                const OpZeroPoint& op_zero_point)
+                                                const OpScale& op_scale)
                     {
                         if (groups > 1)
                         {
@@ -173,6 +164,9 @@ namespace ngraph
 
                 NodeVector quant_conv(const Node& node)
                 {
+                    NGRAPH_WARN << "[" << node.get_name()
+                                << "] Zero point different from 0 is not supported. Assuming Zero "
+                                   "point is 0";
                     const NodeVector& inputs = node.get_ng_inputs();
                     auto data = inputs.at(0);
                     auto filters = inputs.at(3);
@@ -223,8 +217,7 @@ namespace ngraph
                                                padding_above,
                                                data_dilations,
                                                groups,
-                                               OpScale{data_scale, filters_scale, output_scale},
-                                               OpZeroPoint{data_zp, filters_zp, output_zp});
+                                               OpScale{data_scale, filters_scale, output_scale});
                     }
                     else
                     {
@@ -239,8 +232,7 @@ namespace ngraph
                             padding_above,
                             data_dilations,
                             groups,
-                            OpScale{data_scale, filters_scale, output_scale},
-                            OpZeroPoint{data_zp, filters_zp, output_zp});
+                            OpScale{data_scale, filters_scale, output_scale});
                     }
 
                     return {conv_node};
