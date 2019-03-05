@@ -66,7 +66,7 @@ namespace ngraph
 
 // TODO(amprocte): refactor so we don't have to introduce a locally-scoped variable and risk
 // shadowing here.
-#define CHECK(exc_class, ctx, check, ...)                                                          \
+#define NGRAPH_CHECK(exc_class, ctx, check, ...)                                                   \
     do                                                                                             \
     {                                                                                              \
         if (!(check))                                                                              \
