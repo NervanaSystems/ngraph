@@ -187,8 +187,6 @@ namespace ngraph
                     auto filters_scale = inputs.at(4);
                     auto output_scale = inputs.at(6);
 
-                    auto scale = data_scale * filters_scale / output_scale;
-
                     ASSERT_VALID_ARGUMENT(node,
                                           ((groups >= 0) && (groups <= data->get_shape().at(1)) &&
                                            (groups <= filters->get_shape().at(0))))
