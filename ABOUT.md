@@ -10,7 +10,7 @@ that the stack diagram is simplified to show how nGraph executes deep
 learning workloads with two hardware backends; however, many other
 deep learning frameworks and backends currently are functioning.
 
-![](doc/sphinx/source/graphics/stackngrknl.png)
+![](doc/sphinx/source/graphics/arch_simple.png)
 
 
 #### Bridge
