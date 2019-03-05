@@ -117,7 +117,7 @@ release of nGraph. nGraph currently has limited support for dynamic graphs.
 Current nGraph Compiler full stack
 ----------------------------------
 
-![](doc/sphinx/source/graphics/about_fullstack.png)
+![](doc/sphinx/source/graphics/arch_complex.png)
 
 
 In addition to IA and NNP transformers, nGraph Compiler stack has transformers
