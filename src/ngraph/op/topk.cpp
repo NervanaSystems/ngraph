@@ -43,26 +43,36 @@ void op::TopK::validate_and_infer_types()
     Rank input_rank = input_shape.rank();
     element::Type input_element_type = get_input_element_type(0);
 
-    NODE_VALIDATION_ASSERT(this, !m_index_element_type.is_dynamic())
-        << "Argument element type must not be dynamic.";
+    NODE_VALIDATION_CHECK(
+        this, !m_index_element_type.is_dynamic(), "Argument element type must not be dynamic.");
 
-    NODE_VALIDATION_ASSERT(
-        this, m_index_element_type == element::i32 || m_index_element_type == element::i64)
-        << "Argument element type must be i64 or i32 (got " << m_index_element_type << ").";
+    NODE_VALIDATION_CHECK(this,
+                          m_index_element_type == element::i32 ||
+                              m_index_element_type == element::i64,
+                          "Argument element type must be i64 or i32 (got ",
+                          m_index_element_type,
+                          ").");
 
-    NODE_VALIDATION_ASSERT(this, input_rank.is_dynamic() || static_cast<size_t>(input_rank) > 0)
-        << "Argument rank must be greater than 0.";
+    NODE_VALIDATION_CHECK(this,
+                          input_rank.is_dynamic() || static_cast<size_t>(input_rank) > 0,
+                          "Argument rank must be greater than 0.");
 
-    NODE_VALIDATION_ASSERT(
-        this, input_rank.is_dynamic() || m_top_k_axis < static_cast<size_t>(input_rank))
-        << "TopK axis (" << m_top_k_axis << ") is out of bounds.";
+    NODE_VALIDATION_CHECK(this,
+                          input_rank.is_dynamic() || m_top_k_axis < static_cast<size_t>(input_rank),
+                          "TopK axis (",
+                          m_top_k_axis,
+                          ") is out of bounds.");
 
-    NODE_VALIDATION_ASSERT(this,
-                           input_rank.is_dynamic() || input_shape[m_top_k_axis].is_dynamic() ||
-                               m_k <= static_cast<size_t>(input_shape[m_top_k_axis]))
-        << "K (" << m_k << ") exceeds the dimension ("
-        << (input_rank.is_static() ? input_shape[m_top_k_axis] : 0) << ") of the TopK axis (axis "
-        << m_top_k_axis << ").";
+    NODE_VALIDATION_CHECK(this,
+                          input_rank.is_dynamic() || input_shape[m_top_k_axis].is_dynamic() ||
+                              m_k <= static_cast<size_t>(input_shape[m_top_k_axis]),
+                          "K (",
+                          m_k,
+                          ") exceeds the dimension (",
+                          (input_rank.is_static() ? input_shape[m_top_k_axis] : 0),
+                          ") of the TopK axis (axis ",
+                          m_top_k_axis,
+                          ").");
 
     PartialShape output_shape{input_shape};
 
