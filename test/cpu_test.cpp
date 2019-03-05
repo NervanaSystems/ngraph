@@ -889,41 +889,6 @@ TEST(cpu_test, convert_inplace)
     EXPECT_EQ((vector<int8_t>{1, 2, 3, -2}), read_vector<int8_t>(result));
 }
 
-TEST(cpu_test, abc_codegen)
-{
-    Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C});
-
-    auto backend = runtime::Backend::create("CPU");
-
-    // Create some tensors for input/output
-    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shape);
-    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::f32, shape);
-    shared_ptr<runtime::Tensor> c = backend->create_tensor(element::f32, shape);
-    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::f32, shape);
-
-    copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
-    copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
-    copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
-
-    ngraph::pass::PassConfig pass_config{ngraph::pass::CompilationMode::CODEGEN};
-    auto handle = backend->compile(f, pass_config);
-    handle->call_with_validate({result}, {a, b, c});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
-
-    handle->call_with_validate({result}, {b, a, c});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
-
-    handle->call_with_validate({result}, {a, c, b});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
-}
-
 TEST(cpu_test, rotated_pooling)
 {
     auto make_f = [&](bool is_4d, bool avgpool) {
