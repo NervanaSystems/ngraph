@@ -55,6 +55,8 @@ namespace ngraph
     }
 }
 
+// This class will be instantiated in the CPUCallFrame with the allocator object which will be used for the
+// device memory allocation
 class ngraph::runtime::cpu::CPUAllocator
 {
 public:
@@ -69,7 +71,7 @@ private:
     size_t m_alignment;
 };
 
-// Abstarct class for the allocator
+// Abstarct class for the allocator, for allocating and deallocating device memory
 class ngraph::runtime::Allocator
 {
 public:
@@ -77,6 +79,8 @@ public:
     virtual void cpu_free(void* ptr, void*) = 0;
 };
 
+// SystemAllocator overides and implements "cpu_malloc" & "cpu_free" of Alloctaor interface class
+// this class uses system library malloc and free for device memory allocation
 class ngraph::runtime::SystemAllocator : public ngraph::runtime::Allocator
 {
 public:
@@ -108,6 +112,8 @@ private:
     size_t m_alignment;
 };
 
+// FrameworkAllocator overides and implements "cpu_malloc" & "cpu_free" of Alloctaor interface class,
+// this class uses framework provide allocators and deallocators for device memory allocation
 class ngraph::runtime::FrameworkAllocator : public ngraph::runtime::Allocator
 {
 public:
