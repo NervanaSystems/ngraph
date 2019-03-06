@@ -33,24 +33,35 @@ void op::DynBroadcast::validate_and_infer_types()
     // shape node should have integer data type. For now we only allow i64
     //TODO: potenially make the type more flexible to include other integer types
     auto shape_et = get_input_element_type(1);
-    NODE_VALIDATION_ASSERT(this, shape_et==element::Type_t::i64)
-        << "DynBroadcast shape has inocorect element type: " << shape_et << ", only i64 is allowed";
+    NODE_VALIDATION_CHECK(this, 
+    shape_et==element::Type_t::i64,
+        "DynBroadcast shape has inocorect element type: ", 
+        shape_et, 
+        ", only i64 is allowed");
 
     //shape node should produce a one dimensional shape.    
     auto broadcast_shape_size = get_input_shape(1).size();
-    NODE_VALIDATION_ASSERT(this, broadcast_shape_size==1)
-        << "DynBroadcast shape has incorrect rank " << broadcast_shape_size << ", it must be equal to 1";
+    NODE_VALIDATION_CHECK(this, 
+        broadcast_shape_size==1,
+        "DynBroadcast shape has incorrect rank ",
+        broadcast_shape_size,
+        ", it must be equal to 1");
 
     // axes node should have integer data type. For now we only allow i64
     //TODO: potenially make the type more flexible to include other integer types
     auto axes_et = get_input_element_type(2);
-    NODE_VALIDATION_ASSERT(this, axes_et==element::Type_t::i64)
-        << "DynBroadcast axes input element type: " << axes_et << ", only i64 is allowed";
+    NODE_VALIDATION_CHECK(this,
+        axes_et==element::Type_t::i64,
+        "DynBroadcast axes input element type: ",
+        axes_et, ", only i64 is allowed");
 
     //axes node should produce a one dimensional shape.    
     auto axes_shape_size = get_input_shape(2).size();
-    NODE_VALIDATION_ASSERT(this, axes_shape_size==1)
-        << "DynBroadcast axes has incorrect rank " << axes_shape_size << ", it must be equal to 1";
+    NODE_VALIDATION_CHECK(this,
+        axes_shape_size==1,
+        "DynBroadcast axes has incorrect rank ", 
+        axes_shape_size, 
+        ", it must be equal to 1");
 
     set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
 }

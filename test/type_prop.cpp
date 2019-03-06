@@ -216,7 +216,7 @@ TEST(type_prop, dyn_broadcast_shape_wrong_rank)
         auto bc = make_shared<op::DynBroadcast>(arg, bc_shape, bc_axes);
         FAIL() << "Output shape mismatch (wrong rank) not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
@@ -239,7 +239,7 @@ TEST(type_prop, dyn_broadcast_axes_wrong_rank)
         auto bc = make_shared<op::DynBroadcast>(arg, bc_shape, bc_axes);
         FAIL() << "Output axes mismatch (wrong rank) not detected";
     }
-    catch (const NodeValidationError& error)
+    catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
