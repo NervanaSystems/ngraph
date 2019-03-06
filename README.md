@@ -97,7 +97,7 @@ to improve it:
 [Validated workloads]: https://ngraph.nervanasys.com/docs/latest/frameworks/validation.html
 [Functional]: https://github.com/NervanaSystems/ngraph-onnx/ 
 [How to contribute]: How-to-contribute
-[framework integration guidess]: https://ngraph.nervanasys.com/docs/latest/frameworks/index.html
+[framework integration guides]: https://ngraph.nervanasys.com/docs/latest/frameworks/index.html
 [release notes]: https://ngraph.nervanasys.com/docs/latest/project/release-notes.html
 [Github issues]: https://github.com/NervanaSystems/ngraph/issues
 [contrib guide]: https://ngraph.nervanasys.com/docs/latest/project/contribution-guide.html
