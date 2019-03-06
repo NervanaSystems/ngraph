@@ -99,7 +99,7 @@ TEST(serialize, friendly_name)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto sum = A+B;
+    auto sum = A + B;
     auto product = sum * C;
     auto f = make_shared<Function>(product, ParameterVector{A, B, C}, "f");
 

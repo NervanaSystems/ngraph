@@ -1210,7 +1210,7 @@ static shared_ptr<ngraph::Function>
         {
             string node_name;
             auto it = node_js.find("name");
-            if(it != node_js.end())
+            if (it != node_js.end())
             {
                 node_name = it->get<string>();
             }
