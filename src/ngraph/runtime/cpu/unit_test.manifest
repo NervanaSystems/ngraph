@@ -1,11 +1,3 @@
-# one hot tests that expect exceptions
-# Consider removing
-one_hot_scalar_fp_nonint_in_3
-one_hot_scalar_oob_in_3
-one_hot_vector_1_barely_oob
-one_hot_vector_1_far_oob
-one_hot_vector_1_fp_nonint
-
 backwards_maxpool_n2_c1_hw5_3x3_str2_max_pad1x2_2x3
 backwards_batch_norm_training
 shape_of_scalar

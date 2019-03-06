@@ -24,6 +24,9 @@
 #include "ngraph/log.hpp"
 #include "ngraph/pattern/matcher.hpp"
 
+using namespace std;
+using namespace ngraph;
+
 // GraphRewrite algorithm:
 // GraphRewrite processes an input graph in an topological order(i.e. args before users)
 // Given the following graph:          Abs2
@@ -56,16 +59,16 @@
 // c) there's no linear order of fusions which will give
 //    the correct final fusion. i.e. the same fusion needs to occur before and after some other fusion
 
-bool ngraph::pass::GraphRewrite::run_on_function(std::shared_ptr<ngraph::Function> f)
+bool pass::GraphRewrite::run_on_function(shared_ptr<Function> f)
 {
     bool rewritten = false;
     const size_t NUM_TRIES = 10;
     size_t tries = NUM_TRIES;
-    std::vector<std::shared_ptr<pattern::Matcher>> original_matchers{m_matchers};
+    vector<shared_ptr<pattern::Matcher>> original_matchers{m_matchers};
     do
     {
         rewritten = false;
-        std::vector<std::shared_ptr<pattern::Matcher>> matchers{m_matchers};
+        vector<shared_ptr<pattern::Matcher>> matchers{m_matchers};
         m_matchers.clear();
         for (auto node : f->get_ordered_ops())
         {
@@ -92,31 +95,31 @@ bool ngraph::pass::GraphRewrite::run_on_function(std::shared_ptr<ngraph::Functio
     return (NUM_TRIES - tries) > 1; //this means a graph was transformed
 }
 
-static const std::vector<std::regex> initialize_fusion_regexes()
+static const vector<regex> initialize_fusion_regexes()
 {
-    const char* cnsf = std::getenv("NGRAPH_DISABLED_FUSIONS");
-    std::vector<std::regex> regexes;
+    const char* cnsf = getenv("NGRAPH_DISABLED_FUSIONS");
+    vector<regex> regexes;
     if (cnsf)
     {
-        const std::string nsf = cnsf;
-        const auto sregexes = ngraph::split(nsf, ';');
+        const string nsf = cnsf;
+        const auto sregexes = split(nsf, ';');
 
-        std::transform(sregexes.begin(),
-                       sregexes.end(),
-                       std::back_inserter(regexes),
-                       [](const std::string& c) -> std::regex { return std::regex(c); });
+        transform(sregexes.begin(),
+                  sregexes.end(),
+                  back_inserter(regexes),
+                  [](const string& c) -> regex { return regex(c); });
     }
     return regexes;
 }
 
-bool ngraph::pass::GraphRewrite::is_enabled(std::shared_ptr<pattern::Matcher> m)
+bool pass::GraphRewrite::is_enabled(shared_ptr<pattern::Matcher> m)
 {
     //note, regexes are static to avoid re-initialization
     static const auto regexes = initialize_fusion_regexes();
 
     for (const auto& regex : regexes)
     {
-        if (std::regex_match(m->get_name(), regex))
+        if (regex_match(m->get_name(), regex))
         {
             NGRAPH_DEBUG << "Disabling matcher " << m->get_name();
             return false;
@@ -126,7 +129,7 @@ bool ngraph::pass::GraphRewrite::is_enabled(std::shared_ptr<pattern::Matcher> m)
     return true;
 }
 
-void ngraph::pass::GraphRewrite::add_matcher(std::shared_ptr<pattern::Matcher> m)
+void pass::GraphRewrite::add_matcher(shared_ptr<pattern::Matcher> m)
 {
     if (is_enabled(m))
     {
@@ -134,7 +137,7 @@ void ngraph::pass::GraphRewrite::add_matcher(std::shared_ptr<pattern::Matcher> m
     }
 }
 
-bool ngraph::pass::RecurrentGraphRewrite::run_on_function(std::shared_ptr<ngraph::Function> f)
+bool pass::RecurrentGraphRewrite::run_on_function(shared_ptr<Function> f)
 {
     bool changed = false;
     size_t i = 0;
