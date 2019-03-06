@@ -156,12 +156,13 @@ set (SRC
     runtime/aligned_buffer.cpp
     runtime/backend.cpp
     runtime/backend_manager.cpp
-    state/rng_state.cpp
+    runtime/executable.cpp
     runtime/host_tensor.cpp
     runtime/tensor.cpp
     serializer.cpp
     shape.cpp
     shape_util.cpp
+    state/rng_state.cpp
     strides.cpp
     type/bfloat16.cpp
     type/element_type.cpp
@@ -265,6 +266,15 @@ endif()
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     target_sources(ngraph PRIVATE $<TARGET_OBJECTS:onnx_import_interface>)
     target_link_libraries(ngraph PRIVATE onnx_import)
+endif()
+
+# Build subdirectories for all build types on Windows
+if(WIN32)
+    foreach(BUILD_TYPE Release Debug RelWithDebInfo MinSizeRel)
+        if(NOT EXISTS ${NGRAPH_BUILD_DIR}/${BUILD_TYPE})
+            file(MAKE_DIRECTORY ${NGRAPH_BUILD_DIR}/${BUILD_TYPE})
+        endif()
+    endforeach()
 endif()
 
 #-----------------------------------------------------------------------------------------------

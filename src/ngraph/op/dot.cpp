@@ -49,11 +49,14 @@ void op::Dot::validate_and_infer_types()
 {
     element::Type result_et;
 
-    NODE_VALIDATION_ASSERT(
-        this, element::Type::merge(result_et, get_input_element_type(0), get_input_element_type(1)))
-        << "Arguments do not have the same element type (arg0 element type: "
-        << get_input_element_type(0) << ", arg1 element type: " << get_input_element_type(1)
-        << ").";
+    NODE_VALIDATION_CHECK(
+        this,
+        element::Type::merge(result_et, get_input_element_type(0), get_input_element_type(1)),
+        "Arguments do not have the same element type (arg0 element type: ",
+        get_input_element_type(0),
+        ", arg1 element type: ",
+        get_input_element_type(1),
+        ").");
 
     const PartialShape& arg0_shape = get_input_partial_shape(0);
     const PartialShape& arg1_shape = get_input_partial_shape(1);
@@ -82,17 +85,27 @@ void op::Dot::validate_and_infer_types()
 
     PartialShape result_shape;
 
-    NODE_VALIDATION_ASSERT(this,
-                           reduction_axes_ambiguous || arg0_shape.rank().is_dynamic() ||
-                               m_reduction_axes_count <= size_t(arg0_shape.rank()))
-        << "Reduction axes count (" << m_reduction_axes_count
-        << ") is too large (arg0 shape: " << arg0_shape << ", arg1 shape: " << arg1_shape << ").";
+    NODE_VALIDATION_CHECK(this,
+                          reduction_axes_ambiguous || arg0_shape.rank().is_dynamic() ||
+                              m_reduction_axes_count <= size_t(arg0_shape.rank()),
+                          "Reduction axes count (",
+                          m_reduction_axes_count,
+                          ") is too large (arg0 shape: ",
+                          arg0_shape,
+                          ", arg1 shape: ",
+                          arg1_shape,
+                          ").");
 
-    NODE_VALIDATION_ASSERT(this,
-                           reduction_axes_ambiguous || arg1_shape.rank().is_dynamic() ||
-                               m_reduction_axes_count <= size_t(arg1_shape.rank()))
-        << "Reduction axes count (" << m_reduction_axes_count
-        << ") is too large (arg0 shape: " << arg0_shape << ", arg1 shape: " << arg1_shape << ").";
+    NODE_VALIDATION_CHECK(this,
+                          reduction_axes_ambiguous || arg1_shape.rank().is_dynamic() ||
+                              m_reduction_axes_count <= size_t(arg1_shape.rank()),
+                          "Reduction axes count (",
+                          m_reduction_axes_count,
+                          ") is too large (arg0 shape: ",
+                          arg0_shape,
+                          ", arg1 shape: ",
+                          arg1_shape,
+                          ").");
 
     if (!reduction_axes_ambiguous && arg0_shape.rank().is_static() && arg1_shape.rank().is_static())
     {
@@ -101,12 +114,20 @@ void op::Dot::validate_and_infer_types()
             size_t axis_index_arg0 = size_t(arg0_shape.rank()) - m_reduction_axes_count + i;
             size_t axis_index_arg1 = i;
 
-            NODE_VALIDATION_ASSERT(
-                this, arg0_shape[axis_index_arg0].compatible(arg1_shape[axis_index_arg1]))
-                << "Paired axes (axis " << axis_index_arg0 << " from arg0, axis " << axis_index_arg1
-                << " from arg1) do not have same length (arg0 shape: " << arg0_shape
-                << ", arg1 shape: " << arg1_shape
-                << ", reduction axes count: " << m_reduction_axes_count << ").";
+            NODE_VALIDATION_CHECK(
+                this,
+                arg0_shape[axis_index_arg0].compatible(arg1_shape[axis_index_arg1]),
+                "Paired axes (axis ",
+                axis_index_arg0,
+                " from arg0, axis ",
+                axis_index_arg1,
+                " from arg1) do not have same length (arg0 shape: ",
+                arg0_shape,
+                ", arg1 shape: ",
+                arg1_shape,
+                ", reduction axes count: ",
+                m_reduction_axes_count,
+                ").");
         }
 
         std::vector<Dimension> result_dims(size_t(arg0_shape.rank()) + size_t(arg1_shape.rank()) -

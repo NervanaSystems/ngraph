@@ -161,6 +161,10 @@ void runtime::hybrid::rewrite_function(const shared_ptr<Function>& f,
         if (cluster.size() > 0)
         {
             shared_ptr<Node> tmp_node = *cluster.begin();
+            if (tmp_node == nullptr)
+            {
+                throw runtime_error("cluster contains nullptr instead of nodes");
+            }
             auto placement = tmp_node->get_placement_index();
             if (placement != 0)
             {
