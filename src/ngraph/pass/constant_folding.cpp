@@ -55,7 +55,7 @@ using namespace std;
 using namespace ngraph;
 
 template <class T>
-shared_ptr<op::Constant> make_constant_reshape(shared_ptr<op::Constant> constant,
+shared_ptr<op::Constant> fold_constant_reshape(shared_ptr<op::Constant> constant,
                                                shared_ptr<op::Reshape> reshape,
                                                NodeExecutorTy func)
 {
@@ -84,7 +84,7 @@ shared_ptr<op::Constant> make_constant_reshape(shared_ptr<op::Constant> constant
 }
 
 template <class T>
-shared_ptr<op::Constant> make_constant_pad(shared_ptr<op::Constant> constant,
+shared_ptr<op::Constant> fold_constant_pad(shared_ptr<op::Constant> constant,
                                            shared_ptr<op::Pad> pad,
                                            NodeExecutorTy func)
 {
@@ -153,25 +153,25 @@ void ngraph::pass::ConstantFolding::construct_constant_pad()
         if (type == element::i32)
         {
             replace_node(m.get_match_root(),
-                         make_constant_pad<int>(constant_match, pad_match, func));
+                         fold_constant_pad<int>(constant_match, pad_match, func));
             return true;
         }
         else if (type == element::i8)
         {
             replace_node(m.get_match_root(),
-                         make_constant_pad<int8_t>(constant_match, pad_match, func));
+                         fold_constant_pad<int8_t>(constant_match, pad_match, func));
             return true;
         }
         else if (type == element::f32)
         {
             replace_node(m.get_match_root(),
-                         make_constant_pad<float>(constant_match, pad_match, func));
+                         fold_constant_pad<float>(constant_match, pad_match, func));
             return true;
         }
         else if (type == element::f64)
         {
             replace_node(m.get_match_root(),
-                         make_constant_pad<double>(constant_match, pad_match, func));
+                         fold_constant_pad<double>(constant_match, pad_match, func));
             return true;
         }
 
@@ -211,25 +211,25 @@ void ngraph::pass::ConstantFolding::construct_constant_reshape()
         if (type == element::i32)
         {
             replace_node(m.get_match_root(),
-                         make_constant_reshape<int>(constant_match, reshape_match, func));
+                         fold_constant_reshape<int>(constant_match, reshape_match, func));
             return true;
         }
         else if (type == element::i8)
         {
             replace_node(m.get_match_root(),
-                         make_constant_reshape<int8_t>(constant_match, reshape_match, func));
+                         fold_constant_reshape<int8_t>(constant_match, reshape_match, func));
             return true;
         }
         else if (type == element::f32)
         {
             replace_node(m.get_match_root(),
-                         make_constant_reshape<float>(constant_match, reshape_match, func));
+                         fold_constant_reshape<float>(constant_match, reshape_match, func));
             return true;
         }
         else if (type == element::f64)
         {
             replace_node(m.get_match_root(),
-                         make_constant_reshape<double>(constant_match, reshape_match, func));
+                         fold_constant_reshape<double>(constant_match, reshape_match, func));
             return true;
         }
 
@@ -242,7 +242,7 @@ void ngraph::pass::ConstantFolding::construct_constant_reshape()
 }
 
 template <class T>
-shared_ptr<op::Constant> make_constant_broadcast(shared_ptr<op::Constant> constant,
+shared_ptr<op::Constant> fold_constant_broadcast(shared_ptr<op::Constant> constant,
                                                  shared_ptr<op::Broadcast> broadcast,
                                                  NodeExecutorTy func)
 {
@@ -299,25 +299,25 @@ void ngraph::pass::ConstantFolding::construct_constant_broadcast()
         if (type == element::i32)
         {
             replace_node(m.get_match_root(),
-                         make_constant_broadcast<int>(constant_match, broadcast_match, func));
+                         fold_constant_broadcast<int>(constant_match, broadcast_match, func));
             return true;
         }
         else if (type == element::i8)
         {
             replace_node(m.get_match_root(),
-                         make_constant_broadcast<int8_t>(constant_match, broadcast_match, func));
+                         fold_constant_broadcast<int8_t>(constant_match, broadcast_match, func));
             return true;
         }
         else if (type == element::f32)
         {
             replace_node(m.get_match_root(),
-                         make_constant_broadcast<float>(constant_match, broadcast_match, func));
+                         fold_constant_broadcast<float>(constant_match, broadcast_match, func));
             return true;
         }
         else if (type == element::f64)
         {
             replace_node(m.get_match_root(),
-                         make_constant_broadcast<double>(constant_match, broadcast_match, func));
+                         fold_constant_broadcast<double>(constant_match, broadcast_match, func));
             return true;
         }
 
@@ -330,27 +330,22 @@ void ngraph::pass::ConstantFolding::construct_constant_broadcast()
 }
 
 template <class T>
-shared_ptr<op::Constant> make_constant_binary(shared_ptr<op::Constant> a,
+shared_ptr<op::Constant> fold_constant_binary(shared_ptr<op::Constant> a,
                                               shared_ptr<op::Constant> b,
                                               shared_ptr<Node> binary,
-                                              ngraph::BuildNodeExecutorMap& m_cfmap)
+                                              NodeExecutorTy func)
 {
     auto out_shape = binary->get_shape();
     vector<T> out_vec(shape_size(out_shape));
 
-    vector<void*> inputs;
-    inputs.push_back(const_cast<void*>(a->get_data_ptr()));
-    inputs.push_back(const_cast<void*>(b->get_data_ptr()));
-    vector<void*> outputs;
-    outputs.push_back(out_vec.data());
-
-    auto& node = *binary;
-    if (!m_cfmap.empty())
+    if (func != nullptr)
     {
-        auto handler = m_cfmap.find(type_index(typeid(node)));
-        NGRAPH_ASSERT(handler != m_cfmap.end()) << "constant folding map should have entry for "
-                                                << binary->get_name();
-        auto func = handler->second(binary.get());
+        vector<void*> inputs;
+        inputs.push_back(const_cast<void*>(a->get_data_ptr()));
+        inputs.push_back(const_cast<void*>(b->get_data_ptr()));
+        vector<void*> outputs;
+        outputs.push_back(out_vec.data());
+
         func(inputs, outputs);
     }
     else
@@ -388,7 +383,7 @@ shared_ptr<op::Constant> make_constant_binary(shared_ptr<op::Constant> a,
         else
         {
             NGRAPH_ASSERT(false)
-                << "make_constant_binary must be consistent with is_supported_binary_op";
+                << "fold_constant_binary must be consistent with is_supported_binary_op";
         }
     }
 
@@ -427,29 +422,39 @@ void ngraph::pass::ConstantFolding::construct_constant_binary()
             return false;
         }
 
+        NodeExecutorTy func = nullptr;
+        if (!m_cfmap.empty())
+        {
+            auto& node = *binary_match;
+            auto handler = m_cfmap.find(type_index(typeid(node)));
+            NGRAPH_ASSERT(handler != m_cfmap.end())
+                << "constant folding map should have an entry for " << binary_match->get_name();
+            func = handler->second(binary_match.get());
+        }
+
         auto type = a_match->get_element_type();
         if (type == element::i32)
         {
             replace_node(m.get_match_root(),
-                         make_constant_binary<int>(a_match, b_match, binary_match, m_cfmap));
+                         fold_constant_binary<int>(a_match, b_match, binary_match, func));
             return true;
         }
         else if (type == element::i8)
         {
             replace_node(m.get_match_root(),
-                         make_constant_binary<int8_t>(a_match, b_match, binary_match, m_cfmap));
+                         fold_constant_binary<int8_t>(a_match, b_match, binary_match, func));
             return true;
         }
         else if (type == element::f32)
         {
             replace_node(m.get_match_root(),
-                         make_constant_binary<float>(a_match, b_match, binary_match, m_cfmap));
+                         fold_constant_binary<float>(a_match, b_match, binary_match, func));
             return true;
         }
         else if (type == element::f64)
         {
             replace_node(m.get_match_root(),
-                         make_constant_binary<double>(a_match, b_match, binary_match, m_cfmap));
+                         fold_constant_binary<double>(a_match, b_match, binary_match, func));
             return true;
         }
 
@@ -468,25 +473,20 @@ bool is_supported_unary_op(std::shared_ptr<Node> n)
 }
 
 template <class T>
-shared_ptr<op::Constant> make_constant_unary(shared_ptr<op::Constant> constant,
+shared_ptr<op::Constant> fold_constant_unary(shared_ptr<op::Constant> constant,
                                              shared_ptr<Node> unary,
-                                             ngraph::BuildNodeExecutorMap& m_cfmap)
+                                             NodeExecutorTy func)
 {
     auto out_shape = unary->get_shape();
     vector<T> out_vec(shape_size(out_shape));
 
-    vector<void*> inputs;
-    inputs.push_back(const_cast<void*>(constant->get_data_ptr()));
-    vector<void*> outputs;
-    outputs.push_back(out_vec.data());
-
-    auto& node = *unary;
-    if (!m_cfmap.empty())
+    if (func != nullptr)
     {
-        auto handler = m_cfmap.find(type_index(typeid(node)));
-        NGRAPH_ASSERT(handler != m_cfmap.end()) << "constant folding map should have entry for "
-                                                << unary->get_name();
-        auto func = handler->second(unary.get());
+        vector<void*> inputs;
+        inputs.push_back(const_cast<void*>(constant->get_data_ptr()));
+        vector<void*> outputs;
+        outputs.push_back(out_vec.data());
+
         func(inputs, outputs);
     }
     else
@@ -537,29 +537,39 @@ void ngraph::pass::ConstantFolding::construct_constant_unary()
             return false;
         }
 
+        NodeExecutorTy func = nullptr;
+        if (!m_cfmap.empty())
+        {
+            auto& node = *unary_match;
+            auto handler = m_cfmap.find(type_index(typeid(node)));
+            NGRAPH_ASSERT(handler != m_cfmap.end())
+                << "constant folding map should have an entry for " << unary_match->get_name();
+            func = handler->second(unary_match.get());
+        }
+
         auto type = constant_match->get_element_type();
         if (type == element::i32)
         {
             replace_node(m.get_match_root(),
-                         make_constant_unary<int>(constant_match, unary_match, m_cfmap));
+                         fold_constant_unary<int>(constant_match, unary_match, func));
             return true;
         }
         else if (type == element::i8)
         {
             replace_node(m.get_match_root(),
-                         make_constant_unary<int8_t>(constant_match, unary_match, m_cfmap));
+                         fold_constant_unary<int8_t>(constant_match, unary_match, func));
             return true;
         }
         else if (type == element::f32)
         {
             replace_node(m.get_match_root(),
-                         make_constant_unary<float>(constant_match, unary_match, m_cfmap));
+                         fold_constant_unary<float>(constant_match, unary_match, func));
             return true;
         }
         else if (type == element::f64)
         {
             replace_node(m.get_match_root(),
-                         make_constant_unary<double>(constant_match, unary_match, m_cfmap));
+                         fold_constant_unary<double>(constant_match, unary_match, func));
             return true;
         }
 
@@ -572,7 +582,7 @@ void ngraph::pass::ConstantFolding::construct_constant_unary()
 }
 
 template <class QUANT, class REAL>
-shared_ptr<op::Constant> make_constant_dequantize(shared_ptr<op::Constant> constant,
+shared_ptr<op::Constant> fold_constant_dequantize(shared_ptr<op::Constant> constant,
                                                   shared_ptr<op::Dequantize> dequant,
                                                   shared_ptr<op::Constant> scale,
                                                   shared_ptr<op::Constant> offset)
@@ -624,14 +634,14 @@ void ngraph::pass::ConstantFolding::construct_constant_dequantize()
         if (type == element::u8)
         {
             replace_node(m.get_match_root(),
-                         make_constant_dequantize<uint8_t, float>(
+                         fold_constant_dequantize<uint8_t, float>(
                              constant_match, dequantize_op, scale, offset));
             return true;
         }
         else if (type == element::i8)
         {
             replace_node(m.get_match_root(),
-                         make_constant_dequantize<int8_t, float>(
+                         fold_constant_dequantize<int8_t, float>(
                              constant_match, dequantize_op, scale, offset));
             return true;
         }
@@ -645,7 +655,7 @@ void ngraph::pass::ConstantFolding::construct_constant_dequantize()
 }
 
 template <class REAL, class QUANT>
-shared_ptr<op::Constant> make_constant_quantize(shared_ptr<op::Constant> constant,
+shared_ptr<op::Constant> fold_constant_quantize(shared_ptr<op::Constant> constant,
                                                 shared_ptr<op::Quantize> quant,
                                                 shared_ptr<op::Constant> scale,
                                                 shared_ptr<op::Constant> offset)
@@ -700,14 +710,14 @@ void ngraph::pass::ConstantFolding::construct_constant_quantize()
         {
             replace_node(
                 m.get_match_root(),
-                make_constant_quantize<float, uint8_t>(constant_match, quantize_op, scale, offset));
+                fold_constant_quantize<float, uint8_t>(constant_match, quantize_op, scale, offset));
             return true;
         }
         else if (type == element::i8)
         {
             replace_node(
                 m.get_match_root(),
-                make_constant_quantize<float, int8_t>(constant_match, quantize_op, scale, offset));
+                fold_constant_quantize<float, int8_t>(constant_match, quantize_op, scale, offset));
             return true;
         }
 
