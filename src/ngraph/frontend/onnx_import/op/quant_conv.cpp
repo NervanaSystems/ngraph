@@ -60,7 +60,8 @@ namespace ngraph
                                            const CoordinateDiff& padding_above,
                                            const Strides& data_dilations,
                                            int groups,
-                                           const OpScale& op_scale)
+                                           const OpScale& op_scale,
+                                           const std::shared_ptr<ngraph::Node>& bias = nullptr)
                     {
                         if (groups > 1)
                         {
@@ -94,18 +95,27 @@ namespace ngraph
                                 auto sliced_filters = std::make_shared<ngraph::op::Slice>(
                                     filters, filters_lower_bounds, filters_upper_bounds);
 
-                                convolution_nodes.push_back(
-                                    ngraph::builder::quantization::QuantizedLinearConvolution(
-                                        sliced_data,
-                                        sliced_filters,
-                                        strides,
-                                        filter_dilations,
-                                        padding_below,
-                                        padding_above,
-                                        data_dilations,
-                                        op_scale.data_scale,
-                                        op_scale.filter_scale,
-                                        op_scale.output_scale));
+                                if (bias)
+                                {
+                                    error::NotSupported(
+                                        "Groups != 1 not supported for Quantized Convolution with "
+                                        "bias.");
+                                }
+                                else
+                                {
+                                    convolution_nodes.push_back(
+                                        ngraph::builder::quantization::QuantizedLinearConvolution(
+                                            sliced_data,
+                                            sliced_filters,
+                                            strides,
+                                            filter_dilations,
+                                            padding_below,
+                                            padding_above,
+                                            data_dilations,
+                                            op_scale.data_scale,
+                                            op_scale.filter_scale,
+                                            op_scale.output_scale));
+                                }
                             }
                             std::size_t concatenation_axis = 1;
                             return std::make_shared<ngraph::op::Concat>(convolution_nodes,
@@ -113,50 +123,35 @@ namespace ngraph
                         }
                         else
                         {
-                            return ngraph::builder::quantization::QuantizedLinearConvolution(
-                                data,
-                                filters,
-                                strides,
-                                filter_dilations,
-                                padding_below,
-                                padding_above,
-                                data_dilations,
-                                op_scale.data_scale,
-                                op_scale.filter_scale,
-                                op_scale.output_scale);
-                        }
-                    }
-
-                    std::shared_ptr<ngraph::Node>
-                        make_ng_quant_conv_bias(const std::shared_ptr<ngraph::Node>& data,
-                                                const std::shared_ptr<ngraph::Node>& filters,
-                                                const std::shared_ptr<ngraph::Node>& bias,
-                                                const Strides& strides,
-                                                const Strides& filter_dilations,
-                                                const CoordinateDiff& padding_below,
-                                                const CoordinateDiff& padding_above,
-                                                const Strides& data_dilations,
-                                                int groups,
-                                                const OpScale& op_scale)
-                    {
-                        if (groups > 1)
-                        {
-                            throw error::NotSupported("No support for quantized group conv+bias.");
-                        }
-                        else
-                        {
-                            return ngraph::builder::quantization::QuantizedLinearConvolutionBias(
-                                data,
-                                filters,
-                                bias,
-                                strides,
-                                filter_dilations,
-                                padding_below,
-                                padding_above,
-                                data_dilations,
-                                op_scale.data_scale,
-                                op_scale.filter_scale,
-                                op_scale.output_scale);
+                            if (bias)
+                            {
+                                return ngraph::builder::quantization::
+                                    QuantizedLinearConvolutionBias(data,
+                                                                   filters,
+                                                                   bias,
+                                                                   strides,
+                                                                   filter_dilations,
+                                                                   padding_below,
+                                                                   padding_above,
+                                                                   data_dilations,
+                                                                   op_scale.data_scale,
+                                                                   op_scale.filter_scale,
+                                                                   op_scale.output_scale);
+                            }
+                            else
+                            {
+                                return ngraph::builder::quantization::QuantizedLinearConvolution(
+                                    data,
+                                    filters,
+                                    strides,
+                                    filter_dilations,
+                                    padding_below,
+                                    padding_above,
+                                    data_dilations,
+                                    op_scale.data_scale,
+                                    op_scale.filter_scale,
+                                    op_scale.output_scale);
+                            }
                         }
                     }
 
@@ -222,17 +217,17 @@ namespace ngraph
                     else
                     {
                         auto bias = inputs.at(8);
-                        conv_node = make_ng_quant_conv_bias(
-                            data,
-                            filters,
-                            bias,
-                            strides,
-                            filter_dilations,
-                            padding_below,
-                            padding_above,
-                            data_dilations,
-                            groups,
-                            OpScale{data_scale, filters_scale, output_scale});
+                        conv_node =
+                            make_ng_quant_conv(data,
+                                               filters,
+                                               strides,
+                                               filter_dilations,
+                                               padding_below,
+                                               padding_above,
+                                               data_dilations,
+                                               groups,
+                                               OpScale{data_scale, filters_scale, output_scale},
+                                               bias);
                     }
 
                     return {conv_node};
