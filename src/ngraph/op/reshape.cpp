@@ -41,25 +41,39 @@ void op::Reshape::validate_and_infer_types()
     // Check that the input axis order is a permutation of (0,...,n-1) for some n.
     for (size_t i = 0; i < m_input_order.size(); i++)
     {
-        NODE_VALIDATION_ASSERT(
-            this, find(begin(m_input_order), end(m_input_order), i) != end(m_input_order))
-            << "Input axis order is not a permutation of argument's axis indices (axis order: "
-            << m_input_order << ", argument shape: " << input_shape << ").";
+        NODE_VALIDATION_CHECK(
+            this,
+            find(begin(m_input_order), end(m_input_order), i) != end(m_input_order),
+            "Input axis order is not a permutation of argument's axis indices (axis order: ",
+            m_input_order,
+            ", argument shape: ",
+            input_shape,
+            ").");
     }
 
     // TODO(amprocte): should be possible to move around unknown dims in the input shape.
     if (input_rank.is_static())
     {
-        NODE_VALIDATION_ASSERT(this, m_input_order.size() == size_t(input_rank))
-            << "Input axis order is not a permutation of argument's axis indices (axis order: "
-            << m_input_order << ", argument shape: " << input_shape << ").";
+        NODE_VALIDATION_CHECK(
+            this,
+            m_input_order.size() == size_t(input_rank),
+            "Input axis order is not a permutation of argument's axis indices (axis order: ",
+            m_input_order,
+            ", argument shape: ",
+            input_shape,
+            ").");
 
         for (size_t i = 0; i < size_t(input_rank); i++)
         {
             auto it = find(begin(m_input_order), end(m_input_order), i);
-            NODE_VALIDATION_ASSERT(this, it != end(m_input_order))
-                << "Input axis order is not a permutation of argument's axis indices (axis order: "
-                << m_input_order << ", argument shape: " << input_shape << ").";
+            NODE_VALIDATION_CHECK(
+                this,
+                it != end(m_input_order),
+                "Input axis order is not a permutation of argument's axis indices (axis order: ",
+                m_input_order,
+                ", argument shape: ",
+                input_shape,
+                ").");
         }
 
         // TODO(amprocte): make a partial_shape_size() analogous to shape_size().
@@ -71,11 +85,16 @@ void op::Reshape::validate_and_infer_types()
 
         if (input_shape_product.is_static())
         {
-            NODE_VALIDATION_ASSERT(this, size_t(input_shape_product) == shape_size(m_output_shape))
-                << "Product of output shape dimensions does not match product of argument shape "
-                   "dimensions "
-                << "(output shape: " << m_output_shape << ", argument shape: " << input_shape
-                << ").";
+            NODE_VALIDATION_CHECK(
+                this,
+                size_t(input_shape_product) == shape_size(m_output_shape),
+                "Product of output shape dimensions does not match product of argument shape "
+                "dimensions ",
+                "(output shape: ",
+                m_output_shape,
+                ", argument shape: ",
+                input_shape,
+                ").");
         }
     }
 
