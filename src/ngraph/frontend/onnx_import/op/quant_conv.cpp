@@ -168,10 +168,6 @@ namespace ngraph
 
                     int64_t groups{node.get_attribute_value<int64_t>("group", 1)};
 
-                    auto data_zp = inputs.at(2);
-                    auto filters_zp = inputs.at(5);
-                    auto output_zp = inputs.at(7);
-
                     auto data_scale = inputs.at(1);
                     auto filters_scale = inputs.at(4);
                     auto output_scale = inputs.at(6);
