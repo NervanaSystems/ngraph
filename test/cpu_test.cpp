@@ -33,6 +33,7 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
+#include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
@@ -950,4 +951,44 @@ TEST(cpu_test, rotated_pooling)
     compare_backends(make_f(false, true), make_f(false, true), "INTERPRETER", "CPU"); // 5D AvgPool
     compare_backends(
         make_f(false, false), make_f(false, false), "INTERPRETER", "CPU"); // 5D MaxPool
+}
+
+TEST(cpu_test, conv_wino_grad)
+{
+    auto make_f = [&](Shape input_shape, Shape filter_shape, Shape bias_shape) {
+        auto input = std::make_shared<op::Parameter>(element::f32, input_shape);
+        auto filter = std::make_shared<op::Parameter>(element::f32, filter_shape);
+        auto bias = std::make_shared<op::Parameter>(element::f32, bias_shape);
+
+        auto conv1 = make_shared<op::Convolution>(input,
+                                                  filter,
+                                                  Strides{1, 1},
+                                                  Strides{1, 1},
+                                                  CoordinateDiff{1, 1},
+                                                  CoordinateDiff{1, 1},
+                                                  Strides{1, 1});
+
+        auto conv = std::make_shared<op::Convolution>(input, filter);
+        auto conv_bias = std::make_shared<op::ConvolutionBias>(conv, bias);
+
+        return make_shared<Function>(conv1, ParameterVector{input, filter, bias});
+    };
+
+    auto backend = runtime::Backend::create("CPU");
+    auto cpu_f = make_f(Shape{64, 3, 224, 224}, Shape{64, 3, 3, 3}, Shape{64});
+
+    test::Uniform<float> rng(-100.0f, 100.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto cpu_results = execute(cpu_f, args, "CPU");
+
+    /*compare_backends(make_f(Shape{64, 3, 224, 224}, Shape{64, 3, 3, 3}, Shape{64}),
+                     make_f(Shape{64, 3, 224, 224}, Shape{64, 3, 3, 3}, Shape{64}), 
+                     "INTERPRETER", "CPU");
+    */
 }

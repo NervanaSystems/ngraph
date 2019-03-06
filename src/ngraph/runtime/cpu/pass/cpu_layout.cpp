@@ -389,6 +389,10 @@ namespace ngraph
                     const memory::desc result_desc(
                         mkldnn_result_shape, et_result, memory::format::any);
                     std::unique_ptr<convolution_forward::desc> fwd_desc{nullptr};
+                    mkldnn::algorithm convolution_algo =
+                        mkldnn_utils::can_use_conv_auto() ? mkldnn::algorithm::convolution_auto
+                                                          : mkldnn::algorithm::convolution_direct;
+
                     if (use_bias)
                     {
                         memory::data_type et_bias =
@@ -399,18 +403,17 @@ namespace ngraph
                             mkldnn_arg2_shape, et_bias, memory::format::any);
                         try
                         {
-                            fwd_desc.reset(
-                                new convolution_forward::desc(prop_kind::forward,
-                                                              algorithm::convolution_direct,
-                                                              input_data_desc,
-                                                              weights_desc,
-                                                              bias_desc, // with bias
-                                                              result_desc,
-                                                              mkldnn_filter_strides,
-                                                              mkldnn_dilated_strides,
-                                                              mkldnn_padding_below,
-                                                              mkldnn_padding_above,
-                                                              padding_kind::zero));
+                            fwd_desc.reset(new convolution_forward::desc(prop_kind::forward,
+                                                                         convolution_algo,
+                                                                         input_data_desc,
+                                                                         weights_desc,
+                                                                         bias_desc, // with bias
+                                                                         result_desc,
+                                                                         mkldnn_filter_strides,
+                                                                         mkldnn_dilated_strides,
+                                                                         mkldnn_padding_below,
+                                                                         mkldnn_padding_above,
+                                                                         padding_kind::zero));
                         }
                         catch (const mkldnn::error& e)
                         {
@@ -423,17 +426,16 @@ namespace ngraph
                     {
                         try
                         {
-                            fwd_desc.reset(
-                                new convolution_forward::desc(prop_kind::forward,
-                                                              algorithm::convolution_direct,
-                                                              input_data_desc,
-                                                              weights_desc,
-                                                              result_desc,
-                                                              mkldnn_filter_strides,
-                                                              mkldnn_dilated_strides,
-                                                              mkldnn_padding_below,
-                                                              mkldnn_padding_above,
-                                                              padding_kind::zero));
+                            fwd_desc.reset(new convolution_forward::desc(prop_kind::forward,
+                                                                         convolution_algo,
+                                                                         input_data_desc,
+                                                                         weights_desc,
+                                                                         result_desc,
+                                                                         mkldnn_filter_strides,
+                                                                         mkldnn_dilated_strides,
+                                                                         mkldnn_padding_below,
+                                                                         mkldnn_padding_above,
+                                                                         padding_kind::zero));
                         }
                         catch (const mkldnn::error& e)
                         {
