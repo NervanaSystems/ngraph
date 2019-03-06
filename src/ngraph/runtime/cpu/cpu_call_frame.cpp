@@ -145,21 +145,19 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
     // Create temporary buffer pools
     size_t alignment = runtime::cpu::CPU_ExternalFunction::s_memory_pool_alignment;
 
-    // assign the passed memory allocators
-    /*ngraph::runtime::cpu::CPUAllocator::framework_allocator = m_framework_allocator;
-    ngraph::runtime::cpu::CPUAllocator::framework_deallocator = m_framework_deallocator;
-    ngraph::runtime::cpu::CPUAllocator::alignment = alignment;
-    */
-    std::unique_ptr<ngraph::runtime::cpu::CPUAllocator> alloctor = nullptr;
+    ngraph::runtime::cpu::CPUAllocator* allocator = nullptr;
     if (m_framework_allocator && m_framework_deallocator)
     {
-        alloctor = new ngraph::runtime::cpu::CPUAllocator(ngraph::runtime::FrameworkAllocator(m_framework_allocator, m_framework_deallocator, s_memory_pool_alignment));
+        auto fw_allocator = new ngraph::runtime::FrameworkAllocator(
+            m_framework_allocator, m_framework_deallocator, alignment);
+        allocator = new ngraph::runtime::cpu::CPUAllocator(fw_allocator, alignment);
     }
     else
     {
-        allocator =  new ngraph::runtime::cpu::CPUAllocator(ngraph::runtime::SystemAllocator(s_memory_pool_alignment)); 
+        auto sys_allocator = new ngraph::runtime::SystemAllocator(alignment);
+        allocator = new ngraph::runtime::cpu::CPUAllocator(sys_allocator, alignment);
     }
-     
+
     for (auto buffer_size : m_external_function->get_memory_buffer_sizes())
     {
         auto buffer = new CPUAlignedBuffer(buffer_size, alignment, allocator);

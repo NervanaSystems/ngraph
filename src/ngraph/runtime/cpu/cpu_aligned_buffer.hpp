@@ -36,7 +36,9 @@ namespace ngraph
 class ngraph::runtime::cpu::CPUAlignedBuffer
 {
 public:
-    CPUAlignedBuffer(size_t byte_size, size_t alignment, ngraph::runtime::cpu::CPUAllocator* cpu_allocator);
+    CPUAlignedBuffer(size_t byte_size,
+                     size_t alignment,
+                     ngraph::runtime::cpu::CPUAllocator* cpu_allocator);
     ~CPUAlignedBuffer();
 
     size_t size() const { return m_byte_size; }

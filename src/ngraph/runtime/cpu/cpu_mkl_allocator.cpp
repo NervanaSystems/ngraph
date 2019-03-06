@@ -14,48 +14,41 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "ngraph/runtime/cpu/cpu_mkl_allocator.hpp"
 #include <string>
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
-#include "ngraph/runtime/cpu/cpu_mkl_allocator.hpp"
 
-ngraph::runtime::cpu::CPUAllocator::CPUAllocator()
+ngraph::runtime::cpu::CPUAllocator::CPUAllocator(ngraph::runtime::Allocator* allocator,
+                                                 size_t alignment)
+    : m_allocator(allocator)
+    , m_alignment(alignment)
 {
-}
-
-ngraph::runtime::cpu::CPUAllocator::CPUAllocator(ngraph::runtime::Allocator* allocator)
-: m_allocator(allocator)
-{
-    
 }
 
 ngraph::runtime::cpu::CPUAllocator::~CPUAllocator()
 {
 }
 
-void* ngraph::runtime::cpu::cpuAllocator::malloc(size_t size)
+void* ngraph::runtime::cpu::CPUAllocator::malloc(size_t size)
 {
-    m_allocator->cpu_malloc(size);
+    m_allocator->cpu_malloc(nullptr, size, m_alignment);
 }
 
-void ngraph::runtime::cpu::cpuAllocator::free(void* ptr)
+void ngraph::runtime::cpu::CPUAllocator::free(void* ptr)
 {
-     m_allocator->cpu_free(ptr);
+    m_allocator->cpu_free(nullptr, ptr);
 }
 
 ngraph::runtime::SystemAllocator::SystemAllocator(size_t alignment)
-: m_alignment(alignment)
+    : m_alignment(alignment)
 {
-
 }
 
-ngraph::runtime::FrameworkAllocator::FrameworkAllocator(AllocateFunc allocator, DestroyFunc deallocator, size_t alignment)
-:   m_allocator(allocator)
-,   m_deallocator(deallocator)
-,   m_alignment(alignment)
+ngraph::runtime::FrameworkAllocator::FrameworkAllocator(AllocateFunc allocator,
+                                                        DestroyFunc deallocator,
+                                                        size_t alignment)
+    : m_allocator(allocator)
+    , m_deallocator(deallocator)
+    , m_alignment(alignment)
 {
-
-
 }
-
-
-

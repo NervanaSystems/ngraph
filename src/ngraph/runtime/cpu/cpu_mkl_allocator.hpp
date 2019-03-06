@@ -18,9 +18,9 @@
 
 #include <cstddef>
 #include <cstdint>
+#include "ngraph/except.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/util.hpp"
-#include "ngraph/except.hpp"
 
 using namespace ngraph;
 using AllocateFunc = void* (*)(void*, size_t, size_t);
@@ -51,8 +51,6 @@ namespace ngraph
         namespace cpu
         {
             class CPUAllocator;
-            void* cpu_malloc(size_t size, size_t alignment, AllocateFunc framework_allocator);
-            void cpu_free(void* ptr, DestroyFunc framework_deallocator);
         }
     }
 }
@@ -60,41 +58,35 @@ namespace ngraph
 class ngraph::runtime::cpu::CPUAllocator
 {
 public:
-    CPUAllocator(ngraph::runtime::Allocator* alloctor);
-    CPUAllocator();
+    CPUAllocator(ngraph::runtime::Allocator* alloctor, size_t alignment);
     ~CPUAllocator();
 
     void* malloc(size_t size);
     void free(void* ptr);
 
 private:
-
     std::unique_ptr<ngraph::runtime::Allocator> m_allocator;
-    
+    size_t m_alignment;
 };
 
-
-// Abstarct class for the allocator 
-class  ngraph::runtime::Allocator
+// Abstarct class for the allocator
+class ngraph::runtime::Allocator
 {
-    public:
-        virtual void* cpu_malloc(void*, size_t size, size_t alignment) = 0;
-        virtual void cpu_free(void* ptr, void*) = 0;
-
+public:
+    virtual void* cpu_malloc(void*, size_t size, size_t alignment) = 0;
+    virtual void cpu_free(void* ptr, void*) = 0;
 };
 
-
-class  ngraph::runtime::SystemAllocator : public  ngraph::runtime::Allocator
+class ngraph::runtime::SystemAllocator : public ngraph::runtime::Allocator
 {
+public:
+    SystemAllocator(size_t alignment);
+    ~SystemAllocator();
 
-    public:
-        SystemAllocator(size_t alignment);
-        ~SystemAllocator();
-
-    void* cpu_malloc(void*, size_t size, size_t alignment) override 
+    void* cpu_malloc(void*, size_t size, size_t alignment) override
     {
-        void *ptr = malloc(size);
-         
+        void* ptr = malloc(size);
+
         // check for exception
         if (size != 0 && !ptr)
         {
@@ -102,7 +94,7 @@ class  ngraph::runtime::SystemAllocator : public  ngraph::runtime::Allocator
             throw std::bad_alloc();
         }
         return ptr;
-    }   
+    }
 
     void cpu_free(void* ptr, void*) override
     {
@@ -112,22 +104,20 @@ class  ngraph::runtime::SystemAllocator : public  ngraph::runtime::Allocator
         }
     }
 
-    private:
-        size_t m_alignment;
+private:
+    size_t m_alignment;
 };
 
-
-class  ngraph::runtime::FrameworkAllocator : public ngraph::runtime::Allocator
+class ngraph::runtime::FrameworkAllocator : public ngraph::runtime::Allocator
 {
-
-    public:
+public:
     FrameworkAllocator(AllocateFunc allocator, DestroyFunc deallocator, size_t alignment);
     ~FrameworkAllocator();
-    
-    void* cpu_malloc(void*, size_t size, size_t alignment) override 
+
+    void* cpu_malloc(void*, size_t size, size_t alignment) override
     {
-        void *ptr =  m_allocator(nullptr, alignment, size);
-         
+        void* ptr = m_allocator(nullptr, alignment, size);
+
         // check for exception
         if (size != 0 && !ptr)
         {
@@ -135,7 +125,7 @@ class  ngraph::runtime::FrameworkAllocator : public ngraph::runtime::Allocator
             throw std::bad_alloc();
         }
         return ptr;
-    }   
+    }
 
     void cpu_free(void* ptr, void*) override
     {
@@ -145,9 +135,8 @@ class  ngraph::runtime::FrameworkAllocator : public ngraph::runtime::Allocator
         }
     }
 
-    private:
+private:
     AllocateFunc m_allocator;
     DestroyFunc m_deallocator;
     size_t m_alignment;
-
 };

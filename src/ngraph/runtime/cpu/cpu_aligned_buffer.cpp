@@ -22,7 +22,9 @@
 
 using namespace ngraph;
 
-runtime::cpu::CPUAlignedBuffer::CPUAlignedBuffer(size_t byte_size, size_t alignment, ngraph::runtime::cpu::CPUAllocator* cpu_allocator)
+runtime::cpu::CPUAlignedBuffer::CPUAlignedBuffer(size_t byte_size,
+                                                 size_t alignment,
+                                                 ngraph::runtime::cpu::CPUAllocator* cpu_allocator)
 {
     m_byte_size = byte_size;
     m_cpu_allocator = cpu_allocator;
