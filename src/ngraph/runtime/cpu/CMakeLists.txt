@@ -195,6 +195,11 @@ if (NGRAPH_CPU_ENABLE)
     target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libmkl libeigen libjson libtbb)
     if (NOT NGRAPH_DEX_ONLY)
         target_link_libraries(cpu_backend PUBLIC codegen)
+        add_custom_command(TARGET cpu_backend POST_BUILD
+                     COMMAND ${CMAKE_COMMAND} -E
+                         copy
+                            ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libcpu_backend.so
+                            ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libcpu_codegen_backend.so)
     endif()
     target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)
     if (NOT APPLE AND NOT MSVS)
