@@ -604,10 +604,10 @@ static shared_ptr<ngraph::Function>
                     node_js.count("element_type") == 0 ? node_js.at("value_type") : node_js;
                 auto element_type = read_element_type(type_node_js.at("element_type"));
                 auto shape = type_node_js.at("shape");
-                auto it = node_js.find("value");
-                if (it != node_js.end())
+                auto value_it = node_js.find("value");
+                if (value_it != node_js.end())
                 {
-                    auto value = it->get<vector<string>>();
+                    auto value = value_it->get<vector<string>>();
                     node = make_shared<op::Constant>(element_type, shape, value);
                 }
                 else
