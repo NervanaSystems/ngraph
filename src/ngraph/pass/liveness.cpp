@@ -33,7 +33,7 @@
 using namespace std;
 using namespace ngraph;
 
-bool pass::Liveness::run_on_function(shared_ptr<ngraph::Function> function)
+bool pass::Liveness::run_on_function(shared_ptr<Function> function)
 {
     list<shared_ptr<Node>> ops = function->get_ordered_ops();
 

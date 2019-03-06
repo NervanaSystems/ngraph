@@ -156,12 +156,13 @@ set (SRC
     runtime/aligned_buffer.cpp
     runtime/backend.cpp
     runtime/backend_manager.cpp
-    state/rng_state.cpp
+    runtime/executable.cpp
     runtime/host_tensor.cpp
     runtime/tensor.cpp
     serializer.cpp
     shape.cpp
     shape_util.cpp
+    state/rng_state.cpp
     strides.cpp
     type/bfloat16.cpp
     type/element_type.cpp
