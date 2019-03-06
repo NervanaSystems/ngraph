@@ -1,5 +1,4 @@
-![](doc/sphinx/source/graphics/ngraph_header.png)
-===========================
+![nGraph Compiler stack](doc/sphinx/source/graphics/ngraph_header.png)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/NervanaSystems/ngraph/blob/master/LICENSE) [![Build Status][build-status-badge]][build-status] 
 
 <div align="left">
@@ -48,8 +47,8 @@ framework and deploying to a variety of hardware targets. We strongly believe in
 providing freedom, performance, and ease-of-use to AI developers. 
 
 The diagram below shows deep learning frameworks and hardware targets
-supported by nGraph. NNP-L (Neural Network Processor for Learning) & NNP-I 
-(Neural Network Processor for Inference) refer to Intel's next generation deep 
+supported by nGraph. The Intel® Nervana™ Neural Network Processor (Intel® Nervana™ NNP-L 
+for Learning and the NNP-I for Inference) refer to Intel's next generation deep 
 learning accelators for training and inference respectively. Future plans 
 for supporting addtional deep learning frameworks and backends are outlined in
 the [ecosystem] section. 
@@ -59,7 +58,7 @@ the [ecosystem] section.
 
 
 While the ecosystem shown above is all functioning, we have validated 
-performance for deep learning inference on CPU processors such as Intel® Xeon® 
+performance for deep learning inference on CPU processors, such as Intel® Xeon® 
 for the Beta release of nGraph. The Gold release is targeted for June 2019; it 
 will feature broader workload coverage including quantized graphs (int8) and 
 will implement support for dynamic shapes. 
@@ -97,7 +96,7 @@ to improve it:
 [Validated workloads]: https://ngraph.nervanasys.com/docs/latest/frameworks/validation.html
 [Functional]: https://github.com/NervanaSystems/ngraph-onnx/ 
 [How to contribute]: How-to-contribute
-[framework integration guides]: http://ngraph.nervanasys.com/docs/latest/framework-integration-guides.html
+[framework integration guides]: https://ngraph.nervanasys.com/docs/latest/frameworks/index.html
 [release notes]: https://ngraph.nervanasys.com/docs/latest/project/release-notes.html
 [Github issues]: https://github.com/NervanaSystems/ngraph/issues
 [contrib guide]: https://ngraph.nervanasys.com/docs/latest/project/contribution-guide.html
@@ -108,8 +107,6 @@ to improve it:
 [ngraph-compiler-stack-readme]: doc/sphinx/source/graphics/ngraph-compiler-stack-readme.png "nGraph Compiler Stack"
 [build-status]: https://travis-ci.org/NervanaSystems/ngraph/branches
 [build-status-badge]: https://travis-ci.org/NervanaSystems/ngraph.svg?branch=master
-[develop-without-lockin]: doc/sphinx/source/graphics/develop-without-lockin.png "Develop on any part of the stack wtihout lockin"
-[Movidius™ Myriad™ 2]:https://www.movidius.com/solutions/vision-processing-unit
 [PlaidML]: https://github.com/plaidml/plaidml
 [Source compile]: https://github.com/NervanaSystems/ngraph-mxnet/blob/master/README.md
 [nGraph-ONNX]: https://github.com/NervanaSystems/ngraph-onnx/blob/master/README.md
