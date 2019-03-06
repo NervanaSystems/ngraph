@@ -2242,3 +2242,17 @@ TEST(onnx_${BACKEND_NAME}, model_quantize_linear)
         execute<float, std::uint8_t>(function, inputs, "${BACKEND_NAME}")};
     EXPECT_TRUE(test::all_close(expected_output.front(), outputs.front()));
 }
+
+TEST(onnx_${BACKEND_NAME}, model_dequantize_linear)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/dequant_lin.onnx"));
+
+    std::vector<std::vector<std::uint8_t>> inputs;
+    inputs.emplace_back(std::vector<std::uint8_t>{19, 210, 21, 10});
+
+    Outputs expected_output{std::vector<float>{76.f, 840.f, 84.f, 40.f}};
+
+    Outputs outputs{execute<std::uint8_t, float>(function, inputs, "${BACKEND_NAME}")};
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+}

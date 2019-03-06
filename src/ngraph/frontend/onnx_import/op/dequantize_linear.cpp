@@ -26,6 +26,7 @@
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/shape.hpp"
 #include "quantize_linear.hpp"
+#include "utils/common.hpp"
 
 namespace ngraph
 {
@@ -39,25 +40,34 @@ namespace ngraph
                 {
                     NodeVector inputs{node.get_ng_inputs()};
                     std::shared_ptr<ngraph::Node> x = inputs.at(0);
-                    std::shared_ptr<ngraph::Node> y_scale = inputs.at(1);
-                    std::shared_ptr<ngraph::Node> y_zero_point = inputs.at(2);
+                    std::shared_ptr<ngraph::Node> x_scale = inputs.at(1);
+                    std::shared_ptr<ngraph::Node> zero_point;
+                    if (inputs.size() == 3)
+                    {
+                        zero_point = inputs.at(2);
+                    }
+                    else
+                    {
+                        zero_point = common::make_constant_node(
+                            x->get_element_type(), Shape{}, std::vector<std::uint8_t>{0});
+                    }
 
-                    Shape y_scale_shape = y_scale->get_shape();
-                    Shape y_zero_point_shape = y_zero_point->get_shape();
+                    Shape y_scale_shape = x_scale->get_shape();
+                    Shape y_zero_point_shape = zero_point->get_shape();
 
                     ASSERT_VALID_ARGUMENT(node, y_scale_shape.size() == 0)
-                        << "y_scale must be a scalar.";
+                        << "x_scale must be a scalar.";
                     ASSERT_VALID_ARGUMENT(node, y_zero_point_shape.size() == 0)
-                        << "y_zero_point must be a scalar.";
+                        << "zero_point must be a scalar.";
 
-                    if (x->get_element_type() != y_zero_point->get_element_type())
+                    if (x->get_element_type() != zero_point->get_element_type())
                     {
-                        y_zero_point = std::make_shared<ngraph::op::Convert>(y_zero_point,
-                                                                             x->get_element_type());
+                        zero_point = std::make_shared<ngraph::op::Convert>(zero_point,
+                                                                           x->get_element_type());
                     }
 
                     return {std::make_shared<ngraph::op::Dequantize>(
-                        x, y_scale, y_zero_point, y_scale->get_element_type(), AxisSet{})};
+                        x, x_scale, zero_point, x_scale->get_element_type(), AxisSet{})};
                 }
 
             } // namespace set_1
