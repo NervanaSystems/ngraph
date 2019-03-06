@@ -84,10 +84,14 @@ std::string ngraph::get_timestamp()
     auto timer = std::chrono::system_clock::to_time_t(now);
 
     // convert to broken time
+    char buffer[256];
+    buffer[0] = 0;
     std::tm* bt = std::localtime(&timer);
 
-    char buffer[256];
-    strftime(buffer, sizeof(buffer), "%H:%M:%S", bt);
+    if (bt)
+    {
+        strftime(buffer, sizeof(buffer), "%H:%M:%S", bt);
+    }
 
     std::ostringstream timestamp;
     timestamp << buffer;
