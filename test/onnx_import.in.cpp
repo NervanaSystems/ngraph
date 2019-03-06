@@ -2225,3 +2225,20 @@ TEST(onnx_${BACKEND_NAME}, import_malformed_model)
         EXPECT_EQ(exc.what(), std::string{"Failure parsing data from the provided input stream"});
     }
 }
+
+TEST(onnx_${BACKEND_NAME}, model_quantize_linear)
+{
+    auto function =
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/quant_lin.onnx"));
+
+    Inputs inputs;
+    inputs.emplace_back(std::vector<float>{32.25f, 48.34f, 50.f, 83.f});
+    inputs.emplace_back(std::vector<float>{0.5f});
+
+    std::vector<std::vector<std::uint8_t>> expected_output{
+        std::vector<std::uint8_t>{64, 97, 100, 166}};
+
+    std::vector<std::vector<std::uint8_t>> outputs{
+        execute<float, std::uint8_t>(function, inputs, "${BACKEND_NAME}")};
+    EXPECT_TRUE(test::all_close(expected_output.front(), outputs.front()));
+}
