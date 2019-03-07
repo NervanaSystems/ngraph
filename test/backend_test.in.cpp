@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include <algorithm>
-#include <algorithm>
 #include <cinttypes>
 #include <cmath>
 #include <cstdlib>
@@ -84,7 +83,7 @@ NGRAPH_TEST(${BACKEND_NAME}, unhandled_op)
     shared_ptr<runtime::Tensor> a = backend->create_tensor<float>(shape);
     shared_ptr<runtime::Tensor> result = backend->create_tensor<float>(shape);
     ASSERT_THROW(auto handle = backend->compile(f);
-                 backend->call_with_validate(handle, {result}, {a}), unsupported_op);
+                 handle->call_with_validate({result}, {a}), unsupported_op);
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, function_name)
@@ -105,7 +104,7 @@ NGRAPH_TEST(${BACKEND_NAME}, function_name)
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
 }
@@ -116,7 +115,7 @@ NGRAPH_TEST(${BACKEND_NAME}, node_name)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = A + B;
-    C->set_name("a node name");
+    C->set_friendly_name("a node name");
     auto f = make_shared<Function>(C, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -130,7 +129,7 @@ NGRAPH_TEST(${BACKEND_NAME}, node_name)
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
 }
@@ -164,8 +163,8 @@ NGRAPH_TEST(${BACKEND_NAME}, aliased_output)
     vector<float> expectedD{0, 2, 6, 12};
     vector<float> expectedE{1, 2, 3, 4};
 
-    backend->call_with_validate(
-        backend->compile(f), {out1, out2, out3, out4, out5, out6, out7}, {a, b});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({out1, out2, out3, out4, out5, out6, out7}, {a, b});
     EXPECT_EQ(expectedC, read_vector<float>(out1));
     EXPECT_EQ(expectedC, read_vector<float>(out2));
     EXPECT_EQ(expectedD, read_vector<float>(out3));
@@ -192,7 +191,7 @@ NGRAPH_TEST(${BACKEND_NAME}, parameter_as_output)
     copy_data(a, expected);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ(read_vector<float>(result), expected);
 }
 
@@ -217,15 +216,15 @@ NGRAPH_TEST(${BACKEND_NAME}, abc)
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b, c});
+    handle->call_with_validate({result}, {a, b, c});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
 
-    backend->call_with_validate(handle, {result}, {b, a, c});
+    handle->call_with_validate({result}, {b, a, c});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
 
-    backend->call_with_validate(handle, {result}, {a, c, b});
+    handle->call_with_validate({result}, {a, c, b});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
 }
@@ -250,13 +249,13 @@ NGRAPH_TEST(${BACKEND_NAME}, abc_int64)
     auto result = backend->create_tensor(element::i64, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b, c});
+    handle->call_with_validate({result}, {a, b, c});
     EXPECT_EQ((vector<int64_t>{54, 80, 110, 144}), read_vector<int64_t>(result));
 
-    backend->call_with_validate(handle, {result}, {b, a, c});
+    handle->call_with_validate({result}, {b, a, c});
     EXPECT_EQ((vector<int64_t>{54, 80, 110, 144}), read_vector<int64_t>(result));
 
-    backend->call_with_validate(handle, {result}, {a, c, b});
+    handle->call_with_validate({result}, {a, c, b});
     EXPECT_EQ((vector<int64_t>{50, 72, 98, 128}), read_vector<int64_t>(result));
 }
 
@@ -285,7 +284,7 @@ NGRAPH_TEST(${BACKEND_NAME}, multiple_result)
     auto r1 = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {r0, r1}, {a, b, c});
+    handle->call_with_validate({r0, r1}, {a, b, c});
 
     EXPECT_EQ((vector<float>{6, 8, 10, 12}), read_vector<float>(r0));
     EXPECT_EQ((vector<float>{54, 80, 110, 144}), read_vector<float>(r1));
@@ -332,8 +331,8 @@ public:
         copy_data(m_mean, mean);
         copy_data(m_variance, variance);
         auto handle = m_backend->compile(m_function);
-        m_backend->call_with_validate(
-            handle, {m_normed_input}, {m_input, m_gamma, m_beta, m_mean, m_variance});
+        handle->call_with_validate({m_normed_input},
+                                   {m_input, m_gamma, m_beta, m_mean, m_variance});
         auto res_normed_input = read_vector<T>(m_normed_input);
         return test::all_close(normed_input, res_normed_input);
     }
@@ -586,8 +585,8 @@ public:
         copy_data(m_gamma, gamma);
         copy_data(m_beta, beta);
         auto handle = m_backend->compile(m_function);
-        m_backend->call_with_validate(
-            handle, {m_normed_input, m_mean, m_variance}, {m_input, m_gamma, m_beta});
+        handle->call_with_validate({m_normed_input, m_mean, m_variance},
+                                   {m_input, m_gamma, m_beta});
         auto res_normed_input = read_vector<T>(m_normed_input);
         bool normed_input_test = test::all_close(normed_input, res_normed_input);
 
@@ -762,7 +761,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_matrix_colwise)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b, c});
+    handle->call_with_validate({result}, {a, b, c});
     EXPECT_EQ((vector<float>{2, 4, 1, 2, 4, 2, 3, 5, 8, 16, 8, 16, 32, 7, 11, 13}),
               read_vector<float>(result));
 }
@@ -791,7 +790,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_matrix_rowwise)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b, c});
+    handle->call_with_validate({result}, {a, b, c});
     EXPECT_EQ((vector<float>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 2, 3, 5, 7, 11, 13}),
               read_vector<float>(result));
 }
@@ -820,7 +819,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_matrix_int64)
     auto result = backend->create_tensor(element::i64, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b, c});
+    handle->call_with_validate({result}, {a, b, c});
     EXPECT_EQ((vector<int64_t>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 2, 3, 5, 7, 11, 13}),
               read_vector<int64_t>(result));
 }
@@ -862,7 +861,7 @@ NGRAPH_TEST_P(${BACKEND_NAME}, concat_vector_params, concat_vector_large)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, inputs_value);
+    handle->call_with_validate({result}, inputs_value);
     EXPECT_EQ(ref_result, read_vector<float>(result));
 }
 
@@ -899,7 +898,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_vector)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b, c});
+    handle->call_with_validate({result}, {a, b, c});
     EXPECT_EQ((vector<float>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 18, 19}), read_vector<float>(result));
 }
 
@@ -925,7 +924,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_4d_tensor)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b, c});
+    handle->call_with_validate({result}, {a, b, c});
     EXPECT_EQ((vector<float>{1, 2, 3}), read_vector<float>(result));
 }
 
@@ -951,7 +950,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_2d_tensor)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b, c});
+    handle->call_with_validate({result}, {a, b, c});
     EXPECT_EQ((vector<float>{1, 2, 3}), read_vector<float>(result));
 }
 
@@ -983,7 +982,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_in_place_2d_tensor)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b, c, d});
+    handle->call_with_validate({result}, {a, b, c, d});
     EXPECT_EQ((vector<float>{3, 7, 2}), read_vector<float>(result));
 }
 
@@ -1016,7 +1015,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_in_place_propagate_2d_tensor)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b, c, d});
+    handle->call_with_validate({result}, {a, b, c, d});
     EXPECT_EQ((vector<float>{3, 7, 2}), read_vector<float>(result));
 }
 
@@ -1109,7 +1108,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_5d)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b, c});
+    handle->call_with_validate({result}, {a, b, c});
     EXPECT_EQ(
         (vector<float>{
             1.,    2.,    3.,    4.,    5.,    6.,    7.,    8.,    9.,    10.,   11.,   12.,
@@ -1167,7 +1166,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_zero_length_1d_last)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(result));
 }
 
@@ -1201,8 +1200,25 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_zero_length_1d_middle)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b, c});
+    handle->call_with_validate({result}, {a, b, c});
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), read_vector<float>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, concat_zero_zero)
+{
+    Shape shape{0};
+    auto constant_1 = op::Constant::create(element::f32, shape, {1});
+    auto concat_1 = make_shared<op::Concat>(NodeVector{constant_1, constant_1}, 0);
+
+    auto f = make_shared<Function>(concat_1, ParameterVector{});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    auto result = backend->create_tensor(element::f32, shape);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {});
+
+    EXPECT_EQ(vector<float>{}, read_vector<float>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, concat_zero_length_4d_middle)
@@ -1235,7 +1251,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_zero_length_4d_middle)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b, c});
+    handle->call_with_validate({result}, {a, b, c});
     EXPECT_EQ((vector<float>{1, 5, 2, 6, 3, 7, 4, 8}), read_vector<float>(result));
 }
 
@@ -1258,7 +1274,7 @@ NGRAPH_TEST(${BACKEND_NAME}, lrn)
 
     auto result = backend->create_tensor(element::f32, shape);
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
 
     vector<float> expected{0.f,
                            0.3015113f,
@@ -1295,7 +1311,7 @@ NGRAPH_TEST(${BACKEND_NAME}, select)
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b, c});
+    handle->call_with_validate({result}, {a, b, c});
     EXPECT_EQ((vector<float>{11, 2, 3, 14, 15, 6, 17, 8}), read_vector<float>(result));
 }
 
@@ -1311,7 +1327,7 @@ NGRAPH_TEST(${BACKEND_NAME}, tensor_constant)
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {});
+    handle->call_with_validate({result}, {});
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), read_vector<float>(result));
 }
 
@@ -1328,7 +1344,7 @@ NGRAPH_TEST(${BACKEND_NAME}, tensor_2constant)
     auto result1 = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result0, result1}, {});
+    handle->call_with_validate({result0, result1}, {});
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), read_vector<float>(result0));
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), read_vector<float>(result1));
 }
@@ -1345,7 +1361,7 @@ NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_with_op)
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {});
+    handle->call_with_validate({result}, {});
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), read_vector<float>(result));
 }
 
@@ -1356,13 +1372,12 @@ NGRAPH_TEST(${BACKEND_NAME}, constant_multi_use)
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     std::shared_ptr<runtime::Tensor> r1 = backend->create_tensor(element::i32, Shape{});
-    backend->call_with_validate(
-        backend->compile(f), {r1}, std::vector<std::shared_ptr<runtime::Tensor>>{});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({r1}, std::vector<std::shared_ptr<runtime::Tensor>>{});
     EXPECT_EQ(read_vector<int>(r1), std::vector<int>{388});
 
     std::shared_ptr<runtime::Tensor> r2 = backend->create_tensor(element::i32, Shape{});
-    backend->call_with_validate(
-        backend->compile(f), {r2}, std::vector<std::shared_ptr<runtime::Tensor>>{});
+    handle->call_with_validate({r2}, std::vector<std::shared_ptr<runtime::Tensor>>{});
     EXPECT_EQ(read_vector<int>(r2), std::vector<int>{388});
 }
 
@@ -1376,12 +1391,12 @@ NGRAPH_TEST(${BACKEND_NAME}, convert_int32_float32)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::i32, shape);
-    copy_data(a, vector<int32_t>{1, 2, 3, 4});
+    copy_data(a, vector<int32_t>{281, 2, 3, 4});
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
-    EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(result));
+    handle->call_with_validate({result}, {a});
+    EXPECT_EQ((vector<float>{281, 2, 3, 4}), read_vector<float>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, convert_uint16_float32)
@@ -1398,7 +1413,7 @@ NGRAPH_TEST(${BACKEND_NAME}, convert_uint16_float32)
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(result));
 }
 
@@ -1417,7 +1432,7 @@ NGRAPH_TEST(${BACKEND_NAME}, convert_int32_bool)
     auto result = backend->create_tensor(element::boolean, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<char>{1, 2, 3, 4}), read_vector<char>(result));
 }
 
@@ -1436,7 +1451,7 @@ NGRAPH_TEST(${BACKEND_NAME}, convert_float32_bool)
     auto result = backend->create_tensor(element::boolean, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<char>{1, 2, 3, 4}), read_vector<char>(result));
 }
 
@@ -1456,7 +1471,7 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_scalar)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{312}), read_vector<float>(result));
 }
 
@@ -1476,7 +1491,7 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_matrix)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{2, 3, 6, 7, 10, 11}), read_vector<float>(result));
 }
 
@@ -1496,7 +1511,7 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_vector)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}), read_vector<float>(result));
 }
 
@@ -1522,7 +1537,7 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_matrix_axis_0_overlap)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((vector<float>{12, 16, 20, 24, 28, 32, 36, 40}), read_vector<float>(result));
 }
 
@@ -1543,7 +1558,8 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_matrix_axis_0_in_place)
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{10, 12, 14, 16, 18, 20, 22, 24}), read_vector<float>(result));
 }
 
@@ -1565,7 +1581,8 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_matrix_axis_0_in_place_twice)
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{14, 16, 18, 20}), read_vector<float>(result));
 }
 
@@ -1588,7 +1605,8 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_matrix_axis_0_in_place_twice_overlap)
               vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20});
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{22, 24, 26, 28, 30, 32, 34, 36}), read_vector<float>(result));
 }
 
@@ -1612,7 +1630,8 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_matrix_axis_0_in_place_with_reshape)
               vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20});
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{12, 13, 14, 15, 17, 18, 19, 20}), read_vector<float>(result));
 }
 
@@ -1632,7 +1651,7 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_matrix_strided)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{4, 7, 12, 15}), read_vector<float>(result));
 }
 
@@ -1658,7 +1677,7 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_3d)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{21, 22, 25, 26, 37, 38, 41, 42}), read_vector<float>(result));
 }
 
@@ -1684,7 +1703,7 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_3d_strided)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{0, 2, 8, 10, 32, 34, 40, 42}), read_vector<float>(result));
 }
 
@@ -1710,8 +1729,34 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_3d_strided_different_strides)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{0, 3, 8, 11, 32, 35, 40, 43}), read_vector<float>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, slice_3d_strided_different_strides_int64)
+{
+    Shape shape_a{4, 4, 4};
+    auto A = make_shared<op::Parameter>(element::i64, shape_a);
+    Shape shape_r{2, 2, 2};
+    auto r = make_shared<op::Slice>(A, Coordinate{0, 0, 0}, Coordinate{4, 4, 4}, Strides{2, 2, 3});
+    auto f = make_shared<Function>(r, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::i64, shape_a);
+    copy_data(a, vector<int64_t>{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
+
+                                 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+
+                                 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+
+                                 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63});
+    auto result = backend->create_tensor(element::i64, shape_r);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_EQ((vector<int64_t>{0, 3, 8, 11, 32, 35, 40, 43}), read_vector<int64_t>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, slice_3d_start_just_oob)
@@ -1732,7 +1777,7 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_3d_start_just_oob)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{}), read_vector<float>(result));
 }
 
@@ -1747,13 +1792,13 @@ NGRAPH_TEST(${BACKEND_NAME}, scalar_constant_float32)
     auto result = backend->create_tensor(element::f32, Shape{});
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {});
+    handle->call_with_validate({result}, {});
     EXPECT_EQ(vector<float>{4.75f}, read_vector<float>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, scalar_constant_int64)
 {
-    auto r = op::Constant::create(element::i64, Shape{}, {2112});
+    auto r = op::Constant::create(element::i64, Shape{}, {0x4000000000000001});
     auto f = make_shared<Function>(r, ParameterVector{});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -1762,8 +1807,8 @@ NGRAPH_TEST(${BACKEND_NAME}, scalar_constant_int64)
     auto result = backend->create_tensor(element::i64, Shape{});
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {});
-    EXPECT_EQ(vector<int64_t>{2112}, read_vector<int64_t>(result));
+    handle->call_with_validate({result}, {});
+    EXPECT_EQ(vector<int64_t>{0x4000000000000001}, read_vector<int64_t>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_float32)
@@ -1778,24 +1823,22 @@ NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_float32)
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {});
+    handle->call_with_validate({result}, {});
     EXPECT_EQ((vector<float>{4.75f, 4.5f, -5.25f, 0.0f}), read_vector<float>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_int64)
 {
-    Shape shape{2, 2};
-    auto r = op::Constant::create(element::i64, shape, {2112, 1848, 1776, 1964});
+    Shape shape{2};
+    auto r = op::Constant::create(element::i64, shape, {0x4000000000000001, 0x4000000000000002});
     auto f = make_shared<Function>(r, ParameterVector{});
-
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
     // Create some tensors for input/output
     auto result = backend->create_tensor(element::i64, shape);
-
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {});
-    EXPECT_EQ((vector<int64_t>{2112, 1848, 1776, 1964}), read_vector<int64_t>(result));
+    handle->call_with_validate({result}, {});
+    EXPECT_EQ((vector<int64_t>{0x4000000000000001, 0x4000000000000002}),
+              read_vector<int64_t>(result));
 }
 
 // TODO: Kahan sum only works in limited cases with CPU / Interpreter backend
@@ -1814,7 +1857,7 @@ NGRAPH_TEST(${BACKEND_NAME}, kahan_sum_to_scalar)
     auto result = backend->create_tensor(element::f32, Shape{});
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_TRUE(test::all_close_f(vector<float>{epsilon}, read_vector<float>(result)));
 }
 
@@ -1839,7 +1882,7 @@ NGRAPH_TEST(${BACKEND_NAME}, kahan_sum_3d_to_vector)
     auto result = backend->create_tensor(element::f32, shape_rt);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_TRUE(test::all_close_f(vector<float>{epsilon_a, epsilon_b, epsilon_c},
                                   read_vector<float>(result)));
 }
@@ -1861,7 +1904,7 @@ NGRAPH_TEST(${BACKEND_NAME}, constant_equality_bool)
     auto result = backend->create_tensor(element::boolean, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {});
+    handle->call_with_validate({result}, {});
     EXPECT_EQ((vector<char>{true, false, true, false}), read_vector<char>(result));
 }
 
@@ -1885,7 +1928,7 @@ NGRAPH_TEST(${BACKEND_NAME}, replace_slice_scalar)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((vector<float>{808}), read_vector<float>(result));
 }
 
@@ -1912,7 +1955,7 @@ NGRAPH_TEST(${BACKEND_NAME}, replace_slice_matrix_inplace)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((vector<float>{1, 102, 103, 4, 5, 106, 107, 8, 9, 110, 111, 12, 13, 14, 15, 16}),
               read_vector<float>(result));
 }
@@ -1937,7 +1980,7 @@ NGRAPH_TEST(${BACKEND_NAME}, replace_slice_matrix)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((vector<float>{1, 102, 103, 4, 5, 106, 107, 8, 9, 110, 111, 12, 13, 14, 15, 16}),
               read_vector<float>(result));
 }
@@ -1962,7 +2005,7 @@ NGRAPH_TEST(${BACKEND_NAME}, replace_slice_vector)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ(
         (vector<float>{0, 1, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 14, 15}),
         read_vector<float>(result));
@@ -1994,7 +2037,7 @@ NGRAPH_TEST(${BACKEND_NAME}, replace_slice_3d)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((vector<float>{0,  1,  2,  3,  4,  5,   6,   7,  8,  9,   10,  11, 12, 13, 14, 15,
 
                              16, 17, 18, 19, 20, 921, 922, 23, 24, 925, 926, 27, 28, 29, 30, 31,
@@ -2032,7 +2075,7 @@ NGRAPH_TEST(${BACKEND_NAME}, replace_slice_3d_strided)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((vector<float>{900, 1,  902, 3,  4,  5,  6,  7,  908, 9,  910, 11, 12, 13, 14, 15,
 
                              16,  17, 18,  19, 20, 21, 22, 23, 24,  25, 26,  27, 28, 29, 30, 31,
@@ -2070,7 +2113,7 @@ NGRAPH_TEST(${BACKEND_NAME}, replace_slice_3d_strided_different_strides)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((vector<float>{900, 1,  2,  903, 4,  5,  6,  7,  908, 9,  10, 911, 12, 13, 14, 15,
 
                              16,  17, 18, 19,  20, 21, 22, 23, 24,  25, 26, 27,  28, 29, 30, 31,
@@ -2095,7 +2138,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_0d)
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{6}), read_vector<float>(result));
 }
 
@@ -2113,7 +2156,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_1d_nochange)
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{0, 1, 2, 3, 4, 5, 6, 7}), read_vector<float>(result));
 }
 
@@ -2131,7 +2174,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_1d_0)
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{7, 6, 5, 4, 3, 2, 1, 0}), read_vector<float>(result));
 }
 
@@ -2150,7 +2193,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_2d_nochange)
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ(
         (test::NDArray<float, 2>({{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}}).get_vector()),
         read_vector<float>(result));
@@ -2171,7 +2214,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_2d_0)
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ(
         (test::NDArray<float, 2>({{9, 10, 11}, {6, 7, 8}, {3, 4, 5}, {0, 1, 2}}).get_vector()),
         read_vector<float>(result));
@@ -2192,7 +2235,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_2d_1)
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ(
         (test::NDArray<float, 2>({{2, 1, 0}, {5, 4, 3}, {8, 7, 6}, {11, 10, 9}}).get_vector()),
         read_vector<float>(result));
@@ -2213,7 +2256,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_2d_01)
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ(
         (test::NDArray<float, 2>({{11, 10, 9}, {8, 7, 6}, {5, 4, 3}, {2, 1, 0}}).get_vector()),
         read_vector<float>(result));
@@ -2236,7 +2279,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_nochange)
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((test::NDArray<float, 3>({{{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}},
                                         {{12, 13, 14}, {15, 16, 17}, {18, 19, 20}, {21, 22, 23}}})
                    .get_vector()),
@@ -2260,7 +2303,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_0)
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((test::NDArray<float, 3>({{{12, 13, 14}, {15, 16, 17}, {18, 19, 20}, {21, 22, 23}},
                                         {{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}}})
                    .get_vector()),
@@ -2284,7 +2327,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_1)
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((test::NDArray<float, 3>({{{9, 10, 11}, {6, 7, 8}, {3, 4, 5}, {0, 1, 2}},
                                         {{21, 22, 23}, {18, 19, 20}, {15, 16, 17}, {12, 13, 14}}})
                    .get_vector()),
@@ -2308,7 +2351,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_2)
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((test::NDArray<float, 3>({{{2, 1, 0}, {5, 4, 3}, {8, 7, 6}, {11, 10, 9}},
                                         {{14, 13, 12}, {17, 16, 15}, {20, 19, 18}, {23, 22, 21}}})
                    .get_vector()),
@@ -2332,7 +2375,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_01)
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((test::NDArray<float, 3>({{{21, 22, 23}, {18, 19, 20}, {15, 16, 17}, {12, 13, 14}},
                                         {{9, 10, 11}, {6, 7, 8}, {3, 4, 5}, {0, 1, 2}}})
                    .get_vector()),
@@ -2356,7 +2399,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_02)
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((test::NDArray<float, 3>({{{14, 13, 12}, {17, 16, 15}, {20, 19, 18}, {23, 22, 21}},
                                         {{2, 1, 0}, {5, 4, 3}, {8, 7, 6}, {11, 10, 9}}})
                    .get_vector()),
@@ -2380,7 +2423,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_12)
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((test::NDArray<float, 3>({{{11, 10, 9}, {8, 7, 6}, {5, 4, 3}, {2, 1, 0}},
                                         {{23, 22, 21}, {20, 19, 18}, {17, 16, 15}, {14, 13, 12}}})
                    .get_vector()),
@@ -2405,7 +2448,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_012)
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((test::NDArray<float, 3>({{{23, 22, 21}, {20, 19, 18}, {17, 16, 15}, {14, 13, 12}},
                                         {{11, 10, 9}, {8, 7, 6}, {5, 4, 3}, {2, 1, 0}}})
                    .get_vector()),
@@ -2424,7 +2467,7 @@ NGRAPH_TEST(${BACKEND_NAME}, numeric_float_nan)
     // Create some tensors for input/output
     auto result = backend->create_tensor(element::boolean, shape);
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {});
+    handle->call_with_validate({result}, {});
     EXPECT_EQ((vector<char>{false, false, true, false, false}), read_vector<char>(result));
 }
 
@@ -2440,7 +2483,7 @@ NGRAPH_TEST(${BACKEND_NAME}, numeric_double_nan)
     // Create some tensors for input/output
     auto result = backend->create_tensor(element::boolean, shape);
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {});
+    handle->call_with_validate({result}, {});
     EXPECT_EQ((vector<char>{false, false, true, false, false}), read_vector<char>(result));
 }
 
@@ -2456,7 +2499,7 @@ NGRAPH_TEST(${BACKEND_NAME}, numeric_float_inf)
     // Create some tensors for input/output
     auto result = backend->create_tensor(element::boolean, shape);
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {});
+    handle->call_with_validate({result}, {});
     EXPECT_EQ((vector<char>{false, false, true, false, false}), read_vector<char>(result));
 }
 
@@ -2472,7 +2515,7 @@ NGRAPH_TEST(${BACKEND_NAME}, numeric_double_inf)
     // Create some tensors for input/output
     auto result = backend->create_tensor(element::boolean, shape);
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {});
+    handle->call_with_validate({result}, {});
     EXPECT_EQ((vector<char>{false, false, true, false, false}), read_vector<char>(result));
 }
 
@@ -2502,7 +2545,7 @@ void make_unary_empty_test(const string& backend_name)
     }
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, outputs, inputs);
+    handle->call_with_validate(outputs, inputs);
 
     EXPECT_EQ(read_vector<float>(inputs[0]).size(), 0);
     EXPECT_EQ(read_vector<double>(inputs[1]).size(), 0);
@@ -2562,7 +2605,7 @@ void make_binary_empty_test(const string& backend_name, bool is_comparison = fal
     }
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, outputs, inputs);
+    handle->call_with_validate(outputs, inputs);
 
     EXPECT_EQ(read_vector<float>(inputs[0]).size(), 0);
     EXPECT_EQ(read_vector<double>(inputs[1]).size(), 0);
@@ -2645,7 +2688,7 @@ NGRAPH_TEST(${BACKEND_NAME}, zero_sized_not)
     auto result = backend->create_tensor(element::from<char>(), shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
 
     auto in_vec = read_vector<char>(a);
     auto out_vec = read_vector<char>(result);
@@ -2809,7 +2852,7 @@ NGRAPH_TEST(${BACKEND_NAME}, convolution_outlining)
     vector<float> expected_result{4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f};
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ(vector<float>{expected_result}, read_vector<float>(result));
 }
 
@@ -2818,7 +2861,7 @@ NGRAPH_TEST(${BACKEND_NAME}, computation_reuse)
     Shape shape_a{1, 16, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{32, 16, 1, 1};
-    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto B = make_shared<op::Parameter>(element::f32, shape_b, true);
     Shape shape_r{1, 32, 2, 2};
     auto conv = make_shared<op::Convolution>(A,
                                              B,
@@ -2845,12 +2888,12 @@ NGRAPH_TEST(${BACKEND_NAME}, computation_reuse)
     auto result = backend->create_tensor(element::f32, shape_r, rv.data());
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
 
     vector<float> rv_saved(rv);
 
     b->set_stale(false);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ(rv_saved, rv);
 }
 
@@ -2878,7 +2921,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_interior_1d)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((test::NDArray<float, 1>(
                    {1, 2112, 2112, 2, 2112, 2112, 3, 2112, 2112, 4, 2112, 2112, 5, 2112, 2112, 6})
                    .get_vector()),
@@ -2909,7 +2952,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_1d)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((test::NDArray<float, 1>(
                    {2112, 2112, 2112, 2112, 1, 2, 3, 4, 5, 6, 2112, 2112, 2112, 2112, 2112})
                    .get_vector()),
@@ -2940,7 +2983,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_interior_exterior_1d)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((test::NDArray<float, 1>({2112, 2112, 2112, 2112, 1,    2112, 2112, 2, 2112,
                                         2112, 3,    2112, 2112, 4,    2112, 2112, 5, 2112,
                                         2112, 6,    2112, 2112, 2112, 2112, 2112})
@@ -2972,7 +3015,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_interior_exterior_2d)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((test::NDArray<float, 2>({{9, 9, 9, 9, 9, 9},
                                         {1, 9, 2, 9, 3, 9},
                                         {9, 9, 9, 9, 9, 9},
@@ -3008,7 +3051,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_2d_0x0)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((test::NDArray<float, 2>({{2112, 2112, 2112, 2112, 2112},
                                         {2112, 2112, 2112, 2112, 2112},
                                         {2112, 2112, 2112, 2112, 2112},
@@ -3042,7 +3085,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_2d_0x3)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((test::NDArray<float, 2>({{2112, 2112, 2112, 2112, 2112},
                                         {2112, 2112, 2112, 2112, 2112},
                                         {2112, 2112, 2112, 2112, 2112},
@@ -3076,7 +3119,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_2d_3x0)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((test::NDArray<float, 2>({{2112, 2112, 2112, 2112, 2112},
                                         {2112, 2112, 2112, 2112, 2112},
                                         {2112, 2112, 2112, 2112, 2112},
@@ -3126,7 +3169,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_4d_1x2x2x2)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     // clang-format off
     EXPECT_EQ((test::NDArray<float, 4>(
         {
@@ -3180,7 +3223,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_interior_exterior_4d_2x0x3x2)
     vector<float> expected(5 * 2 * 3 * 2, 2112);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ(expected, read_vector<float>(result));
 }
 
@@ -3233,7 +3276,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_2channel_2image_asym)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((test::NDArray<float, 4>({{{{0, 1, 0, 2, 42, 42}, // img 0 chan 0
                                           {0, 3, 2, 0, 42, 42},
                                           {2, 0, 0, 0, 42, 42},
@@ -3280,7 +3323,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_trivial)
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(result));
 }
 
@@ -3300,7 +3343,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_trivial_5d)
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                              1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}),
               read_vector<float>(result));
@@ -3320,7 +3363,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_to_scalar)
     auto result = backend->create_tensor(element::f32, Shape{});
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{24}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -3343,7 +3386,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_matrix_columns)
     auto result = backend->create_tensor(element::f32, shape_rt);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{15, 48}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -3366,7 +3409,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_matrix_rows)
     auto result = backend->create_tensor(element::f32, shape_rt);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{2, 12, 30}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -3390,7 +3433,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_matrix_rows_zero)
     copy_data(result, vector<float>({3, 3, 3}));
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{1, 1, 1}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -3415,7 +3458,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_matrix_cols_zero)
     copy_data(result, vector<float>({3, 3}));
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{1, 1}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -3439,7 +3482,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_vector_zero)
     copy_data(result, vector<float>({3}));
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{1}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -3463,7 +3506,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_matrix_to_scalar_zero_by_zero)
     copy_data(result, vector<float>({3}));
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{1}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -3487,7 +3530,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_3d_to_matrix_most_sig)
     auto result = backend->create_tensor(element::f32, shape_rt);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{1 * 10 * 19,
                              2 * 11 * 20,
                              3 * 12 * 21,
@@ -3516,7 +3559,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_3d_to_matrix_least_sig)
     auto result = backend->create_tensor(element::f32, shape_rt);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{1 * 2 * 3,
                              4 * 5 * 6,
                              7 * 8 * 9,
@@ -3545,7 +3588,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_3d_to_vector)
     auto result = backend->create_tensor(element::f32, shape_rt);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{1.0f * 10.0f * 19.0f * 4.0f * 13.0f * 22.0f * 7.0f * 16.0f * 25.0f,
                              2.0f * 11.0f * 20.0f * 5.0f * 14.0f * 23.0f * 8.0f * 17.0f * 26.0f,
                              3.0f * 12.0f * 21.0f * 6.0f * 15.0f * 24.0f * 9.0f * 18.0f * 27.0f}),
@@ -3569,7 +3612,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_3d_to_scalar)
     auto result = backend->create_tensor(element::f32, shape_rt);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_TRUE(test::all_close(vector<float>{1.0f * 10.0f * 9.0f * 4.0f * 13.0f * 6.0f * 7.0f *
                                               12.0f * 3.0f * 2.0f * 11.0f * 8.0f * 5.0f * 14.0f *
                                               5.0f * 8.0f * 11.0f * 2.0f * 3.0f * 12.0f * 7.0f *
@@ -3595,7 +3638,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_3d_eliminate_zero_dim)
     copy_data(result, vector<float>{2112, 2112, 2112, 2112, 2112, 2112});
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{1, 1, 1, 1, 1, 1}), read_vector<float>(result));
 }
 
@@ -3614,7 +3657,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_2d_to_scalar_int32)
     auto result = backend->create_tensor(element::i32, shape_rt);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ(vector<int32_t>{1 * 2 * 3 * 4 * 5 * 6 * 7 * 8 * 9}, read_vector<int32_t>(result));
 }
 
@@ -3632,7 +3675,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_to_scalar_int32)
     auto result = backend->create_tensor(element::i32, Shape{});
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<int32_t>{24}), read_vector<int32_t>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -3654,7 +3697,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_to_scalar_int8)
     auto result = backend->create_tensor(element::i8, Shape{});
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<int8_t>{24}), read_vector<int8_t>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -3677,7 +3720,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_trivial)
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(result));
 }
 
@@ -3695,7 +3738,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_trivial_int8)
     auto result = backend->create_tensor(element::i8, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<int8_t>{1, 2, 3, 4}), read_vector<int8_t>(result));
 }
 
@@ -3715,7 +3758,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_trivial_5d)
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                              1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}),
               read_vector<float>(result));
@@ -3736,7 +3779,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_trivial_5d_int32)
     auto result = backend->create_tensor(element::i32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<int32_t>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                                1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}),
               read_vector<int32_t>(result));
@@ -3756,7 +3799,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_to_scalar)
     auto result = backend->create_tensor(element::f32, Shape{});
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{4}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -3778,7 +3821,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_to_scalar_int8)
     auto result = backend->create_tensor(element::i8, Shape{});
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<int8_t>{4}), read_vector<int8_t>(result));
 }
 
@@ -3797,7 +3840,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_matrix_columns)
     auto result = backend->create_tensor(element::f32, shape_rt);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{5, 6}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -3820,7 +3863,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_matrix_rows)
     auto result = backend->create_tensor(element::f32, shape_rt);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{2, 4, 6}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -3843,7 +3886,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_matrix_rows_int32)
     auto result = backend->create_tensor(element::i32, shape_rt);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<int32_t>{2, 4, 6}), read_vector<int32_t>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -3867,7 +3910,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_matrix_rows_zero)
     copy_data(result, vector<float>({3, 3, 3}));
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{-std::numeric_limits<float>::infinity(),
                              -std::numeric_limits<float>::infinity(),
                              -std::numeric_limits<float>::infinity()}),
@@ -3898,7 +3941,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_matrix_rows_zero_int32)
                          : std::numeric_limits<int32_t>::min();
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<int32_t>{minval, minval, minval}), read_vector<int32_t>(result));
     EXPECT_EQ((vector<int32_t>{}), read_vector<int32_t>(a));
 }
@@ -3920,7 +3963,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_matrix_cols_zero)
     copy_data(result, vector<float>({3, 3}));
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{-std::numeric_limits<float>::infinity(),
                              -std::numeric_limits<float>::infinity()}),
               read_vector<float>(result));
@@ -3946,7 +3989,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_vector_zero)
     copy_data(result, vector<float>({3}));
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{-std::numeric_limits<float>::infinity()}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -3970,7 +4013,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_matrix_to_scalar_zero_by_zero)
     copy_data(result, vector<float>({3}));
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{-std::numeric_limits<float>::infinity()}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -3994,7 +4037,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_3d_to_matrix_most_sig)
     auto result = backend->create_tensor(element::f32, shape_rt);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{19, 20, 21, 22, 23, 24, 25, 26, 27}), read_vector<float>(result));
 }
 
@@ -4014,7 +4057,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_3d_to_matrix_least_sig)
     auto result = backend->create_tensor(element::f32, shape_rt);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{3, 6, 9, 12, 15, 18, 21, 24, 27}), read_vector<float>(result));
 }
 
@@ -4034,7 +4077,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_3d_to_vector)
     auto result = backend->create_tensor(element::f32, shape_rt);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{25.0f, 26.0f, 27.0f}), read_vector<float>(result));
 }
 
@@ -4054,7 +4097,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_3d_to_scalar)
     auto result = backend->create_tensor(element::f32, shape_rt);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{14.0f}), read_vector<float>(result));
 }
 
@@ -4074,7 +4117,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_3d_to_scalar_int32)
     auto result = backend->create_tensor(element::i32, shape_rt);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<int32_t>{14}), read_vector<int32_t>(result));
 }
 
@@ -4094,7 +4137,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_3d_to_scalar_double)
     auto result = backend->create_tensor(element::f64, shape_rt);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<double>{14}), read_vector<double>(result));
 }
 
@@ -4118,7 +4161,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_3d_eliminate_zero_dim)
     float mi = -std::numeric_limits<float>::infinity();
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{mi, mi, mi, mi, mi, mi}), read_vector<float>(result));
 }
 
@@ -4137,7 +4180,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_trivial)
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(result));
 }
 
@@ -4157,7 +4200,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_trivial_5d)
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                              1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}),
               read_vector<float>(result));
@@ -4178,7 +4221,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_trivial_5d_int32)
     auto result = backend->create_tensor(element::i32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<int32_t>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                                1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}),
               read_vector<int32_t>(result));
@@ -4198,7 +4241,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_to_scalar)
     auto result = backend->create_tensor(element::f32, Shape{});
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{1}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -4220,7 +4263,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_to_scalar_int8)
     auto result = backend->create_tensor(element::i8, Shape{});
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<int8_t>{1}), read_vector<int8_t>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -4243,7 +4286,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_matrix_columns)
     auto result = backend->create_tensor(element::f32, shape_rt);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{1, 2}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -4266,7 +4309,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_matrix_rows)
     auto result = backend->create_tensor(element::f32, shape_rt);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{1, 3, 5}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -4289,7 +4332,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_matrix_rows_int32)
     auto result = backend->create_tensor(element::i32, shape_rt);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<int32_t>{1, 3, 5}), read_vector<int32_t>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -4313,7 +4356,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_matrix_rows_zero)
     copy_data(result, vector<float>({3, 3, 3}));
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{std::numeric_limits<float>::infinity(),
                              std::numeric_limits<float>::infinity(),
                              std::numeric_limits<float>::infinity()}),
@@ -4341,7 +4384,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_matrix_cols_zero)
     copy_data(result, vector<float>({3, 3}));
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{std::numeric_limits<float>::infinity(),
                              std::numeric_limits<float>::infinity()}),
               read_vector<float>(result));
@@ -4367,7 +4410,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_vector_zero)
     copy_data(result, vector<float>({3}));
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{std::numeric_limits<float>::infinity()}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -4391,7 +4434,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_matrix_to_scalar_zero_by_zero)
     copy_data(result, vector<float>({3}));
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{std::numeric_limits<float>::infinity()}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -4415,7 +4458,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_3d_to_matrix_most_sig)
     auto result = backend->create_tensor(element::f32, shape_rt);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9}), read_vector<float>(result));
 }
 
@@ -4435,7 +4478,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_3d_to_matrix_least_sig)
     auto result = backend->create_tensor(element::f32, shape_rt);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{1, 4, 7, 10, 13, 16, 19, 22, 25}), read_vector<float>(result));
 }
 
@@ -4455,7 +4498,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_3d_to_vector)
     auto result = backend->create_tensor(element::f32, shape_rt);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{1, 2, 3}), read_vector<float>(result));
 }
 
@@ -4475,7 +4518,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_3d_to_scalar)
     auto result = backend->create_tensor(element::f32, shape_rt);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{1}), read_vector<float>(result));
 }
 
@@ -4495,7 +4538,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_3d_to_scalar_int32)
     auto result = backend->create_tensor(element::i32, shape_rt);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<int32_t>{1}), read_vector<int32_t>(result));
 }
 
@@ -4519,7 +4562,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_3d_eliminate_zero_dim)
     float inf = std::numeric_limits<float>::infinity();
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{inf, inf, inf, inf, inf, inf}), read_vector<float>(result));
 }
 
@@ -4538,7 +4581,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sigmoid_n1c1h2w2)
     copy_data(a, dataA);
 
     auto handle = backend->compile(func);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     vector<float> expected{0.73105858f, 0.98201379f, 0.73105858f, 0.98201379f};
     ASSERT_TRUE(read_vector<float>(result) == expected);
 }
@@ -4558,7 +4601,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sigmoid_n1c1h4)
     copy_data(a, dataA);
 
     auto handle = backend->compile(func);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     vector<float> expected{0.73105858f, 0.98201379f, 0.73105858f, 0.98201379f};
     ASSERT_TRUE(read_vector<float>(result) == expected);
 }
@@ -4581,7 +4624,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sigmoid_bprop_n1c1h4)
     copy_data(a, dataA);
     copy_data(b, dataB);
     auto handle = backend->compile(func);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
 
     vector<float> expected{0.196612f, 0.0176627f, 0.196612f, 0.0176627f};
     EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
@@ -4603,7 +4646,7 @@ NGRAPH_TEST(${BACKEND_NAME}, relu_2Dfprop)
     vector<float> expected{1, 8, 0, 17, 0, 1, 8, 0, 17, 0};
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ(read_vector<float>(result), expected);
 }
 
@@ -4623,7 +4666,7 @@ NGRAPH_TEST(${BACKEND_NAME}, relu_4Dfprop)
     vector<float> expected{1, 8, 0, 17, 0, 1, 8, 0, 17, 0, 1, 8, 0, 17, 0, 1};
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ(read_vector<float>(result), expected);
 }
 
@@ -4644,7 +4687,7 @@ NGRAPH_TEST(${BACKEND_NAME}, fuse_max_with_constant_zero_input_as_relu)
     vector<float> expected{1, 8, 0, 17, 0, 1, 8, 0, 17, 0};
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {b});
+    handle->call_with_validate({result}, {b});
     EXPECT_EQ(read_vector<float>(result), expected);
 }
 
@@ -4667,7 +4710,7 @@ NGRAPH_TEST(${BACKEND_NAME}, relu_2Dbackprop)
     vector<float> expected{1, 2, 0, 4, 0, 6, 7, 0, 9, 0};
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, delta});
+    handle->call_with_validate({result}, {a, delta});
     EXPECT_EQ(read_vector<float>(result), expected);
 }
 
@@ -4690,7 +4733,7 @@ NGRAPH_TEST(${BACKEND_NAME}, relu_4Dbackprop)
     vector<float> expected{1, 8, 0, 17, 0, 1, 8, 0, 17, 0, 1, 8, 0, 17, 0, 1};
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, delta});
+    handle->call_with_validate({result}, {a, delta});
     EXPECT_EQ(read_vector<float>(result), expected);
 }
 
@@ -4709,7 +4752,7 @@ NGRAPH_TEST(${BACKEND_NAME}, softmax_all)
     auto d = expf(-3) + expf(-2) + expf(-1) + expf(0) + expf(1) + expf(2);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     vector<float> expected{
         expf(-3) / d, expf(-2) / d, expf(-1) / d, expf(0) / d, expf(1) / d, expf(2) / d};
     EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result)));
@@ -4719,7 +4762,7 @@ NGRAPH_TEST(${BACKEND_NAME}, softmax_all)
     backend = runtime::Backend::create("${BACKEND_NAME}");
 
     auto h1 = backend->compile(f);
-    backend->call_with_validate(h1, {result}, {a});
+    h1->call_with_validate({result}, {a});
     EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result)));
 }
 
@@ -4743,7 +4786,7 @@ NGRAPH_TEST(${BACKEND_NAME}, softmax_axis_3d)
     auto d5 = expf(-60) + expf(-6);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     vector<float> expected{expf(-10) / d0,
                            expf(-20) / d1,
                            expf(-30) / d2,
@@ -4780,7 +4823,7 @@ NGRAPH_TEST(${BACKEND_NAME}, softmax_axis_3d_double)
     auto d5 = expf(-60) + expf(-6);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     vector<double> expected{expf(-10) / d0,
                             expf(-20) / d1,
                             expf(-30) / d2,
@@ -4813,7 +4856,7 @@ NGRAPH_TEST(${BACKEND_NAME}, softmax_axis)
     auto d1 = expf(-40) + expf(-50) + expf(-60);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     vector<float> expected{expf(-10) / d0,
                            expf(-20) / d0,
                            expf(-30) / d0,
@@ -4840,7 +4883,7 @@ NGRAPH_TEST(${BACKEND_NAME}, softmax_axis_2)
     auto d2 = expf(-30) + expf(-60);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     vector<float> expected{expf(-10) / d0,
                            expf(-20) / d1,
                            expf(-30) / d2,
@@ -4863,7 +4906,7 @@ NGRAPH_TEST(${BACKEND_NAME}, softmax_axis_3d_trivial)
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     vector<float> expected{1, 1, 1, 1, 1, 1};
     EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
 }
@@ -4887,7 +4930,7 @@ NGRAPH_TEST(${BACKEND_NAME}, softmax_underflow)
     auto d2 = expf(2) + expf(5);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     vector<float> expected{
         expf(low) / d0, expf(1) / d1, expf(2) / d2, expf(3) / d0, expf(4) / d1, expf(5) / d2};
     EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
@@ -4912,7 +4955,7 @@ NGRAPH_TEST(${BACKEND_NAME}, softmax_overflow)
     auto d2 = expf(2) + expf(5);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     vector<float> expected{expf(high - high) / d0,
                            expf(1) / d1,
                            expf(2) / d2,
@@ -4952,11 +4995,13 @@ NGRAPH_TEST(${BACKEND_NAME}, multiple_backends)
     copy_data(a2, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
     copy_data(b2, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
 
-    backend1->call_with_validate(backend1->compile(f), {result1}, {a1, b1});
+    auto handle1 = backend1->compile(f);
+    handle1->call_with_validate({result1}, {a1, b1});
     EXPECT_EQ(read_vector<float>(result1),
               (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
 
-    backend2->call_with_validate(backend2->compile(g), {result2}, {a2, b2});
+    auto handle2 = backend2->compile(g);
+    handle2->call_with_validate({result2}, {a2, b2});
     EXPECT_EQ(read_vector<float>(result2),
               (test::NDArray<float, 2>({{5, 12}, {21, 32}})).get_vector());
 }
@@ -4989,7 +5034,7 @@ NGRAPH_TEST(${BACKEND_NAME}, tensorview_custom_mem)
 
     // result should be in memory without needing explict read
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((vector<float>{2, 2, 2, 2}), rv);
 }
 
@@ -5007,8 +5052,7 @@ NGRAPH_TEST(${BACKEND_NAME}, validate_call_input_count)
     auto b = backend->create_tensor(element::f32, shape);
     auto c = backend->create_tensor(element::f32, shape);
 
-    EXPECT_ANY_THROW(auto handle = backend->compile(f);
-                     backend->call_with_validate(handle, {c}, {a}));
+    EXPECT_ANY_THROW(auto handle = backend->compile(f); handle->call_with_validate({c}, {a}));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, validate_call_input_type)
@@ -5025,8 +5069,7 @@ NGRAPH_TEST(${BACKEND_NAME}, validate_call_input_type)
     auto b = backend->create_tensor(element::f32, shape);
     auto c = backend->create_tensor(element::f32, shape);
 
-    EXPECT_ANY_THROW(auto handle = backend->compile(f);
-                     backend->call_with_validate(handle, {c}, {a, b}));
+    EXPECT_ANY_THROW(auto handle = backend->compile(f); handle->call_with_validate({c}, {a, b}));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, validate_call_input_shape)
@@ -5043,8 +5086,7 @@ NGRAPH_TEST(${BACKEND_NAME}, validate_call_input_shape)
     auto b = backend->create_tensor(element::f32, shape);
     auto c = backend->create_tensor(element::f32, shape);
 
-    EXPECT_ANY_THROW(auto handle = backend->compile(f);
-                     backend->call_with_validate(handle, {c}, {a, b}));
+    EXPECT_ANY_THROW(auto handle = backend->compile(f); handle->call_with_validate({c}, {a, b}));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, validate_call_output_count)
@@ -5062,8 +5104,7 @@ NGRAPH_TEST(${BACKEND_NAME}, validate_call_output_count)
     auto c = backend->create_tensor(element::f32, shape);
     auto d = backend->create_tensor(element::f32, shape);
 
-    EXPECT_ANY_THROW(auto handle = backend->compile(f);
-                     backend->call_with_validate(handle, {c, d}, {a, b}));
+    EXPECT_ANY_THROW(auto handle = backend->compile(f); handle->call_with_validate({c, d}, {a, b}));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, validate_call_output_type)
@@ -5080,8 +5121,7 @@ NGRAPH_TEST(${BACKEND_NAME}, validate_call_output_type)
     auto b = backend->create_tensor(element::f32, shape);
     auto c = backend->create_tensor(element::f32, shape);
 
-    EXPECT_ANY_THROW(auto handle = backend->compile(f);
-                     backend->call_with_validate(handle, {a}, {b, c}));
+    EXPECT_ANY_THROW(auto handle = backend->compile(f); handle->call_with_validate({a}, {b, c}));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, validate_call_output_shape)
@@ -5098,8 +5138,7 @@ NGRAPH_TEST(${BACKEND_NAME}, validate_call_output_shape)
     auto b = backend->create_tensor(element::f32, shape);
     auto c = backend->create_tensor(element::f32, shape);
 
-    EXPECT_ANY_THROW(auto handle = backend->compile(f);
-                     backend->call_with_validate(handle, {a}, {c, b}));
+    EXPECT_ANY_THROW(auto handle = backend->compile(f); handle->call_with_validate({a}, {c, b}));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, logical_and)
@@ -5119,7 +5158,7 @@ NGRAPH_TEST(${BACKEND_NAME}, logical_and)
     auto result = backend->create_tensor(element::boolean, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((vector<char>{0, 0, 1, 0, 0, 0, 1, 0}), read_vector<char>(result));
 }
 
@@ -5140,7 +5179,7 @@ NGRAPH_TEST(${BACKEND_NAME}, logical_or)
     auto result = backend->create_tensor(element::boolean, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((vector<char>{1, 0, 1, 1, 1, 1, 1, 0}), read_vector<char>(result));
 }
 
@@ -5198,8 +5237,8 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_fprop_b1c2h2w2)
     vector<float> expected_mean{0.602912f, 0.599727f};
     vector<float> expected_variance{0.00472505f, 0.0361782f};
 
-    backend->call_with_validate(
-        backend->compile(f), {bn_output, result_mean, result_variance}, {_input, _gamma, _beta});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({bn_output, result_mean, result_variance}, {_input, _gamma, _beta});
 
     EXPECT_TRUE(test::all_close(expected_result, read_vector<float>(bn_output), 1e-5f, 1e-6f));
     EXPECT_TRUE(test::all_close(expected_mean, read_vector<float>(result_mean), 1e-5f, 1e-6f));
@@ -5252,8 +5291,8 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_fprop_b2c2h2w1)
         -0.30327f, 1.1561f, -0.0963782f, -0.434702f, -1.4011f, 0.548275f, -1.06187f, 1.59295f};
     vector<float> expected_mean{0.583388f, 0.619252f};
     vector<float> expected_variance{0.0119972f, 0.0282681f};
-    backend->call_with_validate(
-        backend->compile(f), {bn_output, result_mean, result_variance}, {_input, _gamma, _beta});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({bn_output, result_mean, result_variance}, {_input, _gamma, _beta});
 
     EXPECT_TRUE(test::all_close(expected_result, read_vector<float>(bn_output)));
     EXPECT_TRUE(test::all_close(expected_mean, read_vector<float>(result_mean)));
@@ -5306,8 +5345,8 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_b2c2d2h1w1)
         -0.30327f, 1.1561f, -0.0963782f, -0.434702f, -1.4011f, 0.548275f, -1.06187f, 1.59295f};
     vector<float> expected_mean{0.583388f, 0.619252f};
     vector<float> expected_variance{0.0119972f, 0.0282681f};
-    backend->call_with_validate(
-        backend->compile(f), {bn_output, result_mean, result_variance}, {_input, _gamma, _beta});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({bn_output, result_mean, result_variance}, {_input, _gamma, _beta});
 
     EXPECT_TRUE(test::all_close(expected_result, read_vector<float>(bn_output)));
     EXPECT_TRUE(test::all_close(expected_mean, read_vector<float>(result_mean)));
@@ -5389,8 +5428,8 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_bprop_n4c3h2w2)
     shared_ptr<runtime::Tensor> _dbeta = backend->create_tensor(element::f32, beta_shape);
 
     auto handle = backend->compile(df);
-    backend->call_with_validate(
-        handle, {_dinput, _dgamma, _dbeta}, {_mean, _var, _input, _gamma, _beta, _delta});
+    handle->call_with_validate({_dinput, _dgamma, _dbeta},
+                               {_mean, _var, _input, _gamma, _beta, _delta});
 
     vector<float> expected_input{
         8.17051607e-06f,  4.77576657e-06f,  1.02257760e-05f,  1.20387525e-06f,  -1.73868522e-06f,
@@ -5454,8 +5493,8 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_fprop_inference_b2c2h2w1)
 
     vector<float> expected_result{
         -0.30327f, 1.1561f, -0.0963782f, -0.434702f, -1.4011f, 0.548275f, -1.06187f, 1.59295f};
-    backend->call_with_validate(
-        backend->compile(f), {bn_output}, {_input, _gamma, _beta, _mean, _var});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({bn_output}, {_input, _gamma, _beta, _mean, _var});
 
     ASSERT_TRUE(
         ngraph::test::all_close(expected_result, read_vector<float>(bn_output), 1e-3f, 1e-4f));
@@ -5498,7 +5537,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_sequence_n2c3h4w2)
     copy_data(a, input);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ(read_vector<int>(result), expected);
 }
 
@@ -5538,7 +5577,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_sequence_n4c3h2w2)
     copy_data(a, input);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ(read_vector<int>(result), expected);
 }
 
@@ -5584,7 +5623,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_sequence_n4d2c3h2w2)
     copy_data(b, seq_lenghts);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ(read_vector<int>(result), expected);
 }
 
@@ -5605,12 +5644,12 @@ NGRAPH_TEST(${BACKEND_NAME}, generate_mask)
     auto result_tv1 = backend->create_tensor<float>(result_shape);
     auto result_tv2 = backend->create_tensor<float>(result_shape);
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result_tv1, result_tv2}, {});
+    handle->call_with_validate({result_tv1, result_tv2}, {});
     auto result1 = read_vector<float>(result_tv1);
     auto result2 = read_vector<float>(result_tv2);
     ASSERT_EQ(result1, result2);
     ASSERT_FALSE(std::any_of(result1.begin(), result1.end(), is_not_zero_or_one));
-    backend->call_with_validate(handle, {result_tv1, result_tv2}, {});
+    handle->call_with_validate({result_tv1, result_tv2}, {});
     auto result1_2 = read_vector<float>(result_tv1);
     auto result2_2 = read_vector<float>(result_tv2);
     ASSERT_NE(result1, result1_2);
@@ -5651,7 +5690,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize)
     // equals                         1  1  2  3  3  3  4  5  5  5  6   7
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {y}, {x});
+    handle->call_with_validate({y}, {x});
     EXPECT_EQ((vector<output_c_type>{1, 1, 2, 3, 3, 3, 4, 5, 5, 5, 6, 7}),
               read_vector<output_c_type>(y));
 }
@@ -5685,7 +5724,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize)
     // equals                         0  0  2  4  4  4  6  8  8  8 10 12
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {y}, {x});
+    handle->call_with_validate({y}, {x});
     EXPECT_EQ((vector<output_c_type>{0, 0, 2, 4, 4, 4, 6, 8, 8, 8, 10, 12}),
               read_vector<output_c_type>(y));
 }
@@ -5722,7 +5761,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_zero_offset)
     // equals                         0  0  1  2  2  2  3  4  4  4  5   6
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {y}, {x});
+    handle->call_with_validate({y}, {x});
     EXPECT_EQ((vector<output_c_type>{0, 0, 1, 2, 2, 2, 3, 4, 4, 4, 5, 6}),
               read_vector<output_c_type>(y));
 }
@@ -5756,7 +5795,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize_zero_offset)
     // equals                         0  0  2  4  4  4  6  8  8  8 10 12
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {y}, {x});
+    handle->call_with_validate({y}, {x});
     EXPECT_EQ((vector<output_c_type>{0, 0, 2, 4, 4, 4, 6, 8, 8, 8, 10, 12}),
               read_vector<output_c_type>(y));
 }
@@ -5793,7 +5832,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_axes)
     // equals                        10 11 11 21 21 22 32 32 32 42 42  42
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {y}, {x});
+    handle->call_with_validate({y}, {x});
     EXPECT_EQ((vector<output_c_type>{10, 11, 11, 21, 21, 22, 32, 32, 32, 42, 42, 42}),
               read_vector<output_c_type>(y));
 }
@@ -5827,7 +5866,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize_axes)
     // equals                          0   2   2   3   3   6   8   8   8  10  10  10
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {y}, {x});
+    handle->call_with_validate({y}, {x});
     EXPECT_EQ((vector<output_c_type>{0, 2, 2, 3, 3, 6, 8, 8, 8, 10, 10, 10}),
               read_vector<output_c_type>(y));
 }
@@ -5864,7 +5903,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_int8)
     // equals                         1   1  2  -1  3  -1  4  -3  5  -3  6   -5
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {y}, {x});
+    handle->call_with_validate({y}, {x});
     EXPECT_EQ((vector<output_c_type>{1, 1, 2, -1, 3, -1, 4, -3, 5, -3, 6, -5}),
               read_vector<output_c_type>(y));
 }
@@ -5898,7 +5937,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize_int8)
     // equals                         0  0  2  -4  4  -4  6  -8  8  -8 10 -12
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {y}, {x});
+    handle->call_with_validate({y}, {x});
     EXPECT_EQ((vector<output_c_type>{0, 0, 2, -4, 4, -4, 6, -8, 8, -8, 10, -12}),
               read_vector<output_c_type>(y));
 }
@@ -5935,7 +5974,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_int8_zero_offset)
     // equals                         0   0  1  -2  2  -2  3  -4  4  -4  5   -6
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {y}, {x});
+    handle->call_with_validate({y}, {x});
     EXPECT_EQ((vector<output_c_type>{0, 0, 1, -2, 2, -2, 3, -4, 4, -4, 5, -6}),
               read_vector<output_c_type>(y));
 }
@@ -5969,7 +6008,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize_int8_zero_offset)
     // equals                         0  0  2  -4  4  -4  6  -8  8  -8 10 -12
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {y}, {x});
+    handle->call_with_validate({y}, {x});
     EXPECT_EQ((vector<output_c_type>{0, 0, 2, -4, 4, -4, 6, -8, 8, -8, 10, -12}),
               read_vector<output_c_type>(y));
 }
@@ -6006,7 +6045,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_int32)
     // equals                         1   1  2  -1  3  -1  4  -3  5  -3  6   -5
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {y}, {x});
+    handle->call_with_validate({y}, {x});
     EXPECT_EQ((vector<output_c_type>{1, 1, 2, -1, 3, -1, 4, -3, 5, -3, 6, -5}),
               read_vector<output_c_type>(y));
 }
@@ -6040,7 +6079,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize_int32)
     // equals                         0  0  2  -4  4  -4  6  -8  8  -8 10 -12
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {y}, {x});
+    handle->call_with_validate({y}, {x});
     EXPECT_EQ((vector<output_c_type>{0, 0, 2, -4, 4, -4, 6, -8, 8, -8, 10, -12}),
               read_vector<output_c_type>(y));
 }
@@ -6077,7 +6116,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_int32_zero_offset)
     // equals                         0   0  1  -2  2  -2  3  -4  4  -4  5   -6
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {y}, {x});
+    handle->call_with_validate({y}, {x});
     EXPECT_EQ((vector<output_c_type>{0, 0, 1, -2, 2, -2, 3, -4, 4, -4, 5, -6}),
               read_vector<output_c_type>(y));
 }
@@ -6111,7 +6150,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize_int32_zero_offset)
     // equals                         0  0  2  -4  4  -4  6  -8  8  -8 10 -12
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {y}, {x});
+    handle->call_with_validate({y}, {x});
     EXPECT_EQ((vector<output_c_type>{0, 0, 2, -4, 4, -4, 6, -8, 8, -8, 10, -12}),
               read_vector<output_c_type>(y));
 }
@@ -6146,7 +6185,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_clamp_uint8)
     copy_data(x, vector<input_c_type>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11});
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {y}, {x});
+    handle->call_with_validate({y}, {x});
     EXPECT_EQ((vector<output_c_type>{0, max, max, max, max, max, max, max, max, max, max, max}),
               read_vector<output_c_type>(y));
 }
@@ -6182,7 +6221,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_clamp_int8)
     copy_data(x, vector<input_c_type>{0, -1, 2, -3, 4, -5, 6, -7, 8, -9, 10, -11});
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {y}, {x});
+    handle->call_with_validate({y}, {x});
     EXPECT_EQ((vector<output_c_type>{0, min, max, min, max, min, max, min, max, min, max, min}),
               read_vector<output_c_type>(y));
 }
@@ -6219,7 +6258,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_clamp_int32)
     copy_data(x, vector<input_c_type>{0, -1, 2, -3, 4, -5, 6, -7, 8, -9, 10, -11});
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {y}, {x});
+    handle->call_with_validate({y}, {x});
     EXPECT_EQ((vector<output_c_type>{0, min, max, min, max, min, max, min, max, min, max, min}),
               read_vector<output_c_type>(y));
 }
@@ -6254,7 +6293,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_NEAREST_TOWARD_ZERO)
     // equals (rounded)               2   2   3  -2   -2   -3   3   3   4   -3   -3   -4
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {y}, {x});
+    handle->call_with_validate({y}, {x});
     EXPECT_EQ((vector<output_c_type>{2, 2, 3, -2, -2, -3, 3, 3, 4, -3, -3, -4}),
               read_vector<output_c_type>(y));
 }
@@ -6289,7 +6328,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_NEAREST_TOWARD_INFINITY)
     // equals (rounded)               2   3   3  -2   -3   -3   3   4   4   -3   -4   -4
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {y}, {x});
+    handle->call_with_validate({y}, {x});
     EXPECT_EQ((vector<output_c_type>{2, 3, 3, -2, -3, -3, 3, 4, 4, -3, -4, -4}),
               read_vector<output_c_type>(y));
 }
@@ -6324,7 +6363,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_NEAREST_UPWARD)
     // equals (rounded)               2   3   3  -2   -2   -3   3   4   4   -3   -3   -4
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {y}, {x});
+    handle->call_with_validate({y}, {x});
     EXPECT_EQ((vector<output_c_type>{2, 3, 3, -2, -2, -3, 3, 4, 4, -3, -3, -4}),
               read_vector<output_c_type>(y));
 }
@@ -6359,7 +6398,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_NEAREST_DOWNWARD)
     // equals (rounded)               2   2   3  -2   -3   -3   3   3   4   -3   -4   -4
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {y}, {x});
+    handle->call_with_validate({y}, {x});
     EXPECT_EQ((vector<output_c_type>{2, 2, 3, -2, -3, -3, 3, 3, 4, -3, -4, -4}),
               read_vector<output_c_type>(y));
 }
@@ -6394,7 +6433,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_NEAREST_TOWARD_EVEN)
     // equals (rounded)               2   2   3  -2   -2   -3   3   4   4   -3   -4   -4
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {y}, {x});
+    handle->call_with_validate({y}, {x});
     EXPECT_EQ((vector<output_c_type>{2, 2, 3, -2, -2, -3, 3, 4, 4, -3, -4, -4}),
               read_vector<output_c_type>(y));
 }
@@ -6434,7 +6473,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_TOWARD_INFINITY)
     // equals (rounded)               3   3   3  -3   -3   -3   4   4   4   -4   -4   -4
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {y}, {x});
+    handle->call_with_validate({y}, {x});
     EXPECT_EQ((vector<output_c_type>{3, 3, 3, -3, -3, -3, 4, 4, 4, -4, -4, -4}),
               read_vector<output_c_type>(y));
 }
@@ -6474,7 +6513,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_TOWARD_ZERO)
     // equals (rounded)               2   2   2  -2   -2   -2   3   3   3   -3   -3   -3
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {y}, {x});
+    handle->call_with_validate({y}, {x});
     EXPECT_EQ((vector<output_c_type>{2, 2, 2, -2, -2, -2, 3, 3, 3, -3, -3, -3}),
               read_vector<output_c_type>(y));
 }
@@ -6509,7 +6548,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_UP)
     // equals (rounded)               3   3   3  -2   -2   -2   4   4   4   -3   -3   -3
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {y}, {x});
+    handle->call_with_validate({y}, {x});
     EXPECT_EQ((vector<output_c_type>{3, 3, 3, -2, -2, -2, 4, 4, 4, -3, -3, -3}),
               read_vector<output_c_type>(y));
 }
@@ -6544,7 +6583,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_DOWN)
     // equals (rounded)               2   2   2  -3   -3   -3   3   3   3   -4   -4   -4
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {y}, {x});
+    handle->call_with_validate({y}, {x});
     EXPECT_EQ((vector<output_c_type>{2, 2, 2, -3, -3, -3, 3, 3, 3, -4, -4, -4}),
               read_vector<output_c_type>(y));
 }
@@ -6564,7 +6603,7 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_scalar)
     auto result = backend->create_tensor(element::u64, output_shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     vector<uint64_t> expected{};
     EXPECT_EQ(expected, read_vector<uint64_t>(result));
 }
@@ -6584,7 +6623,7 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_vector)
     auto result = backend->create_tensor(element::u64, output_shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     vector<uint64_t> expected{2};
     EXPECT_EQ(expected, read_vector<uint64_t>(result));
 }
@@ -6604,7 +6643,7 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_matrix)
     auto result = backend->create_tensor(element::u64, output_shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     vector<uint64_t> expected{2, 4};
     EXPECT_EQ(expected, read_vector<uint64_t>(result));
 }
@@ -6624,7 +6663,7 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_5d)
     auto result = backend->create_tensor(element::u64, output_shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     vector<uint64_t> expected{2, 4, 8, 16, 32};
     EXPECT_EQ(expected, read_vector<uint64_t>(result));
 }
@@ -6658,7 +6697,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize_dynamic_offset)
     copy_data(Offset, vector<input_c_type>{128});
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {y}, {x, Scale, Offset});
+    handle->call_with_validate({y}, {x, Scale, Offset});
     EXPECT_EQ((vector<output_c_type>{-256.0f, -250.0f, 0.0f, 254.0f}),
               read_vector<output_c_type>(y));
 }
@@ -6699,7 +6738,34 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_dynamic_offset)
     copy_data(Offset, vector<output_c_type>{1});
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {y}, {x, Scale, Offset});
+    handle->call_with_validate({y}, {x, Scale, Offset});
     EXPECT_EQ((vector<output_c_type>{1, 1, 2, 3, 3, 3, 4, 5, 5, 5, 6, 7}),
               read_vector<output_c_type>(y));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, get_parameters_and_results)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::Tensor> c = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::f32, shape);
+
+    copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
+    copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
+    copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
+
+    auto handle = backend->compile(f);
+    auto parameters = handle->get_parameters();
+    auto results = handle->get_results();
+    EXPECT_EQ(parameters.size(), 3);
+    EXPECT_EQ(results.size(), 1);
 }

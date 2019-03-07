@@ -53,12 +53,19 @@ set(SRC
     serialize.cpp
     shape.cpp
     tensor.cpp
-    tools.cpp
     type_prop.cpp
     util.cpp
     uuid.cpp
     zero_dim_tensor_elimination.cpp
 )
+
+if(NOT WIN32 AND NGRAPH_TOOLS_ENABLE)
+    list(APPEND SRC tools.cpp)
+endif()
+
+if(NGRAPH_DISTRIBUTED_ENABLE)
+    list(APPEND SRC distributed_setup.cpp)
+endif()
 
 set_source_files_properties(includes.cpp PROPERTIES COMPILE_DEFINITIONS
     NGRAPH_INCLUDES="${PROJECT_SOURCE_DIR}/src/ngraph")
@@ -75,6 +82,9 @@ endif()
 if (NGRAPH_CPU_ENABLE)
     list(APPEND SRC core_fusion.cpp builder_quantization.cpp)
     list(APPEND SRC backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_debugger.cpp)
+    if (NOT NGRAPH_DEX_ONLY)
+        list(APPEND SRC cpu_codegen.cpp)
+    endif()
     if (NGRAPH_HALIDE)
         list(APPEND SRC halide.cpp)
     endif()
@@ -184,8 +194,16 @@ if(NGRAPH_ADDRESS_SANITIZER)
 endif()
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
-    target_compile_definitions(unit-test PRIVATE NGRAPH_DISTRIBUTED)
-    target_link_libraries(unit-test PRIVATE libmlsl)
+    if(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
+        target_link_libraries(unit-test PRIVATE libmlsl)
+    elseif(NGRAPH_DISTRIBUTED_OMPI_ENABLE)
+        find_package(MPI REQUIRED)
+        target_include_directories(unit-test
+        SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+        target_link_libraries(unit-test PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+    else()
+            message(FATAL_ERROR "Distributed Library not supported/mentioned")
+    endif()
 endif()
 
 target_link_libraries(unit-test PRIVATE ngraph_test_util)
@@ -225,7 +243,7 @@ endif()
 
 if (NGRAPH_INTERPRETER_ENABLE)
     target_compile_definitions(unit-test PRIVATE NGRAPH_INTERPRETER_ENABLE)
-    target_link_libraries(unit-test PRIVATE interpreter_backend hybrid_base)
+    target_link_libraries(unit-test PRIVATE interpreter_backend)
 endif()
 
 if (NGRAPH_GPU_ENABLE)

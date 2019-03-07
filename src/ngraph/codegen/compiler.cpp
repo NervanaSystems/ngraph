@@ -557,8 +557,14 @@ void codegen::CompilerCore::configure_search_path()
     add_header_search_path(CUDNN_HEADER_PATHS);
 #endif
 
-#ifdef NGRAPH_DISTRIBUTED
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
     add_header_search_path(MLSL_HEADER_PATH);
+#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
+    add_header_search_path(MPI_HEADER_PATH);
+#else
+    throw ngraph_error("Distributed Library not supported/mentioned");
+#endif
 #endif
 }
 
@@ -610,6 +616,7 @@ int codegen::CompilerCore::full_version_number(const std::string& path, const st
 
     // create full version number and return
     std::string full_version = {};
+    std::string full_version = "0";
     // Assume versioning like X.Y.Z
     int padding = 3 - tokens.size();
     for (std::string s : tokens)
@@ -627,7 +634,7 @@ std::string codegen::CompilerCore::find_header_version(const std::string& path)
 {
     // Step 1: find highest g++ version
     std::string gpp_prefix = file_util::path_join(path, "bin/g++-");
-    std::string gpp_ver = {};
+    std::string gpp_ver;
     for (auto i : {"8", "7", "6", "5", "4.9", "4.8"})
     {
         if (file_util::exists(gpp_prefix + i))

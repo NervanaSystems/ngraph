@@ -30,6 +30,7 @@ namespace ngraph
             {
                 class LSTMFusion;
                 class RNNFusion;
+                class BiDirectionalRnn;
                 class MultiLayerRNNFusion;
             }
         }
@@ -65,7 +66,8 @@ private:
     void construct_rnn_lstm_fprop();
 };
 
-class ngraph::runtime::cpu::pass::MultiLayerRNNFusion : public ngraph::pass::RecurrentGraphRewrite
+class CPU_BACKEND_API ngraph::runtime::cpu::pass::MultiLayerRNNFusion
+    : public ngraph::pass::RecurrentGraphRewrite
 {
 public:
     MultiLayerRNNFusion()
@@ -76,4 +78,18 @@ public:
 
 private:
     void construct_multi_layer_rnn_fusion_fprop();
+};
+
+class CPU_BACKEND_API ngraph::runtime::cpu::pass::BiDirectionalRnn
+    : public ngraph::pass::GraphRewrite
+{
+public:
+    BiDirectionalRnn()
+        : GraphRewrite()
+    {
+        construct_bidirectional_rnn();
+    }
+
+private:
+    void construct_bidirectional_rnn();
 };

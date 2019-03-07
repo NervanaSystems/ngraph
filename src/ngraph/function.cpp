@@ -118,7 +118,7 @@ const std::string& Function::get_name() const
     return m_unique_name;
 }
 
-void Function::set_name(const string& name)
+void Function::set_friendly_name(const string& name)
 {
     if (m_name.empty())
     {
@@ -213,4 +213,14 @@ size_t Function::get_graph_size() const
         }
     }
     return total_size;
+}
+
+size_t Function::get_placement() const
+{
+    return m_placement;
+}
+
+void Function::set_placement(size_t placement)
+{
+    m_placement = placement;
 }

@@ -25,7 +25,11 @@ namespace ngraph
     public:
         Distributed();
         ~Distributed();
-        size_t get_size() const;
-        size_t get_rank() const;
+        int get_size() const;
+        int get_rank() const;
+
+    private:
+        bool m_init_comm = false;
+        void finalize();
     };
 }

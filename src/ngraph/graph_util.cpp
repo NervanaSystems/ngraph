@@ -31,6 +31,8 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
+#include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/result_vector.hpp"
 #include "ngraph/util.hpp"
 
@@ -547,4 +549,30 @@ bool ngraph::is_valid_rank(const std::shared_ptr<Node>& node, std::vector<size_t
         }
     }
     return false;
+}
+
+bool ngraph::compare_constants(const std::shared_ptr<Node>& n1, const std::shared_ptr<Node>& n2)
+{
+    if (!(n1->is_constant() && n2->is_constant()))
+    {
+        return false;
+    }
+
+    if (static_pointer_cast<op::Constant>(n1)->get_value_strings() !=
+        static_pointer_cast<op::Constant>(n2)->get_value_strings())
+    {
+        return false;
+    }
+
+    return true;
+}
+
+void ngraph::plot_graph(
+    std::shared_ptr<Function> f,
+    const std::string& filename,
+    std::function<void(const Node& node, std::vector<std::string>& attributes)> attributes)
+{
+    ngraph::pass::Manager pass_manager;
+    pass_manager.register_pass<ngraph::pass::VisualizeTree>(filename, attributes);
+    pass_manager.run_passes(f);
 }

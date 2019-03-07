@@ -110,7 +110,6 @@ int main(int argc, char** argv)
 
     for (ResourceInfo& path : include_paths)
     {
-        // cout << "path " << path.source_path << " -> " << path.target_path << endl;
         vector<string> path_list;
         if (path.subdirs.empty())
         {
@@ -131,7 +130,6 @@ int main(int argc, char** argv)
                                       string ext = get_file_ext(file);
                                       if (contains(valid_ext, ext))
                                       {
-                                          //   cout << "add " << path.search_path << ", " << file << endl;
                                           path.files.push_back(file);
                                       }
                                   }

@@ -38,7 +38,6 @@ ExternalProject_Add(
         pybind11
         GIT_REPOSITORY "https://github.com/pybind/pybind11.git"
         GIT_TAG "v2.2.4"
-        ${NGRAPH_GIT_ARGS}
         SOURCE_DIR ${PYBIND11_SOURCE_DIR}
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""

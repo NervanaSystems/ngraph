@@ -116,5 +116,9 @@ CMakeCache.txt
 CMakeFiles/
 CMakeSettings.json
 
+# don't add dot-save files!
+
+.save
+
 # YouCompleteMe
 .ycm_extra_conf.py

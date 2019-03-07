@@ -35,7 +35,7 @@ namespace ngraph
                 struct file_open : ngraph_error
                 {
                     explicit file_open(const std::string& path)
-                        : ngraph_error{"failure opening file:" + path}
+                        : ngraph_error{"Failure opening file: " + path}
                     {
                     }
                 };
@@ -43,7 +43,7 @@ namespace ngraph
                 struct stream_parse : ngraph_error
                 {
                     explicit stream_parse(std::istream&)
-                        : ngraph_error{"failure parsing data from the stream"}
+                        : ngraph_error{"Failure parsing data from the provided input stream"}
                     {
                     }
                 };
@@ -64,7 +64,7 @@ namespace ngraph
                 graph.get_ng_outputs(), graph.get_ng_parameters(), graph.get_name());
             for (std::size_t i{0}; i < function->get_output_size(); ++i)
             {
-                function->get_output_op(i)->set_name(graph.get_outputs().at(i).get_name());
+                function->get_output_op(i)->set_friendly_name(graph.get_outputs().at(i).get_name());
             }
             return function;
         }

@@ -204,6 +204,7 @@ sources = [
     'pyngraph/ops/or.cpp',
     'pyngraph/ops/pad.cpp',
     'pyngraph/ops/parameter.cpp',
+    'pyngraph/ops/passthrough.cpp',
     'pyngraph/ops/power.cpp',
     'pyngraph/ops/regmodule_pyngraph_op.cpp',
     'pyngraph/ops/relu.cpp',
@@ -228,6 +229,7 @@ sources = [
     'pyngraph/ops/softmax.cpp',
     'pyngraph/ops/result.cpp',
     'pyngraph/runtime/backend.cpp',
+    'pyngraph/runtime/executable.cpp',
     'pyngraph/runtime/regmodule_pyngraph_runtime.cpp',
     'pyngraph/runtime/tensor.cpp',
     'pyngraph/passes/manager.cpp',
@@ -370,7 +372,7 @@ setup(
     name='ngraph-core',
     description='nGraph - Intel\'s graph compiler and runtime for Neural Networks',
     version=__version__,
-    author='Intel',
+    author='Intel Corporation',
     author_email='intelnervana@intel.com',
     url='https://github.com/NervanaSystems/ngraph/',
     license='License :: OSI Approved :: Apache Software License',
@@ -384,4 +386,7 @@ setup(
     setup_requires=['numpy'],
     install_requires=requirements,
     zip_safe=False,
+    extras_require={
+        'plaidml': ['plaidml>=0.5.0'],
+    },
 )

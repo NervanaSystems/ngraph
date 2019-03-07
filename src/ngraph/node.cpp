@@ -114,13 +114,18 @@ bool Node::is_constant() const
     return false;
 }
 
+const std::string& Node::description() const
+{
+    return m_node_type;
+}
+
 const std::string& Node::get_friendly_name() const
 {
-    if (m_name.empty())
+    if (m_friendly_name.empty())
     {
         return m_unique_name;
     }
-    return m_name;
+    return m_friendly_name;
 }
 
 const std::string& Node::get_name() const
@@ -128,11 +133,11 @@ const std::string& Node::get_name() const
     return m_unique_name;
 }
 
-void Node::set_name(const string& name)
+void Node::set_friendly_name(const string& name)
 {
-    if (m_name.empty())
+    if (m_friendly_name.empty())
     {
-        m_name = name;
+        m_friendly_name = name;
     }
     else
     {
@@ -417,15 +422,20 @@ NodeVector Node::get_users(bool check_is_used) const
 std::string ngraph::node_validation_assertion_string(const Node* node)
 {
     std::stringstream ss;
-    ss << "While validating node '" << *node << "' of type '" << node->description() << "'";
+    ss << "While validating node '" << *node << "'";
     return ss.str();
 }
 
 void ngraph::check_new_args_count(const Node* node, const NodeVector& new_args)
 {
-    NODE_VALIDATION_ASSERT(node, new_args.size() == node->get_arguments().size())
-        << "copy_with_new_args() expected " << node->get_arguments().size() << " argument"
-        << (node->get_arguments().size() == 1 ? "" : "s") << " but got " << new_args.size();
+    NODE_VALIDATION_CHECK(node,
+                          new_args.size() == node->get_arguments().size(),
+                          "copy_with_new_args() expected ",
+                          node->get_arguments().size(),
+                          " argument",
+                          (node->get_arguments().size() == 1 ? "" : "s"),
+                          " but got ",
+                          new_args.size());
 }
 
 const std::shared_ptr<Node>& ngraph::check_single_output_arg(const std::shared_ptr<Node>& node,
@@ -454,13 +464,14 @@ std::tuple<element::Type, PartialShape> Node::validate_and_infer_elementwise_arg
     {
         for (size_t i = 1; i < get_input_size(); ++i)
         {
-            NODE_VALIDATION_ASSERT(
-                this, element::Type::merge(element_type, element_type, get_input_element_type(i)))
-                << "Argument element types are inconsistent.";
+            NODE_VALIDATION_CHECK(
+                this,
+                element::Type::merge(element_type, element_type, get_input_element_type(i)),
+                "Argument element types are inconsistent.");
 
-            NODE_VALIDATION_ASSERT(this,
-                                   PartialShape::merge_into(pshape, get_input_partial_shape(i)))
-                << "Argument shapes are inconsistent.";
+            NODE_VALIDATION_CHECK(this,
+                                  PartialShape::merge_into(pshape, get_input_partial_shape(i)),
+                                  "Argument shapes are inconsistent.");
         }
     }
 
@@ -473,8 +484,11 @@ void Node::validate_and_infer_elementwise_arithmetic()
     element::Type& args_et = std::get<0>(args_et_pshape);
     PartialShape& args_pshape = std::get<1>(args_et_pshape);
 
-    NODE_VALIDATION_ASSERT(this, args_et.is_dynamic() || args_et != element::boolean)
-        << "Arguments cannot have boolean element type (argument element type: " << args_et << ").";
+    NODE_VALIDATION_CHECK(this,
+                          args_et.is_dynamic() || args_et != element::boolean,
+                          "Arguments cannot have boolean element type (argument element type: ",
+                          args_et,
+                          ").");
 
     set_output_type(0, args_et, args_pshape);
 }
@@ -485,9 +499,12 @@ void Node::validate_and_infer_elementwise_logical()
     element::Type& args_et = std::get<0>(args_et_pshape);
     PartialShape& args_pshape = std::get<1>(args_et_pshape);
 
-    NODE_VALIDATION_ASSERT(this, args_et.is_dynamic() || args_et == element::boolean)
-        << "Operands for logical operators must have boolean element type but have element type "
-        << args_et << ".";
+    NODE_VALIDATION_CHECK(
+        this,
+        args_et.is_dynamic() || args_et == element::boolean,
+        "Operands for logical operators must have boolean element type but have element type ",
+        args_et,
+        ".");
 
     set_output_type(0, element::boolean, args_pshape);
 }

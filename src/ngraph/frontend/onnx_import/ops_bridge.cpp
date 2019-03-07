@@ -24,12 +24,15 @@
 #include "ngraph/log.hpp"
 #include "op/abs.hpp"
 #include "op/acos.hpp"
+#include "op/acosh.hpp"
 #include "op/add.hpp"
 #include "op/and.hpp"
 #include "op/argmax.hpp"
 #include "op/argmin.hpp"
 #include "op/asin.hpp"
+#include "op/asinh.hpp"
 #include "op/atan.hpp"
+#include "op/atanh.hpp"
 #include "op/average_pool.hpp"
 #include "op/batch_norm.hpp"
 #include "op/cast.hpp"
@@ -40,8 +43,10 @@
 #include "op/conv.hpp"
 #include "op/conv_transpose.hpp"
 #include "op/cos.hpp"
+#include "op/cosh.hpp"
 #include "op/depth_to_space.hpp"
 #include "op/div.hpp"
+#include "op/dropout.hpp"
 #include "op/elu.hpp"
 #include "op/equal.hpp"
 #include "op/exp.hpp"
@@ -57,6 +62,7 @@
 #include "op/less.hpp"
 #include "op/log.hpp"
 #include "op/log_softmax.hpp"
+#include "op/lp_pool.hpp"
 #include "op/lrn.hpp"
 #include "op/lstm.hpp"
 #include "op/matmul.hpp"
@@ -67,6 +73,7 @@
 #include "op/mul.hpp"
 #include "op/neg.hpp"
 #include "op/not.hpp"
+#include "op/onehot.hpp"
 #include "op/or.hpp"
 #include "op/pad.cpp"
 #include "op/pad.hpp"
@@ -79,7 +86,9 @@
 #include "op/selu.hpp"
 #include "op/shape.hpp"
 #include "op/sigmoid.hpp"
+#include "op/sign.hpp"
 #include "op/sin.hpp"
+#include "op/sinh.hpp"
 #include "op/size.hpp"
 #include "op/slice.hpp"
 #include "op/softmax.hpp"
@@ -97,6 +106,7 @@
 #include "op/topk.hpp"
 #include "op/transpose.hpp"
 #include "op/unsqueeze.hpp"
+#include "op/where.hpp"
 #include "op/xor.hpp"
 #include "ops_bridge.hpp"
 
@@ -132,11 +142,17 @@ namespace ngraph
                                                  const std::string& domain,
                                                  Operator fn)
         {
-            auto result = m_map[domain][name].emplace(version, std::move(fn));
-            if (result.second)
+            auto it = m_map[domain][name].find(version);
+            if (it == std::end(m_map[domain][name]))
             {
+                m_map[domain][name].emplace(version, std::move(fn));
+            }
+            else
+            {
+                it->second = std::move(fn);
                 NGRAPH_WARN << "Overwriting existing operator: "
-                            << domain + "." + name + ":" + std::to_string(version);
+                            << (domain.empty() ? "ai.onnx" : domain)
+                            << "." + name + ":" + std::to_string(version);
             }
         }
 
@@ -202,13 +218,16 @@ namespace ngraph
         {
             REGISTER_OPERATOR("Abs", 1, abs);
             REGISTER_OPERATOR("Acos", 1, acos);
+            REGISTER_OPERATOR("Acosh", 1, acosh);
             REGISTER_OPERATOR("Add", 1, add);
             REGISTER_OPERATOR("Add", 7, add);
             REGISTER_OPERATOR("And", 1, logical_and);
             REGISTER_OPERATOR("ArgMin", 1, argmin);
             REGISTER_OPERATOR("ArgMax", 1, argmax);
             REGISTER_OPERATOR("Asin", 1, asin);
+            REGISTER_OPERATOR("Asinh", 1, asinh);
             REGISTER_OPERATOR("Atan", 1, atan);
+            REGISTER_OPERATOR("Atanh", 1, atanh);
             REGISTER_OPERATOR("AveragePool", 1, average_pool);
             REGISTER_OPERATOR("BatchNormalization", 1, batch_norm);
             REGISTER_OPERATOR("Cast", 1, cast);
@@ -219,10 +238,11 @@ namespace ngraph
             REGISTER_OPERATOR("Conv", 1, conv);
             REGISTER_OPERATOR("ConvTranspose", 1, conv_transpose);
             REGISTER_OPERATOR("Cos", 1, cos);
+            REGISTER_OPERATOR("Cosh", 1, cosh);
             REGISTER_OPERATOR("DepthToSpace", 1, depth_to_space);
             REGISTER_OPERATOR("Div", 1, div);
             REGISTER_OPERATOR("Div", 7, div);
-            REGISTER_OPERATOR("Dropout", 1, identity);
+            REGISTER_OPERATOR("Dropout", 1, dropout);
             REGISTER_OPERATOR("Elu", 1, elu);
             REGISTER_OPERATOR("Equal", 1, equal);
             REGISTER_OPERATOR("Exp", 1, exp);
@@ -230,6 +250,7 @@ namespace ngraph
             REGISTER_OPERATOR("Floor", 1, floor);
             REGISTER_OPERATOR("Gemm", 1, gemm);
             REGISTER_OPERATOR("GlobalAveragePool", 1, global_average_pool);
+            REGISTER_OPERATOR("GlobalLpPool", 1, global_lp_pool);
             REGISTER_OPERATOR("GlobalMaxPool", 1, global_max_pool);
             REGISTER_OPERATOR("Greater", 1, greater);
             REGISTER_OPERATOR("HardSigmoid", 1, hard_sigmoid);
@@ -253,6 +274,7 @@ namespace ngraph
             REGISTER_OPERATOR("Neg", 1, neg);
             REGISTER_OPERATOR("Not", 1, logical_not);
             REGISTER_OPERATOR("Or", 1, logical_or);
+            REGISTER_OPERATOR("OneHot", 1, onehot);
             REGISTER_OPERATOR("Pad", 1, pad);
             REGISTER_OPERATOR("Pow", 1, pow);
             REGISTER_OPERATOR("PRelu", 1, prelu);
@@ -272,7 +294,9 @@ namespace ngraph
             REGISTER_OPERATOR("Selu", 1, selu);
             REGISTER_OPERATOR("Shape", 1, shape);
             REGISTER_OPERATOR("Sigmoid", 1, sigmoid);
+            REGISTER_OPERATOR("Sign", 1, sign);
             REGISTER_OPERATOR("Sin", 1, sin);
+            REGISTER_OPERATOR("Sinh", 1, sinh);
             REGISTER_OPERATOR("Size", 1, size);
             REGISTER_OPERATOR("Slice", 1, slice);
             REGISTER_OPERATOR("Softmax", 1, softmax);
@@ -292,6 +316,7 @@ namespace ngraph
             REGISTER_OPERATOR("TopK", 1, topk);
             REGISTER_OPERATOR("Transpose", 1, transpose);
             REGISTER_OPERATOR("Unsqueeze", 1, unsqueeze);
+            REGISTER_OPERATOR("Where", 1, where);
             REGISTER_OPERATOR("Xor", 1, logical_xor);
         }
 

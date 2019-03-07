@@ -30,7 +30,8 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     endif()
 endif()
 
-set(GTEST_OUTPUT_DIR ${EXTERNAL_PROJECTS_ROOT}/gtest/build/googlemock/gtest)
+set(GMOCK_OUTPUT_DIR ${EXTERNAL_PROJECTS_ROOT}/gtest/build/googlemock)
+set(GTEST_OUTPUT_DIR ${GMOCK_OUTPUT_DIR}/gtest)
 
 if (APPLE OR LINUX)
     set(COMPILE_FLAGS -fPIC)
@@ -52,7 +53,6 @@ ExternalProject_Add(
     PREFIX gtest
     GIT_REPOSITORY ${GTEST_GIT_REPO_URL}
     GIT_TAG ${GTEST_GIT_LABEL}
-    ${NGRAPH_GIT_ARGS}
     # Disable install step
     INSTALL_COMMAND ""
     UPDATE_COMMAND ""
@@ -71,9 +71,23 @@ ExternalProject_Add(
 ExternalProject_Get_Property(ext_gtest SOURCE_DIR BINARY_DIR)
 
 add_library(libgtest INTERFACE)
-add_dependencies(libgtest ext_gtest)
-target_include_directories(libgtest SYSTEM INTERFACE ${SOURCE_DIR}/googletest/include)
+add_dependencies(libgtest ext_gtest ext_gmock)
+target_include_directories(libgtest SYSTEM INTERFACE
+    ${SOURCE_DIR}/googletest/include
+    ${SOURCE_DIR}/googlemock/include)
 
-target_link_libraries(libgtest INTERFACE
-    debug ${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gtestd${CMAKE_STATIC_LIBRARY_SUFFIX}
-    optimized ${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX})
+if(LINUX OR APPLE)
+    target_link_libraries(libgtest INTERFACE
+        debug ${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gtestd${CMAKE_STATIC_LIBRARY_SUFFIX}
+        debug ${GMOCK_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gmockd${CMAKE_STATIC_LIBRARY_SUFFIX}
+        optimized ${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX}
+        optimized ${GMOCK_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gmock${CMAKE_STATIC_LIBRARY_SUFFIX})
+elseif(WIN32)
+    target_link_libraries(libgtest INTERFACE
+        debug ${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gtestd${CMAKE_STATIC_LIBRARY_SUFFIX}
+        debug ${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gmockd${CMAKE_STATIC_LIBRARY_SUFFIX}
+        optimized ${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX}
+        optimized ${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gmock${CMAKE_STATIC_LIBRARY_SUFFIX})
+else()
+    message(FATAL_ERROR "libgtest: Unsupported platform.")
+endif()

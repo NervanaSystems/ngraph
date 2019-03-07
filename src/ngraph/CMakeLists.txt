@@ -20,6 +20,7 @@ set (SRC
     autodiff/adjoints.cpp
     builder/autobroadcast.cpp
     builder/numpy_transpose.cpp
+    builder/quantization/quantized_linear_convolution.cpp
     builder/quantization.cpp
     builder/reduce_ops.cpp
     coordinate.cpp
@@ -69,6 +70,7 @@ set (SRC
     op/experimental/quantized_conv_relu.cpp
     op/experimental/quantized_conv.cpp
     op/experimental/quantized_max_pool.cpp
+    op/experimental/quantized_concat.cpp
     op/experimental/shape_of.cpp
     op/floor.cpp
     op/get_output_element.cpp
@@ -92,6 +94,7 @@ set (SRC
     op/or.cpp
     op/pad.cpp
     op/parameter.cpp
+    op/passthrough.cpp
     op/power.cpp
     op/product.cpp
     op/quantize.cpp
@@ -153,12 +156,13 @@ set (SRC
     runtime/aligned_buffer.cpp
     runtime/backend.cpp
     runtime/backend_manager.cpp
-    state/rng_state.cpp
+    runtime/executable.cpp
     runtime/host_tensor.cpp
     runtime/tensor.cpp
     serializer.cpp
     shape.cpp
     shape_util.cpp
+    state/rng_state.cpp
     strides.cpp
     type/bfloat16.cpp
     type/element_type.cpp
@@ -168,6 +172,20 @@ set (SRC
     placement.cpp
     cpio.cpp
     )
+
+set(SRC ${SRC}
+    runtime/hybrid/hybrid_backend.cpp
+    runtime/hybrid/hybrid_executable.cpp
+    runtime/hybrid/hybrid_util.cpp
+    runtime/hybrid/op/function_call.cpp
+    runtime/hybrid/pass/default_placement.cpp
+    runtime/hybrid/pass/dump.cpp
+    runtime/hybrid/pass/fix_get_output_element.cpp
+    runtime/hybrid/pass/liveness.cpp
+    runtime/hybrid/pass/memory_layout.cpp
+    )
+
+
 if(NGRAPH_DISTRIBUTED_ENABLE)
     list(APPEND SRC distributed.cpp)
 endif()
@@ -176,13 +194,18 @@ configure_file(version.in.hpp version.hpp)
 
 add_library(ngraph SHARED ${SRC})
 
-set_target_properties(ngraph PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
-
 if(NGRAPH_DISTRIBUTED_ENABLE)
     target_sources(ngraph PRIVATE distributed.cpp)
-    target_compile_definitions(ngraph PRIVATE NGRAPH_DISTRIBUTED)
-    target_include_directories(ngraph SYSTEM PRIVATE libmlsl)
-    target_link_libraries(ngraph PRIVATE libmlsl)
+    if(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
+        target_include_directories(ngraph SYSTEM PRIVATE libmlsl)
+        target_link_libraries(ngraph PRIVATE libmlsl)
+    elseif(NGRAPH_DISTRIBUTED_OMPI_ENABLE)
+        find_package(MPI REQUIRED)
+        target_include_directories(ngraph SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+        target_link_libraries(ngraph PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+    else()
+        message(FATAL_ERROR "Distributed Library not supported/mentioned")
+    endif()
 endif()
 
 add_subdirectory(frontend)
@@ -249,6 +272,15 @@ endif()
 
 if (NGRAPH_MANYLINUX_ENABLE)
     target_compile_definitions(ngraph PRIVATE "NGRAPH_MANYLINUX_ENABLE")
+endif()
+
+# Build subdirectories for all build types on Windows
+if(WIN32)
+    foreach(BUILD_TYPE Release Debug RelWithDebInfo MinSizeRel)
+        if(NOT EXISTS ${NGRAPH_BUILD_DIR}/${BUILD_TYPE})
+            file(MAKE_DIRECTORY ${NGRAPH_BUILD_DIR}/${BUILD_TYPE})
+        endif()
+    endforeach()
 endif()
 
 #-----------------------------------------------------------------------------------------------

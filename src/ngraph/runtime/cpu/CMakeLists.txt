@@ -42,6 +42,8 @@ set(SRC
     builder/concat.cpp
     builder/convert.cpp
     builder/convert_layout.cpp
+    builder/quantized_conv.cpp
+    builder/quantized_concat.cpp
     builder/convolution.cpp
     builder/dot.cpp
     builder/embedding_lookup.cpp
@@ -107,6 +109,7 @@ set(SRC
     pass/cpu_layout.cpp
     pass/cpu_loop_kernel_fusion.cpp
     pass/cpu_mat_fusion.cpp
+    pass/cpu_memory_assignment.cpp
     pass/cpu_memory_optimization.cpp
     pass/cpu_post_layout_optimizations.cpp
     pass/cpu_rnn_fusion.cpp
@@ -145,6 +148,10 @@ if (NGRAPH_CPU_ENABLE)
     if (NGRAPH_DEX_ONLY)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_DEX_ONLY")
     endif()
+    if(NGRAPH_TBB_ENABLE)
+        set_source_files_properties(cpu_external_function.cpp
+            PROPERTIES COMPILE_DEFINITIONS "NGRAPH_TBB_ENABLE")
+    endif()
     if (NGRAPH_HALIDE)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_HALIDE")
         ExternalProject_Get_Property(ext_halide BINARY_DIR)
@@ -170,9 +177,18 @@ if (NGRAPH_CPU_ENABLE)
     target_compile_definitions(cpu_backend PRIVATE CPU_BACKEND_DLL_EXPORTS)
 
     if(NGRAPH_DISTRIBUTED_ENABLE)
-        target_compile_definitions(cpu_backend PRIVATE NGRAPH_DISTRIBUTED)
-        target_include_directories(cpu_backend SYSTEM PRIVATE libmlsl)
-        target_link_libraries(cpu_backend PRIVATE libmlsl)
+        if(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
+            target_include_directories(cpu_backend SYSTEM PRIVATE libmlsl)
+            target_link_libraries(cpu_backend PRIVATE libmlsl)
+        elseif(NGRAPH_DISTRIBUTED_OMPI_ENABLE)
+            find_package(MPI REQUIRED)
+            target_include_directories(cpu_backend
+                SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+            target_link_libraries(cpu_backend
+                PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+        else()
+            message(FATAL_ERROR "Distributed Library not supported/mentioned")
+        endif()
     endif()
 
     add_dependencies(cpu_backend ext_mkldnn ext_eigen)
@@ -184,7 +200,6 @@ if (NGRAPH_CPU_ENABLE)
         target_link_libraries(cpu_backend PUBLIC codegen)
     endif()
     target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)
-    set_target_properties(cpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
     if (NOT APPLE AND NOT MSVS)
         # CPU backend uses third-party libraries like Eigen that might be linked in and
         # exported by other DSOs as well. In the absence of versioning, this could lead to the
@@ -194,7 +209,5 @@ if (NGRAPH_CPU_ENABLE)
         set_property(TARGET cpu_backend APPEND PROPERTY LINK_FLAGS "-Wl,-Bsymbolic-functions -Wl,--exclude-libs=ALL")
     endif()
 
-    if (NOT WIN32)
-        install(TARGETS cpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
-    endif()
+    install(TARGETS cpu_backend DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()

@@ -57,8 +57,7 @@ namespace ngraph
                     }
                     else if (data_shape != slope_shape)
                     {
-                        auto params = numpy_style_broadcast_for_binary_operation(slope, data);
-                        slope = params.at(0);
+                        slope = numpy_style_broadcast({slope, data})[0];
                     }
 
                     // x <  0 => f(x) = x * slope
