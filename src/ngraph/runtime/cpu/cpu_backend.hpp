@@ -60,7 +60,7 @@ namespace ngraph
                             ngraph::pass::PassConfig& pass_config,
                             AllocateFunc& framework_allocator,
                             DestroyFunc& framework_deallocator,
-                            bool enable_performance_counters = false);
+                            bool enable_performance_counters = false) override;
 
                 void remove_compiled_function(std::shared_ptr<Executable> exec) override;
 

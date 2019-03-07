@@ -16,6 +16,7 @@
 
 #include "gtest/gtest.h"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/util.hpp"
 #include "util/all_close.hpp"
 #include "util/ndarray.hpp"
 
@@ -43,7 +44,9 @@ TEST(cpu_codegen, abc)
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
     ngraph::pass::PassConfig pass_config{ngraph::pass::CompilationMode::CODEGEN};
-    auto handle = backend->compile(f, pass_config);
+    AllocateFunc framework_allocator = nullptr;
+    DestroyFunc framework_deallocator = nullptr;
+    auto handle = backend->compile(f, pass_config, framework_allocator, framework_deallocator);
     handle->call_with_validate({result}, {a, b, c});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());

@@ -42,6 +42,8 @@ vector<string> runtime::Backend::get_registered_devices()
 std::shared_ptr<runtime::Executable>
     runtime::Backend::compile(std::shared_ptr<Function> func,
                               ngraph::pass::PassConfig& pass_config,
+                              AllocateFunc& framework_allocator,
+                              DestroyFunc& framework_deallocator,
                               bool enable_performance_data)
 {
     return compile(func, enable_performance_data);
