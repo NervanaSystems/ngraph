@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # *****************************************************************************
 #  Copyright 2017-2019 Intel Corporation
 #
@@ -65,12 +66,13 @@ def _get_output_file_path(path, extension):
 
 if __name__ == '__main__':
     args = docopt(__doc__)
-    print(args)
     input_file_path = args['INPUT_FILE']
     if not args['OUTPUT_FILE']:
         output_file_path = _get_output_file_path(*os.path.splitext(input_file_path))
     else:
         output_file_path = args['OUTPUT_FILE']
+
+    print('Converting {} to {}.'.format(input_file_path, output_file_path))
 
     if not os.path.exists(input_file_path):
         sys.exit('ERROR: Provided input model path does not exists: {}'.format(input_file_path))
