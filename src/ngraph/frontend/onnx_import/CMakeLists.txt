@@ -32,11 +32,15 @@ add_library(onnx_import STATIC
         core/model.cpp
         core/model.hpp
         core/node.hpp
+        core/null_node.cpp
+        core/null_node.hpp
         core/operator_set.hpp
         core/tensor.hpp
         core/value_info.hpp
         exceptions.hpp
         op/acos.hpp
+        op/acosh.cpp
+        op/acosh.hpp
         op/add.hpp
         op/and.hpp
         op/argmax.cpp
@@ -44,7 +48,11 @@ add_library(onnx_import STATIC
         op/argmin.cpp
         op/argmin.hpp
         op/asin.hpp
+        op/asinh.cpp
+        op/asinh.hpp
         op/atan.hpp
+        op/atanh.cpp
+        op/atanh.hpp
         op/average_pool.cpp
         op/average_pool.hpp
         op/batch_norm.cpp
@@ -67,6 +75,7 @@ add_library(onnx_import STATIC
         op/depth_to_space.cpp
         op/depth_to_space.hpp
         op/div.hpp
+        op/dropout.hpp
         op/elu.cpp
         op/elu.hpp
         op/equal.hpp
@@ -89,6 +98,8 @@ add_library(onnx_import STATIC
         op/less.hpp
         op/log.hpp
         op/log_softmax.hpp
+        op/lp_pool.cpp
+        op/lp_pool.hpp
         op/lrn.cpp
         op/lrn.hpp
         op/lstm.cpp
@@ -104,6 +115,8 @@ add_library(onnx_import STATIC
         op/mul.hpp
         op/neg.hpp
         op/not.hpp
+        op/onehot.cpp
+        op/onehot.hpp
         op/or.hpp
         op/pad.cpp
         op/pad.hpp
@@ -122,6 +135,7 @@ add_library(onnx_import STATIC
         op/shape.hpp
         op/shape.cpp
         op/sigmoid.hpp
+        op/sign.hpp
         op/sin.hpp
         op/sinh.hpp
         op/size.cpp
@@ -153,6 +167,7 @@ add_library(onnx_import STATIC
         op/transpose.hpp
         op/unsqueeze.cpp
         op/unsqueeze.hpp
+        op/where.hpp
         op/xor.hpp
         ops_bridge.cpp
         ops_bridge.hpp
@@ -161,9 +176,14 @@ add_library(onnx_import STATIC
         utils/common.hpp
         utils/convpool.cpp
         utils/convpool.hpp
+        utils/norm.cpp
+        utils/norm.hpp
+        utils/reduction.cpp
         utils/reduction.hpp
         utils/reshape.cpp
         utils/reshape.hpp
+        utils/rnn/activation_functions.cpp
+        utils/rnn/activation_functions.hpp
         utils/variadic.hpp)
 
 set(ONNX_IMPORT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "")

@@ -1,29 +1,29 @@
 .. backend-support/index.rst
 
 
-Transformer, CPU, GPU, PlaidML
-###############################
+About backends
+##############
 
-
+* :ref:`what_is_backend`
 * :ref:`hybrid_transformer`
 * :ref:`cpu_backend`
 * :ref:`plaidml_backend`
 * :ref:`gpu_backend`
 
 
+.. _what_is_backend:
 
+What's a backend?
+-----------------
 
-What is a backend?
-------------------
-
-Backends are responsible for function execution and value allocation. They 
-can be used to :doc:`carry out a programmed computation<../howto/execute>`
-from a framework by using a CPU or GPU; or they can be used with an *Interpreter* 
-mode, which is primarily intended for testing, to analyze a program, or for a 
-framework developer to develop customizations. Experimental APIs to support 
+In the nGraph Compiler stack, what we call a *backend* is responsible for 
+function execution and value allocation. A  backend can be used to 
+:doc:`carry out a programmed computation<../core/constructing-graphs/execute>` 
+from a framework on a CPU or GPU; or it can be used with an *Interpreter* mode, 
+which is primarily intended for testing, to analyze a program, or to help a 
+framework developer customize targeted solutions. Experimental APIs to support 
 current and future nGraph Backends are also available; see, for example, the 
-section on :ref:`plaidml_backend`.
-
+section on the :ref:`plaidml_backend`.
 
 
 .. _hybrid_transformer:
@@ -31,7 +31,7 @@ section on :ref:`plaidml_backend`.
 Hybrid Transformer
 ==================
 
-Lorem ipsum
+More detail coming soon
 
 
 .. _cpu_backend:
@@ -39,7 +39,7 @@ Lorem ipsum
 CPU Backend
 ===========
 
-Lorem ipsum
+More detail coming soon
 
 
 .. _gpu_backend:
@@ -47,7 +47,7 @@ Lorem ipsum
 GPU Backend
 ===========
 
-Lorem ipsum
+More detail coming soon 
 
 
 .. _plaidml_backend:

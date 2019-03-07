@@ -27,9 +27,9 @@
 using namespace ngraph;
 using namespace std;
 
-#define TI(x) std::type_index(typeid(x))
+#define TI(x) type_index(typeid(x))
 
-bool pass::VisualizeTree::run_on_module(vector<shared_ptr<ngraph::Function>>& functions)
+bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
 {
     for (shared_ptr<Function> f : functions)
     {
@@ -42,10 +42,10 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<ngraph::Function>>& fu
                 m_ss << add_attributes(node);
                 m_ss << "    " << arg->get_name() << " -> " << node->get_name();
 
-                if (std::getenv("NGRAPH_VISUALIZE_EDGE_LABELS") != nullptr)
+                if (getenv("NGRAPH_VISUALIZE_EDGE_LABELS") != nullptr)
                 {
                     size_t output = 0;
-                    if (auto goe = std::dynamic_pointer_cast<op::GetOutputElement>(node))
+                    if (auto goe = dynamic_pointer_cast<op::GetOutputElement>(node))
                     {
                         output = goe->get_n();
                     }
@@ -71,7 +71,7 @@ pass::VisualizeTree::VisualizeTree(const string& file_name, node_modifiers_t nm)
 {
 }
 
-std::string pass::VisualizeTree::add_attributes(shared_ptr<Node> node)
+string pass::VisualizeTree::add_attributes(shared_ptr<Node> node)
 {
     string rc;
     if (m_nodes_with_attributes.find(node) == m_nodes_with_attributes.end())
@@ -82,7 +82,7 @@ std::string pass::VisualizeTree::add_attributes(shared_ptr<Node> node)
     return rc;
 }
 
-std::string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
+string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
 {
     vector<string> attributes;
     if (node->is_parameter() || node->is_output())
@@ -108,24 +108,24 @@ std::string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
     // Construct the label attribute
     {
         stringstream label;
-        label << "label=\"" << node->get_name();
+        label << "label=\"" << node->get_friendly_name();
 
-        static const char* nvtos = std::getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES");
+        static const char* nvtos = getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES");
         if (nvtos != nullptr)
         {
             // The shapes of the Outputs of a multi-output op
             // will be printed for its corresponding `GetOutputElement`s
-            label << " " << (node->get_outputs().size() != 1 ? std::string("[skipped]")
+            label << " " << (node->get_outputs().size() != 1 ? string("[skipped]")
                                                              : vector_to_string(node->get_shape()));
         }
 
-        static const char* nvtot = std::getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES");
+        static const char* nvtot = getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES");
         if (nvtot != nullptr)
         {
             // The types of the Outputs of a multi-output op
             // will be printed for its corresponding `GetOutputElement`s
             label << " "
-                  << ((node->get_outputs().size() != 1) ? std::string("[skipped]")
+                  << ((node->get_outputs().size() != 1) ? string("[skipped]")
                                                         : node->get_element_type().c_type_string());
         }
 
@@ -150,9 +150,9 @@ std::string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
     return ss.str();
 }
 
-std::string pass::VisualizeTree::get_file_ext()
+string pass::VisualizeTree::get_file_ext()
 {
-    const char* format = std::getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_FORMAT");
+    const char* format = getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_FORMAT");
     if (!format)
     {
         format = "png";
@@ -163,7 +163,7 @@ std::string pass::VisualizeTree::get_file_ext()
         format += 1;
     }
 
-    return std::string(format);
+    return string(format);
 }
 
 void pass::VisualizeTree::render() const

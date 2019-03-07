@@ -49,9 +49,22 @@ namespace ngraph
                 auto& dst_iter_tensor = external_function->get_tensor_data(out[1].get_name());
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                auto rnn_index = mkldnn_emitter->build_rnn<ngraph::op::Rnn>(node, args, out);
+                auto rnn_desc =
+                    mkldnn_emitter->get_rnn_forward_desc<ngraph::op::Rnn>(node, args, out);
+                // Rnn needs 9 primitives: src_layer, src_iter, weights_layer, weights_iter, bias,
+                // dst_layer, dst_iter, and rnn_forward.
+                // It needs a new workspace.
+                auto rnn_index =
+                    mkldnn_emitter->reserve_primitive_space(9, true /* new workspace */);
                 auto& deps = mkldnn_emitter->get_primitive_deps(rnn_index);
-                auto functor = [&, rnn_index](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+
+                auto functor = [&, rnn_desc, rnn_index](CPURuntimeContext* ctx,
+                                                        CPUExecutionContext* ectx) {
+                    if (ctx->first_iteration)
+                    {
+                        mkldnn_emitter->build_rnn_forward(rnn_desc, rnn_index);
+                        ctx->mkldnn_workspaces = mkldnn_emitter->get_mkldnn_workspaces().data();
+                    }
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], src_layer_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], src_iter_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], weights_layer_tensor);

@@ -159,9 +159,7 @@ std::map<memory::format, const std::string>&
         {memory::format::tnc, "memory::format::tnc"},
         {memory::format::ldsnc, "memory::format::ldsnc"},
         {memory::format::ldigo, "memory::format::ldigo"},
-        {memory::format::ldigo_p, "memory::format::ldigo_p"},
         {memory::format::ldgoi, "memory::format::ldgoi"},
-        {memory::format::ldgoi_p, "memory::format::ldgoi_p"},
         {memory::format::ldgo, "memory::format::ldgo"},
         {memory::format::wino_fmt, "memory::format::wino_fmt"},
         {memory::format::format_last, "memory::format::format_last"},
@@ -289,6 +287,17 @@ mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_default_mkldnn_md(
     return memory::desc(memory::dims(shape.begin(), shape.end()), et, format);
 }
 
+bool runtime::cpu::mkldnn_utils::can_create_mkldnn_md(const ngraph::element::Type type)
+{
+    auto it = get_mkldnn_data_type_map().find(type);
+    if (it == get_mkldnn_data_type_map().end() ||
+        it->second == mkldnn::memory::data_type::data_undef)
+    {
+        return false;
+    }
+    return true;
+}
+
 bool runtime::cpu::mkldnn_utils::can_create_mkldnn_md(const Shape& dims,
                                                       const Strides& strides,
                                                       const ngraph::element::Type type)
@@ -354,6 +363,18 @@ mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_blocked_mkldnn_md(
         if (is_perm_sorted(strides, {0, 1}))
         {
             return memory::desc(dim, dtype, memory::format::nc);
+        }
+    }
+
+    if (dims.size() == 3)
+    {
+        if (is_perm_sorted(strides, {0, 1, 2}))
+        {
+            return memory::desc(dim, dtype, memory::format::tnc);
+        }
+        if (is_perm_sorted(strides, {1, 0, 2}))
+        {
+            return memory::desc(dim, dtype, memory::format::ntc);
         }
     }
 
@@ -441,6 +462,10 @@ memory::desc runtime::cpu::mkldnn_utils::try_get_named_md(const mkldnn_memory_de
     {
     case 1: CANONICALIZE_MD(mkldnn_x); break;
     case 2: CANONICALIZE_MD(mkldnn_nc); break;
+    case 3:
+        CANONICALIZE_MD(mkldnn_tnc);
+        CANONICALIZE_MD(mkldnn_ntc);
+        break;
     case 4:
         CANONICALIZE_MD(mkldnn_nchw);
         CANONICALIZE_MD(mkldnn_nhwc);

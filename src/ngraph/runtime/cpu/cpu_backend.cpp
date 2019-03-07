@@ -51,9 +51,10 @@ namespace
 }
 
 shared_ptr<runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_Backend::make_call_frame(
-    const shared_ptr<runtime::cpu::CPU_ExternalFunction>& external_function)
+    const shared_ptr<runtime::cpu::CPU_ExternalFunction>& external_function,
+    ngraph::pass::PassConfig& pass_config)
 {
-    return external_function->make_call_frame();
+    return external_function->make_call_frame(pass_config);
 }
 
 shared_ptr<runtime::Tensor>
@@ -68,44 +69,62 @@ shared_ptr<runtime::Tensor> runtime::cpu::CPU_Backend::create_tensor(
     return make_shared<runtime::cpu::CPUTensorView>(element_type, shape, memory_pointer, this);
 }
 
-runtime::Handle runtime::cpu::CPU_Backend::compile(shared_ptr<Function> func)
+shared_ptr<runtime::Executable>
+    runtime::cpu::CPU_Backend::compile(shared_ptr<Function> func, bool performance_counters_enabled)
 {
-    FunctionInstance& instance = m_function_map[func];
+    ngraph::pass::PassConfig pass_config;
+    return compile(func, pass_config, performance_counters_enabled);
+}
+
+shared_ptr<runtime::Executable>
+    runtime::cpu::CPU_Backend::compile(shared_ptr<Function> func,
+                                       ngraph::pass::PassConfig& pass_config,
+                                       bool performance_counters_enabled)
+{
+    shared_ptr<runtime::Executable> rc;
+    auto it = m_exec_map.find(func);
+    if (it != m_exec_map.end())
+    {
+        rc = it->second;
+    }
+    else
+    {
+        rc = make_shared<CPU_Executable>(func, pass_config, performance_counters_enabled);
+        m_exec_map.insert({func, rc});
+    }
+    return rc;
+}
+
+runtime::cpu::CPU_Executable::CPU_Executable(shared_ptr<Function> func,
+                                             ngraph::pass::PassConfig& pass_config,
+                                             bool performance_counters_enabled)
+{
+    FunctionInstance& instance = m_function_instance;
     if (instance.m_external_function == nullptr)
     {
         instance.m_external_function = make_shared<CPU_ExternalFunction>(func);
-        instance.m_external_function->m_emit_timing = instance.m_performance_counters_enabled;
-        auto cf = instance.m_external_function->make_call_frame();
+        instance.m_external_function->m_emit_timing = performance_counters_enabled;
+        auto cf = instance.m_external_function->make_call_frame(pass_config);
         instance.m_call_frame = dynamic_pointer_cast<CPU_CallFrame>(cf);
     }
-    return func;
+    set_parameters_and_results(*func);
 }
 
-std::shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
-    runtime::cpu::CPU_Backend::get_call_frame(std::shared_ptr<Function> func)
+std::shared_ptr<ngraph::runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_Executable::get_call_frame()
 {
-    FunctionInstance& instance = m_function_map[func];
-    if (instance.m_external_function == nullptr)
-    {
-        auto rc = compile(func);
-        if (!rc)
-        {
-            throw ngraph_error("couldn't compile a function");
-        }
-    }
-
+    FunctionInstance& instance = m_function_instance;
     return instance.m_call_frame;
 }
 
-bool runtime::cpu::CPU_Backend::call(shared_ptr<Function> func,
-                                     const vector<shared_ptr<runtime::Tensor>>& outputs,
-                                     const vector<shared_ptr<runtime::Tensor>>& inputs)
+bool runtime::cpu::CPU_Executable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                        const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     bool rc = true;
 
-    FunctionInstance& instance = m_function_map[func];
+    FunctionInstance& instance = m_function_instance;
     if (instance.m_external_function == nullptr)
     {
+        NGRAPH_INFO;
         throw runtime_error("compile() must be called before call().");
     }
 
@@ -114,35 +133,27 @@ bool runtime::cpu::CPU_Backend::call(shared_ptr<Function> func,
     return rc;
 }
 
-void runtime::cpu::CPU_Backend::remove_compiled_function(shared_ptr<Function> func)
+void runtime::cpu::CPU_Backend::remove_compiled_function(shared_ptr<Executable> exec)
 {
-    m_function_map.erase(func);
-}
-
-void runtime::cpu::CPU_Backend::enable_performance_data(shared_ptr<Function> func, bool enable)
-{
-    FunctionInstance& instance = m_function_map[func];
-    if (instance.m_external_function != nullptr)
+    for (auto it = m_exec_map.begin(); it != m_exec_map.end(); ++it)
     {
-        throw runtime_error("Performance data collection must be enabled prior to compiling.");
+        if (it->second == exec)
+        {
+            m_exec_map.erase(it);
+            break;
+        }
     }
-    instance.m_performance_counters_enabled = enable;
 }
 
-vector<runtime::PerformanceCounter>
-    runtime::cpu::CPU_Backend::get_performance_data(shared_ptr<Function> func) const
+vector<runtime::PerformanceCounter> runtime::cpu::CPU_Executable::get_performance_data() const
 {
     vector<runtime::PerformanceCounter> rc;
-    auto it = m_function_map.find(func);
-    if (it != m_function_map.end())
+    const FunctionInstance& instance = m_function_instance;
+    if (instance.m_external_function != nullptr)
     {
-        const FunctionInstance& instance = it->second;
-        if (instance.m_external_function != nullptr)
-        {
-            rc.insert(rc.end(),
-                      instance.m_external_function->get_perf_counters().begin(),
-                      instance.m_external_function->get_perf_counters().end());
-        }
+        rc.insert(rc.end(),
+                  instance.m_external_function->get_perf_counters().begin(),
+                  instance.m_external_function->get_perf_counters().end());
     }
     return rc;
 }
@@ -151,7 +162,6 @@ bool runtime::cpu::CPU_Backend::is_supported(const Node& op) const
 {
     return true;
 }
-
 bool runtime::cpu::CPU_Backend::is_supported_property(const Property prop) const
 {
     if (prop == Property::memory_attach)

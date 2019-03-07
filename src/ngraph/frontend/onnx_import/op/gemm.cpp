@@ -79,8 +79,7 @@ namespace ngraph
                     input_c = std::make_shared<ngraph::op::Multiply>(beta_node, input_c);
 
                     // alpha * A' * B' + beta * C
-                    NodeVector broadcasted_nodes =
-                        numpy_style_broadcast_for_binary_operation(a_dot_b, input_c);
+                    NodeVector broadcasted_nodes = numpy_style_broadcast({a_dot_b, input_c});
                     // The ONNX documentation says that `input_c` should be "unidirectional broadcastable"
                     // to the `a_dot_b` tensor. Since numpy style broadcasting is bidirectional, below we
                     // only use the second output from above broadcasting. In other words we want to
