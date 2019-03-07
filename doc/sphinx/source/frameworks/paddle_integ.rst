@@ -25,12 +25,13 @@ Once nGraph engine is called, performance optimization is handled by nGraph engi
 
 Lastly, the code contributed by the nGraph team to PaddlePaddle repository mainly resides in the fluid/operator/ngraph directory, and having the nGraph bridge code in one place allows for easy maintenance. 
 
-![](https://github.com/NervanaSystems/ngraph-paddle/raw/ngraph/doc/fluid/design/ngraph/images/ngraph_flow.png)
+.. _figure-A:
 
-The diagram above depicts nGraph access from PaddlePaddle. The PaddlePaddle executor generates executable operator according to the procedure description (ProgDesc). The ngraph scans the operator sequence before execution and replaces the supported operator subgraph with ngraph. Engine operator. The next execution is returned to Paddle. The paddle can call and execute the ngraph engine operator with a uniform interface.
+.. figure:: ../graphics/paddlepaddle_design.png
+   :width: 555px
+   :alt: 
 
-
-
+The diagram above depicts nGraph access from PaddlePaddle. The PaddlePaddle executor generates executable operator according to the program description (ProgramDesc). nGraph scans the operator sequence before execution and replaces the supported operators (or subgraphs) with nGraph operators. PaddlePaddle can then execute the nGraph operators and unreplaced PaddlePaddle operators with a uniform interface. The unreplaced operators are executed by PaddlePaddle native implementation.
 
 Integration details 
 -------------------
