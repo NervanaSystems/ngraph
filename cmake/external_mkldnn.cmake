@@ -47,16 +47,22 @@ if(MKLDNN_INCLUDE_DIR AND MKLDNN_LIB_DIR)
     if(NOT MKLML_LIB_DIR)
         set(MKLML_LIB_DIR ${MKLDNN_LIB_DIR})
     endif()
-
-    if(WIN32)
-        add_library(libmkldnn STATIC IMPORTED)
-        set_property(TARGET libmkldnn PROPERTY IMPORTED_LOCATION ${MKLDNN_LIB_DIR}/${MKLDNN_IMPORT_LIB})
-    else()
-        add_library(libmkldnn SHARED IMPORTED)
-        set_property(TARGET libmkldnn PROPERTY IMPORTED_LOCATION ${MKLDNN_LIB_DIR}/${MKLDNN_LIB})
-    endif()
+    ExternalProject_Add(
+        ext_mkldnn
+        PREFIX mkldnn
+        DOWNLOAD_COMMAND ""
+        UPDATE_COMMAND ""
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+        INSTALL_COMMAND ""
+        )
+    add_library(libmkldnn INTERFACE)
     target_include_directories(libmkldnn SYSTEM INTERFACE ${MKLDNN_INCLUDE_DIR})
-
+    target_link_libraries(libmkldnn INTERFACE
+        ${MKLDNN_LIB_DIR}/${MKLDNN_LIB}
+        ${MKLML_LIB_DIR}/${MKLML_LIB}
+        ${MKLML_LIB_DIR}/${OMP_LIB}
+        )
     install(FILES ${MKLDNN_LIB_DIR}/${MKLDNN_LIB} ${MKLML_LIB_DIR}/${MKLML_LIB} ${MKLML_LIB_DIR}/${OMP_LIB}  DESTINATION ${NGRAPH_INSTALL_LIB})
     return()
 endif()
