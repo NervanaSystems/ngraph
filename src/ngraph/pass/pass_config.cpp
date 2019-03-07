@@ -19,10 +19,12 @@
 #include "ngraph/log.hpp"
 #include "ngraph/util.hpp"
 
+using namespace std;
 using namespace ngraph;
 
 // TODO: Add file-based configuration support
-ngraph::pass::PassConfig::PassConfig()
+pass::PassConfig::PassConfig(pass::CompilationMode mode)
+    : m_compilation_mode(mode)
 {
     /**
     * Parses the semi-colon separated environment string passed through NGRAPH_PASS_ENABLES
@@ -31,15 +33,15 @@ ngraph::pass::PassConfig::PassConfig()
     * E.g., NGRAPH_PASS_ENABLES="CoreFusion:0;LikeReplacement:1;CPUCollapseDims" would
     *       set disables on CoreFusion and enables on LikeReplacement and CPUCollapseDims
     **/
-    const char* env_str = std::getenv("NGRAPH_PASS_ENABLES");
+    const char* env_str = getenv("NGRAPH_PASS_ENABLES");
     if (env_str)
     {
-        std::stringstream ss;
+        stringstream ss;
         ss << env_str;
         while (ss.good())
         {
-            std::string substr;
-            std::getline(ss, substr, ';');
+            string substr;
+            getline(ss, substr, ';');
             auto split_str = split(substr, ':', false);
             switch (split_str.size())
             {
@@ -57,15 +59,15 @@ ngraph::pass::PassConfig::PassConfig()
     * would set false on "OptimizeForMemory", true on "MemoryAssignment::ReuseMemory" and true on
     * "UseDefaultLayouts"
     **/
-    env_str = std::getenv("NGRAPH_PASS_ATTRIBUTES");
+    env_str = getenv("NGRAPH_PASS_ATTRIBUTES");
     if (env_str)
     {
-        std::stringstream ss;
+        stringstream ss;
         ss << env_str;
         while (ss.good())
         {
-            std::string substr;
-            std::getline(ss, substr, ';');
+            string substr;
+            getline(ss, substr, ';');
             auto split_str = split(substr, '=', false);
             switch (split_str.size())
             {
@@ -79,12 +81,12 @@ ngraph::pass::PassConfig::PassConfig()
     }
 }
 
-void ngraph::pass::PassConfig::set_pass_enable(std::string name, bool enable)
+void pass::PassConfig::set_pass_enable(string name, bool enable)
 {
     m_pass_enables[name] = enable;
 }
 
-bool ngraph::pass::PassConfig::get_pass_enable(std::string name)
+bool pass::PassConfig::get_pass_enable(string name)
 {
     if (m_pass_enables.find(name) == m_pass_enables.end())
     {
@@ -93,12 +95,12 @@ bool ngraph::pass::PassConfig::get_pass_enable(std::string name)
     return m_pass_enables[name];
 }
 
-void ngraph::pass::PassConfig::set_pass_attribute(std::string name, bool enable)
+void pass::PassConfig::set_pass_attribute(string name, bool enable)
 {
     m_pass_attributes[name] = enable;
 }
 
-bool ngraph::pass::PassConfig::get_pass_attribute(std::string name)
+bool pass::PassConfig::get_pass_attribute(string name)
 {
     if (m_pass_attributes.find(name) == m_pass_attributes.end())
     {
