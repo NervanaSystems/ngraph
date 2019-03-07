@@ -134,9 +134,13 @@ void op::MaxPoolBackprop::validate_and_infer_types()
 
     element::Type result_et;
 
-    NODE_VALIDATION_ASSERT(this, element::Type::merge(result_et, forward_arg_et, delta_et))
-        << "Element types for forward argument (" << forward_arg_et << ") and delta (" << delta_et
-        << ") do not match.";
+    NODE_VALIDATION_CHECK(this,
+                          element::Type::merge(result_et, forward_arg_et, delta_et),
+                          "Element types for forward argument (",
+                          forward_arg_et,
+                          ") and delta (",
+                          delta_et,
+                          ") do not match.");
 
     // infer_batched_forward_pooling wants CoordinateDiffs for these, while the pooling ops for
     // now still take Shape (no negative padding).
@@ -155,9 +159,15 @@ void op::MaxPoolBackprop::validate_and_infer_types()
 
     const PartialShape& delta_shape = get_input_partial_shape(1);
 
-    NODE_VALIDATION_ASSERT(this, forward_result_shape.compatible(delta_shape))
-        << "Inferred forward output shape does not match delta shape (inferred forward output "
-        << "shape: " << forward_result_shape << ", delta shape: " << delta_shape << ").";
+    NODE_VALIDATION_CHECK(
+        this,
+        forward_result_shape.compatible(delta_shape),
+        "Inferred forward output shape does not match delta shape (inferred forward output ",
+        "shape: ",
+        forward_result_shape,
+        ", delta shape: ",
+        delta_shape,
+        ").");
 
     // TODO(amprocte): We may technically be able to infer some extra information from
     // forward_result_shape that was not present in the forward arg shape---namely batch size and

@@ -19,6 +19,8 @@
 #include <memory>
 
 #include "ngraph/function.hpp"
+#include "ngraph/pass/pass_config.hpp"
+#include "ngraph/runtime/executable.hpp"
 #include "ngraph/runtime/performance_counter.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -27,10 +29,8 @@ namespace ngraph
 {
     namespace runtime
     {
-        class ExternalFunction;
         class Tensor;
         class Backend;
-        using Handle = std::shared_ptr<Function>;
     }
 }
 
@@ -81,43 +81,16 @@ public:
     /// \brief Compiles a Function.
     /// \param func The function to compile
     /// \returns compiled function or nullptr on failure
-    virtual Handle compile(std::shared_ptr<Function> func) = 0;
+    virtual std::shared_ptr<Executable> compile(std::shared_ptr<Function> func,
+                                                bool enable_performance_data = false) = 0;
 
-    /// \brief Executes a single iteration of a Function. If func is not compiled the call will
-    ///     compile it.
-    /// \param func The function to execute
-    /// \returns true if iteration is successful, false otherwise
-    virtual bool call(std::shared_ptr<Function> func,
-                      const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                      const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) = 0;
-
-    /// \brief Executes a single iteration of a Function. If func is not compiled the call will
-    ///     compile it. Optionally validates the inputs and outputs against the function graph.
-    /// \param func The function to execute
-    /// \returns true if iteration is successful, false otherwise
-    bool call_with_validate(std::shared_ptr<Function> func,
-                            const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                            const std::vector<std::shared_ptr<runtime::Tensor>>& inputs)
-    {
-        validate(func, outputs, inputs);
-        return call(func, outputs, inputs);
-    }
-
-    /// \brief Compiled functions may be cached. This function removes a compiled function
-    ///     from the cache.
-    /// \param func The function to execute
-    virtual void remove_compiled_function(std::shared_ptr<Function> func);
-
-    /// \brief Enable the collection of per-op performance information on a specified Function.
-    ///     Data collection is via the `get_performance_data` method.
-    /// \param func The function to collect perfomance data on.
-    /// \param enable Set to true to enable or false to disable data collection
-    virtual void enable_performance_data(std::shared_ptr<Function> func, bool enable) {}
-    /// \brief Collect performance information gathered on a Function.
-    /// \param func The function to get collected data.
-    /// \returns Vector of PerformanceCounter information.
-    virtual std::vector<PerformanceCounter>
-        get_performance_data(std::shared_ptr<Function> func) const;
+    /// \brief Compiles a Function.
+    /// \param func The function to compile
+    /// \param pass_config Configuration object for defining compilation options
+    /// \returns compiled function or nullptr on failure
+    virtual std::shared_ptr<Executable> compile(std::shared_ptr<Function> func,
+                                                ngraph::pass::PassConfig& pass_config,
+                                                bool enable_performance_data = false);
 
     /// \brief Test if a backend is capable of supporting an op
     /// \param node is the op to test.
@@ -133,8 +106,7 @@ public:
     /// \brief Test if a backend particular property is supported
     /// \param prop is the feature to test.
     /// \returns true if the property is supported, false otherwise.
-    virtual bool is_supported_property(const Property prop) const { return false; }
-    void validate(std::shared_ptr<const Function> func,
-                  const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                  const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
+    virtual bool is_supported_property(const Property prop) const;
+
+    virtual void remove_compiled_function(std::shared_ptr<Executable> exec);
 };

@@ -219,6 +219,14 @@ namespace ngraph
     * bprop function will have these nodes as the first N input parameters
     **/
     FpropCache cache_fprop(std::shared_ptr<Function> fprop, std::shared_ptr<Function> bprop);
+
+    enum class CPUTensorRole
+    {
+        INPUT,
+        CONSTANT,
+        OUTPUT,
+        INTERMEDIATE
+    };
 } // end namespace ngraph
 
 std::ostream& operator<<(std::ostream& os, const ngraph::NodeVector& nv);

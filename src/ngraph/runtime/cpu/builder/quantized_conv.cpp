@@ -48,8 +48,7 @@ namespace ngraph
 
                     auto conv_desc =
                         mkldnn_emitter
-                            ->get_convolution_forward_desc<ngraph::op::QuantizedConvolution>(
-                                node, args, out);
+                            ->get_convolution_forward_desc<ngraph::op::QuantizedConvolution>(node);
                     auto conv_attr =
                         mkldnn_emitter
                             ->get_convolution_forward_attr<ngraph::op::QuantizedConvolution>(node);
@@ -65,8 +64,10 @@ namespace ngraph
                             vector<float> dyn_scales;
                             dyn_scales.assign(static_cast<float*>(arg2_tensor),
                                               static_cast<float*>(arg2_tensor) + scales_size);
-                            conv_attr.set_output_scales(0, dyn_scales);
-                            mkldnn_emitter->convolution_forward<false>(
+                            // use conv channelwise (dim 1, mask=2^1) if dyn_scales is a vector
+                            const int mask = scales_size == 1 ? 0 : 2;
+                            conv_attr.set_output_scales(mask, dyn_scales);
+                            mkldnn_emitter->build_convolution_forward<false>(
                                 conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
@@ -99,7 +100,7 @@ namespace ngraph
                     auto conv_desc =
                         mkldnn_emitter
                             ->get_convolution_forward_desc<ngraph::op::QuantizedConvolutionRelu>(
-                                node, args, out);
+                                node);
                     auto conv_attr =
                         mkldnn_emitter
                             ->get_convolution_forward_attr<ngraph::op::QuantizedConvolutionRelu>(
@@ -114,8 +115,10 @@ namespace ngraph
                             vector<float> dyn_scales;
                             dyn_scales.assign(static_cast<float*>(arg2_tensor),
                                               static_cast<float*>(arg2_tensor) + scales_size);
-                            conv_attr.set_output_scales(0, dyn_scales);
-                            mkldnn_emitter->convolution_forward<false>(
+                            // use conv channelwise (dim 1, mask=2^1) if dyn_scales is a vector
+                            const int mask = scales_size == 1 ? 0 : 2;
+                            conv_attr.set_output_scales(mask, dyn_scales);
+                            mkldnn_emitter->build_convolution_forward<false>(
                                 conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
@@ -150,7 +153,7 @@ namespace ngraph
                     auto conv_desc =
                         mkldnn_emitter
                             ->get_convolution_forward_desc<ngraph::op::QuantizedConvolutionBias>(
-                                node, args, out);
+                                node);
                     auto conv_attr =
                         mkldnn_emitter
                             ->get_convolution_forward_attr<ngraph::op::QuantizedConvolutionBias>(
@@ -165,8 +168,10 @@ namespace ngraph
                             vector<float> dyn_scales;
                             dyn_scales.assign(static_cast<float*>(arg3_tensor),
                                               static_cast<float*>(arg3_tensor) + scales_size);
-                            conv_attr.set_output_scales(0, dyn_scales);
-                            mkldnn_emitter->convolution_forward<true>(
+                            // use conv channelwise (dim 1, mask=2^1) if dyn_scales is a vector
+                            const int mask = scales_size == 1 ? 0 : 2;
+                            conv_attr.set_output_scales(mask, dyn_scales);
+                            mkldnn_emitter->build_convolution_forward<true>(
                                 conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
@@ -197,8 +202,8 @@ namespace ngraph
                     auto& arg4_tensor = external_function->get_tensor_data(args[4].get_name());
                     auto& arg5_tensor = external_function->get_tensor_data(args[5].get_name());
                     auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
+                    size_t arg3_size = node->get_inputs()[3].get_tensor().size();
 
-                    size_t arg3_size = args[3].get_size();
                     auto scales_size = shape_size(args[4].get_shape());
                     auto sum_scales_size = shape_size(args[5].get_shape());
 
@@ -207,7 +212,7 @@ namespace ngraph
                     auto conv_desc =
                         mkldnn_emitter
                             ->get_convolution_forward_desc<ngraph::op::QuantizedConvolutionBiasAdd>(
-                                node, args, out);
+                                node);
                     auto conv_attr =
                         mkldnn_emitter
                             ->get_convolution_forward_attr<ngraph::op::QuantizedConvolutionBiasAdd>(
@@ -249,9 +254,11 @@ namespace ngraph
                                     new_pops.append_sum(dyn_post_op_scales[0]);
                                 }
                             }
-                            conv_attr.set_output_scales(0, dyn_scales);
+                            // use conv channelwise (dim 1, mask=2^1) if dyn_scales is a vector
+                            const int mask = scales_size == 1 ? 0 : 2;
+                            conv_attr.set_output_scales(mask, dyn_scales);
                             conv_attr.set_post_ops(new_pops);
-                            mkldnn_emitter->convolution_forward<true>(
+                            mkldnn_emitter->build_convolution_forward<true>(
                                 conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
                         }
 
@@ -289,15 +296,15 @@ namespace ngraph
                     auto& arg4_tensor = external_function->get_tensor_data(args[4].get_name());
                     auto& arg5_tensor = external_function->get_tensor_data(args[5].get_name());
                     auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
+                    size_t arg3_size = node->get_inputs()[3].get_tensor().size();
 
-                    size_t arg3_size = args[3].get_size();
                     auto scales_size = shape_size(args[4].get_shape());
                     auto sum_scales_size = shape_size(args[5].get_shape());
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
 
                     auto conv_desc = mkldnn_emitter->get_convolution_forward_desc<
-                        ngraph::op::QuantizedConvolutionBiasSignedAdd>(node, args, out);
+                        ngraph::op::QuantizedConvolutionBiasSignedAdd>(node);
                     auto conv_attr = mkldnn_emitter->get_convolution_forward_attr<
                         ngraph::op::QuantizedConvolutionBiasSignedAdd>(node);
                     size_t conv_index = mkldnn_emitter->convolution_forward_init(true);
@@ -338,8 +345,10 @@ namespace ngraph
                                 }
                             }
                             conv_attr.set_post_ops(new_pops);
-                            conv_attr.set_output_scales(0, dyn_scales);
-                            mkldnn_emitter->convolution_forward<true>(
+                            // use conv channelwise (dim 1, mask=2^1) if dyn_scales is a vector
+                            const int mask = scales_size == 1 ? 0 : 2;
+                            conv_attr.set_output_scales(mask, dyn_scales);
+                            mkldnn_emitter->build_convolution_forward<true>(
                                 conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
                         }
 

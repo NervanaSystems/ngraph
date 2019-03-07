@@ -20,7 +20,7 @@
 #include <CPP/scale.hpp>
 #include <CPP/split.hpp>
 
-#include "ngraph/runtime/intelgpu/code_writer.hpp"
+#include "ngraph/code_writer.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_batchnorm.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
@@ -64,11 +64,12 @@ void runtime::intelgpu::do_create_mean(cldnn::topology& topology,
     const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, channel_shape);
     const string entry_point_name = "create_mean_" + output_name;
     const size_t output_counts = shape_size<Shape>(input_shape) / input_shape.at(channel_axis);
-    codegen::CodeWriter writer;
+    const string kernel_data_type = get_opencl_type_name(output_type);
+    CodeWriter writer;
 
-    writer << "__kernel void " << entry_point_name << "( const __global float input"
-           << array_dims(input_shape) << ", __global float output" << array_dims(channel_shape)
-           << ")\n";
+    writer << "__kernel void " << entry_point_name << "( const __global " << kernel_data_type
+           << " input" << array_dims(input_shape) << ", __global " << kernel_data_type << " output"
+           << array_dims(channel_shape) << ")\n";
 
     writer.block_begin();
     { // Main function body
@@ -78,7 +79,7 @@ void runtime::intelgpu::do_create_mean(cldnn::topology& topology,
                << input_shape.at(channel_axis) << "; ++i" << channel_axis << ")\n";
         writer.block_begin();
         {
-            writer << "float sum = 0.0f;\n";
+            writer << kernel_data_type << " sum = 0.0f;\n";
             size_t var_idx = 0;
             // Main loops
             for (auto const& i : input_shape)
@@ -139,11 +140,13 @@ void runtime::intelgpu::do_create_variance(cldnn::topology& topology,
     const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, channel_shape);
     const string entry_point_name = "create_variance_" + output_name;
     const size_t output_counts = shape_size<Shape>(input_shape) / input_shape.at(channel_axis);
-    codegen::CodeWriter writer;
+    const string kernel_data_type = get_opencl_type_name(output_type);
+    CodeWriter writer;
 
-    writer << "__kernel void " << entry_point_name << "( const __global float input"
-           << array_dims(input_shape) << ", const __global float mean" << array_dims(channel_shape)
-           << ", __global float output" << array_dims(channel_shape) << ")\n";
+    writer << "__kernel void " << entry_point_name << "( const __global " << kernel_data_type
+           << " input" << array_dims(input_shape) << ", const __global " << kernel_data_type
+           << " mean" << array_dims(channel_shape) << ", __global " << kernel_data_type << " output"
+           << array_dims(channel_shape) << ")\n";
 
     writer.block_begin();
     { // Main function body
@@ -153,7 +156,7 @@ void runtime::intelgpu::do_create_variance(cldnn::topology& topology,
                << input_shape.at(channel_axis) << "; ++i" << channel_axis << ")\n";
         writer.block_begin();
         {
-            writer << "float sum = 0.0f;\n";
+            writer << kernel_data_type << " sum = 0.0f;\n";
 
             size_t var_idx = 0;
             // Main loops
@@ -168,8 +171,8 @@ void runtime::intelgpu::do_create_variance(cldnn::topology& topology,
                 ++var_idx;
             }
 
-            writer << "float mean_diff = input" << access_dims(input_shape) << " - mean[i"
-                   << channel_axis << "];\n";
+            writer << kernel_data_type << " mean_diff = input" << access_dims(input_shape)
+                   << " - mean[i" << channel_axis << "];\n";
             writer << "sum += mean_diff * mean_diff;\n";
 
             var_idx = 0;
@@ -217,14 +220,17 @@ void runtime::intelgpu::do_batch_norm_operation(cldnn::topology& topology,
     const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, input_shape);
     const vector<size_t> gws(input_shape.begin(), input_shape.begin() + 2);
     const string entry_point_name = "batch_norm_" + output_name;
-    codegen::CodeWriter writer;
+    const string kernel_data_type = get_opencl_type_name(output_type);
+    CodeWriter writer;
 
     // The kernel name and parameters
     writer << "__attribute__((reqd_work_group_size(1,1,1)))\n"
-           << "__kernel void " << entry_point_name
-           << "(const __global float *input0, const __global float *input1,"
-           << " const __global float *input2, const __global float *input3,"
-           << " const __global float *input4, __global float *output)\n";
+           << "__kernel void " << entry_point_name << "(const __global " << kernel_data_type
+           << " *input0, const __global " << kernel_data_type << " *input1,"
+           << " const __global " << kernel_data_type << " *input2, const __global "
+           << kernel_data_type << " *input3,"
+           << " const __global " << kernel_data_type << " *input4, __global " << kernel_data_type
+           << " *output)\n";
     writer.block_begin();
     { // Main function body
 
@@ -234,11 +240,12 @@ void runtime::intelgpu::do_batch_norm_operation(cldnn::topology& topology,
                << "); /* channel_axis trip count " << input_shape.at(channel_axis) << "*/\n";
 
         // Invariants for the rest of the loops
-        writer << "const float    gamma = input1[i" << channel_axis << "];\n"
-               << "const float     beta = input2[i" << channel_axis << "];\n"
-               << "const float     mean = input3[i" << channel_axis << "];\n"
-               << "const float variance = input4[i" << channel_axis << "];\n"
-               << "const float var_sqrt = (gamma / sqrt(variance + " << eps << "));\n";
+        writer << "const " << kernel_data_type << "    gamma = input1[i" << channel_axis << "];\n"
+               << "const " << kernel_data_type << "     beta = input2[i" << channel_axis << "];\n"
+               << "const " << kernel_data_type << "     mean = input3[i" << channel_axis << "];\n"
+               << "const " << kernel_data_type << " variance = input4[i" << channel_axis << "];\n"
+               << "const " << kernel_data_type << " var_sqrt = (gamma / sqrt(variance + " << eps
+               << "));\n";
 
         writer << "const uint i0 = get_global_id(0);"
                << " /* batch axis trip count " << input_shape.at(0) << "*/\n";
@@ -285,14 +292,16 @@ void runtime::intelgpu::do_create_variance_back(cldnn::topology& topology,
     const Shape channel_shape = get_channel_shape(input_shape, "create_variance_back");
     const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, channel_shape);
     const string entry_point_name = "create_variance_back_" + output_name;
-    codegen::CodeWriter writer;
+    const string kernel_data_type = get_opencl_type_name(output_type);
+    CodeWriter writer;
     vector<size_t> gws;
 
-    writer << "__kernel void " << entry_point_name << "(const __global float input"
-           << array_dims(input_shape) << ", const __global float delta" << array_dims(input_shape)
-           << ", const __global float mean" << array_dims(channel_shape)
-           << ", const __global float variance" << array_dims(channel_shape)
-           << ", __global float output" << array_dims(channel_shape) << ")\n";
+    writer << "__kernel void " << entry_point_name << "(const __global " << kernel_data_type
+           << " input" << array_dims(input_shape) << ", const __global " << kernel_data_type
+           << " delta" << array_dims(input_shape) << ", const __global " << kernel_data_type
+           << " mean" << array_dims(channel_shape) << ", const __global " << kernel_data_type
+           << " variance" << array_dims(channel_shape) << ", __global " << kernel_data_type
+           << " output" << array_dims(channel_shape) << ")\n";
 
     writer.block_begin();
     { // Main function body
@@ -302,10 +311,12 @@ void runtime::intelgpu::do_create_variance_back(cldnn::topology& topology,
         writer << "\nconst uint i" << channel_axis << " = get_global_id(" << channel_axis
                << "); /* channel_axis trip count " << input_shape.at(channel_axis) << "*/\n";
         gws.push_back(input_shape.at(channel_axis));
-        writer << "const float     mean_loc = mean[i" << channel_axis << "];\n"
-               << "const float variance_loc = variance[i" << channel_axis << "];\n"
-               << "const float var_sqrt = 1.0f / sqrt(variance_loc + " << eps << ");\n";
-        writer << "float sum = 0.0f;\n";
+        writer << "const " << kernel_data_type << "     mean_loc = mean[i" << channel_axis << "];\n"
+               << "const " << kernel_data_type << " variance_loc = variance[i" << channel_axis
+               << "];\n"
+               << "const " << kernel_data_type << " var_sqrt = 1.0f / sqrt(variance_loc + " << eps
+               << ");\n";
+        writer << kernel_data_type << " sum = 0.0f;\n";
 
         // Main loops
         writer << "for (uint i0 = 0; i0 < " << input_shape.at(0) << "; ++i0)\n";
@@ -317,8 +328,10 @@ void runtime::intelgpu::do_create_variance_back(cldnn::topology& topology,
                 writer << "for (uint i3 = 0; i3 < " << input_shape.at(3) << "; ++i3)\n";
                 writer.block_begin();
                 {
-                    writer << "const float input_loc = input" << access_dims(input_shape) << ";\n";
-                    writer << "const float delta_loc = delta" << access_dims(input_shape) << ";\n";
+                    writer << "const " << kernel_data_type << " input_loc = input"
+                           << access_dims(input_shape) << ";\n";
+                    writer << "const " << kernel_data_type << " delta_loc = delta"
+                           << access_dims(input_shape) << ";\n";
                     writer << "sum += (input_loc - mean_loc) * var_sqrt * delta_loc;\n";
                 }
                 writer.block_end();
@@ -360,17 +373,19 @@ void runtime::intelgpu::do_batch_norm_backprop_operation(cldnn::topology& topolo
     const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(type, shape);
     const string entry_point_name = "batch_norm_backprop_" + output_name;
     const size_t r_axes_size = shape_size(shape) / shape_size(channel_shape);
-    codegen::CodeWriter writer;
+    const string kernel_data_type = get_opencl_type_name(type);
+    CodeWriter writer;
     vector<size_t> gws;
 
-    writer << "__kernel void " << entry_point_name << "(const __global float input"
-           << array_dims(shape) << ", const __global float delta" << array_dims(shape)
-           << ", const __global float mean" << array_dims(channel_shape)
-           << ", const __global float variance" << array_dims(channel_shape)
-           << ", const __global float gamma" << array_dims(channel_shape)
-           << ", const __global float gamma_backprop" << array_dims(channel_shape)
-           << ", const __global float beta_backprop" << array_dims(channel_shape)
-           << ", __global float output" << array_dims(shape) << ")\n";
+    writer << "__kernel void " << entry_point_name << "(const __global " << kernel_data_type
+           << " input" << array_dims(shape) << ", const __global " << kernel_data_type << " delta"
+           << array_dims(shape) << ", const __global " << kernel_data_type << " mean"
+           << array_dims(channel_shape) << ", const __global " << kernel_data_type << " variance"
+           << array_dims(channel_shape) << ", const __global " << kernel_data_type << " gamma"
+           << array_dims(channel_shape) << ", const __global " << kernel_data_type
+           << " gamma_backprop" << array_dims(channel_shape) << ", const __global "
+           << kernel_data_type << " beta_backprop" << array_dims(channel_shape) << ", __global "
+           << kernel_data_type << " output" << array_dims(shape) << ")\n";
 
     writer.block_begin();
     { // Main function body
@@ -378,10 +393,11 @@ void runtime::intelgpu::do_batch_norm_backprop_operation(cldnn::topology& topolo
         // Main loops
         gws = runtime::intelgpu::generate_loops(writer, shape, true);
 
-        writer << "float stddev = sqrt(variance[i" << channel_axis << "] + " << eps << ");\n";
-        writer << "float xhat = (input" << access_dims(shape) << " - mean[i" << channel_axis
-               << "]) / stddev;\n";
-        writer << "float norma = gamma[i" << channel_axis << "] / stddev;\n";
+        writer << kernel_data_type << " stddev = sqrt(variance[i" << channel_axis << "] + " << eps
+               << ");\n";
+        writer << kernel_data_type << " xhat = (input" << access_dims(shape) << " - mean[i"
+               << channel_axis << "]) / stddev;\n";
+        writer << kernel_data_type << " norma = gamma[i" << channel_axis << "] / stddev;\n";
 
         writer << "output" << access_dims(shape) << " = norma * (delta" << access_dims(shape)
                << " - (xhat * gamma_backprop[i" << channel_axis << "] + beta_backprop[i"

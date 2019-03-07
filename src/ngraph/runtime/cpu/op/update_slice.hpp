@@ -52,8 +52,8 @@ namespace ngraph
         public:
             /// \brief Constructs a tensor slice update operation.
             ///
-            /// \param arg0 The tensor view to overwrite into.
-            /// \param arg1 The tensor view to increment into `arg0`.
+            /// \param arg0 The tensor to overwrite into.
+            /// \param arg1 The tensor to increment into `arg0`.
             /// \param lower_bounds The axiswise lower bounds of the slice (inclusive).
             /// \param upper_bounds The axiswise upper bounds of the slice (exclusive).
             /// \param strides The slicing strides; for example, strides of `{n,m}` means to take
@@ -67,8 +67,8 @@ namespace ngraph
 
             /// \brief Constructs a tensor slice replacement operation with unit strides; i.e., every element inside the bounding box will be overwritten.
             ///
-            /// \param arg0 The tensor view to overwrite into.
-            /// \param arg1 The tensor view to increment into `arg0`.
+            /// \param arg0 The tensor to overwrite into.
+            /// \param arg1 The tensor to increment into `arg0`.
             /// \param lower_bounds The axiswise lower bounds of the slice (inclusive).
             /// \param upper_bounds The axiswise upper bounds of the slice (exclusive).
             UpdateSlice(const std::shared_ptr<Node>& arg0,

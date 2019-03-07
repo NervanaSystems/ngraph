@@ -15,8 +15,8 @@
 .. limitations under the License.
 .. ---------------------------------------------------------------------------
 
-nGraph Library docs  
-===================
+Contributing Documentation
+==========================
 
 Read this for changes affecting anything in ``ngraph/doc``
 ----------------------------------------------------------
@@ -105,8 +105,8 @@ style guide.
 
 .. build-docs:
 
-Build the documentation
-=======================
+How to build the documentation
+-------------------------------
 
 
 .. note:: Stuck on how to generate the html? Run these commands; they assume 
@@ -127,7 +127,7 @@ To build documentation locally, run:
 
    .. code-block:: console
 
-      $ sudo apt-get install python3-sphinxcd
+      $ sudo apt-get install python3-sphinx
       $ pip3 install [-I] Sphinx==1.7.5 [--user] 
       $ pip3 install [-I] breathe numpy [--user]
       $ cd doc/sphinx/

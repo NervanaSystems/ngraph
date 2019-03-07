@@ -61,8 +61,8 @@ TEST(debugger, add_breakpoint)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    auto cf =
-        std::dynamic_pointer_cast<ngraph::runtime::cpu::CPU_Backend>(backend)->get_call_frame(f);
+    shared_ptr<runtime::Executable> handle = backend->compile(f);
+    auto cf = dynamic_pointer_cast<runtime::cpu::CPU_Executable>(handle)->get_call_frame();
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
 
@@ -97,8 +97,8 @@ TEST(debugger, stepping)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    auto cf =
-        std::dynamic_pointer_cast<ngraph::runtime::cpu::CPU_Backend>(backend)->get_call_frame(f);
+    shared_ptr<runtime::Executable> handle = backend->compile(f);
+    auto cf = dynamic_pointer_cast<runtime::cpu::CPU_Executable>(handle)->get_call_frame();
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
 
@@ -134,8 +134,8 @@ TEST(debugger, delete_breakpoint)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    auto cf =
-        std::dynamic_pointer_cast<ngraph::runtime::cpu::CPU_Backend>(backend)->get_call_frame(f);
+    shared_ptr<runtime::Executable> handle = backend->compile(f);
+    auto cf = dynamic_pointer_cast<runtime::cpu::CPU_Executable>(handle)->get_call_frame();
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
 
@@ -174,8 +174,8 @@ TEST(debugger, while_stepping)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    auto cf =
-        std::dynamic_pointer_cast<ngraph::runtime::cpu::CPU_Backend>(backend)->get_call_frame(f);
+    shared_ptr<runtime::Executable> handle = backend->compile(f);
+    auto cf = dynamic_pointer_cast<runtime::cpu::CPU_Executable>(handle)->get_call_frame();
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
 
@@ -212,8 +212,8 @@ TEST(debugger, resume)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    auto cf =
-        std::dynamic_pointer_cast<ngraph::runtime::cpu::CPU_Backend>(backend)->get_call_frame(f);
+    shared_ptr<runtime::Executable> handle = backend->compile(f);
+    auto cf = dynamic_pointer_cast<runtime::cpu::CPU_Executable>(handle)->get_call_frame();
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
 
@@ -248,8 +248,8 @@ TEST(tracer, basic)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    auto cf =
-        std::dynamic_pointer_cast<ngraph::runtime::cpu::CPU_Backend>(backend)->get_call_frame(f);
+    shared_ptr<runtime::Executable> handle = backend->compile(f);
+    auto cf = dynamic_pointer_cast<runtime::cpu::CPU_Executable>(handle)->get_call_frame();
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
 
@@ -281,8 +281,8 @@ TEST(tracer, count_tracepoint)
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shape);
     shared_ptr<runtime::Tensor> result = backend->create_tensor(element::i32, shape);
 
-    auto cf =
-        std::dynamic_pointer_cast<ngraph::runtime::cpu::CPU_Backend>(backend)->get_call_frame(f);
+    shared_ptr<runtime::Executable> handle = backend->compile(f);
+    auto cf = dynamic_pointer_cast<runtime::cpu::CPU_Executable>(handle)->get_call_frame();
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
 
@@ -322,8 +322,8 @@ TEST(tracer, conditional_tracepoint)
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shape);
     shared_ptr<runtime::Tensor> result = backend->create_tensor(element::i32, shape);
 
-    auto cf =
-        std::dynamic_pointer_cast<ngraph::runtime::cpu::CPU_Backend>(backend)->get_call_frame(f);
+    shared_ptr<runtime::Executable> handle = backend->compile(f);
+    auto cf = dynamic_pointer_cast<runtime::cpu::CPU_Executable>(handle)->get_call_frame();
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
 

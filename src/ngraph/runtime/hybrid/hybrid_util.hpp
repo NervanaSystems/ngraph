@@ -30,11 +30,11 @@ namespace ngraph
     {
         namespace hybrid
         {
-            // Split function to function(s) with unique placement
-            std::pair<
-                std::vector<std::shared_ptr<Function>>,
-                std::unordered_map<std::shared_ptr<op::Parameter>, std::shared_ptr<op::Result>>>
-                split_function_by_placement(const std::shared_ptr<Function>& f);
+            void rewrite_function(
+                const std::shared_ptr<Function>& f,
+                const std::vector<std::shared_ptr<runtime::Backend>>& backend_list);
+
+            void node_modifiers(const Node& node, std::vector<std::string>& attributes);
         }
     }
 }
