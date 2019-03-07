@@ -615,7 +615,6 @@ int codegen::CompilerCore::full_version_number(const std::string& path, const st
     }
 
     // create full version number and return
-    std::string full_version = {};
     std::string full_version = "0";
     // Assume versioning like X.Y.Z
     int padding = 3 - tokens.size();
