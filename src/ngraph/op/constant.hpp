@@ -47,11 +47,17 @@ namespace ngraph
                 , m_data(ngraph::aligned_alloc(m_element_type.size(),
                                                shape_size(m_shape) * m_element_type.size()))
             {
-                NODE_VALIDATION_ASSERT(this,
-                                       values.size() == 1 || values.size() == shape_size(m_shape))
-                    << "Did not get the expected number of literals for a constant of shape "
-                    << m_shape << " (got " << values.size() << ", expected "
-                    << (shape_size(m_shape) == 1 ? "" : "1 or ") << shape_size(m_shape) << ").";
+                NODE_VALIDATION_CHECK(
+                    this,
+                    values.size() == 1 || values.size() == shape_size(m_shape),
+                    "Did not get the expected number of literals for a constant of shape ",
+                    m_shape,
+                    " (got ",
+                    values.size(),
+                    ", expected ",
+                    (shape_size(m_shape) == 1 ? "" : "1 or "),
+                    shape_size(m_shape),
+                    ").");
 
                 if (values.size() == 1)
                 {
@@ -77,10 +83,16 @@ namespace ngraph
                 , m_data(ngraph::aligned_alloc(m_element_type.size(),
                                                shape_size(m_shape) * m_element_type.size()))
             {
-                NODE_VALIDATION_ASSERT(this, values.size() == shape_size(m_shape))
-                    << "Did not get the expected number of literals for a constant of shape "
-                    << m_shape << " (got " << values.size() << ", expected " << shape_size(m_shape)
-                    << ".";
+                NODE_VALIDATION_CHECK(
+                    this,
+                    values.size() == shape_size(m_shape),
+                    "Did not get the expected number of literals for a constant of shape ",
+                    m_shape,
+                    " (got ",
+                    values.size(),
+                    ", expected ",
+                    shape_size(m_shape),
+                    ".");
 
                 std::vector<double> dvalues = parse_string<double>(values);
                 write_values(dvalues);
