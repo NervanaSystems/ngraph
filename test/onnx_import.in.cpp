@@ -2240,8 +2240,8 @@ TEST(onnx_${BACKEND_NAME}, import_malformed_model)
 
 TEST(onnx_${BACKEND_NAME}, model_quantize_linear)
 {
-    auto function =
-        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/quant_lin.onnx"));
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/quant_lin.prototxt"));
 
     Inputs inputs;
     inputs.emplace_back(std::vector<float>{32.25f, 48.34f, 50.f, 83.f});
@@ -2258,7 +2258,7 @@ TEST(onnx_${BACKEND_NAME}, model_quantize_linear)
 TEST(onnx_${BACKEND_NAME}, model_dequantize_linear)
 {
     auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/dequant_lin.onnx"));
+        file_util::path_join(SERIALIZED_ZOO, "onnx/dequant_lin.prototxt"));
 
     std::vector<std::vector<std::uint8_t>> inputs;
     inputs.emplace_back(std::vector<std::uint8_t>{19, 210, 21, 10});
@@ -2272,7 +2272,7 @@ TEST(onnx_${BACKEND_NAME}, model_dequantize_linear)
 TEST(onnx_${BACKEND_NAME}, model_quant_conv_linear)
 {
     auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/quant_conv_lin.onnx"));
+        file_util::path_join(SERIALIZED_ZOO, "onnx/quant_conv_lin.prototxt"));
 
     std::vector<std::vector<std::uint8_t>> inputs;
     inputs.emplace_back(std::vector<std::uint8_t>{
