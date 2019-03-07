@@ -297,9 +297,14 @@ void op::ConvolutionBackpropData::validate_and_infer_types()
                                   m_window_movement_strides_forward,
                                   m_window_dilation_strides_forward);
 
-    NODE_VALIDATION_ASSERT(this, forward_result_shape.compatible(delta_shape))
-        << "Inferred forward output shape (" << forward_result_shape << ") does not match shape of "
-        << "delta (" << delta_shape << ").";
+    NODE_VALIDATION_CHECK(this,
+                          forward_result_shape.compatible(delta_shape),
+                          "Inferred forward output shape (",
+                          forward_result_shape,
+                          ") does not match shape of ",
+                          "delta (",
+                          delta_shape,
+                          ").");
 
     set_output_type(0, forward_result_et, m_data_batch_shape);
 
@@ -494,9 +499,14 @@ void op::ConvolutionBackpropFilters::validate_and_infer_types()
                                   m_window_movement_strides_forward,
                                   m_window_dilation_strides_forward);
 
-    NODE_VALIDATION_ASSERT(this, forward_result_shape.compatible(delta_shape))
-        << "Inferred forward output shape (" << forward_result_shape << ") does not match shape of "
-        << "delta (" << delta_shape << ").";
+    NODE_VALIDATION_CHECK(this,
+                          forward_result_shape.compatible(delta_shape),
+                          "Inferred forward output shape (",
+                          forward_result_shape,
+                          ") does not match shape of ",
+                          "delta (",
+                          delta_shape,
+                          ").");
 
     set_output_type(0, forward_result_et, m_filters_shape);
 
@@ -564,93 +574,153 @@ Shape op::util::infer_convolution_output_shape(const Node* node,
                                                size_t batch_axis_result,
                                                size_t output_channel_axis_result)
 {
-    NODE_VALIDATION_ASSERT(node, batch_axis_data <= 1) << "(This is an internal nGraph error)";
-    NODE_VALIDATION_ASSERT(node, input_channel_axis_data <= 1)
-        << "(This is an internal nGraph error)";
-    NODE_VALIDATION_ASSERT(node, input_channel_axis_filters <= 1)
-        << "(This is an internal nGraph error)";
-    NODE_VALIDATION_ASSERT(node, output_channel_axis_filters <= 1)
-        << "(This is an internal nGraph error)";
-    NODE_VALIDATION_ASSERT(node, batch_axis_result <= 1) << "(This is an internal nGraph error)";
-    NODE_VALIDATION_ASSERT(node, output_channel_axis_result <= 1)
-        << "(This is an internal nGraph error)";
+    NODE_VALIDATION_CHECK(node, batch_axis_data <= 1, "(This is an internal nGraph error)");
+    NODE_VALIDATION_CHECK(node, input_channel_axis_data <= 1, "(This is an internal nGraph error)");
+    NODE_VALIDATION_CHECK(
+        node, input_channel_axis_filters <= 1, "(This is an internal nGraph error)");
+    NODE_VALIDATION_CHECK(
+        node, output_channel_axis_filters <= 1, "(This is an internal nGraph error)");
+    NODE_VALIDATION_CHECK(node, batch_axis_result <= 1, "(This is an internal nGraph error)");
+    NODE_VALIDATION_CHECK(
+        node, output_channel_axis_result <= 1, "(This is an internal nGraph error)");
 
     //
     // Make sure data_batch: NCiDi for some Di of rank>0, N != 0, Ci != 0.
     //
-    NODE_VALIDATION_ASSERT(node, data_batch_shape.size() >= 3)
-        << "Data batch input must have rank of at least 3 (one batch axis, "
-        << "one input-channel axis, and at least one spatial dimension) "
-        << "(data batch shape: " << data_batch_shape << ").";
+    NODE_VALIDATION_CHECK(node,
+                          data_batch_shape.size() >= 3,
+                          "Data batch input must have rank of at least 3 (one batch axis, ",
+                          "one input-channel axis, and at least one spatial dimension) ",
+                          "(data batch shape: ",
+                          data_batch_shape,
+                          ").");
 
     size_t batch_size = data_batch_shape[batch_axis_data];
-    NODE_VALIDATION_ASSERT(node, batch_size != 0)
-        << "Data batch size is zero (data batch shape: " << data_batch_shape << ", "
-        << "batch axis is axis " << batch_axis_data << ").";
+    NODE_VALIDATION_CHECK(node,
+                          batch_size != 0,
+                          "Data batch size is zero (data batch shape: ",
+                          data_batch_shape,
+                          ", ",
+                          "batch axis is axis ",
+                          batch_axis_data,
+                          ").");
 
     size_t input_channel_count = data_batch_shape[input_channel_axis_data];
-    NODE_VALIDATION_ASSERT(node, input_channel_count != 0)
-        << "Input channel count is zero (data batch shape: " << data_batch_shape << ", "
-        << "channel axis is axis " << input_channel_axis_data << ").";
+    NODE_VALIDATION_CHECK(node,
+                          input_channel_count != 0,
+                          "Input channel count is zero (data batch shape: ",
+                          data_batch_shape,
+                          ", ",
+                          "channel axis is axis ",
+                          input_channel_axis_data,
+                          ").");
 
     size_t spatial_dimension_count = data_batch_shape.size() - 2;
 
     //
     // Make sure filters: CoCiWv for some Co>0, rank of W = rank of Di.
     //
-    NODE_VALIDATION_ASSERT(node, filters_shape.size() == 2 + spatial_dimension_count)
-        << "Filter input must have rank equal to the data batch (one axis for output "
-        << "channels, one axis for input channels, and the same number of spatial "
-        << "dimensions as the data batch (filter input shape: " << filters_shape << ", "
-        << "data batch shape: " << data_batch_shape << ").";
+    NODE_VALIDATION_CHECK(
+        node,
+        filters_shape.size() == 2 + spatial_dimension_count,
+        "Filter input must have rank equal to the data batch (one axis for output ",
+        "channels, one axis for input channels, and the same number of spatial ",
+        "dimensions as the data batch (filter input shape: ",
+        filters_shape,
+        ", ",
+        "data batch shape: ",
+        data_batch_shape,
+        ").");
 
     size_t output_channel_count = filters_shape[output_channel_axis_filters];
-    NODE_VALIDATION_ASSERT(node, output_channel_count != 0)
-        << "Output channel count for filters is zero (filters shape: " << filters_shape << ", "
-        << "output channels on axis " << output_channel_axis_filters << ").";
+    NODE_VALIDATION_CHECK(node,
+                          output_channel_count != 0,
+                          "Output channel count for filters is zero (filters shape: ",
+                          filters_shape,
+                          ", ",
+                          "output channels on axis ",
+                          output_channel_axis_filters,
+                          ").");
 
-    NODE_VALIDATION_ASSERT(node, filters_shape[input_channel_axis_filters] == input_channel_count)
-        << "Input channel count for filters (" << filters_shape[input_channel_axis_filters] << ") "
-        << "does not match the number of channels in the data batch (" << input_channel_count
-        << ") "
-        << "(filter input shape: " << filters_shape << ", filter input channels on axis "
-        << input_channel_axis_filters << "; data batch shape: " << data_batch_shape
-        << ", data batch channels on axis " << batch_axis_data << ").";
+    NODE_VALIDATION_CHECK(node,
+                          filters_shape[input_channel_axis_filters] == input_channel_count,
+                          "Input channel count for filters (",
+                          filters_shape[input_channel_axis_filters],
+                          ") ",
+                          "does not match the number of channels in the data batch (",
+                          input_channel_count,
+                          ") ",
+                          "(filter input shape: ",
+                          filters_shape,
+                          ", filter input channels on axis ",
+                          input_channel_axis_filters,
+                          "; data batch shape: ",
+                          data_batch_shape,
+                          ", data batch channels on axis ",
+                          batch_axis_data,
+                          ").");
 
     //
     // Make sure window movement strides, window dilation strides, and data dilation strides
     // have same rank as Di.
     //
-    NODE_VALIDATION_ASSERT(node, window_movement_strides.size() == spatial_dimension_count)
-        << "Rank of window movement strides does not match the number of spatial dimensions ("
-        << spatial_dimension_count
-        << ") in the data batch (window movement strides: " << window_movement_strides
-        << ", data batch shape: " << data_batch_shape << ").";
+    NODE_VALIDATION_CHECK(
+        node,
+        window_movement_strides.size() == spatial_dimension_count,
+        "Rank of window movement strides does not match the number of spatial dimensions (",
+        spatial_dimension_count,
+        ") in the data batch (window movement strides: ",
+        window_movement_strides,
+        ", data batch shape: ",
+        data_batch_shape,
+        ").");
 
-    NODE_VALIDATION_ASSERT(node, window_dilation_strides.size() == spatial_dimension_count)
-        << "Rank of window dilation strides does not match the number of spatial dimensions ("
-        << spatial_dimension_count
-        << ") in the data batch (window dilation strides: " << window_dilation_strides
-        << ", data batch shape: " << data_batch_shape << ").";
+    NODE_VALIDATION_CHECK(
+        node,
+        window_dilation_strides.size() == spatial_dimension_count,
+        "Rank of window dilation strides does not match the number of spatial dimensions (",
+        spatial_dimension_count,
+        ") in the data batch (window dilation strides: ",
+        window_dilation_strides,
+        ", data batch shape: ",
+        data_batch_shape,
+        ").");
 
-    NODE_VALIDATION_ASSERT(node, data_dilation_strides.size() == spatial_dimension_count)
-        << "Rank of data dilation strides does not match the number of spatial dimensions ("
-        << spatial_dimension_count
-        << ") in the data batch (data dilation strides: " << data_dilation_strides
-        << ", data batch shape: " << data_batch_shape << ").";
+    NODE_VALIDATION_CHECK(
+        node,
+        data_dilation_strides.size() == spatial_dimension_count,
+        "Rank of data dilation strides does not match the number of spatial dimensions (",
+        spatial_dimension_count,
+        ") in the data batch (data dilation strides: ",
+        data_dilation_strides,
+        ", data batch shape: ",
+        data_batch_shape,
+        ").");
 
     //
     // Make sure padding-below and padding-above shapes have same rank as Di.
     //
-    NODE_VALIDATION_ASSERT(node, padding_below.size() == spatial_dimension_count)
-        << "Rank of the padding below does not match the number of spatial dimensions ("
-        << spatial_dimension_count << ") in the data batch (padding below: " << padding_below
-        << ", data batch shape: " << data_batch_shape << ").";
+    NODE_VALIDATION_CHECK(
+        node,
+        padding_below.size() == spatial_dimension_count,
+        "Rank of the padding below does not match the number of spatial dimensions (",
+        spatial_dimension_count,
+        ") in the data batch (padding below: ",
+        padding_below,
+        ", data batch shape: ",
+        data_batch_shape,
+        ").");
 
-    NODE_VALIDATION_ASSERT(node, padding_above.size() == spatial_dimension_count)
-        << "Rank of the padding above does not match the number of spatial dimensions ("
-        << spatial_dimension_count << ") in the data batch (padding above: " << padding_above
-        << ", data batch shape: " << data_batch_shape << ").";
+    NODE_VALIDATION_CHECK(
+        node,
+        padding_above.size() == spatial_dimension_count,
+        "Rank of the padding above does not match the number of spatial dimensions (",
+        spatial_dimension_count,
+        ") in the data batch (padding above: ",
+        padding_above,
+        ", data batch shape: ",
+        data_batch_shape,
+        ").");
 
     //
     // Extract input item shape Di and make sure all dimensions are larger than 0 after padding and dilation.
@@ -659,9 +729,14 @@ Shape op::util::infer_convolution_output_shape(const Node* node,
 
     for (size_t i = 0; i < spatial_dimension_count; i++)
     {
-        NODE_VALIDATION_ASSERT(node, data_dilation_strides[i] != 0)
-            << "Data dilation stride at spatial dimension " << i << " is zero "
-            << "(data dilation strides: " << data_dilation_strides << ").";
+        NODE_VALIDATION_CHECK(node,
+                              data_dilation_strides[i] != 0,
+                              "Data dilation stride at spatial dimension ",
+                              i,
+                              " is zero ",
+                              "(data dilation strides: ",
+                              data_dilation_strides,
+                              ").");
 
         size_t dim_size = data_batch_shape[1 + 1 + i];
         size_t dilated_dim_size = (dim_size - 1) * data_dilation_strides[i] + 1;
@@ -675,13 +750,22 @@ Shape op::util::infer_convolution_output_shape(const Node* node,
 
     for (size_t i = 0; i < spatial_dimension_count; i++)
     {
-        NODE_VALIDATION_ASSERT(node, input_item_virtual_shape_signed[i] > 0)
-            << "Input dimension after padding and dilation is non-positive "
-            << "at spatial axis " << i
-            << " (post-padding/dilation input item shape: " << input_item_virtual_shape
-            << ", data batch shape: " << data_batch_shape
-            << ", data dilation strides: " << data_dilation_strides
-            << ", padding below: " << padding_below << ", padding above: " << padding_above << ").";
+        NODE_VALIDATION_CHECK(node,
+                              input_item_virtual_shape_signed[i] > 0,
+                              "Input dimension after padding and dilation is non-positive ",
+                              "at spatial axis ",
+                              i,
+                              " (post-padding/dilation input item shape: ",
+                              input_item_virtual_shape,
+                              ", data batch shape: ",
+                              data_batch_shape,
+                              ", data dilation strides: ",
+                              data_dilation_strides,
+                              ", padding below: ",
+                              padding_below,
+                              ", padding above: ",
+                              padding_above,
+                              ").");
 
         input_item_virtual_shape.push_back(size_t(input_item_virtual_shape_signed[i]));
     }
@@ -695,9 +779,14 @@ Shape op::util::infer_convolution_output_shape(const Node* node,
     for (size_t i = 0; i < spatial_dimension_count; i++)
     {
         window_physical_shape.push_back(filters_shape[1 + 1 + i]);
-        NODE_VALIDATION_ASSERT(node, window_physical_shape[i] != 0)
-            << "Filters shape at spatial dimension " << i << " is zero "
-            << "(filters shape: " << filters_shape << ").";
+        NODE_VALIDATION_CHECK(node,
+                              window_physical_shape[i] != 0,
+                              "Filters shape at spatial dimension ",
+                              i,
+                              " is zero ",
+                              "(filters shape: ",
+                              filters_shape,
+                              ").");
     }
 
     //
@@ -708,23 +797,41 @@ Shape op::util::infer_convolution_output_shape(const Node* node,
 
     for (size_t i = 0; i < spatial_dimension_count; i++)
     {
-        NODE_VALIDATION_ASSERT(node, window_dilation_strides[i] != 0)
-            << "Window dilation stride at spatial dimension " << i << " is zero "
-            << "(window dilation strides: " << window_dilation_strides << ").";
+        NODE_VALIDATION_CHECK(node,
+                              window_dilation_strides[i] != 0,
+                              "Window dilation stride at spatial dimension ",
+                              i,
+                              " is zero ",
+                              "(window dilation strides: ",
+                              window_dilation_strides,
+                              ").");
 
         window_virtual_shape.push_back((window_physical_shape[i] - 1) * window_dilation_strides[i] +
                                        1);
 
-        NODE_VALIDATION_ASSERT(node, window_virtual_shape[i] <= input_item_virtual_shape[i])
-            << "Post-dilation window shape is smaller than the post-padding/dilation "
-            << "input item shape at spatial dimension " << i << " (post-padding/dilation "
-            << "input item shape: " << input_item_virtual_shape
-            << ", data batch shape: " << data_batch_shape
-            << ", data dilation strides: " << data_dilation_strides
-            << ", padding below: " << padding_below << ", padding above: " << padding_above
-            << ", post-dilation window shape: " << window_virtual_shape
-            << ", filters shape: " << filters_shape
-            << ", window dilation strides: " << window_dilation_strides;
+        NODE_VALIDATION_CHECK(
+            node,
+            window_virtual_shape[i] <= input_item_virtual_shape[i],
+            "Post-dilation window shape is smaller than the post-padding/dilation ",
+            "input item shape at spatial dimension ",
+            i,
+            " (post-padding/dilation ",
+            "input item shape: ",
+            input_item_virtual_shape,
+            ", data batch shape: ",
+            data_batch_shape,
+            ", data dilation strides: ",
+            data_dilation_strides,
+            ", padding below: ",
+            padding_below,
+            ", padding above: ",
+            padding_above,
+            ", post-dilation window shape: ",
+            window_virtual_shape,
+            ", filters shape: ",
+            filters_shape,
+            ", window dilation strides: ",
+            window_dilation_strides);
     }
 
     //
@@ -737,9 +844,14 @@ Shape op::util::infer_convolution_output_shape(const Node* node,
 
     for (size_t i = 0; i < spatial_dimension_count; i++)
     {
-        NODE_VALIDATION_ASSERT(node, window_movement_strides[i] != 0)
-            << "Window movement stride at spatial dimension " << i << " is zero "
-            << "(window movement strides: " << window_movement_strides << ").";
+        NODE_VALIDATION_CHECK(node,
+                              window_movement_strides[i] != 0,
+                              "Window movement stride at spatial dimension ",
+                              i,
+                              " is zero ",
+                              "(window movement strides: ",
+                              window_movement_strides,
+                              ").");
 
         result_shape[i + 2] = ceil_div(input_item_virtual_shape[i] - window_virtual_shape[i] + 1,
                                        window_movement_strides[i]);

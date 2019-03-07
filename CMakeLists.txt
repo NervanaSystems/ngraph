@@ -64,6 +64,8 @@ if (APPLE)
     else()
         set(MACOS_RPATH ON)
     endif()
+    # Enable CMAKE_<LANG>_COMPILER_ID AppleClang
+    cmake_policy(SET CMP0025 NEW)
 endif()
 
 project (ngraph)
