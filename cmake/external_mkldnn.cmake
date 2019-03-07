@@ -49,6 +49,18 @@ if(MKLDNN_INCLUDE_DIR AND MKLDNN_LIB_DIR)
     endif()
 
     if(WIN32)
+        add_library(libmkl STATIC IMPORTED)
+        set_property(TARGET libmkl PROPERTY IMPORTED_LOCATION ${MKLML_LIB_DIR}/${MKLML_IMPLIB})
+        set_target_properties(libmkl PROPERTIES
+            IMPORTED_LINK_INTERFACE_LIBRARIES ${MKLML_LIB_DIR}/${OMP_IMPLIB})
+    else()
+        add_library(libmkl SHARED IMPORTED)
+        set_property(TARGET libmkl PROPERTY IMPORTED_LOCATION ${MKLML_LIB_DIR}/${MKLML_LIB})
+        set_target_properties(libmkl PROPERTIES
+            IMPORTED_LINK_INTERFACE_LIBRARIES ${MKLML_LIB_DIR}/${OMP_LIB})
+    endif()
+
+    if(WIN32)
         add_library(libmkldnn STATIC IMPORTED)
         set_property(TARGET libmkldnn PROPERTY IMPORTED_LOCATION ${MKLDNN_LIB_DIR}/${MKLDNN_IMPLIB})
         set_target_properties(libmkldnn PROPERTIES
