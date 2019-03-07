@@ -20,7 +20,7 @@
 
 ngraph::runtime::cpu::CPUAllocator::CPUAllocator(ngraph::runtime::Allocator* allocator,
                                                  size_t alignment)
-    : m_allocator(allocator)
+    : m_allocator(std::move(allocator))
     , m_alignment(alignment)
 {
 }
