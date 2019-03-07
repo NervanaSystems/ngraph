@@ -17,7 +17,7 @@
 #pragma once
 
 #include <cstddef>
-#include "ngraph/runtime/cpu/cpu_mkl_allocator.hpp"
+#include "ngraph/runtime/cpu/cpu_allocator.hpp"
 
 namespace ngraph
 {

@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/cpu/cpu_mkl_allocator.hpp"
+#include "ngraph/runtime/cpu/cpu_allocator.hpp"
 #include <string>
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 

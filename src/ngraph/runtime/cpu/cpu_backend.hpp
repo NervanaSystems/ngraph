@@ -22,7 +22,7 @@
 #include "cpu_backend_visibility.h"
 #include "ngraph/pass/pass_config.hpp"
 #include "ngraph/runtime/backend.hpp"
-#include "ngraph/runtime/cpu/cpu_mkl_allocator.hpp"
+#include "ngraph/runtime/cpu/cpu_allocator.hpp"
 
 namespace ngraph
 {

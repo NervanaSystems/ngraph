@@ -17,7 +17,7 @@
 #include <memory>
 
 #include "ngraph/runtime/cpu/cpu_aligned_buffer.hpp"
-#include "ngraph/runtime/cpu/cpu_mkl_allocator.hpp"
+#include "ngraph/runtime/cpu/cpu_allocator.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
