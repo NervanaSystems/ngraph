@@ -30,7 +30,7 @@
 #endif
 #include <vector>
 
-#ifdef NGRAPH_DISTRIBUTED_OMPI_ENABLE
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
 #include "ngraph/distributed.hpp"
 #endif
 
