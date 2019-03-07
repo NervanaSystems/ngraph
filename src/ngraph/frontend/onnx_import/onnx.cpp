@@ -15,6 +15,8 @@
 //*****************************************************************************
 
 #include <fstream>
+#include <google/protobuf/io/zero_copy_stream_impl.h>
+#include <google/protobuf/text_format.h>
 #include <memory>
 
 #include "core/graph.hpp"
@@ -54,10 +56,20 @@ namespace ngraph
         std::shared_ptr<Function> import_onnx_model(std::istream& sin, const Weights& weights)
         {
             onnx::ModelProto model_proto;
+            // Try parsing input as a binary protobuf message
             if (!model_proto.ParseFromIstream(&sin))
             {
-                throw detail::error::stream_parse{sin};
+                // Rewind to the beginning and clear stream state.
+                sin.clear();
+                sin.seekg(0);
+                google::protobuf::io::IstreamInputStream iistream(&sin);
+                // Try parsing input as a prototxt message
+                if (!google::protobuf::TextFormat::Parse(&iistream, &model_proto))
+                {
+                    throw detail::error::stream_parse{sin};
+                }
             }
+
             Model model{model_proto};
             Graph graph{model_proto.graph(), model, weights};
             auto function = std::make_shared<Function>(
