@@ -22,7 +22,6 @@
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/util.hpp"
 
-using namespace ngraph;
 using AllocateFunc = void* (*)(void*, size_t, size_t);
 using DestroyFunc = void (*)(void*, void*);
 
@@ -75,6 +74,7 @@ private:
 class ngraph::runtime::Allocator
 {
 public:
+    virtual ~Allocator() = default;
     virtual void* cpu_malloc(void*, size_t size, size_t alignment) = 0;
     virtual void cpu_free(void* ptr, void*) = 0;
 };
@@ -84,7 +84,7 @@ public:
 class ngraph::runtime::SystemAllocator : public ngraph::runtime::Allocator
 {
 public:
-    SystemAllocator(size_t alignment);
+    SystemAllocator();
     ~SystemAllocator();
 
     void* cpu_malloc(void*, size_t size, size_t alignment) override
@@ -107,9 +107,6 @@ public:
             free(ptr);
         }
     }
-
-private:
-    size_t m_alignment;
 };
 
 // FrameworkAllocator overides and implements "cpu_malloc" & "cpu_free" of Alloctaor interface class,
@@ -117,7 +114,7 @@ private:
 class ngraph::runtime::FrameworkAllocator : public ngraph::runtime::Allocator
 {
 public:
-    FrameworkAllocator(AllocateFunc allocator, DestroyFunc deallocator, size_t alignment);
+    FrameworkAllocator(AllocateFunc& allocator, DestroyFunc& deallocator);
     ~FrameworkAllocator();
 
     void* cpu_malloc(void*, size_t size, size_t alignment) override
@@ -144,5 +141,4 @@ public:
 private:
     AllocateFunc m_allocator;
     DestroyFunc m_deallocator;
-    size_t m_alignment;
 };

@@ -148,13 +148,13 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
     ngraph::runtime::cpu::CPUAllocator* allocator = nullptr;
     if (m_framework_allocator && m_framework_deallocator)
     {
-        auto fw_allocator = new ngraph::runtime::FrameworkAllocator(
-            m_framework_allocator, m_framework_deallocator, alignment);
+        auto fw_allocator =
+            new ngraph::runtime::FrameworkAllocator(m_framework_allocator, m_framework_deallocator);
         allocator = new ngraph::runtime::cpu::CPUAllocator(fw_allocator, alignment);
     }
     else
     {
-        auto sys_allocator = new ngraph::runtime::SystemAllocator(alignment);
+        auto sys_allocator = new ngraph::runtime::SystemAllocator();
         allocator = new ngraph::runtime::cpu::CPUAllocator(sys_allocator, alignment);
     }
 

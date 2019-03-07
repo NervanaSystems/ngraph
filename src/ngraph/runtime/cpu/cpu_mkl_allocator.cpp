@@ -31,7 +31,7 @@ ngraph::runtime::cpu::CPUAllocator::~CPUAllocator()
 
 void* ngraph::runtime::cpu::CPUAllocator::malloc(size_t size)
 {
-    m_allocator->cpu_malloc(nullptr, size, m_alignment);
+    return m_allocator->cpu_malloc(nullptr, size, m_alignment);
 }
 
 void ngraph::runtime::cpu::CPUAllocator::free(void* ptr)
@@ -39,16 +39,21 @@ void ngraph::runtime::cpu::CPUAllocator::free(void* ptr)
     m_allocator->cpu_free(nullptr, ptr);
 }
 
-ngraph::runtime::SystemAllocator::SystemAllocator(size_t alignment)
-    : m_alignment(alignment)
+ngraph::runtime::SystemAllocator::SystemAllocator()
 {
 }
 
-ngraph::runtime::FrameworkAllocator::FrameworkAllocator(AllocateFunc allocator,
-                                                        DestroyFunc deallocator,
-                                                        size_t alignment)
+ngraph::runtime::SystemAllocator::~SystemAllocator()
+{
+}
+
+ngraph::runtime::FrameworkAllocator::~FrameworkAllocator()
+{
+}
+
+ngraph::runtime::FrameworkAllocator::FrameworkAllocator(AllocateFunc& allocator,
+                                                        DestroyFunc& deallocator)
     : m_allocator(allocator)
     , m_deallocator(deallocator)
-    , m_alignment(alignment)
 {
 }
