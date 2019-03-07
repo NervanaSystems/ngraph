@@ -76,15 +76,20 @@ shared_ptr<runtime::Executable>
     runtime::cpu::CPU_Backend::compile(shared_ptr<Function> func, bool performance_counters_enabled)
 {
     ngraph::pass::PassConfig pass_config;
-    return compile(func, pass_config, performance_counters_enabled);
+
+    // TODO(pruthvi): reseat this with framework provided allocator and deallocator
+    AllocateFunc framework_alloc = nullptr;
+    DestroyFunc framework_dealloc = nullptr;
+    return compile(
+        func, pass_config, framework_alloc, framework_dealloc, performance_counters_enabled);
 }
 
 shared_ptr<runtime::Executable>
     runtime::cpu::CPU_Backend::compile(shared_ptr<Function> func,
                                        ngraph::pass::PassConfig& pass_config,
-                                       bool performance_counters_enabled,
-                                       AllocateFunc framework_allocator,
-                                       DestroyFunc framework_deallocator)
+                                       AllocateFunc& framework_allocator,
+                                       DestroyFunc& framework_deallocator,
+                                       bool performance_counters_enabled)
 {
     shared_ptr<runtime::Executable> rc;
     auto it = m_exec_map.find(func);
@@ -96,9 +101,9 @@ shared_ptr<runtime::Executable>
     {
         rc = make_shared<CPU_Executable>(func,
                                          pass_config,
-                                         performance_counters_enabled,
                                          framework_allocator,
-                                         framework_deallocator);
+                                         framework_deallocator,
+                                         performance_counters_enabled);
         m_exec_map.insert({func, rc});
     }
     return rc;
@@ -106,9 +111,9 @@ shared_ptr<runtime::Executable>
 
 runtime::cpu::CPU_Executable::CPU_Executable(shared_ptr<Function> func,
                                              ngraph::pass::PassConfig& pass_config,
-                                             bool performance_counters_enabled,
                                              AllocateFunc& framework_allocator,
-                                             DestroyFunc& framework_deallocator)
+                                             DestroyFunc& framework_deallocator,
+                                             bool performance_counters_enabled)
 {
     FunctionInstance& instance = m_function_instance;
     if (instance.m_external_function == nullptr)

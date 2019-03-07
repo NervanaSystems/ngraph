@@ -58,9 +58,9 @@ namespace ngraph
                 std::shared_ptr<ngraph::runtime::Executable>
                     compile(std::shared_ptr<Function> func,
                             ngraph::pass::PassConfig& pass_config,
-                            bool enable_performance_counters = false,
-                            AllocateFunc framework_allocator = nullptr,
-                            DestroyFunc framework_deallocator = nullptr) override;
+                            AllocateFunc& framework_allocator,
+                            DestroyFunc& framework_deallocator,
+                            bool enable_performance_counters = false);
 
                 void remove_compiled_function(std::shared_ptr<Executable> exec) override;
 
@@ -77,9 +77,9 @@ namespace ngraph
             public:
                 CPU_Executable(std::shared_ptr<Function> func,
                                ngraph::pass::PassConfig& pass_config,
-                               bool performance_counters_enabled,
                                AllocateFunc& framework_allocator,
-                               DestroyFunc& framework_deallocator);
+                               DestroyFunc& framework_deallocator,
+                               bool performance_counters_enabled);
                 bool call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                           const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
 
