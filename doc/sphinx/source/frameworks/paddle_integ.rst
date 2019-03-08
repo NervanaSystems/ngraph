@@ -67,8 +67,8 @@ More details on implementation of nGraph engine op, nGraph engine, and nGraph br
 
       nGraph engine class includes the input and output required to build nGraph graph from the nGraph engine kernel, the execution function, and the data exchange between nGraph and PaddlePaddle. The main methods are
 
-      - BuildNgIO: Gets input and output variables.
-      - GetNgFunction: Obtains the nGraph function used in the calculation. It matches entire pattern of the input to the output and saves functions that need to be called repeatedly.
+      - BuildNgIO: gets input and output variables.
+      - GetNgFunction: obtains the nGraph function used in the calculation. It matches entire pattern of the input to the output and saves functions that need to be called repeatedly.
       - BuildNgFunction: builds nGraph functions.
       - Run: calls backend execution  and exchange data with the paddle.
       - Related code :
@@ -79,8 +79,8 @@ More details on implementation of nGraph engine op, nGraph engine, and nGraph br
 
       nGraph bridge converts the supported PaddlePaddle operators to nGraph operators to reconstruct the subgraph with nGraph's intermediate representation. The convertable operators are located in the ngraph/ops directory, and each operator has its own files for easy management. For the conversion of operators, there is a common unified interface to facilitate code development and operator transformation. The relevant interfaces are
 
-      - GetInputNode: Obtains input node for the conversion operator. The node has unordered graph management.
-      - SetOutputNode: Sets an operator management system for adding the operator of the first conversion.
+      - GetInputNode: obtains input node for the conversion operator. The node has unordered graph management.
+      - SetOutputNode: sets an operator management system for adding the operator of the first conversion.
       - Related code :
          - Paddle/fluid/operators/ngraph/ngraph_bridge.h
          - Paddle/fluid/operators/ngraph/ngraph_bridge.cc
