@@ -33,6 +33,7 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
+#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/serializer.hpp"
@@ -953,42 +954,112 @@ TEST(cpu_test, rotated_pooling)
         make_f(false, false), make_f(false, false), "INTERPRETER", "CPU"); // 5D MaxPool
 }
 
-TEST(cpu_test, conv_wino_grad)
+TEST(cpu_test, conv_test_winograd)
 {
-    auto make_f = [&](Shape input_shape, Shape filter_shape, Shape bias_shape) {
-        auto input = std::make_shared<op::Parameter>(element::f32, input_shape);
-        auto filter = std::make_shared<op::Parameter>(element::f32, filter_shape);
-        auto bias = std::make_shared<op::Parameter>(element::f32, bias_shape);
+    // This test creates the conv_primitive and checks for the winograd algo selection
+    // from mkldnn conv heursitics
+    using namespace mkldnn;
+    using namespace ngraph::runtime::cpu;
 
-        auto conv1 = make_shared<op::Convolution>(input,
-                                                  filter,
-                                                  Strides{1, 1},
-                                                  Strides{1, 1},
-                                                  CoordinateDiff{1, 1},
-                                                  CoordinateDiff{1, 1},
-                                                  Strides{1, 1});
+    engine cpu_engine(engine::cpu, 0);
+    const int batch = 64;
+    std::vector<float> net_src(batch * 3 * 224 * 224);
+    std::vector<float> net_dst(batch * 3 * 3 * 3);
 
-        auto conv = std::make_shared<op::Convolution>(input, filter);
-        auto conv_bias = std::make_shared<op::ConvolutionBias>(conv, bias);
+    /* initializing non-zero values for src */
+    for (size_t i = 0; i < net_src.size(); ++i)
+        net_src[i] = sinf((float)i);
 
-        return make_shared<Function>(conv1, ParameterVector{input, filter, bias});
-    };
+    memory::dims conv_src_tz = {batch, 3, 224, 224};
+    memory::dims conv_weights_tz = {64, 3, 3, 3};
+    memory::dims conv_bias_tz = {64};
+    memory::dims conv_dst_tz = {64, 64, 224, 224};
+    memory::dims conv_strides = {1, 1};
+    auto conv_padding = {1, 1};
 
-    auto backend = runtime::Backend::create("CPU");
-    auto cpu_f = make_f(Shape{64, 3, 224, 224}, Shape{64, 3, 3, 3}, Shape{64});
+    std::vector<float> conv_weights(std::accumulate(
+        conv_weights_tz.begin(), conv_weights_tz.end(), 1, std::multiplies<uint32_t>()));
+    std::vector<float> conv_bias(
+        std::accumulate(conv_bias_tz.begin(), conv_bias_tz.end(), 1, std::multiplies<uint32_t>()));
 
-    test::Uniform<float> rng(-100.0f, 100.0f);
-    vector<vector<float>> args;
-    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    /* initializing non-zero values for weights and bias */
+    for (size_t i = 0; i < conv_weights.size(); ++i)
+        conv_weights[i] = sinf((float)i);
+    for (size_t i = 0; i < conv_bias.size(); ++i)
+        conv_bias[i] = sinf((float)i);
+
+    /* create memory for user data */
+    auto conv_user_src_memory =
+        memory({{{conv_src_tz}, memory::data_type::f32, memory::format::nchw}, cpu_engine},
+               net_src.data());
+    auto conv_user_weights_memory =
+        memory({{{conv_weights_tz}, memory::data_type::f32, memory::format::oihw}, cpu_engine},
+               conv_weights.data());
+    auto conv_user_bias_memory =
+        memory({{{conv_bias_tz}, memory::data_type::f32, memory::format::x}, cpu_engine},
+               conv_bias.data());
+
+    /* create mmemory descriptors for convolution data w/ no specified
+     * format(`any`)
+     * format `any` lets a primitive(convolution in this case)
+     * chose the memory format preferred for best performance. */
+    auto conv_src_md = memory::desc({conv_src_tz}, memory::data_type::f32, memory::format::any);
+    auto conv_bias_md = memory::desc({conv_bias_tz}, memory::data_type::f32, memory::format::any);
+    auto conv_weights_md =
+        memory::desc({conv_weights_tz}, memory::data_type::f32, memory::format::any);
+    auto conv_dst_md = memory::desc({conv_dst_tz}, memory::data_type::f32, memory::format::any);
+
+    mkldnn::algorithm convolution_algo = mkldnn_utils::can_use_conv_auto()
+                                             ? mkldnn::algorithm::convolution_auto
+                                             : mkldnn::algorithm::convolution_direct;
+    /* create a convolution primitive descriptor */
+    auto conv_desc = convolution_forward::desc(prop_kind::forward,
+                                               convolution_algo,
+                                               conv_src_md,
+                                               conv_weights_md,
+                                               conv_bias_md,
+                                               conv_dst_md,
+                                               conv_strides,
+                                               conv_padding,
+                                               conv_padding,
+                                               padding_kind::zero);
+    auto conv_pd = convolution_forward::primitive_desc(conv_desc, cpu_engine);
+
+    /* create reorder primitives between user input and conv src if needed */
+    auto conv_src_memory = conv_user_src_memory;
+    bool reorder_conv_src = false;
+    primitive conv_reorder_src;
+    if (memory::primitive_desc(conv_pd.src_primitive_desc()) !=
+        conv_user_src_memory.get_primitive_desc())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
-        rng.initialize(tensor_val);
-        args.push_back(tensor_val);
+        conv_src_memory = memory(conv_pd.src_primitive_desc());
+        conv_reorder_src = reorder(conv_user_src_memory, conv_src_memory);
+        reorder_conv_src = true;
     }
-    auto cpu_results = execute(cpu_f, args, "CPU");
 
-    /*compare_backends(make_f(Shape{64, 3, 224, 224}, Shape{64, 3, 3, 3}, Shape{64}),
-                     make_f(Shape{64, 3, 224, 224}, Shape{64, 3, 3, 3}, Shape{64}), 
-                     "INTERPRETER", "CPU");
-    */
+    auto conv_weights_memory = conv_user_weights_memory;
+    bool reorder_conv_weights = false;
+    primitive conv_reorder_weights;
+    if (memory::primitive_desc(conv_pd.weights_primitive_desc()) !=
+        conv_user_weights_memory.get_primitive_desc())
+    {
+        conv_weights_memory = memory(conv_pd.weights_primitive_desc());
+        conv_reorder_weights = reorder(conv_user_weights_memory, conv_weights_memory);
+        reorder_conv_weights = true;
+    }
+
+    /* create memory primitive for conv dst */
+    auto conv_dst_memory = memory(conv_pd.dst_primitive_desc());
+
+    /* finally create a convolution primitive */
+    auto conv = convolution_forward(
+        conv_pd, conv_src_memory, conv_weights_memory, conv_user_bias_memory, conv_dst_memory);
+
+    auto get_conv_algo_kind = [&]() {
+
+        mkldnn_convolution_desc_t* temp_conv_desc = {0};
+        mkldnn_primitive_desc_query(conv_pd.get(), mkldnn_query_convolution_d, 0, &temp_conv_desc);
+        return temp_conv_desc->alg_kind;
+    };
+    EXPECT_EQ(mkldnn::algorithm::convolution_winograd, get_conv_algo_kind());
 }
