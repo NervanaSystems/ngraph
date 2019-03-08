@@ -69,14 +69,14 @@ More details on implementation of nGraph engine op, nGraph engine, and nGraph br
 
       - BuildNgIO: Gets input and output variables.
       - GetNgFunction: Obtains the nGraph function used in the calculation. It matches entire pattern of the input to the output and saves functions that need to be called repeatedly.
-      - BuildNgFunction : builds nGraph functions.
+      - BuildNgFunction: builds nGraph functions.
       - Run: calls backend execution  and exchange data with the paddle.
       - Related code :
          - paddle/fluid/operators/ngraph/ngraph_engine.h
          - paddle/fluid/operators/ngraph/ngraph_engine.cc
  
 3. **nGraph bridge**: Converts PaddlePaddle operators to nGraph operators
-      The Ngraph bridge converts the supported operators, and the transformed ngraph node ( node ) will be used to construct the ngraph calculation graph. The conversion of the operator is concentrated in the ngraph /ops directory, and the operator has separate files for easy management. For the conversion of operators, there is a common unified interface to facilitate code development and understanding of operator transformation. The relevant interfaces are as follows:
+      The nGraph bridge converts the supported PaddlePaddle operators to nGraph operators to reconstruct the subgraph with nGraph's intermediate representation. The convertable operators are located in the ngraph/ops directory, and each operator has its own files for easy management. For the conversion of operators, there is a common unified interface to facilitate code development and operator transformation. The relevant interfaces are
 
       - Get InputNode: The input node used to obtain the conversion operator. The node has unordered graph management.
       - SetOutputNode: An operator management diagram for adding the operator of the first conversion.
@@ -87,31 +87,16 @@ More details on implementation of nGraph engine op, nGraph engine, and nGraph br
 nGraph compilation control and trigger method
 --------------------------------------------
 
-1)       Compile Control: The compilation of nGrap h is controlled by the WITH _ NGRAPH option. If WITH_ NGRAPH=ON, The ngraph library will be downloaded and compiled. The relevant code has a corresponding PADDLE _WITH_NGRAPH control. If WITH_ NGRAPH=OFF, the relevant code will not be compiled.
+1. **Compile Control**: The compilation of nGraph is controlled with the WITH_NGRAPH option. If WITH_NGRAPH=ON, the nGraph library will be downloaded and compiled. This option has a corresponding PADDLE_WITH_NGRAPH control. If WITH_NGRAPH=OFF, the relevant code will not be compiled.
 
-2)       Trigger Control: Trigger calling nGrap h of FLAGS_use_ngraph controlled by the environment variable. If the variable is true, ngraph will trigger in the executor and call the relevant function to convert and execute the supported submap.
+2. **Trigger Control**: FLAGS_use_ngraph triggers nGraph. If this option is set to *true*, nGraph will be triggered by the PaddlePaddle executor to convert and execute the supported subgraph. Examples are provided under paddle/benchmark/fluid/ngraph, and the scripts can be executed with the following command line: 
+      - FLAGS_ues_ngrap=true python train.py 
+      - FLAGS_ues_ngrap=true python infer.py 
+
+
+
 
  
 
-3, the main affected module interface changes
-Please list the direct interface changes for the core design.
-No new interfaces that have a direct impact on users
 
-Please check the impact of each link on the framework one by one.
-1)       Network definition: none
-
-2)       Underlying data structure: none
-
-3)       OP
-
-N graph _engine: Added support for ngraph submap Op
-4)       Data IO: None
-
-5)       Execution: None
-
-6)       Distributed: none
-
-7)       Model save: None, ngraph is accessed before the operator is executed, no model changes and saves
-
-8)       Forecast deployment: none
 
