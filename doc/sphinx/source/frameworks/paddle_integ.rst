@@ -49,6 +49,7 @@ Integration details
 More details on implementation of nGraph engine op, nGraph engine, and nGraph bridges are provided below: 
 
 1. **nGraph engine op**: Triggers subgraphs to be executed by nGraph.
+
       - Input: Input variable set
 
       - Output: Output variable Set
@@ -63,6 +64,7 @@ More details on implementation of nGraph engine op, nGraph engine, and nGraph br
  
 
 2. **nGraph engine**: calls the nGraph library to perform calculations.
+
       nGraph engine class includes the input and output required to build nGraph graph from the nGraph engine kernel, the execution function, and the data exchange between nGraph and PaddlePaddle. The main methods are
 
       - BuildNgIO: Gets input and output variables.
@@ -73,7 +75,8 @@ More details on implementation of nGraph engine op, nGraph engine, and nGraph br
          - paddle/fluid/operators/ngraph/ngraph_engine.h
          - paddle/fluid/operators/ngraph/ngraph_engine.cc
  
-3. **nGraph bridge**: converts PaddlePaddle operators to nGraph operators
+3. **nGraph bridge**: converts PaddlePaddle operators to nGraph operators.
+
       nGraph bridge converts the supported PaddlePaddle operators to nGraph operators to reconstruct the subgraph with nGraph's intermediate representation. The convertable operators are located in the ngraph/ops directory, and each operator has its own files for easy management. For the conversion of operators, there is a common unified interface to facilitate code development and operator transformation. The relevant interfaces are
 
       - GetInputNode: Obtains input node for the conversion operator. The node has unordered graph management.
