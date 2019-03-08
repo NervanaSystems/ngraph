@@ -34,16 +34,25 @@ void op::OneHot::validate_and_infer_types()
     PartialShape arg_shape = get_input_partial_shape(0);
     Rank arg_rank = arg_shape.rank();
 
-    NODE_VALIDATION_ASSERT(this, m_shape.rank().is_static())
-        << "Requested result shape has dynamic rank.";
+    NODE_VALIDATION_CHECK(
+        this, m_shape.rank().is_static(), "Requested result shape has dynamic rank.");
 
-    NODE_VALIDATION_ASSERT(this, m_one_hot_axis < static_cast<size_t>(m_shape.rank()))
-        << "One-hot axis (" << m_one_hot_axis
-        << ") is out of bounds (requested result shape: " << m_shape << ").";
+    NODE_VALIDATION_CHECK(this,
+                          m_one_hot_axis < static_cast<size_t>(m_shape.rank()),
+                          "One-hot axis (",
+                          m_one_hot_axis,
+                          ") is out of bounds (requested result shape: ",
+                          m_shape,
+                          ").");
 
-    NODE_VALIDATION_ASSERT(this, m_shape[m_one_hot_axis].is_static())
-        << "Requested result shape (" << m_shape << ") has dynamic dimension at the one-hot axis "
-        << "(" << m_one_hot_axis << ").";
+    NODE_VALIDATION_CHECK(this,
+                          m_shape[m_one_hot_axis].is_static(),
+                          "Requested result shape (",
+                          m_shape,
+                          ") has dynamic dimension at the one-hot axis ",
+                          "(",
+                          m_one_hot_axis,
+                          ").");
 
     PartialShape result_shape{m_shape};
 
@@ -58,9 +67,13 @@ void op::OneHot::validate_and_infer_types()
         PartialShape expected_input_shape{expected_input_dims};
 
         PartialShape merged_input_shape{expected_input_shape};
-        NODE_VALIDATION_ASSERT(this, PartialShape::merge_into(merged_input_shape, arg_shape))
-            << "Argument shape " << arg_shape << " does not match the expected shape of "
-            << expected_input_shape << ".";
+        NODE_VALIDATION_CHECK(this,
+                              PartialShape::merge_into(merged_input_shape, arg_shape),
+                              "Argument shape ",
+                              arg_shape,
+                              " does not match the expected shape of ",
+                              expected_input_shape,
+                              ".");
 
         std::vector<Dimension> output_dims(static_cast<size_t>(merged_input_shape.rank()));
         for (size_t i = 0; i < static_cast<size_t>(merged_input_shape.rank()); i++)
