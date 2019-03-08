@@ -30,6 +30,7 @@
 
 #include "ngraph/assertion.hpp"
 #include "ngraph/autodiff/adjoints.hpp"
+#include "ngraph/check.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/descriptor/tensor.hpp"
@@ -274,15 +275,13 @@ namespace ngraph
         size_t m_placement_index = placement_invalid;
     };
 
-    class NodeValidationError : public AssertionFailure
+    class NodeValidationFailure : public CheckFailure
     {
     public:
-        NodeValidationError(std::string what)
-            : AssertionFailure(what)
-        {
-        }
-        NodeValidationError(const char* what)
-            : AssertionFailure(what)
+        NodeValidationFailure(const CheckLocInfo& check_loc_info,
+                              const Node* node,
+                              const std::string& explanation)
+            : CheckFailure(check_loc_info, node_validation_assertion_string(node), explanation)
         {
         }
     };
@@ -309,9 +308,5 @@ namespace ngraph
     void check_new_args_count(const Node* node, const NodeVector& new_args);
 } // namespace ngraph
 
-#define NODE_VALIDATION_ASSERT(node, cond)                                                         \
-    NGRAPH_ASSERT_STREAM_WITH_LOC(                                                                 \
-        ::ngraph::NodeValidationError, cond, ::ngraph::node_validation_assertion_string(node))
-#define NODE_VALIDATION_FAIL(node)                                                                 \
-    NGRAPH_FAIL_STREAM_WITH_LOC(::ngraph::NodeValidationError,                                     \
-                                ::ngraph::node_validation_assertion_string(node))
+#define NODE_VALIDATION_CHECK(node, cond, ...)                                                     \
+    NGRAPH_CHECK(::ngraph::NodeValidationFailure, (node), (cond), __VA_ARGS__)

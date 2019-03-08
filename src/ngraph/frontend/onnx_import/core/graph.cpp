@@ -140,7 +140,7 @@ namespace ngraph
                 // https://github.com/onnx/onnx/blob/master/docs/IR.md#optional-inputs-and-outputs
                 for (std::size_t i{0}; i < node.get_outputs_size(); ++i)
                 {
-                    m_ng_node_cache[node.output(i)] = ng_nodes[i];
+                    m_ng_node_cache[node.output(i)] = ng_nodes.at(i);
                 }
             }
         }

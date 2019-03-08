@@ -25,7 +25,7 @@ runtime::hybrid::op::FunctionCall::FunctionCall(const NodeVector& outputs,
                                                 shared_ptr<Function> function,
                                                 shared_ptr<Backend> backend)
     : Op("FunctionCall", inputs)
-    , m_outputs{outputs}
+    , m_function_outputs{outputs}
     , m_function{function}
     , m_backend{backend}
     , m_executable{backend->compile(function)}
@@ -40,7 +40,7 @@ runtime::hybrid::op::FunctionCall::FunctionCall(const NodeVector& outputs,
 shared_ptr<Node>
     runtime::hybrid::op::FunctionCall::copy_with_new_args(const NodeVector& new_args) const
 {
-    return make_shared<FunctionCall>(m_outputs, new_args, m_function, m_backend);
+    return make_shared<FunctionCall>(m_function_outputs, new_args, m_function, m_backend);
 }
 
 shared_ptr<runtime::Backend> runtime::hybrid::op::FunctionCall::get_backend() const
