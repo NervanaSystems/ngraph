@@ -31,7 +31,9 @@ add_library(codegen SHARED ${SRC})
 # LLVM binary builds are typically built without RTTI
 # The built-in headers are in a version-specific directory
 # This must be kept in sync with the LLVM + Clang version in use
-set_source_files_properties(compiler.cpp PROPERTIES COMPILE_FLAGS "-fno-rtti")
+if(NOT WIN32)
+   set_source_files_properties(compiler.cpp PROPERTIES COMPILE_FLAGS "-fno-rtti")
+endif()
 
 get_target_property(LLVM_INCLUDE_DIR libllvm INTERFACE_INCLUDE_DIRECTORIES)
 
