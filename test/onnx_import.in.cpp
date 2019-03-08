@@ -2259,6 +2259,11 @@ TEST(onnx_${BACKEND_NAME}, model_dequantize_linear)
 
 TEST(onnx_${BACKEND_NAME}, model_quant_conv_linear)
 {
+    std::string backend_name = "${BACKEND_NAME}";
+    if(backend_name == "INTERPRETER")
+    {
+        return;
+    }
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/quant_conv_lin.prototxt"));
 
