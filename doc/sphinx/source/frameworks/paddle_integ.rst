@@ -75,7 +75,7 @@ More details on implementation of nGraph engine op, nGraph engine, and nGraph br
          - paddle/fluid/operators/ngraph/ngraph_engine.h
          - paddle/fluid/operators/ngraph/ngraph_engine.cc
  
-3. **nGraph bridge**: Converts PaddlePaddle operators to nGraph operators
+3. **nGraph bridge**: converts PaddlePaddle operators to nGraph operators
       nGraph bridge converts the supported PaddlePaddle operators to nGraph operators to reconstruct the subgraph with nGraph's intermediate representation. The convertable operators are located in the ngraph/ops directory, and each operator has its own files for easy management. For the conversion of operators, there is a common unified interface to facilitate code development and operator transformation. The relevant interfaces are
 
       - GetInputNode: Obtains input node for the conversion operator. The node has unordered graph management.
@@ -87,9 +87,11 @@ More details on implementation of nGraph engine op, nGraph engine, and nGraph br
 nGraph compilation control and trigger method
 --------------------------------------------
 
-1. **Compile Control**: The compilation of nGraph is controlled with the WITH_NGRAPH option. If WITH_NGRAPH=ON, nGraph library will be downloaded and compiled. This option has a corresponding PADDLE_WITH_NGRAPH flag. If WITH_NGRAPH=OFF, the relevant code will not be compiled.
+1. **Compile Control** T
+   The compilation of nGraph is controlled with the WITH_NGRAPH option. If WITH_NGRAPH=ON, nGraph library will be downloaded and compiled. This option has a corresponding PADDLE_WITH_NGRAPH flag. If WITH_NGRAPH=OFF, the relevant code will not be compiled.
 
-2. **Trigger Control**: FLAGS_use_ngraph triggers nGraph. If this option is set to *true*, nGraph will be triggered by the PaddlePaddle executor to convert and execute the supported subgraph. Examples are provided under paddle/benchmark/fluid/ngraph, and the scripts can be executed with the following command line: 
+2. **Trigger Control**: 
+   FLAGS_use_ngraph triggers nGraph. If this option is set to *true*, nGraph will be triggered by the PaddlePaddle executor to convert and execute the supported subgraph. Examples are provided under paddle/benchmark/fluid/ngraph, and the scripts can be executed with the following command line: 
       - FLAGS_ues_ngrap=true python train.py 
       - FLAGS_ues_ngrap=true python infer.py 
 
