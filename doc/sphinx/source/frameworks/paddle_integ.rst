@@ -65,16 +65,15 @@ More details on implementation of nGraph engine op, nGraph engine, and nGraph br
 
 2. **Ngraph engine**: calls the nGraph library to perform calculations.
 
-      nGraph The engine class includes the input and output required to build ngraph from the ngraph engine kernel, the execution function, and the data exchange between ngraph and paddle. The main method.
+      nGraph engine class includes the input and output required to build nGraph graph from the nGraph engine kernel, the execution function, and the data exchange between nGraph and PaddlePaddle. The main methods are
 
-BuildNgIO: Get input and output variables.
-GetNgFunction: Used to get the function used in the calculation. N graph is done by a function for the calculation. This function comprises calculating from the entire pattern of the input to the output. Save time to save functions that need to be called repeatedly.
-BuildNgFunction : used to build ngraph calculation functions.
-Run: Used to call the backend calculation and exchange data with the paddle.
-Related code :
-
-Paddle/fluid/operators/ ngraph / ngraph_engine.h
-Paddle /fluid/operators/ ngraph/ngraph_engine.cc
+      - BuildNgIO: Get input and output variables.
+      - GetNgFunction: Used to get the function used in the calculation. N graph is done by a function for the calculation. This function comprises calculating from the entire pattern of the input to the output. Save time to save functions that need to be called repeatedly.
+      - BuildNgFunction : used to build ngraph calculation functions.
+      - Run: Used to call the backend calculation and exchange data with the paddle.
+      - Related code :
+         - Paddle/fluid/operators/ngraph/ngraph_engine.h
+         - paddle/fluid/operators/ngraph/ngraph_engine.cc
  
 
 3)       Ngraph Bridge: for operator conversion from paddle to ngraph
