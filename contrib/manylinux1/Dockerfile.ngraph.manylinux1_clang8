@@ -31,7 +31,7 @@ RUN ln -s /opt/python/cp27-cp27mu/bin/virtualenv /usr/local/bin/virtualenv
 RUN cd /opt/rh/devtoolset-2/root/usr/lib/gcc && ln -s x86_64-CentOS-linux x86_64-redhat-linux
 RUN cd /opt/rh/devtoolset-2/root/usr/include/c++/4.8.2 && ln -s x86_64-CentOS-linux x86_64-redhat-linux
 RUN cd /opt/rh/devtoolset-2/root/usr/libexec/gcc && ln -s x86_64-CentOS-linux x86_64-redhat-linux
-RUN git clone --depth 1 --single-branch -b llvmorg-8.0.0-rc3 https://github.com/llvm/llvm-project.git
+RUN git clone --depth 1 --single-branch -b llvmorg-8.0.0-rc4 https://github.com/llvm/llvm-project.git
 RUN cd llvm-project/llvm && cp CMakeLists.txt CMakeLists.txt.orig && \
   sed '121,126d' CMakeLists.txt.orig > CMakeLists.txt
 RUN cd llvm-project && mkdir build && cd build && \
