@@ -13,9 +13,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-#ifdef NGRAPH_DISTRIBUTED
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
 
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
 #include <mlsl.hpp>
+#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE 
+#include <mpi.h>
+#endif
 
 #include "ngraph/op/broadcastdistributed.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
@@ -36,6 +40,8 @@ namespace ngraph
 
                 auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
                 auto count = static_cast<int>(args[0].get_size());
+
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
                 auto data_type = MLSL::DT_FLOAT;
 
                 if (args[0].get_element_type() == element::f32)
@@ -53,7 +59,11 @@ namespace ngraph
                         ctx->mlsl_dist->Bcast(arg_tensor, count, data_type, 0, MLSL::GT_DATA);
                     ctx->mlsl_env->Wait(req);
                 };
-
+#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
+                auto data_type = MPI_FLOAT;
+#else
+                throw ngraph_error("Distributed Library not supported/mentioned");
+#endif
                 functors.emplace_back(functor);
             }
 
