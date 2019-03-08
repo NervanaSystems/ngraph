@@ -219,7 +219,8 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     , m_use_tbb(std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
 #if !defined(NGRAPH_DEX_ONLY)
     , m_is_compiled(false)
-    , m_direct_execution(!std::getenv("NGRAPH_CODEGEN"))
+    , m_direct_execution((std::getenv("NGRAPH_CODEGEN") == nullptr) ||
+                         (std::string(std::getenv("NGRAPH_CODEGEN")) == "0"))
 #else
     , m_direct_execution(true)
 #endif

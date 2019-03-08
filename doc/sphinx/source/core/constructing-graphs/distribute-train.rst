@@ -16,12 +16,12 @@ more than one device.
 Frameworks can implement distributed training with nGraph versions prior to 
 `0.13`:
 
-* Use ``-DNGRAPH_DISTRIBUTED_OMPI_ENABLE=TRUE`` to enable distributed training 
+* Use ``-DNGRAPH_DISTRIBUTED_ENABLE=OMPI`` to enable distributed training 
   with OpenMPI. Use of this flag requires that OpenMPI be a pre-existing library 
   in the system. If it's not present on the system, install `OpenMPI`_ version 
   ``2.1.1`` or later before running the compile. 
 
-* Use ``-DNGRAPH_DISTRIBUTED_MLSL_ENABLE=TRUE`` to enable the option for 
+* Use ``-DNGRAPH_DISTRIBUTED_ENABLE=MLSL`` to enable the option for 
   :abbr:`Intel® Machine Learning Scaling Library (MLSL)` for Linux* OS:
 
   .. note:: The Intel® MLSL option applies to Intel® Architecture CPUs 
