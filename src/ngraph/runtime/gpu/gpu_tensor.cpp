@@ -39,14 +39,17 @@ runtime::gpu::GPUTensor::GPUTensor(const ngraph::element::Type& element_type,
         std::make_shared<ngraph::descriptor::layout::DenseTensorLayout>(*m_descriptor));
 
     m_buffer_size = shape_size(shape) * element_type.size();
-    if (memory_pointer != nullptr && is_device_pointer(memory_pointer))
+    if (memory_pointer != nullptr)
     {
-        m_allocated_buffer_pool = memory_pointer;
-        m_custom_memory = true;
-    }
-    else if (memory_pointer != nullptr)
-    {
-        throw ngraph_error("The pointer passed to GPUTensor is not a device pointer.");
+        if (is_device_pointer(memory_pointer))
+        {
+            m_allocated_buffer_pool = memory_pointer;
+            m_custom_memory = true;
+        }
+        else
+        {
+            throw ngraph_error("The pointer passed to GPUTensor is not a device pointer.");
+        }
     }
     else if (m_buffer_size > 0)
     {

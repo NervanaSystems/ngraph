@@ -66,7 +66,7 @@ bool runtime::gpu::is_device_pointer(const void* ptr)
 {
     cudaPointerAttributes attributes;
     CUDA_RT_SAFE_CALL_NO_THROW(cudaPointerGetAttributes(&attributes, ptr));
-    if (attributes.devicePointer != NULL)
+    if (attributes.devicePointer != nullptr)
     {
         return true;
     }
