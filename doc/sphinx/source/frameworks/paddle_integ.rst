@@ -7,7 +7,7 @@ nGraph PaddlePaddle integration overview
 ----------------------------------------
 PaddlePaddle is an open source deep learning framework developed by Baidu. It aims to enable performant large scale distributed computation for deep learning. nGraph Compiler stack is integrated with the current version of PaddlePaddle (Fluid v1.4) and respects PaddlePaddle’s design philosophies to minimize switching cost for users. In order to access nGraph from PaddlePaddle, we added three modules to PaddlePaddle: nGrah engine operator (op), nGraph engine, and nGraph bridge. 
 
-nGraph engine op inherits the PaddlePaddle operator class to allow nGraph engine op to be called using methods consistent with other PaddlePaddle operators. When the nGraph engine is called by the aforementioned op, the nGraph bridge takes and converts PaddlePaddle operators into nGraph operators. nGraph will then build a computational graph based on the converted ops according to the input topology. 
+nGraph engine op inherits the PaddlePaddle operator class to allow nGraph engine op to be called using methods consistent with other PaddlePaddle operators. When the nGraph engine is called by the aforementioned op, the nGraph bridge converts PaddlePaddle operators into nGraph operators. nGraph will then build a computational graph based on the converted ops according to the input topology. 
 
 Integration design
 ----------------------------------------
@@ -19,11 +19,11 @@ Here are key design criteria for nGraph PaddlePaddle integration:
 3. Ease of maintenance 
 
 
-To satisfy the first design criteria, nGraph designed its operator to match PaddlePaddle implementation. nGraph is triggered in the executor exactly in the same way as MKL-DNN and requires one line of code. 
+To satisfy the first design criteria, nGraph designed its operator to match PaddlePaddle implementation. nGraph is triggered by the PaddlePaddle executor exactly in the same way as MKL-DNN and requires one line of code. 
 
-Once nGraph engine is called, performance optimization is handled by nGraph engine and its C++ backend. There is no change made to the PaddlePaddle's python frontend, and end users are not required to change their code to take advantage of nGraph's performance. This design fulfills the second criteria.
+Once nGraph engine is called, performance optimization is handled by nGraph engine and its C++ backend. PaddlePaddle's python frontend remains the same, and end users will not need to change their code to take advantage of nGraph's performance. This design fulfills the second criteria.
 
-Lastly, the code contributed by the nGraph team to PaddlePaddle repository mainly resides in the fluid/operator/ngraph directory, and having the nGraph bridge code in one place allows for easy maintenance. 
+Lastly, the code contributed by nGraph to PaddlePaddle repository mainly resides in the fluid/operator/ngraph directory, and having most of the nGraph code in one place allows for easy maintenance. 
 
 .. _figure-A:
 
@@ -33,7 +33,7 @@ Lastly, the code contributed by the nGraph team to PaddlePaddle repository mainl
 
 The diagram above depicts nGraph access from PaddlePaddle. The PaddlePaddle executor generates executable operator according to the program description (ProgramDesc). nGraph scans the operator sequence before execution and replaces the supported operators (or subgraphs) with nGraph operators. PaddlePaddle can then execute the nGraph operators and unreplaced PaddlePaddle operators with a uniform interface. The unreplaced operators are executed by PaddlePaddle native implementation.
 
-nGraph's current integration on PaddlePaddle's github repository is organized in the following file structure:  
+nGraph's current integration reflected on PaddlePaddle's github repository is organized in the following file structure:  
 
 .. _figure-B:
 
