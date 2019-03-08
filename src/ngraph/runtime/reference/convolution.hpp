@@ -20,6 +20,7 @@
 
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/coordinate_transform.hpp"
+#include "ngraph/runtime/reference/reverse.hpp"
 #include "ngraph/util.hpp"
 
 namespace ngraph
@@ -45,8 +46,7 @@ namespace ngraph
                                      size_t filters_data_channel_axis,
                                      size_t filters_out_channel_axis,
                                      size_t out_batch_axis,
-                                     size_t out_channel_axis,
-                                     bool rotate_filter)
+                                     size_t out_channel_axis)
             {
                 // Comments throughout assume without loss of generality that:
                 //
@@ -54,7 +54,6 @@ namespace ngraph
                 // * data channel axes for both data and filters are 1
                 // * output channel axes for filters is 0
                 // * output channel axis for output is 1
-                // * rotate_filter is false
 
                 // At the outermost level we will walk over every output coordinate O.
                 CoordinateTransform output_transform(out_shape);
@@ -173,25 +172,11 @@ namespace ngraph
                     while (data_it != data_it_end && filter_it != filter_it_end)
                     {
                         const Coordinate& data_coord = *data_it;
-                        Coordinate filter_coord = *filter_it;
-
-                        if (rotate_filter)
-                        {
-                            Shape target_shape = filter_transform.get_target_shape();
-
-                            // Note that we only reverse the spatial dimensions here (loop
-                            // starts at 2)
-                            for (size_t i = 2; i < filter_coord.size(); i++)
-                            {
-                                filter_coord[i] = target_shape[i] - filter_coord[i] - 1;
-                            }
-                        }
-
                         T v = data_transform.has_source_coordinate(data_coord)
                                   ? data[data_transform.index(data_coord)]
                                   : 0;
 
-                        result += v * filters[filter_transform.index(filter_coord)];
+                        result += v * filters[filter_transform.index(*filter_it)];
 
                         ++data_it;
                         ++filter_it;
@@ -230,8 +215,7 @@ namespace ngraph
                                     1,
                                     0,
                                     0,
-                                    1,
-                                    false);
+                                    1);
             }
 
             template <typename T>
@@ -280,8 +264,7 @@ namespace ngraph
                                     0,
                                     1,
                                     1,
-                                    0,
-                                    false);
+                                    0);
             }
 
             template <typename T>
@@ -320,8 +303,19 @@ namespace ngraph
                          window_movement_strides[i]) -
                         padding_above[i];
                 }
+
+                // Note that we only reverse the spatial dimensions here (loop
+                // starts at 2)
+                std::vector<T> reversed(shape_size(filters_shape));
+                AxisSet reverse_axes;
+                for (size_t i = 2; i < filters_shape.size(); ++i)
+                {
+                    reverse_axes.insert(i);
+                }
+                reverse<T>(filters, &reversed[0], filters_shape, filters_shape, reverse_axes);
+
                 general_convolution(output_delta,
-                                    filters,
+                                    &reversed[0],
                                     out,
                                     output_delta_shape,
                                     filters_shape,
@@ -336,8 +330,7 @@ namespace ngraph
                                     0,
                                     1,
                                     0,
-                                    1,
-                                    true);
+                                    1);
             }
         } // namespace reference
     }     // namespace runtime
