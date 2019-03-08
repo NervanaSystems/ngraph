@@ -48,7 +48,7 @@ public:
 private:
     std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
 
-    const NodeVector m_outputs;
+    const NodeVector m_function_outputs;
     std::shared_ptr<Function> m_function;
     std::shared_ptr<Backend> m_backend;
     std::shared_ptr<Executable> m_executable;

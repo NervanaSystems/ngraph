@@ -34,7 +34,7 @@ pass::MemoryVisualize::MemoryVisualize(const string& filename)
 {
 }
 
-bool pass::MemoryVisualize::run_on_module(vector<shared_ptr<ngraph::Function>>& functions)
+bool pass::MemoryVisualize::run_on_module(vector<shared_ptr<Function>>& functions)
 {
     ofstream file(m_filename);
     {

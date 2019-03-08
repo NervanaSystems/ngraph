@@ -44,6 +44,7 @@
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/pad.hpp"
+#include "ngraph/op/passthrough.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/replace_slice.hpp"
@@ -126,7 +127,6 @@
 #include "ngraph/runtime/reference/softmax.hpp"
 #include "ngraph/runtime/reference/sqrt.hpp"
 #include "ngraph/runtime/reference/subtract.hpp"
-#include "ngraph/runtime/reference/sum.hpp"
 #include "ngraph/runtime/reference/tan.hpp"
 #include "ngraph/runtime/reference/tanh.hpp"
 #include "ngraph/runtime/reference/topk.hpp"
@@ -929,6 +929,11 @@ private:
                            pad->get_padding_interior());
             break;
         }
+        case OP_TYPEID::Passthrough:
+        {
+            const op::Passthrough* passthrough = static_cast<const op::Passthrough*>(&node);
+            throw unsupported_op{"Unsupported operation language: " + passthrough->language()};
+        }
         case OP_TYPEID::Power:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -1003,8 +1008,7 @@ private:
         case OP_TYPEID::QuantizedConvolution:
         case OP_TYPEID::QuantizedMaxPool:
         {
-            throw unsupported_op("Unsupported op '" + node.description() +
-                                 "' in Interpreter back end.");
+            throw unsupported_op("Unsupported op '" + node.description() + "'.");
         }
         case OP_TYPEID::Relu:
         {

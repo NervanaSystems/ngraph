@@ -15,10 +15,11 @@
 # ******************************************************************************
 
 import numpy as np
-import pytest
 import ngraph as ng
 
 from string import ascii_uppercase
+
+import test
 
 
 def _get_numpy_dtype(scalar):
@@ -27,8 +28,7 @@ def _get_numpy_dtype(scalar):
 
 def get_runtime():
     """Return runtime object."""
-    backend_name = pytest.config.getoption('backend', default='CPU')
-    return ng.runtime(backend_name=backend_name)
+    return ng.runtime(backend_name=test.BACKEND_NAME)
 
 
 def run_op_node(input_data, op_fun, *args):
