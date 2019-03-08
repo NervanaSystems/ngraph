@@ -93,10 +93,10 @@ nGraph compilation control and trigger method
 
 2. **Trigger Control**: 
    FLAGS_use_ngraph triggers nGraph. If this option is set to *true*, nGraph will be triggered by the PaddlePaddle executor to convert and execute the supported subgraph. Examples are provided under paddle/benchmark/fluid/ngraph, and the scripts can be executed with the following command line: 
-      - FLAGS_ues_ngrap=true python train.py 
-      - FLAGS_ues_ngrap=true python infer.py 
+      - FLAGS_use_ngraph=true python train.py 
+      - FLAGS_use_ngraph=true python infer.py 
 
-
+Please note that PaddlePaddle optimized with MKL-DNN cannot be used with *FLAGS_use_ngraph=true*. 
 
 
  
