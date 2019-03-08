@@ -50,22 +50,22 @@ More details on implementation of nGraph engine op, nGraph engine, and nGraph br
 
 1. **nGraph_engine op**: Triggers subgraphs to be executed by nGraph.
 
-      Input: Input Variable set
+      - Input: Input variable set
 
-      Output: Output Variable Set
+      - Output: Output variable Set
 
-      Attribute :
-         - Graph: Serialized subgraph. The proto described by Paddle 's block is serialized and passed to ngraph as a string.
-         - Interval: FIG operator to replace the column ngraph interval. The operators in the interval will be executed by ngraph.
+      - Attribute :
+         - Graph: Serialized subgraph. The protobuff described by PaddlePaddle is serialized and passed to nGraph as a string.
+         - Interval: FIG operator to replace the column nGraph interval. The operators in the interval will be executed by nGraph.
       
-      Related code :
-         - Paddle/fluid/operators/ ngraph / ngraph_engine_op. h
-         - Paddle /fluid/op erators/ngraph/ngraph_engine_op .cc
+      - Related code :
+         - Paddle/fluid/operators/ngraph/ngraph_engine_op.h
+         - Paddle/fluid/operators/ngraph/ngraph_engine_op.cc
  
 
-2)       Ngraph engine: Supports calling the ngraph library to perform calculations.
+2. **Ngraph engine**: calls the nGraph library to perform calculations.
 
-N graph The engine class includes the input and output required to build ngraph from the ngraph engine kernel, the execution function, and the data exchange between ngraph and paddle. The main method.
+      nGraph The engine class includes the input and output required to build ngraph from the ngraph engine kernel, the execution function, and the data exchange between ngraph and paddle. The main method.
 
 BuildNgIO: Get input and output variables.
 GetNgFunction: Used to get the function used in the calculation. N graph is done by a function for the calculation. This function comprises calculating from the entire pattern of the input to the output. Save time to save functions that need to be called repeatedly.
