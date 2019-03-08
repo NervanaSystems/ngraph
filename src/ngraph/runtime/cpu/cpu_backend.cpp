@@ -66,6 +66,10 @@ shared_ptr<runtime::Tensor>
 shared_ptr<runtime::Tensor> runtime::cpu::CPU_Backend::create_tensor(
     const element::Type& element_type, const Shape& shape, void* memory_pointer)
 {
+    if (memory_pointer != nullptr && !is_device_pointer(memory_pointer))
+    {
+        throw ngraph_error("The pointer passed to create_tensor is not a device pointer.");
+    }
     return make_shared<runtime::cpu::CPUTensorView>(element_type, shape, memory_pointer, this);
 }
 
