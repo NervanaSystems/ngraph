@@ -2260,7 +2260,7 @@ TEST(onnx_${BACKEND_NAME}, model_dequantize_linear)
 TEST(onnx_${BACKEND_NAME}, model_quant_conv_linear)
 {
     std::string backend_name = "${BACKEND_NAME}";
-    if(backend_name == "INTERPRETER")
+    if (backend_name == "INTERPRETER")
     {
         return;
     }
