@@ -55,7 +55,7 @@ namespace ngraph
                 std::shared_ptr<ngraph::runtime::Executable>
                     compile(std::shared_ptr<Function> func,
                             ngraph::pass::PassConfig& pass_config,
-                            bool enable_performance_counters = false);
+                            bool enable_performance_counters = false) override;
 
                 void remove_compiled_function(std::shared_ptr<Executable> exec) override;
 
