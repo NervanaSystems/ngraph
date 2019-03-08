@@ -49,7 +49,6 @@ Integration details
 More details on implementation of nGraph engine op, nGraph engine, and nGraph bridges are provided below: 
 
 1. **nGraph engine op**: Triggers subgraphs to be executed by nGraph.
-
       - Input: Input variable set
 
       - Output: Output variable Set
@@ -64,7 +63,6 @@ More details on implementation of nGraph engine op, nGraph engine, and nGraph br
  
 
 2. **nGraph engine**: calls the nGraph library to perform calculations.
-
       nGraph engine class includes the input and output required to build nGraph graph from the nGraph engine kernel, the execution function, and the data exchange between nGraph and PaddlePaddle. The main methods are
 
       - BuildNgIO: Gets input and output variables.
@@ -87,7 +85,7 @@ More details on implementation of nGraph engine op, nGraph engine, and nGraph br
 nGraph compilation control and trigger method
 --------------------------------------------
 
-1. **Compile Control** T
+1. **Compile Control**: 
    The compilation of nGraph is controlled with the WITH_NGRAPH option. If WITH_NGRAPH=ON, nGraph library will be downloaded and compiled. This option has a corresponding PADDLE_WITH_NGRAPH flag. If WITH_NGRAPH=OFF, the relevant code will not be compiled.
 
 2. **Trigger Control**: 
