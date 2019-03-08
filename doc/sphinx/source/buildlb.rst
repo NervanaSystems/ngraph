@@ -54,8 +54,6 @@ as needed:
    -- NGRAPH_NOP_ENABLE:               ON
    -- NGRAPH_GPUH_ENABLE:              OFF
    -- NGRAPH_GENERIC_CPU_ENABLE:       OFF
-   -- NGRAPH_DISTRIBUTED_MLSL_ENABLE:  OFF
-   -- NGRAPH_DISTRIBUTED_OMPI_ENABLE:  OFF
    -- NGRAPH_DEBUG_ENABLE:             OFF
    -- NGRAPH_ONNX_IMPORT_ENABLE:       OFF
    -- NGRAPH_DEX_ONLY:                 OFF
@@ -64,7 +62,7 @@ as needed:
    -- NGRAPH_PYTHON_BUILD_ENABLE:      OFF
    -- NGRAPH_USE_PREBUILT_LLVM:        OFF
    -- NGRAPH_PLAIDML_ENABLE:           OFF
-
+   -- NGRAPH_DISTRIBUTED_ENABLE:       OFF
 
 .. important:: The default :program:`cmake` procedure (no build flags) will  
    install ``ngraph_dist`` to an OS-level location like ``/usr/bin/ngraph_dist``
