@@ -72,8 +72,8 @@ More details on implementation of nGraph engine op, nGraph engine, and nGraph br
       - BuildNgFunction: builds nGraph functions.
       - Run: calls backend execution  and exchange data with the paddle.
       - Related code :
-         - paddle/fluid/operators/ngraph/ngraph_engine.h
-         - paddle/fluid/operators/ngraph/ngraph_engine.cc
+         - Paddle/fluid/operators/ngraph/ngraph_engine.h
+         - Paddle/fluid/operators/ngraph/ngraph_engine.cc
  
 3. **nGraph bridge**: converts PaddlePaddle operators to nGraph operators.
 
@@ -82,8 +82,8 @@ More details on implementation of nGraph engine op, nGraph engine, and nGraph br
       - GetInputNode: Obtains input node for the conversion operator. The node has unordered graph management.
       - SetOutputNode: Sets an operator management system for adding the operator of the first conversion.
       - Related code :
-         - paddle/fluid/operators/ngraph/ngraph_bridge.h
-         - paddle/fluid/operators/ngraph/ngraph_bridge.cc
+         - Paddle/fluid/operators/ngraph/ngraph_bridge.h
+         - Paddle/fluid/operators/ngraph/ngraph_bridge.cc
 
 nGraph compilation control and trigger method
 --------------------------------------------
