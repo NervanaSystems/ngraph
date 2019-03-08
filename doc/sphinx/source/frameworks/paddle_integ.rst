@@ -33,9 +33,6 @@ Lastly, the code contributed by the nGraph team to PaddlePaddle repository mainl
 
 The diagram above depicts nGraph access from PaddlePaddle. The PaddlePaddle executor generates executable operator according to the program description (ProgramDesc). nGraph scans the operator sequence before execution and replaces the supported operators (or subgraphs) with nGraph operators. PaddlePaddle can then execute the nGraph operators and unreplaced PaddlePaddle operators with a uniform interface. The unreplaced operators are executed by PaddlePaddle native implementation.
 
-Integration details 
--------------------
-
 nGraph's current integration on PaddlePaddle's github repository is organized in the following file structure:  
 
 .. _figure-B:
@@ -46,24 +43,24 @@ nGraph's current integration on PaddlePaddle's github repository is organized in
 
 Compilation of nGraph is handled by ngraph.cmake file in the cmake/external directory. Other newly introduced files are mostly located in the paddle/fluid/operator/ngraph directory. The nGraph operators that replace PaddlePaddle operators as described in the previous section can be found in the ngraph/ops directory.
 
-2. 2 Ngraph Introduction to engine Op/Kernel and related module files
+Integration details 
+-------------------
 
-Next will be described the newly added ngraph engine Op and Kernel:
+More details on implementation of nGraph engine op, nGraph engine, and nGraph bridges are provided below: 
 
-1)       Ngraph_engine op: Supports subgraphs to be executed from ngraph.
+1. **nGraph_engine op**: Triggers subgraphs to be executed by nGraph.
 
-Input: input variable set
+      Input: Input Variable set
 
-Output: Output Variable Set
+      Output: Output Variable Set
 
-Attribute :
-
-Graph: Serialized subgraph. The proto described by Paddle 's block is serialized and passed to ngraph as a string.
-interval: FIG operator to replace the column ngraph interval. The operators in the interval will be executed by ngraph.
-Related code :
-
-Paddle/fluid/operators/ ngraph / ngraph_engine_op. h
-Paddle /fluid/op erators/ngraph/ngraph_engine_op .cc
+      Attribute :
+         - Graph: Serialized subgraph. The proto described by Paddle 's block is serialized and passed to ngraph as a string.
+         - Interval: FIG operator to replace the column ngraph interval. The operators in the interval will be executed by ngraph.
+      
+      Related code :
+         - Paddle/fluid/operators/ ngraph / ngraph_engine_op. h
+         - Paddle /fluid/op erators/ngraph/ngraph_engine_op .cc
  
 
 2)       Ngraph engine: Supports calling the ngraph library to perform calculations.
@@ -90,9 +87,9 @@ Related code :
 
 Paddle/fluid/operators/ngraph/ngraph_bridge.h
 Paddle/fluid/operators/ngraph/ngraph_bridge. cc
- 
 
-2. 3 ngraph compilation control and trigger method
+nGraph compilation control and trigger method
+--------------------------------------------
 
 1)       Compile Control: The compilation of nGrap h is controlled by the WITH _ NGRAPH option. If WITH_ NGRAPH=ON, The ngraph library will be downloaded and compiled. The relevant code has a corresponding PADDLE _WITH_NGRAPH control. If WITH_ NGRAPH=OFF, the relevant code will not be compiled.
 
