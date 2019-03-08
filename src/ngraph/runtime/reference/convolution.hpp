@@ -223,19 +223,18 @@ namespace ngraph
 
             template <typename T>
             void convolution_backprop_filter(const T* in,
-                                             const T* out_delta,
-                                             T* out,
-                                             const Shape& filter_shape,
+                                             const T* delta_out,
+                                             T* delta_filter,
                                              const Shape& in_shape,
-                                             const Shape& out_delta_shape,
                                              const Shape& out_shape,
+                                             const Shape& filter_shape,
                                              const Strides& filter_dilation,
                                              const Strides& stride,
                                              const CoordinateDiff& in_pad_below,
                                              const CoordinateDiff& in_pad_above,
                                              const Strides& in_dilation)
             {
-                size_t spatial_dim_count = static_cast<size_t>(out_delta_shape.size()) - 2;
+                size_t spatial_dim_count = static_cast<size_t>(out_shape.size()) - 2;
                 CoordinateDiff backward_pad_above;
                 backward_pad_above.resize(spatial_dim_count);
 
@@ -250,11 +249,11 @@ namespace ngraph
                 }
 
                 general_convolution(in,
-                                    out_delta,
-                                    out,
+                                    delta_out,
+                                    delta_filter,
                                     in_shape,
-                                    out_delta_shape,
                                     out_shape,
+                                    filter_shape,
                                     filter_dilation,
                                     stride,
                                     in_pad_below,
@@ -269,13 +268,13 @@ namespace ngraph
             }
 
             template <typename T>
-            void convolution_backprop_in(const T* out_delta,
+            void convolution_backprop_in(const T* delta_out,
                                          const T* filter,
-                                         T* out,
+                                         T* delta_in,
                                          const Shape& in_shape,
-                                         const Shape& out_delta_shape,
+                                         const Shape& delta_out_shape,
                                          const Shape& filter_shape,
-                                         const Shape& out_shape,
+                                         const Shape& delta_in_shape,
                                          const Strides& in_dilation,
                                          const Strides& filter_dilation,
                                          const CoordinateDiff& in_pad_below,
@@ -313,12 +312,12 @@ namespace ngraph
                 }
                 reverse<T>(filter, &reversed[0], filter_shape, filter_shape, reverse_axes);
 
-                general_convolution(out_delta,
+                general_convolution(delta_out,
                                     &reversed[0],
-                                    out,
-                                    out_delta_shape,
+                                    delta_in,
+                                    delta_out_shape,
                                     filter_shape,
-                                    out_shape,
+                                    delta_in_shape,
                                     in_dilation,
                                     filter_dilation,
                                     backward_pad_below,

@@ -559,18 +559,18 @@ private:
         {
             const op::ConvolutionBackpropFilters* c =
                 static_cast<const op::ConvolutionBackpropFilters*>(&node);
-            reference::convolution_backprop_filter<T>(args[0]->get_data_ptr<const T>(),
-                                                      args[1]->get_data_ptr<const T>(),
-                                                      out[0]->get_data_ptr<T>(),
-                                                      c->get_filters_shape(),
-                                                      c->get_input_shape(0),
-                                                      c->get_input_shape(1),
-                                                      c->get_output_shape(0),
-                                                      c->get_window_dilation_strides_forward(),
-                                                      c->get_window_movement_strides_forward(),
-                                                      c->get_padding_below_forward(),
-                                                      c->get_padding_above_forward(),
-                                                      c->get_data_dilation_strides_forward());
+            reference::convolution_backprop_filter<T>(
+                args[0]->get_data_ptr<const T>(), // input
+                args[1]->get_data_ptr<const T>(), // delta_convolution_output
+                out[0]->get_data_ptr<T>(),        // delta_filter
+                c->get_input_shape(0),            // input_shape
+                c->get_input_shape(1),            // convolution_output_shape
+                c->get_filters_shape(),           // filter_shape
+                c->get_window_dilation_strides_forward(),
+                c->get_window_movement_strides_forward(),
+                c->get_padding_below_forward(),
+                c->get_padding_above_forward(),
+                c->get_data_dilation_strides_forward());
             break;
         }
         case OP_TYPEID::ConvolutionBackpropData:
