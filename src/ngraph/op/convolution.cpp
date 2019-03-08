@@ -498,6 +498,31 @@ shared_ptr<Node>
                                                    m_data_dilation_strides_forward);
 }
 
+CoordinateDiff op::ConvolutionBackpropFilters::compute_backward_pad_above() const
+{
+    const auto& in_shape = get_input_shape(0);
+    const auto& out_shape = get_input_shape(1);
+    const auto& filter_shape = get_filters_shape();
+    const auto& in_pad_above = get_padding_above_forward();
+    const auto& in_pad_below = get_padding_below_forward();
+    const auto& in_dilation = get_data_dilation_strides_forward();
+    const auto& filter_dilation = get_window_dilation_strides_forward();
+    const auto& stride = get_window_movement_strides_forward();
+    size_t spatial_dim_count = static_cast<size_t>(out_shape.size()) - 2;
+    CoordinateDiff backward_pad_above;
+    backward_pad_above.resize(spatial_dim_count);
+
+    for (size_t i = 0; i < spatial_dim_count; i++)
+    {
+        backward_pad_above[i] =
+            in_pad_above[i] -
+            (in_pad_below[i] + (static_cast<ptrdiff_t>(in_shape[i + 2]) - 1) * in_dilation[i] +
+             in_pad_above[i] - (filter_shape[i + 2] - 1) * filter_dilation[i]) %
+                stride[i];
+    }
+    return backward_pad_above;
+}
+
 //
 // This is a legacy function, retained because the CPU backend uses it for now.
 // TODO(amprocte): Update CPU backend to use the new stuff in validation_util.hpp, and remove this

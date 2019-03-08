@@ -559,6 +559,7 @@ private:
         {
             const op::ConvolutionBackpropFilters* c =
                 static_cast<const op::ConvolutionBackpropFilters*>(&node);
+            CoordinateDiff backward_pad_above = c->compute_backward_pad_above();
             reference::convolution_backprop_filter<T>(
                 args[0]->get_data_ptr<const T>(), // input
                 args[1]->get_data_ptr<const T>(), // delta_convolution_output

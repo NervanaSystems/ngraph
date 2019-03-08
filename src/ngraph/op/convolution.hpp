@@ -220,6 +220,10 @@ namespace ngraph
                 return m_data_dilation_strides_forward;
             }
 
+            // Compute the pad_above value to be used if in a convolution
+            CoordinateDiff compute_backward_pad_above() const;
+            CoordinateDiff compute_backward_pad_below() const;
+
         protected:
             Shape m_data_batch_shape;
             Strides m_window_movement_strides_forward;
@@ -285,6 +289,9 @@ namespace ngraph
                 return m_data_dilation_strides_forward;
             }
 
+            // Compute the pad_above value to be used if in a convolution
+            CoordinateDiff compute_backward_pad_above() const;
+
         protected:
             Shape m_filters_shape;
             Strides m_window_movement_strides_forward;
@@ -313,6 +320,6 @@ namespace ngraph
                                                  size_t output_channel_axis_filters,
                                                  size_t batch_axis_result,
                                                  size_t output_channel_axis_result);
-        }
-    }
-}
+        } // namespace util
+    }     // namespace op
+} // namespace ngraph
