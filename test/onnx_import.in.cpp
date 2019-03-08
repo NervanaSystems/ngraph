@@ -39,26 +39,6 @@ static std::string s_manifest = "${MANIFEST}";
 using Inputs = std::vector<std::vector<float>>;
 using Outputs = std::vector<std::vector<float>>;
 
-namespace
-{
-    template <typename T>
-    std::vector<T> read_binary_file(const std::string& path)
-    {
-        std::vector<T> file_content;
-        std::ifstream inputs_fs{file_util::path_join(SERIALIZED_ZOO, path),
-                                std::ios::in | std::ios::binary};
-        EXPECT_TRUE(inputs_fs);
-
-        inputs_fs.seekg(0, std::ios::end);
-        auto size = inputs_fs.tellg();
-        inputs_fs.seekg(0, std::ios::beg);
-        file_content.resize(size / sizeof(T));
-        inputs_fs.read(reinterpret_cast<char*>(file_content.data()), size);
-        return file_content;
-    }
-
-} // anonymous namespace
-
 TEST(onnx_${BACKEND_NAME}, model_output_names_check)
 {
     auto function = onnx_import::import_onnx_model(
