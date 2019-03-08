@@ -63,7 +63,7 @@ More details on implementation of nGraph engine op, nGraph engine, and nGraph br
          - Paddle/fluid/operators/ngraph/ngraph_engine_op.cc
  
 
-2. **Ngraph engine**: calls the nGraph library to perform calculations.
+2. **nGraph engine**: calls the nGraph library to perform calculations.
 
       nGraph engine class includes the input and output required to build nGraph graph from the nGraph engine kernel, the execution function, and the data exchange between nGraph and PaddlePaddle. The main methods are
 
@@ -76,10 +76,10 @@ More details on implementation of nGraph engine op, nGraph engine, and nGraph br
          - paddle/fluid/operators/ngraph/ngraph_engine.cc
  
 3. **nGraph bridge**: Converts PaddlePaddle operators to nGraph operators
-      The nGraph bridge converts the supported PaddlePaddle operators to nGraph operators to reconstruct the subgraph with nGraph's intermediate representation. The convertable operators are located in the ngraph/ops directory, and each operator has its own files for easy management. For the conversion of operators, there is a common unified interface to facilitate code development and operator transformation. The relevant interfaces are
+      nGraph bridge converts the supported PaddlePaddle operators to nGraph operators to reconstruct the subgraph with nGraph's intermediate representation. The convertable operators are located in the ngraph/ops directory, and each operator has its own files for easy management. For the conversion of operators, there is a common unified interface to facilitate code development and operator transformation. The relevant interfaces are
 
-      - Get InputNode: The input node used to obtain the conversion operator. The node has unordered graph management.
-      - SetOutputNode: An operator management diagram for adding the operator of the first conversion.
+      - GetInputNode: Obtains input node for the conversion operator. The node has unordered graph management.
+      - SetOutputNode: Sets an operator management system for adding the operator of the first conversion.
       - Related code :
          - paddle/fluid/operators/ngraph/ngraph_bridge.h
          - paddle/fluid/operators/ngraph/ngraph_bridge.cc
@@ -87,7 +87,7 @@ More details on implementation of nGraph engine op, nGraph engine, and nGraph br
 nGraph compilation control and trigger method
 --------------------------------------------
 
-1. **Compile Control**: The compilation of nGraph is controlled with the WITH_NGRAPH option. If WITH_NGRAPH=ON, the nGraph library will be downloaded and compiled. This option has a corresponding PADDLE_WITH_NGRAPH control. If WITH_NGRAPH=OFF, the relevant code will not be compiled.
+1. **Compile Control**: The compilation of nGraph is controlled with the WITH_NGRAPH option. If WITH_NGRAPH=ON, nGraph library will be downloaded and compiled. This option has a corresponding PADDLE_WITH_NGRAPH flag. If WITH_NGRAPH=OFF, the relevant code will not be compiled.
 
 2. **Trigger Control**: FLAGS_use_ngraph triggers nGraph. If this option is set to *true*, nGraph will be triggered by the PaddlePaddle executor to convert and execute the supported subgraph. Examples are provided under paddle/benchmark/fluid/ngraph, and the scripts can be executed with the following command line: 
       - FLAGS_ues_ngrap=true python train.py 
