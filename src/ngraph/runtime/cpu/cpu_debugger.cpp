@@ -129,8 +129,7 @@ bool runtime::cpu::CPU_Debugger::delete_breakpoint(std::shared_ptr<Node> op)
 
 void* runtime::cpu::CPU_Debugger::inspect(std::shared_ptr<Node> op, size_t output_index)
 {
-    if (std::getenv("NGRAPH_CODEGEN") == nullptr ||
-        std::string(std::getenv("NGRAPH_CODEGEN")) == "0")
+    if (m_callframe.m_external_function->is_direct_execution())
     {
         return m_callframe.m_external_function->get_tensor_data(op->get_name() + "_" +
                                                                 to_string(output_index));

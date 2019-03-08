@@ -38,12 +38,22 @@
 using namespace ngraph;
 using namespace std;
 
-// These tests are for DEX mode only.
-TEST(debugger, add_breakpoint)
+bool static is_codegen_mode()
 {
     if (std::getenv("NGRAPH_CODEGEN") != nullptr &&
         std::string(std::getenv("NGRAPH_CODEGEN")) != "0")
     {
+        return true;
+    }
+    return false;
+}
+
+// These tests are for DEX mode only.
+TEST(debugger, add_breakpoint)
+{
+    if (is_codegen_mode())
+    {
+        //TODO change every return to skip when next gtest release comes out.
         return;
     }
     Shape shape{};
@@ -82,8 +92,7 @@ TEST(debugger, add_breakpoint)
 
 TEST(debugger, stepping)
 {
-    if (std::getenv("NGRAPH_CODEGEN") != nullptr &&
-        std::string(std::getenv("NGRAPH_CODEGEN")) != "0")
+    if (is_codegen_mode())
     {
         return;
     }
@@ -124,8 +133,7 @@ TEST(debugger, stepping)
 
 TEST(debugger, delete_breakpoint)
 {
-    if (std::getenv("NGRAPH_CODEGEN") != nullptr &&
-        std::string(std::getenv("NGRAPH_CODEGEN")) != "0")
+    if (is_codegen_mode())
     {
         return;
     }
@@ -169,8 +177,7 @@ TEST(debugger, delete_breakpoint)
 
 TEST(debugger, while_stepping)
 {
-    if (std::getenv("NGRAPH_CODEGEN") != nullptr &&
-        std::string(std::getenv("NGRAPH_CODEGEN")) != "0")
+    if (is_codegen_mode())
     {
         return;
     }
@@ -212,8 +219,7 @@ TEST(debugger, while_stepping)
 
 TEST(debugger, resume)
 {
-    if (std::getenv("NGRAPH_CODEGEN") != nullptr &&
-        std::string(std::getenv("NGRAPH_CODEGEN")) != "0")
+    if (is_codegen_mode())
     {
         return;
     }
@@ -253,8 +259,7 @@ TEST(debugger, resume)
 
 TEST(tracer, basic)
 {
-    if (std::getenv("NGRAPH_CODEGEN") != nullptr &&
-        std::string(std::getenv("NGRAPH_CODEGEN")) != "0")
+    if (is_codegen_mode())
     {
         return;
     }
@@ -298,8 +303,7 @@ TEST(tracer, basic)
 
 TEST(tracer, count_tracepoint)
 {
-    if (std::getenv("NGRAPH_CODEGEN") != nullptr &&
-        std::string(std::getenv("NGRAPH_CODEGEN")) != "0")
+    if (is_codegen_mode())
     {
         return;
     }
@@ -344,8 +348,7 @@ TEST(tracer, count_tracepoint)
 
 TEST(tracer, conditional_tracepoint)
 {
-    if (std::getenv("NGRAPH_CODEGEN") != nullptr &&
-        std::string(std::getenv("NGRAPH_CODEGEN")) != "0")
+    if (is_codegen_mode())
     {
         return;
     }
