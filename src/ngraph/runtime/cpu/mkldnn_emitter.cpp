@@ -279,7 +279,6 @@ size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& inpu
 
     mkldnn::primitive_attr conv_attr;
     conv_attr.set_post_ops(pops);
-    std::cout << "I am here ...." << std::endl;
     mkldnn::algorithm convolution_algo = mkldnn_utils::can_use_conv_auto()
                                              ? mkldnn::algorithm::convolution_auto
                                              : mkldnn::algorithm::convolution_direct;
@@ -424,7 +423,6 @@ size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& inpu
     const size_t bias_index = build_memory_primitive(bias_desc);
     const size_t result_index = build_memory_primitive(result_desc);
 
-    std::cout << "I am here ...." << std::endl;
     mkldnn::primitive_attr conv_attr;
     conv_attr.set_post_ops(pops);
 

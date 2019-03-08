@@ -957,7 +957,7 @@ TEST(cpu_test, rotated_pooling)
 TEST(cpu_test, conv_test_winograd)
 {
     // This test creates the conv_primitive and checks for the winograd algo selection
-    // from mkldnn conv heursitics
+    // from mkldnn conv heuristic.
     using namespace mkldnn;
     using namespace ngraph::runtime::cpu;
 
