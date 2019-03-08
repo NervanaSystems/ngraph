@@ -36,5 +36,89 @@ The diagram above depicts nGraph access from PaddlePaddle. The PaddlePaddle exec
 Integration details 
 -------------------
 
+nGraph's current integration on PaddlePaddle's github repository is organized in the following file structure:  
 
+.. _figure-B:
+
+.. figure:: ../graphics/paddlepaddle_directory.png
+   :width: 555px
+   :alt: 
+
+Compilation of nGraph is handled by ngraph.cmake file in the cmake/external directory. Other newly introduced files are mostly located in the paddle/fluid/operator/ngraph directory. The nGraph operators that replace PaddlePaddle operators as described in the previous section can be found in the ngraph/ops directory.
+
+2. 2 Ngraph Introduction to engine Op/Kernel and related module files
+
+Next will be described the newly added ngraph engine Op and Kernel:
+
+1)       Ngraph_engine op: Supports subgraphs to be executed from ngraph.
+
+Input: input variable set
+
+Output: Output Variable Set
+
+Attribute :
+
+Graph: Serialized subgraph. The proto described by Paddle 's block is serialized and passed to ngraph as a string.
+interval: FIG operator to replace the column ngraph interval. The operators in the interval will be executed by ngraph.
+Related code :
+
+Paddle/fluid/operators/ ngraph / ngraph_engine_op. h
+Paddle /fluid/op erators/ngraph/ngraph_engine_op .cc
+ 
+
+2)       Ngraph engine: Supports calling the ngraph library to perform calculations.
+
+N graph The engine class includes the input and output required to build ngraph from the ngraph engine kernel, the execution function, and the data exchange between ngraph and paddle. The main method.
+
+BuildNgIO: Get input and output variables.
+GetNgFunction: Used to get the function used in the calculation. N graph is done by a function for the calculation. This function comprises calculating from the entire pattern of the input to the output. Save time to save functions that need to be called repeatedly.
+BuildNgFunction : used to build ngraph calculation functions.
+Run: Used to call the backend calculation and exchange data with the paddle.
+Related code :
+
+Paddle/fluid/operators/ ngraph / ngraph_engine.h
+Paddle /fluid/operators/ ngraph/ngraph_engine.cc
+ 
+
+3)       Ngraph Bridge: for operator conversion from paddle to ngraph
+
+The Ngraph bridge converts the supported operators, and the transformed ngraph node ( node ) will be used to construct the ngraph calculation graph. The conversion of the operator is concentrated in the ngraph /ops directory, and the operator has separate files for easy management. For the conversion of operators, there is a common unified interface to facilitate code development and understanding of operator transformation. The relevant interfaces are as follows:
+
+Get InputNode: The input node used to obtain the conversion operator. The node has unordered graph management.
+SetOutputNode: An operator management diagram for adding the operator of the first conversion.
+Related code :
+
+Paddle/fluid/operators/ngraph/ngraph_bridge.h
+Paddle/fluid/operators/ngraph/ngraph_bridge. cc
+ 
+
+2. 3 ngraph compilation control and trigger method
+
+1)       Compile Control: The compilation of nGrap h is controlled by the WITH _ NGRAPH option. If WITH_ NGRAPH=ON, The ngraph library will be downloaded and compiled. The relevant code has a corresponding PADDLE _WITH_NGRAPH control. If WITH_ NGRAPH=OFF, the relevant code will not be compiled.
+
+2)       Trigger Control: Trigger calling nGrap h of FLAGS_use_ngraph controlled by the environment variable. If the variable is true, ngraph will trigger in the executor and call the relevant function to convert and execute the supported submap.
+
+ 
+
+3, the main affected module interface changes
+Please list the direct interface changes for the core design.
+No new interfaces that have a direct impact on users
+
+Please check the impact of each link on the framework one by one.
+1)       Network definition: none
+
+2)       Underlying data structure: none
+
+3)       OP
+
+N graph _engine: Added support for ngraph submap Op
+4)       Data IO: None
+
+5)       Execution: None
+
+6)       Distributed: none
+
+7)       Model save: None, ngraph is accessed before the operator is executed, no model changes and saves
+
+8)       Forecast deployment: none
 
