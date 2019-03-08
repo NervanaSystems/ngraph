@@ -5,7 +5,7 @@ PaddlePaddle
 
 nGraph PaddlePaddle integration overview
 ----------------------------------------
-PaddlePaddle is an open source deep learning framework developed by Baidu. It aims to enable performant large scale distributed computation for deep learning. nGraph Compiler stack is integrated with the current version of PaddlePaddle (Fluid v1.4) and respects PaddlePaddle’s design philosophies to minimize switching cost for users. In order to access nGraph from PaddlePaddle, we added three modules to PaddlePaddle: nGrah engine operator (op), nGraph engine, and nGraph bridge. 
+PaddlePaddle is an open source deep learning framework developed by Baidu. It aims to enable performant large scale distributed computation for deep learning. nGraph Compiler stack is integrated with the current version of PaddlePaddle (Fluid v1.4) and respects PaddlePaddle’s design philosophy to minimize switching cost for users. In order to access nGraph from PaddlePaddle, we added three modules to PaddlePaddle: nGrah engine operator (op), nGraph engine, and nGraph bridge. 
 
 nGraph engine op inherits the PaddlePaddle operator class to allow nGraph engine op to be called using methods consistent with other PaddlePaddle operators. When the nGraph engine is called by the aforementioned op, the nGraph bridge converts PaddlePaddle operators into nGraph operators. nGraph will then build a computational graph based on the converted ops according to the input topology. 
 
