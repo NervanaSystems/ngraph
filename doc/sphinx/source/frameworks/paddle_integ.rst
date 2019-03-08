@@ -8,10 +8,9 @@ nGraph PaddlePaddle integration overview
 
 PaddlePaddle is an open source deep learning framework developed by Baidu. It 
 aims to enable performant large-scale distributed computation for deep learning. 
-The nGraph Compiler stack is integrated with the current version of PaddlePaddle 
-(Fluid v1.4), and respects PaddlePaddle’s design philosophy to minimize switching 
-cost for users. To access nGraph from PaddlePaddle, we've added three modules to 
-PaddlePaddle: 
+The nGraph Compiler stack's integration to PaddlePaddle respects PaddlePaddle’s
+design philosophy to minimize switching cost for users. To access nGraph from
+PaddlePaddle, we've added three modules to PaddlePaddle:
 
 * nGraph engine operator (op), 
 * nGraph engine, and 
@@ -37,8 +36,7 @@ Key design criteria for nGraph-PaddlePaddle integration includes:
 
 To satisfy the first design criteria, nGraph designed its operator to match 
 PaddlePaddle's implementation. nGraph is triggered by the PaddlePaddle 
-executor in exactly the same way as MKL-DNN, and requires only one line 
-of code. 
+executor by one line of code.
 
 After nGraph engine is called, it and the nGraph C++ backend manage all the 
 heavy lifting for performance optimization. The Python frontend on PaddlePaddle
@@ -97,8 +95,7 @@ and nGraph bridges are provided below:
      + Graph: Serialized subgraph. The protobuffer described 
        by PaddlePaddle is serialized and passed to nGraph **as a string**.
      
-     + Interval: FIG operator to replace the column nGraph interval. 
-       The operators in the interval will be executed by nGraph.
+     + Interval: The interval of ops in operator list that will be executed by nGraph.
       
    - Related code :
      
@@ -110,7 +107,7 @@ and nGraph bridges are provided below:
 #. **nGraph engine**: calls the nGraph Library to perform calculations.
 
    The nGraph engine class includes the input and output required to build 
-   an nGraph function graph from the nGraph engine kernel, the execution 
+   a nGraph function graph from the nGraph engine kernel, the execution
    function, and the data exchange between nGraph and PaddlePaddle. 
    The primary methods are:
 
@@ -134,8 +131,9 @@ and nGraph bridges are provided below:
    is a common unified interface to facilitate code development and 
    operator transformation. The relevant interfaces are:
 
-   - GetInputNode: obtains input node for the conversion operator. The node has unordered graph management.
-   - SetOutputNode: sets an operator management system for adding the operator of the first conversion.
+   - GetInputNode: obtains input node for the conversion operator. The nodes
+     are manged through a map.
+   - SetOutputNode: sets the constructed node to the map.
    - Related code :
      + ``Paddle/fluid/operators/ngraph/ngraph_bridge.h`` `link to ngraph_bridge header code`_
      + ``Paddle/fluid/operators/ngraph/ngraph_bridge.cc``  `link to ngraph_bridge cpp code`_
@@ -152,13 +150,7 @@ nGraph compilation control and trigger method
 #. **Trigger Control** -- ``FLAGS_use_ngraph`` triggers nGraph. If this option 
    is set to ``true``, nGraph will be triggered by the PaddlePaddle executor 
    to convert and execute the supported subgraph. `Examples are provided`_ under    
-   ``paddle/benchmark/fluid/ngraph``, and the scripts can be executed with the 
-   following command-line options for training and inference, respectively: 
-   - ``FLAGS_use_ngraph=true python train.py`` 
-   - ``FLAGS_use_ngraph=true python infer.py`` 
-
-.. important:: Please note that PaddlePaddle which has been optimized with 
-   MKL-DNN cannot be used with ``FLAGS_use_ngraph=true``.
+   ``paddle/benchmark/fluid/ngraph``. 
 
 
 .. _link to ngraph_engine_op header code: https://github.com/PaddlePaddle/Paddle/blob/develop/paddle/fluid/operators/ngraph/ngraph_engine_op.h
