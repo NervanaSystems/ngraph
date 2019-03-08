@@ -48,7 +48,7 @@ Integration details
 
 More details on implementation of nGraph engine op, nGraph engine, and nGraph bridges are provided below: 
 
-1. **nGraph_engine op**: Triggers subgraphs to be executed by nGraph.
+1. **nGraph engine op**: Triggers subgraphs to be executed by nGraph.
 
       - Input: Input variable set
 
@@ -67,25 +67,22 @@ More details on implementation of nGraph engine op, nGraph engine, and nGraph br
 
       nGraph engine class includes the input and output required to build nGraph graph from the nGraph engine kernel, the execution function, and the data exchange between nGraph and PaddlePaddle. The main methods are
 
-      - BuildNgIO: Get input and output variables.
-      - GetNgFunction: Used to get the function used in the calculation. N graph is done by a function for the calculation. This function comprises calculating from the entire pattern of the input to the output. Save time to save functions that need to be called repeatedly.
-      - BuildNgFunction : used to build ngraph calculation functions.
-      - Run: Used to call the backend calculation and exchange data with the paddle.
+      - BuildNgIO: Gets input and output variables.
+      - GetNgFunction: Obtains the nGraph function used in the calculation. It matches entire pattern of the input to the output and saves functions that need to be called repeatedly.
+      - BuildNgFunction : builds nGraph functions.
+      - Run: calls backend execution  and exchange data with the paddle.
       - Related code :
-         - Paddle/fluid/operators/ngraph/ngraph_engine.h
+         - paddle/fluid/operators/ngraph/ngraph_engine.h
          - paddle/fluid/operators/ngraph/ngraph_engine.cc
  
+3. **nGraph bridge**: Converts PaddlePaddle operators to nGraph operators
+      The Ngraph bridge converts the supported operators, and the transformed ngraph node ( node ) will be used to construct the ngraph calculation graph. The conversion of the operator is concentrated in the ngraph /ops directory, and the operator has separate files for easy management. For the conversion of operators, there is a common unified interface to facilitate code development and understanding of operator transformation. The relevant interfaces are as follows:
 
-3)       Ngraph Bridge: for operator conversion from paddle to ngraph
-
-The Ngraph bridge converts the supported operators, and the transformed ngraph node ( node ) will be used to construct the ngraph calculation graph. The conversion of the operator is concentrated in the ngraph /ops directory, and the operator has separate files for easy management. For the conversion of operators, there is a common unified interface to facilitate code development and understanding of operator transformation. The relevant interfaces are as follows:
-
-Get InputNode: The input node used to obtain the conversion operator. The node has unordered graph management.
-SetOutputNode: An operator management diagram for adding the operator of the first conversion.
-Related code :
-
-Paddle/fluid/operators/ngraph/ngraph_bridge.h
-Paddle/fluid/operators/ngraph/ngraph_bridge. cc
+      - Get InputNode: The input node used to obtain the conversion operator. The node has unordered graph management.
+      - SetOutputNode: An operator management diagram for adding the operator of the first conversion.
+      - Related code :
+         - paddle/fluid/operators/ngraph/ngraph_bridge.h
+         - paddle/fluid/operators/ngraph/ngraph_bridge.cc
 
 nGraph compilation control and trigger method
 --------------------------------------------
