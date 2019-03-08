@@ -44,7 +44,7 @@ runtime::gpu::GPUTensor::GPUTensor(const ngraph::element::Type& element_type,
         m_allocated_buffer_pool = memory_pointer;
         m_custom_memory = true;
     }
-    else if(memory_pointer != nullptr)
+    else if (memory_pointer != nullptr)
     {
         throw ngraph_error("The pointer passed to GPUTensor is not a device pointer.");
     }
