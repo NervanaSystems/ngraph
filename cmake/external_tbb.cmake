@@ -19,7 +19,7 @@
 #------------------------------------------------------------------------------
 
 set(TBB_GIT_REPO_URL https://github.com/01org/tbb)
-set(NGRAPH_TBB_VERSION "2019_U3")
+set(NGRAPH_TBB_VERSION "2019_U4")
 
 if(NGRAPH_TBB_ENABLE)
     set(TBB_ROOT ${CMAKE_CURRENT_BINARY_DIR}/tbb/tbb-src)
@@ -35,14 +35,12 @@ if(NGRAPH_TBB_ENABLE)
         tbb_build(TBB_ROOT ${TBB_ROOT}
                   MAKE_ARGS tbb_build_dir=${CMAKE_CURRENT_BINARY_DIR}/tbb_build
                             tbb_build_prefix=tbb
-                            stdver=c++11
                             SDKROOT=${CMAKE_OSX_SYSROOT}
                   CONFIG_DIR TBB_DIR)
     else()
         tbb_build(TBB_ROOT ${TBB_ROOT}
                   MAKE_ARGS tbb_build_dir=${CMAKE_CURRENT_BINARY_DIR}/tbb_build
                             tbb_build_prefix=tbb
-                            stdver=c++11
                   CONFIG_DIR TBB_DIR)
     endif()
     find_package(TBB REQUIRED tbb)
