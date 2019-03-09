@@ -140,7 +140,7 @@ option(NGRAPH_GPUH_ENABLE "Control the building of the Hybrid GPU backend" FALSE
 option(NGRAPH_GENERIC_CPU_ENABLE "Enable build nGraph for generic CPU backend" FALSE)
 option(NGRAPH_DEBUG_ENABLE "Enable output for NGRAPH_DEBUG statements" FALSE)
 option(NGRAPH_ONNX_IMPORT_ENABLE "Enable ONNX importer" FALSE)
-option(NGRAPH_DEX_ONLY "Build CPU DEX without codegen" FALSE)
+option(NGRAPH_DEX_ONLY "Build CPU DEX without codegen" TRUE)
 option(NGRAPH_CODE_COVERAGE_ENABLE "Enable code coverage data collection" FALSE)
 option(NGRAPH_LIB_VERSIONING_ENABLE "Enable shared library versioning" FALSE)
 option(NGRAPH_PYTHON_BUILD_ENABLE "Enable build nGraph python package wheel" FALSE)
@@ -149,7 +149,7 @@ option(NGRAPH_DISTRIBUTED_ENABLE "Enable distributed training using MLSL/OpenMPI
 
 if (NGRAPH_CPU_ENABLE
         AND
-    ((NOT NGRAPH_GPU_ENABLE) AND (NOT NGRAPH_GPUH_ENABLE) 
+    ((NOT NGRAPH_GPU_ENABLE) AND (NOT NGRAPH_GPUH_ENABLE)
         AND (NOT NGRAPH_GENERIC_CPU_ENABLE) AND (NOT NGRAPH_INTELGPU_ENABLE))
    )
     set(NGRAPH_INTEL_CPU_ONLY_ENABLE ON)
