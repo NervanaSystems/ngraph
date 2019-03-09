@@ -231,23 +231,9 @@ namespace ngraph
                                              const Strides& filter_dilation,
                                              const Strides& stride,
                                              const CoordinateDiff& in_pad_below,
-                                             const CoordinateDiff& in_pad_above,
+                                             const CoordinateDiff& backprop_in_pad_above,
                                              const Strides& in_dilation)
             {
-                size_t spatial_dim_count = static_cast<size_t>(out_shape.size()) - 2;
-                CoordinateDiff backward_pad_above;
-                backward_pad_above.resize(spatial_dim_count);
-
-                for (size_t i = 0; i < spatial_dim_count; i++)
-                {
-                    backward_pad_above[i] =
-                        in_pad_above[i] -
-                        (in_pad_below[i] +
-                         (static_cast<ptrdiff_t>(in_shape[i + 2]) - 1) * in_dilation[i] +
-                         in_pad_above[i] - (filter_shape[i + 2] - 1) * filter_dilation[i]) %
-                            stride[i];
-                }
-
                 general_convolution(in,
                                     delta_out,
                                     delta_filter,
@@ -257,7 +243,7 @@ namespace ngraph
                                     filter_dilation,
                                     stride,
                                     in_pad_below,
-                                    backward_pad_above,
+                                    backprop_in_pad_above,
                                     in_dilation,
                                     1,
                                     0,
@@ -276,31 +262,10 @@ namespace ngraph
                                          const Shape& in_shape,
                                          const Strides& in_dilation,
                                          const Strides& filter_dilation,
-                                         const CoordinateDiff& in_pad_below,
-                                         const CoordinateDiff& in_pad_above,
+                                         const CoordinateDiff& backward_delta_out_pad_below,
+                                         const CoordinateDiff& backward_delta_out_pad_above,
                                          const Strides& stride)
             {
-                size_t spatial_dim_count = static_cast<size_t>(in_shape.size()) - 2;
-
-                CoordinateDiff backward_pad_below;
-                backward_pad_below.resize(spatial_dim_count);
-                CoordinateDiff backward_pad_above;
-                backward_pad_above.resize(spatial_dim_count);
-
-                for (size_t i = 0; i < spatial_dim_count; i++)
-                {
-                    backward_pad_below[i] =
-                        (static_cast<ptrdiff_t>(filter_shape[i + 2]) - 1) * filter_dilation[i] -
-                        in_pad_below[i];
-                    backward_pad_above[i] =
-                        (static_cast<ptrdiff_t>(filter_shape[i + 2]) - 1) * filter_dilation[i] +
-                        ((in_pad_below[i] + ((in_shape[i + 2]) - 1) * in_dilation[i] +
-                          in_pad_above[i] -
-                          (static_cast<ptrdiff_t>(filter_shape[i + 2]) - 1) * filter_dilation[i]) %
-                         stride[i]) -
-                        in_pad_above[i];
-                }
-
                 // Note that we only reverse the spatial dimensions here (loop
                 // starts at 2)
                 std::vector<T> reversed(shape_size(filter_shape));
@@ -319,8 +284,8 @@ namespace ngraph
                                     in_shape,
                                     in_dilation,
                                     filter_dilation,
-                                    backward_pad_below,
-                                    backward_pad_above,
+                                    backward_delta_out_pad_below,
+                                    backward_delta_out_pad_above,
                                     stride,
                                     0,
                                     1,

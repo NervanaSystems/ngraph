@@ -220,9 +220,9 @@ namespace ngraph
                 return m_data_dilation_strides_forward;
             }
 
-            // Compute the pad_above value to be used if in a convolution
-            CoordinateDiff compute_backward_pad_above() const;
-            CoordinateDiff compute_backward_pad_below() const;
+            // Compute the pad_above values to be used if in a convolution
+            CoordinateDiff compute_backward_delta_out_pad_above() const;
+            CoordinateDiff compute_backward_delta_out_pad_below() const;
 
         protected:
             Shape m_data_batch_shape;
@@ -290,7 +290,7 @@ namespace ngraph
             }
 
             // Compute the pad_above value to be used if in a convolution
-            CoordinateDiff compute_backward_pad_above() const;
+            CoordinateDiff compute_backward_in_pad_above() const;
 
         protected:
             Shape m_filters_shape;

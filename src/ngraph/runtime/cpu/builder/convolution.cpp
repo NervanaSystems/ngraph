@@ -14,9 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/convolution.hpp"
-#include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/kernel/convolution.hpp"
+#include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
@@ -353,6 +352,10 @@ namespace ngraph
                     auto padding_above = convolution->get_padding_above_forward();
                     auto window_movement_strides =
                         convolution->get_window_movement_strides_forward();
+                    auto backward_delta_out_pad_below =
+                        convolution->compute_backward_delta_out_pad_below();
+                    auto backward_delta_out_pad_above =
+                        convolution->compute_backward_delta_out_pad_above();
 
                     auto functor = [&,
                                     kernel,
@@ -361,8 +364,8 @@ namespace ngraph
                                     in_shape,
                                     data_dilation_strides,
                                     window_dilation_strides,
-                                    padding_below,
-                                    padding_above,
+                                    backward_delta_out_pad_below,
+                                    backward_delta_out_pad_above,
                                     window_movement_strides](CPURuntimeContext* ctx,
                                                              CPUExecutionContext* ectx) {
                         kernel(arg1_tensor,
@@ -373,8 +376,8 @@ namespace ngraph
                                in_shape,
                                data_dilation_strides,
                                window_dilation_strides,
-                               padding_below,
-                               padding_above,
+                               backward_delta_out_pad_below,
+                               backward_delta_out_pad_above,
                                window_movement_strides);
                     };
                     functors.emplace_back(functor);
@@ -439,6 +442,8 @@ namespace ngraph
                     auto padding_below = convolution->get_padding_below_forward();
                     auto padding_above = convolution->get_padding_above_forward();
                     auto data_dilation_strides = convolution->get_data_dilation_strides_forward();
+                    CoordinateDiff backward_in_pad_above =
+                        convolution->compute_backward_in_pad_above();
 
                     auto functor = [&,
                                     kernel,
@@ -448,7 +453,7 @@ namespace ngraph
                                     window_dilation_strides,
                                     window_movement_strides,
                                     padding_below,
-                                    padding_above,
+                                    backward_in_pad_above,
                                     data_dilation_strides](CPURuntimeContext* ctx,
                                                            CPUExecutionContext* ectx) {
                         kernel(arg0_tensor,
@@ -460,7 +465,7 @@ namespace ngraph
                                window_movement_strides,
                                window_dilation_strides,
                                padding_below,
-                               padding_above,
+                               backward_in_pad_above,
                                data_dilation_strides);
                     };
                     functors.emplace_back(functor);

@@ -559,7 +559,6 @@ private:
         {
             const op::ConvolutionBackpropFilters* c =
                 static_cast<const op::ConvolutionBackpropFilters*>(&node);
-            CoordinateDiff backward_pad_above = c->compute_backward_pad_above();
             reference::convolution_backprop_filter<T>(
                 args[0]->get_data_ptr<const T>(), // input
                 args[1]->get_data_ptr<const T>(), // delta_convolution_output
@@ -570,7 +569,7 @@ private:
                 c->get_window_dilation_strides_forward(),
                 c->get_window_movement_strides_forward(),
                 c->get_padding_below_forward(),
-                c->get_padding_above_forward(),
+                c->compute_backward_in_pad_above(),
                 c->get_data_dilation_strides_forward());
             break;
         }
@@ -587,8 +586,13 @@ private:
                                                   c->get_data_batch_shape(),
                                                   c->get_data_dilation_strides_forward(),
                                                   c->get_window_dilation_strides_forward(),
+#if 0
                                                   c->get_padding_below_forward(),
                                                   c->get_padding_above_forward(),
+#endif
+                                                  c->compute_backward_delta_out_pad_below(),
+                                                  c->compute_backward_delta_out_pad_above(),
+
                                                   c->get_window_movement_strides_forward());
             break;
         }

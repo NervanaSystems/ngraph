@@ -400,6 +400,52 @@ shared_ptr<Node> op::ConvolutionBackpropData::copy_with_new_args(const NodeVecto
                                                 m_data_dilation_strides_forward);
 }
 
+CoordinateDiff op::ConvolutionBackpropData::compute_backward_delta_out_pad_below() const
+{
+    auto& in_shape = get_data_batch_shape();
+    auto& filter_dilation = get_window_dilation_strides_forward();
+    auto& filter_shape = get_input_shape(0);
+    auto& in_pad_below = get_padding_below_forward();
+    size_t spatial_dim_count = static_cast<size_t>(in_shape.size()) - 2;
+
+    CoordinateDiff backward_delta_out_pad_below;
+    backward_delta_out_pad_below.resize(spatial_dim_count);
+
+    for (size_t i = 0; i < spatial_dim_count; i++)
+    {
+        backward_delta_out_pad_below[i] =
+            (static_cast<ptrdiff_t>(filter_shape[i + 2]) - 1) * filter_dilation[i] -
+            in_pad_below[i];
+    }
+    return backward_delta_out_pad_below;
+}
+
+CoordinateDiff op::ConvolutionBackpropData::compute_backward_delta_out_pad_above() const
+{
+    auto& in_shape = get_data_batch_shape();
+    auto& filter_dilation = get_window_dilation_strides_forward();
+    auto& filter_shape = get_input_shape(0);
+    auto& in_pad_below = get_padding_below_forward();
+    auto& in_pad_above = get_padding_above_forward();
+    auto& in_dilation = get_data_dilation_strides_forward();
+    auto& stride = get_window_movement_strides_forward();
+    size_t spatial_dim_count = static_cast<size_t>(in_shape.size()) - 2;
+
+    CoordinateDiff backward_delta_out_pad_above;
+    backward_delta_out_pad_above.resize(spatial_dim_count);
+
+    for (size_t i = 0; i < spatial_dim_count; i++)
+    {
+        backward_delta_out_pad_above[i] =
+            (static_cast<ptrdiff_t>(filter_shape[i + 2]) - 1) * filter_dilation[i] +
+            ((in_pad_below[i] + ((in_shape[i + 2]) - 1) * in_dilation[i] + in_pad_above[i] -
+              (static_cast<ptrdiff_t>(filter_shape[i + 2]) - 1) * filter_dilation[i]) %
+             stride[i]) -
+            in_pad_above[i];
+    }
+    return backward_delta_out_pad_above;
+}
+
 op::ConvolutionBackpropFilters::ConvolutionBackpropFilters(
     const shared_ptr<Node>& data_batch,
     const Shape& filters_shape,
@@ -498,7 +544,7 @@ shared_ptr<Node>
                                                    m_data_dilation_strides_forward);
 }
 
-CoordinateDiff op::ConvolutionBackpropFilters::compute_backward_pad_above() const
+CoordinateDiff op::ConvolutionBackpropFilters::compute_backward_in_pad_above() const
 {
     const auto& in_shape = get_input_shape(0);
     const auto& out_shape = get_input_shape(1);
@@ -509,18 +555,18 @@ CoordinateDiff op::ConvolutionBackpropFilters::compute_backward_pad_above() cons
     const auto& filter_dilation = get_window_dilation_strides_forward();
     const auto& stride = get_window_movement_strides_forward();
     size_t spatial_dim_count = static_cast<size_t>(out_shape.size()) - 2;
-    CoordinateDiff backward_pad_above;
-    backward_pad_above.resize(spatial_dim_count);
+    CoordinateDiff backward_in_pad_above;
+    backward_in_pad_above.resize(spatial_dim_count);
 
     for (size_t i = 0; i < spatial_dim_count; i++)
     {
-        backward_pad_above[i] =
+        backward_in_pad_above[i] =
             in_pad_above[i] -
             (in_pad_below[i] + (static_cast<ptrdiff_t>(in_shape[i + 2]) - 1) * in_dilation[i] +
              in_pad_above[i] - (filter_shape[i + 2] - 1) * filter_dilation[i]) %
                 stride[i];
     }
-    return backward_pad_above;
+    return backward_in_pad_above;
 }
 
 //
