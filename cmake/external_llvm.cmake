@@ -16,7 +16,7 @@
 
 include(ExternalProject)
 
-set(NGRAPH_LLVM_VERSION 7.0.1)
+set(NGRAPH_LLVM_VERSION 8.0.0)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     if (DEFINED NGRAPH_USE_CXX_ABI)
@@ -27,8 +27,10 @@ endif()
 ExternalProject_Add(
     ext_clang
     PREFIX clang
-    URL http://releases.llvm.org/${NGRAPH_LLVM_VERSION}/cfe-${NGRAPH_LLVM_VERSION}.src.tar.xz
-    URL_HASH SHA1=427e12762836d808583fb4149c033d02de0a8db2
+    #URL http://releases.llvm.org/${NGRAPH_LLVM_VERSION}/cfe-${NGRAPH_LLVM_VERSION}.src.tar.xz
+    #URL_HASH SHA1=427e12762836d808583fb4149c033d02de0a8db2
+    URL http://prereleases.llvm.org/8.0.0/rc4/cfe-8.0.0rc4.src.tar.xz
+    URL_HASH SHA1=a1660897fecc33e129df116279341b8fe2018f46
     DOWNLOAD_NO_PROGRESS TRUE
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
@@ -43,8 +45,10 @@ set(CLANG_SOURCE_DIR ${SOURCE_DIR})
 ExternalProject_Add(
     ext_openmp
     PREFIX openmp
-    URL http://releases.llvm.org/${NGRAPH_LLVM_VERSION}/openmp-${NGRAPH_LLVM_VERSION}.src.tar.xz
-    URL_HASH SHA1=3b931dcafbe6e621c9d99617235fd63f222c2ba2
+    #URL http://releases.llvm.org/${NGRAPH_LLVM_VERSION}/openmp-${NGRAPH_LLVM_VERSION}.src.tar.xz
+    #URL_HASH SHA1=3b931dcafbe6e621c9d99617235fd63f222c2ba2
+    URL http://prereleases.llvm.org/8.0.0/rc4/openmp-8.0.0rc4.src.tar.xz
+    URL_HASH SHA1=8297ec60b923ece86cb73869fcd1a3a373f41e1f
     DOWNLOAD_NO_PROGRESS TRUE
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
@@ -73,8 +77,10 @@ ExternalProject_Add(
     ext_llvm
     PREFIX llvm
     DEPENDS ${LLVM_DEPENDS}
-    URL http://releases.llvm.org/${NGRAPH_LLVM_VERSION}/llvm-${NGRAPH_LLVM_VERSION}.src.tar.xz
-    URL_HASH SHA1=f97632fcc3186eb0d396492ef8acfc807648580f
+    #URL http://releases.llvm.org/${NGRAPH_LLVM_VERSION}/llvm-${NGRAPH_LLVM_VERSION}.src.tar.xz
+    #URL_HASH SHA1=f97632fcc3186eb0d396492ef8acfc807648580f
+    URL http://prereleases.llvm.org/8.0.0/rc4/llvm-8.0.0rc4.src.tar.xz
+    URL_HASH SHA1=8486b2a8e136166fe50cbcdccec1ae57a48b7d3c
     DOWNLOAD_NO_PROGRESS TRUE
     CMAKE_GENERATOR ${CMAKE_GENERATOR}
     CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
