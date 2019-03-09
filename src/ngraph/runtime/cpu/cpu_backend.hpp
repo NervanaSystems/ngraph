@@ -35,6 +35,8 @@ namespace ngraph
             class CPU_BACKEND_API CPU_Backend : public runtime::Backend
             {
             public:
+                CPU_Backend(ngraph::pass::PassConfig& pass_config);
+
                 std::shared_ptr<CPU_CallFrame>
                     make_call_frame(const std::shared_ptr<CPU_ExternalFunction>& external_function,
                                     ngraph::pass::PassConfig& pass_config);
@@ -65,6 +67,8 @@ namespace ngraph
             private:
                 std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<Executable>>
                     m_exec_map;
+
+                ngraph::pass::PassConfig m_pass_config;
             };
 
             class CPU_BACKEND_API CPU_Executable : public runtime::Executable

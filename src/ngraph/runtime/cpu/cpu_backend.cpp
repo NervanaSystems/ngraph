@@ -32,7 +32,18 @@ extern "C" CPU_BACKEND_API runtime::Backend* new_backend(const char* configurati
 {
     // Force TBB to link to the backend
     tbb::TBB_runtime_interface_version();
-    return new runtime::cpu::CPU_Backend();
+
+    string config = configuration_string;
+    if (config == "CPU_CODEGEN")
+    {
+        ngraph::pass::PassConfig pass_config{ngraph::pass::CompilationMode::CODEGEN};
+        return new runtime::cpu::CPU_Backend(pass_config);
+    }
+    else
+    {
+        ngraph::pass::PassConfig pass_config{};
+        return new runtime::cpu::CPU_Backend(pass_config);
+    }
 }
 
 extern "C" CPU_BACKEND_API void delete_backend(runtime::Backend* backend)
@@ -48,6 +59,11 @@ namespace
         CPUStaticInit() { runtime::BackendManager::register_backend("CPU", new_backend); }
         ~CPUStaticInit() {}
     } s_cpu_static_init;
+}
+
+runtime::cpu::CPU_Backend::CPU_Backend(ngraph::pass::PassConfig& pass_config)
+    : m_pass_config{pass_config}
+{
 }
 
 shared_ptr<runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_Backend::make_call_frame(
@@ -72,8 +88,7 @@ shared_ptr<runtime::Tensor> runtime::cpu::CPU_Backend::create_tensor(
 shared_ptr<runtime::Executable>
     runtime::cpu::CPU_Backend::compile(shared_ptr<Function> func, bool performance_counters_enabled)
 {
-    ngraph::pass::PassConfig pass_config;
-    return compile(func, pass_config, performance_counters_enabled);
+    return compile(func, m_pass_config, performance_counters_enabled);
 }
 
 shared_ptr<runtime::Executable>
