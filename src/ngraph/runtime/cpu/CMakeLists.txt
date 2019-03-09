@@ -198,8 +198,8 @@ if (NGRAPH_CPU_ENABLE)
         add_custom_command(TARGET cpu_backend POST_BUILD
                      COMMAND ${CMAKE_COMMAND} -E
                          copy
-                            ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libcpu_backend.so
-                            ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libcpu_codegen_backend.so)
+                            ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_SHARED_LIBRARY_PREFIX}cpu_backend${CMAKE_SHARED_LIBRARY_SUFFIX}
+                            ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_SHARED_LIBRARY_PREFIX}cpu_codegen_backend${CMAKE_SHARED_LIBRARY_SUFFIX})
     endif()
     target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)
     if (NOT APPLE AND NOT MSVS)
