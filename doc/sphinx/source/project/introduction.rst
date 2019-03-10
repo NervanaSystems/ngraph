@@ -17,9 +17,11 @@ However, kernel libraries have three main problems:
 2. Framework integration of kernel libraries does not scale
 3. There are too many kernels to write and they require expert knowledge 
 
+nGraph Compiler stack is designed to address the first and the second problems. nGraph applies graph level optimizations by taking computational graph from deep learning frameworks and reconstructing it with nGraph IR (Intermediate Representations). The nGraph IR centralizes computational graphs from various frameworks and provides a unified way to connect backends for targetted hardware. To address the third problem, nGraph Compiler stack is integrated with PlaidML to generate code in LLVM, OpenCL, OpenGL, Cuda and Metal with low level optimizations automatically applied. 
 
+The following three sections explore the aformentioned three problems in more detail. 
 
-Kernel libraries do not support graph-level optimizations
+1. Absence of graph level optimization
 ---------------------------------------------------------
 
 A framework designed for training using GPUs requires integration with a kernel 
