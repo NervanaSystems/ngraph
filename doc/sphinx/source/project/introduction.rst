@@ -13,9 +13,9 @@ The current state of art software solution for speeding up deep learning computa
 
 However, kernel libraries have three main problems: 
 
-   1. Kernel libraries do not support graph level optimizations
-   2. Framework integration of kernel libraries does not scale
-   3. There are too many kernels to write and they require expert knowledge 
+1. Kernel libraries do not support graph level optimizations
+2. Framework integration of kernel libraries does not scale
+3. There are too many kernels to write and they require expert knowledge 
 
 
 
