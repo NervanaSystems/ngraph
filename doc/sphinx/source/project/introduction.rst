@@ -46,7 +46,7 @@ significant work for what will ultimately be a brittle setup that is enormously
 expensive to maintain.    
 .. _figure-B:
 
-.. figure:: ../graphics/intro_kernel_to_fw.png
+.. figure:: ../graphics/intro_kernel_to_fw_accent.png
    :width: 555px
    :alt: 
 
