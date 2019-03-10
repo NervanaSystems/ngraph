@@ -32,7 +32,7 @@ The diagram below illustrates a simple example of how a deep learning framework 
    :width: 555px
    :alt: 
 
-The graph is constructed to execute (A+B)*C, but we can further optimize the graph to be represented as A*C. From the first graph shown on the left, the operation on the constant B be can be computed at the compile time (known as constant folding), and the graph can be further simplified to the one on the right because the constant has value of zero. Without such graph level optimization, a deep learning framework with kernel libraries will compute all the operations, and the resulting computation will be sub-optimal. 
+The graph is constructed to execute (A+B)*C, but we can further optimize the graph to be represented as A*C. From the first graph shown on the left, the operation on the constant B be can be computed at the compile time (known as constant folding), and the graph can be further simplified to the one on the right because the constant has value of zero. Without such graph level optimizations, a deep learning framework with a kernel library will compute all operations, and the resulting computation will be sub-optimal. 
 
 2. Reduced scalability 
 -------------------------
