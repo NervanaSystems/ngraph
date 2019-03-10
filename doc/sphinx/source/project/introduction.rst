@@ -37,7 +37,7 @@ The graph is constructed to execute (A+B)*C, but we can further optimize the gra
 2. Reduced scalability 
 -------------------------
 
-Integrating kernel libraries to frameworks is increasingly becoming non-trivial due growing number of new deep learning accelerators. For each new deep learning accelator, a kernel library must be developed by team of experts which is labor intensive. This labor intensive work is further amplified by the number of frameworks. 
+Integrating kernel libraries to frameworks is increasingly becoming non-trivial due growing number of new deep learning accelerators. For each new deep learning accelator, a kernel library must be developed by team of experts which is labor intensive. This labor intensive work is further amplified by the number of frameworks as indicated in the following diagram with orange lines. 
 
 Each individual framework must be manually integrated with each hardware-specific kernel library. Each integration 
 is unique to the framework and its set of deep learning operators, its view on 
@@ -50,7 +50,8 @@ expensive to maintain.
    :width: 555px
    :alt: 
 
-
+3. Increasing number of kernels 
+---------------------------------------------------------
 
 A typical network is constructed using some kind of language-based API, which 
 translates the network or :abbr:`DL (Deep Learning)` model (statically or 
