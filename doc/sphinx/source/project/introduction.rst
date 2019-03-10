@@ -37,7 +37,7 @@ The graph is constructed to execute (A+B)*C, but we can further optimize the gra
 2. Reduced scalability 
 -------------------------
 
-Integrating kernel libraries to frameworks is increasingly becoming non-trivial due growing number of new deep learning accelerators. For each new deep learning accelator, a kernel library must be developed by team of experts which is labor intensive. This labor intensive work is further amplified by the number of frameworks as indicated in the following diagram with orange lines. 
+Integrating kernel libraries to frameworks is increasingly becoming non-trivial due to growing number of new deep learning accelerators. For each new deep learning accelator, a kernel library must be developed by team of experts which is labor intensive. This labor intensive work is further amplified by the number of frameworks as indicated in the following diagram with orange lines. 
 
 Each individual framework must be manually integrated with each hardware-specific kernel library. Each integration 
 is unique to the framework and its set of deep learning operators, its view on 
@@ -54,7 +54,7 @@ expensive to maintain.
 3. Increasing number of kernels 
 ---------------------------------------------------------
 
-The number of kernels 
+As mentioned in the pervious section, kernel libraries need to be integrated with multiple deep learning frameworks, and this arduous task becomes even harder due to increased numbers of required kernels for achieving optimial performance. The number of required kernels is product of number of chip designs, data types, operations, and the cardinality of each parameter for each operation. In the past, the number of required kernels was limited, but as the AI research and industry rapidly develops, 
 
 .. _figure-C:
 
@@ -64,10 +64,7 @@ The number of kernels
 
 
 
-   Figure F: The number of kernels necessary to achieve optimal performance is 
-   bounded by the product of the number of chip designs one wishes to support, 
-   the number of data types supported, the number of operations, and the 
-   cardinality of each parameter for each operation.
+  
 
 In the past, this upper bound was quite limited; however, since the industry is 
 shifting toward a more diverse future in terms of deep learning hardware, the 
