@@ -17,12 +17,15 @@ However, kernel libraries have three main problems:
 2. Framework integration of kernel libraries does not scale
 3. There are too many kernels to write and they require expert knowledge 
 
-nGraph Compiler stack is designed to address the first and the second problems. nGraph applies graph level optimizations by taking computational graph from deep learning frameworks and reconstructing it with nGraph IR (Intermediate Representations). The nGraph IR centralizes computational graphs from various frameworks and provides a unified way to connect backends for targetted hardware. To address the third problem, nGraph Compiler stack is integrated with PlaidML to generate code in LLVM, OpenCL, OpenGL, Cuda and Metal with low level optimizations automatically applied. 
+nGraph Compiler stack is designed to address the first two problems. nGraph applies graph level optimizations by taking computational graph from deep learning frameworks and reconstructing it with nGraph IR (Intermediate Representations). nGraph IR centralizes computational graphs from various frameworks and provides a unified way to connect backends for targetted hardwares. To address the third problem, nGraph Compiler stack is integrated with PlaidML to generate code in LLVM, OpenCL, OpenGL, Cuda and Metal with low level optimizations automatically applied. 
 
 The following three sections explore the aformentioned three problems in more detail. 
 
 1. Absence of graph level optimization
 ---------------------------------------------------------
+
+The diagram below illustrates a simple example of how framewrok integrated with a kernel library can run each operation in a graph optimally, but the graph itself may not be optimial. The original graph on the fle 
+
 
 A framework designed for training using GPUs requires integration with a kernel 
 library unique to that vendor's hardware. For example, after integration, a 
@@ -34,33 +37,6 @@ the graph itself within any larger :term:`NN` won't be optimal.
 .. figure:: ../graphics/framework-to-kernel-lib.png
    :width: 555px
    :alt: 
-
-   Figure A: Lack of graph-level optimization makes framework-to-kernel library
-   integration enormously inefficient. The computation graph above represents 
-   the computation: "A plus B times C".
-
-
-.. _figure-B:
-
-.. figure:: ../graphics/framework-to-graph-opt.png
-   :width: 555px
-   :alt: 
-
-   Figure B: Notice that an operation on the constant B (in this case a ``Broadcast``) 
-   can be done at compile time. This is an example of constant folding, and it 
-   is not available to a device-based kernel library.   
-
-
-.. _figure-C:
-
-.. figure:: ../graphics/ngraph-algebraic-simp.png
-   :width: 555px
-   :alt: 
-
-   Figure C: Finally notice that the constant has value "zero" thus the add is an 
-   *identity* operation and can be eliminated. This is an example of **Algebraic 
-   simplification**, and it is not available to a device-based kernel library.
-
 
 After the two graph-level optimizations above (**Algebraic Simplification** and 
 **Constant Folding**),  we now have an optimal graph: A times C. Again, kernel 
