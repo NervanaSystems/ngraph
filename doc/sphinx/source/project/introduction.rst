@@ -4,10 +4,20 @@
 Introduction
 ############
 
-Accelerating deep learning performance is critical for further development of Artificial Intelligence (AI). Deep learning models & corresponding data set sizes are increasing rapidly, and deployment of scalable AI solution is challenging. Currently, there are two general approaches to advancing deep learning performance. First approach is to design hardware solutions dedicated for deep learning computation. Exisiting large silicon companies such as Intel and deep learning hardware startups are actively developing ASICs (Application Specific Integrated Circuit) for speeding up deep learning performance for training & inference. Second approach is to deliever performance via software optimization. nGraph Compiler stack not only aims to provide software acceleration for the upcoming deep learning ASICs but also to unlock massive performance boost for exisiting hardwares such as CPUs and GPUs. 
+Accelerating deep learning performance is critical for further development of Artificial Intelligence (AI). Deep learning models & corresponding data set sizes are increasing rapidly, and deployment of scalable AI solution is challenging. Currently, there are two general approaches to advancing deep learning performance. First approach is to design hardware solutions dedicated to deep learning computation. Exisiting large silicon companies including Intel and deep learning hardware startups are actively developing ASICs (Application Specific Integrated Circuit) for speeding up deep learning performance for training & inference. Second approach is to deliever performance via software optimization, and nGraph Compiler stack is our solution to the second apporach. We created nGraph compiler stack not only to provide software acceleration for the upcoming deep learning ASICs but also to unlock massive performance boost for exisiting hardware targets such as CPUs and GPUs. 
 
 Motivations
 ===========
+
+The current state of art software solution for speeding up deep learning computation is to integrate kernel libraries such as Intel MKL-DNN and NVidia's CuDNN into deep learning frameworks. These kernel libraries offer runtime performance boost on specific hardware targets through highly optimized kernels and operator level optimizations.
+
+However, kernel libraries have three main problems: 
+
+   1. Kernel libraries do not support graph level optimizations
+   2. Framework integration of kernel libraries does not scale
+   3. There are too many kernels to write and they require expert knowledge 
+
+
 
 Kernel libraries do not support graph-level optimizations
 ---------------------------------------------------------
