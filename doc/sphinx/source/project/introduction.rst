@@ -24,29 +24,17 @@ The following three sections explore the aformentioned three problems in more de
 1. Absence of graph level optimization
 ---------------------------------------------------------
 
-The diagram below illustrates a simple example of how framewrok integrated with a kernel library can run each operation in a graph optimally, but the graph itself may not be optimial. The original graph on the fle 
-
-
-A framework designed for training using GPUs requires integration with a kernel 
-library unique to that vendor's hardware. For example, after integration, a 
-kernel library can run operations that it is "familar" with optimally; however, 
-the graph itself within any larger :term:`NN` won't be optimal.
+The diagram below illustrates a simple example of how a deep learning framework integrated with a kernel library is capable of running each operation in a graph optimally, but the graph itself may not be optimial.  
 
 .. _figure-A:
 
-.. figure:: ../graphics/framework-to-kernel-lib.png
+.. figure:: ../graphics/intro_graph_optimization.png
    :width: 555px
    :alt: 
 
-After the two graph-level optimizations above (**Algebraic Simplification** and 
-**Constant Folding**),  we now have an optimal graph: A times C. Again, kernel 
-libraries do not support this type of optimization. Although each implementation 
-can be done individually, it will eventually yield an "exploding" number of 
-kernels the larger and more complex an :abbr:`NN (Neural Network)` becomes. For 
-some insight on why this happens, see the next section. 
+The graph is constructed to execute (A+B)*C, but we can further optimize the graph to be represented as A*C. From the first graph shown on the left, the operation on the constant B be can be computed at the compile time (known as constant folding), and the graph can be further simplified to the one on the right as the constant has value of zero. Without such graph level optimization, a deep learning framework with kernel libraries will compute all the operations, and the resulting computation will be sub-optimal. 
 
-
-Too Many Kernels to write
+2. Reduced scalability 
 -------------------------
 
 A typical network is constructed using some kind of language-based API, which 
