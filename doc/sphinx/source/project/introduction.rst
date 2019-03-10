@@ -4,20 +4,7 @@
 Introduction
 ############
 
-The nGraph Compiler stack provides industry-standard reference and implementation 
-guidelines for working with various :abbr:`Deep Learning (DL)` (DL) models and 
-optimizing an :abbr:`Artificial Neural Network (ANN)` (often abbreviated :term:`NN`) 
-to run graph-based computations for training, inference, testing, or validation.  
-Because today's NNs make use of many custom-purpose devices (FPGAs, GPUs, CPUs, 
-and custom silicon), having such a standard simplifies what would otherwise be 
-an enormously complex and difficult-to-scale pipeline (:ref:`Figure C <figure-C>`) 
-from "training with your favorite framework using GPUs" (:ref:`Figure D <figure-D>`), 
-to deploying that (now) pre-trained model in a datacenter or production 
-environment, where infrastructure owners or software developers renting anything 
-in a datacenter ought to be mutually concerned with **efficiency per-watt**, to 
-keep costs in check.
-
-So what exactly are the motivations behind the nGraph Compiler stack? 
+Accelerating deep learning performance is critical for further development of Artificial Intelligence (AI). Deep learning models & corresponding data set sizes are increasing rapidly, and deployment of scalable AI solution is challenging. Currently, there are two general approaches to advancing deep learning performance. First approach is to design hardware solutions dedicated for deep learning computation. Exisiting large silicon companies such as Intel and deep learning hardware startups are actively developing ASICs (Application Specific Integrated Circuit) for speeding up deep learning performance for training & inference. Second approach is to deliever performance via software optimization. nGraph Compiler stack not only aims to provide software acceleration for the upcoming deep learning ASICs but also to unlock massive performance boost for exisiting hardwares such as CPUs and GPUs. 
 
 Motivations
 ===========
