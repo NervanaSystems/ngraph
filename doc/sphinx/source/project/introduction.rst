@@ -43,7 +43,8 @@ Each individual framework must be manually integrated with each hardware-specifi
 is unique to the framework and its set of deep learning operators, its view on 
 memory layout, its feature set, etc. Each of these connections, then, represents 
 significant work for what will ultimately be a brittle setup that is enormously 
-expensive to maintain.    
+expensive to maintain.  
+
 .. _figure-B:
 
 .. figure:: ../graphics/intro_kernel_to_fw_accent.png
