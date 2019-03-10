@@ -85,22 +85,6 @@ hardware coverage and optimization automatically. Any hardware that supports
 LLVM, OpenCL, OpenGL, CUDA or Metal can be supported automatically with PlaidML 
 and nGraph.  
 
-.. _figure-G:
-
-.. figure:: ../graphics/graph-compilers-at-a-glance.png
-   :width: 700px
-   :alt: Overview of various graph and tensor compilers.
-
-   Figure G: Overview of various graph and tensor compilers.
-
-
-.. _figure-H:
-
-.. figure:: ../graphics/tensor-compilers-at-a-glance.png
-   :width: 700px
-   :alt: A closer look at tensor compilers.
-
-   Figure H: A closer look at tensor compilers.
 
 
 Other notable efforts
