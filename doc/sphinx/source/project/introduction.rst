@@ -32,10 +32,25 @@ The diagram below illustrates a simple example of how a deep learning framework 
    :width: 555px
    :alt: 
 
-The graph is constructed to execute (A+B)*C, but we can further optimize the graph to be represented as A*C. From the first graph shown on the left, the operation on the constant B be can be computed at the compile time (known as constant folding), and the graph can be further simplified to the one on the right as the constant has value of zero. Without such graph level optimization, a deep learning framework with kernel libraries will compute all the operations, and the resulting computation will be sub-optimal. 
+The graph is constructed to execute (A+B)*C, but we can further optimize the graph to be represented as A*C. From the first graph shown on the left, the operation on the constant B be can be computed at the compile time (known as constant folding), and the graph can be further simplified to the one on the right because the constant has value of zero. Without such graph level optimization, a deep learning framework with kernel libraries will compute all the operations, and the resulting computation will be sub-optimal. 
 
 2. Reduced scalability 
 -------------------------
+
+Integrating kernel libraries to frameworks is increasingly becoming non-trivial due growing number of new deep learning accelerators. For each new deep learning accelator, a kernel library must be developed by team of experts which is labor intensive. This labor intensive work is further amplified by the number of frameworks. 
+
+Each individual framework must be manually integrated with each hardware-specific kernel library. Each integration 
+is unique to the framework and its set of deep learning operators, its view on 
+memory layout, its feature set, etc. Each of these connections, then, represents 
+significant work for what will ultimately be a brittle setup that is enormously 
+expensive to maintain.    
+.. _figure-B:
+
+.. figure:: ../graphics/intro_kernel_to_fw.png
+   :width: 555px
+   :alt: 
+
+
 
 A typical network is constructed using some kind of language-based API, which 
 translates the network or :abbr:`DL (Deep Learning)` model (statically or 
