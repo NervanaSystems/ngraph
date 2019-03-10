@@ -54,58 +54,15 @@ expensive to maintain.
 3. Increasing number of kernels 
 ---------------------------------------------------------
 
-A typical network is constructed using some kind of language-based API, which 
-translates the network or :abbr:`DL (Deep Learning)` model (statically or 
-dynamically) into serialized graphs. Those graphs can then passed through a 
-compilation process (the *Graph optimization or compilation* step in 
-*Figure D* below), where various graph-level optimizations, like constant folding 
-or fusion can happen. These processes require unique vendor-provided libraries 
-to communicate with a driver (possibly through OpenCL\*, CUDA\*, or SYCL\*), to 
-compile and execute an implementation (kernel) for a specific 
-:abbr:`Instruction Set Architecture (ISA)`, or :term:`ISA`.
+The number of kernels 
 
-Illustrated below is a simplified DL stack, showing relative complexity of 
-each component. Note that optimizing for any one on its own usually requires 
-engineering expertise that can be highly specialized to that component, and that 
-the terms have been simplified for illustrative purposes. 
+.. _figure-C:
 
-.. _figure-D:
+.. figure:: ../graphics/intro_kernels.png
+   :width: 555px
+   :alt: 
 
-.. figure:: ../graphics/components-dl-stack.png
-   :width: 700px
-   :alt: A simplified DL stack
 
-   Figure D: Components of a DL stack, simplified for illustrative purposes.
-
-There are many deep learning frameworks, each with its own strengths and user 
-bases. A setup that is common to many DL practitioners is shown in the 
-illustration below.
-
-.. _figure-E:
-
-.. figure:: ../graphics/a-common-stack.png
-   :width: 700px
-   :alt: A common implementation
-
-   Figure E: A commonly-implemented stack uses TensorFlow\* as the frontend. 
-   The input is either optimized via Grappler, or executed directly via TensorFlow. 
-   In either case, when targeting an Nvidia\* GPU, cuDNN is called to select an 
-   optimal kernel for the operation; cuDNN then relies on CUDA\* or direct access 
-   to run code on the target; in this toy example, the target is a V100.
-
-A natural result of this approach is that the framework-level integration of 
-kernel libraries does not scale. Rather, each individual framework must be 
-manually integrated with each hardware-specific kernel library. Each integration 
-is unique to the framework and its set of deep learning operators, its view on 
-memory layout, its feature set, etc. Each of these connections, then, represents 
-significant work for what will ultimately be a brittle setup that is enormously 
-expensive to maintain.    
-
-.. _figure-F:
-
-.. figure:: ../graphics/dl-current-state.png
-   :width: 700px
-   :alt: Scalability matters
 
    Figure F: The number of kernels necessary to achieve optimal performance is 
    bounded by the product of the number of chip designs one wishes to support, 
