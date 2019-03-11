@@ -4,20 +4,8 @@
 Introduction
 ############
 
-The nGraph Compiler stack provides industry-standard reference and implementation 
-guidelines for working with various :abbr:`Deep Learning (DL)` (DL) models and 
-optimizing an :abbr:`Artificial Neural Network (ANN)` (often abbreviated :term:`NN`) 
-to run graph-based computations for training, inference, testing, or validation.  
-Because today's NNs make use of many custom-purpose devices (FPGAs, GPUs, CPUs, 
-and custom silicon), having such a standard simplifies what would otherwise be 
-an enormously complex and difficult-to-scale pipeline (:ref:`Figure C <figure-C>`) 
-from "training with your favorite framework using GPUs" (:ref:`Figure D <figure-D>`), 
-to deploying that (now) pre-trained model in a datacenter or production 
-environment, where infrastructure owners or software developers renting anything 
-in a datacenter ought to be mutually concerned with **efficiency per-watt**, to 
-keep costs in check.
+Deep Learning (DL) computational performance is critical for scientists and engineers applying deep learning techniques to many challenges in healthcare, commerce, autonomous driving, and other domains. While they can leverage 
 
-So what exactly are the motivations behind the nGraph Compiler stack? 
 
 Motivations
 ===========
