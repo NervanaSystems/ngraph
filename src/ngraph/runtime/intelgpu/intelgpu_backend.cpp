@@ -1629,11 +1629,11 @@ shared_ptr<runtime::Executable>
             const shared_ptr<op::ConvolutionBackpropFilters> conv_op =
                 static_pointer_cast<op::ConvolutionBackpropFilters>(op);
 
-            const Strides& win_stride = conv_op->get_window_movement_strides_backward();
-            const CoordinateDiff& pad_below = conv_op->get_padding_below_backward();
-            const CoordinateDiff& pad_above = conv_op->get_padding_above_backward();
-            const Strides& win_dilation = conv_op->get_window_dilation_strides_backward();
-            const Strides& data_dilation = conv_op->get_data_dilation_strides_backward();
+            const Strides& win_stride = conv_op->get_window_dilation_strides_forward();
+            const CoordinateDiff& pad_below = conv_op->get_padding_below_forward();
+            CoordinateDiff pad_above = conv_op->compute_backward_in_pad_above();
+            const Strides& win_dilation = conv_op->get_window_movement_strides_forward();
+            const Strides& data_dilation = conv_op->get_data_dilation_strides_forward();
 
             if ((win_stride.size() > 2) || (win_stride.at(0) != 1) || (win_stride.at(1) != 1) ||
                 (pad_below.size() > 2) || (pad_above.size() > 2) || (data_dilation.size() > 2) ||
@@ -1648,10 +1648,10 @@ shared_ptr<runtime::Executable>
                                          get_output_name(op),
                                          get_output_shape(op),
                                          get_output_type(op),
-                                         conv_op->get_padding_below_backward(),
-                                         conv_op->get_window_movement_strides_backward(),
-                                         conv_op->get_window_dilation_strides_backward(),
-                                         conv_op->get_data_dilation_strides_backward(),
+                                         conv_op->get_padding_below_forward(),
+                                         win_stride,
+                                         win_dilation,
+                                         data_dilation,
                                          1,
                                          0,
                                          0,
@@ -1728,11 +1728,11 @@ shared_ptr<runtime::Executable>
 
             const shared_ptr<op::ConvolutionBackpropData> conv_op =
                 static_pointer_cast<op::ConvolutionBackpropData>(op);
-            const Strides& win_stride = conv_op->get_window_movement_strides_backward();
-            const CoordinateDiff& pad_below = conv_op->get_padding_below_backward();
-            const CoordinateDiff& pad_above = conv_op->get_padding_above_backward();
-            const Strides& win_dilation = conv_op->get_window_dilation_strides_backward();
-            const Strides& data_dilation = conv_op->get_data_dilation_strides_backward();
+            const Strides& win_stride = conv_op->get_data_dilation_strides_forward();
+            CoordinateDiff pad_below = conv_op->compute_backward_delta_out_pad_below();
+            CoordinateDiff pad_above = conv_op->compute_backward_delta_out_pad_above();
+            const Strides& win_dilation = conv_op->get_window_dilation_strides_forward();
+            const Strides& data_dilation = conv_op->get_window_movement_strides_forward();
 
             if ((win_stride.size() > 2) || (win_stride.at(0) != 1) || (win_stride.at(1) != 1) ||
                 (pad_below.size() > 2) || (pad_above.size() > 2) || (data_dilation.size() > 2) ||
@@ -1749,10 +1749,10 @@ shared_ptr<runtime::Executable>
                                          get_output_name(op),
                                          get_output_shape(op),
                                          get_output_type(op),
-                                         conv_op->get_padding_below_backward(),
-                                         conv_op->get_window_movement_strides_backward(),
-                                         conv_op->get_window_dilation_strides_backward(),
-                                         conv_op->get_data_dilation_strides_backward(),
+                                         pad_below,
+                                         win_stride,
+                                         win_dilation,
+                                         data_dilation,
                                          0,
                                          1,
                                          1,
