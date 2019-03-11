@@ -69,15 +69,17 @@ PlaidML was designed to address the expoential growth of kernel needs. It takes 
 Our solution: nGraph & PlaidML
 ===============================
 
-We developed nGraph and integrated it with PlaidML to accelerate deep learning performance. Furthermore, nGraph aims 
+We developed nGraph and integrated it with PlaidML to accelerate deep learning performance and address the scalabliity issue of kernel libraries. nGraph applies graph level optimization to deep learning computations and unifies computational graphs from deep learning frameworks with its IR to mitigate scalability problem for backends. 
 
-Integrating a framework on nGraph can be an attractive option for hardware 
-companies trying to design their own deep learning hardware or network architecture. 
-Framework integration is non-trivial amount of work, and nGraph automatically 
-does much of the heavy lifting. Furthermore, PlaidML can provide a wide range of 
-hardware coverage and optimization automatically. Any hardware that supports 
-LLVM, OpenCL, OpenGL, CUDA or Metal can be supported automatically with PlaidML 
-and nGraph.  
+PlaidML automatically applies low level deep learning performance optimizations in conjunction with nGraph's graph level optimizations. PlaidML also offers extensive support for many hardware targets with its ability to generate code in LLVM, OpenCL, OpenGL, CUDA, and Metal. 
+
+nGraph and PlaidML thus provide best of both worlds. If there is backend with exisiting kernel libraries, nGraph can readily support the target hardware because the backend only needs to support a few nGraph primitive ops. If the hardware supports one of the PlaidML supported code generation languages, it can be supported by specifying machine description. 
+
+This documentation provides technical details of nGraph's core functionality, and framework & backend integration. Creating a compiler stack like nGraph and PlaidML requires expert knowledge, and we hope nGraph and PlaidML will lift the burden for 
+1. Framework owners needing to support new hardware
+2. Data scientist and ML developers wishing to accelerate deep learning performance
+3. New deep learning accelerator developers creating end-to-end software stack from deep learning frameworks to their silicon.  
+
 
 
 
