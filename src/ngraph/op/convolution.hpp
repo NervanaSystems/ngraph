@@ -320,6 +320,6 @@ namespace ngraph
                                                  size_t output_channel_axis_filters,
                                                  size_t batch_axis_result,
                                                  size_t output_channel_axis_result);
-        } // namespace util
-    }     // namespace op
-} // namespace ngraph
+        }
+    }
+}
