@@ -58,14 +58,10 @@ set(NGRAPH_INCLUDE_PATH
 )
 
 if (APPLE)
-    # Suppress an OS X-specific warning.
-    if (POLICY CMP0042)
-        cmake_policy(SET CMP0042 NEW)
-    else()
-        set(MACOS_RPATH ON)
-    endif()
     # Enable CMAKE_<LANG>_COMPILER_ID AppleClang
     cmake_policy(SET CMP0025 NEW)
+    # Enable MACOS_RPATH by default.
+    cmake_policy(SET CMP0042 NEW)
 endif()
 
 project (ngraph LANGUAGES C CXX)
@@ -296,6 +292,7 @@ if (LINUX)
     else()
         set(CMAKE_INSTALL_RPATH "$ORIGIN")
     endif()
+    set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 endif()
 
 #-----------------------------------------------------------------------------------------------

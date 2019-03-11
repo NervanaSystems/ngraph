@@ -18,6 +18,10 @@ if(NOT NGRAPH_CODEGEN_ENABLE)
     return()
 endif()
 
+if(LINUX)
+    set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+endif()
+
 set (SRC
     main.cpp
     util.cpp
