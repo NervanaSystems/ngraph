@@ -60,7 +60,7 @@ As mentioned in the pervious section, kernel libraries need to be integrated wit
 
 .. _figure-C:
 
-.. figure:: ../graphics/intro_kernels.png
+.. figure:: ../graphics/intro_kernel_explosion.png
    :width: 555px
    :alt: 
 
