@@ -118,6 +118,18 @@ ExternalProject_Add(
 )
 
 ExternalProject_Get_Property(ext_llvm INSTALL_DIR)
+
+if(NGRAPH_MANYLINUX_ENABLE)
+    ExternalProject_Add_Step(
+        ext_llvm
+        CopyOMPRT
+        COMMAND ${CMAKE_COMMAND} -E copy ${INSTALL_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}omp${CMAKE_SHARED_LIBRARY_SUFFIX} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_SHARED_LIBRARY_PREFIX}omp${CMAKE_SHARED_LIBRARY_SUFFIX}
+        COMMAND ${CMAKE_COMMAND} -E copy ${INSTALL_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}iomp5${CMAKE_SHARED_LIBRARY_SUFFIX} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_SHARED_LIBRARY_PREFIX}iomp5${CMAKE_SHARED_LIBRARY_SUFFIX}
+        COMMENT "Copy OpenMP runtime libraries to ngraph build directory."
+        DEPENDEES install
+        )
+endif()
+
 set(LLVM_LINK_LIBS
     #[[
     # 5.0.2 does not have

@@ -6,7 +6,7 @@
 
 Basic build procedure on an Ubuntu system:
 
-    # apt-get install build-essential cmake clang-3.9 clang-format-3.9 git curl zlib1g zlib1g-dev libtinfo-dev unzip autoconf automake libtool patchelf
+    # apt-get install build-essential cmake clang-3.9 clang-format-3.9 git curl zlib1g zlib1g-dev libtinfo-dev unzip autoconf automake libtool
     # apt-get install python3 python3-dev python python-dev python-virtualenv
 
     $ git clone https://github.com/NervanaSystems/ngraph.git

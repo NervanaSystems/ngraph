@@ -14,10 +14,6 @@
 # limitations under the License.
 # ******************************************************************************
 
-if (NOT NGRAPH_MANYLINUX_ENABLE)
-    return()
-endif()
-
 #
 # OpenMP runtime bundled with mklml cannot run with GLIBC==2.5
 # For manylinux1, build the OpenMP runtime from LLVM and use it instead.
@@ -29,8 +25,8 @@ set(OMPRT_INSTALL_PREFIX ${EXTERNAL_PROJECTS_ROOT}/omprt)
 
 ExternalProject_Add(
     ext_omprt
-    URL http://releases.llvm.org/7.0.1/openmp-7.0.1.src.tar.xz
-    URL_HASH SHA1=3b931dcafbe6e621c9d99617235fd63f222c2ba2
+    URL http://prereleases.llvm.org/8.0.0/rc4/openmp-8.0.0rc4.src.tar.xz
+    URL_HASH SHA1=8297ec60b923ece86cb73869fcd1a3a373f41e1f
     DOWNLOAD_NO_PROGRESS TRUE
     CMAKE_ARGS
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
@@ -38,20 +34,16 @@ ExternalProject_Add(
             -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
             -DCMAKE_INSTALL_PREFIX=${OMPRT_INSTALL_PREFIX}
             -DLIBOMP_OMPT_SUPPORT=OFF
-    TMP_DIR "${OMPRT_INSTALL_PREFIX}/tmp"
-    STAMP_DIR "${OMPRT_INSTALL_PREFIX}/stamp"
-    DOWNLOAD_DIR "${OMPRT_INSTALL_PREFIX}/download"
-    SOURCE_DIR "${OMPRT_INSTALL_PREFIX}/src"
-    BINARY_DIR "${OMPRT_INSTALL_PREFIX}/build"
-    INSTALL_DIR "${OMPRT_INSTALL_PREFIX}"
     EXCLUDE_FROM_ALL TRUE
 )
+
+ExternalProject_Get_Property(ext_llvm INSTALL_DIR)
 
 ExternalProject_Add_Step(
     ext_omprt
     CopyOMPRT
-    COMMAND ${CMAKE_COMMAND} -E copy ${OMPRT_INSTALL_PREFIX}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}omp${CMAKE_SHARED_LIBRARY_SUFFIX} ${NGRAPH_BUILD_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}iomp5${CMAKE_SHARED_LIBRARY_SUFFIX}
-    COMMAND patchelf --set-soname "${CMAKE_SHARED_LIBRARY_PREFIX}iomp5${CMAKE_SHARED_LIBRARY_SUFFIX}" ${NGRAPH_BUILD_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}iomp5${CMAKE_SHARED_LIBRARY_SUFFIX}
+    COMMAND ${CMAKE_COMMAND} -E copy ${INSTALL_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}omp${CMAKE_SHARED_LIBRARY_SUFFIX} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_SHARED_LIBRARY_PREFIX}omp${CMAKE_SHARED_LIBRARY_SUFFIX}
+    COMMAND ${CMAKE_COMMAND} -E copy ${INSTALL_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}iomp5${CMAKE_SHARED_LIBRARY_SUFFIX} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_SHARED_LIBRARY_PREFIX}iomp5${CMAKE_SHARED_LIBRARY_SUFFIX}
     COMMENT "Copy OpenMP runtime libraries to ngraph build directory."
     DEPENDEES install
     )

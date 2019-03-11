@@ -226,14 +226,6 @@ class BuildExt(build_ext):
         for source in sharedlib_files:
             destination = self.build_lib + '/' + os.path.basename(source)
             copyfile(source, destination)
-            if 'libtbb' in destination:
-                continue
-            if sys.platform.startswith('linux'):
-                rpath_patch_cmd = 'patchelf --force-rpath --set-rpath \'$ORIGIN\' ' + destination
-            else:
-                rpath_patch_cmd = 'install_name_tool -id \"@rpath\" ' + destination
-            if os.system(rpath_patch_cmd) != 0:
-                raise Exception('Failed to patch rpath of %s' % destination)
 
     def build_extensions(self):
         """Override build_extension."""

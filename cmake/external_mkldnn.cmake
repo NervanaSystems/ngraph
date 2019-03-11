@@ -104,8 +104,13 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
         set(MKLDNN_FLAG "${MKLDNN_FLAG} -Wno-unused-result -Wno-unused-value")
     endif()
 endif()
+
 if(NGRAPH_MANYLINUX_ENABLE)
-    set(MKL_DEPENDS ext_omprt)
+    if(NGRAPH_CODEGEN_ENABLE)
+        set(MKL_DEPENDS ext_llvm)
+    else()
+        set(MKL_DEPENDS ext_omprt)
+    endif()
 endif()
 
 ExternalProject_Add(
