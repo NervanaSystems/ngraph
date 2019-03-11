@@ -109,14 +109,10 @@ namespace ngraph
         //===
         // OUTPUTS
         //===
-        // Deprecated
-        // Bopped outside backends.
         // TODO: Remove from unit tests.
-        std::deque<descriptor::Output>& get_outputs(); // TRIAGED (to be deprecated)
-        // Deprecated
-        // Bopped outside backends.
+        std::deque<descriptor::Output>& get_outputs() /*__attribute__((deprecated))*/;
         // TODO: Remove from unit tests.
-        const std::deque<descriptor::Output>& get_outputs() const; // TRIAGED (to be deprecated)
+        const std::deque<descriptor::Output>& get_outputs() const /*__attribute__((deprecated))*/;
 
         /// Returns the number of outputs from this node.
         size_t get_output_size() const;
@@ -136,23 +132,19 @@ namespace ngraph
         /// Returns the tensor of output i
         std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr(size_t i) const;
 
-        // DEPRECATED: Assumes only one output
+        // TO DEPRECATE: Assumes only one output
         /// Checks that there is exactly one output and returns its element type
         const element::Type& get_element_type() const;
 
-        // DEPRECATED: Assumes only one output
+        // TO DEPRECATE: Assumes only one output
         /// Checks that there is exactly one output and returns its shape
         const Shape& get_shape() const;
 
         //===
         // INPUTS
         //===
-        // TODO: Deprecate
-        // Bopped outside backends
-        std::deque<descriptor::Input>& get_inputs() { return m_inputs; } // TRIAGED (to be deprecated)
-        // TODO: Deprecate
-        // Bopped outside backends
-        const std::deque<descriptor::Input>& get_inputs() const { return m_inputs; } // TRIAGED (to be deprecated)
+        std::deque<descriptor::Input>& get_inputs() /*__attribute__((deprecated))*/ { return m_inputs; }
+        const std::deque<descriptor::Input>& get_inputs() const /*__attribute__((deprecated))*/ { return m_inputs; }
         /// Returns the number of inputs for the op
         size_t get_input_size() const;
 
@@ -172,10 +164,10 @@ namespace ngraph
         // virtual just because GetOutputElement wants to override...
         // TODO: make non-virtual
         // TODO: rename to something like "get_input_source_nodes", or deprecate.
-        virtual NodeVector get_arguments() const;
+        virtual NodeVector get_arguments() const __attribute__((deprecated));
 
         // TODO: rename to something like "get_input_source_node".
-        std::shared_ptr<Node> get_argument(size_t index) const;
+        std::shared_ptr<Node> get_argument(size_t index) const __attribute__((deprecated));
 
         NodeOutput get_input_source_output(size_t input_index) const;
 
@@ -192,20 +184,16 @@ namespace ngraph
         // TODO: vector for now but should it be unordered_set? set?
         std::vector<NodeInput> get_output_targets(size_t output_index) const;
 
-        // TO DEPRECATE
-        // Bopped outside of backends
         /// Returns the set of inputs using output i
-        const std::set<descriptor::Input*>& get_output_inputs(size_t i) const;
+        const std::set<descriptor::Input*>& get_output_inputs(size_t i) const /*__attribute__((deprecated))*/;
 
-        // TO DEPRECATE
         // Bopped outside of backends EXCEPT insert_node_between
         /// Get input descriptors that are connected from src to this
-        std::vector<descriptor::Input*> get_inputs_from(const std::shared_ptr<Node>& src);
+        std::vector<descriptor::Input*> get_inputs_from(const std::shared_ptr<Node>& src) /*__attribute__((deprecated))*/;
 
-        // TO DEPRECATE
         // Bopped outside of backends EXCEPT insert_node_between
         /// Get output descriptors that are connected from this to dst
-        std::vector<descriptor::Output*> get_outputs_to(const std::shared_ptr<Node>& dst);
+        std::vector<descriptor::Output*> get_outputs_to(const std::shared_ptr<Node>& dst) /*__attribute__((deprecated))*/;
 
         // TO DEPRECATE???
         /// Get all the nodes that use the current node
@@ -275,7 +263,7 @@ namespace ngraph
         // TODO(amprocte): make this a pure virtual once copy_with_new_args is sunsetted
         virtual std::shared_ptr<Node> copy_with_new_source_outputs(const std::vector<NodeOutput>& new_source_outputs) const;
 
-        // DEPRECATED
+        // TO DEPRECATE
         virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const = 0;
 
         //===

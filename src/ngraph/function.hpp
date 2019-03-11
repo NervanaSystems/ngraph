@@ -69,7 +69,7 @@ namespace ngraph
         /// Return a list of function's outputs
         const ResultVector& get_results() const { return m_results; }
         /// Check that there is a single result and return it.
-        std::shared_ptr<Node> get_result() const;
+        std::shared_ptr<Node> get_result() const __attribute__((deprecated));
 
         /// \brief Get the unique name of the function.
         /// \returns A const reference to the function's unique name.

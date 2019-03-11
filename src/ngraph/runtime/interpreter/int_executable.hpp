@@ -683,8 +683,8 @@ private:
         case OP_TYPEID::EmbeddingLookup:
         {
             const op::EmbeddingLookup* embed = static_cast<const op::EmbeddingLookup*>(&node);
-            auto type = embed->get_argument(0)->get_element_type();
-            size_t element_count = shape_size(embed->get_argument(0)->get_shape());
+            auto type = embed->get_input_element_type(0);
+            size_t element_count = shape_size(embed->get_input_shape(0));
 
             if (type == element::f32)
             {

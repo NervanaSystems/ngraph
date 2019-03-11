@@ -46,6 +46,13 @@ namespace ngraph
             return m_node->get_output_partial_shape(m_index);
         }
 
+        bool operator==(const NodeOutput& other) const { return m_node == other.m_node && m_index == other.m_index; }
+        bool operator!=(const NodeOutput& other) const { return m_node != other.m_node || m_index != other.m_index; }
+        bool operator<(const NodeOutput& other) const { return m_node < other.m_node || (m_node == other.m_node && m_index < other.m_index); }
+        bool operator>(const NodeOutput& other) const { return m_node > other.m_node || (m_node == other.m_node && m_index > other.m_index); }
+        bool operator<=(const NodeOutput& other) const { return m_node <= other.m_node || (m_node == other.m_node && m_index <= other.m_index); }
+        bool operator>=(const NodeOutput& other) const { return m_node >= other.m_node || (m_node == other.m_node && m_index >= other.m_index); }
+
     private:
         const std::shared_ptr<Node> m_node;
         const size_t m_index;

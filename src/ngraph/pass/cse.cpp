@@ -87,7 +87,7 @@ static bool cse_reshape(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
     auto reshape_a = std::static_pointer_cast<ngraph::op::Reshape>(a);
     auto reshape_b = std::static_pointer_cast<ngraph::op::Reshape>(b);
 
-    return (a->get_argument(0) == b->get_argument(0)) &&
+    return (a->get_input_source_output(0) == b->get_input_source_output(0)) &&
            (reshape_a->get_input_order() == reshape_b->get_input_order()) &&
            (reshape_a->get_output_shape() == reshape_b->get_output_shape());
 }
@@ -98,7 +98,7 @@ static bool cse_broadcast(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
     auto broadcast_a = std::static_pointer_cast<ngraph::op::Broadcast>(a);
     auto broadcast_b = std::static_pointer_cast<ngraph::op::Broadcast>(b);
 
-    return (a->get_argument(0) == b->get_argument(0)) &&
+    return (a->get_input_source_output(0) == b->get_input_source_output(0)) &&
            (broadcast_a->get_broadcast_axes() == broadcast_b->get_broadcast_axes()) &&
            (broadcast_a->get_broadcast_shape() == broadcast_b->get_broadcast_shape());
 }
@@ -106,15 +106,15 @@ static bool cse_unarywise(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
 {
     NGRAPH_DEBUG << "In cse_unarywise for " << a->get_name() << " and " << b->get_name();
 
-    return a->get_argument(0) == b->get_argument(0);
+    return a->get_input_source_output(0) == b->get_input_source_output(0);
 }
 
 static bool cse_binarywise(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
 {
     NGRAPH_DEBUG << "In cse_binary for " << a->get_name() << " and " << b->get_name();
 
-    return (a->get_argument(0) == b->get_argument(0) && a->get_argument(1) == b->get_argument(1)) ||
-           (a->get_argument(1) == b->get_argument(0) && a->get_argument(0) == b->get_argument(1));
+    return (a->get_input_source_output(0) == b->get_input_source_output(0) && a->get_input_source_output(1) == b->get_input_source_output(1)) ||
+           (a->get_input_source_output(1) == b->get_input_source_output(0) && a->get_input_source_output(0) == b->get_input_source_output(1));
 }
 
 static bool cse_reduction(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
@@ -124,7 +124,7 @@ static bool cse_reduction(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
     auto ar_a = std::static_pointer_cast<op::util::ArithmeticReduction>(a);
     auto ar_b = std::static_pointer_cast<op::util::ArithmeticReduction>(b);
 
-    return ar_a->get_argument(0) == ar_b->get_argument(0) &&
+    return ar_a->get_input_source_output(0) == ar_b->get_input_source_output(0) &&
            ar_a->get_reduction_axes() == ar_b->get_reduction_axes();
 }
 
