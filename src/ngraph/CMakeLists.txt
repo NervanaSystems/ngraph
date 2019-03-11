@@ -140,6 +140,8 @@ set (SRC
     op/experimental/quantized_max_pool.hpp
     op/experimental/shape_of.cpp
     op/experimental/shape_of.hpp
+    op/experimental/transpose.cpp
+    op/experimental/transpose.hpp
     op/floor.cpp
     op/floor.hpp
     op/get_output_element.cpp
