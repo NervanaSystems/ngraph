@@ -62,7 +62,7 @@ TEST(op, provenance_tag)
 // TODO: Need to mock Node, Op etc to be able to unit test functions like replace_node().
 // Mocking them directly isn't possible because google test requires methods to be
 // non-virtual. For non-virtual methods we will need to templatize these classes and call using
-// different template argument in testing vs production.
+// different template argument between testing and production.
 /*
 TEST(op, provenance_replace_node)
 {
