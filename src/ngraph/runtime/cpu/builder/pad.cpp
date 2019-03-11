@@ -121,7 +121,7 @@ namespace ngraph
                                           runtime::cpu::kernel::pad);
 
                     auto functor = [kernel, arg_shape, out_shape, padding_below, padding_above](
-                        const std::vector<void*> inputs, std::vector<void*> outputs) {
+                        const std::vector<void*>& inputs, std::vector<void*>& outputs) {
                         kernel(inputs[0],
                                outputs[0],
                                inputs[1],
@@ -147,8 +147,8 @@ namespace ngraph
                                     out_shape,
                                     padding_below,
                                     padding_above,
-                                    padding_interior](const std::vector<void*> inputs,
-                                                      std::vector<void*> outputs) {
+                                    padding_interior](const std::vector<void*>& inputs,
+                                                      std::vector<void*>& outputs) {
                         kernel(inputs[0],
                                inputs[1],
                                outputs[0],

@@ -174,7 +174,8 @@ namespace ngraph
                 }
                 else
                 {
-                    functor = [size](const std::vector<void*> inputs, std::vector<void*> outputs) {
+                    functor = [size](const std::vector<void*>& inputs,
+                                     std::vector<void*>& outputs) {
                         memcpy(outputs[0], inputs[0], size);
                     };
                 }

@@ -227,7 +227,7 @@ namespace ngraph
     // using the supplied input and output memory locations.
     // A BuildNodeExecutor returns a backend-specific NodeExecutor for a given Node type
     using NodeExecutorTy =
-        std::function<void(const std::vector<void*> inputs, std::vector<void*> outputs)>;
+        std::function<void(const std::vector<void*>& inputs, std::vector<void*>& outputs)>;
     using BuildNodeExecutor = std::function<NodeExecutorTy(const ngraph::Node*)>;
 
     using BuildNodeExecutorMap = std::unordered_map<std::type_index, BuildNodeExecutor>;

@@ -130,7 +130,7 @@ namespace ngraph
                 if (kernel)
                 {
                     functor = [kernel, arg_shape, input_order, result_shape](
-                        const std::vector<void*> inputs, std::vector<void*> outputs) {
+                        const std::vector<void*>& inputs, std::vector<void*>& outputs) {
                         kernel(inputs[0], outputs[0], arg_shape, input_order, result_shape, 0);
                     };
                 }
@@ -143,7 +143,8 @@ namespace ngraph
                 }
                 else if (skip_reshape)
                 {
-                    functor = [size](const std::vector<void*> inputs, std::vector<void*> outputs) {
+                    functor = [size](const std::vector<void*>& inputs,
+                                     std::vector<void*>& outputs) {
                         if (inputs[0] != outputs[0])
                         {
                             memcpy(outputs[0], inputs[0], size);
@@ -152,7 +153,8 @@ namespace ngraph
                 }
                 else
                 {
-                    functor = [size](const std::vector<void*> inputs, std::vector<void*> outputs) {
+                    functor = [size](const std::vector<void*>& inputs,
+                                     std::vector<void*>& outputs) {
                         memcpy(outputs[0], inputs[0], size);
                     };
                 }

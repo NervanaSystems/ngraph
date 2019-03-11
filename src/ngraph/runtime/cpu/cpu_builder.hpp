@@ -239,8 +239,8 @@
                                                                                                    \
     auto element_count = shape_size(node->get_shape());                                            \
                                                                                                    \
-    auto functor = [&, kernel, element_count](const std::vector<void*> inputs,                     \
-                                              std::vector<void*> outputs) {                        \
+    auto functor = [&, kernel, element_count](const std::vector<void*>& inputs,                    \
+                                              std::vector<void*>& outputs) {                       \
         kernel(inputs[0], outputs[0], element_count, 0);                                           \
     };                                                                                             \
     return functor;
@@ -252,8 +252,8 @@
                                                                                                    \
     auto element_count = shape_size(node->get_shape());                                            \
                                                                                                    \
-    auto functor = [&, kernel, element_count](const std::vector<void*> inputs,                     \
-                                              std::vector<void*> outputs) {                        \
+    auto functor = [&, kernel, element_count](const std::vector<void*>& inputs,                    \
+                                              std::vector<void*>& outputs) {                       \
         kernel(inputs[0], inputs[1], outputs[0], element_count, 0);                                \
     };                                                                                             \
     return functor;
