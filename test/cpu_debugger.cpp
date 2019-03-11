@@ -51,11 +51,6 @@ bool static is_codegen_mode()
 // These tests are for DEX mode only.
 TEST(debugger, add_breakpoint)
 {
-    if (is_codegen_mode())
-    {
-        //TODO change every return to skip when next gtest release comes out.
-        return;
-    }
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
@@ -84,6 +79,24 @@ TEST(debugger, add_breakpoint)
 
     dbg.add_breakpoint(neg);
     dbg.call({result}, {a, b});
+
+    if (is_codegen_mode())
+    {
+        try
+        {
+            ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
+        }
+        catch (const std::exception& e)
+        {
+            EXPECT_EQ(e.what(), std::string("_Map_base::at"));
+            return;
+        }
+        catch (...)
+        {
+            FAIL() << "Expected std::exception";
+        }
+    }
+
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn)), 777);
     dbg.step();
@@ -92,10 +105,6 @@ TEST(debugger, add_breakpoint)
 
 TEST(debugger, stepping)
 {
-    if (is_codegen_mode())
-    {
-        return;
-    }
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
@@ -124,6 +133,24 @@ TEST(debugger, stepping)
 
     dbg.add_breakpoint(add);
     dbg.call({result}, {a, b});
+
+    if (is_codegen_mode())
+    {
+        try
+        {
+            ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
+        }
+        catch (const std::exception& e)
+        {
+            EXPECT_EQ(e.what(), std::string("_Map_base::at"));
+            return;
+        }
+        catch (...)
+        {
+            FAIL() << "Expected std::exception";
+        }
+    }
+
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
     dbg.step();
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn)), 777);
@@ -133,10 +160,6 @@ TEST(debugger, stepping)
 
 TEST(debugger, delete_breakpoint)
 {
-    if (is_codegen_mode())
-    {
-        return;
-    }
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
@@ -170,6 +193,24 @@ TEST(debugger, delete_breakpoint)
     dbg.delete_breakpoint(absn);
     dbg.delete_breakpoint(neg);
     dbg.call({result}, {a, b});
+
+    if (is_codegen_mode())
+    {
+        try
+        {
+            ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
+        }
+        catch (const std::exception& e)
+        {
+            EXPECT_EQ(e.what(), std::string("_Map_base::at"));
+            return;
+        }
+        catch (...)
+        {
+            FAIL() << "Expected std::exception";
+        }
+    }
+
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn)), 777);
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg)), -777);
@@ -177,10 +218,6 @@ TEST(debugger, delete_breakpoint)
 
 TEST(debugger, while_stepping)
 {
-    if (is_codegen_mode())
-    {
-        return;
-    }
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
@@ -212,6 +249,24 @@ TEST(debugger, while_stepping)
     while (dbg.step())
     {
     };
+
+    if (is_codegen_mode())
+    {
+        try
+        {
+            ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
+        }
+        catch (const std::exception& e)
+        {
+            EXPECT_EQ(e.what(), std::string("_Map_base::at"));
+            return;
+        }
+        catch (...)
+        {
+            FAIL() << "Expected std::exception";
+        }
+    }
+
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn)), 777);
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg)), -777);
@@ -219,10 +274,6 @@ TEST(debugger, while_stepping)
 
 TEST(debugger, resume)
 {
-    if (is_codegen_mode())
-    {
-        return;
-    }
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
@@ -251,6 +302,24 @@ TEST(debugger, resume)
 
     dbg.add_breakpoint(absn);
     dbg.call({result}, {a, b});
+
+    if (is_codegen_mode())
+    {
+        try
+        {
+            ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
+        }
+        catch (const std::exception& e)
+        {
+            EXPECT_EQ(e.what(), std::string("_Map_base::at"));
+            return;
+        }
+        catch (...)
+        {
+            FAIL() << "Expected std::exception";
+        }
+    }
+
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
     dbg.resume();
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn)), 777);
@@ -259,10 +328,6 @@ TEST(debugger, resume)
 
 TEST(tracer, basic)
 {
-    if (is_codegen_mode())
-    {
-        return;
-    }
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
@@ -303,10 +368,6 @@ TEST(tracer, basic)
 
 TEST(tracer, count_tracepoint)
 {
-    if (is_codegen_mode())
-    {
-        return;
-    }
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
@@ -348,10 +409,6 @@ TEST(tracer, count_tracepoint)
 
 TEST(tracer, conditional_tracepoint)
 {
-    if (is_codegen_mode())
-    {
-        return;
-    }
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
