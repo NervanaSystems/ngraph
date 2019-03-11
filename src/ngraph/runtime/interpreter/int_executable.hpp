@@ -146,9 +146,9 @@ namespace ngraph
         {
             class INTBackend;
             class INTExecutable;
-        }
-    }
-}
+        } // namespace interpreter
+    }     // namespace runtime
+} // namespace ngraph
 
 class ngraph::runtime::interpreter::INTExecutable : public Executable
 {
@@ -551,38 +551,26 @@ private:
                                       c->get_window_dilation_strides(),
                                       c->get_padding_below(),
                                       c->get_padding_above(),
-                                      c->get_data_dilation_strides(),
-                                      0,
-                                      1,
-                                      1,
-                                      0,
-                                      0,
-                                      1,
-                                      false);
+                                      c->get_data_dilation_strides());
+
             break;
         }
         case OP_TYPEID::ConvolutionBackpropFilters:
         {
             const op::ConvolutionBackpropFilters* c =
                 static_cast<const op::ConvolutionBackpropFilters*>(&node);
-            reference::convolution<T>(args[0]->get_data_ptr<const T>(),
-                                      args[1]->get_data_ptr<const T>(),
-                                      out[0]->get_data_ptr<T>(),
-                                      node.get_input_shape(0),
-                                      node.get_input_shape(1),
-                                      node.get_output_shape(0),
-                                      c->get_window_movement_strides_backward(),
-                                      c->get_window_dilation_strides_backward(),
-                                      c->get_padding_below_backward(),
-                                      c->get_padding_above_backward(),
-                                      c->get_data_dilation_strides_backward(),
-                                      1,
-                                      0,
-                                      0,
-                                      1,
-                                      1,
-                                      0,
-                                      false);
+            reference::convolution_backprop_filter<T>(
+                args[0]->get_data_ptr<const T>(), // input
+                args[1]->get_data_ptr<const T>(), // delta_convolution_output
+                out[0]->get_data_ptr<T>(),        // delta_filter
+                c->get_input_shape(0),            // input_shape
+                c->get_input_shape(1),            // convolution_output_shape
+                c->get_filters_shape(),           // filter_shape
+                c->get_window_dilation_strides_forward(),
+                c->get_window_movement_strides_forward(),
+                c->get_padding_below_forward(),
+                c->compute_backward_in_pad_above(),
+                c->get_data_dilation_strides_forward());
             break;
         }
         case OP_TYPEID::ConvolutionBackpropData:
@@ -590,24 +578,17 @@ private:
             // Note that args[1] and args[0] are switched here from the usual order.
             const op::ConvolutionBackpropData* c =
                 static_cast<const op::ConvolutionBackpropData*>(&node);
-            reference::convolution<T>(args[1]->get_data_ptr<const T>(),
-                                      args[0]->get_data_ptr<const T>(),
-                                      out[0]->get_data_ptr<T>(),
-                                      node.get_input_shape(1),
-                                      node.get_input_shape(0),
-                                      node.get_output_shape(0),
-                                      c->get_window_movement_strides_backward(),
-                                      c->get_window_dilation_strides_backward(),
-                                      c->get_padding_below_backward(),
-                                      c->get_padding_above_backward(),
-                                      c->get_data_dilation_strides_backward(),
-                                      0,
-                                      1,
-                                      0,
-                                      1,
-                                      0,
-                                      1,
-                                      true);
+            reference::convolution_backprop_in<T>(args[1]->get_data_ptr<const T>(),
+                                                  args[0]->get_data_ptr<const T>(),
+                                                  out[0]->get_data_ptr<T>(),
+                                                  c->get_input_shape(1),
+                                                  c->get_input_shape(0),
+                                                  c->get_data_batch_shape(),
+                                                  c->get_data_dilation_strides_forward(),
+                                                  c->get_window_dilation_strides_forward(),
+                                                  c->compute_backward_delta_out_pad_below(),
+                                                  c->compute_backward_delta_out_pad_above(),
+                                                  c->get_window_movement_strides_forward());
             break;
         }
         case OP_TYPEID::Cos:
