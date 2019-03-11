@@ -85,7 +85,7 @@ add_custom_target(header_resource
     BYPRODUCTS
 )
 if (NGRAPH_CPU_ENABLE)
-    add_dependencies(header_resource ext_eigen ext_mkldnn)
+    add_dependencies(header_resource ext_eigen libmkldnn)
 endif()
 
 if(NGRAPH_LIB_VERSIONING_ENABLE)
