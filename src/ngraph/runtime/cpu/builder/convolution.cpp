@@ -59,7 +59,7 @@ namespace ngraph
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
                     auto functor = [&, conv_desc, conv_attr, conv_index](
-                                       CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<false>(
@@ -134,7 +134,7 @@ namespace ngraph
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
                     auto functor = [&, conv_desc, conv_attr, conv_index](
-                                       CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<false>(
@@ -176,7 +176,7 @@ namespace ngraph
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
                     auto functor = [&, conv_desc, conv_attr, conv_index](
-                                       CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<true>(
@@ -221,7 +221,7 @@ namespace ngraph
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
                     auto functor = [&, conv_desc, conv_attr, conv_index, arg3_size](
-                                       CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<true>(
@@ -271,7 +271,7 @@ namespace ngraph
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
                     auto functor = [&, conv_desc, conv_attr, conv_index, arg2_size](
-                                       CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<false>(
@@ -538,7 +538,7 @@ namespace ngraph
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
                     auto functor = [&, conv_desc, conv_attr, conv_index](
-                                       CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<false>(
@@ -582,7 +582,7 @@ namespace ngraph
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
                     auto functor = [&, conv_desc, conv_attr, conv_index](
-                                       CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<true>(
