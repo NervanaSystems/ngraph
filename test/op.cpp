@@ -19,11 +19,11 @@
 #include <string>
 #include <vector>
 
-#include "gtest/gtest.h"
 #include "gmock/gmock.h"
+#include "gtest/gtest.h"
 
-#include "ngraph/ngraph.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/ngraph.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -44,7 +44,6 @@ TEST(op, is_parameter)
     EXPECT_FALSE(t0->is_parameter());
 }
 
-
 TEST(op, provenance_tag)
 {
     auto node = make_shared<op::Parameter>(element::f32, Shape{1});
@@ -54,17 +53,16 @@ TEST(op, provenance_tag)
     node->add_provenance_tag(tag2);
 
     node->remove_provenance_tag(tag1);
-    
+
     auto tags = node->get_provenance_tags();
-    ASSERT_TRUE(tags.find(tag1) == tags.end()); 
-    ASSERT_TRUE(tags.find(tag2) != tags.end()); 
+    ASSERT_TRUE(tags.find(tag1) == tags.end());
+    ASSERT_TRUE(tags.find(tag2) != tags.end());
 }
 
-
-// TODO: Need to mock Node, Op etc to be able to unit test replace_node
-// This also means we need to start using templatizing these classes to differentiate
-// between production and testing as they have non-virtual methods which can't be directly
-// mocked in google test.
+// TODO: Need to mock Node, Op etc to be able to unit test functions like replace_node().
+// Mocking them directly isn't possible because google test requires methods to be
+// non-virtual. For non-virtual methods we will need to templatize these classes and call using
+// different template argument in testing vs production.
 /*
 TEST(op, provenance_replace_node)
 {

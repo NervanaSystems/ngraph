@@ -174,6 +174,7 @@ void Node::add_provenance_tag(const std::string& tag)
 {
     m_provenance_tags.insert(tag);
 }
+
 size_t Node::remove_provenance_tag(const std::string& tag)
 {
     return m_provenance_tags.erase(tag);
@@ -181,7 +182,7 @@ size_t Node::remove_provenance_tag(const std::string& tag)
 
 void Node::merge_provenance_tags_from(std::shared_ptr<const Node> source)
 {
-    for(auto& tag : source->get_provenance_tags())
+    for (auto& tag : source->get_provenance_tags())
     {
         add_provenance_tag(tag);
     }
