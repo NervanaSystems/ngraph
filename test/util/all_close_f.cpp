@@ -240,8 +240,7 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
     }
     if (a.size() == 0)
     {
-        msg << "No elements to compare";
-        return ::testing::AssertionSuccess();
+        return ::testing::AssertionSuccess() << "No elements to compare";
     }
     vector<uint32_t> distances = float_distances(a, b);
 
@@ -345,8 +344,7 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
     }
     if (a.size() == 0)
     {
-        msg << "No elements to compare";
-        return ::testing::AssertionSuccess();
+        return ::testing::AssertionSuccess() << "No elements to compare";
     }
 
     vector<uint64_t> distances = float_distances(a, b);
