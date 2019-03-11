@@ -12148,3 +12148,256 @@ TEST(type_prop, DISABLED_benchmark_type_prop_convolution)
     std::cout << "Constructed " << std::fixed << num_iterations << " Convolution ops in "
               << std::fixed << total_nanosec << " ns" << std::endl;
 }
+
+TEST(type_prop, transpose_arg_static_input_order_static_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto input_order = make_shared<op::Parameter>(element::i64, Shape{4});
+
+    auto r = make_shared<op::Transpose>(arg, input_order);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+}
+
+TEST(type_prop, transpose_arg_rank_static_dynamic_input_order_static_ok)
+{
+    auto arg = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+    auto input_order = make_shared<op::Parameter>(element::i64, Shape{4});
+
+    auto r = make_shared<op::Transpose>(arg, input_order);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+}
+
+TEST(type_prop, transpose_arg_static_input_order_rank_static_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto input_order = make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+
+    auto r = make_shared<op::Transpose>(arg, input_order);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+}
+
+TEST(type_prop, transpose_arg_rank_static_dynamic_input_order_rank_static_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+    auto input_order = make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+
+    auto r = make_shared<op::Transpose>(arg, input_order);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+}
+
+TEST(type_prop, transpose_arg_rank_dynamic_input_order_rank_static_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto input_order = make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+
+    auto r = make_shared<op::Transpose>(arg, input_order);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
+}
+
+TEST(type_prop, transpose_arg_rank_dynamic_input_order_rank_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto input_order = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+
+    auto r = make_shared<op::Transpose>(arg, input_order);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
+}
+
+TEST(type_prop, transpose_arg_rank_static_dynamic_input_order_rank_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+    auto input_order = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+
+    auto r = make_shared<op::Transpose>(arg, input_order);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+}
+
+TEST(type_prop, transpose_arg_static_input_order_static_input_order_not_vector)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape{2, 4, 6, 8});
+    auto input_order = make_shared<op::Parameter>(element::i64, PartialShape{2, 2});
+
+    try
+    {
+        auto r = make_shared<op::Transpose>(arg, input_order);
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input order must be a vector."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, transpose_arg_static_input_order_rank_static_dynamic_input_order_not_vector)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape{2, 4, 6, 8});
+    auto input_order =
+        make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+
+    try
+    {
+        auto r = make_shared<op::Transpose>(arg, input_order);
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input order must be a vector."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, transpose_arg_static_input_order_static_input_order_wrong_size)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape{2, 4, 6, 8});
+    auto input_order = make_shared<op::Parameter>(element::i64, PartialShape{5});
+
+    try
+    {
+        auto r = make_shared<op::Transpose>(arg, input_order);
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Input order must have shape [n], where n is the rank of arg."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, transpose_arg_rank_static_dynamic_input_order_static_input_order_not_vector)
+{
+    auto arg = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+    auto input_order = make_shared<op::Parameter>(element::i64, PartialShape{2, 2});
+
+    try
+    {
+        auto r = make_shared<op::Transpose>(arg, input_order);
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input order must be a vector."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop,
+     transpose_arg_rank_static_dynamic_input_order_rank_static_dynamic_input_order_not_vector)
+{
+    auto arg = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+    auto input_order =
+        make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+
+    try
+    {
+        auto r = make_shared<op::Transpose>(arg, input_order);
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input order must be a vector."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, transpose_arg_rank_dynamic_input_order_rank_static_dynamic_input_order_not_vector)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto input_order =
+        make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+
+    try
+    {
+        auto r = make_shared<op::Transpose>(arg, input_order);
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input order must be a vector."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, transpose_input_order_et_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto input_order = make_shared<op::Parameter>(element::dynamic, Shape{4});
+
+    auto r = make_shared<op::Transpose>(arg, input_order);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+}
+
+TEST(type_prop, transpose_input_order_et_wrong)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto input_order = make_shared<op::Parameter>(element::boolean, Shape{4});
+
+    try
+    {
+        auto r = make_shared<op::Transpose>(arg, input_order);
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input order must have element type i64."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+// TEST(type_prop, transpose_arg_rank_dynamic_input_order_rank_dynamic_ok)
+// {
+//     auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+//     auto input_order = make_shared<op::Parameter>(element::i64, Shape{4});
+
+//     try
+//     {
+//         auto r = make_shared<op::All>(param_0, AxisSet{0, 2, 1});
+//         // Should have thrown, so fail if it didn't
+//         FAIL() << "Did not detect out-of-bound axis for All";
+//     }
+//     catch (const NodeValidationFailure& error)
+//     {
+//         EXPECT_HAS_SUBSTRING(error.what(), std::string("Reduction axis (2) is out of bounds"));
+//     }
+//     catch (...)
+//     {
+//         FAIL() << "Deduced type check failed for unexpected reason";
+//     }
+// }

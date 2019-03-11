@@ -42,7 +42,7 @@ void op::Transpose::validate_and_infer_types()
                           input_order_shape.compatible(PartialShape{arg_shape.rank()}),
                           "Input order must have shape [n], where n is the rank of arg.");
 
-    set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
+    set_output_type(0, get_input_element_type(0), PartialShape::dynamic(arg_shape.rank()));
 }
 
 shared_ptr<Node> op::Transpose::copy_with_new_args(const NodeVector& new_args) const
