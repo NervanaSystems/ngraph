@@ -12380,24 +12380,3 @@ TEST(type_prop, transpose_input_order_et_wrong)
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
-
-// TEST(type_prop, transpose_arg_rank_dynamic_input_order_rank_dynamic_ok)
-// {
-//     auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
-//     auto input_order = make_shared<op::Parameter>(element::i64, Shape{4});
-
-//     try
-//     {
-//         auto r = make_shared<op::All>(param_0, AxisSet{0, 2, 1});
-//         // Should have thrown, so fail if it didn't
-//         FAIL() << "Did not detect out-of-bound axis for All";
-//     }
-//     catch (const NodeValidationFailure& error)
-//     {
-//         EXPECT_HAS_SUBSTRING(error.what(), std::string("Reduction axis (2) is out of bounds"));
-//     }
-//     catch (...)
-//     {
-//         FAIL() << "Deduced type check failed for unexpected reason";
-//     }
-// }
