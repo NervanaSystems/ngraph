@@ -17,7 +17,7 @@
 #include <pybind11/pybind11.h>
 
 #include "ngraph/op/pad.hpp"
-#include "ngraph/shape.hpp"
+#include "ngraph/coordinate_diff.hpp"
 #include "pyngraph/ops/pad.hpp"
 
 namespace py = pybind11;
@@ -28,7 +28,7 @@ void regclass_pyngraph_op_Pad(py::module m)
     pad.doc() = "ngraph.impl.op.Pad wraps ngraph::op::Pad";
     pad.def(py::init<const std::shared_ptr<ngraph::Node>&,
                      const std::shared_ptr<ngraph::Node>&,
-                     const ngraph::Shape&,
-                     const ngraph::Shape&,
-                     const ngraph::Shape&>());
+                     const ngraph::CoordinateDiff&,
+                     const ngraph::CoordinateDiff&,
+                     ngraph::op::PadMode>());
 }
