@@ -34,7 +34,9 @@ namespace ngraph
             namespace mkldnn_utils
             {
                 extern mkldnn::engine global_cpu_engine;
-
+#ifndef _WIN32
+                extern "C" void mkl_serv_free_buffers();
+#endif
                 mkldnn::memory::format
                     CreateNativeDataFormat(const ngraph::runtime::cpu::LayoutDescriptor& layout);
                 mkldnn::memory::format CreateNativeDataFormat(const Shape& shape);
@@ -50,6 +52,7 @@ namespace ngraph
                                                               bool is_output,
                                                               mkldnn::memory::format format);
                 bool is_perm_sorted(const Strides& a, const AxisVector& perm);
+                bool can_create_mkldnn_md(const ngraph::element::Type type);
                 bool can_create_mkldnn_md(const Shape& dims,
                                           const Strides& strides,
                                           const ngraph::element::Type type);
@@ -98,11 +101,27 @@ namespace ngraph
                     {
                         return false;
                     }
-                    if (node->get_input_element_type(0) != element::f32)
+                    // Data
+                    if (node->get_input_element_type(0) != element::f32 &&
+                        node->get_input_element_type(0) != element::i8 &&
+                        node->get_input_element_type(0) != element::u8)
                     {
                         return false;
                     }
-
+                    // Weights
+                    if (node->get_input_element_type(1) != element::f32 &&
+                        node->get_input_element_type(1) != element::i8)
+                    {
+                        return false;
+                    }
+                    // Outputs
+                    if (node->get_output_element_type(0) != element::f32 &&
+                        node->get_output_element_type(0) != element::i8 &&
+                        node->get_output_element_type(0) != element::u8 &&
+                        node->get_output_element_type(0) != element::i32)
+                    {
+                        return false;
+                    }
                     return true;
                 }
             }

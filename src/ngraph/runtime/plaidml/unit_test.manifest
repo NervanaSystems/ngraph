@@ -60,6 +60,8 @@ maxpool_bprop_larger_than_cache
 generate_mask
 avg_pool_3d
 avg_pool_3d_uneven_strided_padded_include_in_computation
+quantize_dynamic_offset                 # Quantization/Dequantization is unimplemented
+dequantize_dynamic_offset               # Quantization/Dequantization is unimplemented
 dequantize_int8_zero_offset             # Quantization/Dequantization is unimplemented
 dequantize_int32                        # Quantization/Dequantization is unimplemented
 dequantize_int32_zero_offset            # Quantization/Dequantization is unimplemented
@@ -76,6 +78,7 @@ quantize_ROUND_DOWN                     # Quantization/Dequantization is unimple
 quantize                                # Quantization/Dequantization is unimplemented
 quantize_zero_offset                    # Quantization/Dequantization is unimplemented
 quantize_axes                           # Quantization/Dequantization is unimplemented
+quantize_dynamic_offset                 # Quantization/Dequantization is unimplemented
 quantize_int8                           # Quantization/Dequantization is unimplemented
 quantize_int8_zero_offset               # Quantization/Dequantization is unimplemented
 quantize_int32                          # Quantization/Dequantization is unimplemented
@@ -98,23 +101,4 @@ sum_stable_acc_double  # To debug: precision errors
 embedding_lookup_4x5_reverse
 embedding_lookup_10x1_arbitrary
 embedding_lookup_10x1_arbitrary_index_type_int
-any_trivial                             # Requires boolean reduction in PlaidML
-any_2x2_to_scalar_true                  # Requires boolean reduction in PlaidML
-any_2x3_eliminate_row_dim               # Requires boolean reduction in PlaidML
-any_2x2x3_eliminate_dim_0               # Requires boolean reduction in PlaidML
-any_2x2x3_eliminate_dim_1               # Requires boolean reduction in PlaidML
-any_2x2x3_eliminate_dim_2               # Requires boolean reduction in PlaidML
-any_2x2x3_eliminate_dims_0_1            # Requires boolean reduction in PlaidML
-any_2x2x3_eliminate_dims_0_2            # Requires boolean reduction in PlaidML
-any_2x2x3_eliminate_dims_1_2            # Requires boolean reduction in PlaidML
-any_2x2x3_eliminate_dims_0_1_2          # Requires boolean reduction in PlaidML
-all_trivial                             # Requires boolean reduction in PlaidML
-all_2x2_to_scalar_false                 # Requires boolean reduction in PlaidML
-all_2x3_eliminate_col_dim               # Requires boolean reduction in PlaidML
-all_2x2x3_eliminate_dim_0               # Requires boolean reduction in PlaidML
-all_2x2x3_eliminate_dim_1               # Requires boolean reduction in PlaidML
-all_2x2x3_eliminate_dim_2               # Requires boolean reduction in PlaidML
-all_2x2x3_eliminate_dims_0_1            # Requires boolean reduction in PlaidML
-all_2x2x3_eliminate_dims_0_2            # Requires boolean reduction in PlaidML
-all_2x2x3_eliminate_dims_1_2            # Requires boolean reduction in PlaidML
-all_2x2x3_eliminate_dims_0_1_2          # Requires boolean reduction in PlaidML
+floor_int32

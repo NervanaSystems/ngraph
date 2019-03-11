@@ -48,6 +48,11 @@
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
+#include "ngraph/op/experimental/quantized_avg_pool.hpp"
+#include "ngraph/op/experimental/quantized_conv.hpp"
+#include "ngraph/op/experimental/quantized_conv_bias.hpp"
+#include "ngraph/op/experimental/quantized_conv_relu.hpp"
+#include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -70,6 +75,7 @@
 #include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/parameter.hpp"
+#include "ngraph/op/passthrough.hpp"
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
@@ -333,10 +339,10 @@ shared_ptr<ngraph::Function> ngraph::deserialize(istream& in)
                         {
                             if (info.get_name() == const_name)
                             {
-                                void* const_data = malloc(info.get_size());
+                                void* const_data = ngraph_malloc(info.get_size());
                                 reader.read(const_name, const_data, info.get_size());
                                 const_node = make_shared<op::Constant>(et, shape, const_data);
-                                free(const_data);
+                                ngraph_free(const_data);
                                 break;
                             }
                         }
@@ -424,6 +430,12 @@ static shared_ptr<ngraph::Function>
         try
         {
             string node_name = node_js.at("name").get<string>();
+            string friendly_name;
+            auto it = node_js.find("friendly_name");
+            if (it != node_js.end())
+            {
+                friendly_name = it->get<string>();
+            }
             string node_op = node_js.at("op").get<string>();
             vector<string> node_inputs = node_js.at("inputs").get<vector<string>>();
             vector<string> control_deps_inputs =
@@ -592,12 +604,13 @@ static shared_ptr<ngraph::Function>
                     node_js.count("element_type") == 0 ? node_js.at("value_type") : node_js;
                 auto element_type = read_element_type(type_node_js.at("element_type"));
                 auto shape = type_node_js.at("shape");
-                try
+                auto value_it = node_js.find("value");
+                if (value_it != node_js.end())
                 {
-                    auto value = node_js.at("value").get<vector<string>>();
+                    auto value = value_it->get<vector<string>>();
                     node = make_shared<op::Constant>(element_type, shape, value);
                 }
-                catch (...)
+                else
                 {
                     node = const_data_callback(node_name, element_type, shape);
                 }
@@ -951,6 +964,22 @@ static shared_ptr<ngraph::Function>
                     make_shared<op::Parameter>(element_type, read_partial_shape(shape), cacheable);
                 break;
             }
+            case OP_TYPEID::Passthrough:
+            {
+                std::vector<json> outputs_js = node_js.at("output_shapes");
+                std::vector<std::tuple<element::Type, PartialShape>> outputs;
+                for (auto output_js : outputs_js)
+                {
+                    outputs.emplace_back(read_element_type(output_js.at("element_type")),
+                                         read_partial_shape(output_js.at("shape")));
+                }
+                node = make_shared<op::Passthrough>(node_js.at("logical_type"),
+                                                    node_js.at("language"),
+                                                    node_js.at("function"),
+                                                    args,
+                                                    std::move(outputs));
+                break;
+            }
             case OP_TYPEID::Power:
             {
                 node = make_shared<op::Power>(args[0], args[1]);
@@ -968,6 +997,66 @@ static shared_ptr<ngraph::Function>
                 auto axes = node_js.at("axes").get<set<size_t>>();
                 auto round_mode = node_js.at("round_mode").get<op::Quantize::RoundMode>();
                 node = make_shared<op::Quantize>(args[0], args[1], args[2], type, axes, round_mode);
+                break;
+            }
+            case OP_TYPEID::QuantizedAvgPool:
+            {
+                auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
+                auto window_movement_strides =
+                    node_js.at("window_movement_strides").get<vector<size_t>>();
+                auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
+                auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
+                auto include_padding_in_avg_computation =
+                    node_js.at("include_padding_in_avg_computation").get<bool>();
+                node = make_shared<op::QuantizedAvgPool>(args[0],
+                                                         window_shape,
+                                                         window_movement_strides,
+                                                         padding_below,
+                                                         padding_above,
+                                                         include_padding_in_avg_computation);
+                break;
+            }
+            case OP_TYPEID::QuantizedConvolutionBias: { break;
+            }
+            case OP_TYPEID::QuantizedConvolutionBiasAdd: { break;
+            }
+            case OP_TYPEID::QuantizedConvolutionBiasSignedAdd: { break;
+            }
+            case OP_TYPEID::QuantizedConvolutionRelu: { break;
+            }
+            case OP_TYPEID::QuantizedConvolution:
+            {
+                auto window_movement_strides =
+                    node_js.at("window_movement_strides").get<vector<size_t>>();
+                auto window_dilation_strides =
+                    node_js.at("window_dilation_strides").get<vector<size_t>>();
+                auto padding_below = node_js.at("padding_below").get<vector<std::ptrdiff_t>>();
+                auto padding_above = node_js.at("padding_above").get<vector<std::ptrdiff_t>>();
+                auto data_dilation_strides = node_js["data_dilation_strides"];
+                node =
+                    make_shared<op::Convolution>(args[0],
+                                                 args[1],
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides.get<std::vector<size_t>>());
+                break;
+            }
+            case OP_TYPEID::QuantizedMaxPool:
+            {
+                auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
+                auto window_movement_strides =
+                    node_js.at("window_movement_strides").get<vector<size_t>>();
+                // For backwards compatibility, both (but not just one) of the padding_ fields may be
+                // omitted.
+                auto padding_below_maybe = node_js["padding_below"];
+                auto padding_above_maybe = node_js["padding_above"];
+                auto padding_below = padding_below_maybe.get<vector<size_t>>();
+                auto padding_above = padding_above_maybe.get<vector<size_t>>();
+                node = make_shared<op::QuantizedMaxPool>(
+                    args[0], window_shape, window_movement_strides, padding_below, padding_above);
+
                 break;
             }
             case OP_TYPEID::Relu:
@@ -1124,21 +1213,21 @@ static shared_ptr<ngraph::Function>
                 node->add_control_dependency(node_map.at(name));
             }
 
+            if (!friendly_name.empty())
+            {
+                node->set_friendly_name(friendly_name);
+            }
             node_map[node_name] = node;
-
-            // Typically, it could be unsafe to change the name of a node since it may break nameing
-            // uniqueness. However, it could sometimes be helpful to use the original name from
-            // the serialization for debugging.
-            // node->set_name(node_name);
         }
         catch (...)
         {
             string node_name;
-            try
+            auto it = node_js.find("name");
+            if (it != node_js.end())
             {
-                node_name = node_js.at("name").get<string>();
+                node_name = it->get<string>();
             }
-            catch (...)
+            else
             {
                 node_name = "UNKNOWN";
             }
@@ -1187,6 +1276,10 @@ static json write(const Node& n, bool binary_constant_data)
 {
     json node;
     node["name"] = n.get_name();
+    if (n.get_name() != n.get_friendly_name())
+    {
+        node["friendly_name"] = n.get_friendly_name();
+    }
     node["op"] = n.description();
     // TODO Multiple outputs
     json inputs = json::array();
@@ -1504,6 +1597,23 @@ static json write(const Node& n, bool binary_constant_data)
         node["element_type"] = write_element_type(tmp->get_element_type());
         break;
     }
+    case OP_TYPEID::Passthrough:
+    {
+        auto tmp = dynamic_cast<const op::Passthrough*>(&n);
+        node["logical_type"] = tmp->logical_type();
+        node["language"] = tmp->language();
+        node["function"] = tmp->function();
+        std::vector<json> outputs_js;
+        for (const auto& output_shape : tmp->output_shapes())
+        {
+            json output_js;
+            output_js["element_type"] = write_element_type(std::get<0>(output_shape));
+            output_js["shape"] = write_partial_shape(std::get<1>(output_shape));
+            outputs_js.emplace_back(std::move(output_js));
+        }
+        node["output_shapes"] = std::move(outputs_js);
+        break;
+    }
     case OP_TYPEID::Product:
     {
         auto tmp = dynamic_cast<const op::Product*>(&n);
@@ -1518,6 +1628,43 @@ static json write(const Node& n, bool binary_constant_data)
         node["type"] = write_element_type(tmp->get_element_type());
         node["axes"] = tmp->get_axes();
         node["round_mode"] = tmp->get_round_mode();
+        break;
+    }
+    case OP_TYPEID::QuantizedAvgPool:
+    {
+        auto tmp = dynamic_cast<const op::QuantizedAvgPool*>(&n);
+        node["window_shape"] = tmp->get_window_shape();
+        node["window_movement_strides"] = tmp->get_window_movement_strides();
+        node["padding_below"] = tmp->get_padding_below();
+        node["padding_above"] = tmp->get_padding_above();
+        node["include_padding_in_avg_computation"] = tmp->get_include_padding_in_avg_computation();
+        break;
+    }
+    case OP_TYPEID::QuantizedConvolutionBias: { break;
+    }
+    case OP_TYPEID::QuantizedConvolutionBiasAdd: { break;
+    }
+    case OP_TYPEID::QuantizedConvolutionBiasSignedAdd: { break;
+    }
+    case OP_TYPEID::QuantizedConvolutionRelu: { break;
+    }
+    case OP_TYPEID::QuantizedConvolution:
+    {
+        auto tmp = dynamic_cast<const op::QuantizedConvolution*>(&n);
+        node["window_movement_strides"] = tmp->get_window_movement_strides();
+        node["window_dilation_strides"] = tmp->get_window_dilation_strides();
+        node["padding_below"] = tmp->get_padding_below();
+        node["padding_above"] = tmp->get_padding_above();
+        node["data_dilation_strides"] = tmp->get_data_dilation_strides();
+        break;
+    }
+    case OP_TYPEID::QuantizedMaxPool:
+    {
+        auto tmp = dynamic_cast<const op::QuantizedMaxPool*>(&n);
+        node["window_shape"] = tmp->get_window_shape();
+        node["window_movement_strides"] = tmp->get_window_movement_strides();
+        node["padding_below"] = tmp->get_padding_below();
+        node["padding_above"] = tmp->get_padding_above();
         break;
     }
     case OP_TYPEID::Relu: { break;

@@ -33,7 +33,7 @@
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 
-#ifdef NGRAPH_DISTRIBUTED
+#if defined NGRAPH_DISTRIBUTED_ENABLE
 #include "ngraph/distributed.hpp"
 #endif
 
@@ -298,8 +298,12 @@ OPTIONS
         return 1;
     }
 
-#ifdef NGRAPH_DISTRIBUTED
-    ngraph::Distributed dist;
+#if defined NGRAPH_DISTRIBUTED_ENABLE
+    unique_ptr<ngraph::Distributed> dist(new ngraph::Distributed());
+    if (dist->get_size() == 1)
+    {
+        dist.reset();
+    }
 #endif
 
     vector<string> models;
@@ -423,6 +427,13 @@ OPTIONS
         cout << "============================================================================\n";
         print_results(aggregate_perf_data, timing_detail);
     }
+
+#if defined NGRAPH_DISTRIBUTED_ENABLE
+    if (dist)
+    {
+        dist.reset();
+    }
+#endif
 
     return rc;
 }

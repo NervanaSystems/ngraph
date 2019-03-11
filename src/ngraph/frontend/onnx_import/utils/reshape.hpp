@@ -127,19 +127,17 @@ namespace ngraph
                 return reshape(node, get_default_axis_vector(node->get_shape().size()), shape);
             }
 
-            /// \brief      Expands node tensor shape with empty axes.
+            /// \brief      Expands node tensor shape with empty axis at
+            ///             specified position.
             ///
-            /// \param[in]  node                  The node to be expanded.
-            /// \param[in]  outermost_axes_count  The number of added outermost axes.
-            ///                                   At the front of the shape.
-            /// \param[in]  innermost_axes_count  The number of added innermost axes.
-            ///                                   At the end of the shape.
+            /// \param[in]  node  The node to be expanded.
+            /// \param[in]  axis  The position in the expanded axes where the
+            ///                   new axis is placed.
             ///
-            /// \return     The node with added empty axes.
+            /// \return     The node with added empty axis.
             ///
-            std::shared_ptr<ngraph::Node> add_empty_axes(const std::shared_ptr<ngraph::Node>& node,
-                                                         std::size_t outermost_axes_count = 1,
-                                                         std::size_t innermost_axes_count = 0);
+            std::shared_ptr<ngraph::Node> expand_dims(const std::shared_ptr<ngraph::Node>& node,
+                                                      std::size_t axis = 0);
 
             /// \brief      Split node on specified axis into multiple parts.
             ///

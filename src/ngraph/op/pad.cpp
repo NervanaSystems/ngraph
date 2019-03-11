@@ -39,27 +39,41 @@ void op::Pad::validate_and_infer_types()
 {
     element::Type result_et;
 
-    NODE_VALIDATION_ASSERT(
-        this, element::Type::merge(result_et, get_input_element_type(0), get_input_element_type(1)))
-        << "Argument element types do not match (arg0 element type: " << get_input_element_type(0)
-        << ", arg1 element type: " << get_input_element_type(1) << ").";
+    NODE_VALIDATION_CHECK(
+        this,
+        element::Type::merge(result_et, get_input_element_type(0), get_input_element_type(1)),
+        "Argument element types do not match (arg0 element type: ",
+        get_input_element_type(0),
+        ", arg1 element type: ",
+        get_input_element_type(1),
+        ").");
 
-    NODE_VALIDATION_ASSERT(this, get_input_partial_shape(1).compatible(PartialShape{}))
-        << "Argument for padding value is not a scalar (shape: " << get_input_partial_shape(1)
-        << ").";
+    NODE_VALIDATION_CHECK(this,
+                          get_input_partial_shape(1).compatible(PartialShape{}),
+                          "Argument for padding value is not a scalar (shape: ",
+                          get_input_partial_shape(1),
+                          ").");
 
     auto arg_shape = get_input_partial_shape(0);
 
-    NODE_VALIDATION_ASSERT(this, m_padding_below.size() == m_padding_above.size())
-        << "Ranks for padding below (" << m_padding_below << ") and padding above ("
-        << m_padding_above << ") do not match.";
+    NODE_VALIDATION_CHECK(this,
+                          m_padding_below.size() == m_padding_above.size(),
+                          "Ranks for padding below (",
+                          m_padding_below,
+                          ") and padding above (",
+                          m_padding_above,
+                          ") do not match.");
 
     size_t implied_rank = m_padding_below.size();
 
-    NODE_VALIDATION_ASSERT(this, arg_shape.rank().compatible(implied_rank))
-        << "Rank for padding below and padding above do not match the rank of the "
-        << "data argument (padding below: " << m_padding_below
-        << ", padding above: " << m_padding_above << ").";
+    NODE_VALIDATION_CHECK(this,
+                          arg_shape.rank().compatible(implied_rank),
+                          "Rank for padding below and padding above do not match the rank of the ",
+                          "data argument (padding below: ",
+                          m_padding_below,
+                          ", padding above: ",
+                          m_padding_above,
+                          ").");
 
     std::vector<Dimension> result_dims(implied_rank, Dimension::dynamic());
 
@@ -71,21 +85,28 @@ void op::Pad::validate_and_infer_types()
             {
                 ptrdiff_t result_dim =
                     m_padding_below[i] + static_cast<ptrdiff_t>(arg_shape[i]) + m_padding_above[i];
-                NODE_VALIDATION_ASSERT(this, result_dim >= 0)
-                    << "Inferred result dimension at axis " << i
-                    << " is negative after padding (padding below: " << m_padding_below << ", "
-                    << ", padding above: " << m_padding_above << ").";
+                NODE_VALIDATION_CHECK(this,
+                                      result_dim >= 0,
+                                      "Inferred result dimension at axis ",
+                                      i,
+                                      " is negative after padding (padding below: ",
+                                      m_padding_below,
+                                      ", ",
+                                      ", padding above: ",
+                                      m_padding_above,
+                                      ").");
                 result_dims[i] = static_cast<size_t>(result_dim);
 
-                NODE_VALIDATION_ASSERT(
-                    this, m_pad_mode != op::PadMode::EDGE || static_cast<size_t>(arg_shape[i]) >= 1)
-                    << "EDGE padding mode requires an input of dimension of at least 1 at each "
-                       "axis.";
-                NODE_VALIDATION_ASSERT(this,
-                                       m_pad_mode != op::PadMode::REFLECT ||
-                                           static_cast<size_t>(arg_shape[i]) >= 2)
-                    << "REFLECT padding mode requires an input of dimension of at least 2 at each "
-                       "axis.";
+                NODE_VALIDATION_CHECK(
+                    this,
+                    m_pad_mode != op::PadMode::EDGE || static_cast<size_t>(arg_shape[i]) >= 1,
+                    "EDGE padding mode requires an input of dimension of at least 1 at each "
+                    "axis.");
+                NODE_VALIDATION_CHECK(
+                    this,
+                    m_pad_mode != op::PadMode::REFLECT || static_cast<size_t>(arg_shape[i]) >= 2,
+                    "REFLECT padding mode requires an input of dimension of at least 2 at each "
+                    "axis.");
             }
         }
     }
