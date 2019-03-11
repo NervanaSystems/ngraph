@@ -323,19 +323,19 @@ void op::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjoints
 
     adjoints.add_delta(x, data_conv);
 
-    Strides window_movement_strides;
-    Strides window_dilation_strides;
+    Strides window_movement_strides = m_window_dilation_strides_forward;
+    Strides window_dilation_strides = m_data_dilation_strides_forward;
+    Strides data_dilation_strides = m_window_movement_strides_forward;
     CoordinateDiff padding_below;
     CoordinateDiff padding_above;
-    Strides data_dilation_strides;
     const Shape& filters_shape = get_input_shape(0);
     for (size_t i = 0; i < f_shape.size() - 2; i++)
     {
-        window_movement_strides.push_back(m_window_dilation_strides_forward[i]);
-        window_dilation_strides.push_back(m_data_dilation_strides_forward[i]);
         ptrdiff_t padding_below_backward =
             (static_cast<ptrdiff_t>(filters_shape[i + 2]) - 1) * window_dilation_strides[i] -
             m_padding_below_forward[i];
+        padding_below.push_back(padding_below_backward);
+
         ptrdiff_t padding_above_backward =
             (static_cast<ptrdiff_t>(filters_shape[i + 2]) - 1) *
                 m_window_dilation_strides_forward[i] +
@@ -347,13 +347,11 @@ void op::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjoints
              m_window_movement_strides_forward[i]) -
             m_padding_above_forward[i];
 
-        padding_below.push_back(padding_below_backward);
         padding_above.push_back(
             padding_above_backward -
             (padding_below_backward + (x_shape[i + 2] - 1) * m_window_movement_strides_forward[i] +
              padding_above_backward - (f_shape[i + 2] - 1) * m_window_dilation_strides_forward[i]) %
                 m_data_dilation_strides_forward[i]);
-        data_dilation_strides.push_back(m_window_movement_strides_forward[i]);
     }
 
     auto swap_NC = [](const shared_ptr<Node> n) {
