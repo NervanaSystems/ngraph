@@ -73,6 +73,10 @@ else()
     set(PASS_LLVM_OPENMP_DIR -DLLVM_EXTERNAL_OPENMP_SOURCE_DIR=${OPENMP_SOURCE_DIR})
 endif()
 
+if(NGRAPH_MANYLINUX_ENABLE)
+    set(ALLOW_LLVM_OLD_TOOLCHAIN -DLLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN=ON)
+endif()
+
 ExternalProject_Add(
     ext_llvm
     PREFIX llvm
@@ -102,6 +106,7 @@ ExternalProject_Add(
                 -DLLVM_ENABLE_BINDINGS=OFF
                 -DLLVM_ENABLE_TERMINFO=OFF
                 -DLLVM_ENABLE_ZLIB=OFF
+                ${ALLOW_LLVM_OLD_TOOLCHAIN}
                 -DLIBOMP_OMPT_SUPPORT=OFF
                 -DCLANG_BUILD_TOOLS=OFF
                 -DCLANG_ENABLE_ARCMT=OFF
