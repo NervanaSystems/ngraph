@@ -107,14 +107,14 @@ namespace ngraph
 
                 template <typename ElementType>
                 void pad(const void* arg0,
-                             const void* arg1,
-                             void* out,
-                             const Shape& arg0_shape,
-                             const Shape& out_shape,
+                         const void* arg1,
+                         void* out,
+                         const Shape& arg0_shape,
+                         const Shape& out_shape,
                          const CoordinateDiff& padding_below,
                          const CoordinateDiff& padding_above,
                          const ngraph::op::PadMode pad_mode,
-                             int arena)
+                         int arena)
                 {
                     reference::pad(static_cast<const ElementType*>(arg0),
                                    static_cast<const ElementType*>(arg1),

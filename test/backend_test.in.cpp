@@ -2975,7 +2975,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_negative_exterior_1d_check_limits)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    handle->call_with_validate( {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((test::NDArray<float, 1>({2112, 2112, 2112}).get_vector()),
               read_vector<float>(result));
 }
@@ -3031,7 +3031,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_edge_1d_top_neg)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    handle->call_with_validate( {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((test::NDArray<float, 1>({1, 1, 1, 2, 3}).get_vector()), read_vector<float>(result));
 }
 
@@ -3058,7 +3058,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_edge_1d_top_neg_bigger_than_tensor)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    handle->call_with_validate( {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((test::NDArray<float, 1>({1}).get_vector()), read_vector<float>(result));
 }
 
@@ -3085,7 +3085,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_edge_1d_bottom_neg)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    handle->call_with_validate( {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((test::NDArray<float, 1>({3, 4, 5, 6, 6, 6, 6}).get_vector()),
               read_vector<float>(result));
 }
@@ -3113,7 +3113,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_edge_1d_bottom_neg_bigger_than_tensor)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    handle->call_with_validate( {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((test::NDArray<float, 1>({6, 6}).get_vector()), read_vector<float>(result));
 }
 
@@ -3141,7 +3141,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_edge_2d)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    handle->call_with_validate( {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((test::NDArray<float, 2>({{1, 1, 1, 1, 2, 3, 4, 4, 4},
                                         {1, 1, 1, 1, 2, 3, 4, 4, 4},
                                         {1, 1, 1, 1, 2, 3, 4, 4, 4},
@@ -3176,7 +3176,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_edge_2d_with_neg)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    handle->call_with_validate( {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((test::NDArray<float, 2>({{2, 3, 4, 4, 4},
                                         {2, 3, 4, 4, 4},
                                         {2, 3, 4, 4, 4},
@@ -3210,7 +3210,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_reflect_1d)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    handle->call_with_validate( {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((test::NDArray<float, 1>({3, 2, 1, 2, 3, 4, 5, 6, 5, 4, 3}).get_vector()),
               read_vector<float>(result));
 }
@@ -3238,7 +3238,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_reflect_1d_top_neg)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    handle->call_with_validate( {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((test::NDArray<float, 1>({3, 2, 1, 2, 3}).get_vector()), read_vector<float>(result));
 }
 
@@ -3265,7 +3265,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_reflect_1d_top_neg_bigger_than_tensor)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    handle->call_with_validate( {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((test::NDArray<float, 1>({3}).get_vector()), read_vector<float>(result));
 }
 
@@ -3292,7 +3292,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_reflect_1d_bottom_neg)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    handle->call_with_validate( {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((test::NDArray<float, 1>({3, 4, 5, 6, 5, 4, 3}).get_vector()),
               read_vector<float>(result));
 }
@@ -3320,7 +3320,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_reflect_1d_bottom_neg_bigger_than_tensor)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    handle->call_with_validate( {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((test::NDArray<float, 1>({4, 3}).get_vector()), read_vector<float>(result));
 }
 
@@ -3347,7 +3347,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_reflect_1d_multi_reflect)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    handle->call_with_validate( {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ(
         (test::NDArray<float, 1>({3, 2, 1, 2, 3, 2, 1, 2, 3, 2, 1, 2, 3, 2, 1, 2, 3, 2, 1, 2, 3, 2})
              .get_vector()),
@@ -3378,7 +3378,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_reflect_2d)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    handle->call_with_validate( {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((test::NDArray<float, 2>({{12, 11, 10, 9, 10, 11, 12, 11, 10},
                                         {8, 7, 6, 5, 6, 7, 8, 7, 6},
                                         {4, 3, 2, 1, 2, 3, 4, 3, 2},
@@ -3413,7 +3413,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_reflect_2d_with_neg)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    handle->call_with_validate( {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
 
     EXPECT_EQ((test::NDArray<float, 2>({{10, 11, 12, 11, 10},
                                         {6, 7, 8, 7, 6},
@@ -3574,7 +3574,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_negative_exterior_2d_all_negative)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
-    handle->call_with_validate( {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((test::NDArray<float, 2>({{5}}).get_vector()), read_vector<float>(result));
 }
 

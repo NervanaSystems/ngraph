@@ -16,8 +16,8 @@
 
 #include <pybind11/pybind11.h>
 
-#include "ngraph/op/pad.hpp"
 #include "ngraph/coordinate_diff.hpp"
+#include "ngraph/op/pad.hpp"
 #include "pyngraph/ops/pad.hpp"
 
 namespace py = pybind11;
