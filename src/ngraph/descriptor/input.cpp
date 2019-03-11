@@ -51,7 +51,7 @@ void Input::replace_output(Output& new_output)
 
 void Input::replace_output(std::shared_ptr<Node> node, size_t i)
 {
-    replace_output(node->get_outputs().at(i));
+    replace_output(node->get_outputs().at(i)); // TRIAGED (to be deprecated)
 }
 
 std::shared_ptr<Node> Input::get_node() const

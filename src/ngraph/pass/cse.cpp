@@ -238,18 +238,25 @@ namespace std
 
             arg_ids.push_back(type_hash);
 
-            auto cargs = k.get_node()->get_arguments();
+            std::vector<std::shared_ptr<Node>> source_nodes(k.get_node()->get_input_size());
+
+            // FIXME(amprocte): This code is ignoring output index. It probably shouldn't.
+            // Perhaps we can just throw the output index into arg_ids.
+            for (size_t i = 0; i < k.get_node()->get_input_size(); i++)
+            {
+                source_nodes[i] = k.get_node()->get_input_source_output(i).get_node();
+            }
 
             // TODO: Do we need another map, so we could
             // specify how to compute hash for each op?
             if (p_this.is_commutative())
             {
-                std::sort(begin(cargs), end(cargs));
+                std::sort(begin(source_nodes), end(source_nodes));
             }
 
-            for (auto arg : cargs)
+            for (auto source_node : source_nodes)
             {
-                arg_ids.push_back(arg->get_instance_id());
+                arg_ids.push_back(source_node->get_instance_id());
             }
 
             auto hashc = ngraph::hash_combine(arg_ids);

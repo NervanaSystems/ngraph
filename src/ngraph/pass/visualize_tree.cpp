@@ -35,12 +35,12 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<ngraph::Function>>& fu
     {
         // map<size_t, list<node_ptr>> dependent_nodes;
         traverse_nodes(f, [&](shared_ptr<Node> node) {
-            size_t i = 0;
-            for (auto arg : node->get_arguments())
+            for (size_t i = 0; i < node->get_input_size(); i++)
             {
-                m_ss << add_attributes(arg);
+                auto source_node = node->get_input_source_output(i).get_node();
+                m_ss << add_attributes(source_node);
                 m_ss << add_attributes(node);
-                m_ss << "    " << arg->get_name() << " -> " << node->get_name();
+                m_ss << "    " << source_node->get_name() << " -> " << node->get_name();
 
                 if (std::getenv("NGRAPH_VISUALIZE_EDGE_LABELS") != nullptr)
                 {
@@ -55,7 +55,6 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<ngraph::Function>>& fu
                 }
 
                 m_ss << ";\n";
-                i++;
             }
         });
     }

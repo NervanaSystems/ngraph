@@ -87,7 +87,7 @@ namespace ngraph
                 for (auto entry : m_pattern_map)
                 {
                     // leaf label
-                    if (entry.first->get_inputs().empty())
+                    if (entry.first->get_input_size() == 0)
                     {
                         label_exclusions.push_back(entry.second);
                     }

@@ -35,15 +35,15 @@ using namespace std;
 bool pass::GetOutputElementElimination::run_on_node(shared_ptr<Node> n)
 {
     bool optimized = false;
-    for (auto& input : n->get_inputs())
+
+    for (size_t i = 0; i < n->get_input_size(); i++)
     {
-        if (auto goe = dynamic_pointer_cast<op::GetOutputElement>(input.get_output().get_node()))
+        if (auto goe = dynamic_pointer_cast<op::GetOutputElement>(n->get_input_source_output(i).get_node()))
         {
-            auto multi = goe->get_inputs().at(0).get_output().get_node();
-            input.replace_output(goe->get_inputs().at(goe->get_n()).get_output());
-            // we don't need to fix anything w.r.t GetOutputElement as it will become unreachable
+            n->replace_input_source(i,goe->get_input_source_output(goe->get_n()));
             optimized = true;
         }
     }
+
     return optimized;
 }

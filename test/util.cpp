@@ -362,38 +362,6 @@ TEST(util, test_fprop_cache)
     EXPECT_EQ(fprop_cache.bprop->get_parameters().size(), 5);
 }
 
-TEST(graph_util, test_subgraph_topological_sort)
-{
-    Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto add = A + B;
-    auto mul = C * add;
-    auto result = make_shared<op::Result>(mul);
-    auto sorted = ngraph::subgraph_topological_sort(NodeVector{mul, add, A});
-    std::list<std::shared_ptr<Node>> expected{A, add, mul};
-    ASSERT_EQ(expected, sorted);
-}
-
-TEST(graph_util, test_subgraph_topological_sort_control_dependencies)
-{
-    Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto D = make_shared<op::Abs>(A);
-    auto E = make_shared<op::Abs>(B);
-    auto add = A + B;
-    add->add_control_dependency(D);
-    add->add_control_dependency(E);
-    auto mul = C * add;
-    auto result = make_shared<op::Result>(mul);
-    auto sorted = ngraph::subgraph_topological_sort(NodeVector{mul, add, A, D}, true);
-    std::list<std::shared_ptr<Node>> expected{A, D, add, mul};
-    ASSERT_EQ(expected, sorted);
-}
-
 TEST(pass, visualize_tree)
 {
     Shape shape{2, 2};

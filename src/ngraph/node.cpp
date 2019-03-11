@@ -23,6 +23,7 @@
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/node_input.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/placement.hpp"
@@ -60,7 +61,7 @@ Node::Node(const std::string& node_type,
     size_t i = 0;
     for (auto arg : arguments)
     {
-        m_inputs.emplace_back(this, i++, arg.get_node()->get_outputs().at(arg.get_index()));
+        m_inputs.emplace_back(this, i++, arg.get_node()->get_outputs().at(arg.get_index())); // TRIAGED (hidden legacy)
     }
     set_output_size(output_size);
 }
@@ -105,12 +106,12 @@ void Node::set_output_type(size_t i, const element::Type& element_type, const Pa
     m_outputs.at(i).get_tensor_ptr()->set_tensor_type(element_type, pshape);
 }
 
-std::deque<descriptor::Output>& Node::get_outputs()
+std::deque<descriptor::Output>& Node::get_outputs() // TRIAGED (to be deprecated)
 {
     return m_outputs;
 }
 
-const std::deque<descriptor::Output>& Node::get_outputs() const
+const std::deque<descriptor::Output>& Node::get_outputs() const // TRIAGED (to be deprecated)
 {
     return m_outputs;
 }
@@ -181,14 +182,33 @@ void Node::set_placement_index(size_t placement)
     m_placement_index = placement;
 }
 
+// TODO(amprocte): make this a pure virtual once copy_with_new_args is sunsetted
+std::shared_ptr<Node> Node::copy_with_new_source_outputs(const std::vector<NodeOutput>& new_source_outputs) const
+{
+    NodeVector new_source_nodes(new_source_outputs.size());
+
+    for (size_t i = 0; i < new_source_outputs.size(); i++)
+    {
+        new_source_nodes[i] = new_source_outputs[i].get_node();
+    }
+
+    return copy_with_new_args(new_source_nodes);
+}
+
 std::shared_ptr<Node> Node::get_argument(size_t index) const
 {
-    for (auto& i : get_inputs())
+    for (auto& i : get_inputs()) // TRIAGED (this function to be deprecated anyway)
     {
         NGRAPH_ASSERT(i.get_output().get_node()->get_output_size() == 1)
             << "child " << i.get_output().get_node()->get_name() << " has multiple outputs";
     }
     return m_inputs.at(index).get_output().get_node();
+}
+
+NodeOutput Node::get_input_source_output(size_t input_index) const
+{
+    auto& output_descriptor = m_inputs[input_index].get_output();
+    return NodeOutput(output_descriptor.get_node(), output_descriptor.get_index());
 }
 
 Node::~Node()
@@ -202,7 +222,7 @@ Node::~Node()
 NodeVector Node::get_arguments() const
 {
     NodeVector result;
-    for (auto& i : get_inputs())
+    for (auto& i : get_inputs()) // TRIAGED (this function to be deprecated anyway)
     {
         result.push_back(i.get_output().get_node());
     }
@@ -253,8 +273,10 @@ std::ostream& Node::write_long_description(std::ostream& out) const
 {
     out << description() << '[' << get_name() << "](";
     string sep = "";
-    for (auto arg : get_arguments())
+    for (size_t i = 0; i < get_input_size(); i++)
     {
+        auto arg = get_input_source_output(i).get_node();
+        // TODO(amprocte): Should specify which output
         out << sep << NodeDescription(*arg, true) << ": "
             << pretty_element_type(arg->get_output_element_type(0))
             << arg->get_output_partial_shape(0);
@@ -318,9 +340,31 @@ shared_ptr<descriptor::Tensor> Node::get_output_tensor_ptr(size_t i) const
     return m_outputs.at(i).get_tensor_ptr();
 }
 
+void Node::replace_input_source(size_t input_index, const std::shared_ptr<Node>& src_node, size_t output_index)
+{
+    m_inputs[input_index].replace_output(src_node, output_index);
+}
+
+void Node::replace_input_source(size_t input_index, const NodeOutput& src_output)
+{
+    replace_input_source(input_index, src_output.get_node(), src_output.get_index());
+}
+
+std::vector<NodeInput> Node::get_output_targets(size_t output_index) const
+{
+    std::vector<NodeInput> result;
+
+    for (auto& input : m_outputs[output_index].get_inputs()) // TRIAGED (part of new API)
+    {
+        result.emplace_back(input->get_raw_pointer_node(), input->get_index());
+    }
+
+    return result;
+}
+
 const std::set<descriptor::Input*>& Node::get_output_inputs(size_t i) const
 {
-    return m_outputs.at(i).get_inputs();
+    return m_outputs.at(i).get_inputs(); // TRIAGED (this function to be deprecated)
 }
 
 descriptor::Tensor& Node::get_output_tensor(size_t i) const
@@ -348,6 +392,21 @@ const PartialShape& Node::get_input_partial_shape(size_t i) const
     return m_inputs.at(i).get_partial_shape();
 }
 
+descriptor::Tensor& Node::get_input_tensor(size_t i)
+{
+    return m_inputs.at(i).get_output().get_tensor();
+}
+
+const descriptor::Tensor& Node::get_input_tensor(size_t i) const
+{
+    return m_inputs.at(i).get_output().get_tensor();
+}
+
+descriptor::Tensor* Node::get_input_tensor_ptr(size_t i) const
+{
+    return m_inputs.at(i).get_output().get_tensor_ptr().get();
+}
+
 std::vector<descriptor::Input*> Node::get_inputs_from(const shared_ptr<Node>& src)
 {
     std::vector<descriptor::Input*> results;
@@ -356,7 +415,7 @@ std::vector<descriptor::Input*> Node::get_inputs_from(const shared_ptr<Node>& sr
     {
         if (this->get_argument(i) == src)
         {
-            results.push_back(&(this->get_inputs().at(i)));
+            results.push_back(&(this->get_inputs().at(i))); // TRIAGED (this function to be deprecated)
         }
     }
 
@@ -371,7 +430,7 @@ std::vector<descriptor::Output*> Node::get_outputs_to(const shared_ptr<Node>& ds
     {
         if (dst->get_argument(i).get() == this)
         {
-            results.push_back(&(dst->get_inputs().at(i).get_output()));
+            results.push_back(&(dst->get_inputs().at(i).get_output())); // TRIAGED (this function to be deprecated)
         }
     }
 
@@ -412,9 +471,9 @@ std::string ngraph::node_validation_assertion_string(const Node* node)
 
 void ngraph::check_new_args_count(const Node* node, const NodeVector& new_args)
 {
-    NODE_VALIDATION_ASSERT(node, new_args.size() == node->get_arguments().size())
-        << "copy_with_new_args() expected " << node->get_arguments().size() << " argument"
-        << (node->get_arguments().size() == 1 ? "" : "s") << " but got " << new_args.size();
+    NODE_VALIDATION_ASSERT(node, new_args.size() == node->get_input_size())
+        << "copy_with_new_args() expected " << node->get_input_size() << " argument"
+        << (node->get_input_size() == 1 ? "" : "s") << " but got " << new_args.size();
 }
 
 const std::shared_ptr<Node>& ngraph::check_single_output_arg(const std::shared_ptr<Node>& node,

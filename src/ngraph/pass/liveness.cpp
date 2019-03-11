@@ -73,9 +73,9 @@ bool pass::Liveness::run_on_function(shared_ptr<ngraph::Function> function)
     {
         const shared_ptr<Node>& node = *it;
         unordered_set<descriptor::Tensor*> input_tensor_decls;
-        for (descriptor::Input& input_decl : node->get_inputs())
+        for (size_t i = 0; i < node->get_input_size(); i++)
         {
-            descriptor::Tensor& tensor = input_decl.get_tensor();
+            descriptor::Tensor& tensor = node->get_input_tensor(i);
             if (persistent_tensors.find(&tensor) == persistent_tensors.end())
             {
                 input_tensor_decls.insert(&tensor);

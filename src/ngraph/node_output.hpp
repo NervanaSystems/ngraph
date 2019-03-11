@@ -37,18 +37,18 @@ namespace ngraph
         {
         }
 
-        const std::shared_ptr<Node>& get_node() { return m_node; }
-        size_t get_index() { return m_index; }
-        const element::Type& get_element_type() { return m_node->get_output_element_type(m_index); }
-        const Shape& get_shape() { return m_node->get_output_shape(m_index); }
-        const PartialShape& get_partial_shape()
+        const std::shared_ptr<Node>& get_node() const { return m_node; }
+        size_t get_index() const { return m_index; }
+        const element::Type& get_element_type() const { return m_node->get_output_element_type(m_index); }
+        const Shape& get_shape() const { return m_node->get_output_shape(m_index); }
+        const PartialShape& get_partial_shape() const
         {
             return m_node->get_output_partial_shape(m_index);
         }
 
     private:
-        std::shared_ptr<Node> m_node;
-        size_t m_index;
+        const std::shared_ptr<Node> m_node;
+        const size_t m_index;
     };
 
     std::vector<NodeOutput> check_single_output_args(const NodeVector& args);

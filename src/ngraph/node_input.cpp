@@ -15,5 +15,12 @@
 //*****************************************************************************
 
 #include "ngraph/node_input.hpp"
+#include "ngraph/node_output.hpp"
 
 using namespace ngraph;
+
+NodeOutput NodeInput::get_source_output() const
+{
+    auto& output_descriptor = m_node->get_inputs().at(m_index).get_output(); // TRIAGED (new api)
+    return NodeOutput(output_descriptor.get_node(), output_descriptor.get_index());
+}

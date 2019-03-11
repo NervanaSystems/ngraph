@@ -26,6 +26,7 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/node_input.hpp"
 #include "ngraph/node_vector.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
@@ -89,11 +90,12 @@ void ngraph::traverse_nodes(const NodeVector& io_nodes,
             f(n);
         }
         stack.pop_front();
-        for (auto arg : n->get_arguments())
+        for (size_t i = 0; i < n->get_input_size(); i++)
         {
-            if (instances_seen.count(arg) == 0)
+            auto source_node = n->get_input_source_output(i).get_node();
+            if (instances_seen.count(source_node) == 0)
             {
-                stack.push_front(arg);
+                stack.push_front(source_node);
             }
         }
 
@@ -157,10 +159,11 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
     //         Change I's connected upstream output to O_rep
     for (size_t i = 0; i < target->get_output_size(); i++)
     {
-        std::set<ngraph::descriptor::Input*> copy_inputs = target->get_output_inputs(i);
-        for (auto input : copy_inputs)
+        std::vector<NodeInput> copy_inputs = target->get_output_targets(i);
+        for (auto& input : copy_inputs)
         {
-            input->replace_output(replacement->get_outputs().at(i));
+            // TODO: add an "input.replace_source(...)" function
+            input.get_node()->replace_input_source(input.get_index(), replacement, i);
         }
     }
 }
@@ -232,13 +235,13 @@ std::list<std::shared_ptr<ngraph::Node>>
     {
         if (!node_map.exists(node))
         {
-            // get (already) cloned arguments and clone the node
-            NodeVector cloned_args;
-            for (auto arg : node->get_arguments())
+            // TODO(amprocte): Should be using NodeOutputs, not Nodes
+            NodeVector cloned_source_nodes;
+            for (size_t i = 0; i < node->get_input_size(); i++)
             {
-                cloned_args.push_back(node_map.get(arg));
+                cloned_source_nodes.push_back(node_map.get(node->get_input_source_output(i).get_node()));
             }
-            auto cloned_node = node->copy_with_new_args(cloned_args);
+            auto cloned_node = node->copy_with_new_args(cloned_source_nodes);
 
             //copy control dependencies
             for (auto cdep : node->get_control_dependencies())
@@ -520,18 +523,18 @@ size_t ngraph::get_user_count(Node* node)
 
 bool ngraph::possibly_overwritten(Node* node)
 {
-    for (const descriptor::Output& output : node->get_outputs())
+    for (size_t i = 0; i < node->get_output_size(); i++)
     {
-        for (const descriptor::Input* input : output.get_inputs())
+        for (auto& input : node->get_output_targets(i))
         {
-            if (input->get_node()->is_op())
+            if (input.get_node()->is_op())
             {
-                auto op = std::static_pointer_cast<ngraph::op::Op>(input->get_node());
+                auto op = static_cast<ngraph::op::Op*>(input.get_node());
                 if (auto op_annotations = op->get_op_annotations())
                 {
                     for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
                     {
-                        if (input->get_index() == oi_pair.input && oi_pair.destructive)
+                        if (input.get_index() == oi_pair.input && oi_pair.destructive)
                         {
                             return true;
                         }
@@ -540,6 +543,7 @@ bool ngraph::possibly_overwritten(Node* node)
             }
         }
     }
+
     return false;
 }
 

@@ -106,25 +106,27 @@ bool ngraph::pass::ZeroDimTensorElimination::run_on_function(std::shared_ptr<ngr
             continue;
         }
 
-        if (n->get_inputs().size() == 0)
+        if (n->get_input_size() == 0)
         {
             continue;
         }
 
         if (auto concat = std::dynamic_pointer_cast<op::Concat>(n))
         {
-            NodeVector non_zero_dim_args;
-            for (auto arg : concat->get_arguments())
+            // TODO(amprocte): probably should be operating on NodeOutputs, not Nodes
+            NodeVector non_zero_dim_source_nodes;
+            for (size_t i = 0; i < concat->get_input_size(); i++)
             {
-                if (!has_zero_dim(arg))
+                auto source_node = concat->get_input_source_output(i).get_node();
+                if (!has_zero_dim(source_node))
                 {
-                    non_zero_dim_args.push_back(arg);
+                    non_zero_dim_source_nodes.push_back(source_node);
                 }
             }
 
-            if (non_zero_dim_args.size() < concat->get_inputs().size())
+            if (non_zero_dim_source_nodes.size() < concat->get_input_size())
             {
-                auto new_concat = concat->copy_with_new_args(non_zero_dim_args);
+                auto new_concat = concat->copy_with_new_args(non_zero_dim_source_nodes);
                 NGRAPH_DEBUG << " Replacing " << n->get_name() << " with "
                              << new_concat->get_name();
                 ngraph::replace_node(concat, new_concat);
@@ -132,7 +134,7 @@ bool ngraph::pass::ZeroDimTensorElimination::run_on_function(std::shared_ptr<ngr
             }
         }
 
-        auto arg = n->get_inputs().at(0).get_output().get_node();
+        auto arg = n->get_input_source_output(0).get_node();
 
         if (arg->get_output_size() != 1 || !has_zero_dim(arg))
         {

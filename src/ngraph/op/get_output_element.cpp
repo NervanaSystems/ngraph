@@ -16,6 +16,7 @@
 
 #include <sstream>
 
+#include "ngraph/node_input.hpp"
 #include "ngraph/op/get_output_element.hpp"
 
 using namespace std;
@@ -59,10 +60,10 @@ NodeVector op::get_output_elements(const shared_ptr<Node>& mon)
 {
     NodeVector goes(mon->get_output_size());
 
-    for (auto goe_input : mon->get_output_inputs(0))
+    for (auto& goe_input : mon->get_output_targets(0))
     {
-        auto goe = std::dynamic_pointer_cast<op::GetOutputElement>(goe_input->get_node());
-        goes.at(goe->get_n()) = goe_input->get_node();
+        auto goe = static_cast<op::GetOutputElement*>(goe_input.get_node());
+        goes.at(goe->get_n()) = goe_input.get_node()->shared_from_this();
     }
     return goes;
 }

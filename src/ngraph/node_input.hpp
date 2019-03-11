@@ -21,6 +21,8 @@
 
 namespace ngraph
 {
+    class NodeOutput;
+
     class NodeInput
     {
     public:
@@ -30,11 +32,17 @@ namespace ngraph
         {
         }
 
-        Node* get_node() { return m_node; }
-        size_t get_index() { return m_index; }
-        const element::Type& get_element_type() { return m_node->get_input_element_type(m_index); }
-        const Shape& get_shape() { return m_node->get_input_shape(m_index); }
-        const PartialShape& get_partial_shape() { return m_node->get_input_partial_shape(m_index); }
+        NodeInput(std::shared_ptr<Node> n, size_t index)
+            : NodeInput(n.get(), index)
+        {
+        }
+
+        Node* get_node() const { return m_node; }
+        size_t get_index() const { return m_index; }
+        const element::Type& get_element_type() const { return m_node->get_input_element_type(m_index); }
+        const Shape& get_shape() const { return m_node->get_input_shape(m_index); }
+        const PartialShape& get_partial_shape() const { return m_node->get_input_partial_shape(m_index); }
+        NodeOutput get_source_output() const;
     private:
         Node* const m_node;
         const size_t m_index;

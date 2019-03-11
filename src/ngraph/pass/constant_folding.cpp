@@ -512,9 +512,8 @@ void ngraph::pass::ConstantFolding::construct_constant_dequantize()
         auto constant_match = dynamic_pointer_cast<op::Constant>(pattern_map[constant_label]);
         auto dequant_match = pattern_map[dequant];
         auto dequantize_op = dynamic_pointer_cast<op::Dequantize>(dequant_match);
-        auto args = dequant_match->get_arguments();
-        auto scale = dynamic_pointer_cast<op::Constant>(args[1]);
-        auto offset = dynamic_pointer_cast<op::Constant>(args[2]);
+        auto scale = static_pointer_cast<op::Constant>(dequant_match->get_input_source_output(1).get_node());
+        auto offset = static_pointer_cast<op::Constant>(dequant_match->get_input_source_output(2).get_node());
 
         auto type = constant_match->get_element_type();
 
@@ -586,10 +585,9 @@ void ngraph::pass::ConstantFolding::construct_constant_quantize()
 
         auto constant_match = dynamic_pointer_cast<op::Constant>(pattern_map[constant_label]);
         auto quant_match = pattern_map[quant];
-        auto quantize_op = dynamic_pointer_cast<op::Quantize>(quant_match);
-        auto args = quant_match->get_arguments();
-        auto scale = static_pointer_cast<op::Constant>(args[1]);
-        auto offset = static_pointer_cast<op::Constant>(args[2]);
+        auto quantize_op = static_pointer_cast<op::Quantize>(quant_match);
+        auto scale = static_pointer_cast<op::Constant>(quant_match->get_input_source_output(1).get_node());
+        auto offset = static_pointer_cast<op::Constant>(quant_match->get_input_source_output(2).get_node());
 
         auto type = quant_match->get_element_type();
 

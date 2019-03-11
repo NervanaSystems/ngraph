@@ -96,17 +96,18 @@ autodiff::Adjoints::Adjoints(const NodeVector& ys, const NodeVector& cs)
         {
             continue;
         }
-        for (auto arg : node->get_arguments())
+        for (size_t i = 0; i < node->get_input_size(); i++)
         {
-            auto count_it = parent_counts.find(arg);
+            auto source_node = node->get_input_source_output(i).get_node();
+            auto count_it = parent_counts.find(source_node);
             if (count_it == parent_counts.end())
             {
-                parent_counts[arg] = 1;
-                nodes_to_check.push_front(arg);
+                parent_counts[source_node] = 1;
+                nodes_to_check.push_front(source_node);
             }
             else
             {
-                parent_counts[arg]++;
+                parent_counts[source_node]++;
             }
         }
         visited_nodes.insert(node);
@@ -128,13 +129,14 @@ autodiff::Adjoints::Adjoints(const NodeVector& ys, const NodeVector& cs)
         auto node = nodes_to_check.front();
         nodes_to_check.pop_front();
         // Look for nodes that will be available when this node is done
-        for (auto arg : node->get_arguments())
+        for (size_t i = 0; i < node->get_input_size(); i++)
         {
-            auto count_it = parent_counts.find(arg);
+            auto source_node = node->get_input_source_output(i).get_node();
+            auto count_it = parent_counts.find(source_node);
             count_it->second--;
             if (0 == count_it->second)
             {
-                nodes_to_check.push_front(arg);
+                nodes_to_check.push_front(source_node);
             }
         }
         node->generate_adjoints(*this, get(node));
