@@ -1,0 +1,22 @@
+diff --git a/runtime/src/CMakeLists.txt b/runtime/src/CMakeLists.txt
+index 9bf9c80..59ba173 100644
+--- a/runtime/src/CMakeLists.txt
++++ b/runtime/src/CMakeLists.txt
+@@ -161,17 +161,6 @@ else()
+   set(LIBOMP_LIBRARY_DIR ${LIBOMP_LIBRARY_DIR} PARENT_SCOPE)
+ endif()
+ 
+-# Add symbolic links to libomp
+-if(NOT WIN32)
+-  add_custom_command(TARGET omp POST_BUILD
+-    COMMAND ${CMAKE_COMMAND} -E create_symlink ${LIBOMP_LIB_FILE}
+-      libgomp${LIBOMP_LIBRARY_SUFFIX}
+-    COMMAND ${CMAKE_COMMAND} -E create_symlink ${LIBOMP_LIB_FILE}
+-      libiomp5${LIBOMP_LIBRARY_SUFFIX}
+-    WORKING_DIRECTORY ${LIBOMP_LIBRARY_DIR}
+-  )
+-endif()
+-
+ # Linking command will include libraries in LIBOMP_CONFIGURED_LIBFLAGS
+ libomp_get_libflags(LIBOMP_CONFIGURED_LIBFLAGS)
+ target_link_libraries(omp ${LIBOMP_CONFIGURED_LIBFLAGS} ${CMAKE_DL_LIBS})
