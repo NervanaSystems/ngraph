@@ -29,8 +29,8 @@ ExternalProject_Add(
     PREFIX clang
     #URL http://releases.llvm.org/${NGRAPH_LLVM_VERSION}/cfe-${NGRAPH_LLVM_VERSION}.src.tar.xz
     #URL_HASH SHA1=427e12762836d808583fb4149c033d02de0a8db2
-    URL http://prereleases.llvm.org/8.0.0/rc4/cfe-8.0.0rc4.src.tar.xz
-    URL_HASH SHA1=a1660897fecc33e129df116279341b8fe2018f46
+    URL http://prereleases.llvm.org/8.0.0/rc5/cfe-8.0.0rc5.src.tar.xz
+    URL_HASH SHA1=b2e37038d64f097f396c7fe5181349c337da9551
     DOWNLOAD_NO_PROGRESS TRUE
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
@@ -47,8 +47,8 @@ ExternalProject_Add(
     PREFIX openmp
     #URL http://releases.llvm.org/${NGRAPH_LLVM_VERSION}/openmp-${NGRAPH_LLVM_VERSION}.src.tar.xz
     #URL_HASH SHA1=3b931dcafbe6e621c9d99617235fd63f222c2ba2
-    URL http://prereleases.llvm.org/8.0.0/rc4/openmp-8.0.0rc4.src.tar.xz
-    URL_HASH SHA1=8297ec60b923ece86cb73869fcd1a3a373f41e1f
+    URL http://prereleases.llvm.org/8.0.0/rc5/openmp-8.0.0rc5.src.tar.xz
+    URL_HASH SHA1=006e8734f642d831ce591eab3aa8d20c18e24962
     DOWNLOAD_NO_PROGRESS TRUE
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
@@ -83,8 +83,8 @@ ExternalProject_Add(
     DEPENDS ${LLVM_DEPENDS}
     #URL http://releases.llvm.org/${NGRAPH_LLVM_VERSION}/llvm-${NGRAPH_LLVM_VERSION}.src.tar.xz
     #URL_HASH SHA1=f97632fcc3186eb0d396492ef8acfc807648580f
-    URL http://prereleases.llvm.org/8.0.0/rc4/llvm-8.0.0rc4.src.tar.xz
-    URL_HASH SHA1=8486b2a8e136166fe50cbcdccec1ae57a48b7d3c
+    URL http://prereleases.llvm.org/8.0.0/rc5/llvm-8.0.0rc5.src.tar.xz
+    URL_HASH SHA1=37c0c3b5596fb05a64e75dbc0eafaf738dadc8ca
     DOWNLOAD_NO_PROGRESS TRUE
     CMAKE_GENERATOR ${CMAKE_GENERATOR}
     CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
