@@ -20,11 +20,11 @@ import numpy as np
 from test.ngraph.util import get_runtime
 
 try:
-    from ngraph.impl.onnx_import import import_onnx_model_file
+    from ngraph.impl.onnx_import import import_onnx_file
 
     def test_import_onnx_function():
         model_path = os.path.join(os.path.dirname(__file__), 'models/add_abc.onnx')
-        ng_function = import_onnx_model_file(model_path)
+        ng_function = import_onnx_file(model_path)
 
         dtype = np.float32
         value_a = np.array([1.0], dtype=dtype)
