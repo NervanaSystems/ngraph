@@ -56,7 +56,7 @@ def generateMap(Closure method, configurationMaps) {
     return executionMap
 }
 
-def createStage(String stageName, Closure method, configurationMaps) {
+def createStage(String stageName, Closure method, configurationMaps, force = false) {
     /**
     * Create pipeline stage.
     *
