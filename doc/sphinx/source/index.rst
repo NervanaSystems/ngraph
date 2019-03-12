@@ -96,4 +96,3 @@ Indices and tables
 
    * :ref:`search`
    * :ref:`genindex`
-

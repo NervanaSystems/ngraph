@@ -633,7 +633,7 @@ std::string codegen::CompilerCore::find_header_version(const std::string& path)
 {
     // Step 1: find highest g++ version
     std::string gpp_prefix = file_util::path_join(path, "bin/g++-");
-    std::string gpp_ver = "0";
+    std::string gpp_ver;
     for (auto i : {"8", "7", "6", "5", "4.9", "4.8"})
     {
         if (file_util::exists(gpp_prefix + i))
