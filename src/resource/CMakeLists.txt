@@ -14,6 +14,10 @@
 # limitations under the License.
 # ******************************************************************************
 
+if(NOT NGRAPH_CODEGEN_ENABLE)
+    return()
+endif()
+
 set (SRC
     main.cpp
     util.cpp
@@ -21,13 +25,15 @@ set (SRC
     header_rewrite.cpp
 )
 
-set(LLVM_LIB_DIR ${LLVM_INCLUDE_DIR}/../lib/clang/5.0.2/include)
-get_filename_component(LLVM_LIB_DIR ${LLVM_LIB_DIR} ABSOLUTE)
-
-list(APPEND HEADER_SEARCH_DEFINES CLANG_BUILTIN_HEADERS_PATH="${LLVM_LIB_DIR}")
+add_executable(resource_generator EXCLUDE_FROM_ALL ${SRC})
+add_dependencies(resource_generator libllvm)
+get_target_property(LLVM_INCLUDE_DIR libllvm INTERFACE_INCLUDE_DIRECTORIES)
+get_filename_component(CLANG_INCLUDE_DIR ${LLVM_INCLUDE_DIR}/../lib/clang/5.0.2/include ABSOLUTE)
+list(APPEND HEADER_SEARCH_DEFINES CLANG_BUILTIN_HEADERS_PATH="${CLANG_INCLUDE_DIR}")
 list(APPEND HEADER_SEARCH_DEFINES NGRAPH_HEADERS_PATH="${NGRAPH_INCLUDE_PATH}")
 
 if(NGRAPH_CPU_ENABLE)
+    add_dependencies(resource_generator libmkldnn libeigen)
     get_target_property(MKLDNN_INCLUDE_DIR libmkldnn INTERFACE_INCLUDE_DIRECTORIES)
     get_target_property(EIGEN_INCLUDE_DIR libeigen INTERFACE_INCLUDE_DIRECTORIES)
     list(APPEND HEADER_SEARCH_DEFINES EIGEN_HEADERS_PATH="${EIGEN_INCLUDE_DIR}")
@@ -35,13 +41,9 @@ if(NGRAPH_CPU_ENABLE)
 endif()
 
 if(NGRAPH_TBB_ENABLE)
-    list(APPEND HEADER_SEARCH_DEFINES TBB_HEADERS_PATH="${TBB_ROOT}/include")
-endif()
-
-add_executable(resource_generator EXCLUDE_FROM_ALL ${SRC})
-add_dependencies(resource_generator ext_llvm)
-if(NGRAPH_CPU_ENABLE)
-    add_dependencies(resource_generator ext_eigen ext_mkldnn)
+    add_dependencies(resource_generator libtbb)
+    get_target_property(TBB_INCLUDE_DIR libtbb INTERFACE_INCLUDE_DIRECTORIES)
+    list(APPEND HEADER_SEARCH_DEFINES TBB_HEADERS_PATH="${TBB_INCLUDE_DIR}")
 endif()
 
 set_source_files_properties(main.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES}")

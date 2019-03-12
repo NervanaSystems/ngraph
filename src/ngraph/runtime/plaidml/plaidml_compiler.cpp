@@ -18,7 +18,6 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/pass/algebraic_simplification.hpp"
-#include "ngraph/pass/any_all_replacement.hpp"
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/cse.hpp"
 #include "ngraph/pass/get_output_element_elimination.hpp"
@@ -32,6 +31,7 @@
 #include "ngraph/runtime/plaidml/plaidml_impl.hpp"
 #include "ngraph/runtime/plaidml/plaidml_logger.hpp"
 #include "ngraph/runtime/plaidml/plaidml_pass_concat_elision.hpp"
+#include "ngraph/runtime/plaidml/plaidml_pass_concat_split.hpp"
 #include "ngraph/runtime/plaidml/plaidml_pass_explicit_logicals.hpp"
 #include "ngraph/runtime/plaidml/plaidml_pass_implicit_broadcast.hpp"
 #include "ngraph/runtime/plaidml/plaidml_pass_lower_convolutions.hpp"
@@ -73,7 +73,7 @@ ngraph::runtime::plaidml::Compiler::Compiler(Config* config)
 {
 }
 
-std::shared_ptr<ngraph::runtime::plaidml::CompiledFunction>
+std::shared_ptr<ngraph::runtime::plaidml::PlaidML_Executable>
     ngraph::runtime::plaidml::Compiler::compile(std::shared_ptr<Function> func)
 {
     // N.B. ngraph::pass::Manager::run_passes() is *not* a const
@@ -86,7 +86,6 @@ std::shared_ptr<ngraph::runtime::plaidml::CompiledFunction>
     ngraph::pass::Manager pass_manager;
 
     // We apply the same general-purposes passes as the CPU backend.
-    pass_manager.register_pass<ngraph::pass::AnyAllReplacement>();
     pass_manager.register_pass<ngraph::pass::LikeReplacement>();
     pass_manager.register_pass<ngraph::pass::NopElimination>();
     pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
@@ -98,6 +97,7 @@ std::shared_ptr<ngraph::runtime::plaidml::CompiledFunction>
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::ExplicitLogicals>();
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::ConcatElision>();
+    pass_manager.register_pass<ngraph::runtime::plaidml::pass::ConcatSplit>();
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::ReplicateElision>();
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::ReplicateCombination>();
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::ImplicitBroadcast>();
@@ -121,15 +121,20 @@ std::shared_ptr<ngraph::runtime::plaidml::CompiledFunction>
     // The caller may wish to perform operations (e.g. clone) on their
     // supplied function that will cause validation to occur.  So
     // before we rewrite, we make our own copy of the function.
-    func = clone_function(*func);
+    auto rewrite_func = clone_function(*func);
 
     // Apply passes.
-    pass_manager.run_passes(func);
+    pass_manager.run_passes(rewrite_func);
 
     // Compile the resulting function.
     Build b;
-    build(std::move(func), &b);
-    return std::make_shared<CompiledFunction>(std::move(b));
+    build(std::move(rewrite_func), &b);
+    return std::make_shared<PlaidML_Executable>(std::move(b), std::move(func));
+}
+
+bool ngraph::runtime::plaidml::Compiler::is_supported(const Node& node) const
+{
+    return GlobalOpImplMap()->count(std::type_index(typeid(node))) != 0;
 }
 
 void ngraph::runtime::plaidml::Compiler::build(std::shared_ptr<Function> func, Build* b)

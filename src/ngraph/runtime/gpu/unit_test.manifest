@@ -5,10 +5,6 @@ divide_by_zero_int32
 # int64 is not supprted by cuDNN
 dot_matrix_vector_int64
 generate_mask
-# select_and_scatter is deprecated
-select_and_scatter_3d_without_overlap
-select_and_scatter_with_overlap
-select_and_scatter_without_overlap
 # custom_mem is not implemented on GPU
 tensorview_custom_mem
 # integer is not supported by cuDNN on backward pooling
@@ -30,6 +26,7 @@ backwards_batch_norm_training
 dequantize
 dequantize_zero_offset
 dequantize_axes
+dequantize_dynamic_offset
 dequantize_int8
 dequantize_int8_zero_offset
 dequantize_int32
@@ -37,6 +34,7 @@ dequantize_int32_zero_offset
 quantize
 quantize_zero_offset
 quantize_axes
+quantize_dynamic_offset
 quantize_int8
 quantize_int8_zero_offset
 quantize_int32
@@ -67,7 +65,34 @@ product_vector_zero
 product_matrix_to_scalar_zero_by_zero
 product_3d_eliminate_zero_dim
 max_matrix_rows_zero_int32
-reduce_matrix_rows_zero
-reduce_matrix_cols_zero
-reduce_vector_zero
-reduce_matrix_to_scalar_zero_by_zero
+any_trivial
+any_2x2_to_scalar_true
+any_2x2_to_scalar_false
+any_2x0_to_scalar
+any_2x3_eliminate_col_dim
+any_2x3_eliminate_row_dim
+any_2x2x3_eliminate_dim_0
+any_2x2x3_eliminate_dim_1
+any_2x2x3_eliminate_dim_2
+any_2x2x3_eliminate_dims_0_1
+any_2x2x3_eliminate_dims_0_2
+any_2x2x3_eliminate_dims_1_2
+any_2x2x3_eliminate_dims_0_1_2
+all_trivial
+all_2x2_to_scalar_false
+all_2x2_to_scalar_true
+all_2x0_to_scalar
+all_2x3_eliminate_col_dim
+all_2x3_eliminate_row_dim
+all_2x2x3_eliminate_dim_0
+all_2x2x3_eliminate_dim_1
+all_2x2x3_eliminate_dim_2
+all_2x2x3_eliminate_dims_0_1
+all_2x2x3_eliminate_dims_0_2
+all_2x2x3_eliminate_dims_1_2
+all_2x2x3_eliminate_dims_0_1_2
+
+# GPU backend uses floats to implement these ops for int32 
+floor_int32
+divide_int32
+one_hot_scalar_oob_in_3

@@ -22,7 +22,7 @@
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
 
-#ifdef NGRAPH_DISTRIBUTED
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
 #include <mlsl.hpp>
 #endif
 
@@ -30,16 +30,30 @@ using namespace std;
 using namespace ngraph;
 
 runtime::cpu::CPU_CallFrame::CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction> external_function,
+                                           InitContextFuncCG compiled_init_ctx_func,
+                                           DestroyContextFuncCG compiled_destroy_ctx_func,
                                            EntryPoint compiled_function)
     : m_external_function(external_function)
+    , m_compiled_init_ctx_func(compiled_init_ctx_func)
+    , m_compiled_destroy_ctx_func(compiled_destroy_ctx_func)
     , m_compiled_function(compiled_function)
 {
     setup_runtime_context();
+    if (!m_external_function->is_direct_execution())
+    {
+        // Invoke codegen runtime context initialization function.
+        NGRAPH_ASSERT(m_compiled_init_ctx_func) << "compiled_init_ctx_func cannot be null.";
+        cg_ctx = m_compiled_init_ctx_func();
+    }
 }
 
 runtime::cpu::CPU_CallFrame::~CPU_CallFrame()
 {
-    cleanup_runtime_context();
+    if (!m_external_function->is_direct_execution())
+    {
+        NGRAPH_ASSERT(m_compiled_destroy_ctx_func) << "compiled_destroy_ctx_func cannot be null.";
+        m_compiled_destroy_ctx_func(cg_ctx);
+    }
 }
 
 void runtime::cpu::CPU_CallFrame::inner_call(
@@ -66,7 +80,7 @@ void runtime::cpu::CPU_CallFrame::inner_call(
     // Invoke compiled computation
     if (!m_external_function->is_direct_execution())
     {
-        m_compiled_function(inputs.data(), outputs.data(), ctx);
+        m_compiled_function(inputs.data(), outputs.data(), ctx, cg_ctx);
     }
     else
     {
@@ -97,14 +111,14 @@ void runtime::cpu::CPU_CallFrame::propagate_layouts(
     if (layouts.size() != tvs.size())
     {
         throw ngraph_error(
-            "Error propagating layouts - tensor view and layout descriptor counts do not match");
+            "Error propagating layouts - tensor and layout descriptor counts do not match");
     }
     for (size_t i = 0; i < tvs.size(); i++)
     {
         if (layouts[i] == nullptr)
         {
             throw ngraph_error(
-                "Error propagating layouts - layout information missing from tensor view");
+                "Error propagating layouts - layout information missing from tensor");
         }
         tvs[i]->set_tensor_layout(layouts[i]);
     }
@@ -136,18 +150,22 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
     ctx->mkldnn_workspaces = mkldnn_emitter->get_mkldnn_workspaces().data();
     ctx->states = m_external_function->m_states.data();
 
-    if (std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
+    if (m_external_function->is_direct_execution() && std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
     {
+        // For codegen mode, graph and global control are now part of the code generated
+        // CPURuntimeContextCG class.
         ctx->G = new tbb::flow::graph;
         const auto envParallelism = std::getenv("NGRAPH_INTER_OP_PARALLELISM");
         const auto parallelism = envParallelism == nullptr ? 1 : std::atoi(envParallelism);
         ctx->c = new tbb::global_control(tbb::global_control::max_allowed_parallelism, parallelism);
     }
 
-#ifdef NGRAPH_DISTRIBUTED
-    NGRAPH_ASSERT(MLSL::Environment::GetEnv().IsInitialized());
-    ctx->mlsl_env = &MLSL::Environment::GetEnv();
-    ctx->mlsl_dist = ctx->mlsl_env->CreateDistribution(ctx->mlsl_env->GetProcessCount(), 1);
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
+    if (MLSL::Environment::GetEnv().IsInitialized())
+    {
+        ctx->mlsl_env = &MLSL::Environment::GetEnv();
+        ctx->mlsl_dist = ctx->mlsl_env->CreateDistribution(ctx->mlsl_env->GetProcessCount(), 1);
+    }
 #endif
 }
 
@@ -159,8 +177,11 @@ void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
     {
         delete buffer;
     }
-    if (std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
+    if (m_external_function->is_direct_execution() && std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
     {
+        // For codegen mode, graph and global control are now part of a code generated
+        // CPURuntimeContext class.
+
         // delete graph G and nodes in G
         ctx->G->wait_for_all();
         std::vector<tbb::flow::graph_node*> to_be_deleted;
@@ -175,7 +196,8 @@ void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
         }
         delete ctx->c;
     }
-#ifdef NGRAPH_DISTRIBUTED
+
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
     if (MLSL::Environment::GetEnv().IsInitialized() && ctx->mlsl_dist != nullptr)
     {
         ctx->mlsl_env->DeleteDistribution(ctx->mlsl_dist);

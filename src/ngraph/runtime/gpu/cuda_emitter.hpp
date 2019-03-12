@@ -17,7 +17,7 @@
 #pragma once
 
 #include <array>
-#include "ngraph/codegen/code_writer.hpp"
+#include "ngraph/code_writer.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_ops.hpp"
 #include "ngraph/runtime/gpu/gpu_host_parameters.hpp"
 #include "ngraph/runtime/gpu/nvdiff.hpp"
@@ -90,13 +90,6 @@ namespace ngraph
                                    NVShape lower_bounds,
                                    NVShape slice_strides,
                                    NVShape output_shape);
-
-                size_t build_reduce_window(const OpName op_name,
-                                           const std::vector<std::string>& dtypes,
-                                           NVShape input_shape,
-                                           NVShape output_shape,
-                                           NVShape reduce_window_shape,
-                                           NVShape reduce_window_strides);
 
                 size_t build_reverse_sequence(const std::array<std::string, 3>& dtypes,
                                               NVShape input_shape0,
@@ -202,7 +195,7 @@ namespace ngraph
                             GPURuntimeContext* ctx,
                             std::shared_ptr<GPUHostParameters> params);
                 uint32_t align_to_block_size(uint32_t threads, uint32_t block_size);
-                void print_tensor_from_gpu(codegen::CodeWriter& writer,
+                void print_tensor_from_gpu(CodeWriter& writer,
                                            const std::string& tensor_name,
                                            NVShape shape);
                 std::string include_helpers();

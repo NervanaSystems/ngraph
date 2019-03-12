@@ -24,7 +24,7 @@
 #include <string>
 #include <tuple>
 
-#include "ngraph/codegen/code_writer.hpp"
+#include "ngraph/code_writer.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/descriptor/output.hpp"
@@ -56,7 +56,6 @@
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/floor.hpp"
-#include "ngraph/op/function_call.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
@@ -80,8 +79,6 @@
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/product.hpp"
-#include "ngraph/op/reduce.hpp"
-#include "ngraph/op/reduce_window.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -89,7 +86,6 @@
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/select.hpp"
-#include "ngraph/op/select_and_scatter.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/sign.hpp"
 #include "ngraph/op/sin.hpp"
@@ -207,7 +203,7 @@ std::string runtime::gpu::GPUInternalFunction::add_call_to_runtime(
     const std::vector<runtime::gpu::GPUTensorWrapper>& out)
 {
     m_runtime_constructor->add_call(caller, callee, args, out);
-    codegen::CodeWriter writer;
+    CodeWriter writer;
     writer.block_begin();
     {
         for (auto const& tensor : args)
@@ -229,7 +225,7 @@ std::string runtime::gpu::GPUInternalFunction::compose_manifest(
     const std::vector<runtime::gpu::GPUTensorWrapper>& args,
     const std::vector<runtime::gpu::GPUTensorWrapper>& out) const
 {
-    codegen::CodeWriter writer;
+    CodeWriter writer;
     writer.block_begin();
     {
         for (auto const& tensor : args)
@@ -393,7 +389,7 @@ void runtime::gpu::GPUInternalFunction::emit()
 
     if (std::getenv("NGRAPH_GPU_TRACE"))
     {
-        m_trace = std::make_shared<codegen::CodeWriter>();
+        m_trace = std::make_shared<CodeWriter>();
     }
 
     // build and emit functions

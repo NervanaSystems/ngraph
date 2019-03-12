@@ -34,7 +34,7 @@ from test.ngraph.util import run_op_node, get_runtime
     (ng.sum, np.sum, (0, 2)),
     (ng.prod, np.prod, (0, 2)),
 ])
-@pytest.config.gpu_skip(reason='Not implemented')
+@pytest.mark.skip_on_gpu
 def test_reduction_ops(ng_api_helper, numpy_function, reduction_axes):
     shape = [2, 4, 3, 2]
     np.random.seed(133391)
@@ -45,7 +45,7 @@ def test_reduction_ops(ng_api_helper, numpy_function, reduction_axes):
     assert np.allclose(result, expected)
 
 
-@pytest.config.gpu_skip(reason='Not implemented')
+@pytest.mark.skip_on_gpu
 def test_argmax():
     runtime = get_runtime()
     input_x = ng.constant(np.array([[9, 2, 10],
@@ -58,7 +58,7 @@ def test_argmax():
                        np.array([1, 3, 0], dtype=np.int32))
 
 
-@pytest.config.gpu_skip(reason='Not implemented')
+@pytest.mark.skip_on_gpu
 def test_argmin():
     runtime = get_runtime()
     input_x = ng.constant(np.array([[12, 2, 10],
@@ -71,7 +71,7 @@ def test_argmin():
                        np.array([3, 2, 1], dtype=np.int32))
 
 
-@pytest.config.gpu_skip(reason='Not implemented')
+@pytest.mark.skip_on_gpu
 def test_topk():
     runtime = get_runtime()
     input_x = ng.constant(np.array([[9, 2, 10],
@@ -93,31 +93,3 @@ def test_topk():
                                  [9, 8, 7],
                                  [6, 2, 5],
                                  [3, 1, 4]], dtype=np.float32))
-
-
-def test_reduce():
-    from functools import reduce
-    np.random.seed(133391)
-
-    # default reduce all axes
-    init_val = np.float32(0.)
-    input_data = np.random.randn(3, 4, 5).astype(np.float32)
-    expected = np.sum(input_data)
-    reduction_function_args = [init_val, ng.impl.op.Add]
-    result = run_op_node([input_data], ng.reduce, *reduction_function_args)
-    assert np.allclose(result, expected)
-
-    reduction_axes = (0, 2)
-    init_val = np.float32(0.)
-    input_data = np.random.randn(3, 4, 5).astype(np.float32)
-    expected = np.sum(input_data, axis=reduction_axes)
-    reduction_function_args = [init_val, ng.impl.op.Add, list(reduction_axes)]
-    result = run_op_node([input_data], ng.reduce, *reduction_function_args)
-    assert np.allclose(result, expected)
-
-    reduction_axes = (0, )
-    input_data = np.random.randn(100).astype(np.float32)
-    expected = reduce(lambda x, y: x - y, input_data, np.float32(0.))
-    reduction_function_args = [init_val, ng.impl.op.Subtract, list(reduction_axes)]
-    result = run_op_node([input_data], ng.reduce, *reduction_function_args)
-    assert np.allclose(result, expected)

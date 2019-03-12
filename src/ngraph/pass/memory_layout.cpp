@@ -40,7 +40,7 @@ pass::MemoryLayout::MemoryLayout(size_t alignment, bool disable_memory_sharing)
     }
 }
 
-bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
+bool pass::MemoryLayout::run_on_function(shared_ptr<Function> function)
 {
     MemoryManager mm(m_alignment, m_disable_memory_sharing);
     for (shared_ptr<Node> node : function->get_ordered_ops())
@@ -68,9 +68,13 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
                         // Non-destructive kernels can pass through if memory sharing is disabled
                         if ((node->liveness_free_list.count(input) != 0 ||
                              std::dynamic_pointer_cast<op::GetOutputElement>(node) ||
-                             (m_disable_memory_sharing && !oi_pair.destructive)) &&
+                             (m_disable_memory_sharing && !oi_pair.destructive &&
+                              !input_node->is_parameter() && !input_node->is_constant())) &&
                             node->liveness_new_list.count(output) != 0)
+
                         {
+                            NGRAPH_DEBUG << "Reusing " << input->get_name() << " for "
+                                         << output->get_name();
                             in_place_outputs.insert({output, input});
                             reused_inputs.insert(input);
                         }
