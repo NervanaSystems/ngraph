@@ -64,7 +64,6 @@
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
-#include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
@@ -1360,11 +1359,6 @@ std::string runtime::gpu::GPU_Emitter::emit_TopK(EMIT_ARGS)
         dtypes, input_shape, topk_axis, topk_k, index_elem_type, compute_max);
 
     return compiled_function->add_to_runtime(index, function_name, args, out);
-}
-
-std::string runtime::gpu::GPU_Emitter::emit_Transpose(EMIT_ARGS)
-{
-    throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 string runtime::gpu::GPU_Emitter::node_names(const vector<GPUTensorWrapper>& args,
