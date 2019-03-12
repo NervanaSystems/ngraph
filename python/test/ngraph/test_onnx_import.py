@@ -15,16 +15,18 @@
 # ******************************************************************************
 
 import os
-import numpy as np
-
-from test.ngraph.util import get_runtime
 
 try:
-    from ngraph.onnx import import_onnx_model_file
+    import numpy as np
+    import onnx
+    from ngraph.impl import onnx_import
+    from google.protobuf.message import DecodeError
+    from ngraph.onnx import import_onnx_file
+    from test.ngraph.util import get_runtime
 
     def test_import_onnx_function():
         model_path = os.path.join(os.path.dirname(__file__), 'models/add_abc.onnx')
-        ng_function = import_onnx_model_file(model_path)
+        ng_function = import_onnx_file(model_path)
 
         dtype = np.float32
         value_a = np.array([1.0], dtype=dtype)
