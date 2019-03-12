@@ -32,7 +32,7 @@ op::Concat::Concat(const NodeVector& args, size_t concatenation_axis)
 
 void op::Concat::validate_and_infer_types()
 {
-    NODE_VALIDATION_CHECK(this, m_inputs.size() >= 1, "At least one argument required.");
+    NODE_VALIDATION_CHECK(this, get_input_size() >= 1, "At least one argument required.");
 
     PartialShape inputs_shape_scheme{PartialShape::dynamic()};
     element::Type inputs_et{element::dynamic};

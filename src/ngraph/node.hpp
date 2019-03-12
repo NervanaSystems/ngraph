@@ -274,8 +274,10 @@ namespace ngraph
         std::set<NodeOutput> get_node_outputs();
 
     protected:
-        std::set<std::shared_ptr<Node>> m_control_dependencies;
         void set_output_size(size_t n);
+
+    private:
+        std::set<std::shared_ptr<Node>> m_control_dependencies;
 
         const std::string m_node_type;
         size_t m_instance_id;
