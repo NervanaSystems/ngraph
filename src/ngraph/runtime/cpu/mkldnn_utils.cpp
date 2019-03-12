@@ -724,9 +724,9 @@ bool runtime::cpu::mkldnn_utils::can_use_conv_auto()
     {
         return false;
     }
-#endif
-
+#else
     return false;
+#endif
 }
 bool runtime::cpu::mkldnn_utils::can_use_mkldnn_batchnorm_bprop(const ngraph::Node* node)
 {

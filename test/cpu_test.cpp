@@ -936,7 +936,7 @@ TEST(cpu_test, conv_test_winograd)
 
     /* initializing non-zero values for src */
     for (size_t i = 0; i < net_src.size(); ++i)
-        net_src[i] = sinf((float)i);
+        net_src[i] = sinf(static_cast<float>(i));
 
     memory::dims conv_src_tz = {batch, 3, 224, 224};
     memory::dims conv_weights_tz = {64, 3, 3, 3};
@@ -952,9 +952,9 @@ TEST(cpu_test, conv_test_winograd)
 
     /* initializing non-zero values for weights and bias */
     for (size_t i = 0; i < conv_weights.size(); ++i)
-        conv_weights[i] = sinf((float)i);
+        conv_weights[i] = sinf(static_cast<float>(i));
     for (size_t i = 0; i < conv_bias.size(); ++i)
-        conv_bias[i] = sinf((float)i);
+        conv_bias[i] = sinf(static_cast<float>(i));
 
     /* create memory for user data */
     auto conv_user_src_memory =
