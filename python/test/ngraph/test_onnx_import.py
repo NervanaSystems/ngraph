@@ -18,9 +18,9 @@ import os
 
 try:
     import numpy as np
-    import onnx
-    from ngraph.impl import onnx_import
-    from google.protobuf.message import DecodeError
+    import onnx  # noqa
+    from ngraph.impl import onnx_import  # noqa
+    from google.protobuf.message import DecodeError  # noqa
     from ngraph.onnx import import_onnx_file
     from test.ngraph.util import get_runtime
 
