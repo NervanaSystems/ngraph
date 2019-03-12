@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2018-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,10 +14,16 @@
 # limitations under the License.
 # ******************************************************************************
 
+if(NOT NGRAPH_MANYLINUX_ENABLE)
+    return()
+endif()
+
 #
 # OpenMP runtime bundled with mklml cannot run with GLIBC==2.5
 # For manylinux1, build the OpenMP runtime from LLVM and use it instead.
 #
+
+include(cmake/external_hwloc.cmake)
 
 include(ExternalProject)
 
@@ -26,6 +32,7 @@ set(OMPRT_INSTALL_PREFIX ${EXTERNAL_PROJECTS_ROOT}/omprt)
 ExternalProject_Add(
     ext_omprt
     PREFIX omprt
+    DEPENDS ext_hwloc
     URL http://prereleases.llvm.org/8.0.0/rc5/openmp-8.0.0rc5.src.tar.xz
     URL_HASH SHA1=006e8734f642d831ce591eab3aa8d20c18e24962
     DOWNLOAD_NO_PROGRESS TRUE
@@ -35,9 +42,12 @@ ExternalProject_Add(
             -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
             -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
             -DCMAKE_INSTALL_PREFIX=${OMPRT_INSTALL_PREFIX}
+            -DCMAKE_INSTALL_RPATH=${CMAKE_INSTALL_RPATH}
             -DLIBOMP_OMPT_SUPPORT=OFF
             -DLIBOMP_LIB_NAME=${CMAKE_SHARED_LIBRARY_PREFIX}iomp5
             -DLIBOMP_INSTALL_ALIASES=OFF
+            -DLIBOMP_USE_HWLOC=ON
+            -DLIBOMP_HWLOC_INSTALL_DIR=${HWLOC_INSTALL_PREFIX}
     EXCLUDE_FROM_ALL TRUE
 )
 

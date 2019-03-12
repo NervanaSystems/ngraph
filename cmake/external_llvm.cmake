@@ -14,6 +14,8 @@
 # limitations under the License.
 # ******************************************************************************
 
+include(cmake/external_hwloc.cmake)
+
 include(ExternalProject)
 
 set(NGRAPH_LLVM_VERSION 8.0.0)
@@ -70,12 +72,26 @@ endif()
 if(WIN32)
     set(LLVM_DEPENDS ext_clang)
 else()
-    set(LLVM_DEPENDS ext_clang ext_openmp)
     set(PASS_LLVM_OPENMP_DIR -DLLVM_EXTERNAL_OPENMP_SOURCE_DIR=${OPENMP_SOURCE_DIR})
+    if(NGRAPH_MANYLINUX_ENABLE)
+        set(LLVM_DEPENDS ext_clang ext_openmp ext_hwloc)
+    else()
+        set(LLVM_DEPENDS ext_clang ext_openmp)
+    endif()
 endif()
 
 if(NGRAPH_MANYLINUX_ENABLE)
     set(ALLOW_LLVM_OLD_TOOLCHAIN -DLLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN=ON)
+endif()
+
+if(NGRAPH_MANYLINUX_ENABLE)
+    ExternalProject_Get_Property(ext_hwloc INSTALL_DIR)
+    set(LIBOMP_MANYLINUX_ARGS
+        -DLIBOMP_LIB_NAME=${CMAKE_SHARED_LIBRARY_PREFIX}iomp5
+        -DLIBOMP_INSTALL_ALIASES=OFF
+        -DLIBOMP_USE_HWLOC=ON
+        -DLIBOMP_HWLOC_INSTALL_DIR=${INSTALL_DIR}
+    )
 endif()
 
 ExternalProject_Add(
@@ -109,8 +125,7 @@ ExternalProject_Add(
                 -DLLVM_ENABLE_ZLIB=OFF
                 ${ALLOW_LLVM_OLD_TOOLCHAIN}
                 -DLIBOMP_OMPT_SUPPORT=OFF
-                -DLIBOMP_LIB_NAME=${CMAKE_SHARED_LIBRARY_PREFIX}iomp5
-                -DLIBOMP_INSTALL_ALIASES=OFF
+                ${LIBOMP_MANYLINUX_ARGS}
                 -DCLANG_BUILD_TOOLS=OFF
                 -DCLANG_ENABLE_ARCMT=OFF
                 -DCLANG_ENABLE_STATIC_ANALYZER=OFF
