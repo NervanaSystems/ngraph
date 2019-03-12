@@ -37,6 +37,24 @@
 #include "ngraph/node_vector.hpp"
 #include "ngraph/placement.hpp"
 
+// We are working on deprecating the descriptor::Input and descriptor::Output classes. Currently,
+// they are still used extensively by the backends, so we make this deprecation optional while the
+// work is in progress.
+
+// TODO: Get rid of all the preprocessor junk here, once descriptor::Input and descriptor::Output
+// have actually been eliminated.
+
+// Uncomment the following line to enable the deprecation of methods handling descriptor::Input
+// and descriptor::Output.
+// #define NGRAPH_DEPRECATE_INPUT_OUTPUT_CLASSES
+
+#ifdef NGRAPH_DEPRECATE_INPUT_OUTPUT_CLASSES
+#define INPUT_OUTPUT_DEPRECATED __attribute__((deprecated))
+#undef NGRAPH_DEPRECATE_INPUT_OUTPUT_CLASSES
+#else
+#define INPUT_OUTPUT_DEPRECATED
+#endif
+
 namespace ngraph
 {
     class NodeInput;
@@ -159,18 +177,18 @@ namespace ngraph
         virtual std::ostream& write_long_description(std::ostream&) const;
 
         // TODO: Deprecate
-        std::deque<descriptor::Input>& get_inputs() __attribute__((deprecated)) { return m_inputs; }
+        std::deque<descriptor::Input>& get_inputs() INPUT_OUTPUT_DEPRECATED { return m_inputs; }
         // TODO: Deprecate
-        const std::deque<descriptor::Input>& get_inputs() const __attribute__((deprecated))
+        const std::deque<descriptor::Input>& get_inputs() const INPUT_OUTPUT_DEPRECATED
         {
             return m_inputs;
         }
         // Deprecated
         // TODO: Remove from unit tests.
-        std::deque<descriptor::Output>& get_outputs() __attribute__((deprecated));
+        std::deque<descriptor::Output>& get_outputs() INPUT_OUTPUT_DEPRECATED;
         // Deprecated
         // TODO: Remove from unit tests.
-        const std::deque<descriptor::Output>& get_outputs() const __attribute__((deprecated));
+        const std::deque<descriptor::Output>& get_outputs() const INPUT_OUTPUT_DEPRECATED;
 
         /// Get control dependencies registered on the node
         const std::set<std::shared_ptr<Node>>& get_control_dependencies() const;
@@ -214,7 +232,7 @@ namespace ngraph
 
         /// Returns the set of inputs using output i
         const std::set<descriptor::Input*>& get_output_inputs(size_t i) const
-            __attribute__((deprecated));
+            INPUT_OUTPUT_DEPRECATED;
 
         /// Returns the number of inputs for the op
         size_t get_input_size() const;
