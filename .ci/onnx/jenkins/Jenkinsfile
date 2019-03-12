@@ -195,9 +195,9 @@ def main(String label, String projectName, String projectRoot, String dockerCont
                     runToxTests(configurationMaps)
                 }
             }
-            catch(e) {
+            catch(Exception e) {
                 // Set result to ABORTED if exception contains exit code of a process interrupted by SIGTERM
-                if ("$e".contains("143")) {
+                if (e.toString().contains("FlowInterruptedException")) {
                     currentBuild.result = "ABORTED"
                 } else {
                     currentBuild.result = "FAILURE"
