@@ -860,7 +860,7 @@ void MKLDNNEmitter::build_max_pooling_backward(const mkldnn::pooling_backward::d
 
     mkldnn::pooling_forward::primitive_desc fwd_pd{fwd_pool_desc, executor::global_cpu_engine};
 
-    size_t ws_index = m_primitive_deps[fwd_pool_index][1];
+    size_t ws_index = m_primitive_deps[fwd_pool_index][2];
     build_memory_primitive(fwd_pd.workspace_primitive_desc().desc(), ws_index);
     m_primitive_deps[bwd_pool_index][1] = ws_index;
 
