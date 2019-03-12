@@ -133,12 +133,13 @@ def runToxTests(configurationMaps) {
 def cleanup(configurationMaps) {
     Closure cleanupMethod = { configMap ->
         sh """
+            docker exec ${configMap["dockerContainerName"]} rm -rf /root || true
             cd ${HOME}/ONNX_CI
             ./docker.sh chmod --container_name=${configMap["dockerContainerName"]} --directory="/logs" --options="-R 777" || true
             ./docker.sh stop --container_name=${configMap["dockerContainerName"]} || true
             ./docker.sh remove --container_name=${configMap["dockerContainerName"]} || true
             ./docker.sh clean_up || true
-            rm ${HOME}/ONNX_CI/docker.sh
+            rm -rf ${HOME}/ONNX_CI/docker.sh
             rm -rf ${WORKSPACE}/${BUILD_NUMBER}
         """
     }
