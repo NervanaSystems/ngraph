@@ -388,6 +388,27 @@ namespace ngraph
                         mkldnn_arg1_shape, et_weights, memory::format::any);
                     const memory::desc result_desc(
                         mkldnn_result_shape, et_result, memory::format::any);
+
+                    auto emit_debug_info = [&]() {
+                        std::cout << "input_shape: " << join(mkldnn_arg0_shape) << std::endl;
+                        std::cout << "filter_shape: " << join(mkldnn_arg1_shape) << std::endl;
+                        if (use_bias)
+                        {
+                            auto bias_shape = node->get_input_shape(2);
+                            memory::dims mkldnn_bias_shape(bias_shape.begin(), bias_shape.end());
+                            std::cout << "bias_shape:  " << join(bias_shape) << std::endl;
+                        }
+                        std::cout << "result_shape: " << join(mkldnn_result_shape) << std::endl;
+                        std::cout << "mkldnn_filter_strides: " << join(mkldnn_filter_strides)
+                                  << std::endl;
+                        std::cout << "mkldnn_dialted_strides: " << join(mkldnn_dilated_strides)
+                                  << std::endl;
+                        std::cout << "mkldnn_padding_below: " << join(mkldnn_padding_below)
+                                  << std::endl;
+                        std::cout << "mkldnn_padding_above: " << join(mkldnn_padding_above)
+                                  << std::endl;
+                    };
+
                     std::unique_ptr<convolution_forward::desc> fwd_desc{nullptr};
                     if (use_bias)
                     {
@@ -451,6 +472,7 @@ namespace ngraph
                             }
                             else
                             {
+                                emit_debug_info();
                                 throw ngraph_error(
                                     "setting layouts on Convolution failed with MKLDNN error: " +
                                     e.message);
@@ -508,6 +530,7 @@ namespace ngraph
                             }
                             else
                             {
+                                emit_debug_info();
                                 throw ngraph_error(
                                     "setting layouts on Convolution failed with MKLDNN error: " +
                                     e.message);
