@@ -1992,6 +1992,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::StopGradient:
         case OP_TYPEID::TopK:
+        case OP_TYPEID::Transpose:
         case OP_TYPEID::EmbeddingLookup:
         case OP_TYPEID::Passthrough:
         {
