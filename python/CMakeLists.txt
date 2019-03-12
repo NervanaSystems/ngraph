@@ -43,6 +43,6 @@ add_custom_command(
 
 add_custom_target(python_wheel DEPENDS ngraph ${CMAKE_BINARY_DIR}/python/dist/)
 if (NGRAPH_CPU_ENABLE)
-    add_dependencies(python_wheel ext_mkldnn)
+    add_dependencies(python_wheel libmkldnn)
 endif()
 
