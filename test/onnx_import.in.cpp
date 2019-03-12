@@ -1836,12 +1836,12 @@ TEST(onnx_${BACKEND_NAME}, model_space_to_depth_no_blocksize)
 TEST(onnx_${BACKEND_NAME}, model_slice_start_out_of_bounds)
 {
     auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/slice_start_out_of_bounds.onnx"));
+        file_util::path_join(SERIALIZED_ZOO, "onnx/slice_start_out_of_bounds.prototxt"));
 
     Inputs inputs{read_binary_file<float>(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/slice_start_out_of_bounds_input0.bin"))};
+        file_util::path_join(TEST_FILES, "onnx/slice_start_out_of_bounds_input0.bin"))};
     Outputs expected_output{read_binary_file<float>(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/slice_start_out_of_bounds_output0.bin"))};
+        file_util::path_join(TEST_FILES, "onnx/slice_start_out_of_bounds_output0.bin"))};
 
     Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
