@@ -355,10 +355,6 @@ void runtime::intelgpu::do_pad_operation(cldnn::topology& topology,
             }
             writer.block_begin();
 
-            // FIXME: Padding can now be negative, and I am not sure I know precisely how to
-            // account for that here so I am throwing in an assert. --amprocte
-            NGRAPH_ASSERT(pad_below.at(i) >= 0);
-
             writer << "uint input_idx" << var_idx << " = i" << var_idx << " - "
                    << pad_below.at(var_idx) << " /*pad_below*/;\n";
             writer << "uint input_idx_interior" << var_idx << " = input_idx" << var_idx << " / ("
