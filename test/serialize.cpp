@@ -91,6 +91,50 @@ TEST(serialize, main)
     handle->call_with_validate({result}, {x, z, y});
     EXPECT_EQ((vector<float>{50, 72, 98, 128}), read_vector<float>(result));
 }
+
+TEST(serialize, friendly_name)
+{
+    // First create "f(A,B,C) = (A+B)*C".
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto sum = A + B;
+    auto product = sum * C;
+    auto f = make_shared<Function>(product, ParameterVector{A, B, C}, "f");
+
+    A->set_friendly_name("A");
+    B->set_friendly_name("B");
+    C->set_friendly_name("C");
+    sum->set_friendly_name("Sum");
+    product->set_friendly_name("Product");
+
+    string js = serialize(f, 4);
+    ofstream out("serialize_function.js");
+    out << js;
+
+    istringstream in(js);
+    shared_ptr<Function> sfunc = deserialize(in);
+    auto backend = runtime::Backend::create("INTERPRETER");
+    auto handle = backend->compile(sfunc);
+
+    auto x = backend->create_tensor(element::f32, shape);
+    copy_data(x, vector<float>{1, 2, 3, 4});
+    auto y = backend->create_tensor(element::f32, shape);
+    copy_data(y, vector<float>{5, 6, 7, 8});
+    auto z = backend->create_tensor(element::f32, shape);
+    copy_data(z, vector<float>{9, 10, 11, 12});
+    auto result = backend->create_tensor(element::f32, shape);
+
+    handle->call_with_validate({result}, {x, y, z});
+    EXPECT_EQ((vector<float>{54, 80, 110, 144}), read_vector<float>(result));
+
+    handle->call_with_validate({result}, {y, x, z});
+    EXPECT_EQ((vector<float>{54, 80, 110, 144}), read_vector<float>(result));
+
+    handle->call_with_validate({result}, {x, z, y});
+    EXPECT_EQ((vector<float>{50, 72, 98, 128}), read_vector<float>(result));
+}
 #endif
 
 TEST(serialize, existing_models)

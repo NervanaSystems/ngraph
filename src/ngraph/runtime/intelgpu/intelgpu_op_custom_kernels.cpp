@@ -1195,13 +1195,14 @@ void runtime::intelgpu::do_concat_operation(cldnn::topology& topology,
         }
         else
         {
-            if (idx == input_shapes.size() - 1)
-            {
-                // last kernel should produce the output name as overall node required
-                name_suffix = "";
-            }
             kernel_input.push_back(aux_output_name);
             kernel_arguments = get_kernel_args(2, 1);
+        }
+
+        // last kernel should produce the output name as overall node required
+        if (idx == input_shapes.size() - 1)
+        {
+            name_suffix = "";
         }
 
         const cldnn::custom_gpu_primitive op_concat(output_name + name_suffix,

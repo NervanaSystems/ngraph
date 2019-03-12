@@ -219,7 +219,8 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     , m_use_tbb(std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
 #if !defined(NGRAPH_DEX_ONLY)
     , m_is_compiled(false)
-    , m_direct_execution(!std::getenv("NGRAPH_CODEGEN"))
+    , m_direct_execution((std::getenv("NGRAPH_CODEGEN") == nullptr) ||
+                         (std::string(std::getenv("NGRAPH_CODEGEN")) == "0"))
 #else
     , m_direct_execution(true)
 #endif
@@ -675,16 +676,11 @@ using namespace ngraph::runtime;
         }
 
         bool temporaries_used = false;
-        size_t worst_case_tmp_size = 0;
         for (shared_ptr<Node> node : ordered_ops)
         {
             if (node->liveness_new_list.size() > 0)
             {
                 temporaries_used = true;
-                for (descriptor::Tensor* tensor : node->liveness_new_list)
-                {
-                    worst_case_tmp_size += tensor->size();
-                }
             }
         }
         if (temporaries_used)
