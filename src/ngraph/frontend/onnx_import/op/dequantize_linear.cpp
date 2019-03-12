@@ -42,7 +42,7 @@ namespace ngraph
                     std::shared_ptr<ngraph::Node> x = inputs.at(0);
                     std::shared_ptr<ngraph::Node> x_scale = inputs.at(1);
                     std::shared_ptr<ngraph::Node> zero_point;
-                    if (inputs.size() == 3)
+                    if (inputs.size() == 3 && !inputs.at(2)->is_null())
                     {
                         zero_point = inputs.at(2);
                     }

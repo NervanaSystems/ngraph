@@ -97,7 +97,7 @@ namespace ngraph
 
                                 if (bias)
                                 {
-                                    error::NotSupported(
+                                    throw error::NotSupported(
                                         "Groups != 1 not supported for Quantized Convolution with "
                                         "bias.");
                                 }
@@ -197,20 +197,7 @@ namespace ngraph
                     std::shared_ptr<ngraph::Node> conv_node = nullptr;
 
                     // no bias param
-                    if (inputs.size() < 9)
-                    {
-                        conv_node =
-                            make_ng_quant_conv(data,
-                                               filters,
-                                               strides,
-                                               filter_dilations,
-                                               padding_below,
-                                               padding_above,
-                                               data_dilations,
-                                               groups,
-                                               OpScale{data_scale, filters_scale, output_scale});
-                    }
-                    else
+                    if (inputs.size() == 9 && !inputs.at(8)->is_null())
                     {
                         auto bias = inputs.at(8);
                         conv_node =
@@ -224,6 +211,19 @@ namespace ngraph
                                                groups,
                                                OpScale{data_scale, filters_scale, output_scale},
                                                bias);
+                    }
+                    else
+                    {
+                        conv_node =
+                            make_ng_quant_conv(data,
+                                               filters,
+                                               strides,
+                                               filter_dilations,
+                                               padding_below,
+                                               padding_above,
+                                               data_dilations,
+                                               groups,
+                                               OpScale{data_scale, filters_scale, output_scale});
                     }
 
                     return {conv_node};
