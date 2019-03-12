@@ -18,6 +18,8 @@ set -e
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-cmake -DNGRAPH_PYTHON_BUILD_ENABLE=TRUE -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DNGRAPH_MANYLINUX_ENABLE=TRUE -DNGRAPH_DEX_ONLY=TRUE ${SCRIPT_DIR}/../..
+cmake -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DNGRAPH_MANYLINUX_ENABLE=TRUE -DNGRAPH_DEX_ONLY=TRUE ${SCRIPT_DIR}/../../..
 lcores=$(grep processor /proc/cpuinfo | wc -l)
-make -j$lcores python_wheel
+make -j$lcores
+NGRAPH_CODEGEN=1 ./test/unit-test
+./test/unit-test

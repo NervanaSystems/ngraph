@@ -45,7 +45,7 @@ fi
 # build the docker base image
 docker build  --rm=true \
        ${DOCKER_HTTP_PROXY} ${DOCKER_HTTPS_PROXY} \
-       -f="${SCRIPT_DIR}/Dockerfile.ngraph.manylinux1_clang8" \
+       -f="${SCRIPT_DIR}/docker/Dockerfile.ngraph.manylinux1_clang8" \
        -t="ngraph:manylinux1_clang8" \
        ${SCRIPT_DIR}
 
