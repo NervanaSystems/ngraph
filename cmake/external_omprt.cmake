@@ -26,8 +26,8 @@ set(OMPRT_INSTALL_PREFIX ${EXTERNAL_PROJECTS_ROOT}/omprt)
 ExternalProject_Add(
     ext_omprt
     PREFIX omprt
-    URL http://prereleases.llvm.org/8.0.0/rc4/openmp-8.0.0rc4.src.tar.xz
-    URL_HASH SHA1=8297ec60b923ece86cb73869fcd1a3a373f41e1f
+    URL http://prereleases.llvm.org/8.0.0/rc5/openmp-8.0.0rc5.src.tar.xz
+    URL_HASH SHA1=006e8734f642d831ce591eab3aa8d20c18e24962
     DOWNLOAD_NO_PROGRESS TRUE
     CMAKE_ARGS
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
