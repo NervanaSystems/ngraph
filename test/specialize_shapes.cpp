@@ -112,7 +112,7 @@ TEST(specialize_shapes, et_static_shape_rank_dynamic_validation_fails)
             specialize_shapes(
                 f, {element::f32, element::i32}, {PartialShape{1, 2, 3}, PartialShape{1, 2, 3, 4}});
         },
-        NodeValidationError);
+        NodeValidationFailure);
 }
 
 // Test specialization of dynamic element types to a case where validation will fail.
@@ -133,7 +133,7 @@ TEST(specialize_shapes, et_dynamic_shape_static_validation_fails)
             specialize_shapes(
                 f, {element::u32, element::i32}, {PartialShape{1, 2, 3}, PartialShape{1, 2, 3}});
         },
-        NodeValidationError);
+        NodeValidationFailure);
 }
 
 // Test specialization of rank-static dynamic shapes, where the replacement shapes have the wrong
@@ -180,7 +180,7 @@ TEST(specialize_shapes, et_static_shape_rank_static_dynamic_dim_mismatch)
     ASSERT_THROW(
         {
             specialize_shapes(
-                f, {element::f32, element::i32}, {PartialShape{1, 2, 3}, PartialShape{1, 9, 3}});
+                f, {element::f32, element::i32}, {PartialShape{1, 2, 3}, PartialShape{1, 9, 4}});
         },
         AssertionFailure);
 }
