@@ -16,6 +16,8 @@
 
 #include <sstream>
 
+#include "ngraph/node_input.hpp"
+#include "ngraph/node_output.hpp"
 #include "ngraph/op/get_output_element.hpp"
 
 using namespace std;
@@ -49,24 +51,24 @@ shared_ptr<Node> op::GetOutputElement::copy_with_new_args(const NodeVector& new_
 
 NodeVector op::GetOutputElement::get_arguments() const
 {
-    return NodeVector{get_inputs().at(0).get_output().get_node()};
+    return NodeVector{get_input_source_output(0).get_node()};
 }
 
 void op::GetOutputElement::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
     auto delta = deltas.at(0);
 
-    adjoints.add_delta(get_inputs().at(0).get_output().get_node(), delta, get_n());
+    adjoints.add_delta(get_input_source_output(0).get_node(), delta, get_n());
 }
 
 NodeVector op::get_output_elements(const shared_ptr<Node>& mon)
 {
-    NodeVector goes(mon->get_outputs().size());
+    NodeVector goes(mon->get_output_size());
 
-    for (auto goe_input : mon->get_output_inputs(0))
+    for (auto goe_input : mon->get_output_target_inputs(0))
     {
-        auto goe = std::dynamic_pointer_cast<op::GetOutputElement>(goe_input->get_node());
-        goes.at(goe->get_n()) = goe_input->get_node();
+        auto goe = static_cast<op::GetOutputElement*>(goe_input.get_node());
+        goes.at(goe->get_n()) = goe_input.get_node()->shared_from_this();
     }
     return goes;
 }

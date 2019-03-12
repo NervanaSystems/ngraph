@@ -26,6 +26,8 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/node_input.hpp"
+#include "ngraph/node_output.hpp"
 #include "ngraph/node_vector.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
@@ -155,14 +157,11 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
     // For each of target's output O with replacement output O_rep:
     //     For each O's connected downstream input I:
     //         Change I's connected upstream output to O_rep
-    for (size_t i = 0; i < target->get_outputs().size(); i++)
+    for (size_t i = 0; i < target->get_output_size(); i++)
     {
-        auto& target_output = target->get_outputs().at(i);
-        std::set<ngraph::descriptor::Input*> copy_inputs{begin(target_output.get_inputs()),
-                                                         end(target_output.get_inputs())};
-        for (auto input : copy_inputs)
+        for (auto& input : target->get_output_target_inputs(i))
         {
-            input->replace_output(replacement->get_outputs().at(i));
+            input.replace_source_output(replacement, i);
         }
     }
 }
@@ -344,10 +343,19 @@ pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
     par_node->set_placement(dst_node->get_placement());
 
     // Fix input / output among src, dst and par
-    descriptor::Input* dst_input = dst_node->get_input_from(src_node);
-    descriptor::Output* src_output = src_node->get_output_to(dst_node);
-    src_output->remove_input(dst_input);    // Remove [0]
-    dst_input->replace_output(par_node, 0); // Remove [0] (again), add [8], remove [1], add [9]
+    std::set<NodeInput> dst_inputs = get_node_inputs_from(*src_node, *dst_node);
+    NGRAPH_ASSERT(dst_inputs.size() == 1) << "insert_result_parameter_split encountered more than "
+                                             "one input between the source and destination nodes";
+    auto& dst_input = *(dst_inputs.begin());
+
+    std::set<NodeOutput> src_outputs = get_node_outputs_to(*src_node, *dst_node);
+    NGRAPH_ASSERT(src_outputs.size() == 1) << "insert_result_parameter_split encountered more than "
+                                              "one output between the source and destination nodes";
+    auto& src_output = *(src_outputs.begin());
+
+    src_output.remove_target_input(dst_input); // Remove [0]
+    dst_input.replace_source_output(par_node,
+                                    0); // Remove [0] (again), add [8], remove [1], add [9]
 
     // Add res node
     shared_ptr<op::Result> res_node = make_shared<op::Result>(src_node); // Add [4], [5], [6], [7]
@@ -401,10 +409,19 @@ void ngraph::insert_new_node_between(const shared_ptr<Node>& src_node,
                                      const shared_ptr<Node>& new_node)
 {
     // Fix input / output
-    descriptor::Input* dst_input = dst_node->get_input_from(src_node);
-    descriptor::Output* src_output = src_node->get_output_to(dst_node);
-    src_output->remove_input(dst_input);    // Remove [0]
-    dst_input->replace_output(new_node, 0); // Remove [0] (again), add [8], remove [1], add [9]
+    std::set<NodeInput> dst_inputs = get_node_inputs_from(*src_node, *dst_node);
+    NGRAPH_ASSERT(dst_inputs.size() == 1) << "insert_new_node_between encountered more than one "
+                                             "input between the source and destination nodes";
+    auto& dst_input = *(dst_inputs.begin());
+
+    std::set<NodeOutput> src_outputs = get_node_outputs_to(*src_node, *dst_node);
+    NGRAPH_ASSERT(src_outputs.size() == 1) << "insert_new_node_between encountered more than one "
+                                              "output between the source and destination nodes";
+    auto& src_output = *(src_outputs.begin());
+
+    src_output.remove_target_input(dst_input); // Remove [0]
+    dst_input.replace_source_output(new_node,
+                                    0); // Remove [0] (again), add [8], remove [1], add [9]
 }
 
 std::shared_ptr<Node> ngraph::make_zero(const element::Type& element_type, const Shape& shape)
@@ -510,18 +527,18 @@ size_t ngraph::get_user_count(Node* node)
 
 bool ngraph::possibly_overwritten(Node* node)
 {
-    for (const descriptor::Output& output : node->get_outputs())
+    for (size_t i = 0; i < node->get_output_size(); i++)
     {
-        for (const descriptor::Input* input : output.get_inputs())
+        for (auto& input : node->get_output_target_inputs(i))
         {
-            if (input->get_node()->is_op())
+            if (input.get_node()->is_op())
             {
-                auto op = std::static_pointer_cast<ngraph::op::Op>(input->get_node());
+                auto op = static_cast<ngraph::op::Op*>(input.get_node());
                 if (auto op_annotations = op->get_op_annotations())
                 {
                     for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
                     {
-                        if (input->get_index() == oi_pair.input && oi_pair.destructive)
+                        if (input.get_index() == oi_pair.input && oi_pair.destructive)
                         {
                             return true;
                         }
@@ -575,4 +592,45 @@ void ngraph::plot_graph(
     ngraph::pass::Manager pass_manager;
     pass_manager.register_pass<ngraph::pass::VisualizeTree>(filename, attributes);
     pass_manager.run_passes(f);
+}
+
+std::set<NodeInput> ngraph::get_node_inputs_from(Node& src, Node& dst)
+{
+    std::set<NodeInput> result = dst.get_node_inputs();
+
+    for (auto it = std::begin(result); it != std::end(result); it++)
+    {
+        if (it->get_source_output().get_node().get() != &src)
+        {
+            result.erase(it);
+        }
+    }
+
+    return result;
+}
+
+std::set<NodeOutput> ngraph::get_node_outputs_to(Node& src, Node& dst)
+{
+    std::set<NodeOutput> result = src.get_node_outputs();
+
+    for (auto it = std::begin(result); it != std::end(result); it++)
+    {
+        bool targets_dst = false;
+
+        for (auto& input : it->get_target_inputs())
+        {
+            if (input.get_node() == &dst)
+            {
+                targets_dst = true;
+                break;
+            }
+        }
+
+        if (!targets_dst)
+        {
+            result.erase(it);
+        }
+    }
+
+    return result;
 }

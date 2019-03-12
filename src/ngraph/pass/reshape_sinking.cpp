@@ -24,6 +24,8 @@
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/node_input.hpp"
+#include "ngraph/node_output.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/concat.hpp"
@@ -68,9 +70,9 @@ static shared_ptr<op::Reshape> combine_reshapes(shared_ptr<op::Reshape> r1,
 
 static void insert_reshape(shared_ptr<Node> target, shared_ptr<Node> reshape, size_t input_index)
 {
-    auto arg = target->get_inputs().at(input_index).get_output().get_node();
+    auto arg = target->get_argument(input_index);
     auto new_reshape = reshape->copy_with_new_args({arg});
-    target->get_inputs().at(input_index).replace_output(new_reshape->get_outputs().at(0));
+    target->replace_input_source_output(input_index, new_reshape, 0);
 }
 
 static void delete_reshape(shared_ptr<Node> reshape)
@@ -111,7 +113,7 @@ static AxisSet get_quantization_axes_in_default_order(shared_ptr<op::Reshape> ar
 
 struct Swimmer
 {
-    descriptor::Input* input;
+    NodeInput input;
     shared_ptr<op::Reshape> reshape;
 };
 
@@ -121,7 +123,7 @@ struct Swimmer
 //we prefer nchw since a lot of ngraph ops require this format,
 //so keeping things in nchw allows us to eliminate as many reshapes
 //as possible
-void swim(descriptor::Input* input, shared_ptr<op::Reshape> reshape)
+void swim(NodeInput input, shared_ptr<op::Reshape> reshape)
 {
     Swimmer sw{input, reshape};
     list<Swimmer> work_queue;
@@ -133,11 +135,11 @@ void swim(descriptor::Input* input, shared_ptr<op::Reshape> reshape)
     {
         auto csw = work_queue.front();
         work_queue.pop_front();
-        auto n = csw.input->get_output().get_node();
+        auto n = csw.input.get_source_output().get_node();
         NGRAPH_DEBUG << "Processing (swimming) " << n->get_name();
         if (auto unary = dynamic_pointer_cast<op::util::UnaryElementwiseArithmetic>(n))
         {
-            Swimmer nsw{&unary->get_inputs().at(0), csw.reshape};
+            Swimmer nsw{NodeInput(unary, 0), csw.reshape};
             work_queue.push_back(nsw);
             NGRAPH_DEBUG << "Propagating reshape " << describe_reshape(csw.reshape) << " for "
                          << n->get_name() << " to " << unary->get_argument(0);
@@ -192,7 +194,7 @@ void swim(descriptor::Input* input, shared_ptr<op::Reshape> reshape)
 
             auto new_broadcast = make_shared<op::Broadcast>(
                 broadcast_input, broadcast_reshape->get_shape(), new_broadcast_axes);
-            csw.input->replace_output(new_broadcast->get_outputs().at(0));
+            csw.input.replace_source_output(new_broadcast, 0);
         }
         //TODO: Add cases to push through Reshape and BinaryElementwiseArithmetic
         else
@@ -200,7 +202,7 @@ void swim(descriptor::Input* input, shared_ptr<op::Reshape> reshape)
             //materialize
             auto new_reshape = csw.reshape->copy_with_new_args({n});
             NGRAPH_DEBUG << "Materializing new reshape " << describe_reshape(new_reshape);
-            csw.input->replace_output(new_reshape->get_outputs().at(0));
+            csw.input.replace_source_output(new_reshape, 0);
         }
     }
 }
@@ -211,12 +213,12 @@ void swim(descriptor::Input* input, shared_ptr<op::Reshape> reshape)
 //as far as we can
 static void convert_binary_to_default_order(
     shared_ptr<Node> binary,
-    descriptor::Input& input,
+    const NodeInput& input,
     shared_ptr<Node> right,
     unordered_map<shared_ptr<Node>, shared_ptr<op::Reshape>>& reorders,
     set<shared_ptr<Node>>& reshapes_to_delete)
 {
-    auto left = input.get_output().get_node();
+    auto left = input.get_source_output().get_node();
     auto perm_to_def =
         ngraph::get_permutation_to_default_order(reorders.at(right)->get_input_order());
     auto new_shape = apply_permutation(left->get_shape(), perm_to_def);
@@ -226,7 +228,7 @@ static void convert_binary_to_default_order(
     NGRAPH_DEBUG << "left : About to swim " << describe_reshape(new_reshape) << " up to "
                  << left->get_name();
     //this should now insert and swim reshape on right
-    swim(&input, new_reshape);
+    swim(input, new_reshape);
     mark_reshape_for_deletion(reorders.at(right), reshapes_to_delete);
     reorders[binary] = reorders.at(right);
 }
@@ -236,7 +238,7 @@ static void materialize_shapes(shared_ptr<Node> n,
                                set<shared_ptr<Node>>& reshapes_to_delete)
 {
     //skip multiple output nodes and deal with GOEs exclusively
-    if (n->get_outputs().size() > 1)
+    if (n->get_output_size() > 1)
     {
         return;
     }
@@ -314,12 +316,12 @@ static void sink_binary(shared_ptr<op::util::BinaryElementwiseArithmetic> binary
     else if (reorders.at(left)->get_input_order() == ngraph::get_default_order(left->get_shape()))
     {
         convert_binary_to_default_order(
-            binary, binary->get_inputs().at(0), right, reorders, reshapes_to_delete);
+            binary, NodeInput(binary, 0), right, reorders, reshapes_to_delete);
     }
     else if (reorders.at(right)->get_input_order() == ngraph::get_default_order(right->get_shape()))
     {
         convert_binary_to_default_order(
-            binary, binary->get_inputs().at(1), left, reorders, reshapes_to_delete);
+            binary, NodeInput(binary, 1), left, reorders, reshapes_to_delete);
     }
     else
     {

@@ -59,6 +59,14 @@ namespace ngraph
             return m_node->get_output_partial_shape(m_index);
         }
 
+        /// \return A set containing handles for all inputs targeted by the output referenced by
+        ///        this output handle.
+        std::set<NodeInput> get_target_inputs() const;
+
+        /// \brief Removes a target input from the output referenced by this output handle.
+        /// \param target_input The target input to remove.
+        void remove_target_input(const NodeInput& target_input) const;
+
         bool operator==(const NodeOutput& other) const
         {
             return m_node == other.m_node && m_index == other.m_index;

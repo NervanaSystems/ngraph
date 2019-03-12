@@ -39,6 +39,9 @@
 
 namespace ngraph
 {
+    class NodeInput;
+    class NodeOutput;
+
     namespace pass
     {
         class GetOutputElementElimination;
@@ -78,6 +81,8 @@ namespace ngraph
         // So Adjoints can call generate_adjoints
         friend class autodiff::Adjoints;
         friend class descriptor::Input;
+        friend class NodeInput;                         // for private_get_inputs
+        friend class pass::GetOutputElementElimination; // for private_get_inputs
         friend void replace_node_users_arguments(std::shared_ptr<Node> target,
                                                  std::shared_ptr<Node> replacement);
         friend std::pair<std::shared_ptr<op::Result>, std::shared_ptr<op::Parameter>>
@@ -154,15 +159,18 @@ namespace ngraph
         virtual std::ostream& write_long_description(std::ostream&) const;
 
         // TODO: Deprecate
-        std::deque<descriptor::Input>& get_inputs() { return m_inputs; }
+        std::deque<descriptor::Input>& get_inputs() __attribute__((deprecated)) { return m_inputs; }
         // TODO: Deprecate
-        const std::deque<descriptor::Input>& get_inputs() const { return m_inputs; }
+        const std::deque<descriptor::Input>& get_inputs() const __attribute__((deprecated))
+        {
+            return m_inputs;
+        }
         // Deprecated
         // TODO: Remove from unit tests.
-        std::deque<descriptor::Output>& get_outputs();
+        std::deque<descriptor::Output>& get_outputs() __attribute__((deprecated));
         // Deprecated
         // TODO: Remove from unit tests.
-        const std::deque<descriptor::Output>& get_outputs() const;
+        const std::deque<descriptor::Output>& get_outputs() const __attribute__((deprecated));
 
         /// Get control dependencies registered on the node
         const std::set<std::shared_ptr<Node>>& get_control_dependencies() const;
@@ -205,7 +213,8 @@ namespace ngraph
         std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr() const;
 
         /// Returns the set of inputs using output i
-        const std::set<descriptor::Input*>& get_output_inputs(size_t i) const;
+        const std::set<descriptor::Input*>& get_output_inputs(size_t i) const
+            __attribute__((deprecated));
 
         /// Returns the number of inputs for the op
         size_t get_input_size() const;
@@ -245,12 +254,6 @@ namespace ngraph
         /// Set device placement
         void set_placement_index(size_t placement);
 
-        /// Get input descriptor that is connected to src
-        descriptor::Input* get_input_from(const std::shared_ptr<Node>& src);
-
-        /// Get ouput descriptor that outputs to dst
-        descriptor::Output* get_output_to(const std::shared_ptr<Node>& dst);
-
         /// Get all the nodes that uses the current node
         NodeVector get_users(bool check_is_used = false) const;
 
@@ -258,6 +261,17 @@ namespace ngraph
         /// Use instance ids for comparison instead of memory addresses to improve determinism
         bool operator<(const Node& other) const { return m_instance_id < other.m_instance_id; }
         static const size_t placement_invalid = -1;
+
+        NodeOutput get_input_source_output(size_t input_index) const;
+        descriptor::Tensor& get_input_tensor(size_t input_index) const;
+        void replace_input_source_output(size_t input_index, const NodeOutput& src_output);
+        void replace_input_source_output(size_t input_index,
+                                         const std::shared_ptr<Node>& source_node,
+                                         size_t output_index);
+        std::set<NodeInput> get_output_target_inputs(size_t output_index) const;
+        void remove_output_target_input(size_t output_index, const NodeInput& target_input);
+        std::set<NodeInput> get_node_inputs();
+        std::set<NodeOutput> get_node_outputs();
 
     protected:
         std::set<std::shared_ptr<Node>> m_control_dependencies;
@@ -273,6 +287,9 @@ namespace ngraph
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
         Placement m_placement = Placement::DEFAULT;
         size_t m_placement_index = placement_invalid;
+
+    private:
+        std::deque<descriptor::Input>& private_get_inputs() { return m_inputs; }
     };
 
     class NodeValidationFailure : public CheckFailure

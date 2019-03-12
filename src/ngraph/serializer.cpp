@@ -20,6 +20,7 @@
 #include "ngraph/cpio.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/node_output.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"
 #include "ngraph/op/add.hpp"
@@ -1273,9 +1274,9 @@ static json write(const Node& n, bool binary_constant_data)
     json control_deps = json::array();
     json outputs = json::array();
 
-    for (const descriptor::Input& input : n.get_inputs())
+    for (size_t i = 0; i < n.get_input_size(); i++)
     {
-        inputs.push_back(input.get_output().get_node()->get_name());
+        inputs.push_back(n.get_input_source_output(i).get_node()->get_name());
     }
     for (auto cdep : n.get_control_dependencies())
     {

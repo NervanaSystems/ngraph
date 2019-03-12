@@ -49,7 +49,7 @@ static bool verify_no_internal_zero_length_ops(shared_ptr<Function> f)
     set<shared_ptr<Node>> zero_length_nodes;
     for (auto n : f->get_ordered_ops())
     {
-        if (n->is_output() || n->is_parameter() || n->get_outputs().size() > 1)
+        if (n->is_output() || n->is_parameter() || n->get_output_size() > 1)
         {
             continue;
         }
@@ -90,7 +90,7 @@ bool pass::ZeroDimTensorElimination::run_on_function(shared_ptr<Function> f)
         // if any `GetOutputElement` is zero-length
         // we replace it w/ a signalling constant
         // so we don't have to deal w/ multi-output nodes directly
-        if (n->is_output() || n->is_parameter() || n->get_outputs().size() > 1)
+        if (n->is_output() || n->is_parameter() || n->get_output_size() > 1)
         {
             continue;
         }
@@ -106,7 +106,7 @@ bool pass::ZeroDimTensorElimination::run_on_function(shared_ptr<Function> f)
             continue;
         }
 
-        if (n->get_inputs().size() == 0)
+        if (n->get_input_size() == 0)
         {
             continue;
         }
@@ -122,7 +122,7 @@ bool pass::ZeroDimTensorElimination::run_on_function(shared_ptr<Function> f)
                 }
             }
 
-            if (non_zero_dim_args.size() < concat->get_inputs().size())
+            if (non_zero_dim_args.size() < concat->get_input_size())
             {
                 auto new_concat = concat->copy_with_new_args(non_zero_dim_args);
                 NGRAPH_DEBUG << " Replacing " << n->get_name() << " with "
@@ -132,9 +132,9 @@ bool pass::ZeroDimTensorElimination::run_on_function(shared_ptr<Function> f)
             }
         }
 
-        auto arg = n->get_inputs().at(0).get_output().get_node();
+        auto arg = n->get_argument(0);
 
-        if (arg->get_outputs().size() != 1 || !has_zero_dim(arg))
+        if (arg->get_output_size() != 1 || !has_zero_dim(arg))
         {
             continue;
         }

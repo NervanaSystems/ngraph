@@ -23,6 +23,8 @@
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/node_input.hpp"
+#include "ngraph/node_output.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/placement.hpp"
@@ -41,7 +43,7 @@ Node::Node(const std::string& node_type, const NodeVector& arguments, size_t out
     size_t i = 0;
     for (auto arg : arguments)
     {
-        for (descriptor::Output& output : arg->get_outputs())
+        for (descriptor::Output& output : arg->m_outputs)
         {
             m_inputs.emplace_back(this, i++, output);
         }
@@ -167,9 +169,9 @@ void Node::set_placement_index(size_t placement)
 
 std::shared_ptr<Node> Node::get_argument(size_t index) const
 {
-    for (auto& i : get_inputs())
+    for (auto& i : m_inputs)
     {
-        NGRAPH_ASSERT(i.get_output().get_node()->get_outputs().size() == 1)
+        NGRAPH_ASSERT(i.get_output().get_node()->get_output_size() == 1)
             << "child " << i.get_output().get_node()->get_name() << " has multiple outputs";
     }
     return m_inputs.at(index).get_output().get_node();
@@ -186,7 +188,7 @@ Node::~Node()
 NodeVector Node::get_arguments() const
 {
     NodeVector result;
-    for (auto& i : get_inputs())
+    for (auto& i : m_inputs)
     {
         {
             result.push_back(i.get_output().get_node());
@@ -248,9 +250,10 @@ std::ostream& Node::write_long_description(std::ostream& out) const
     }
     out << ") -> (";
     sep = "";
-    for (const auto& o : get_outputs())
+    for (size_t i = 0; i < get_output_size(); i++)
     {
-        out << sep << pretty_element_type(o.get_element_type()) << o.get_partial_shape();
+        out << sep << pretty_element_type(get_output_element_type(i))
+            << get_output_partial_shape(i);
         sep = ", ";
     }
     out << ")";
@@ -370,37 +373,13 @@ bool Node::has_same_type(std::shared_ptr<const Node> node) const
     return true;
 }
 
-descriptor::Input* Node::get_input_from(const shared_ptr<Node>& src)
-{
-    for (size_t i = 0; i < this->get_input_size(); ++i)
-    {
-        if (this->get_argument(i) == src)
-        {
-            return &(this->get_inputs().at(i));
-        }
-    }
-    throw ngraph_error("Error: src is not one of self's input Node");
-}
-
-descriptor::Output* Node::get_output_to(const shared_ptr<Node>& dst)
-{
-    for (size_t i = 0; i < dst->get_input_size(); ++i)
-    {
-        if (dst->get_argument(i).get() == this)
-        {
-            return &(dst->get_inputs().at(i).get_output());
-        }
-    }
-    throw ngraph_error("Error: dst is not one of self's output Node");
-}
-
 NodeVector Node::get_users(bool check_is_used) const
 {
     NodeVector result;
 
     for (size_t i = 0; i < get_output_size(); ++i)
     {
-        for (auto input : get_output_inputs(i))
+        for (auto input : m_outputs.at(i).get_inputs())
         {
             if (check_is_used)
             {
@@ -507,4 +486,64 @@ void Node::validate_and_infer_elementwise_logical()
         ".");
 
     set_output_type(0, element::boolean, args_pshape);
+}
+
+void Node::replace_input_source_output(size_t input_index,
+                                       const std::shared_ptr<Node>& src_node,
+                                       size_t output_index)
+{
+    m_inputs.at(input_index).replace_output(src_node, output_index);
+}
+
+NodeOutput Node::get_input_source_output(size_t input_index) const
+{
+    auto& output_descriptor = m_inputs.at(input_index).get_output();
+    return NodeOutput(output_descriptor.get_node(), output_descriptor.get_index());
+}
+
+descriptor::Tensor& Node::get_input_tensor(size_t i) const
+{
+    return m_inputs.at(i).get_output().get_tensor();
+}
+
+std::set<NodeInput> Node::get_output_target_inputs(size_t output_index) const
+{
+    std::set<NodeInput> result;
+
+    for (auto& input : m_outputs[output_index].get_inputs())
+    {
+        result.emplace(input->get_raw_pointer_node(), input->get_index());
+    }
+
+    return result;
+}
+
+void Node::remove_output_target_input(size_t output_index, const NodeInput& target_input)
+{
+    m_outputs.at(output_index)
+        .remove_input(&(target_input.get_node()->m_inputs.at(target_input.get_index())));
+}
+
+std::set<NodeInput> Node::get_node_inputs()
+{
+    std::set<NodeInput> result;
+
+    for (size_t i = 0; i < get_input_size(); i++)
+    {
+        result.emplace(this, i);
+    }
+
+    return result;
+}
+
+std::set<NodeOutput> Node::get_node_outputs()
+{
+    std::set<NodeOutput> result;
+
+    for (size_t i = 0; i < get_output_size(); i++)
+    {
+        result.emplace(shared_from_this(), i);
+    }
+
+    return result;
 }

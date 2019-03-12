@@ -39,7 +39,7 @@ void op::QuantizedConcat::validate_and_infer_types()
     element::Type inputs_et{element::dynamic};
     Dimension concatenation_axis_output_dim{0};
 
-    for (auto i = 0; i < get_inputs().size(); i++)
+    for (auto i = 0; i < get_input_size(); i++)
     {
         PartialShape this_input_shape = get_input_partial_shape(i);
         Dimension this_input_rank = this_input_shape.rank();

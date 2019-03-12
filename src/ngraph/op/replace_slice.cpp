@@ -176,11 +176,10 @@ void op::ReplaceSlice::generate_adjoints(autodiff::Adjoints& adjoints, const Nod
 {
     auto delta = deltas.at(0);
 
-    auto x = get_inputs().at(0).get_output().get_node();
-    auto& y_input = get_inputs().at(1);
-    auto y = y_input.get_output().get_node();
-    auto& y_element_type = y_input.get_element_type();
-    auto y_shape = y_input.get_shape();
+    auto x = get_argument(0);
+    auto y = get_argument(1);
+    auto& y_element_type = get_input_element_type(1);
+    auto y_shape = get_input_shape(1);
 
     auto zeros_shaped_like_y = op::Constant::create(y_element_type, y_shape, {0.0});
 
