@@ -17,15 +17,15 @@
 include(ExternalProject)
 
 
-set(NGRAPH_TBB_VERSION "2019_U4")
-set(NGRAPH_TBB_SUB_VERSION "tbb2019_20190206oss")
+set(NGRAPH_TBB_VERSION "2019_U3")
+set(NGRAPH_TBB_SUB_VERSION "tbb2019_20181203oss")
 
 if (WIN32)
     set(TBB_FILE https://github.com/01org/tbb/releases/download/${NGRAPH_TBB_VERSION}/${NGRAPH_TBB_SUB_VERSION}_win.zip)
-    set(TBB_SHA1_HASH dda14a8c1210399f7ba93e1e2c1521b0636720c0)
+    set(TBB_SHA1_HASH 1989458a49e780d76248edac13b963f80c9a460c)
 elseif(APPLE)
     set(TBB_FILE https://github.com/01org/tbb/releases/download/${NGRAPH_TBB_VERSION}/${NGRAPH_TBB_SUB_VERSION}_mac.tgz)
-    set(TBB_SHA1_HASH c865d37a1e21e67a5c774ed78e9ff6ca513f688f)
+    set(TBB_SHA1_HASH 36926fb46add578b88a5c7e19652b94bb612e4be)
 endif()
 
 ExternalProject_Add(
