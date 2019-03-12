@@ -2288,8 +2288,7 @@ namespace ngraph
                     writer << "                         {" << join(convolution->get_padding_above())
                            << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_data_dilation_strides()) << "},\n";
-                    writer << "                         0, 1, 1, 0, 0, 1, false);\n";
+                           << join(convolution->get_data_dilation_strides()) << "});\n";
                 }
             }
 
@@ -2323,24 +2322,25 @@ namespace ngraph
                 }
                 else
                 {
-                    writer << "reference::convolution<" << out[0].get_type() << ">("
-                           << args[0].get_name() << ",\n";
+                    writer << "reference::convolution_backprop_filters<" << out[0].get_type()
+                           << ">(" << args[0].get_name() << ",\n";
                     writer << "                         " << args[1].get_name() << ",\n";
                     writer << "                         " << out[0].get_name() << ",\n";
+                    writer << "                         {" << join(convolution->get_filters_shape())
+                           << "},\n";
                     writer << "                         {" << join(arg0_shape) << "},\n";
                     writer << "                         {" << join(arg1_shape) << "},\n";
                     writer << "                         {" << join(result_shape) << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_window_movement_strides_backward()) << "},\n";
+                           << join(convolution->get_window_dilation_strides_forward()) << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_window_dilation_strides_backward()) << "},\n";
+                           << join(convolution->get_window_movement_strides_forward()) << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_padding_below_backward()) << "},\n";
+                           << join(convolution->get_padding_below_forward()) << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_padding_above_backward()) << "},\n";
+                           << join(convolution->get_padding_above_forward()) << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_data_dilation_strides_backward()) << "},\n";
-                    writer << "                         1, 0, 0, 1, 1, 0, false);\n";
+                           << join(convolution->get_data_dilation_strides_forward()) << "});\n";
                 }
             }
 
@@ -2375,24 +2375,25 @@ namespace ngraph
                 else
                 {
                     // Note that args[1] and args[0] are switched here from the usual order.
-                    writer << "reference::convolution<" << out[0].get_type() << ">("
+                    writer << "reference::convolution_backprop_data<" << out[0].get_type() << ">("
                            << args[1].get_name() << ",\n";
                     writer << "                         " << args[0].get_name() << ",\n";
                     writer << "                         " << out[0].get_name() << ",\n";
+                    writer << "                         {"
+                           << join(convolution->get_data_batch_shape()) << "},\n";
                     writer << "                         {" << join(arg1_shape) << "},\n";
                     writer << "                         {" << join(arg0_shape) << "},\n";
                     writer << "                         {" << join(result_shape) << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_window_movement_strides_backward()) << "},\n";
+                           << join(convolution->get_data_dilation_strides_forward()) << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_window_dilation_strides_backward()) << "},\n";
+                           << join(convolution->get_window_dilation_strides_forward()) << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_padding_below_backward()) << "},\n";
+                           << join(convolution->get_padding_below_forward()) << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_padding_above_backward()) << "},\n";
+                           << join(convolution->get_padding_above_forward()) << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_data_dilation_strides_backward()) << "},\n";
-                    writer << "                         0, 1, 0, 1, 0, 1, true);\n";
+                           << join(convolution->get_window_movement_strides_forward()) << "});\n";
                 }
             }
 
