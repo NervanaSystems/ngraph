@@ -261,7 +261,10 @@ class BdistWheel(bdist_wheel):
         return tag
 
 
-setup_requires = ['numpy']
+setup_requires = [
+        'numpy==1.15.4; python_version == "3.4"',
+        'numpy; python_version != "3.4"',
+        ]
 try:
     import pip
     try:
@@ -291,5 +294,8 @@ setup(
     data_files=data_files,
     setup_requires=setup_requires,
     install_requires=requirements,
+    extras_require={
+        'plaidml': ['plaidml>=0.5.0'],
+    },
     zip_safe=False,
 )
