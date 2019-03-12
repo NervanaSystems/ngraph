@@ -34,5 +34,3 @@ def test_import_onnx_function():
     computation = runtime.computation(ng_function)
     result = computation(value_a, value_b, value_c)
     assert np.allclose(result, np.array([6], dtype=dtype))
-
-
