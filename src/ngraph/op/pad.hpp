@@ -41,6 +41,7 @@ namespace ngraph
             /// \param arg_pad_value The node producing the scalar value to be inserted for padding.
             /// \param padding_below The padding-below widths.
             /// \param padding_above The padding-above widths.
+            /// \param pad_mode The padding mode: CONSTANT(default), EDGE or REFLECT.
             Pad(const std::shared_ptr<Node>& arg,
                 const std::shared_ptr<Node>& arg_pad_value,
                 const CoordinateDiff& padding_below,

@@ -11,7 +11,7 @@ Pad
 Description
 ===========
 
- Adds edge and interior padding.
+ Adds edge padding.
 
 Inputs
 ------
@@ -35,7 +35,7 @@ Attributes
 +-----------------------+---------------------------------------------------------------------+
 | ``padding_above``     | Padding added after ``arg``. May be negative.                       |
 +-----------------------+---------------------------------------------------------------------+
-| ``padding_interior``  | Padding inserted between elements of ``arg``. Must not be negative. |
+| ``pad_mode``          | Padding mode: CONSTANT(default), EDGE or REFLECT.                   |
 +-----------------------+---------------------------------------------------------------------+
 
 Outputs
