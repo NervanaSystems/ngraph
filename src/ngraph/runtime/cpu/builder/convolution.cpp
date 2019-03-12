@@ -14,9 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/convolution.hpp"
-#include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/kernel/convolution.hpp"
+#include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
@@ -107,14 +106,7 @@ namespace ngraph
                                window_dilation_strides,
                                padding_below,
                                padding_above,
-                               data_dilation_strides,
-                               0,
-                               1,
-                               1,
-                               0,
-                               0,
-                               1,
-                               false);
+                               data_dilation_strides);
                     };
                     functors.emplace_back(functor);
                 }
@@ -313,7 +305,6 @@ namespace ngraph
 
                 auto arg0_shape = args[0].get_shape();
                 auto arg1_shape = args[1].get_shape();
-                auto result_shape = out[0].get_shape();
 
                 auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
                 auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
@@ -347,48 +338,47 @@ namespace ngraph
                 }
                 else
                 {
-                    std::function<decltype(runtime::cpu::kernel::convolution<float>)> kernel;
+                    std::function<decltype(runtime::cpu::kernel::convolution_backprop_in<float>)>
+                        kernel;
 
-                    SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::convolution);
-
-                    auto window_movement_strides =
-                        convolution->get_window_movement_strides_backward();
+                    SELECT_KERNEL(kernel,
+                                  out[0].get_element_type(),
+                                  runtime::cpu::kernel::convolution_backprop_in);
+                    auto& in_shape = convolution->get_data_batch_shape();
+                    auto data_dilation_strides = convolution->get_data_dilation_strides_forward();
                     auto window_dilation_strides =
-                        convolution->get_window_dilation_strides_backward();
-                    auto padding_below = convolution->get_padding_below_backward();
-                    auto padding_above = convolution->get_padding_above_backward();
-                    auto data_dilation_strides = convolution->get_data_dilation_strides_backward();
+                        convolution->get_window_dilation_strides_forward();
+                    auto padding_below = convolution->get_padding_below_forward();
+                    auto padding_above = convolution->get_padding_above_forward();
+                    auto window_movement_strides =
+                        convolution->get_window_movement_strides_forward();
+                    auto backward_delta_out_pad_below =
+                        convolution->compute_backward_delta_out_pad_below();
+                    auto backward_delta_out_pad_above =
+                        convolution->compute_backward_delta_out_pad_above();
 
                     auto functor = [&,
                                     kernel,
                                     arg0_shape,
                                     arg1_shape,
-                                    result_shape,
-                                    window_movement_strides,
+                                    in_shape,
+                                    data_dilation_strides,
                                     window_dilation_strides,
-                                    padding_below,
-                                    padding_above,
-                                    data_dilation_strides](CPURuntimeContext* ctx,
-                                                           CPUExecutionContext* ectx) {
+                                    backward_delta_out_pad_below,
+                                    backward_delta_out_pad_above,
+                                    window_movement_strides](CPURuntimeContext* ctx,
+                                                             CPUExecutionContext* ectx) {
                         kernel(arg1_tensor,
                                arg0_tensor,
                                out_tensor,
                                arg1_shape,
                                arg0_shape,
-                               result_shape,
-                               window_movement_strides,
-                               window_dilation_strides,
-                               padding_below,
-                               padding_above,
+                               in_shape,
                                data_dilation_strides,
-                               0,
-                               1,
-                               0,
-                               1,
-                               0,
-                               1,
-                               true);
+                               window_dilation_strides,
+                               backward_delta_out_pad_below,
+                               backward_delta_out_pad_above,
+                               window_movement_strides);
                     };
                     functors.emplace_back(functor);
                 }
@@ -403,7 +393,6 @@ namespace ngraph
 
                 auto arg0_shape = args[0].get_shape();
                 auto arg1_shape = args[1].get_shape();
-                auto result_shape = out[0].get_shape();
 
                 auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
                 auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
@@ -437,28 +426,34 @@ namespace ngraph
                 }
                 else
                 {
-                    std::function<decltype(runtime::cpu::kernel::convolution<float>)> kernel;
+                    std::function<decltype(
+                        runtime::cpu::kernel::convolution_backprop_filter<float>)>
+                        kernel;
 
-                    SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::convolution);
+                    SELECT_KERNEL(kernel,
+                                  out[0].get_element_type(),
+                                  runtime::cpu::kernel::convolution_backprop_filter);
 
-                    auto window_movement_strides =
-                        convolution->get_window_movement_strides_backward();
+                    auto& filters_shape = convolution->get_filters_shape();
                     auto window_dilation_strides =
-                        convolution->get_window_dilation_strides_backward();
-                    auto padding_below = convolution->get_padding_below_backward();
-                    auto padding_above = convolution->get_padding_above_backward();
-                    auto data_dilation_strides = convolution->get_data_dilation_strides_backward();
+                        convolution->get_window_dilation_strides_forward();
+                    auto window_movement_strides =
+                        convolution->get_window_movement_strides_forward();
+                    auto padding_below = convolution->get_padding_below_forward();
+                    auto padding_above = convolution->get_padding_above_forward();
+                    auto data_dilation_strides = convolution->get_data_dilation_strides_forward();
+                    CoordinateDiff backward_in_pad_above =
+                        convolution->compute_backward_in_pad_above();
 
                     auto functor = [&,
                                     kernel,
                                     arg0_shape,
                                     arg1_shape,
-                                    result_shape,
-                                    window_movement_strides,
+                                    filters_shape,
                                     window_dilation_strides,
+                                    window_movement_strides,
                                     padding_below,
-                                    padding_above,
+                                    backward_in_pad_above,
                                     data_dilation_strides](CPURuntimeContext* ctx,
                                                            CPUExecutionContext* ectx) {
                         kernel(arg0_tensor,
@@ -466,19 +461,12 @@ namespace ngraph
                                out_tensor,
                                arg0_shape,
                                arg1_shape,
-                               result_shape,
+                               filters_shape,
                                window_movement_strides,
                                window_dilation_strides,
                                padding_below,
-                               padding_above,
-                               data_dilation_strides,
-                               1,
-                               0,
-                               0,
-                               1,
-                               1,
-                               0,
-                               false);
+                               backward_in_pad_above,
+                               data_dilation_strides);
                     };
                     functors.emplace_back(functor);
                 }
@@ -624,6 +612,6 @@ namespace ngraph
             REGISTER_OP_BUILDER(GroupConvolution);
             REGISTER_OP_BUILDER(ConvolutionAdd);
             REGISTER_OP_BUILDER(GroupConvolutionBias);
-        }
-    }
-}
+        } // namespace cpu
+    }     // namespace runtime
+} // namespace ngraph
