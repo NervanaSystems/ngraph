@@ -38,7 +38,7 @@ RUN cd llvm-project && mkdir build && cd build && \
   cmake -DCMAKE_INSTALL_PREFIX=/opt/rh/devtoolset-2/root/usr -DCMAKE_BUILD_TYPE=Release \
     -DLLVM_ENABLE_PROJECTS="clang;openmp" -DLLVM_INCLUDE_TESTS=OFF \
     -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_BUILD_TOOLS=OFF -DLLVM_TARGETS_TO_BUILD=X86 \
-    -DLIBOMP_OMPT_SUPPORT=OFF ../llvm && \
+    -DLIBOMP_OMPT_SUPPORT=OFF -DLLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN=ON ../llvm && \
   make -j`grep processor /proc/cpuinfo | wc -l` install
 RUN rm -rf llvm-project
 
