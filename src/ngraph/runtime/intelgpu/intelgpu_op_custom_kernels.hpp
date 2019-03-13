@@ -18,7 +18,7 @@
 
 #include <CPP/topology.hpp>
 
-#include "ngraph/runtime/intelgpu/code_writer.hpp"
+#include "ngraph/code_writer.hpp"
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/axis_vector.hpp"
@@ -102,6 +102,14 @@ namespace ngraph
                                     const Coordinate& uppper_bounds,
                                     const Strides& strides);
 
+            void do_concat_operation(cldnn::topology& topology,
+                                     const std::vector<std::string>& input_names,
+                                     const std::vector<Shape>& input_shapes,
+                                     const std::string& output_name,
+                                     const Shape& output_shape,
+                                     const element::Type& output_type,
+                                     size_t concat_axis);
+
             void do_select_operation(cldnn::topology& topology,
                                      const std::string& input0_name,
                                      const Shape& input0_shape,
@@ -136,13 +144,37 @@ namespace ngraph
                                    const std::string& operation,
                                    bool function_operation);
 
+            void do_relu_backprop(cldnn::topology& topology,
+                                  const std::string& input0_name,
+                                  const Shape& input0_shape,
+                                  const element::Type& input0_type,
+                                  const std::string& input1_name,
+                                  const Shape& input1_shape,
+                                  const std::string& output_name,
+                                  const Shape& output_shape,
+                                  const element::Type& output_type);
+
             void do_reverse_operation(cldnn::topology& topology,
                                       const std::string& input_name,
                                       const Shape& input_shape,
+                                      const element::Type& input_type,
                                       const std::string& output_name,
                                       const Shape& output_shape,
                                       const element::Type& output_type,
                                       const AxisSet& reversed_axes);
+
+            void do_reverse_sequence_operation(cldnn::topology& topology,
+                                               const std::string& input0_name,
+                                               const Shape& input0_shape,
+                                               const element::Type& input0_type,
+                                               const std::string& input1_name,
+                                               const Shape& input1_shape,
+                                               const element::Type& input1_type,
+                                               const std::string& output_name,
+                                               const Shape& output_shape,
+                                               const element::Type& output_type,
+                                               const size_t reversed_axis,
+                                               const size_t batch_axis);
 
             void do_not_operation(cldnn::topology& topology,
                                   const std::string& input_name,
@@ -245,14 +277,14 @@ namespace ngraph
                                     const AxisSet& axis = {},
                                     bool is_reversed = false);
             std::vector<size_t>
-                generate_loops(codegen::CodeWriter& writer, const Shape& shape, bool is_begin);
+                generate_loops(CodeWriter& writer, const Shape& shape, bool is_begin);
             std::vector<size_t>
-                generate_loops_w_axes(codegen::CodeWriter& writer,
+                generate_loops_w_axes(CodeWriter& writer,
                                       const Shape& shape,
                                       bool is_begin,
                                       const AxisSet& axis = {},
                                       const std::string& expression = std::string());
-            void gen_func_def(codegen::CodeWriter& writer,
+            void gen_func_def(CodeWriter& writer,
                               const std::string& entry_point_name,
                               const std::vector<std::string>& input_types,
                               const std::vector<Shape>& input_shapes,

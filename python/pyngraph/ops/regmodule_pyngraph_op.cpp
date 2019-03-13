@@ -73,6 +73,7 @@ void regmodule_pyngraph_op(py::module m_op)
     regclass_pyngraph_op_Or(m_op);
     regclass_pyngraph_op_Pad(m_op);
     regclass_pyngraph_op_Parameter(m_op);
+    regclass_pyngraph_op_Passthrough(m_op);
     regclass_pyngraph_op_Power(m_op);
     regclass_pyngraph_op_Product(m_op);
     regclass_pyngraph_op_Relu(m_op);

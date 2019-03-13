@@ -21,7 +21,7 @@
 #include <string>
 #include <vector>
 
-#include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/executable.hpp"
 
 namespace ngraph
 {
@@ -47,13 +47,12 @@ public:
 
 private:
     std::shared_ptr<ngraph::Function> m_function;
-    std::vector<std::shared_ptr<ngraph::Function>> m_sub_functions;
+    std::shared_ptr<Executable> m_executable;
     std::unordered_map<std::shared_ptr<ngraph::op::Parameter>, std::shared_ptr<ngraph::op::Result>>
         m_map_parameter_to_result;
 
     std::vector<std::shared_ptr<runtime::Backend>> m_backend_list;
     bool m_debug_enabled = false;
-    std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<Executable>> m_executable_map;
 
     size_t get_placement(const runtime::Tensor* t);
 };

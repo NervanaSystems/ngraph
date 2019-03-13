@@ -65,36 +65,58 @@ void op::QuantizedAvgPool::validate_and_infer_types()
     // Make sure batch size and channel count are not zero, and that we have at least one spatial
     // dimension (in other words, that arg has shape NCDi for some Di of rank>0, N != 0, C != 0).
     //
-    NODE_VALIDATION_ASSERT(this, arg_shape.size() >= 3)
-        << "Data input shape does not have rank of at least 3 (data input shape: " << arg_shape
-        << ").";
+    NODE_VALIDATION_CHECK(this,
+                          arg_shape.size() >= 3,
+                          "Data input shape does not have rank of at least 3 (data input shape: ",
+                          arg_shape,
+                          ").");
 
     size_t batch_size = arg_shape[0];
-    NODE_VALIDATION_ASSERT(this, batch_size != 0)
-        << "Data batch size is zero (data input shape: " << arg_shape << ").";
+    NODE_VALIDATION_CHECK(
+        this, batch_size != 0, "Data batch size is zero (data input shape: ", arg_shape, ").");
 
     size_t channel_count = arg_shape[1];
-    NODE_VALIDATION_ASSERT(this, channel_count != 0)
-        << "Channel count is zero (data input shape: " << arg_shape << ").";
+    NODE_VALIDATION_CHECK(
+        this, channel_count != 0, "Channel count is zero (data input shape: ", arg_shape, ").");
 
     size_t spatial_dimension_count = arg_shape.size() - 2;
 
     //
     // Make sure window shape, window movement strides, and padding have same rank as Di.
     //
-    NODE_VALIDATION_ASSERT(this, m_window_shape.size() == spatial_dimension_count)
-        << "Window shape rank does not match number of spatial dimensions (window shape: "
-        << m_window_shape << ", data input shape: " << arg_shape << ").";
-    NODE_VALIDATION_ASSERT(this, m_window_movement_strides.size() == spatial_dimension_count)
-        << "Window movement stride rank does not match number of spatial dimensions (window "
-           "movement strides: "
-        << m_window_movement_strides << ", data input shape: " << arg_shape << ").";
-    NODE_VALIDATION_ASSERT(this, m_padding_below.size() == spatial_dimension_count)
-        << "Below-padding rank does not match number of spatial dimensions (padding below: "
-        << m_padding_below << ", data input shape: " << arg_shape << ").";
-    NODE_VALIDATION_ASSERT(this, m_padding_above.size() == spatial_dimension_count)
-        << "Above-padding rank does not match number of spatial dimensions (padding above: "
-        << m_padding_above << ", data input shape: " << arg_shape << ").";
+    NODE_VALIDATION_CHECK(
+        this,
+        m_window_shape.size() == spatial_dimension_count,
+        "Window shape rank does not match number of spatial dimensions (window shape: ",
+        m_window_shape,
+        ", data input shape: ",
+        arg_shape,
+        ").");
+    NODE_VALIDATION_CHECK(
+        this,
+        m_window_movement_strides.size() == spatial_dimension_count,
+        "Window movement stride rank does not match number of spatial dimensions (window "
+        "movement strides: ",
+        m_window_movement_strides,
+        ", data input shape: ",
+        arg_shape,
+        ").");
+    NODE_VALIDATION_CHECK(
+        this,
+        m_padding_below.size() == spatial_dimension_count,
+        "Below-padding rank does not match number of spatial dimensions (padding below: ",
+        m_padding_below,
+        ", data input shape: ",
+        arg_shape,
+        ").");
+    NODE_VALIDATION_CHECK(
+        this,
+        m_padding_above.size() == spatial_dimension_count,
+        "Above-padding rank does not match number of spatial dimensions (padding above: ",
+        m_padding_above,
+        ", data input shape: ",
+        arg_shape,
+        ").");
 
     //
     // Extract input item shape Di and make sure all dimensions are larger than 0.
@@ -110,10 +132,13 @@ void op::QuantizedAvgPool::validate_and_infer_types()
 
     for (size_t i = 0; i < spatial_dimension_count; i++)
     {
-        NODE_VALIDATION_ASSERT(this, input_item_virtual_shape[i] != 0)
-            << "Data input spatial dimension " << i
-            << " has zero length even after padding (virtual shape of input item: "
-            << input_item_virtual_shape << ").";
+        NODE_VALIDATION_CHECK(this,
+                              input_item_virtual_shape[i] != 0,
+                              "Data input spatial dimension ",
+                              i,
+                              " has zero length even after padding (virtual shape of input item: ",
+                              input_item_virtual_shape,
+                              ").");
     }
 
     //
@@ -121,9 +146,13 @@ void op::QuantizedAvgPool::validate_and_infer_types()
     //
     for (size_t i = 0; i < spatial_dimension_count; i++)
     {
-        NODE_VALIDATION_ASSERT(this, m_window_shape[i] != 0)
-            << "Window shape dimension " << i
-            << " has zero length (window shape: " << m_window_shape << ").";
+        NODE_VALIDATION_CHECK(this,
+                              m_window_shape[i] != 0,
+                              "Window shape dimension ",
+                              i,
+                              " has zero length (window shape: ",
+                              m_window_shape,
+                              ").");
     }
 
     //
@@ -131,10 +160,14 @@ void op::QuantizedAvgPool::validate_and_infer_types()
     //
     for (size_t i = 0; i < spatial_dimension_count; i++)
     {
-        NODE_VALIDATION_ASSERT(this, m_window_shape[i] <= input_item_virtual_shape[i])
-            << "Window shape after padding is larger than the spatial dimensions (window shape: "
-            << m_window_shape << ", virtual shape of input item: " << input_item_virtual_shape
-            << ").";
+        NODE_VALIDATION_CHECK(
+            this,
+            m_window_shape[i] <= input_item_virtual_shape[i],
+            "Window shape after padding is larger than the spatial dimensions (window shape: ",
+            m_window_shape,
+            ", virtual shape of input item: ",
+            input_item_virtual_shape,
+            ").");
     }
     //
     // Compute output item shape Do, checking at the same time that all window movement strides are larger than 0.
@@ -143,9 +176,13 @@ void op::QuantizedAvgPool::validate_and_infer_types()
 
     for (size_t i = 0; i < spatial_dimension_count; i++)
     {
-        NODE_VALIDATION_ASSERT(this, m_window_movement_strides[i] != 0)
-            << "Window movement strides dimension " << i
-            << " has zero length (window movement strides: " << m_window_movement_strides << ").";
+        NODE_VALIDATION_CHECK(this,
+                              m_window_movement_strides[i] != 0,
+                              "Window movement strides dimension ",
+                              i,
+                              " has zero length (window movement strides: ",
+                              m_window_movement_strides,
+                              ").");
         output_item_shape.push_back(ceil_div(input_item_virtual_shape[i] - m_window_shape[i] + 1,
                                              m_window_movement_strides[i]));
     }
@@ -167,11 +204,15 @@ void op::QuantizedAvgPool::validate_and_infer_types()
 
             // Checking the lower edge of each dimension is easy, because there's no mystery
             // regarding the window's lower-edge placement...
-            NODE_VALIDATION_ASSERT(this,
-                                   dim_padding_below == 0 || dim_window_size > dim_padding_below)
-                << "Window will sometimes reside entirely within the below-padding region, but"
-                << " include_padding_in_avg_computation was not set (padding below: "
-                << m_padding_below << ", window shape: " << m_window_shape << ").";
+            NODE_VALIDATION_CHECK(
+                this,
+                dim_padding_below == 0 || dim_window_size > dim_padding_below,
+                "Window will sometimes reside entirely within the below-padding region, but",
+                " include_padding_in_avg_computation was not set (padding below: ",
+                m_padding_below,
+                ", window shape: ",
+                m_window_shape,
+                ").");
 
             // Now check the upper-bound...
             {
@@ -179,13 +220,16 @@ void op::QuantizedAvgPool::validate_and_infer_types()
                 const size_t dim_window_max_lower_offset = dim_num_strides * dim_stride;
                 const size_t dim_padding_above_start_offset = dim_virtual_size - dim_padding_above;
 
-                NODE_VALIDATION_ASSERT(this,
-                                       dim_padding_above == 0 ||
-                                           dim_window_max_lower_offset <
-                                               dim_padding_above_start_offset)
-                    << "Window will sometimes reside entirely within the above-padding region, but"
-                    << " include_padding_in_avg_computation was not set (padding above: "
-                    << m_padding_above << ", window shape: " << m_window_shape << ").";
+                NODE_VALIDATION_CHECK(
+                    this,
+                    dim_padding_above == 0 ||
+                        dim_window_max_lower_offset < dim_padding_above_start_offset,
+                    "Window will sometimes reside entirely within the above-padding region, but",
+                    " include_padding_in_avg_computation was not set (padding above: ",
+                    m_padding_above,
+                    ", window shape: ",
+                    m_window_shape,
+                    ").");
             }
         }
     }

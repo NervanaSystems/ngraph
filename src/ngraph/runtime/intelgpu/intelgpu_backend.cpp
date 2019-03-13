@@ -86,6 +86,7 @@
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
+#include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
@@ -232,11 +233,12 @@ static void do_universal_unary(cldnn::topology& topology,
                                const shared_ptr<Node>& op,
                                const string& operation,
                                cldnn_activation_func mode,
+                               bool force_custom = false,
                                const cldnn_activation_additional_params& param = {0.f, 0.f})
 {
     arguments_check(op, 1, 1);
 
-    if (get_input_type(op) != element::f32)
+    if (force_custom || (get_input_type(op) != element::f32))
     {
         do_custom_unary(topology, op, operation);
     }
@@ -555,11 +557,35 @@ shared_ptr<runtime::Executable>
                 do_reverse_operation(topology,
                                      get_input_name(op),
                                      get_input_shape(op),
+                                     get_input_type(op),
                                      get_output_name(op),
                                      get_output_shape(op),
                                      get_output_type(op),
                                      reversed_axes);
             }
+            break;
+        }
+        case OP_TYPEID::ReverseSequence:
+        {
+            arguments_check(op, 2, 1);
+
+            const shared_ptr<op::ReverseSequence> revseq_op =
+                static_pointer_cast<op::ReverseSequence>(op);
+            const size_t batch_axis = revseq_op->get_batch_axis();
+            const size_t seq_axis = revseq_op->get_sequence_axis();
+
+            do_reverse_sequence_operation(topology,
+                                          get_input_name(op, 0),
+                                          get_input_shape(op, 0),
+                                          get_input_type(op, 0),
+                                          get_input_name(op, 1),
+                                          get_input_shape(op, 1),
+                                          get_input_type(op, 1),
+                                          get_output_name(op),
+                                          get_output_shape(op),
+                                          get_output_type(op),
+                                          seq_axis,
+                                          batch_axis);
             break;
         }
         case OP_TYPEID::Convert:
@@ -589,28 +615,71 @@ shared_ptr<runtime::Executable>
                 arguments_check(op, 1, 1);
             }
 
-            // All input shapes must be the same
-            // if shape is empty (means Shape{}) in this case treat its size as 1
-            const size_t ngraph_tensor_dims =
-                get_input_shape(op).empty() ? 1 : get_input_shape(op).size();
             const shared_ptr<op::Concat> concat_op = static_pointer_cast<op::Concat>(op);
             const size_t ngraph_concat_axis = concat_op->get_concatenation_axis();
-            vector<cldnn::primitive_id> inputs;
 
-            cldnn::concatenation::concatenation_axis cldnn_axis =
-                intelgpu_space::get_cldnn_axis(ngraph_tensor_dims, ngraph_concat_axis);
-
-            for (auto const& input : op->get_inputs())
+            if (!shape_size(get_output_shape(op)) || (get_input_type(op) != element::f32) ||
+                get_output_shape(op).size() > 4)
             {
-                const Shape& input_shape = input.get_shape();
-                if (shape_size(input_shape))
+                vector<string> input_names;
+                vector<Shape> input_shapes;
+
+                for (auto const& input : op->get_inputs())
                 {
-                    inputs.push_back(input.get_tensor().get_name());
+                    const Shape& input_shape = input.get_tensor().get_shape();
+                    if (shape_size(input_shape))
+                    {
+                        input_names.push_back(input.get_tensor().get_name());
+                        input_shapes.push_back(input_shape);
+                    }
+                }
+
+                if (input_names.empty())
+                {
+                    do_equal_propagation(topology, get_input_name(op), get_output_name(op));
+                }
+                else
+                {
+                    do_concat_operation(topology,
+                                        input_names,
+                                        input_shapes,
+                                        get_output_name(op),
+                                        get_output_shape(op),
+                                        get_output_type(op),
+                                        ngraph_concat_axis);
                 }
             }
+            else
+            {
+                // All input shapes must be the same
+                // if shape is empty (means Shape{}) in this case treat its size as 1
+                const size_t ngraph_tensor_dims =
+                    get_input_shape(op).empty() ? 1 : get_input_shape(op).size();
+                vector<cldnn::primitive_id> inputs;
 
-            const cldnn::concatenation cldnn_concat(get_output_name(op), inputs, cldnn_axis);
-            topology.add(cldnn_concat);
+                cldnn::concatenation::concatenation_axis cldnn_axis =
+                    intelgpu_space::get_cldnn_axis(ngraph_tensor_dims, ngraph_concat_axis);
+
+                for (auto const& input : op->get_inputs())
+                {
+                    const Shape& input_shape = input.get_shape();
+                    if (shape_size(input_shape))
+                    {
+                        inputs.push_back(input.get_tensor().get_name());
+                    }
+                }
+
+                if (inputs.empty())
+                {
+                    do_equal_propagation(topology, get_input_name(op), get_output_name(op));
+                }
+                else
+                {
+                    const cldnn::concatenation cldnn_concat(
+                        get_output_name(op), inputs, cldnn_axis);
+                    topology.add(cldnn_concat);
+                }
+            }
             break;
         }
         case OP_TYPEID::Softmax:
@@ -1083,113 +1152,141 @@ shared_ptr<runtime::Executable>
                           values.at(0));
             break;
         }
-        case OP_TYPEID::Relu:
-        {
-            do_cldnn_unary(topology, op, activation_relu);
-            break;
-        }
-        case OP_TYPEID::Sigmoid:
-        {
-            do_cldnn_unary(topology, op, activation_logistic);
-            break;
-        }
         case OP_TYPEID::ReluBackprop:
         {
             arguments_check(op, 2, 1);
 
-            const cldnn_activation_additional_params& param = {0.f, 0.f};
-            const cldnn::activation_grad cldnn_activ_grad(get_output_name(op),
-                                                          get_input_name(op, 1),
-                                                          get_input_name(op, 0),
-                                                          activation_grad_relu,
-                                                          param);
-            topology.add(cldnn_activ_grad);
+            if (get_input_type(op) != element::f32 || get_input_type(op, 1) != element::f32 ||
+                get_output_type(op) != element::f32 || get_output_shape(op).size() > 4)
+            {
+                do_relu_backprop(topology,
+                                 get_input_name(op, 0),
+                                 get_input_shape(op, 0),
+                                 get_input_type(op, 0),
+                                 get_input_name(op, 1),
+                                 get_input_shape(op, 1),
+                                 get_output_name(op),
+                                 get_output_shape(op),
+                                 get_output_type(op));
+            }
+            else
+            {
+                const cldnn_activation_additional_params& param = {0.f, 0.f};
+                const cldnn::activation_grad cldnn_activ_grad(get_output_name(op),
+                                                              get_input_name(op, 1),
+                                                              get_input_name(op, 0),
+                                                              activation_grad_relu,
+                                                              param);
+                topology.add(cldnn_activ_grad);
+            }
             break;
         }
         case OP_TYPEID::Abs:
         {
-            do_universal_unary(topology, op, "fabs", activation_abs);
+            do_universal_unary(topology, op, "fabs(input_var)", activation_abs);
             break;
         }
         case OP_TYPEID::Sqrt:
         {
-            do_universal_unary(topology, op, "sqrt", activation_sqrt);
+            do_universal_unary(topology, op, "sqrt(input_var)", activation_sqrt);
             break;
         }
         case OP_TYPEID::Tanh:
         {
-            do_universal_unary(topology, op, "tanh", activation_hyperbolic_tan);
+            do_universal_unary(topology, op, "tanh(input_var)", activation_hyperbolic_tan);
             break;
         }
         case OP_TYPEID::Sin:
         {
-            do_universal_unary(topology, op, "sin", activation_sin);
+            do_universal_unary(topology, op, "sin(input_var)", activation_sin);
             break;
         }
         case OP_TYPEID::Asin:
         {
-            do_universal_unary(topology, op, "asin", activation_asin);
+            do_universal_unary(topology, op, "asin(input_var)", activation_asin);
             break;
         }
         case OP_TYPEID::Sinh:
         {
-            do_universal_unary(topology, op, "sinh", activation_sinh);
+            do_universal_unary(topology, op, "sinh(input_var)", activation_sinh);
             break;
         }
         case OP_TYPEID::Cos:
         {
-            do_universal_unary(topology, op, "cos", activation_cos);
+            do_universal_unary(topology, op, "cos(input_var)", activation_cos);
             break;
         }
         case OP_TYPEID::Acos:
         {
-            do_universal_unary(topology, op, "acos", activation_acos);
+            do_universal_unary(topology, op, "acos(input_var)", activation_acos);
             break;
         }
         case OP_TYPEID::Cosh:
         {
-            do_universal_unary(topology, op, "cosh", activation_cosh);
+            do_universal_unary(topology, op, "cosh(input_var)", activation_cosh);
             break;
         }
         case OP_TYPEID::Log:
         {
-            do_universal_unary(topology, op, "log", activation_log);
+            // clDNN doesn't provide required accuracy
+            do_universal_unary(topology, op, "log(input_var)", activation_log, true);
             break;
         }
         case OP_TYPEID::Exp:
         {
-            do_universal_unary(topology, op, "exp", activation_exp);
+            do_universal_unary(topology, op, "exp(input_var)", activation_exp);
             break;
         }
         case OP_TYPEID::Negative:
         {
             const cldnn_activation_additional_params param = {-1.f, 0.f};
-            do_universal_unary(topology, op, "-", activation_linear, param);
+            do_universal_unary(topology, op, "-(input_var)", activation_linear, false, param);
+            break;
+        }
+        case OP_TYPEID::Relu:
+        {
+            const string output_type_name = get_opencl_type_name(get_output_type(op));
+            const string convert_to_type = "convert_" + output_type_name;
+            const string zero_const = convert_to_type + "(0)";
+
+            do_universal_unary(topology,
+                               op,
+                               "max(" + zero_const + ", " + convert_to_type + "(input_var))",
+                               activation_relu);
+            break;
+        }
+        case OP_TYPEID::Sigmoid:
+        {
+            const string one_const = "convert_" + get_opencl_type_name(get_output_type(op)) + "(1)";
+            do_universal_unary(topology,
+                               op,
+                               one_const + " / (" + one_const + " + exp(-input_var))",
+                               activation_logistic);
             break;
         }
         case OP_TYPEID::Atan:
         {
-            do_custom_unary(topology, op, "atan");
+            do_custom_unary(topology, op, "atan(input_var)");
             break;
         }
         case OP_TYPEID::Ceiling:
         {
-            do_custom_unary(topology, op, "ceil");
+            do_custom_unary(topology, op, "ceil(input_var)");
             break;
         }
         case OP_TYPEID::Floor:
         {
-            do_custom_unary(topology, op, "floor");
+            do_custom_unary(topology, op, "floor(input_var)");
             break;
         }
         case OP_TYPEID::Sign:
         {
-            do_custom_unary(topology, op, "sign");
+            do_custom_unary(topology, op, "sign(input_var)");
             break;
         }
         case OP_TYPEID::Tan:
         {
-            do_custom_unary(topology, op, "tan");
+            do_custom_unary(topology, op, "tan(input_var)");
             break;
         }
         case OP_TYPEID::SigmoidBackprop:
@@ -1555,11 +1652,11 @@ shared_ptr<runtime::Executable>
             const shared_ptr<op::ConvolutionBackpropFilters> conv_op =
                 static_pointer_cast<op::ConvolutionBackpropFilters>(op);
 
-            const Strides& win_stride = conv_op->get_window_movement_strides_backward();
-            const CoordinateDiff& pad_below = conv_op->get_padding_below_backward();
-            const CoordinateDiff& pad_above = conv_op->get_padding_above_backward();
-            const Strides& win_dilation = conv_op->get_window_dilation_strides_backward();
-            const Strides& data_dilation = conv_op->get_data_dilation_strides_backward();
+            const Strides& win_stride = conv_op->get_window_dilation_strides_forward();
+            const CoordinateDiff& pad_below = conv_op->get_padding_below_forward();
+            CoordinateDiff pad_above = conv_op->compute_backward_in_pad_above();
+            const Strides& win_dilation = conv_op->get_window_movement_strides_forward();
+            const Strides& data_dilation = conv_op->get_data_dilation_strides_forward();
 
             if ((win_stride.size() > 2) || (win_stride.at(0) != 1) || (win_stride.at(1) != 1) ||
                 (pad_below.size() > 2) || (pad_above.size() > 2) || (data_dilation.size() > 2) ||
@@ -1574,10 +1671,10 @@ shared_ptr<runtime::Executable>
                                          get_output_name(op),
                                          get_output_shape(op),
                                          get_output_type(op),
-                                         conv_op->get_padding_below_backward(),
-                                         conv_op->get_window_movement_strides_backward(),
-                                         conv_op->get_window_dilation_strides_backward(),
-                                         conv_op->get_data_dilation_strides_backward(),
+                                         conv_op->get_padding_below_forward(),
+                                         win_stride,
+                                         win_dilation,
+                                         data_dilation,
                                          1,
                                          0,
                                          0,
@@ -1654,17 +1751,18 @@ shared_ptr<runtime::Executable>
 
             const shared_ptr<op::ConvolutionBackpropData> conv_op =
                 static_pointer_cast<op::ConvolutionBackpropData>(op);
-            const Strides& win_stride = conv_op->get_window_movement_strides_backward();
-            const CoordinateDiff& pad_below = conv_op->get_padding_below_backward();
-            const CoordinateDiff& pad_above = conv_op->get_padding_above_backward();
-            const Strides& win_dilation = conv_op->get_window_dilation_strides_backward();
-            const Strides& data_dilation = conv_op->get_data_dilation_strides_backward();
+            const Strides& win_stride = conv_op->get_data_dilation_strides_forward();
+            CoordinateDiff pad_below = conv_op->compute_backward_delta_out_pad_below();
+            CoordinateDiff pad_above = conv_op->compute_backward_delta_out_pad_above();
+            const Strides& win_dilation = conv_op->get_window_dilation_strides_forward();
+            const Strides& data_dilation = conv_op->get_window_movement_strides_forward();
 
             if ((win_stride.size() > 2) || (win_stride.at(0) != 1) || (win_stride.at(1) != 1) ||
                 (pad_below.size() > 2) || (pad_above.size() > 2) || (data_dilation.size() > 2) ||
                 (data_dilation.at(0) != 1) || (data_dilation.at(1) != 1) ||
                 (win_dilation.size() > 2) || (win_dilation.at(0) != 1) ||
-                (win_dilation.at(1) != 1) || (get_output_type(op) != element::f32))
+                (win_dilation.at(1) != 1) || (get_output_type(op) != element::f32) ||
+                ((pad_below.at(0) == pad_above.at(0)) && (pad_below.at(1) == pad_above.at(1))))
             {
                 do_convolution_operation(topology,
                                          get_input_name(op, 1),
@@ -1674,10 +1772,10 @@ shared_ptr<runtime::Executable>
                                          get_output_name(op),
                                          get_output_shape(op),
                                          get_output_type(op),
-                                         conv_op->get_padding_below_backward(),
-                                         conv_op->get_window_movement_strides_backward(),
-                                         conv_op->get_window_dilation_strides_backward(),
-                                         conv_op->get_data_dilation_strides_backward(),
+                                         pad_below,
+                                         win_stride,
+                                         win_dilation,
+                                         data_dilation,
                                          0,
                                          1,
                                          1,
@@ -1693,19 +1791,21 @@ shared_ptr<runtime::Executable>
 
                 if ((pad_below.at(0) == pad_above.at(0)) && (pad_below.at(1) == pad_above.at(1)))
                 {
-                    input_offset_xy = pad_below.at(0) - 1;
+                    // symmetric padding case temporally excluded (custom kernel executed) due to stability issues
+                    const CoordinateDiff& pad_below_for = conv_op->get_padding_below_forward();
+                    input_offset_xy = -pad_below_for.at(0);
                 }
                 else
                 {
                     // Different input padding for operation workarounded by adding aux layer
-                    const cldnn::tensor crop_pad_above(0, 0, -pad_below.at(1), -pad_below.at(0));
-                    const cldnn::tensor crop_pad_below(0, 0, -pad_above.at(1), -pad_above.at(0));
+                    const cldnn::tensor crop_pad_below(0, 0, -pad_below.at(1), -pad_below.at(0));
+                    const cldnn::tensor crop_pad_above(0, 0, -pad_above.at(1), -pad_above.at(0));
                     op_input_name += "_cropped";
 
                     const cldnn::crop cldnn_crop(op_input_name,
                                                  get_input_name(op, 1),
-                                                 crop_pad_above,
                                                  crop_pad_below,
+                                                 crop_pad_above,
                                                  cldnn::crop_borders_t());
                     topology.add(cldnn_crop);
                 }
@@ -1907,12 +2007,12 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::QuantizedMaxPool:
         case OP_TYPEID::ReplaceSlice:
         case OP_TYPEID::GenerateMask:
-        case OP_TYPEID::ReverseSequence:
         case OP_TYPEID::ScalarConstantLike:
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::StopGradient:
         case OP_TYPEID::TopK:
         case OP_TYPEID::EmbeddingLookup:
+        case OP_TYPEID::Passthrough:
         {
             throw unsupported_op("Unsupported op '" + op->description() +
                                  "' in IntelGPU back end.");

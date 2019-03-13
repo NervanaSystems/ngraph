@@ -59,7 +59,7 @@ set(SRC
     zero_dim_tensor_elimination.cpp
 )
 
-if(NGRAPH_TOOLS_ENABLE)
+if(NOT WIN32 AND NGRAPH_TOOLS_ENABLE)
     list(APPEND SRC tools.cpp)
 endif()
 
@@ -82,6 +82,9 @@ endif()
 if (NGRAPH_CPU_ENABLE)
     list(APPEND SRC core_fusion.cpp builder_quantization.cpp)
     list(APPEND SRC backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_debugger.cpp)
+    if (NOT NGRAPH_DEX_ONLY)
+        list(APPEND SRC cpu_codegen.cpp)
+    endif()
     if (NGRAPH_HALIDE)
         list(APPEND SRC halide.cpp)
     endif()
@@ -241,7 +244,7 @@ endif()
 
 if (NGRAPH_INTERPRETER_ENABLE)
     target_compile_definitions(unit-test PRIVATE NGRAPH_INTERPRETER_ENABLE)
-    target_link_libraries(unit-test PRIVATE interpreter_backend hybrid_base)
+    target_link_libraries(unit-test PRIVATE interpreter_backend)
 endif()
 
 if (NGRAPH_GPU_ENABLE)

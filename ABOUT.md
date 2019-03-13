@@ -10,8 +10,7 @@ that the stack diagram is simplified to show how nGraph executes deep
 learning workloads with two hardware backends; however, many other
 deep learning frameworks and backends currently are functioning.
 
-![](doc/sphinx/source/graphics/stackngrknl.png)
-
+![](doc/sphinx/source/graphics/arch_simple_pad.png)
 
 #### Bridge
 
@@ -117,7 +116,7 @@ release of nGraph. nGraph currently has limited support for dynamic graphs.
 Current nGraph Compiler full stack
 ----------------------------------
 
-![](doc/sphinx/source/graphics/about_fullstack.png)
+![](doc/sphinx/source/graphics/arch_complex.png)
 
 
 In addition to IA and NNP transformers, nGraph Compiler stack has transformers

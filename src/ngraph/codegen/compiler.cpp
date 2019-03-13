@@ -239,7 +239,7 @@ void codegen::CompilerCore::initialize()
     // CodeGen options
     auto& CGO = m_compiler->getInvocation().getCodeGenOpts();
     CGO.OptimizationLevel = 3;
-    CGO.RelocationModel = llvm::Reloc::Model::Static;
+    CGO.RelocationModel = "static";
     // CGO.CodeModel = "medium";
     CGO.ThreadModel = "posix";
     CGO.FloatABI = "hard";
@@ -615,7 +615,7 @@ int codegen::CompilerCore::full_version_number(const std::string& path, const st
     }
 
     // create full version number and return
-    std::string full_version = {};
+    std::string full_version = "0";
     // Assume versioning like X.Y.Z
     int padding = 3 - tokens.size();
     for (std::string s : tokens)
@@ -633,7 +633,7 @@ std::string codegen::CompilerCore::find_header_version(const std::string& path)
 {
     // Step 1: find highest g++ version
     std::string gpp_prefix = file_util::path_join(path, "bin/g++-");
-    std::string gpp_ver = {};
+    std::string gpp_ver;
     for (auto i : {"8", "7", "6", "5", "4.9", "4.8"})
     {
         if (file_util::exists(gpp_prefix + i))

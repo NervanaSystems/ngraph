@@ -270,7 +270,7 @@ namespace ngraph
             }
 #endif
 
-            static void emitCblasSgemmBatch(codegen::CodeWriter& writer,
+            static void emitCblasSgemmBatch(CodeWriter& writer,
                                             const Shape& shape_a,
                                             const Shape& shape_b,
                                             const Shape& shape_c,
@@ -358,7 +358,7 @@ namespace ngraph
                                      const Shape& shape_c,
                                      const std::vector<TensorViewWrapper>& args,
                                      const std::vector<TensorViewWrapper>& out,
-                                     codegen::CodeWriter& writer)
+                                     CodeWriter& writer)
             {
                 writer.block_begin();
 
@@ -612,7 +612,7 @@ namespace ngraph
 
             template <typename T>
             void CPU_Emitter::emitBatchNorm(CPU_ExternalFunction* external_function,
-                                            codegen::CodeWriter& writer,
+                                            CodeWriter& writer,
                                             const ngraph::Node* node,
                                             const std::vector<TensorViewWrapper>& args,
                                             const std::vector<TensorViewWrapper>& out,
@@ -1800,7 +1800,7 @@ namespace ngraph
                                          const std::vector<TensorViewWrapper>& out,
                                          size_t reduction_axis,
                                          const char* kernel_name,
-                                         codegen::CodeWriter& writer)
+                                         CodeWriter& writer)
             {
                 if (out[0].get_element_type() != element::i64 &&
                     out[0].get_element_type() != element::i32)
@@ -2312,8 +2312,7 @@ namespace ngraph
                     writer << "                         {" << join(convolution->get_padding_above())
                            << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_data_dilation_strides()) << "},\n";
-                    writer << "                         0, 1, 1, 0, 0, 1, false);\n";
+                           << join(convolution->get_data_dilation_strides()) << "});\n";
                 }
             }
 
@@ -2347,24 +2346,25 @@ namespace ngraph
                 }
                 else
                 {
-                    writer << "reference::convolution<" << out[0].get_type() << ">("
-                           << args[0].get_name() << ",\n";
+                    writer << "reference::convolution_backprop_filters<" << out[0].get_type()
+                           << ">(" << args[0].get_name() << ",\n";
                     writer << "                         " << args[1].get_name() << ",\n";
                     writer << "                         " << out[0].get_name() << ",\n";
+                    writer << "                         {" << join(convolution->get_filters_shape())
+                           << "},\n";
                     writer << "                         {" << join(arg0_shape) << "},\n";
                     writer << "                         {" << join(arg1_shape) << "},\n";
                     writer << "                         {" << join(result_shape) << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_window_movement_strides_backward()) << "},\n";
+                           << join(convolution->get_window_dilation_strides_forward()) << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_window_dilation_strides_backward()) << "},\n";
+                           << join(convolution->get_window_movement_strides_forward()) << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_padding_below_backward()) << "},\n";
+                           << join(convolution->get_padding_below_forward()) << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_padding_above_backward()) << "},\n";
+                           << join(convolution->get_padding_above_forward()) << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_data_dilation_strides_backward()) << "},\n";
-                    writer << "                         1, 0, 0, 1, 1, 0, false);\n";
+                           << join(convolution->get_data_dilation_strides_forward()) << "});\n";
                 }
             }
 
@@ -2399,24 +2399,25 @@ namespace ngraph
                 else
                 {
                     // Note that args[1] and args[0] are switched here from the usual order.
-                    writer << "reference::convolution<" << out[0].get_type() << ">("
+                    writer << "reference::convolution_backprop_data<" << out[0].get_type() << ">("
                            << args[1].get_name() << ",\n";
                     writer << "                         " << args[0].get_name() << ",\n";
                     writer << "                         " << out[0].get_name() << ",\n";
+                    writer << "                         {"
+                           << join(convolution->get_data_batch_shape()) << "},\n";
                     writer << "                         {" << join(arg1_shape) << "},\n";
                     writer << "                         {" << join(arg0_shape) << "},\n";
                     writer << "                         {" << join(result_shape) << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_window_movement_strides_backward()) << "},\n";
+                           << join(convolution->get_data_dilation_strides_forward()) << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_window_dilation_strides_backward()) << "},\n";
+                           << join(convolution->get_window_dilation_strides_forward()) << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_padding_below_backward()) << "},\n";
+                           << join(convolution->get_padding_below_forward()) << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_padding_above_backward()) << "},\n";
+                           << join(convolution->get_padding_above_forward()) << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_data_dilation_strides_backward()) << "},\n";
-                    writer << "                         0, 1, 0, 1, 0, 1, true);\n";
+                           << join(convolution->get_window_movement_strides_forward()) << "});\n";
                 }
             }
 
