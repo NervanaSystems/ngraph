@@ -96,13 +96,3 @@ Indices and tables
 
    * :ref:`search`
    * :ref:`genindex`
-
-
-
-.. _nGraph ONNX companion tool: https://github.com/NervanaSystems/ngraph-onnx
-.. _ONNX: http://onnx.ai
-.. _Movidius: https://www.movidius.com/
-.. _contributions: https://github.com/NervanaSystems/ngraph#how-to-contribute
-.. _TensorFlow bridge to nGraph: https://github.com/NervanaSystems/ngraph-tf/blob/master/README.md
-.. _Compiling MXNet with nGraph: https://github.com/NervanaSystems/ngraph-mxnet/blob/master/README.md
-.. _ecosystem: https://github.com/NervanaSystems/ngraph/blob/master/ecosystem-overview.md
