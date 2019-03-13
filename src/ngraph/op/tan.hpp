@@ -40,7 +40,7 @@ namespace ngraph
         public:
             /// \brief Constructs a tangent operation.
             ///
-            /// \param arg Node that produces the input tensor.
+            /// \param arg Output that produces the input tensor.
             Tan(const NodeOutput& arg);
 
             virtual std::shared_ptr<Node>
