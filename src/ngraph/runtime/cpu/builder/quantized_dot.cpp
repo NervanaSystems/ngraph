@@ -111,12 +111,12 @@ namespace ngraph
                             dyn_scales.assign(static_cast<float*>(arg2_tensor),
                                               static_cast<float*>(arg2_tensor) + scales_size);
                             ip_attr.set_output_scales(0, dyn_scales);
-                            mkldnn_emitter->build_inner_product_forward<true>(
+                            mkldnn_emitter->build_inner_product_forward<false>(
                                 ip_desc, ip_attr, executor::global_cpu_engine, ip_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], out0_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out0_tensor);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, ip_index);
                     };
                     functors.emplace_back(functor);

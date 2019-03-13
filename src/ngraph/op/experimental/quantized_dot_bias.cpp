@@ -40,15 +40,15 @@ op::QuantizedDotBias::QuantizedDotBias(const shared_ptr<Node>& data,
     auto& weights_shape = weights->get_shape();
     auto& bias_shape = bias->get_shape();
     NODE_VALIDATION_CHECK(this,
-                          data_shape.size() != 2 || weights_shape.size() != 2 ||
-                              data_shape[1] != weights_shape[1],
-                          "only valid tensors of rank 2 supported. data shape ",
+                          data_shape.size() == 2 && weights_shape.size() == 2 &&
+                              data_shape[1] == weights_shape[1],
+                          "only valid tensors of rank 2 supported. data ",
                           data_shape,
-                          " weights shape ",
+                          " weights ",
                           weights_shape);
     NODE_VALIDATION_CHECK(this,
-                          bias_shape.size() != 1 || bias_shape[0] != weights_shape[0],
-                          "invalid bias shape ",
+                          bias_shape.size() == 1 && bias_shape[0] == weights_shape[0],
+                          "invalid bias ",
                           bias_shape);
 
     auto output_et = requantize ? (with_relu ? element::u8 : element::i8) : element::f32;

@@ -38,8 +38,8 @@ op::QuantizedDot::QuantizedDot(const shared_ptr<Node>& data,
     auto& data_shape = data->get_shape();
     auto& weights_shape = weights->get_shape();
     NODE_VALIDATION_CHECK(this,
-                          data_shape.size() != 2 || weights_shape.size() != 2 ||
-                              data_shape[1] != weights_shape[1],
+                          data_shape.size() == 2 && weights_shape.size() == 2 &&
+                              data_shape[1] == weights_shape[1],
                           "only valid tensors of rank 2 supported. data shape ",
                           data_shape,
                           " weights shape ",
