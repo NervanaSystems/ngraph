@@ -32,7 +32,7 @@ The Python wheels for nGraph have been tested and are supported on the following
 Frameworks using nGraph Compiler stack to execute workloads have shown 
 [**up to 45X**](https://ai.intel.com/ngraph-compiler-stack-beta-release/) 
 performance boost when compared to native framework implementations. We've also 
-seen performance boosts running workloads that are not included on the list of 
+seen performance boosts running workloads that are not included on the list of  
 [Validated workloads], thanks to nGraph's powerful subgraph pattern matching.
 
 Additionally we have integrated nGraph with [PlaidML] to provide deep learning 
