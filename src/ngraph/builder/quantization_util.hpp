@@ -268,9 +268,9 @@ namespace ngraph
                         throw ngraph_error("check_concat: min and max must have same type");
                     }
 
-                    if (min->get_shape() != Shape{1} || min->get_shape() != Shape{1})
+                    if (min->get_shape() != Shape{1} || max->get_shape() != Shape{1})
                     {
-                        throw ngraph_error("check_concat: min and max must have same shape " +
+                        throw ngraph_error("check_concat: min/max shape not Shape{1}: " +
                                            vector_to_string(min->get_shape()) +
                                            vector_to_string(max->get_shape()));
                     }
