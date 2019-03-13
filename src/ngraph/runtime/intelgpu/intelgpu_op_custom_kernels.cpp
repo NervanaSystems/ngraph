@@ -1650,8 +1650,12 @@ void runtime::intelgpu::do_convert_operation(cldnn::topology& topology,
             writer << input_type_name << " input_var = input0" << access_dims(output_shape) << ";\n"
                    << output_type_name << " output_var = 0;\n";
 
-            writer << "if (input_var > " << get_opencl_type_min_max_value(output_type, false)
-                   << " || isnan(input_var))\n";
+            writer << "if (input_var > " << get_opencl_type_min_max_value(output_type, false);
+            if (!output_type.is_real())
+            {
+                writer << " || isnan(input_var)";
+            }
+            writer << ")\n";
             writer.block_begin();
             {
                 writer << "output_var = " << get_opencl_type_min_max_value(output_type, true)
