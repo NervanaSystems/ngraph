@@ -20,8 +20,8 @@
 using namespace std;
 using namespace ngraph;
 
-op::OneHot::OneHot(const shared_ptr<Node>& arg, const PartialShape& shape, size_t one_hot_axis)
-    : Op("OneHot", check_single_output_args({arg}))
+op::OneHot::OneHot(const NodeOutput& arg, const PartialShape& shape, size_t one_hot_axis)
+    : Op("OneHot", {arg})
     , m_shape(shape)
     , m_one_hot_axis(one_hot_axis)
 {

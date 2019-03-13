@@ -20,9 +20,9 @@ using namespace std;
 using namespace ngraph;
 
 op::util::BinaryElementwiseComparison::BinaryElementwiseComparison(const string& node_type,
-                                                                   const shared_ptr<Node>& arg0,
-                                                                   const shared_ptr<Node>& arg1)
-    : Op(node_type, check_single_output_args({arg0, arg1}))
+                                                                   const NodeOutput& arg0,
+                                                                   const NodeOutput& arg1)
+    : Op(node_type, {arg0, arg1})
 {
 }
 

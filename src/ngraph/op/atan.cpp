@@ -30,7 +30,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Atan::Atan(const shared_ptr<Node>& arg)
+op::Atan::Atan(const NodeOutput& arg)
     : UnaryElementwiseArithmetic("Atan", arg)
 {
     constructor_validate_and_infer_types();

@@ -19,12 +19,12 @@
 using namespace std;
 using namespace ngraph;
 
-op::GenerateMask::GenerateMask(const std::shared_ptr<Node>& training,
+op::GenerateMask::GenerateMask(const NodeOutput& training,
                                const Shape& shape,
                                const element::Type& element_type,
                                unsigned int seed,
                                double prob)
-    : Op("GenerateMask", check_single_output_args({training}))
+    : Op("GenerateMask", {training})
     , m_shape(shape)
     , m_element_type(element_type)
     , m_seed(seed)

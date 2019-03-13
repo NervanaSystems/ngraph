@@ -19,6 +19,7 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/node_input.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/concat.hpp"
@@ -33,20 +34,15 @@
 using namespace std;
 using namespace ngraph;
 
-static bool has_zero_dim(shared_ptr<Node> node)
+static bool has_zero_dim(const NodeOutput& output)
 {
-    if (node->get_output_size() != 1)
-    {
-        throw ngraph_error("has_zero_dim is called on multi-output op");
-    }
-
-    const auto& shape = node->get_shape();
+    const auto& shape = output.get_shape();
     return find(shape.begin(), shape.end(), 0) != shape.end();
 }
 
 static bool verify_no_internal_zero_length_ops(shared_ptr<Function> f)
 {
-    set<shared_ptr<Node>> zero_length_nodes;
+    set<NodeOutput> zero_length_source_outputs;
     for (auto n : f->get_ordered_ops())
     {
         if (n->is_output() || n->is_parameter() || n->get_output_size() > 1)
@@ -54,9 +50,12 @@ static bool verify_no_internal_zero_length_ops(shared_ptr<Function> f)
             continue;
         }
 
-        if (has_zero_dim(n))
+        for (auto& output : n->get_node_outputs())
         {
-            zero_length_nodes.insert(n);
+            if (has_zero_dim(output))
+            {
+                zero_length_source_outputs.insert(output);
+            }
         }
     }
 
@@ -67,14 +66,16 @@ static bool verify_no_internal_zero_length_ops(shared_ptr<Function> f)
     // zero-length nodes (which violates our assumption)
     for (auto r : f->get_results())
     {
-        auto n = r->get_argument(0);
-        if (zero_length_nodes.count(n) != 0)
+        for (auto& input : r->get_node_inputs())
         {
-            zero_length_nodes.erase(n);
+            if (zero_length_source_outputs.count(input.get_source_output()) != 0)
+            {
+                zero_length_source_outputs.erase(input.get_source_output());
+            }
         }
     }
 
-    return zero_length_nodes.size() > 0;
+    return zero_length_source_outputs.size() > 0;
 }
 
 bool pass::ZeroDimTensorElimination::run_on_function(shared_ptr<Function> f)
@@ -132,9 +133,9 @@ bool pass::ZeroDimTensorElimination::run_on_function(shared_ptr<Function> f)
             }
         }
 
-        auto arg = n->get_argument(0);
+        auto source_output = n->get_input_source_output(0);
 
-        if (arg->get_output_size() != 1 || !has_zero_dim(arg))
+        if (source_output.get_node()->get_output_size() != 1 || !has_zero_dim(source_output))
         {
             continue;
         }

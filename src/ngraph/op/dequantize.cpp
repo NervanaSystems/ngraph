@@ -20,13 +20,13 @@
 using namespace std;
 using namespace ngraph;
 
-op::Dequantize::Dequantize(shared_ptr<Node> input,
-                           shared_ptr<Node> scale,
-                           shared_ptr<Node> offset,
+op::Dequantize::Dequantize(const NodeOutput& input,
+                           const NodeOutput& scale,
+                           const NodeOutput& offset,
                            const element::Type& type,
                            const AxisSet& axes)
 
-    : Op("Dequantize", check_single_output_args({input, scale, offset}))
+    : Op("Dequantize", {input, scale, offset})
     , m_type(type)
     , m_axes(axes)
 {

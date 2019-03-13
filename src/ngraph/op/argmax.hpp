@@ -30,12 +30,10 @@ namespace ngraph
         public:
             /// \brief Constructs a ArgMax operation.
             ///
-            /// \param arg The input tensor
+            /// \param arg Output producing the input tensor
             /// \param axis The axis along which to compute an index for maximum
             /// \param index_element_type produce indices. Currently, only int64 or int32 are supported
-            ArgMax(const std::shared_ptr<Node>& arg,
-                   size_t axis,
-                   const element::Type& index_element_type)
+            ArgMax(const NodeOutput& arg, size_t axis, const element::Type& index_element_type)
                 : IndexReduction("ArgMax", arg, axis, index_element_type)
             {
             }

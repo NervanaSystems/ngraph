@@ -35,9 +35,9 @@ namespace ngraph
             // \param gamma gamma scaling for normalized value. [C]
             // \param beta bias added to the scaled normalized value [C]
             // \param epsilon Avoids divsion by 0 if input has 0 variance
-            BatchNormTraining(std::shared_ptr<Node> input,
-                              std::shared_ptr<Node> gamma,
-                              std::shared_ptr<Node> beta,
+            BatchNormTraining(const NodeOutput& input,
+                              const NodeOutput& gamma,
+                              const NodeOutput& beta,
                               double epsilon);
 
             // \deprecated
@@ -61,9 +61,9 @@ namespace ngraph
             //   output[1]: shall have rank 1, with the same span as input's channel axis.
             //   output[2]: shall have rank 1, with the same span as input's channel axis.
             BatchNormTraining(double eps,
-                              std::shared_ptr<Node> gamma,
-                              std::shared_ptr<Node> beta,
-                              std::shared_ptr<Node> input);
+                              const NodeOutput& gamma,
+                              const NodeOutput& beta,
+                              const NodeOutput& input);
 
             void validate_and_infer_types() override;
 
@@ -92,11 +92,11 @@ namespace ngraph
             // \param mean value for mean normalization [C]
             // \param variance value for variance normalization [C]
             // \param epsilon Avoids divsion by 0 if input has 0 variance
-            BatchNormInference(std::shared_ptr<ngraph::Node> input,
-                               std::shared_ptr<ngraph::Node> gamma,
-                               std::shared_ptr<ngraph::Node> beta,
-                               std::shared_ptr<ngraph::Node> mean,
-                               std::shared_ptr<ngraph::Node> variance,
+            BatchNormInference(const NodeOutput& input,
+                               const NodeOutput& gamma,
+                               const NodeOutput& beta,
+                               const NodeOutput& mean,
+                               const NodeOutput& variance,
                                double epsilon);
 
             // \deprecated
@@ -118,11 +118,11 @@ namespace ngraph
             //   variance: must have rank 1, with the same span as input's channel axis.
             //   output:   shall have the same shape as 'input'.
             BatchNormInference(double eps,
-                               std::shared_ptr<ngraph::Node> gamma,
-                               std::shared_ptr<ngraph::Node> beta,
-                               std::shared_ptr<ngraph::Node> input,
-                               std::shared_ptr<ngraph::Node> mean,
-                               std::shared_ptr<ngraph::Node> variance);
+                               const NodeOutput& gamma,
+                               const NodeOutput& beta,
+                               const NodeOutput& input,
+                               const NodeOutput& mean,
+                               const NodeOutput& variance);
 
             void validate_and_infer_types() override;
 
@@ -150,23 +150,23 @@ namespace ngraph
         class BatchNormTrainingBackprop : public Op
         {
         public:
-            BatchNormTrainingBackprop(std::shared_ptr<Node> input,
-                                      std::shared_ptr<Node> gamma,
-                                      std::shared_ptr<Node> beta,
-                                      std::shared_ptr<Node> mean,
-                                      std::shared_ptr<Node> variance,
-                                      std::shared_ptr<Node> delta,
+            BatchNormTrainingBackprop(const NodeOutput& input,
+                                      const NodeOutput& gamma,
+                                      const NodeOutput& beta,
+                                      const NodeOutput& mean,
+                                      const NodeOutput& variance,
+                                      const NodeOutput& delta,
                                       double epsilon);
 
             // \deprecated
             BatchNormTrainingBackprop(double epsilon,
-                                      std::shared_ptr<Node> gamma,
-                                      std::shared_ptr<Node> beta,
-                                      std::shared_ptr<Node> input,
+                                      const NodeOutput& gamma,
+                                      const NodeOutput& beta,
+                                      const NodeOutput& input,
 
-                                      std::shared_ptr<Node> mean,
-                                      std::shared_ptr<Node> variance,
-                                      std::shared_ptr<Node> delta);
+                                      const NodeOutput& mean,
+                                      const NodeOutput& variance,
+                                      const NodeOutput& delta);
 
             void validate_and_infer_types() override;
 

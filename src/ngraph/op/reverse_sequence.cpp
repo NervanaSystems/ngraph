@@ -25,11 +25,11 @@
 using namespace std;
 using namespace ngraph;
 
-op::ReverseSequence::ReverseSequence(const std::shared_ptr<Node> arg,
-                                     const std::shared_ptr<Node> seq_indices,
+op::ReverseSequence::ReverseSequence(const NodeOutput& arg,
+                                     const NodeOutput& seq_indices,
                                      size_t batch_axis,
                                      size_t seq_axis)
-    : Op("ReverseSequence", check_single_output_args({arg, seq_indices}))
+    : Op("ReverseSequence", {arg, seq_indices})
     , m_batch_axis(batch_axis)
     , m_seq_axis(seq_axis)
 {

@@ -28,8 +28,8 @@ namespace ngraph
         public:
             /// \brief Constructs a negative operation.
             ///
-            /// \param arg Node that produces the input tensor.
-            Negative(const std::shared_ptr<Node>& arg);
+            /// \param arg Output that produces the input tensor.
+            Negative(const NodeOutput& arg);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -38,5 +38,5 @@ namespace ngraph
                                            const NodeVector& deltas) override;
         };
     }
-    std::shared_ptr<ngraph::Node> operator-(const std::shared_ptr<ngraph::Node> arg0);
+    std::shared_ptr<ngraph::Node> operator-(const NodeOutput& arg0);
 }

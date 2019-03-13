@@ -41,9 +41,9 @@ namespace ngraph
         public:
             /// \brief Constructs an exponentiation operation.
             ///
-            /// \param arg0 Node that produces the first input tensor.
-            /// \param arg1 Node that produces the second input tensor.
-            Power(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
+            /// \param arg0 Output that produces the first input tensor.
+            /// \param arg1 Output that produces the second input tensor.
+            Power(const NodeOutput& arg0, const NodeOutput& arg1);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

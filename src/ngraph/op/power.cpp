@@ -22,7 +22,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Power::Power(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
+op::Power::Power(const NodeOutput& arg0, const NodeOutput& arg1)
     : BinaryElementwiseArithmetic("Power", arg0, arg1)
 {
     constructor_validate_and_infer_types();

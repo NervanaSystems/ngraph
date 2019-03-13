@@ -30,7 +30,7 @@ namespace ngraph
         public:
             /// \brief Constructs a batched average pooling operation.
             ///
-            /// \param arg The node producing the input data batch tensor.<br>
+            /// \param arg The output producing the input data batch tensor.<br>
             /// `[d1, dn]`
             /// \param window_shape The window shape.<br>
             /// `[n]`
@@ -43,7 +43,7 @@ namespace ngraph
             /// \param include_padding_in_avg_computation If true then averages include padding
             ///  elements, each treated as the number zero.  If false, padding elements are entirely
             ///  ignored when computing averages.
-            QuantizedAvgPool(const std::shared_ptr<Node>& arg,
+            QuantizedAvgPool(const NodeOutput& arg,
                              const Shape& window_shape,
                              const Strides& window_movement_strides,
                              const Shape& padding_below,

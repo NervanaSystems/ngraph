@@ -43,7 +43,7 @@ namespace ngraph
             /// \param include_padding_in_avg_computation If true then averages include padding
             ///  elements, each treated as the number zero.  If false, padding elements are entirely
             ///  ignored when computing averages.
-            AvgPool(const std::shared_ptr<Node>& arg,
+            AvgPool(const NodeOutput& arg,
                     const Shape& window_shape,
                     const Strides& window_movement_strides,
                     const Shape& padding_below,
@@ -58,7 +58,7 @@ namespace ngraph
             /// `[n]`
             /// \param window_movement_strides The window movement strides.<br>
             /// `[n]`
-            AvgPool(const std::shared_ptr<Node>& arg,
+            AvgPool(const NodeOutput& arg,
                     const Shape& window_shape,
                     const Strides& window_movement_strides);
 
@@ -68,7 +68,7 @@ namespace ngraph
             /// `[d1, ..., dn]`
             /// \param window_shape The window shape.<br>
             /// `[n]`
-            AvgPool(const std::shared_ptr<Node>& arg, const Shape& window_shape);
+            AvgPool(const NodeOutput& arg, const Shape& window_shape);
 
             void validate_and_infer_types() override;
 
@@ -108,7 +108,7 @@ namespace ngraph
         {
         public:
             AvgPoolBackprop(const Shape& forward_arg_shape,
-                            const std::shared_ptr<Node>& delta,
+                            const NodeOutput& delta,
                             const Shape& window_shape,
                             const Strides& window_movement_strides,
                             const Shape& padding_below,

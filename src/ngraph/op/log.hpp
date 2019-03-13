@@ -28,8 +28,8 @@ namespace ngraph
         public:
             /// \brief Constructs a natural log operation.
             ///
-            /// \param arg Node that produces the input tensor.
-            Log(const std::shared_ptr<Node>& arg);
+            /// \param arg Output that produces the input tensor.
+            Log(const NodeOutput& arg);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

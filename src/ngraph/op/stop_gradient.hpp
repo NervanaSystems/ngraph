@@ -22,14 +22,14 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief create StopGrdient op
+        /// \brief create StopGradient op
         class StopGradient : public util::UnaryElementwiseArithmetic
         {
         public:
             /// \brief Constructs StopGradient
             ///
-            /// \param arg Node that produces the input tensor.
-            StopGradient(const std::shared_ptr<Node>& arg);
+            /// \param arg Output that produces the input tensor.
+            StopGradient(const NodeOutput& arg);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

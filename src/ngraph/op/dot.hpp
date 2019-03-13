@@ -30,11 +30,11 @@ namespace ngraph
         public:
             /// \brief Constructs a dot product operation.
             ///
-            /// \param arg0 The node producing the first argument.
-            /// \param arg1 The node producing the second argument.
+            /// \param arg0 The output producing the first argument.
+            /// \param arg1 The output producing the second argument.
             /// \param reduction_axes_count The number of axes to dot.
-            Dot(const std::shared_ptr<Node>& arg0,
-                const std::shared_ptr<Node>& arg1,
+            Dot(const NodeOutput& arg0,
+                const NodeOutput& arg1,
                 size_t reduction_axes_count,
                 bool has_reduction_axes_count = true);
 
@@ -46,9 +46,9 @@ namespace ngraph
             /// a scalar, a matrix-vector products where `arg0` is a matrix and `arg1` is a vector, and a
             /// matrix multiplication where `arg0` and `arg1` are both matrices.)
             ///
-            /// \param arg0 The node producing the first argument.
-            /// \param arg1 The node producing the second argument.
-            Dot(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
+            /// \param arg0 The output producing the first argument.
+            /// \param arg1 The output producing the second argument.
+            Dot(const NodeOutput& arg0, const NodeOutput& arg1);
 
             void validate_and_infer_types() override;
 

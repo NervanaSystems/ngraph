@@ -31,10 +31,10 @@ namespace ngraph
             public:
                 /// \brief Constructs a logical reduction operation.
                 ///
-                /// \param arg Node that produces the first input tensor.
+                /// \param arg Output that produces the first input tensor.
                 /// \param reduction_axes The axis positions (0-based) to be eliminated.
                 LogicalReduction(const std::string& node_type,
-                                 const std::shared_ptr<Node>& arg,
+                                 const NodeOutput& arg,
                                  const AxisSet& reduction_axes);
 
                 void validate_and_infer_types() override;

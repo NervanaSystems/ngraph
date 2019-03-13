@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Product::Product(const shared_ptr<Node>& arg, const AxisSet& reduction_axes)
+op::Product::Product(const NodeOutput& arg, const AxisSet& reduction_axes)
     : ArithmeticReduction("Product", arg, reduction_axes)
 {
     constructor_validate_and_infer_types();

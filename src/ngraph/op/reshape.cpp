@@ -23,10 +23,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::Reshape::Reshape(const shared_ptr<Node>& arg,
+op::Reshape::Reshape(const NodeOutput& arg,
                      const AxisVector& input_order,
                      const Shape& output_shape)
-    : Op("Reshape", check_single_output_args({arg}))
+    : Op("Reshape", {arg})
     , m_input_order(input_order)
     , m_output_shape(output_shape)
 {

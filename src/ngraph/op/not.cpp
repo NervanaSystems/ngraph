@@ -20,8 +20,8 @@
 using namespace ngraph;
 using namespace std;
 
-op::Not::Not(const shared_ptr<Node>& arg)
-    : Op("Not", check_single_output_args({arg}))
+op::Not::Not(const NodeOutput& arg)
+    : Op("Not", {arg})
 {
     constructor_validate_and_infer_types();
 }

@@ -14,30 +14,35 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/abs.hpp"
-#include "ngraph/op/multiply.hpp"
-#include "ngraph/op/sign.hpp"
+#pragma once
 
-using namespace std;
-using namespace ngraph;
+#include <memory>
+#include <vector>
 
-op::Abs::Abs(const NodeOutput& arg)
-    : UnaryElementwiseArithmetic("Abs", arg)
+#include "ngraph/node_output.hpp"
+
+namespace ngraph
 {
-    constructor_validate_and_infer_types();
-}
+    /// \brief Zero or more node outputs.
+    class OutputVector : public std::vector<NodeOutput>
+    {
+    public:
+        OutputVector(const std::initializer_list<NodeOutput>& outputs)
+            : std::vector<NodeOutput>(outputs)
+        {
+        }
 
-shared_ptr<Node> op::Abs::copy_with_new_args(const NodeVector& new_args) const
-{
-    check_new_args_count(this, new_args);
-    return make_shared<Abs>(new_args.at(0));
-}
+        OutputVector(const std::initializer_list<std::shared_ptr<Node>>& nodes);
 
-void op::Abs::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
-{
-    auto delta = deltas.at(0);
+        OutputVector(const std::vector<std::shared_ptr<Node>>& nodes);
 
-    auto x = get_argument(0);
+        OutputVector(const OutputVector& outputs)
+            : std::vector<NodeOutput>(outputs)
+        {
+        }
 
-    adjoints.add_delta(x, delta * make_shared<op::Sign>(x));
+        OutputVector& operator=(const OutputVector& other) = default;
+
+        OutputVector() {}
+    };
 }

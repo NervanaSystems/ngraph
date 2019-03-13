@@ -31,13 +31,12 @@ namespace ngraph
         public:
             /// \brief Constructs an absolute value operation.
             ///
-            /// \param arg Node that produces the input tensor.<br>
+            /// \param arg Output that produces the input tensor.<br>
             /// `[d1, ...]`
             ///
             /// Output `[d1, ...]`
             ///
-            Abs(const std::shared_ptr<Node>& arg);
-            Abs(const op::Abs& other, const NodeVector& new_args);
+            Abs(const NodeOutput& arg);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

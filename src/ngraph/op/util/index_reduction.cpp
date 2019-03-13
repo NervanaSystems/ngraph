@@ -22,10 +22,10 @@ using namespace std;
 using namespace ngraph;
 
 op::util::IndexReduction::IndexReduction(const std::string& node_type,
-                                         const std::shared_ptr<Node>& arg,
+                                         const NodeOutput& arg,
                                          size_t axis,
                                          const element::Type& index_element_type)
-    : Op(node_type, check_single_output_args({arg}))
+    : Op(node_type, {arg})
     , m_axis(axis)
     , m_index_element_type(index_element_type)
 {

@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Sqrt::Sqrt(const shared_ptr<Node>& arg)
+op::Sqrt::Sqrt(const NodeOutput& arg)
     : UnaryElementwiseArithmetic("Sqrt", arg)
 {
     constructor_validate_and_infer_types();

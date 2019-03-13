@@ -33,7 +33,7 @@ namespace ngraph
             /// \param window_movement_strides The window movement strides.
             /// \param padding_below The below-padding shape.
             /// \param padding_above The above-padding shape.
-            QuantizedMaxPool(const std::shared_ptr<Node>& arg,
+            QuantizedMaxPool(const NodeOutput& arg,
                              const Shape& window_shape,
                              const Strides& window_movement_strides,
                              const Shape& padding_below,

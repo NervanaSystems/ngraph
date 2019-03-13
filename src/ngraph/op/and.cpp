@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::And::And(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
+op::And::And(const NodeOutput& arg0, const NodeOutput& arg1)
     : BinaryElementwiseLogical("And", arg0, arg1)
 {
     constructor_validate_and_infer_types();

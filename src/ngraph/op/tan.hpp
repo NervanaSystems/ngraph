@@ -41,7 +41,7 @@ namespace ngraph
             /// \brief Constructs a tangent operation.
             ///
             /// \param arg Node that produces the input tensor.
-            Tan(const std::shared_ptr<Node>& arg);
+            Tan(const NodeOutput& arg);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

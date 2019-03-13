@@ -31,9 +31,9 @@ namespace ngraph
         public:
             /// \brief Constructs an "all" reduction operation.
             ///
-            /// \param arg The tensor to be reduced.
+            /// \param arg Output producing tensor to be reduced.
             /// \param reduction_axes The axis positions (0-based) to be eliminated.
-            All(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes);
+            All(const NodeOutput& arg, const AxisSet& reduction_axes);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

@@ -35,7 +35,7 @@ namespace ngraph
             /// \param upper_bounds The axiswise upper bounds of the slice (exclusive).
             /// \param strides The slicing strides; for example, strides of `{n,m}` means to take
             ///                every nth row and every mth column of the input matrix.
-            Slice(const std::shared_ptr<Node>& arg,
+            Slice(const NodeOutput& arg,
                   const Coordinate& lower_bounds,
                   const Coordinate& upper_bounds,
                   const Strides& strides);
@@ -45,7 +45,7 @@ namespace ngraph
             /// \param arg The tensor to be sliced.
             /// \param lower_bounds The axiswise lower bounds of the slice (inclusive).
             /// \param upper_bounds The axiswise upper bounds of the slice (exclusive).
-            Slice(const std::shared_ptr<Node>& arg,
+            Slice(const NodeOutput& arg,
                   const Coordinate& lower_bounds,
                   const Coordinate& upper_bounds);
 

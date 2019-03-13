@@ -23,6 +23,9 @@ namespace ngraph
 {
     namespace op
     {
+        // TODO(amprocte): Convert this to use NodeOutput, including things like get_bias(),
+        // get_filters().
+
         /// \brief Convolution + bias forward prop for batched convolution operation.
         class QuantizedConvolutionBias : public Op
         {

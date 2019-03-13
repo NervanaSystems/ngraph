@@ -250,6 +250,8 @@ set (SRC
     op/util/logical_reduction.hpp
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise_arithmetic.hpp
+    output_vector.cpp
+    output_vector.hpp
     parameter_vector.hpp
     partial_shape.cpp
     partial_shape.hpp

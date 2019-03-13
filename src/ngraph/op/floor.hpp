@@ -28,8 +28,8 @@ namespace ngraph
         public:
             /// \brief Constructs a floor operation.
             ///
-            /// \param arg Node that produces the input tensor.
-            Floor(const std::shared_ptr<Node>& arg);
+            /// \param arg Output that produces the input tensor.
+            Floor(const NodeOutput& arg);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

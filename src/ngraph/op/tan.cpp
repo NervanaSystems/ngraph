@@ -22,7 +22,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Tan::Tan(const shared_ptr<Node>& arg)
+op::Tan::Tan(const NodeOutput& arg)
     : UnaryElementwiseArithmetic("Tan", arg)
 {
     constructor_validate_and_infer_types();

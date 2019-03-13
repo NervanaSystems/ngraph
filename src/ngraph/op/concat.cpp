@@ -23,8 +23,8 @@
 using namespace std;
 using namespace ngraph;
 
-op::Concat::Concat(const NodeVector& args, size_t concatenation_axis)
-    : Op("Concat", check_single_output_args(args))
+op::Concat::Concat(const OutputVector& args, size_t concatenation_axis)
+    : Op("Concat", args)
     , m_concatenation_axis(concatenation_axis)
 {
     constructor_validate_and_infer_types();

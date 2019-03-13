@@ -14,30 +14,18 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/abs.hpp"
-#include "ngraph/op/multiply.hpp"
-#include "ngraph/op/sign.hpp"
+#include "ngraph/output_vector.hpp"
+#include "ngraph/node_output.hpp"
+#include "ngraph/util.hpp"
 
-using namespace std;
 using namespace ngraph;
 
-op::Abs::Abs(const NodeOutput& arg)
-    : UnaryElementwiseArithmetic("Abs", arg)
+OutputVector::OutputVector(const std::initializer_list<std::shared_ptr<Node>>& nodes)
+    : OutputVector(std::vector<std::shared_ptr<Node>>(nodes.begin(), nodes.end()))
 {
-    constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::Abs::copy_with_new_args(const NodeVector& new_args) const
+OutputVector::OutputVector(const std::vector<std::shared_ptr<Node>>& nodes)
+    : std::vector<NodeOutput>(nodes.begin(), nodes.end())
 {
-    check_new_args_count(this, new_args);
-    return make_shared<Abs>(new_args.at(0));
-}
-
-void op::Abs::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
-{
-    auto delta = deltas.at(0);
-
-    auto x = get_argument(0);
-
-    adjoints.add_delta(x, delta * make_shared<op::Sign>(x));
 }

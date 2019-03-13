@@ -19,8 +19,8 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/tanh.hpp"
-#include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;

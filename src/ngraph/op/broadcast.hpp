@@ -18,6 +18,7 @@
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/output_vector.hpp"
 
 namespace ngraph
 {
@@ -29,13 +30,11 @@ namespace ngraph
         public:
             /// \brief Constructs a conversion operation.
             ///
-            /// \param arg            Node that produces the input tensor to be broadcast.
+            /// \param arg            Output that produces the input tensor to be broadcast.
             /// \param shape          The shape of the output tensor.
             /// \param broadcast_axes The axis positions (0-based) in the result that are being broadcast. The
             ///                        remaining axes in shape must be the same as the shape of arg.
-            Broadcast(const std::shared_ptr<Node>& arg,
-                      const Shape& shape,
-                      const AxisSet& broadcast_axes);
+            Broadcast(const NodeOutput& arg, const Shape& shape, const AxisSet& broadcast_axes);
 
             void validate_and_infer_types() override;
 
@@ -47,7 +46,7 @@ namespace ngraph
             const Shape& get_broadcast_shape() const { return m_shape; }
         protected:
             Broadcast(const std::string& node_type,
-                      const NodeVector& args,
+                      const OutputVector& args,
                       const Shape& shape,
                       const AxisSet& broadcast_axes);
 
@@ -72,8 +71,8 @@ namespace ngraph
             /// \param like_arg Provides the shape for the result.
             /// \param initial_broadcast_axes indicates which axes will be broadcast. If empty,
             ///        arg must be scalar and all axes are broadcast.
-            BroadcastLike(const std::shared_ptr<Node>& arg,
-                          const std::shared_ptr<Node>& like_arg,
+            BroadcastLike(const NodeOutput& arg,
+                          const NodeOutput& like_arg,
                           const AxisSet& initial_broadcast_axes);
 
             virtual std::shared_ptr<Node>

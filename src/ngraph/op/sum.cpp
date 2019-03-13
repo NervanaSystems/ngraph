@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Sum::Sum(const shared_ptr<Node>& arg, const AxisSet& reduction_axes)
+op::Sum::Sum(const NodeOutput& arg, const AxisSet& reduction_axes)
     : ArithmeticReduction("Sum", arg, reduction_axes)
 {
     constructor_validate_and_infer_types();

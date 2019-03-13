@@ -29,7 +29,7 @@ namespace ngraph
             /// \brief Constructs a logical negation operation.
             ///
             /// \param arg Node that produces the input tensor.
-            Not(const std::shared_ptr<Node>& arg);
+            Not(const NodeOutput& arg);
 
             void validate_and_infer_types() override;
 

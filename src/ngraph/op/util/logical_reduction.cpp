@@ -20,9 +20,9 @@ using namespace std;
 using namespace ngraph;
 
 op::util::LogicalReduction::LogicalReduction(const std::string& node_type,
-                                             const std::shared_ptr<Node>& arg,
+                                             const NodeOutput& arg,
                                              const AxisSet& reduction_axes)
-    : Op(node_type, check_single_output_args({arg}))
+    : Op(node_type, {arg})
     , m_reduction_axes(reduction_axes)
 {
 }

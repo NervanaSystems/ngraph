@@ -29,8 +29,8 @@ namespace ngraph
         public:
             /// \brief Allows a value to be used as a function result.
             ///
-            /// \param arg Node that produces the input tensor.
-            Result(const std::shared_ptr<Node>& arg);
+            /// \param arg Output that produces the input tensor.
+            Result(const NodeOutput& arg);
 
             void validate_and_infer_types() override;
 

@@ -21,19 +21,17 @@ using namespace std;
 using namespace ngraph;
 
 op::Broadcast::Broadcast(const std::string& name,
-                         const NodeVector& args,
+                         const OutputVector& args,
                          const Shape& shape,
                          const AxisSet& broadcast_axes)
-    : Op(name, check_single_output_args(args))
+    : Op(name, args)
     , m_shape(shape)
     , m_broadcast_axes(broadcast_axes)
 {
     constructor_validate_and_infer_types();
 }
 
-op::Broadcast::Broadcast(const shared_ptr<Node>& arg,
-                         const Shape& shape,
-                         const AxisSet& broadcast_axes)
+op::Broadcast::Broadcast(const NodeOutput& arg, const Shape& shape, const AxisSet& broadcast_axes)
     : Broadcast("Broadcast", {arg}, shape, broadcast_axes)
 {
 }
@@ -96,8 +94,8 @@ void op::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVe
     adjoints.add_delta(x, make_shared<op::Sum>(delta, m_broadcast_axes));
 }
 
-op::BroadcastLike::BroadcastLike(const std::shared_ptr<Node>& arg,
-                                 const std::shared_ptr<Node>& like_arg,
+op::BroadcastLike::BroadcastLike(const NodeOutput& arg,
+                                 const NodeOutput& like_arg,
                                  const AxisSet& initial_broadcast_axes)
     : Broadcast("BroadcastLike", {arg, like_arg}, {}, {})
     , m_initial_broadcast_axes(initial_broadcast_axes)

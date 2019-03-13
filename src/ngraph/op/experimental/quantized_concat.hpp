@@ -30,9 +30,9 @@ namespace ngraph
         public:
             /// \brief Constructs a concatenation operation.
             ///
-            /// \param args               The nodes producing the input tensors.
+            /// \param args               The outputs producing the input tensors.
             /// \param concatenation_axis The axis along which to concatenate the input tensors.
-            QuantizedConcat(const NodeVector& args, size_t concatenation_axis);
+            QuantizedConcat(const OutputVector& args, size_t concatenation_axis);
 
             void validate_and_infer_types() override;
 

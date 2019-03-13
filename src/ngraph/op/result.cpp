@@ -24,8 +24,8 @@
 using namespace std;
 using namespace ngraph;
 
-op::Result::Result(const shared_ptr<Node>& arg)
-    : Op("Result", check_single_output_args({arg}))
+op::Result::Result(const NodeOutput& arg)
+    : Op("Result", {arg})
 {
     constructor_validate_and_infer_types();
 }

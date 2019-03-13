@@ -21,6 +21,7 @@
 
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/output_vector.hpp"
 #include "ngraph/type/bfloat16.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
@@ -41,7 +42,7 @@ namespace ngraph
             ///        of values must match the size of the shape.
             template <typename T>
             Constant(const element::Type& type, Shape shape, const std::vector<T>& values)
-                : Node("Constant", {})
+                : Node("Constant", OutputVector{})
                 , m_element_type(type)
                 , m_shape(shape)
                 , m_data(ngraph::aligned_alloc(m_element_type.size(),
@@ -77,7 +78,7 @@ namespace ngraph
             /// \param shape The shape of the tensor constant.
             /// \param values A list of string values to use as the constant data.
             Constant(const element::Type& type, Shape shape, const std::vector<std::string>& values)
-                : Node("Constant", {})
+                : Node("Constant", OutputVector{})
                 , m_element_type(type)
                 , m_shape(shape)
                 , m_data(ngraph::aligned_alloc(m_element_type.size(),
@@ -106,7 +107,7 @@ namespace ngraph
             /// \param shape The shape of the tensor constant.
             /// \param data A void* to constant data.
             Constant(const element::Type& type, const Shape& shape, const void* data)
-                : Node("Constant", {})
+                : Node("Constant", OutputVector{})
                 , m_element_type(type)
                 , m_shape(shape)
                 , m_data(nullptr)
@@ -185,7 +186,7 @@ namespace ngraph
 
             bool is_constant() const override { return true; }
         protected:
-            Constant(const std::string& name, const NodeVector& args)
+            Constant(const std::string& name, const OutputVector& args)
                 : Node(name, args)
                 , m_shape({})
             {
@@ -286,7 +287,7 @@ namespace ngraph
             std::shared_ptr<op::Constant> as_constant() const;
 
         protected:
-            ScalarConstantLikeBase(const std::string& name, const NodeVector& args)
+            ScalarConstantLikeBase(const std::string& name, const OutputVector& args)
                 : Constant(name, args)
             {
             }
@@ -301,17 +302,18 @@ namespace ngraph
             /// Once the element type is known, the dependency on like will be removed and
             /// this node will be replaced with an equivalent constant.
             ///
-            /// \param like A tensor that will supply the element type.
+            /// \param like Output producing the tensor that will supply the element type.
             /// \param value The value of the scalar.
             template <typename T>
-            ScalarConstantLike(const std::shared_ptr<Node>& like, T value)
+            ScalarConstantLike(const NodeOutput& like, T value)
                 : ScalarConstantLikeBase("ScalarConstantLike", {like})
                 , m_value(static_cast<double>(value))
             {
                 constructor_validate_and_infer_types();
             }
 
-            std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
 
         protected:
             void infer_element_type() override;

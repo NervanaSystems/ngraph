@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Sinh::Sinh(const shared_ptr<Node>& arg)
+op::Sinh::Sinh(const NodeOutput& arg)
     : UnaryElementwiseArithmetic("Sinh", arg)
 {
     constructor_validate_and_infer_types();

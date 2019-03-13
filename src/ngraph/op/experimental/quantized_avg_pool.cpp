@@ -21,13 +21,13 @@
 using namespace std;
 using namespace ngraph;
 
-op::QuantizedAvgPool::QuantizedAvgPool(const shared_ptr<Node>& arg,
+op::QuantizedAvgPool::QuantizedAvgPool(const NodeOutput& arg,
                                        const Shape& window_shape,
                                        const Strides& window_movement_strides,
                                        const Shape& padding_below,
                                        const Shape& padding_above,
                                        bool include_padding_in_avg_computation)
-    : Op("QuantizedAvgPool", check_single_output_args({arg}))
+    : Op("QuantizedAvgPool", {arg})
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)
@@ -35,11 +35,6 @@ op::QuantizedAvgPool::QuantizedAvgPool(const shared_ptr<Node>& arg,
     , m_include_padding_in_avg_computation(include_padding_in_avg_computation)
 {
     constructor_validate_and_infer_types();
-
-    if (arg->get_element_type() != element::u8 && arg->get_element_type() != element::i8)
-    {
-        throw ngraph_error("QuantizedAvgPool supported only for i8/u8!");
-    }
 }
 
 void op::QuantizedAvgPool::validate_and_infer_types()
@@ -241,6 +236,11 @@ void op::QuantizedAvgPool::validate_and_infer_types()
     result_shape[0] = batch_size;
     result_shape[1] = channel_count;
     copy(output_item_shape.begin(), output_item_shape.end(), result_shape.begin() + 2);
+
+    NODE_VALIDATION_CHECK(this,
+                          get_input_element_type(0) == element::u8 ||
+                              get_input_element_type(0) == element::i8,
+                          "QuantizedAvgPool supported only for i8/u8.");
 
     set_output_type(0, get_input_element_type(0), result_shape);
 }

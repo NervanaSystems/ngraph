@@ -28,13 +28,13 @@ namespace ngraph
         public:
             /// \brief Constructs a generic padding operation.
             ///
-            /// \param arg The node producing input tensor to be padded.
-            /// \param arg_pad_value The node producing the scalar value to be inserted for padding.
+            /// \param arg The output producing input tensor to be padded.
+            /// \param arg_pad_value The output producing the scalar value to be inserted for padding.
             /// \param padding_below The padding-below widths.
             /// \param padding_above The padding-above widths.
             /// \param padding_interior The interior-padding widths.
-            Pad(const std::shared_ptr<Node>& arg,
-                const std::shared_ptr<Node>& arg_pad_value,
+            Pad(const NodeOutput& arg,
+                const NodeOutput& arg_pad_value,
                 const Shape& padding_below,
                 const Shape& padding_above,
                 const Shape& padding_interior);

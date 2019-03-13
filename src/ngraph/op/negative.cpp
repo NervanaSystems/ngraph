@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Negative::Negative(const shared_ptr<Node>& arg)
+op::Negative::Negative(const NodeOutput& arg)
     : UnaryElementwiseArithmetic("Negative", arg)
 {
     constructor_validate_and_infer_types();
@@ -40,7 +40,7 @@ void op::Negative::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVec
     adjoints.add_delta(x, -delta);
 }
 
-shared_ptr<Node> ngraph::operator-(const shared_ptr<Node> arg0)
+shared_ptr<Node> ngraph::operator-(const NodeOutput& arg0)
 {
     return make_shared<op::Negative>(arg0);
 }

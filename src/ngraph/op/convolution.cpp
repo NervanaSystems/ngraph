@@ -27,14 +27,14 @@
 using namespace std;
 using namespace ngraph;
 
-op::Convolution::Convolution(const shared_ptr<Node>& data_batch,
-                             const shared_ptr<Node>& filters,
+op::Convolution::Convolution(const NodeOutput& data_batch,
+                             const NodeOutput& filters,
                              const Strides& window_movement_strides,
                              const Strides& window_dilation_strides,
                              const CoordinateDiff& padding_below,
                              const CoordinateDiff& padding_above,
                              const Strides& data_dilation_strides)
-    : Op("Convolution", check_single_output_args({data_batch, filters}))
+    : Op("Convolution", {data_batch, filters})
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
     , m_padding_below(padding_below)
@@ -115,8 +115,8 @@ Strides op::Convolution::default_strides(const Node* node,
     return Strides(rank, 1);
 }
 
-op::Convolution::Convolution(const shared_ptr<Node>& data_batch,
-                             const shared_ptr<Node>& filters,
+op::Convolution::Convolution(const NodeOutput& data_batch,
+                             const NodeOutput& filters,
                              const Strides& window_movement_strides,
                              const Strides& window_dilation_strides,
                              const CoordinateDiff& padding_below,
@@ -153,8 +153,8 @@ CoordinateDiff op::Convolution::default_padding(const Node* node,
     return CoordinateDiff(rank, 0);
 }
 
-op::Convolution::Convolution(const shared_ptr<Node>& data_batch,
-                             const shared_ptr<Node>& filters,
+op::Convolution::Convolution(const NodeOutput& data_batch,
+                             const NodeOutput& filters,
                              const Strides& window_movement_strides,
                              const Strides& window_dilation_strides)
     : Convolution(data_batch,
@@ -166,8 +166,8 @@ op::Convolution::Convolution(const shared_ptr<Node>& data_batch,
 {
 }
 
-op::Convolution::Convolution(const shared_ptr<Node>& data_batch,
-                             const shared_ptr<Node>& filters,
+op::Convolution::Convolution(const NodeOutput& data_batch,
+                             const NodeOutput& filters,
                              const Strides& window_movement_strides)
     : Convolution(data_batch,
                   filters,
@@ -178,7 +178,7 @@ op::Convolution::Convolution(const shared_ptr<Node>& data_batch,
 {
 }
 
-op::Convolution::Convolution(const shared_ptr<Node>& data_batch, const shared_ptr<Node>& filters)
+op::Convolution::Convolution(const NodeOutput& data_batch, const NodeOutput& filters)
     : Convolution(data_batch, filters, Strides(), Strides(), CoordinateDiff(), CoordinateDiff())
 {
 }
@@ -227,14 +227,14 @@ void op::Convolution::generate_adjoints(autodiff::Adjoints& adjoints, const Node
 }
 
 op::ConvolutionBackpropData::ConvolutionBackpropData(const Shape& data_batch_shape,
-                                                     const shared_ptr<Node>& filters,
-                                                     const shared_ptr<Node>& output_delta,
+                                                     const NodeOutput& filters,
+                                                     const NodeOutput& output_delta,
                                                      const Strides& window_movement_strides_forward,
                                                      const Strides& window_dilation_strides_forward,
                                                      const CoordinateDiff& padding_below_forward,
                                                      const CoordinateDiff& padding_above_forward,
                                                      const Strides& data_dilation_strides_forward)
-    : Op("ConvolutionBackpropData", check_single_output_args({filters, output_delta}))
+    : Op("ConvolutionBackpropData", {filters, output_delta})
     , m_data_batch_shape(data_batch_shape)
     , m_window_movement_strides_forward(window_movement_strides_forward)
     , m_window_dilation_strides_forward(window_dilation_strides_forward)
@@ -428,15 +428,15 @@ shared_ptr<Node> op::ConvolutionBackpropData::copy_with_new_args(const NodeVecto
 }
 
 op::ConvolutionBackpropFilters::ConvolutionBackpropFilters(
-    const shared_ptr<Node>& data_batch,
+    const NodeOutput& data_batch,
     const Shape& filters_shape,
-    const shared_ptr<Node>& output_delta,
+    const NodeOutput& output_delta,
     const Strides& window_movement_strides_forward,
     const Strides& window_dilation_strides_forward,
     const CoordinateDiff& padding_below_forward,
     const CoordinateDiff& padding_above_forward,
     const Strides& data_dilation_strides_forward)
-    : Op("ConvolutionBackpropFilters", check_single_output_args({data_batch, output_delta}))
+    : Op("ConvolutionBackpropFilters", {data_batch, output_delta})
     , m_filters_shape(filters_shape)
     , m_window_movement_strides_forward(window_movement_strides_forward)
     , m_window_dilation_strides_forward(window_dilation_strides_forward)

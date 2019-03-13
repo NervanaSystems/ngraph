@@ -30,7 +30,7 @@ namespace ngraph
             ///
             /// \param arg0 Node that produces the first input tensor.
             /// \param arg1 Node that produces the second input tensor.
-            Divide(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
+            Divide(const NodeOutput& arg0, const NodeOutput& arg1);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -40,6 +40,5 @@ namespace ngraph
         };
     }
 
-    std::shared_ptr<ngraph::Node> operator/(const std::shared_ptr<ngraph::Node> arg0,
-                                            const std::shared_ptr<ngraph::Node> arg1);
+    std::shared_ptr<ngraph::Node> operator/(const NodeOutput& arg0, const NodeOutput& arg1);
 }

@@ -36,8 +36,8 @@ namespace ngraph
             /// \param data The input indices for tokens to be translated into embeddings
             /// \param weights is a dense matrix [N,M] where each row 0..N
             /// corresponds to an embedding (i.e. typically, a vector of real numbers) of length M
-            EmbeddingLookup(const std::shared_ptr<Node>& data, const std::shared_ptr<Node>& weights)
-                : Op("EmbeddingLookup", check_single_output_args({data, weights}))
+            EmbeddingLookup(const NodeOutput& data, const NodeOutput& weights)
+                : Op("EmbeddingLookup", {data, weights})
             {
                 constructor_validate_and_infer_types();
             }

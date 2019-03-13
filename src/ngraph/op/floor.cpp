@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Floor::Floor(const shared_ptr<Node>& arg)
+op::Floor::Floor(const NodeOutput& arg)
     : UnaryElementwiseArithmetic("Floor", arg)
 {
     constructor_validate_and_infer_types();

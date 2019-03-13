@@ -29,12 +29,12 @@ namespace ngraph
         public:
             /// \brief Constructs a batched max pooling operation.
             ///
-            /// \param arg The node producing the input data batch tensor.
+            /// \param arg The output producing the input data batch tensor.
             /// \param window_shape The window shape.
             /// \param window_movement_strides The window movement strides.
             /// \param padding_below The below-padding shape.
             /// \param padding_above The above-padding shape.
-            MaxPool(const std::shared_ptr<Node>& arg,
+            MaxPool(const NodeOutput& arg,
                     const Shape& window_shape,
                     const Strides& window_movement_strides,
                     const Shape& padding_below,
@@ -44,18 +44,18 @@ namespace ngraph
 
             /// \brief Constructs a batched, unpadded max pooling operation (i.e., all padding shapes are set to 0).
             ///
-            /// \param arg The node producing the input data batch tensor.
+            /// \param arg The output producing the input data batch tensor.
             /// \param window_shape The window shape.
             /// \param window_movement_strides The window movement strides.
-            MaxPool(const std::shared_ptr<Node>& arg,
+            MaxPool(const NodeOutput& arg,
                     const Shape& window_shape,
                     const Strides& window_movement_strides);
 
             /// \brief Constructs an unstrided batched max pooling operation (i.e., all window movement strides are 1 and all padding shapes are set to 0).
             ///
-            /// \param arg The node producing the input data batch tensor.
+            /// \param arg The output producing the input data batch tensor.
             /// \param window_shape The window shape.
-            MaxPool(const std::shared_ptr<Node>& arg, const Shape& window_shape);
+            MaxPool(const NodeOutput& arg, const Shape& window_shape);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -87,16 +87,16 @@ namespace ngraph
         class MaxPoolBackprop : public Op
         {
         public:
-            MaxPoolBackprop(const std::shared_ptr<Node>& arg_forward,
-                            const std::shared_ptr<Node>& delta,
+            MaxPoolBackprop(const NodeOutput& arg_forward,
+                            const NodeOutput& delta,
                             const Shape& window_shape,
                             const Strides& window_movement_strides,
                             const Shape& padding_below,
                             const Shape& padding_above);
 
-            MaxPoolBackprop(const std::shared_ptr<Node>& arg_forward,
-                            const std::shared_ptr<Node>& delta,
-                            const std::shared_ptr<Node>& result_forward,
+            MaxPoolBackprop(const NodeOutput& arg_forward,
+                            const NodeOutput& delta,
+                            const NodeOutput& result_forward,
                             const Shape& window_shape,
                             const Strides& window_movement_strides,
                             const Shape& padding_below,

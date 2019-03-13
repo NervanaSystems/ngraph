@@ -25,12 +25,12 @@
 using namespace std;
 using namespace ngraph;
 
-op::MaxPool::MaxPool(const shared_ptr<Node>& arg,
+op::MaxPool::MaxPool(const NodeOutput& arg,
                      const Shape& window_shape,
                      const Strides& window_movement_strides,
                      const Shape& padding_below,
                      const Shape& padding_above)
-    : Op("MaxPool", check_single_output_args({arg}))
+    : Op("MaxPool", {arg})
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)
@@ -74,14 +74,14 @@ void op::MaxPool::validate_and_infer_types()
                                                   true));
 }
 
-op::MaxPool::MaxPool(const shared_ptr<Node>& arg,
+op::MaxPool::MaxPool(const NodeOutput& arg,
                      const Shape& window_shape,
                      const Strides& window_movement_strides)
     : MaxPool(arg, window_shape, window_movement_strides, Shape(), Shape())
 {
 }
 
-op::MaxPool::MaxPool(const shared_ptr<Node>& arg, const Shape& window_shape)
+op::MaxPool::MaxPool(const NodeOutput& arg, const Shape& window_shape)
     : MaxPool(arg, window_shape, Strides(), Shape(), Shape())
 {
 }
@@ -96,13 +96,13 @@ shared_ptr<Node> op::MaxPool::copy_with_new_args(const NodeVector& new_args) con
                                 m_padding_above);
 }
 
-op::MaxPoolBackprop::MaxPoolBackprop(const shared_ptr<Node>& arg_forward,
-                                     const shared_ptr<Node>& delta,
+op::MaxPoolBackprop::MaxPoolBackprop(const NodeOutput& arg_forward,
+                                     const NodeOutput& delta,
                                      const Shape& window_shape,
                                      const Strides& window_movement_strides,
                                      const Shape& padding_below,
                                      const Shape& padding_above)
-    : Op("MaxPoolBackprop", check_single_output_args({arg_forward, delta}))
+    : Op("MaxPoolBackprop", {arg_forward, delta})
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)
@@ -111,14 +111,14 @@ op::MaxPoolBackprop::MaxPoolBackprop(const shared_ptr<Node>& arg_forward,
     constructor_validate_and_infer_types();
 }
 
-op::MaxPoolBackprop::MaxPoolBackprop(const shared_ptr<Node>& arg_forward,
-                                     const shared_ptr<Node>& delta,
-                                     const shared_ptr<Node>& result_forward,
+op::MaxPoolBackprop::MaxPoolBackprop(const NodeOutput& arg_forward,
+                                     const NodeOutput& delta,
+                                     const NodeOutput& result_forward,
                                      const Shape& window_shape,
                                      const Strides& window_movement_strides,
                                      const Shape& padding_below,
                                      const Shape& padding_above)
-    : Op("MaxPoolBackprop", check_single_output_args({arg_forward, delta, result_forward}))
+    : Op("MaxPoolBackprop", {arg_forward, delta, result_forward})
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)

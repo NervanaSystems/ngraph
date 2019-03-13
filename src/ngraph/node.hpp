@@ -124,6 +124,9 @@ namespace ngraph
         void validate_and_infer_elementwise_logical();
 
         Node(const std::string& node_type, const NodeVector& arguments, size_t output_size = 1);
+        Node(const std::string& node_type,
+             const std::vector<NodeOutput>& source_outputs,
+             size_t output_size = 1);
 
         virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
     public:
@@ -231,8 +234,8 @@ namespace ngraph
         std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr() const;
 
         /// Returns the set of inputs using output i
-        const std::set<descriptor::Input*>& get_output_inputs(size_t i) const
-            INPUT_OUTPUT_DEPRECATED;
+        const std::set<descriptor::Input*>&
+            get_output_inputs(size_t i) const INPUT_OUTPUT_DEPRECATED;
 
         /// Returns the number of inputs for the op
         size_t get_input_size() const;

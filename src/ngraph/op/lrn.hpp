@@ -40,12 +40,8 @@ namespace ngraph
         public:
             /// \brief Constructs a LRN operation.
             ///
-            /// \param arg Node that produces the input tensor.
-            LRN(const std::shared_ptr<Node>& arg,
-                double alpha,
-                double beta,
-                double bias,
-                size_t size);
+            /// \param arg Output that produces the input tensor.
+            LRN(const NodeOutput& arg, double alpha, double beta, double bias, size_t size);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

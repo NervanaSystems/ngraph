@@ -31,14 +31,14 @@ namespace ngraph
         public:
             /// \brief Constructs a logical-and operation.
             ///
-            /// \param arg0 Node that produces the first input tensor.<br>
+            /// \param arg0 Output that produces the first input tensor.<br>
             /// `[d0, ...]`
-            /// \param arg1 Node that produces the second input tensor.<br>
+            /// \param arg1 Output that produces the second input tensor.<br>
             /// `[d0, ...]`
             ///
             /// Output `[d0, ...]`
             ///
-            And(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
+            And(const NodeOutput& arg0, const NodeOutput& arg1);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Tanh::Tanh(const shared_ptr<Node>& arg)
+op::Tanh::Tanh(const NodeOutput& arg)
     : UnaryElementwiseArithmetic("Tanh", arg)
 {
     constructor_validate_and_infer_types();

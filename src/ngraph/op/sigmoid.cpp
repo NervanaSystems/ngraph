@@ -27,13 +27,13 @@ shared_ptr<Node> op::Sigmoid::copy_with_new_args(const NodeVector& new_args) con
     return make_shared<Sigmoid>(new_args.at(0));
 }
 
-op::Sigmoid::Sigmoid(shared_ptr<Node> arg)
+op::Sigmoid::Sigmoid(const NodeOutput& arg)
     : UnaryElementwiseArithmetic("Sigmoid", arg)
 {
     constructor_validate_and_infer_types();
 }
 
-op::SigmoidBackprop::SigmoidBackprop(shared_ptr<Node> arg, shared_ptr<Node> delta)
+op::SigmoidBackprop::SigmoidBackprop(const NodeOutput& arg, const NodeOutput& delta)
     : BinaryElementwiseArithmetic("SigmoidBackprop", arg, delta)
 {
     constructor_validate_and_infer_types();

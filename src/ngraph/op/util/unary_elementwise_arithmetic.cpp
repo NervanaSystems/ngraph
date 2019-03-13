@@ -19,8 +19,8 @@
 using namespace ngraph;
 
 op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(const std::string& node_type,
-                                                                 const std::shared_ptr<Node>& arg)
-    : Op(node_type, check_single_output_args({arg}))
+                                                                 const NodeOutput& arg)
+    : Op(node_type, {arg})
 {
 }
 

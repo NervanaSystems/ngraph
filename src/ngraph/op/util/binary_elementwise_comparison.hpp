@@ -48,11 +48,11 @@ namespace ngraph
             public:
                 /// \brief Constructs a binary elementwise comparison operation.
                 ///
-                /// \param arg0 Node that produces the first input tensor.
-                /// \param arg1 Node that produces the second input tensor.
+                /// \param arg0 Output that produces the first input tensor.
+                /// \param arg1 Output that produces the second input tensor.
                 BinaryElementwiseComparison(const std::string& node_type,
-                                            const std::shared_ptr<Node>& arg0,
-                                            const std::shared_ptr<Node>& arg1);
+                                            const NodeOutput& arg0,
+                                            const NodeOutput& arg1);
 
                 void validate_and_infer_types() override;
             };

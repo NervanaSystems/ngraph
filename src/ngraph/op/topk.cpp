@@ -23,12 +23,12 @@
 using namespace std;
 using namespace ngraph;
 
-op::TopK::TopK(const shared_ptr<Node>& arg,
+op::TopK::TopK(const NodeOutput& arg,
                size_t top_k_axis,
                const element::Type& index_element_type,
                size_t k,
                bool compute_max)
-    : Op("TopK", check_single_output_args({arg}))
+    : Op("TopK", {arg})
     , m_top_k_axis(top_k_axis)
     , m_index_element_type(index_element_type)
     , m_k(k)

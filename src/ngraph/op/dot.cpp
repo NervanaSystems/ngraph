@@ -29,16 +29,16 @@
 using namespace std;
 using namespace ngraph;
 
-op::Dot::Dot(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
+op::Dot::Dot(const NodeOutput& arg0, const NodeOutput& arg1)
     : Dot(arg0, arg1, 0, false)
 {
 }
 
-op::Dot::Dot(const shared_ptr<Node>& arg0,
-             const shared_ptr<Node>& arg1,
+op::Dot::Dot(const NodeOutput& arg0,
+             const NodeOutput& arg1,
              size_t reduction_axes_count,
              bool has_reduction_axes_count)
-    : Op("Dot", check_single_output_args({arg0, arg1}))
+    : Op("Dot", {arg0, arg1})
     , m_reduction_axes_count(reduction_axes_count)
     , m_has_reduction_axes_count(has_reduction_axes_count)
 {

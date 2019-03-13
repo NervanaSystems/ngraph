@@ -22,23 +22,18 @@
 using namespace std;
 using namespace ngraph;
 
-op::QuantizedMaxPool::QuantizedMaxPool(const shared_ptr<Node>& arg,
+op::QuantizedMaxPool::QuantizedMaxPool(const NodeOutput& arg,
                                        const Shape& window_shape,
                                        const Strides& window_movement_strides,
                                        const Shape& padding_below,
                                        const Shape& padding_above)
-    : Op("QuantizedMaxPool", check_single_output_args({arg}))
+    : Op("QuantizedMaxPool", {arg})
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)
     , m_padding_above(padding_above)
 {
     constructor_validate_and_infer_types();
-
-    if (arg->get_element_type() != element::u8 && arg->get_element_type() != element::i8)
-    {
-        throw ngraph_error("QuantizedMaxPool supported only for i8/u8!");
-    }
 }
 
 void op::QuantizedMaxPool::validate_and_infer_types()
@@ -194,6 +189,11 @@ void op::QuantizedMaxPool::validate_and_infer_types()
     result_shape[0] = batch_size;
     result_shape[1] = channel_count;
     copy(output_item_shape.begin(), output_item_shape.end(), result_shape.begin() + 2);
+
+    NODE_VALIDATION_CHECK(this,
+                          get_input_element_type(0) == element::u8 ||
+                              get_input_element_type(0) == element::i8,
+                          "QuantizedMaxPool supported only for i8/u8.");
 
     set_output_type(0, get_input_element_type(0), result_shape);
 }

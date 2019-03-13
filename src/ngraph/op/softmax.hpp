@@ -22,6 +22,9 @@ namespace ngraph
 {
     namespace op
     {
+        // TODO(amprocte): This is not an elementwise operation, and should not subclass
+        // UnaryElementwiseArithmetic.
+
         /// \brief Softmax operation.
         ///
         class Softmax : public util::UnaryElementwiseArithmetic
@@ -29,13 +32,13 @@ namespace ngraph
         public:
             /// \brief Constructs a softmax operation.
             ///
-            /// \param arg Node that produces the first input tensor.<br>
+            /// \param arg Output that produces the first input tensor.<br>
             /// `[d0, ...]`
             /// \param axes The axis positions (0-based) on which to calculate the softmax.
             ///
             /// Output `[d0, ...]`
             ///
-            Softmax(const std::shared_ptr<Node>& arg, const AxisSet& axes);
+            Softmax(const NodeOutput& arg, const AxisSet& axes);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
