@@ -105,7 +105,8 @@ void op::Pad::validate_and_infer_types()
                         "spatial axis.");
                     NODE_VALIDATION_CHECK(
                         this,
-                        m_pad_mode != op::PadMode::REFLECT || static_cast<size_t>(arg_shape[i]) >= 2,
+                        m_pad_mode != op::PadMode::REFLECT ||
+                            static_cast<size_t>(arg_shape[i]) >= 2,
                         "REFLECT padding mode requires an input of dimension of at least 2 at each "
                         "spatial axis.");
                 }
