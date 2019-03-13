@@ -135,14 +135,7 @@ const std::string& Node::get_name() const
 
 void Node::set_friendly_name(const string& name)
 {
-    if (m_friendly_name.empty())
-    {
-        m_friendly_name = name;
-    }
-    else
-    {
-        throw ngraph_error("Node name may be set exactly once");
-    }
+    m_friendly_name = name;
 }
 
 Placement Node::get_placement() const

@@ -1133,3 +1133,51 @@ TEST(builder, scaled_quantize_concat_signed)
     EXPECT_EQ((vector<int8_t>{-2, 4, 8, 16, -2, 2, 4, 8, 16, 15, -2, 3, 5, 7, 11, 16}),
               read_vector<int8_t>(result));
 }
+
+TEST(builder, scaled_quantize_concat_unsigned_varying)
+{
+    Shape shape_a{2, 3};
+    auto A = make_shared<op::Parameter>(element::u8, shape_a);
+    auto An = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto Ax = make_shared<op::Parameter>(element::f32, Shape{1});
+    Shape shape_b{2, 3};
+    auto B = make_shared<op::Parameter>(element::u8, shape_b);
+    auto Bn = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto Bx = make_shared<op::Parameter>(element::f32, Shape{1});
+    Shape shape_c{2, 3};
+    auto C = make_shared<op::Parameter>(element::u8, shape_c);
+    auto Cn = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto Cx = make_shared<op::Parameter>(element::f32, Shape{1});
+    Shape shape_r{2, 9};
+    auto QConcat = ngraph::builder::ScaledQuantizedConcat(
+        NodeVector{A, B, C}, 1, NodeVector{An, Bn, Cn}, NodeVector{Ax, Bx, Cx});
+    auto f = make_shared<Function>(NodeVector{QConcat},
+                                   ParameterVector{A, B, C, An, Bn, Cn, Ax, Bx, Cx});
+    auto backend = runtime::Backend::create("CPU");
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::u8, shape_a);
+    copy_data(a, vector<uint8_t>{5, 1, 0, 1, 5, 100});
+    auto b = backend->create_tensor(element::u8, shape_b);
+    copy_data(b, vector<uint8_t>{0, 2, 4, 6, 8, 10});
+    auto c = backend->create_tensor(element::u8, shape_c);
+    copy_data(c, vector<uint8_t>{1, 3, 5, 7, 9, 50});
+    // min/max vectors
+    auto an = backend->create_tensor(element::f32, Shape{1});
+    copy_data(an, vector<float>{-3.0});
+    auto ax = backend->create_tensor(element::f32, Shape{1});
+    copy_data(ax, vector<float>{1.0});
+    auto bn = backend->create_tensor(element::f32, Shape{1});
+    copy_data(bn, vector<float>{-3.0});
+    auto bx = backend->create_tensor(element::f32, Shape{1});
+    copy_data(bx, vector<float>{2.0});
+    auto cn = backend->create_tensor(element::f32, Shape{1});
+    copy_data(cn, vector<float>{-3.0});
+    auto cx = backend->create_tensor(element::f32, Shape{1});
+    copy_data(cx, vector<float>{1.0});
+    // result
+    auto result = backend->create_tensor(element::u8, shape_r);
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b, c, an, bn, cn, ax, bx, cx});
+    EXPECT_EQ((vector<uint8_t>{5, 1, 0, 0, 2, 4, 1, 3, 5, 1, 5, 100, 6, 8, 10, 7, 9, 50}),
+              read_vector<uint8_t>(result));
+}
