@@ -9112,10 +9112,10 @@ TEST(type_prop, pad_deduce_above_padding_wrong_rank)
 TEST(type_prop, pad_deduce_too_small_for_edge)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{5, 0, 2});
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{1, 5, 0, 2});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
-    CoordinateDiff padding_below{1, 2, 3};
-    CoordinateDiff padding_above{1, 2, 3};
+    CoordinateDiff padding_below{0, 1, 2, 3};
+    CoordinateDiff padding_above{0, 1, 2, 3};
     try
     {
         auto pad =
@@ -9140,10 +9140,10 @@ TEST(type_prop, pad_deduce_too_small_for_edge)
 TEST(type_prop, pad_deduce_too_small_for_reflect)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{5, 1, 2});
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{1, 5, 1, 2});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
-    CoordinateDiff padding_below{1, 2, 3};
-    CoordinateDiff padding_above{1, 2, 3};
+    CoordinateDiff padding_below{0, 1, 2, 3};
+    CoordinateDiff padding_above{0, 1, 2, 3};
     try
     {
         auto pad = make_shared<op::Pad>(
