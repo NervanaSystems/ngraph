@@ -2227,7 +2227,6 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, import_non_existing_file)
     }
 }
 
-
 TEST(onnx_${BACKEND_NAME}, model_lstm_fwd_mixed_seq)
 {
     auto function = onnx_import::import_onnx_model(
