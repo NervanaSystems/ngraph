@@ -24,7 +24,7 @@ using namespace ngraph;
 op::Parameter::Parameter(const element::Type& element_type,
                          const PartialShape& pshape,
                          const bool cacheable)
-    : Op("Parameter", NodeVector{})
+    : Op("Parameter", OutputVector{})
     , m_cacheable(cacheable)
     , m_partial_shape(pshape)
     , m_element_type(element_type)
