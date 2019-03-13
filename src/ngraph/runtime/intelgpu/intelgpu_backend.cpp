@@ -1156,13 +1156,29 @@ shared_ptr<runtime::Executable>
         {
             arguments_check(op, 2, 1);
 
-            const cldnn_activation_additional_params& param = {0.f, 0.f};
-            const cldnn::activation_grad cldnn_activ_grad(get_output_name(op),
-                                                          get_input_name(op, 1),
-                                                          get_input_name(op, 0),
-                                                          activation_grad_relu,
-                                                          param);
-            topology.add(cldnn_activ_grad);
+            if (get_input_type(op) != element::f32 || get_input_type(op, 1) != element::f32 ||
+                get_output_type(op) != element::f32 || get_output_shape(op).size() > 4)
+            {
+                do_relu_backprop(topology,
+                                 get_input_name(op, 0),
+                                 get_input_shape(op, 0),
+                                 get_input_type(op, 0),
+                                 get_input_name(op, 1),
+                                 get_input_shape(op, 1),
+                                 get_output_name(op),
+                                 get_output_shape(op),
+                                 get_output_type(op));
+            }
+            else
+            {
+                const cldnn_activation_additional_params& param = {0.f, 0.f};
+                const cldnn::activation_grad cldnn_activ_grad(get_output_name(op),
+                                                              get_input_name(op, 1),
+                                                              get_input_name(op, 0),
+                                                              activation_grad_relu,
+                                                              param);
+                topology.add(cldnn_activ_grad);
+            }
             break;
         }
         case OP_TYPEID::Abs:
