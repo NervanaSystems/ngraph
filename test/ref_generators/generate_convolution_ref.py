@@ -248,7 +248,7 @@ NGRAPH_TEST (${BACKEND_NAME}, %s)
 
     auto handle = backend->compile(function);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_TRUE(test::all_close<float>(vector<float>{expected_result}, read_vector<float>(result), 1.0e-4f, 1.0e-6f));
+    EXPECT_TRUE(test::all_close_f(vector<float>{expected_result}, read_vector<float>(result), tolerance));
     // only test backprop for certain cases as it takes significant compute resources
     %sEXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {a, b}, .01f, .01f));
 }
@@ -358,12 +358,18 @@ def main():
 #include "ngraph/ngraph.hpp"
 #include "util/test_tools.hpp"
 #include "util/autodiff/numeric_compare.hpp"
+#include "util/all_close_f.hpp"
 #include "util/test_control.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
+
+// for float this will be 18 bits matching
+// for bfloat this will be 6 bits matching
+constexpr int three_quarters_of_available_bits = (MAX_FLOAT_BITS * 3) / 4;
+constexpr int tolerance = FLOAT_MANTISSA_BITS - three_quarters_of_available_bits;
 
 ''')
 
