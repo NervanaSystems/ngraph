@@ -135,7 +135,7 @@ shared_ptr<Node> op::Pad::copy_with_new_args(const NodeVector& new_args) const
    d20 d21 d22 d23
    d30 d31 d32 d33
 
-   We know that everything but d11, d12, d21, and d23 on the forward prop is just "y".
+   We know that everything but d11, d12, d21, and d22 on the forward prop is just "y".
    So we mask that off (using the forward-prop padding values to determine start, end,
    and slice stride):
 
@@ -154,7 +154,7 @@ shared_ptr<Node> op::Pad::copy_with_new_args(const NodeVector& new_args) const
    For the "x" backprop it's sort of the opposite; just slice out:
 
    d11 d12
-   d21 d23
+   d21 d22
 
    and push that back.
 */
