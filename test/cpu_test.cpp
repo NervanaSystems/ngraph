@@ -976,10 +976,8 @@ TEST(cpu_test, conv_test_winograd)
     auto conv_weights_md =
         memory::desc({conv_weights_tz}, memory::data_type::f32, memory::format::any);
     auto conv_dst_md = memory::desc({conv_dst_tz}, memory::data_type::f32, memory::format::any);
+    mkldnn::algorithm convolution_algo = mkldnn_utils::can_use_conv_auto();
 
-    mkldnn::algorithm convolution_algo = mkldnn_utils::can_use_conv_auto()
-                                             ? mkldnn::algorithm::convolution_auto
-                                             : mkldnn::algorithm::convolution_direct;
     /* create a convolution primitive descriptor */
     auto conv_desc = convolution_forward::desc(prop_kind::forward,
                                                convolution_algo,

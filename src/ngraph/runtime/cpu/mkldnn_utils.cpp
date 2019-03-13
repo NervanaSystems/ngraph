@@ -712,20 +712,20 @@ const mkldnn_version_t* runtime::cpu::mkldnn_utils::get_mkldnn_version()
     return mkldnn_version();
 }
 
-bool runtime::cpu::mkldnn_utils::can_use_conv_auto()
+mkldnn::algorithm runtime::cpu::mkldnn_utils::can_use_conv_auto()
 {
 #if defined(MKLDNN_VERSION_MAJOR) && defined(MKLDNN_VERSION_MINOR) && defined(MKLDNN_VERSION_PATCH)
     auto mkldnn_version = runtime::cpu::mkldnn_utils::get_mkldnn_version();
     if (mkldnn_version->major >= 0 && mkldnn_version->minor >= 18 && mkldnn_version->patch >= 0)
     {
-        return true;
+        return mkldnn::algorithm::convolution_auto;
     }
     else
     {
-        return false;
+        return mkldnn::algorithm::convolution_direct;
     }
 #else
-    return false;
+    return mkldnn::algorithm::convolution_direct;
 #endif
 }
 bool runtime::cpu::mkldnn_utils::can_use_mkldnn_batchnorm_bprop(const ngraph::Node* node)

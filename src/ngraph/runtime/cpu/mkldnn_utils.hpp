@@ -82,7 +82,7 @@ namespace ngraph
                 Inference - Based on convolution sizes, MKLDNN chooses between two different tile sizes F(2x2, 3x3) or 
                 F(4x4, 3x3)(refer to Winograd paper for more informartion on tile sizes). Training - Uses F(4x4, 3x3) winograd.
                 */
-                bool can_use_conv_auto();
+                mkldnn::algorithm can_use_conv_auto();
 
                 /** Intel(R) MKL-DNN Version type */
                 /* typedef struct {
