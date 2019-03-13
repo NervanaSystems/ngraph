@@ -50,10 +50,10 @@ void op::util::validate_convbias_shapes(const Shape& data_shape,
 }
 
 op::ConvolutionBias::ConvolutionBias(const shared_ptr<op::Convolution>& conv,
-                                     const shared_ptr<Node>& bias,
+                                     const NodeOutput& bias,
                                      const bool with_relu)
     : Op("ConvolutionBias",
-         check_single_output_args({conv->get_argument(0), conv->get_argument(1), bias}))
+         {conv->get_input_source_output(0), conv->get_input_source_output(1), bias})
     , m_window_movement_strides(conv->get_window_movement_strides())
     , m_window_dilation_strides(conv->get_window_dilation_strides())
     , m_padding_below(conv->get_padding_below())
@@ -63,27 +63,27 @@ op::ConvolutionBias::ConvolutionBias(const shared_ptr<op::Convolution>& conv,
 {
     constructor_validate_and_infer_types();
 
-    if (conv->get_element_type() != bias->get_element_type())
+    if (conv->get_element_type() != bias.get_element_type())
     {
         throw ngraph_error("Convolution's element type isn't equal to bias!");
     }
 
     util::validate_convbias_shapes(
-        conv->get_argument(0)->get_shape(), conv->get_argument(1)->get_shape(), bias->get_shape());
+        conv->get_argument(0)->get_shape(), conv->get_argument(1)->get_shape(), bias.get_shape());
 
     set_output_type(0, conv->get_element_type(), conv->get_shape());
 }
 
-op::ConvolutionBias::ConvolutionBias(const shared_ptr<Node>& data_batch,
-                                     const shared_ptr<Node>& filters,
-                                     const shared_ptr<Node>& bias,
+op::ConvolutionBias::ConvolutionBias(const NodeOutput& data_batch,
+                                     const NodeOutput& filters,
+                                     const NodeOutput& bias,
                                      const Strides& window_movement_strides,
                                      const Strides& window_dilation_strides,
                                      const CoordinateDiff& padding_below,
                                      const CoordinateDiff& padding_above,
                                      const Strides& data_dilation_strides,
                                      const bool with_relu)
-    : Op("ConvolutionBias", check_single_output_args({data_batch, filters, bias}))
+    : Op("ConvolutionBias", {data_batch, filters, bias})
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
     , m_padding_below(padding_below)
@@ -93,10 +93,10 @@ op::ConvolutionBias::ConvolutionBias(const shared_ptr<Node>& data_batch,
 {
     constructor_validate_and_infer_types();
 
-    auto& data_batch_shape = data_batch->get_shape();
-    auto& data_batch_et = data_batch->get_element_type();
-    auto& filters_shape = filters->get_shape();
-    auto& filters_et = filters->get_element_type();
+    auto& data_batch_shape = data_batch.get_shape();
+    auto& data_batch_et = data_batch.get_element_type();
+    auto& filters_shape = filters.get_shape();
+    auto& filters_et = filters.get_element_type();
 
     //
     // Make sure data batch and filter element types match.
@@ -105,7 +105,7 @@ op::ConvolutionBias::ConvolutionBias(const shared_ptr<Node>& data_batch,
     {
         throw ngraph_error("Convolution data batch and filter element types do not match");
     }
-    util::validate_convbias_shapes(data_batch_shape, filters_shape, bias->get_shape());
+    util::validate_convbias_shapes(data_batch_shape, filters_shape, bias.get_shape());
 
     set_output_type(0,
                     data_batch_et,
@@ -186,16 +186,16 @@ void op::ConvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints, const 
 }
 
 op::ConvolutionBiasBackpropFiltersBias::ConvolutionBiasBackpropFiltersBias(
-    const shared_ptr<Node>& data_batch,
+    const NodeOutput& data_batch,
     const Shape& filters_shape,
     const Shape& bias_shape,
-    const shared_ptr<Node>& output_delta,
+    const NodeOutput& output_delta,
     const Strides& window_movement_strides_forward,
     const Strides& window_dilation_strides_forward,
     const CoordinateDiff& padding_below_forward,
     const CoordinateDiff& padding_above_forward,
     const Strides& data_dilation_strides_forward)
-    : Op("ConvolutionBiasBackpropFiltersBias", check_single_output_args({data_batch, output_delta}))
+    : Op("ConvolutionBiasBackpropFiltersBias", {data_batch, output_delta})
     , m_filters_shape(filters_shape)
     , m_bias_shape(bias_shape)
     , m_window_movement_strides_forward(window_movement_strides_forward)
@@ -267,11 +267,13 @@ shared_ptr<Node>
 }
 
 op::ConvolutionBiasAdd::ConvolutionBiasAdd(const std::shared_ptr<op::ConvolutionBias>& conv,
-                                           const std::shared_ptr<Node>& sum_input,
+                                           const NodeOutput& sum_input,
                                            bool with_relu)
     : Op("ConvolutionBiasAdd",
-         check_single_output_args(
-             {conv->get_argument(0), conv->get_argument(1), conv->get_argument(2), sum_input}))
+         {conv->get_input_source_output(0),
+          conv->get_input_source_output(1),
+          conv->get_input_source_output(2),
+          sum_input})
     , m_window_movement_strides(conv->get_window_movement_strides())
     , m_window_dilation_strides(conv->get_window_dilation_strides())
     , m_padding_below(conv->get_padding_below())
@@ -287,17 +289,17 @@ op::ConvolutionBiasAdd::ConvolutionBiasAdd(const std::shared_ptr<op::Convolution
     set_output_type(0, conv->get_element_type(), conv->get_shape());
 }
 
-op::ConvolutionBiasAdd::ConvolutionBiasAdd(const std::shared_ptr<Node>& data_batch,
-                                           const std::shared_ptr<Node>& filters,
-                                           const std::shared_ptr<Node>& bias,
-                                           const std::shared_ptr<Node>& sum_input,
+op::ConvolutionBiasAdd::ConvolutionBiasAdd(const NodeOutput& data_batch,
+                                           const NodeOutput& filters,
+                                           const NodeOutput& bias,
+                                           const NodeOutput& sum_input,
                                            const Strides& window_movement_strides,
                                            const Strides& window_dilation_strides,
                                            const CoordinateDiff& padding_below,
                                            const CoordinateDiff& padding_above,
                                            const Strides& data_dilation_strides,
                                            bool with_relu)
-    : Op("ConvolutionBiasAdd", check_single_output_args({data_batch, filters, bias, sum_input}))
+    : Op("ConvolutionBiasAdd", {data_batch, filters, bias, sum_input})
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
     , m_padding_below(padding_below)
@@ -307,10 +309,10 @@ op::ConvolutionBiasAdd::ConvolutionBiasAdd(const std::shared_ptr<Node>& data_bat
 {
     constructor_validate_and_infer_types();
 
-    auto& data_batch_shape = data_batch->get_shape();
-    auto& data_batch_et = data_batch->get_element_type();
-    auto& filters_shape = filters->get_shape();
-    auto& filters_et = filters->get_element_type();
+    auto& data_batch_shape = data_batch.get_shape();
+    auto& data_batch_et = data_batch.get_element_type();
+    auto& filters_shape = filters.get_shape();
+    auto& filters_et = filters.get_element_type();
 
     //
     // Make sure data batch and filter element types match.
@@ -320,7 +322,7 @@ op::ConvolutionBiasAdd::ConvolutionBiasAdd(const std::shared_ptr<Node>& data_bat
         throw ngraph_error("Convolution data batch and filter element types do not match");
     }
 
-    util::validate_convbias_shapes(data_batch_shape, filters_shape, bias->get_shape());
+    util::validate_convbias_shapes(data_batch_shape, filters_shape, bias.get_shape());
     set_output_type(0,
                     data_batch_et,
                     util::infer_convolution_output_shape(this,

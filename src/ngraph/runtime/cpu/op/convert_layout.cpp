@@ -21,7 +21,7 @@ using namespace std;
 using namespace ngraph;
 
 runtime::cpu::op::ConvertLayout::ConvertLayout(
-    const shared_ptr<Node>& arg, const shared_ptr<runtime::cpu::LayoutDescriptor>& layout)
+    const NodeOutput& arg, const shared_ptr<runtime::cpu::LayoutDescriptor>& layout)
     : ConvertLayout(arg, 0, layout)
 {
 }
@@ -37,10 +37,10 @@ shared_ptr<Node>
 }
 
 runtime::cpu::op::ConvertLayout::ConvertLayout(
-    const shared_ptr<Node>& arg,
+    const NodeOutput& arg,
     size_t output_index,
     const shared_ptr<runtime::cpu::LayoutDescriptor>& layout)
-    : Op("ConvertLayout", check_single_output_args({arg}))
+    : Op("ConvertLayout", {arg})
     , arg_output_index(output_index)
     , output_layout(layout)
 {

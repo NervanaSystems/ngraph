@@ -31,7 +31,7 @@ namespace ngraph
         class MaxPoolWithIndices : public Op
         {
         public:
-            MaxPoolWithIndices(const std::shared_ptr<Node>& arg,
+            MaxPoolWithIndices(const NodeOutput& arg,
                                const Shape& window_shape,
                                const Strides& window_movement_strides,
                                const Shape& padding_below,
@@ -64,9 +64,9 @@ namespace ngraph
         class MaxPoolWithIndicesBackprop : public Op
         {
         public:
-            MaxPoolWithIndicesBackprop(const std::shared_ptr<Node>& arg_forward,
-                                       const std::shared_ptr<Node>& delta,
-                                       const std::shared_ptr<Node>& indices,
+            MaxPoolWithIndicesBackprop(const NodeOutput& arg_forward,
+                                       const NodeOutput& delta,
+                                       const NodeOutput& indices,
                                        const Shape& window_shape,
                                        const Strides& window_movement_strides,
                                        const Shape& padding_below,

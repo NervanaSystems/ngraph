@@ -27,12 +27,12 @@ namespace ngraph
         {
         public:
             ConvolutionAdd(const std::shared_ptr<op::Convolution>& conv,
-                           const std::shared_ptr<Node>& sum_input,
+                           const NodeOutput& sum_input,
                            bool with_relu);
 
-            ConvolutionAdd(const std::shared_ptr<Node>& data_batch,
-                           const std::shared_ptr<Node>& filters,
-                           const std::shared_ptr<Node>& sum_input,
+            ConvolutionAdd(const NodeOutput& data_batch,
+                           const NodeOutput& filters,
+                           const NodeOutput& sum_input,
                            const Strides& window_movement_strides,
                            const Strides& window_dilation_strides,
                            const CoordinateDiff& padding_below,

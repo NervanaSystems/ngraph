@@ -28,8 +28,8 @@ namespace ngraph
         class GroupConvolution : public Op
         {
         public:
-            CPU_BACKEND_API GroupConvolution(const std::shared_ptr<Node>& data_batch,
-                                             const std::shared_ptr<Node>& filters,
+            CPU_BACKEND_API GroupConvolution(const NodeOutput& data_batch,
+                                             const NodeOutput& filters,
                                              const Strides& window_movement_strides,
                                              const Strides& window_dilation_strides,
                                              const CoordinateDiff& padding_below,

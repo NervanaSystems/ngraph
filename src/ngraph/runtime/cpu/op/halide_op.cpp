@@ -24,11 +24,11 @@ shared_ptr<Node> runtime::cpu::op::HalideOp::copy_with_new_args(const NodeVector
     return make_shared<HalideOp>(new_args, m_ops, m_output_type, m_output_shape);
 }
 
-runtime::cpu::op::HalideOp::HalideOp(const NodeVector& args,
+runtime::cpu::op::HalideOp::HalideOp(const OutputVector& args,
                                      const std::list<std::shared_ptr<Node>>& ops,
                                      const element::Type& out_type,
                                      const Shape& out_shape)
-    : Op("HalideOp", check_single_output_args(args))
+    : Op("HalideOp", args)
     , m_ops(ops)
     , m_output_type(out_type)
     , m_output_shape(out_shape)

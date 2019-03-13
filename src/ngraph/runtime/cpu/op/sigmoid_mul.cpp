@@ -52,29 +52,29 @@ ngraph::op::SigmoidMultiply::FunctionType
     }
 }
 
-op::SigmoidMultiply::SigmoidMultiply(shared_ptr<Node> input_0,
-                                     shared_ptr<Node> input_1,
+op::SigmoidMultiply::SigmoidMultiply(const NodeOutput& input_0,
+                                     const NodeOutput& input_1,
                                      const FunctionType input_0_type,
                                      const FunctionType input_1_type)
-    : Op("SigmoidMultiply", check_single_output_args({input_0, input_1}))
+    : Op("SigmoidMultiply", {input_0, input_1})
 {
     constructor_validate_and_infer_types();
 
-    if (input_0->get_element_type() != input_1->get_element_type())
+    if (input_0.get_element_type() != input_1.get_element_type())
     {
         throw ngraph_error("SigmoidMultiply input element type mismatch");
     }
-    if (input_0->get_shape() != input_1->get_shape())
+    if (input_0.get_shape() != input_1.get_shape())
     {
         throw ngraph_error("SigmoidMultiply input shape mismatch: " +
-                           vector_to_string(input_0->get_shape()) + " != " +
-                           vector_to_string(input_1->get_shape()));
+                           vector_to_string(input_0.get_shape()) + " != " +
+                           vector_to_string(input_1.get_shape()));
     }
 
     m_input_type[0] = input_0_type;
     m_input_type[1] = input_1_type;
 
-    set_output_type(0, input_0->get_element_type(), input_0->get_shape());
+    set_output_type(0, input_0.get_element_type(), input_0.get_shape());
 }
 
 shared_ptr<Node> op::SigmoidMultiply::copy_with_new_args(const NodeVector& new_args) const
@@ -105,29 +105,29 @@ void op::SigmoidMultiply::generate_adjoints(autodiff::Adjoints& adjoints, const 
     adjoints.add_delta(input_1, input_1_delta);
 }
 
-op::SigmoidMultiplyBackprop::SigmoidMultiplyBackprop(std::shared_ptr<Node> input_0,
-                                                     std::shared_ptr<Node> input_1,
-                                                     shared_ptr<Node> delta,
+op::SigmoidMultiplyBackprop::SigmoidMultiplyBackprop(const NodeOutput& input_0,
+                                                     const NodeOutput& input_1,
+                                                     const NodeOutput& delta,
                                                      const std::array<FunctionType, 2>& input_type)
-    : Op("SigmoidMultiplyBackprop", check_single_output_args({input_0, input_1, delta}))
+    : Op("SigmoidMultiplyBackprop", {input_0, input_1, delta})
     , m_input_type(input_type)
 {
     constructor_validate_and_infer_types();
 
-    if (input_0->get_element_type() != input_1->get_element_type())
+    if (input_0.get_element_type() != input_1.get_element_type())
     {
         throw ngraph_error("Argument element types for SigmoidMultiply backprop do not match");
     }
-    if (input_0->get_shape() != input_1->get_shape())
+    if (input_0.get_shape() != input_1.get_shape())
     {
         throw ngraph_error("Argument shapes for SigmoidMultiply backprop do not match");
     }
-    if (input_0->get_element_type() != delta->get_element_type())
+    if (input_0.get_element_type() != delta.get_element_type())
     {
         throw ngraph_error(
             "Argument and delta element types for SigmoidMultiply backprop do not match");
     }
-    if (input_0->get_shape() != delta->get_shape())
+    if (input_0.get_shape() != delta.get_shape())
     {
         throw ngraph_error("Argument and delta shape for SigmoidMultiply backprop do not match");
     }

@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::LeakyRelu::LeakyRelu(shared_ptr<Node> arg, float alpha)
+op::LeakyRelu::LeakyRelu(const NodeOutput& arg, float alpha)
     : UnaryElementwiseArithmetic("LeakyRelu", {arg})
     , m_alpha(alpha)
 {
@@ -28,7 +28,7 @@ op::LeakyRelu::LeakyRelu(shared_ptr<Node> arg, float alpha)
     {
         throw ngraph_error("Leaky Relu expects non-negative alpha");
     }
-    set_output_type(0, arg->get_element_type(), arg->get_shape());
+    set_output_type(0, arg.get_element_type(), arg.get_shape());
 }
 
 shared_ptr<Node> op::LeakyRelu::copy_with_new_args(const NodeVector& new_args) const

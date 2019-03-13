@@ -32,22 +32,22 @@ shared_ptr<Node> op::BatchDot::copy_with_new_args(const NodeVector& new_args) co
     return make_shared<BatchDot>(new_args.at(0), new_args.at(1), m_transpose_a, m_transpose_b);
 }
 
-op::BatchDot::BatchDot(shared_ptr<Node> a, shared_ptr<Node> b, bool transpose_a, bool transpose_b)
-    : Op("BatchDot", check_single_output_args({a, b}))
+op::BatchDot::BatchDot(const NodeOutput& a, const NodeOutput& b, bool transpose_a, bool transpose_b)
+    : Op("BatchDot", {a, b})
     , m_transpose_a(transpose_a)
     , m_transpose_b(transpose_b)
 {
     constructor_validate_and_infer_types();
 
-    const auto& shape_a = a->get_shape();
-    const auto& shape_b = b->get_shape();
+    const auto& shape_a = a.get_shape();
+    const auto& shape_b = b.get_shape();
     if (shape_a.size() != 3 || shape_b.size() != 3)
     {
         NGRAPH_DEBUG << "shape_a = " << vector_to_string(shape_a);
         NGRAPH_DEBUG << "shape_b = " << vector_to_string(shape_b);
         throw ngraph_error("shape rank != 3 while creating BatchDot");
     }
-    if (a->get_element_type() != b->get_element_type())
+    if (a.get_element_type() != b.get_element_type())
     {
         throw ngraph_error("input element types did not match while creating BatchDot");
     }
@@ -68,7 +68,7 @@ op::BatchDot::BatchDot(shared_ptr<Node> a, shared_ptr<Node> b, bool transpose_a,
         shape_a.at(0), shape_a.at(3 - dot_dimension_a), shape_b.at(3 - dot_dimension_b)};
     NGRAPH_DEBUG << "dot_shape shape = " << vector_to_string(dot_shape);
 
-    set_output_type(0, a->get_element_type(), dot_shape);
+    set_output_type(0, a.get_element_type(), dot_shape);
 }
 
 void op::BatchDot::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)

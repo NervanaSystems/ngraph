@@ -19,12 +19,12 @@
 using namespace std;
 using namespace ngraph;
 
-op::UpdateSlice::UpdateSlice(const shared_ptr<Node>& arg0,
-                             const shared_ptr<Node>& arg1,
+op::UpdateSlice::UpdateSlice(const NodeOutput& arg0,
+                             const NodeOutput& arg1,
                              const Coordinate& lower_bounds,
                              const Coordinate& upper_bounds,
                              const Strides& strides)
-    : Op("UpdateSlice", check_single_output_args({arg0, arg1}))
+    : Op("UpdateSlice", {arg0, arg1})
     , m_lower_bounds(lower_bounds)
     , m_upper_bounds(upper_bounds)
     , m_strides(strides)
@@ -32,11 +32,11 @@ op::UpdateSlice::UpdateSlice(const shared_ptr<Node>& arg0,
     constructor_validate_and_infer_types();
 }
 
-op::UpdateSlice::UpdateSlice(const shared_ptr<Node>& arg0,
-                             const shared_ptr<Node>& arg1,
+op::UpdateSlice::UpdateSlice(const NodeOutput& arg0,
+                             const NodeOutput& arg1,
                              const Coordinate& lower_bounds,
                              const Coordinate& upper_bounds)
-    : Op("UpdateSlice", check_single_output_args({arg0, arg1}))
+    : Op("UpdateSlice", {arg0, arg1})
     , m_lower_bounds(lower_bounds)
     , m_upper_bounds(upper_bounds)
     , m_strides(Strides(lower_bounds.size(), 1))

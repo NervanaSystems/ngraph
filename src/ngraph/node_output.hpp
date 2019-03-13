@@ -42,6 +42,13 @@ namespace ngraph
         {
         }
 
+        /// \brief Constructs a NodeOutput whose node reference is a null pointer. The output
+        ///        index is set to zero.
+        NodeOutput(std::nullptr_t)
+            : NodeOutput(nullptr, 0)
+        {
+        }
+
         /// \return A pointer to the node referred to by this output handle.
         const std::shared_ptr<Node>& get_node() const { return m_node; }
         /// \return The index of the output referred to by this output handle.

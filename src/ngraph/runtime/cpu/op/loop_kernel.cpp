@@ -62,8 +62,8 @@ shared_ptr<Node>
 
 ngraph::runtime::cpu::op::LoopKernel::LoopKernel(const NodeVector& node_list,
                                                  const NodeVector& outputs,
-                                                 const NodeVector& args)
-    : Op("LoopKernel", check_single_output_args({args}))
+                                                 const OutputVector& args)
+    : Op("LoopKernel", args)
     , m_node_list(node_list)
     , m_output_nodes(outputs)
 {

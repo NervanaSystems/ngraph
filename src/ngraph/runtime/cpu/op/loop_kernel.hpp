@@ -34,7 +34,7 @@ namespace ngraph
                 public:
                     LoopKernel(const NodeVector& node_list,
                                const NodeVector& outputs,
-                               const NodeVector& args);
+                               const OutputVector& args);
                     virtual std::shared_ptr<Node>
                         copy_with_new_args(const NodeVector& new_args) const override;
 
