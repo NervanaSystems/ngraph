@@ -35,7 +35,7 @@ Attributes
 +-----------------------+---------------------------------------------------------------------+
 | ``padding_above``     | Padding added after ``arg``. May be negative.                       |
 +-----------------------+---------------------------------------------------------------------+
-| ``pad_mode``          | Padding mode: CONSTANT(default), EDGE or REFLECT.                   |
+| ``pad_mode``          | Padding mode: ``CONSTANT(default)``, ``EDGE`` or ``REFLECT``.       |
 +-----------------------+---------------------------------------------------------------------+
 
 Outputs
