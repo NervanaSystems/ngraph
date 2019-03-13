@@ -1487,7 +1487,7 @@ static json write(const Node& n, bool binary_constant_data)
         node["reduction_axes_count"] = tmp->get_reduction_axes_count();
         break;
     }
-	case OP_TYPEID::Dyn_Reshape: { break;
+    case OP_TYPEID::Dyn_Reshape: { break;
     }
     case OP_TYPEID::Dyn_Slice: { break;
     }

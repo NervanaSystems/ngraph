@@ -23,8 +23,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::DynReshape::DynReshape(const shared_ptr<Node>& arg,
-                           const shared_ptr<Node>& output_shape)
+op::DynReshape::DynReshape(const shared_ptr<Node>& arg, const shared_ptr<Node>& output_shape)
     : Op("DynReshape", check_single_output_args({arg, output_shape}))
 {
     constructor_validate_and_infer_types();
@@ -34,16 +33,17 @@ void op::DynReshape::validate_and_infer_types()
 {
     auto output_shape_et = get_input_element_type(1);
     // check data types
-    NODE_VALIDATION_CHECK(this,
-                          output_shape_et == element::Type_t::i64,
-                          "output_shape element type should be i64.");
-    
+    NODE_VALIDATION_CHECK(
+        this, output_shape_et == element::Type_t::i64, "output_shape element type should be i64.");
+
     // check shapes
-    auto output_shape = get_input_partial_shape(1); 
+    auto output_shape = get_input_partial_shape(1);
     NODE_VALIDATION_CHECK(this,
                           output_shape.rank().compatible(1),
-                          "output_shape should have rank 1, got ", output_shape.rank(), ".");
-    
+                          "output_shape should have rank 1, got ",
+                          output_shape.rank(),
+                          ".");
+
     set_output_type(0, get_input_element_type(0), output_shape);
 }
 

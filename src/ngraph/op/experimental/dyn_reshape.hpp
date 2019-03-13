@@ -37,8 +37,7 @@ namespace ngraph
             /// \param output_shape The node that defines output shape.
             ///        If the input shape is \f$(a_0,\dots,a_{k-1})\f$ then the output shape must
             ///        be of the form \f$(b_0,\dots,b_{j-1})\f$ where \f$\Pi(a_i) = \Pi(b_i)\f$.
-            DynReshape(const std::shared_ptr<Node>& arg,
-                       const std::shared_ptr<Node>& output_shape);
+            DynReshape(const std::shared_ptr<Node>& arg, const std::shared_ptr<Node>& output_shape);
 
             void validate_and_infer_types() override;
 
