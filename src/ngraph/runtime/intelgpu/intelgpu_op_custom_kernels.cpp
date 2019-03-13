@@ -1651,7 +1651,7 @@ void runtime::intelgpu::do_convert_operation(cldnn::topology& topology,
                    << output_type_name << " output_var = 0;\n";
 
             writer << "if (input_var > " << get_opencl_type_min_max_value(output_type, false)
-                   << ")\n";
+                   << " || isnan(input_var))\n";
             writer.block_begin();
             {
                 writer << "output_var = " << get_opencl_type_min_max_value(output_type, true)
