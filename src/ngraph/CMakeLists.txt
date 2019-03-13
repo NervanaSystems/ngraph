@@ -124,6 +124,8 @@ set (SRC
     op/equal.hpp
     op/exp.cpp
     op/exp.hpp
+    op/experimental/dyn_reshape.cpp
+    op/experimental/dyn_slice.cpp
     op/experimental/generate_mask.cpp
     op/experimental/generate_mask.hpp
     op/experimental/quantized_avg_pool.cpp

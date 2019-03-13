@@ -47,6 +47,8 @@
 #include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/dyn_reshape.hpp"
+#include "ngraph/op/experimental/dyn_slice.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
@@ -742,6 +744,16 @@ static shared_ptr<ngraph::Function>
                     size_t reduction_axes_count = obj.get<size_t>();
                     node = make_shared<op::Dot>(args[0], args[1], reduction_axes_count);
                 }
+                break;
+            }
+            case OP_TYPEID::Dyn_Reshape:
+            {
+                node = make_shared<op::DynReshape>(args[0], args[1]);
+                break;
+            }
+            case OP_TYPEID::Dyn_Slice:
+            {
+                node = make_shared<op::DynSlice>(args[0], args[1]);
                 break;
             }
             case OP_TYPEID::EmbeddingLookup:
@@ -1474,6 +1486,10 @@ static json write(const Node& n, bool binary_constant_data)
         auto tmp = dynamic_cast<const op::Dot*>(&n);
         node["reduction_axes_count"] = tmp->get_reduction_axes_count();
         break;
+    }
+	case OP_TYPEID::Dyn_Reshape: { break;
+    }
+    case OP_TYPEID::Dyn_Slice: { break;
     }
     case OP_TYPEID::EmbeddingLookup: { break;
     }
