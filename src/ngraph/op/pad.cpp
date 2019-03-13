@@ -102,12 +102,12 @@ void op::Pad::validate_and_infer_types()
                         this,
                         m_pad_mode != op::PadMode::EDGE || static_cast<size_t>(arg_shape[i]) >= 1,
                         "EDGE padding mode requires an input of dimension of at least 1 at each "
-                        "axis.");
+                        "spatial axis.");
                     NODE_VALIDATION_CHECK(
                         this,
                         m_pad_mode != op::PadMode::REFLECT || static_cast<size_t>(arg_shape[i]) >= 2,
                         "REFLECT padding mode requires an input of dimension of at least 2 at each "
-                        "axis.");
+                        "spatial axis.");
                 }
             }
         }
