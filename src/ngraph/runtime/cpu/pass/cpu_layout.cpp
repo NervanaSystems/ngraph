@@ -390,6 +390,7 @@ namespace ngraph
                         mkldnn_result_shape, et_result, memory::format::any);
 
                     auto emit_debug_info = [&]() {
+                        std::cout << "node_name: " << node->get_name() << std::endl;
                         std::cout << "input_shape: " << join(mkldnn_arg0_shape) << std::endl;
                         std::cout << "filter_shape: " << join(mkldnn_arg1_shape) << std::endl;
                         if (use_bias)
@@ -435,7 +436,7 @@ namespace ngraph
                         }
                         catch (const mkldnn::error& e)
                         {
-                            if ((arg0_shape.size() == 4 && arg1_shape.size() == 4) ||
+                            /*if ((arg0_shape.size() == 4 && arg1_shape.size() == 4) ||
                                 (arg0_shape.size() == 5 && arg1_shape.size() == 5))
                             {
                                 auto input_default_format = arg0_shape.size() == 4
@@ -470,7 +471,7 @@ namespace ngraph
                                                                   mkldnn_padding_above,
                                                                   padding_kind::zero));
                             }
-                            else
+                            else*/
                             {
                                 emit_debug_info();
                                 throw ngraph_error(
@@ -497,7 +498,7 @@ namespace ngraph
                         }
                         catch (const mkldnn::error& e)
                         {
-                            if ((arg0_shape.size() == 4 && arg1_shape.size() == 4) ||
+                            /*if ((arg0_shape.size() == 4 && arg1_shape.size() == 4) ||
                                 (arg0_shape.size() == 5 && arg1_shape.size() == 5))
                             {
                                 auto input_default_format = arg0_shape.size() == 4
@@ -528,7 +529,7 @@ namespace ngraph
                                                                   mkldnn_padding_above,
                                                                   padding_kind::zero));
                             }
-                            else
+                            else*/
                             {
                                 emit_debug_info();
                                 throw ngraph_error(
