@@ -955,21 +955,22 @@ TEST(cpu_test, rotated_pooling)
 TEST(cpu_test, rotated_convolution)
 {
     auto make_f = [&](bool is_4d, bool with_bias) {
-        auto input_shape = is_4d ? Shape{4, 2, 2, 1} : Shape{4, 2, 2, 2, 1};
-        auto rotate_order = is_4d ? AxisVector{3, 0, 1, 2} : AxisVector{4, 0, 1, 2, 3};
-        auto conv_shape = is_4d ? Shape{1, 4, 2, 2} : Shape{1, 4, 2, 2, 2};
+
+        auto input_shape = is_4d ? Shape{ 256, 6, 40, 40, 1} : Shape{ 256, 6, 40, 40, 1};
+        auto rotate_order = is_4d ? AxisVector{4, 0, 1, 2, 3} : AxisVector{4, 0, 1, 2, 3};
+        auto conv_shape = is_4d ? Shape{1, 256, 6, 40, 40} : Shape{1, 256, 6, 40, 40};
         auto input = make_shared<op::Parameter>(element::f32, input_shape); // C, H, W, N
         auto transpose = make_shared<op::Reshape>(input, rotate_order, conv_shape);
-        auto filter = make_shared<op::Parameter>(element::f32, Shape{1, 4, 1, 1});
+        auto filter = make_shared<op::Parameter>(element::f32, Shape{512, 256, 1, 1, 1});
 
         auto conv = make_shared<op::Convolution>(transpose,
                                                  filter,
-                                                 Strides{1, 1},
-                                                 Strides{1, 1},
-                                                 CoordinateDiff{0, 0},
-                                                 CoordinateDiff{0, 0},
-                                                 Strides{1, 1});
+                                                 Strides{1, 2, 2},
+                                                 Strides{1, 1, 1},
+                                                 CoordinateDiff{0, 0, 0},
+                                                 CoordinateDiff{0, -1, -1},
+                                                 Strides{1, 1, 1});
         return make_shared<Function>(conv, ParameterVector{input, filter});
     };
-    compare_backends(make_f(true, true), make_f(true, true), "INTERPRETER", "CPU");
+    compare_backends(make_f(true, true), make_f(true, true), "CPU", "CPU");
 }

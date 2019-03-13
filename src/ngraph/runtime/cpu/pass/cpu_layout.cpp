@@ -410,6 +410,7 @@ namespace ngraph
                                   << std::endl;
                     };
 
+                    emit_debug_info();
                     std::unique_ptr<convolution_forward::desc> fwd_desc{nullptr};
                     if (use_bias)
                     {
