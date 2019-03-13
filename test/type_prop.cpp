@@ -12237,6 +12237,7 @@ TEST(type_prop, transpose_arg_static_input_order_static_input_order_not_vector)
     try
     {
         auto r = make_shared<op::Transpose>(arg, input_order);
+        FAIL() << "Did not detect input order not vector";
     }
     catch (const NodeValidationFailure& error)
     {
@@ -12257,6 +12258,7 @@ TEST(type_prop, transpose_arg_static_input_order_rank_static_dynamic_input_order
     try
     {
         auto r = make_shared<op::Transpose>(arg, input_order);
+        FAIL() << "Did not detect input order not vector";
     }
     catch (const NodeValidationFailure& error)
     {
@@ -12276,6 +12278,7 @@ TEST(type_prop, transpose_arg_static_input_order_static_input_order_wrong_size)
     try
     {
         auto r = make_shared<op::Transpose>(arg, input_order);
+        FAIL() << "Did not detect input order wrong size";
     }
     catch (const NodeValidationFailure& error)
     {
@@ -12298,6 +12301,7 @@ TEST(type_prop, transpose_arg_rank_static_dynamic_input_order_static_input_order
     try
     {
         auto r = make_shared<op::Transpose>(arg, input_order);
+        FAIL() << "Did not detect input order not vector";
     }
     catch (const NodeValidationFailure& error)
     {
@@ -12320,6 +12324,7 @@ TEST(type_prop,
     try
     {
         auto r = make_shared<op::Transpose>(arg, input_order);
+        FAIL() << "Did not detect input order not vector";
     }
     catch (const NodeValidationFailure& error)
     {
@@ -12340,6 +12345,7 @@ TEST(type_prop, transpose_arg_rank_dynamic_input_order_rank_static_dynamic_input
     try
     {
         auto r = make_shared<op::Transpose>(arg, input_order);
+        FAIL() << "Did not detect input order not vector";
     }
     catch (const NodeValidationFailure& error)
     {
@@ -12370,6 +12376,7 @@ TEST(type_prop, transpose_input_order_et_wrong)
     try
     {
         auto r = make_shared<op::Transpose>(arg, input_order);
+        FAIL() << "Did not detect input element type not i64";
     }
     catch (const NodeValidationFailure& error)
     {

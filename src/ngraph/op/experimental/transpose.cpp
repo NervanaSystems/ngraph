@@ -30,7 +30,7 @@ op::Transpose::Transpose(const shared_ptr<Node>& arg, const shared_ptr<Node>& in
 void op::Transpose::validate_and_infer_types()
 {
     NODE_VALIDATION_CHECK(this,
-                          get_output_element_type(0).compatible(element::i64),
+                          get_input_element_type(1).compatible(element::i64),
                           "Input order must have element type i64.");
 
     auto& input_order_shape = get_input_partial_shape(1);
