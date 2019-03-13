@@ -233,11 +233,12 @@ static void do_universal_unary(cldnn::topology& topology,
                                const shared_ptr<Node>& op,
                                const string& operation,
                                cldnn_activation_func mode,
+                               bool force_custom = false,
                                const cldnn_activation_additional_params& param = {0.f, 0.f})
 {
     arguments_check(op, 1, 1);
 
-    if (get_input_type(op) != element::f32)
+    if (force_custom || (get_input_type(op) != element::f32))
     {
         do_custom_unary(topology, op, operation);
     }
@@ -1227,7 +1228,8 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::Log:
         {
-            do_universal_unary(topology, op, "log(input_var)", activation_log);
+            // clDNN doesn't provide required accuracy
+            do_universal_unary(topology, op, "log(input_var)", activation_log, true);
             break;
         }
         case OP_TYPEID::Exp:
@@ -1238,7 +1240,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::Negative:
         {
             const cldnn_activation_additional_params param = {-1.f, 0.f};
-            do_universal_unary(topology, op, "-(input_var)", activation_linear, param);
+            do_universal_unary(topology, op, "-(input_var)", activation_linear, false, param);
             break;
         }
         case OP_TYPEID::Relu:
