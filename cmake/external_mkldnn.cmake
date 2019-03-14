@@ -264,6 +264,16 @@ else()
         COMMENT "Copy mkldnn runtime libraries to ngraph build directory."
         DEPENDEES install
         )
+    if(LINUX AND NGRAPH_LIB_VERSIONING_ENABLE)
+        ExternalProject_Add_Step(
+            ext_mkldnn
+            CopyMKLDNNEXTRA
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/mkldnn/${CMAKE_INSTALL_LIBDIR}/${MKLDNN_LIB}.0 ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}.0
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/mkldnn/${CMAKE_INSTALL_LIBDIR}/${MKLDNN_LIB}.0.18.0.0 ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}.0.18.0.0
+            COMMENT "Copy extra mkldnn runtime libraries to ngraph build directory."
+            DEPENDEES install
+           )
+    endif()
 endif()
 
 ExternalProject_Add_Step(
@@ -312,4 +322,14 @@ else()
             ${NGRAPH_INSTALL_LIB}
         OPTIONAL
         )
+    if(LINUX AND NGRAPH_LIB_VERSIONING_ENABLE)
+        install(
+            FILES
+                ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}.0
+                ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}.0.18.0.0
+            DESTINATION
+                ${NGRAPH_INSTALL_LIB}
+            OPTIONAL
+            )
+    endif()
 endif()
