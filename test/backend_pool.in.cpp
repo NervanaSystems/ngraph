@@ -1249,7 +1249,8 @@ NGRAPH_TEST_P(${BACKEND_NAME}, avg_pool_3d_params, avg_pool_3d_uneven_strided_pa
     auto backend_results = execute(cpu_f, args, "${BACKEND_NAME}");
     for (size_t i = 0; i < backend_results.size(); i++)
     {
-        EXPECT_TRUE(test::all_close(backend_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+        EXPECT_TRUE(test::all_close_f(
+            backend_results.at(i), int_results.at(i), DEFAULT_FLOAT_TOLERANCE_BITS + 1));
     }
 }
 
