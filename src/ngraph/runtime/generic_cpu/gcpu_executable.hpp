@@ -1007,6 +1007,8 @@ private:
         case OP_TYPEID::QuantizedConvolutionRelu:
         case OP_TYPEID::QuantizedConvolution:
         case OP_TYPEID::QuantizedMaxPool:
+        case OP_TYPEID::QuantizedDotBias:
+        case OP_TYPEID::QuantizedDot:
         {
             throw unsupported_op("Unsupported op '" + node.description() + "'.");
         }
