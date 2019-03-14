@@ -17,6 +17,8 @@
 include(ExternalProject)
 
 # Includes blas 3.8.0 in mkldnn
+set(NGRAPH_MKLDNN_SHORT_VERSION 0)
+set(NGRAPH_MKLDNN_FULL_VERSION 0.18.0.0)
 set(NGRAPH_MKLDNN_VERSION "v0.18")
 set(NGRAPH_MKLDNN_SUB_VERSION "2019.0.3.20190220")
 set(NGRAPH_MKLDNN_GIT_TAG "v0.18")
@@ -264,6 +266,16 @@ else()
         COMMENT "Copy mkldnn runtime libraries to ngraph build directory."
         DEPENDEES install
         )
+    if(LINUX AND NGRAPH_LIB_VERSIONING_ENABLE)
+        ExternalProject_Add_Step(
+            ext_mkldnn
+            CopyMKLDNNEXTRA
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/mkldnn/${CMAKE_INSTALL_LIBDIR}/${MKLDNN_LIB}.${NGRAPH_MKLDNN_SHORT_VERSION} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}.${NGRAPH_MKLDNN_SHORT_VERSION}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/mkldnn/${CMAKE_INSTALL_LIBDIR}/${MKLDNN_LIB}.${NGRAPH_MKLDNN_FULL_VERSION} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}.${NGRAPH_MKLDNN_FULL_VERSION}
+            COMMENT "Copy extra mkldnn runtime libraries to ngraph build directory."
+            DEPENDEES install
+           )
+    endif()
 endif()
 
 ExternalProject_Add_Step(
@@ -312,4 +324,14 @@ else()
             ${NGRAPH_INSTALL_LIB}
         OPTIONAL
         )
+    if(LINUX AND NGRAPH_LIB_VERSIONING_ENABLE)
+        install(
+            FILES
+            ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}.${NGRAPH_MKLDNN_SHORT_VERSION}
+            ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}.${NGRAPH_MKLDNN_FULL_VERSION}
+            DESTINATION
+                ${NGRAPH_INSTALL_LIB}
+            OPTIONAL
+            )
+    endif()
 endif()
