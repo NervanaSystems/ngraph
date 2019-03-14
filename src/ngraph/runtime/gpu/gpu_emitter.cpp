@@ -848,11 +848,13 @@ std::string runtime::gpu::GPU_Emitter::emit_Pad(EMIT_ARGS)
 
     auto& cuda_emitter = compiled_function->get_primitive_emitter()->get_cuda_emitter();
 
+    NVShape converted_padding(padding_below.begin(), padding_below.end());
+
     auto index =
         cuda_emitter->build_pad_fill({{args[0].get_type(), args[1].get_type(), out[0].get_type()}},
                                      input_shape,
                                      output_shape,
-                                     padding_below,
+                                     converted_padding,
                                      padding_interior);
 
     return compiled_function->add_to_runtime(index, function_name, args, out);
