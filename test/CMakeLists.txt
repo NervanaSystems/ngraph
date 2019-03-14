@@ -14,6 +14,10 @@
 # limitations under the License.
 # ******************************************************************************
 
+if(LINUX)
+    set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+endif()
+
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "4.0.0")
         # gtest has issues with this with v1.8.x
