@@ -97,7 +97,6 @@ set (SRC
     op/batch_norm.cpp
     op/batch_norm.hpp
     op/broadcast.cpp
-    op/broadcast.hpp
     op/ceiling.cpp
     op/ceiling.hpp
     op/concat.cpp

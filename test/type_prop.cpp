@@ -256,6 +256,7 @@ TEST(type_prop, dyn_broadcast_output_partial_shape_dynamic)
     ASSERT_TRUE(bc->get_output_partial_shape(0).is_dynamic());
 }
 
+
 TEST(type_prop, dyn_broadcast_broadcast_shape_et_wrong)
 {
     auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
@@ -270,8 +271,9 @@ TEST(type_prop, dyn_broadcast_broadcast_shape_et_wrong)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("DynBroadcast shape must have element type i64"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("DynBroadcast shape must have element type i64"));
     }
     catch (...)
     {
@@ -293,8 +295,9 @@ TEST(type_prop, dyn_broadcast_axes_et_wrong)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("DynBroadcast axes must have element type i64"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("DynBroadcast axes must have element type i64"));
     }
     catch (...)
     {
