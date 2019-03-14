@@ -45,6 +45,13 @@ namespace ngraph
                 auto count = static_cast<int>(out[0].get_size());
 
                 auto external_function_name = external_function->get_function_name();
+                std::cout << node->get_name() << "[";
+                vector<string> dependencies;
+                for (auto nd : node->get_control_dependencies()) {
+                  dependencies.push_back(nd->get_name());
+                }
+                std::cout << ng::join(dependencies);
+                std::cout << "] -> " << "\n";
                 NGRAPH_DEBUG_PRINT(
                     "AllReduce Queued[%d]: Function: %s Node: %s %s Size: "
                     "%d",
