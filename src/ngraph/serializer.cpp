@@ -53,6 +53,8 @@
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
+#include "ngraph/op/experimental/quantized_dot.hpp"
+#include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/floor.hpp"
@@ -1036,6 +1038,10 @@ static shared_ptr<ngraph::Function>
                                                  data_dilation_strides.get<std::vector<size_t>>());
                 break;
             }
+            case OP_TYPEID::QuantizedDotBias: { break;
+            }
+            case OP_TYPEID::QuantizedDot: { break;
+            }
             case OP_TYPEID::QuantizedMaxPool:
             {
                 auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
@@ -1652,6 +1658,10 @@ static json write(const Node& n, bool binary_constant_data)
         node["padding_above"] = tmp->get_padding_above();
         node["data_dilation_strides"] = tmp->get_data_dilation_strides();
         break;
+    }
+    case OP_TYPEID::QuantizedDotBias: { break;
+    }
+    case OP_TYPEID::QuantizedDot: { break;
     }
     case OP_TYPEID::QuantizedMaxPool:
     {
