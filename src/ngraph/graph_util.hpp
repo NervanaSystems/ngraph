@@ -96,17 +96,11 @@ namespace ngraph
             result_list.push_back(node_map[independent_node]);
             independent_nodes.pop_front();
 
-            for (auto& output : independent_node->get_outputs())
+            for (const std::shared_ptr<Node>& user : independent_node->get_users())
             {
-                for (auto& input : output.get_inputs())
+                if (--node_dependency_count[user.get()] == 0)
                 {
-                    auto user = input->get_raw_pointer_node();
-                    node_dependency_count[user] -= 1;
-                    size_t count = node_dependency_count[user];
-                    if (count == 0)
-                    {
-                        independent_nodes.push_back(user);
-                    }
+                    independent_nodes.push_back(user.get());
                 }
             }
 
@@ -179,17 +173,11 @@ namespace ngraph
             result_list.push_back(node_map[independent_node]);
             independent_nodes.pop_front();
 
-            for (auto& output : independent_node->get_outputs())
+            for (const std::shared_ptr<Node>& user : independent_node->get_users())
             {
-                for (auto& input : output.get_inputs())
+                if (--node_dependency_count[user.get()] == 0)
                 {
-                    auto user = input->get_raw_pointer_node();
-                    node_dependency_count[user] -= 1;
-                    size_t count = node_dependency_count[user];
-                    if (count == 0)
-                    {
-                        independent_nodes.push_back(user);
-                    }
+                    independent_nodes.push_back(user.get());
                 }
             }
 
@@ -309,6 +297,8 @@ namespace ngraph
 
     bool is_one(std::shared_ptr<Node> reduce_constant);
 
+    bool compare_constants(const std::shared_ptr<Node>& n1, const std::shared_ptr<Node>& n2);
+
     // Returns true if `node` is live in the graph i.e. a result op
     // transitively uses this `node`
     bool is_used(Node* node);
@@ -323,4 +313,9 @@ namespace ngraph
     bool is_strided(const Strides& strides);
 
     bool is_valid_rank(const std::shared_ptr<Node>& node, std::vector<size_t> valid_ranks);
+
+    void plot_graph(
+        std::shared_ptr<Function> f,
+        const std::string& filename,
+        std::function<void(const Node& node, std::vector<std::string>& attributes)> = nullptr);
 }

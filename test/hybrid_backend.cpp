@@ -18,12 +18,17 @@
 
 #include "gtest/gtest.h"
 
-#include "hybrid_utils.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/op/get_output_element.hpp"
+#include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/hybrid/hybrid_backend.hpp"
+#include "ngraph/runtime/hybrid/hybrid_util.hpp"
+#include "ngraph/runtime/hybrid/op/function_call.hpp"
+#include "ngraph/runtime/interpreter/int_backend.hpp"
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
 #include "util/ndarray.hpp"
@@ -33,58 +38,98 @@
 using namespace std;
 using namespace ngraph;
 
-static runtime::Backend* hybrid1_creator(const char* config)
+static runtime::Backend* hybrid_creator(const char* config)
 {
-    vector<shared_ptr<runtime::Backend>> backend_list;
-    set<string> s0 = {"Add"};
-    auto b0 = make_shared<BackendWrapper>("INTERPRETER", s0, "AddOnly");
-    backend_list.push_back(b0);
+    vector<string> unsupported_0 = {"Add"};
+    vector<string> unsupported_1 = {"Multiply"};
+    vector<shared_ptr<runtime::Backend>> backend_list = {
+        make_shared<runtime::interpreter::INTBackend>(unsupported_0),
+        make_shared<runtime::interpreter::INTBackend>(unsupported_1)};
 
-#define NGRAPH_OP(a, b) #a,
-    set<string> s1 = {
-#include "ngraph/op/op_tbl.hpp"
-    };
-    auto b1 = make_shared<BackendWrapper>("INTERPRETER", s1, "AllOps");
-    backend_list.push_back(b1);
+    return new runtime::hybrid::HybridBackend(backend_list);
+}
 
-    return new TestBackend(backend_list);
+TEST(HYBRID, function_call)
+{
+    vector<shared_ptr<runtime::Backend>> backend_list = {
+        make_shared<runtime::interpreter::INTBackend>()};
+    auto backend = make_shared<runtime::hybrid::HybridBackend>(backend_list);
+
+    Shape shape{};
+    shared_ptr<Function> inner_function;
+    auto inner_A = make_shared<op::Parameter>(element::f32, shape);
+    auto inner_B = make_shared<op::Parameter>(element::f32, shape);
+    auto inner_C = make_shared<op::Parameter>(element::f32, shape);
+    auto inner_R1 = (inner_A + inner_B) * inner_C;
+    auto inner_R2 = (inner_A + inner_C) * inner_C;
+    NodeVector inner_Result{inner_R1, inner_R2};
+    inner_function =
+        make_shared<Function>(inner_Result, ParameterVector{inner_A, inner_B, inner_C});
+
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    NodeVector fcall_args{A, B, C};
+    auto H = make_shared<runtime::hybrid::op::FunctionCall>(
+        inner_Result, fcall_args, inner_function, backend_list[0]);
+    auto G0 = make_shared<ngraph::op::GetOutputElement>(H, 0);
+    auto G1 = make_shared<ngraph::op::GetOutputElement>(H, 1);
+    NodeVector out{G0, G1};
+    auto J = G0 + G1;
+    auto f = make_shared<Function>(out, ParameterVector{A, B, C});
+
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::Tensor> c = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::Tensor> r0 = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::Tensor> r1 = backend->create_tensor(element::f32, shape);
+
+    copy_data(a, vector<float>{2});
+    copy_data(b, vector<float>{3});
+    copy_data(c, vector<float>{4});
+
+    auto exec = backend->compile(f);
+    exec->call({r0, r1}, {a, b, c});
+
+    ngraph::pass::Manager pass_manager;
+    pass_manager.register_pass<ngraph::pass::VisualizeTree>("test.png");
+    pass_manager.run_passes(f);
 }
 
 TEST(HYBRID, abc)
 {
-    const string backend_name = "HYBRID1";
-    runtime::BackendManager::register_backend(backend_name, hybrid1_creator);
+    const string backend_name = "H1";
+    runtime::BackendManager::register_backend(backend_name, hybrid_creator);
 
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C});
+    auto D = make_shared<op::Parameter>(element::f32, shape);
+    auto t1 = A * B;
+    auto t2 = t1 * D;
+    auto t3 = (t2 + C);
+    auto t4 = (t3 + A) * t1;
+    NodeVector result({t3, t4});
+    auto f = make_shared<Function>(result, ParameterVector{A, B, C, D});
 
-    auto backend = runtime::Backend::create(backend_name);
+    shared_ptr<runtime::Backend> backend = runtime::Backend::create("H1");
+    static_pointer_cast<runtime::hybrid::HybridBackend>(backend)->set_debug_enabled(true);
 
     // Create some tensors for input/output
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shape);
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::f32, shape);
     shared_ptr<runtime::Tensor> c = backend->create_tensor(element::f32, shape);
-    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::Tensor> d = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::Tensor> result1 = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::Tensor> result2 = backend->create_tensor(element::f32, shape);
 
-    copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
-    copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
-    copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
-
-    auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b, c});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
+    copy_data(a, vector<float>{1, 2, 3, 4});
+    copy_data(b, vector<float>{5, 6, 7, 8});
+    copy_data(c, vector<float>{9, 10, 11, 12});
+    copy_data(d, vector<float>{4, 3, 2, 1});
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {b, a, c});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
-
-    auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, c, b});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
+    handle->call_with_validate({result1, result2}, {a, b, c, d});
+    EXPECT_EQ(read_vector<float>(result2), (vector<float>{150, 576, 1176, 1536}));
 }

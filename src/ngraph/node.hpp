@@ -30,6 +30,7 @@
 
 #include "ngraph/assertion.hpp"
 #include "ngraph/autodiff/adjoints.hpp"
+#include "ngraph/check.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/descriptor/tensor.hpp"
@@ -46,7 +47,7 @@ namespace ngraph
     {
         class Parameter;
         class Result;
-    }
+    } // namespace op
 
     void replace_node_users_arguments(std::shared_ptr<Node> target,
                                       std::shared_ptr<Node> replacement);
@@ -71,7 +72,7 @@ namespace ngraph
 
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
-    /// view or a (possibly empty) tuple of values.
+    /// or a (possibly empty) tuple of values.
     class Node : public std::enable_shared_from_this<Node>
     {
         // So Adjoints can call generate_adjoints
@@ -99,17 +100,6 @@ namespace ngraph
         void validate_and_infer_elementwise_arithmetic();
         void validate_and_infer_elementwise_logical();
 
-        // Temporary hack while partial shape propagation is being implemented. If any input has
-        // dynamic shape or dynamic element type, sets all outputs to have a shape of dynamic
-        // rank and dynamic element type. Ops where we haven't yet implemented partial shape
-        // propagation can add this boilerplate at the top of their validate_and_infer_types():
-        //
-        //   if (validate_punt_if_dynamic())
-        //   {
-        //       return;
-        //   }
-        bool validate_punt_if_dynamic();
-
         Node(const std::string& node_type, const NodeVector& arguments, size_t output_size = 1);
 
         virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
@@ -119,11 +109,26 @@ namespace ngraph
         // Called after transition
         void delayed_validate_and_infer_types();
 
-        /// The class name, must not contain spaces
-        std::string description() const { return m_node_type; }
-        const std::string& get_friendly_name() const;
+        /// \brief Get the string name for the type of the node, such as `Add` or `Multiply`.
+        ///        The class name, must not contain spaces as it is used for codegen.
+        /// \returns A const reference to the node's type name
+        const std::string& description() const;
+
+        /// \brief Get the unique name of the node.
+        /// \returns A const reference to the node's unique name.
         const std::string& get_name() const;
-        void set_name(const std::string& name);
+
+        /// \brief Sets a friendly name for a node. This does not overwrite the unique name
+        ///        of the node and is retrieved via get_friendly_name(). Used mainly for debugging.
+        ///        The friendly name may be set exactly once.
+        /// \param name is the friendly name to set
+        void set_friendly_name(const std::string& name);
+
+        /// \brief Gets the friendly name for a node. If no friendly name has been set via
+        ///        set_friendly_name then the node's unique name is returned.
+        /// \returns A const reference to the node's friendly name.
+        const std::string& get_friendly_name() const;
+
         /// Return true if this has the same implementing class as node. This
         /// will be used by the pattern matcher when comparing a pattern
         /// graph against the graph.
@@ -140,6 +145,7 @@ namespace ngraph
         bool is_parameter() const;
         virtual bool is_output() const;
         virtual bool is_constant() const;
+        virtual bool is_null() const { return false; }
         virtual bool is_op() const { return false; }
         virtual bool is_commutative() { return false; }
         size_t get_instance_id() const { return m_instance_id; }
@@ -192,10 +198,10 @@ namespace ngraph
         /// Checks that there is exactly one output and returns its tensor.
         descriptor::Tensor& get_output_tensor() const;
 
-        /// Returns the tensor view of output i
+        /// Returns the tensor of output i
         std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr(size_t i) const;
 
-        /// Checks that there is exactly one output and returns its tensor view.
+        /// Checks that there is exactly one output and returns its tensor.
         std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr() const;
 
         /// Returns the set of inputs using output i
@@ -239,6 +245,13 @@ namespace ngraph
         /// Set device placement
         void set_placement_index(size_t placement);
 
+        const std::unordered_set<std::string>& get_provenance_tags() const;
+        void add_provenance_tag(const std::string& tag);
+        void remove_provenance_tag(const std::string& tag);
+
+        // to be used when nodes are replaced
+        void merge_provenance_tags_from(const std::shared_ptr<const Node>& source);
+
         /// Get input descriptor that is connected to src
         descriptor::Input* get_input_from(const std::shared_ptr<Node>& src);
 
@@ -257,11 +270,12 @@ namespace ngraph
         std::set<std::shared_ptr<Node>> m_control_dependencies;
         void set_output_size(size_t n);
 
-        std::string m_node_type;
+        const std::string m_node_type;
         size_t m_instance_id;
-        std::string m_name;
+        std::string m_friendly_name;
         const std::string m_unique_name;
         static std::atomic<size_t> m_next_instance_id;
+        std::unordered_set<std::string> m_provenance_tags;
         std::deque<descriptor::Input> m_inputs;
         std::deque<descriptor::Output> m_outputs;
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
@@ -269,15 +283,13 @@ namespace ngraph
         size_t m_placement_index = placement_invalid;
     };
 
-    class NodeValidationError : public AssertionFailure
+    class NodeValidationFailure : public CheckFailure
     {
     public:
-        NodeValidationError(std::string what)
-            : AssertionFailure(what)
-        {
-        }
-        NodeValidationError(const char* what)
-            : AssertionFailure(what)
+        NodeValidationFailure(const CheckLocInfo& check_loc_info,
+                              const Node* node,
+                              const std::string& explanation)
+            : CheckFailure(check_loc_info, node_validation_assertion_string(node), explanation)
         {
         }
     };
@@ -302,11 +314,7 @@ namespace ngraph
     };
 
     void check_new_args_count(const Node* node, const NodeVector& new_args);
-}
+} // namespace ngraph
 
-#define NODE_VALIDATION_ASSERT(node, cond)                                                         \
-    NGRAPH_ASSERT_STREAM_WITH_LOC(                                                                 \
-        ::ngraph::NodeValidationError, cond, ::ngraph::node_validation_assertion_string(node))
-#define NODE_VALIDATION_FAIL(node)                                                                 \
-    NGRAPH_FAIL_STREAM_WITH_LOC(::ngraph::NodeValidationError,                                     \
-                                ::ngraph::node_validation_assertion_string(node))
+#define NODE_VALIDATION_CHECK(node, cond, ...)                                                     \
+    NGRAPH_CHECK(::ngraph::NodeValidationFailure, (node), (cond), __VA_ARGS__)

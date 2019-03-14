@@ -45,6 +45,11 @@
 //
 // It's that easy. You can use this for fun and profit.
 
+#ifndef NGRAPH_OP
+#error "NGRAPH_OP not defined"
+#define NGRAPH_OP(x, y)
+#endif
+
 NGRAPH_OP(Abs, ngraph::op)
 NGRAPH_OP(Acos, ngraph::op)
 NGRAPH_OP(Add, ngraph::op)
@@ -100,9 +105,17 @@ NGRAPH_OP(OneHot, ngraph::op)
 NGRAPH_OP(Or, ngraph::op)
 NGRAPH_OP(Pad, ngraph::op)
 NGRAPH_OP(Parameter, ngraph::op)
+NGRAPH_OP(Passthrough, ngraph::op)
 NGRAPH_OP(Power, ngraph::op)
 NGRAPH_OP(Product, ngraph::op)
 NGRAPH_OP(Quantize, ngraph::op)
+NGRAPH_OP(QuantizedAvgPool, ngraph::op)
+NGRAPH_OP(QuantizedConvolutionBias, ngraph::op)
+NGRAPH_OP(QuantizedConvolutionBiasAdd, ngraph::op)
+NGRAPH_OP(QuantizedConvolutionBiasSignedAdd, ngraph::op)
+NGRAPH_OP(QuantizedConvolutionRelu, ngraph::op)
+NGRAPH_OP(QuantizedConvolution, ngraph::op)
+NGRAPH_OP(QuantizedMaxPool, ngraph::op)
 NGRAPH_OP(Relu, ngraph::op)
 NGRAPH_OP(ReluBackprop, ngraph::op)
 NGRAPH_OP(ReplaceSlice, ngraph::op)

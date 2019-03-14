@@ -31,6 +31,7 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
@@ -40,6 +41,7 @@
 #include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
+#include "ngraph/op/quantize.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/sum.hpp"
@@ -277,6 +279,21 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
                << print_table_row_value("transpose", op_reshape->get_is_transpose());
         break;
     }
+    case OP_TYPEID::Quantize:
+    {
+        const shared_ptr<op::Quantize> quant_op = static_pointer_cast<op::Quantize>(node);
+
+        writer << print_table_row_dims("axes", quant_op->get_axes())
+               << print_table_row_value("rounding mode", (int)quant_op->get_round_mode());
+        break;
+    }
+    case OP_TYPEID::Dequantize:
+    {
+        const shared_ptr<op::Dequantize> quant_op = static_pointer_cast<op::Dequantize>(node);
+
+        writer << print_table_row_dims("axes", quant_op->get_axes());
+        break;
+    }
     case OP_TYPEID::Concat:
     {
         const shared_ptr<op::Concat> concat_op = static_pointer_cast<op::Concat>(node);
@@ -329,17 +346,7 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
                << print_table_row_dims("pad_above_forward",
                                        conv_op_filt->get_padding_above_forward())
                << print_table_row_dims("pad_below_forward",
-                                       conv_op_filt->get_padding_below_forward())
-               << print_table_row_dims("window_movement_strides_backward",
-                                       conv_op_filt->get_window_movement_strides_backward())
-               << print_table_row_dims("window_dilation_strides_backward",
-                                       conv_op_filt->get_window_dilation_strides_backward())
-               << print_table_row_dims("data_dilation_strides_backward",
-                                       conv_op_filt->get_data_dilation_strides_backward())
-               << print_table_row_dims("padding_above_backward",
-                                       conv_op_filt->get_padding_above_backward())
-               << print_table_row_dims("padding_below_backward",
-                                       conv_op_filt->get_padding_below_backward());
+                                       conv_op_filt->get_padding_below_forward());
         break;
     }
     case OP_TYPEID::ConvolutionBackpropData:
@@ -357,17 +364,7 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
                << print_table_row_dims("pad_above_forward",
                                        conv_op_data->get_padding_above_forward())
                << print_table_row_dims("pad_below_forward",
-                                       conv_op_data->get_padding_below_forward())
-               << print_table_row_dims("window_movement_strides_backward",
-                                       conv_op_data->get_window_movement_strides_backward())
-               << print_table_row_dims("window_dilation_strides_backward",
-                                       conv_op_data->get_window_dilation_strides_backward())
-               << print_table_row_dims("data_dilation_strides_backward",
-                                       conv_op_data->get_data_dilation_strides_backward())
-               << print_table_row_dims("padding_above_backward",
-                                       conv_op_data->get_padding_above_backward())
-               << print_table_row_dims("padding_below_backward",
-                                       conv_op_data->get_padding_below_backward());
+                                       conv_op_data->get_padding_below_forward());
         break;
     }
     case OP_TYPEID::UNDEFINED_OP:
@@ -403,9 +400,14 @@ void print_node(ostringstream& writer, const shared_ptr<Node>& node)
         size_t arg_idx = 0;
         for (const descriptor::Input& op_input : node->get_inputs())
         {
-            writer << table_row_begin() << font_small_begin
-                   << op_input.get_element_type().c_type_string() << " input" << arg_idx
-                   << vector_to_string(op_input.get_shape()) << font_end << table_row_end;
+            writer << print_table_row_dims(op_input.get_element_type().c_type_string() + " input" +
+                                               to_string(arg_idx),
+                                           op_input.get_shape());
+            if (arg_idx >= 9)
+            {
+                writer << print_table_row_value("... total inputs", node->get_inputs().size());
+                break;
+            }
             ++arg_idx;
         }
     }
@@ -415,9 +417,9 @@ void print_node(ostringstream& writer, const shared_ptr<Node>& node)
         size_t arg_idx = 0;
         for (const descriptor::Output& op_output : node->get_outputs())
         {
-            writer << table_row_begin() << font_small_begin
-                   << op_output.get_element_type().c_type_string() << " output" << arg_idx
-                   << vector_to_string(op_output.get_shape()) << font_end << table_row_end;
+            writer << print_table_row_dims(op_output.get_element_type().c_type_string() +
+                                               " output" + to_string(arg_idx),
+                                           op_output.get_shape());
             ++arg_idx;
         }
     }

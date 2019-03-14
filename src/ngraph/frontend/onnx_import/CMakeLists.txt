@@ -17,12 +17,12 @@
 set(ONNX_OPSET_VERSION 9 CACHE INTERNAL "Supported version of ONNX operator set")
 
 add_library(onnx_import_interface OBJECT
-        onnx.cpp
-        onnx.hpp
-        core/operator_set.hpp
         core/node.cpp
         core/node.hpp
-        core/weight.hpp)
+        core/operator_set.hpp
+        core/weight.hpp
+        onnx.cpp
+        onnx.hpp)
 
 add_library(onnx_import STATIC
         core/attribute.cpp
@@ -32,11 +32,15 @@ add_library(onnx_import STATIC
         core/model.cpp
         core/model.hpp
         core/node.hpp
+        core/null_node.cpp
+        core/null_node.hpp
         core/operator_set.hpp
         core/tensor.hpp
         core/value_info.hpp
         exceptions.hpp
         op/acos.hpp
+        op/acosh.cpp
+        op/acosh.hpp
         op/add.hpp
         op/and.hpp
         op/argmax.cpp
@@ -44,7 +48,11 @@ add_library(onnx_import STATIC
         op/argmin.cpp
         op/argmin.hpp
         op/asin.hpp
+        op/asinh.cpp
+        op/asinh.hpp
         op/atan.hpp
+        op/atanh.cpp
+        op/atanh.hpp
         op/average_pool.cpp
         op/average_pool.hpp
         op/batch_norm.cpp
@@ -55,6 +63,7 @@ add_library(onnx_import STATIC
         op/clip.cpp
         op/clip.hpp
         op/cos.hpp
+        op/cosh.hpp
         op/concat.cpp
         op/concat.hpp
         op/constant.cpp
@@ -63,7 +72,12 @@ add_library(onnx_import STATIC
         op/conv.hpp
         op/conv_transpose.cpp
         op/conv_transpose.hpp
+        op/depth_to_space.cpp
+        op/depth_to_space.hpp
+        op/dequantize_linear.cpp
+        op/dequantize_linear.hpp
         op/div.hpp
+        op/dropout.hpp
         op/elu.cpp
         op/elu.hpp
         op/equal.hpp
@@ -86,6 +100,8 @@ add_library(onnx_import STATIC
         op/less.hpp
         op/log.hpp
         op/log_softmax.hpp
+        op/lp_pool.cpp
+        op/lp_pool.hpp
         op/lrn.cpp
         op/lrn.hpp
         op/lstm.cpp
@@ -101,12 +117,18 @@ add_library(onnx_import STATIC
         op/mul.hpp
         op/neg.hpp
         op/not.hpp
+        op/onehot.cpp
+        op/onehot.hpp
         op/or.hpp
         op/pad.cpp
         op/pad.hpp
         op/pow.hpp
         op/prelu.cpp
         op/prelu.hpp
+        op/quant_conv.cpp
+        op/quant_conv.hpp
+        op/quantize_linear.cpp
+        op/quantize_linear.hpp
         op/reciprocal.cpp
         op/reciprocal.hpp
         op/reduce.cpp
@@ -119,7 +141,9 @@ add_library(onnx_import STATIC
         op/shape.hpp
         op/shape.cpp
         op/sigmoid.hpp
+        op/sign.hpp
         op/sin.hpp
+        op/sinh.hpp
         op/size.cpp
         op/size.hpp
         op/slice.cpp
@@ -130,6 +154,8 @@ add_library(onnx_import STATIC
         op/softplus.hpp
         op/softsign.cpp
         op/softsign.hpp
+        op/space_to_depth.cpp
+        op/space_to_depth.hpp
         op/split.cpp
         op/split.hpp
         op/sqrt.hpp
@@ -141,10 +167,13 @@ add_library(onnx_import STATIC
         op/tanh.hpp
         op/thresholded_relu.cpp
         op/thresholded_relu.hpp
+        op/topk.cpp
+        op/topk.hpp
         op/transpose.cpp
         op/transpose.hpp
         op/unsqueeze.cpp
         op/unsqueeze.hpp
+        op/where.hpp
         op/xor.hpp
         ops_bridge.cpp
         ops_bridge.hpp
@@ -153,14 +182,19 @@ add_library(onnx_import STATIC
         utils/common.hpp
         utils/convpool.cpp
         utils/convpool.hpp
+        utils/norm.cpp
+        utils/norm.hpp
+        utils/reduction.cpp
         utils/reduction.hpp
         utils/reshape.cpp
         utils/reshape.hpp
+        utils/rnn/activation_functions.cpp
+        utils/rnn/activation_functions.hpp
         utils/variadic.hpp)
 
 set(ONNX_IMPORT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "")
 
-add_dependencies(onnx_import_interface onnx::libonnx onnx::libonnx_proto)
+add_dependencies(onnx_import_interface protobuf::libprotobuf onnx::libonnx onnx::libonnx_proto)
 add_dependencies(onnx_import onnx_import_interface)
 
 set_property(TARGET onnx_import PROPERTY POSITION_INDEPENDENT_CODE ON)

@@ -26,6 +26,7 @@ backwards_batch_norm_training
 dequantize
 dequantize_zero_offset
 dequantize_axes
+dequantize_dynamic_offset
 dequantize_int8
 dequantize_int8_zero_offset
 dequantize_int32
@@ -33,6 +34,7 @@ dequantize_int32_zero_offset
 quantize
 quantize_zero_offset
 quantize_axes
+quantize_dynamic_offset
 quantize_int8
 quantize_int8_zero_offset
 quantize_int32
@@ -89,3 +91,13 @@ all_2x2x3_eliminate_dims_0_1
 all_2x2x3_eliminate_dims_0_2
 all_2x2x3_eliminate_dims_1_2
 all_2x2x3_eliminate_dims_0_1_2
+
+# GPU backend uses floats to implement these ops for int32 
+floor_int32
+divide_int32
+one_hot_scalar_oob_in_3
+
+# Quantized operators are not supported on gpu backend
+model_dequantize_linear
+model_quantize_linear
+model_quant_conv_linear

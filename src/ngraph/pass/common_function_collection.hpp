@@ -18,7 +18,7 @@
 
 #include <unordered_map>
 
-#include "ngraph/codegen/code_writer.hpp"
+#include "ngraph/code_writer.hpp"
 #include "ngraph/pass/pass.hpp"
 
 namespace ngraph
