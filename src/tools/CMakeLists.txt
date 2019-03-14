@@ -14,6 +14,10 @@
 # limitations under the License.
 # ******************************************************************************
 
+if(LINUX)
+    set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+endif()
+
 add_subdirectory(nbench)
 add_subdirectory(ngraph-to-plaidml)
 add_subdirectory(reserialize)

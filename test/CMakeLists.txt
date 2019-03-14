@@ -14,6 +14,10 @@
 # limitations under the License.
 # ******************************************************************************
 
+if(LINUX)
+    set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+endif()
+
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "4.0.0")
         # gtest has issues with this with v1.8.x
@@ -127,6 +131,7 @@ set(MULTI_TEST_SRC
     autodiff.in.cpp
     backend_all.in.cpp
     backend_any.in.cpp
+    backend_api.in.cpp
     backend_binary_elementwise.in.cpp
     backend_broadcast.in.cpp
     backend_comparison.in.cpp
