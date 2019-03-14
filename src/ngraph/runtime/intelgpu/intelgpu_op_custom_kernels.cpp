@@ -1695,8 +1695,9 @@ void runtime::intelgpu::do_convert_operation(cldnn::topology& topology,
     {
         gws = generate_loops(writer, output_shape, true);
 
-        if ((input_type.get_type_enum() == element::Type_t::f64) ||
-            (input_type.get_type_enum() == element::Type_t::f32))
+        if (((input_type.get_type_enum() == element::Type_t::f64) ||
+             (input_type.get_type_enum() == element::Type_t::f32)) &&
+            (output_type.get_type_enum() != element::Type_t::boolean))
         {
             // this is the workaround for OpenCL to be same as with CPU floating point operations
             writer << input_type_name << " input_var = input0" << access_dims(output_shape) << ";\n"
