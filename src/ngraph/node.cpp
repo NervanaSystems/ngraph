@@ -158,6 +158,29 @@ void Node::set_placement_index(size_t placement)
     m_placement_index = placement;
 }
 
+const std::unordered_set<std::string>& Node::get_provenance_tags() const
+{
+    return m_provenance_tags;
+}
+
+void Node::add_provenance_tag(const std::string& tag)
+{
+    m_provenance_tags.insert(tag);
+}
+
+void Node::remove_provenance_tag(const std::string& tag)
+{
+    m_provenance_tags.erase(tag);
+}
+
+void Node::merge_provenance_tags_from(const std::shared_ptr<const Node>& source)
+{
+    for (auto& tag : source->get_provenance_tags())
+    {
+        add_provenance_tag(tag);
+    }
+}
+
 std::shared_ptr<Node> Node::get_argument(size_t index) const
 {
     for (auto& i : get_inputs())

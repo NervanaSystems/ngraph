@@ -56,6 +56,7 @@ set(SRC
     reshape_sinking.cpp
     serialize.cpp
     shape.cpp
+    specialize_shapes.cpp
     tensor.cpp
     type_prop.cpp
     util.cpp
