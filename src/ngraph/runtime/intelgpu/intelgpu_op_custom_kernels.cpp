@@ -59,9 +59,9 @@ string runtime::intelgpu::get_opencl_type_min_max_value(const element::Type& ngr
     case element::Type_t::u32: return is_min ? "0" : "UINT_MAX";
     case element::Type_t::i16: return is_min ? "SHRT_MIN" : "SHRT_MAX";
     case element::Type_t::u16: return is_min ? "0" : "USHRT_MAX";
-    case element::Type_t::boolean:
     case element::Type_t::i8: return is_min ? "CHAR_MIN" : "CHAR_MAX";
     case element::Type_t::u8: return is_min ? "0" : "UCHAR_MAX";
+    case element::Type_t::boolean: return is_min ? "0" : "1";
     }
 
     throw ngraph_error("Unsupported type '" + ngraph_type.c_type_string() +
