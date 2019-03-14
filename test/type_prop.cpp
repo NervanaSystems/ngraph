@@ -275,54 +275,6 @@ TEST(type_prop, dyn_broadcast_broadcast_shape_et_wrong)
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
-            error.what(), 
-            std::string("DynBroadcast shape must have element type i64"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-}
-
-TEST(type_prop, dyn_broadcast_axes_et_wrong)
-{
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    auto bc_shape = make_shared<op::Parameter>(element::i64, Shape{1});
-     // wront element type
-    auto bc_axes = make_shared<op::Parameter>(element::f32, Shape{2});
-
-    try
-    {
-        auto bc = make_shared<op::DynBroadcast>(arg, bc_shape, bc_axes);
-        FAIL() << "DynBroadcast: did not detect axes element type not i64";
-    }
-    catch (const NodeValidationFailure& error)
-    {
-        EXPECT_HAS_SUBSTRING(
-            error.what(), 
-            std::string("DynBroadcast axes must have element type i64"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-}
-
-TEST(type_prop, dyn_broadcast_broadcast_shape_et_wrong)
-{
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    // wront element type
-    auto bc_shape = make_shared<op::Parameter>(element::boolean, Shape{1});
-    auto bc_axes = make_shared<op::Parameter>(element::i64, Shape{2});
-
-    try
-    {
-        auto bc = make_shared<op::DynBroadcast>(arg, bc_shape, bc_axes);
-        FAIL() << "DynBroadcast: did not detect shape element type not i64";
-    }
-    catch (const NodeValidationFailure& error)
-    {
-        EXPECT_HAS_SUBSTRING(
             error.what(),
             std::string("DynBroadcast shape must have element type i64"));
     }
