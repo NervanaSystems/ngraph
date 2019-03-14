@@ -30,6 +30,7 @@
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
 #include "util/ndarray.hpp"
+#include "util/test_control.hpp"
 #include "util/test_tools.hpp"
 
 using namespace ngraph;
@@ -39,7 +40,7 @@ static std::string s_manifest = "${MANIFEST}";
 using Inputs = std::vector<std::vector<float>>;
 using Outputs = std::vector<std::vector<float>>;
 
-TEST(onnx_${BACKEND_NAME}, model_output_names_check)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_output_names_check)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/split_equal_parts_default.prototxt"));
@@ -52,7 +53,7 @@ TEST(onnx_${BACKEND_NAME}, model_output_names_check)
     }
 }
 
-TEST(onnx_${BACKEND_NAME}, model_add_abc)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_add_abc)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/add_abc.prototxt"));
@@ -64,7 +65,7 @@ TEST(onnx_${BACKEND_NAME}, model_add_abc)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_binary_add_abc)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_binary_add_abc)
 {
     auto function =
         onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/add_abc.onnx"));
@@ -76,7 +77,7 @@ TEST(onnx_${BACKEND_NAME}, model_binary_add_abc)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_add_abc_initializers)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_add_abc_initializers)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/add_abc_initializers.prototxt"));
@@ -88,7 +89,7 @@ TEST(onnx_${BACKEND_NAME}, model_add_abc_initializers)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_addmul_abc)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_addmul_abc)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/addmul_abc.prototxt"));
@@ -106,7 +107,7 @@ TEST(onnx_${BACKEND_NAME}, model_addmul_abc)
     EXPECT_TRUE(test::all_close_f(expected_output, result_vectors.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_argmin_no_keepdims)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_argmin_no_keepdims)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/argmin_no_keepdims.prototxt"));
@@ -118,7 +119,7 @@ TEST(onnx_${BACKEND_NAME}, model_argmin_no_keepdims)
     EXPECT_EQ(expected_output, result);
 }
 
-TEST(onnx_${BACKEND_NAME}, model_split_equal_parts_default)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_split_equal_parts_default)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/split_equal_parts_default.prototxt"));
@@ -136,7 +137,7 @@ TEST(onnx_${BACKEND_NAME}, model_split_equal_parts_default)
     }
 }
 
-TEST(onnx_${BACKEND_NAME}, model_split_equal_parts_2d)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_split_equal_parts_2d)
 {
     // Split into 2 equal parts along axis=1
     auto function = onnx_import::import_onnx_model(
@@ -155,7 +156,7 @@ TEST(onnx_${BACKEND_NAME}, model_split_equal_parts_2d)
     }
 }
 
-TEST(onnx_${BACKEND_NAME}, model_split_variable_parts_2d)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_split_variable_parts_2d)
 {
     // Split into variable parts {2, 4} along axis=1
     auto function = onnx_import::import_onnx_model(
@@ -200,7 +201,7 @@ namespace
 
 } // namespace
 
-TEST(onnx_${BACKEND_NAME}, model_conv2d_strides_padding)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_conv2d_strides_padding)
 {
     // Convolution with strides=2 and padding=1
     auto function = onnx_import::import_onnx_model(
@@ -217,7 +218,7 @@ TEST(onnx_${BACKEND_NAME}, model_conv2d_strides_padding)
     EXPECT_EQ(expected_output, result.front());
 }
 
-TEST(onnx_${BACKEND_NAME}, model_conv2d_strides_no_padding)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_conv2d_strides_no_padding)
 {
     // Convolution with strides=2 and padding=1
     auto function = onnx_import::import_onnx_model(
@@ -231,7 +232,7 @@ TEST(onnx_${BACKEND_NAME}, model_conv2d_strides_no_padding)
     EXPECT_EQ(expected_output, result.front());
 }
 
-TEST(onnx_${BACKEND_NAME}, model_conv2d_strides_assymetric_padding)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_conv2d_strides_assymetric_padding)
 {
     // Convolution with strides=2 and padding=1
     auto function = onnx_import::import_onnx_model(file_util::path_join(
@@ -246,7 +247,7 @@ TEST(onnx_${BACKEND_NAME}, model_conv2d_strides_assymetric_padding)
     EXPECT_EQ(expected_output, result.front());
 }
 
-TEST(onnx_${BACKEND_NAME}, model_average_pool_2d)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_average_pool_2d)
 {
     // Pooling with strides=2 and no padding
     auto function = onnx_import::import_onnx_model(
@@ -268,7 +269,7 @@ TEST(onnx_${BACKEND_NAME}, model_average_pool_2d)
     EXPECT_EQ(expected_output, outputs.front());
 }
 
-TEST(onnx_${BACKEND_NAME}, model_average_pool_2d_pads)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_average_pool_2d_pads)
 {
     // Pooling with strides=2 and padding=1
     auto function = onnx_import::import_onnx_model(
@@ -292,7 +293,7 @@ TEST(onnx_${BACKEND_NAME}, model_average_pool_2d_pads)
     EXPECT_EQ(expected_output, outputs.front());
 }
 
-TEST(onnx_${BACKEND_NAME}, model_max_pool_2d_pads)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_max_pool_2d_pads)
 {
     // Pooling with strides=2 and padding=1
     auto function = onnx_import::import_onnx_model(
@@ -316,7 +317,7 @@ TEST(onnx_${BACKEND_NAME}, model_max_pool_2d_pads)
     EXPECT_EQ(expected_output, outputs.front());
 }
 
-TEST(onnx_${BACKEND_NAME}, model_batchnorm_default)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_batchnorm_default)
 {
     // Batch Normalization with default parameters
     auto function = onnx_import::import_onnx_model(
@@ -346,7 +347,7 @@ TEST(onnx_${BACKEND_NAME}, model_batchnorm_default)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_relu)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_relu)
 {
     // Simple ReLU test
     auto function =
@@ -359,7 +360,7 @@ TEST(onnx_${BACKEND_NAME}, model_relu)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_sum)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sum)
 {
     // Simple Sum test
     auto function =
@@ -376,7 +377,7 @@ TEST(onnx_${BACKEND_NAME}, model_sum)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_sum_one_input)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sum_one_input)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/sum_one_input.prototxt"));
@@ -388,7 +389,7 @@ TEST(onnx_${BACKEND_NAME}, model_sum_one_input)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_min_two_inputs)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_min_two_inputs)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/min_two_inputs.prototxt"));
@@ -403,7 +404,7 @@ TEST(onnx_${BACKEND_NAME}, model_min_two_inputs)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_max)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_max)
 {
     auto function =
         onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/max.prototxt"));
@@ -419,7 +420,7 @@ TEST(onnx_${BACKEND_NAME}, model_max)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_mean)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_mean)
 {
     auto function =
         onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/mean.prototxt"));
@@ -435,7 +436,7 @@ TEST(onnx_${BACKEND_NAME}, model_mean)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_gemm_abc)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_gemm_abc)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/gemm_abc.prototxt"));
@@ -465,7 +466,7 @@ TEST(onnx_${BACKEND_NAME}, model_gemm_abc)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_matmul)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_matmul)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/matmul.prototxt"));
@@ -486,7 +487,7 @@ TEST(onnx_${BACKEND_NAME}, model_matmul)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_softmax)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_softmax)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/softmax.prototxt"));
@@ -541,7 +542,7 @@ TEST(onnx_${BACKEND_NAME}, model_softmax)
     EXPECT_TRUE(test::all_close_f(expected_output, result_vectors.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_concat)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_concat)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/concat.prototxt"));
@@ -557,7 +558,7 @@ TEST(onnx_${BACKEND_NAME}, model_concat)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_flatten)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_flatten)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/flatten.prototxt"));
@@ -573,7 +574,7 @@ TEST(onnx_${BACKEND_NAME}, model_flatten)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_sub)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sub)
 {
     auto function =
         onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/sub.prototxt"));
@@ -589,7 +590,7 @@ TEST(onnx_${BACKEND_NAME}, model_sub)
     EXPECT_TRUE(test::all_close_f(expected_output, result_vectors.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_unsqueeze)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_unsqueeze)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/unsqueeze.prototxt"));
@@ -612,7 +613,7 @@ TEST(onnx_${BACKEND_NAME}, model_unsqueeze)
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_squeeze)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_squeeze)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/squeeze_duplicate_axes.prototxt"));
@@ -631,7 +632,7 @@ TEST(onnx_${BACKEND_NAME}, model_squeeze)
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_div)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_div)
 {
     auto function =
         onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/div.prototxt"));
@@ -647,7 +648,7 @@ TEST(onnx_${BACKEND_NAME}, model_div)
     EXPECT_TRUE(test::all_close_f(expected_output, result_vectors.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_add_bcast)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_add_bcast)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/add_bcast.prototxt"));
@@ -672,7 +673,7 @@ TEST(onnx_${BACKEND_NAME}, model_add_bcast)
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_reshape_reduced_dims)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reshape_reduced_dims)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/reshape_reduced_dims.prototxt"));
@@ -692,7 +693,7 @@ TEST(onnx_${BACKEND_NAME}, model_reshape_reduced_dims)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_reshape_reordered_dims)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reshape_reordered_dims)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/reshape_reordered_dims.prototxt"));
@@ -713,7 +714,7 @@ TEST(onnx_${BACKEND_NAME}, model_reshape_reordered_dims)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_reshape_extended_dims)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reshape_extended_dims)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/reshape_extended_dims.prototxt"));
@@ -733,7 +734,7 @@ TEST(onnx_${BACKEND_NAME}, model_reshape_extended_dims)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_reshape_single_dim)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reshape_single_dim)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/reshape_single_dim.prototxt"));
@@ -753,7 +754,7 @@ TEST(onnx_${BACKEND_NAME}, model_reshape_single_dim)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_reshape_negative_dim)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reshape_negative_dim)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/reshape_negative_dim.prototxt"));
@@ -776,7 +777,7 @@ TEST(onnx_${BACKEND_NAME}, model_reshape_negative_dim)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_reshape_negative_with_zero_dim)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reshape_negative_with_zero_dim)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/reshape_negative_with_zero_dims.prototxt"));
@@ -796,7 +797,7 @@ TEST(onnx_${BACKEND_NAME}, model_reshape_negative_with_zero_dim)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_reshape_output_shape_as_input)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reshape_output_shape_as_input)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/reshape_output_shape_as_input.prototxt"));
@@ -816,7 +817,7 @@ TEST(onnx_${BACKEND_NAME}, model_reshape_output_shape_as_input)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_reduce_log_sum)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reduce_log_sum)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/reduce_log_sum.prototxt"));
@@ -833,7 +834,7 @@ TEST(onnx_${BACKEND_NAME}, model_reduce_log_sum)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_reduce_log_sum_exp)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reduce_log_sum_exp)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/reduce_log_sum_exp.prototxt"));
@@ -850,7 +851,7 @@ TEST(onnx_${BACKEND_NAME}, model_reduce_log_sum_exp)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_reduce_l1)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reduce_l1)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/reduce_l1.prototxt"));
@@ -867,7 +868,7 @@ TEST(onnx_${BACKEND_NAME}, model_reduce_l1)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_reduce_l2)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reduce_l2)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/reduce_l2.prototxt"));
@@ -884,7 +885,7 @@ TEST(onnx_${BACKEND_NAME}, model_reduce_l2)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_reduce_max)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reduce_max)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/reduce_max.prototxt"));
@@ -901,7 +902,7 @@ TEST(onnx_${BACKEND_NAME}, model_reduce_max)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_reduce_mean)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reduce_mean)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/reduce_mean.prototxt"));
@@ -918,7 +919,7 @@ TEST(onnx_${BACKEND_NAME}, model_reduce_mean)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_reduce_min)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reduce_min)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/reduce_min.prototxt"));
@@ -935,7 +936,7 @@ TEST(onnx_${BACKEND_NAME}, model_reduce_min)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_reduce_prod)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reduce_prod)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/reduce_prod.prototxt"));
@@ -952,7 +953,7 @@ TEST(onnx_${BACKEND_NAME}, model_reduce_prod)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_reduce_sum)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reduce_sum)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/reduce_sum.prototxt"));
@@ -969,7 +970,7 @@ TEST(onnx_${BACKEND_NAME}, model_reduce_sum)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_reduce_sum_square)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reduce_sum_square)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/reduce_sum_square.prototxt"));
@@ -986,7 +987,7 @@ TEST(onnx_${BACKEND_NAME}, model_reduce_sum_square)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_shape)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_shape)
 {
     auto function =
         onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/shape.prototxt"));
@@ -1005,7 +1006,7 @@ TEST(onnx_${BACKEND_NAME}, model_shape)
     EXPECT_TRUE(test::all_close(expected_output.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_elu)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_elu)
 {
     auto function =
         onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/elu.prototxt"));
@@ -1052,7 +1053,7 @@ TEST(onnx_${BACKEND_NAME}, model_elu)
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_leaky_relu)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_leaky_relu)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/leaky_relu.prototxt"));
@@ -1083,7 +1084,7 @@ TEST(onnx_${BACKEND_NAME}, model_leaky_relu)
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, prelu)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, prelu)
 {
     auto function =
         onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/prelu.prototxt"));
@@ -1113,7 +1114,7 @@ TEST(onnx_${BACKEND_NAME}, prelu)
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_selu)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_selu)
 {
     auto function =
         onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/selu.prototxt"));
@@ -1154,7 +1155,7 @@ TEST(onnx_${BACKEND_NAME}, model_selu)
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_sigmoid)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sigmoid)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/sigmoid.prototxt"));
@@ -1229,7 +1230,7 @@ TEST(onnx_${BACKEND_NAME}, model_sigmoid)
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_tanh)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_tanh)
 {
     auto function =
         onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/tanh.prototxt"));
@@ -1304,7 +1305,7 @@ TEST(onnx_${BACKEND_NAME}, model_tanh)
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_thresholded_relu)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_thresholded_relu)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/thresholded_relu.prototxt"));
@@ -1328,7 +1329,7 @@ TEST(onnx_${BACKEND_NAME}, model_thresholded_relu)
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_unsupported_op)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_unsupported_op)
 {
     try
     {
@@ -1349,7 +1350,7 @@ TEST(onnx_${BACKEND_NAME}, model_unsupported_op)
     }
 }
 
-TEST(onnx_${BACKEND_NAME}, model_custom_op)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_custom_op)
 {
     onnx_import::register_operator(
         "AddQ", 1, "com.intel.ai", [](const onnx_import::Node& node) -> NodeVector {
@@ -1367,7 +1368,7 @@ TEST(onnx_${BACKEND_NAME}, model_custom_op)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_custom_op_default_domain)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_custom_op_default_domain)
 {
     onnx_import::register_operator(
         "AddQ", 1, "com.intel.ai", [](const onnx_import::Node& node) -> NodeVector {
@@ -1385,7 +1386,7 @@ TEST(onnx_${BACKEND_NAME}, model_custom_op_default_domain)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_conv2d_dilation_assymetric_pads_strides)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_conv2d_dilation_assymetric_pads_strides)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/conv2d_dilation_assym_pads_strides.prototxt"));
@@ -1425,7 +1426,7 @@ TEST(onnx_${BACKEND_NAME}, model_conv2d_dilation_assymetric_pads_strides)
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_conv3d_bias)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_conv3d_bias)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/conv3d_bias.prototxt"));
@@ -1539,7 +1540,7 @@ TEST(onnx_${BACKEND_NAME}, model_conv3d_bias)
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_matmul_vec_ten3d)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_matmul_vec_ten3d)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/matmul_vec_ten3d.prototxt"));
@@ -1555,7 +1556,7 @@ TEST(onnx_${BACKEND_NAME}, model_matmul_vec_ten3d)
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_softplus)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_softplus)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/softplus.prototxt"));
@@ -1598,7 +1599,7 @@ TEST(onnx_${BACKEND_NAME}, model_softplus)
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_softplus_infinity)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_softplus_infinity)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/softplus.prototxt"));
@@ -1624,7 +1625,7 @@ TEST(onnx_${BACKEND_NAME}, model_softplus_infinity)
     }
 }
 
-TEST(onnx_${BACKEND_NAME}, model_sum_opset8)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sum_opset8)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/sum_opset8.prototxt"));
@@ -1646,7 +1647,7 @@ TEST(onnx_${BACKEND_NAME}, model_sum_opset8)
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_conv_transpose_w_groups)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_conv_transpose_w_groups)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/conv_transpose_w_groups.prototxt"));
@@ -1665,7 +1666,7 @@ TEST(onnx_${BACKEND_NAME}, model_conv_transpose_w_groups)
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_argmax_int32)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_argmax_int32)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/argmax_int32.prototxt"));
@@ -1681,7 +1682,7 @@ TEST(onnx_${BACKEND_NAME}, model_argmax_int32)
     EXPECT_TRUE(test::all_close(expected_output.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_argmin_int32)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_argmin_int32)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/argmin_int32.prototxt"));
@@ -1696,7 +1697,7 @@ TEST(onnx_${BACKEND_NAME}, model_argmin_int32)
     EXPECT_TRUE(test::all_close(expected_output.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, is_op_supported)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, is_op_supported)
 {
     // Simple case
     EXPECT_TRUE(onnx_import::is_operator_supported("Sum", 1, "ai.onnx"));
@@ -1727,7 +1728,7 @@ TEST(onnx_${BACKEND_NAME}, is_op_supported)
     EXPECT_TRUE(onnx_import::is_operator_supported("AddQ", 1, "com.intel.ai"));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_depth_to_space)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_depth_to_space)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/depth_to_space.prototxt"));
@@ -1743,7 +1744,7 @@ TEST(onnx_${BACKEND_NAME}, model_depth_to_space)
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_depth_to_space_chw)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_depth_to_space_chw)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/depth_to_space_chw.prototxt"));
@@ -1759,7 +1760,7 @@ TEST(onnx_${BACKEND_NAME}, model_depth_to_space_chw)
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_depth_to_space_bad_blocksize)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_depth_to_space_bad_blocksize)
 {
     // This model fails to import since the depth channel length must be a multiple of the
     // `blocksize` attribute value.
@@ -1768,7 +1769,7 @@ TEST(onnx_${BACKEND_NAME}, model_depth_to_space_bad_blocksize)
                  std::runtime_error);
 }
 
-TEST(onnx_${BACKEND_NAME}, model_depth_to_space_no_blocksize)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_depth_to_space_no_blocksize)
 {
     // This model fails to import since it lacks of required parameter `blocksize`.
     EXPECT_THROW(onnx_import::import_onnx_model(file_util::path_join(
@@ -1776,7 +1777,7 @@ TEST(onnx_${BACKEND_NAME}, model_depth_to_space_no_blocksize)
                  std::runtime_error);
 }
 
-TEST(onnx_${BACKEND_NAME}, model_space_to_depth)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_space_to_depth)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/space_to_depth.prototxt"));
@@ -1796,7 +1797,7 @@ TEST(onnx_${BACKEND_NAME}, model_space_to_depth)
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_space_to_depth_chw)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_space_to_depth_chw)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/space_to_depth_chw.prototxt"));
@@ -1816,7 +1817,7 @@ TEST(onnx_${BACKEND_NAME}, model_space_to_depth_chw)
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_space_to_depth_bad_blocksize)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_space_to_depth_bad_blocksize)
 {
     // This model fails to import since the depth channel length must be a multiple of the
     // `blocksize` attribute value.
@@ -1825,7 +1826,7 @@ TEST(onnx_${BACKEND_NAME}, model_space_to_depth_bad_blocksize)
                  std::runtime_error);
 }
 
-TEST(onnx_${BACKEND_NAME}, model_space_to_depth_no_blocksize)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_space_to_depth_no_blocksize)
 {
     // This model fails to import since it lacks of required `blocksize` attribute.
     EXPECT_THROW(onnx_import::import_onnx_model(file_util::path_join(
@@ -1833,7 +1834,7 @@ TEST(onnx_${BACKEND_NAME}, model_space_to_depth_no_blocksize)
                  std::runtime_error);
 }
 
-TEST(onnx_${BACKEND_NAME}, model_missing_op_domain)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_missing_op_domain)
 {
     onnx_import::register_operator(
         "CustomAdd", 1, "custom.op", [](const onnx_import::Node& node) -> NodeVector {
@@ -1856,7 +1857,7 @@ TEST(onnx_${BACKEND_NAME}, model_missing_op_domain)
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_top_k)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_top_k)
 {
     auto function =
         onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/top_k.prototxt"));
@@ -1877,7 +1878,7 @@ TEST(onnx_${BACKEND_NAME}, model_top_k)
     EXPECT_TRUE(test::all_close(expected_indices_output, indices_output));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_lstm_fwd_with_clip)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_lstm_fwd_with_clip)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/lstm_fwd_with_clip.prototxt"));
@@ -1962,7 +1963,7 @@ TEST(onnx_${BACKEND_NAME}, model_lstm_fwd_with_clip)
     }
 }
 
-TEST(onnx_${BACKEND_NAME}, model_missing_input)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_missing_input)
 {
     onnx_import::register_operator(
         "TestMissingInOut", 1, "com.intel.ai", [](const onnx_import::Node& node) -> NodeVector {
@@ -2009,7 +2010,7 @@ TEST(onnx_${BACKEND_NAME}, model_missing_input)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_sinh)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sinh)
 {
     auto function =
         onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/sinh.prototxt"));
@@ -2022,7 +2023,7 @@ TEST(onnx_${BACKEND_NAME}, model_sinh)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_cosh)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_cosh)
 {
     auto function =
         onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/cosh.prototxt"));
@@ -2035,7 +2036,7 @@ TEST(onnx_${BACKEND_NAME}, model_cosh)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_initializer_wo_input)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_initializer_wo_input)
 {
     // This test checks a model which has an initializer, but no input with the same name
     auto function = onnx_import::import_onnx_model(
@@ -2050,7 +2051,7 @@ TEST(onnx_${BACKEND_NAME}, model_initializer_wo_input)
     EXPECT_TRUE(test::all_close_f(expected_output, output.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_sign)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sign)
 {
     auto function =
         onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/sign.prototxt"));
@@ -2068,7 +2069,7 @@ TEST(onnx_${BACKEND_NAME}, model_sign)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p0)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p0)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/global_lp_pool_p0.prototxt"));
@@ -2083,7 +2084,7 @@ TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p0)
     EXPECT_TRUE(test::all_close(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p1)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p1)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/global_lp_pool_p1.prototxt"));
@@ -2098,7 +2099,7 @@ TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p1)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p2)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p2)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/global_lp_pool_p2.prototxt"));
@@ -2112,7 +2113,7 @@ TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p2)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p3)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p3)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/global_lp_pool_p3.prototxt"));
@@ -2127,7 +2128,7 @@ TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p3)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_one_hot_with_axis)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_one_hot_with_axis)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/one_hot_axis.prototxt"));
@@ -2142,7 +2143,7 @@ TEST(onnx_${BACKEND_NAME}, model_one_hot_with_axis)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_one_hot_without_axis)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_one_hot_without_axis)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/one_hot_no_axis.prototxt"));
@@ -2157,7 +2158,7 @@ TEST(onnx_${BACKEND_NAME}, model_one_hot_without_axis)
     EXPECT_TRUE(test::all_close(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_where)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_where)
 {
     auto function =
         onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/where.prototxt"));
@@ -2185,7 +2186,7 @@ TEST(onnx_${BACKEND_NAME}, model_where)
     EXPECT_EQ(expected_outputs.front(), outputs.front());
 }
 
-TEST(onnx_${BACKEND_NAME}, model_override_op)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_override_op)
 {
     onnx_import::register_operator(
         "FalseAdd", 1, "", [](const onnx_import::Node& node) -> NodeVector {
@@ -2212,7 +2213,7 @@ TEST(onnx_${BACKEND_NAME}, model_override_op)
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, import_non_existing_file)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, import_non_existing_file)
 {
     try
     {
@@ -2224,4 +2225,58 @@ TEST(onnx_${BACKEND_NAME}, import_non_existing_file)
         std::string msg{exc.what()};
         EXPECT_TRUE(msg.find("i.dont.exist") != std::string::npos);
     }
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_quantize_linear)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/quant_lin.prototxt"));
+
+    Inputs inputs;
+    inputs.emplace_back(std::vector<float>{32.25f, 48.34f, 50.f, 83.f});
+    inputs.emplace_back(std::vector<float>{0.5f});
+
+    std::vector<std::vector<std::uint8_t>> expected_output{
+        std::vector<std::uint8_t>{64, 97, 100, 166}};
+
+    std::vector<std::vector<std::uint8_t>> outputs{
+        execute<float, std::uint8_t>(function, inputs, "${BACKEND_NAME}")};
+    EXPECT_TRUE(test::all_close(expected_output.front(), outputs.front()));
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_dequantize_linear)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/dequant_lin.prototxt"));
+
+    std::vector<std::vector<std::uint8_t>> inputs;
+    inputs.emplace_back(std::vector<std::uint8_t>{19, 210, 21, 10});
+
+    Outputs expected_output{std::vector<float>{76.f, 840.f, 84.f, 40.f}};
+
+    Outputs outputs{execute<std::uint8_t, float>(function, inputs, "${BACKEND_NAME}")};
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_quant_conv_linear)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/quant_conv_lin.prototxt"));
+
+    std::vector<std::vector<std::uint8_t>> inputs;
+    inputs.emplace_back(std::vector<std::uint8_t>{
+        1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
+        22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42,
+        43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+        64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81});
+
+    std::vector<std::vector<std::int8_t>> expected_output{std::vector<std::int8_t>{
+        2,  3,  3,  3,  4,  4,  4,  5,  2,  4,  6,  7,  8,  8,  9,  9,  10, 3,  8,  11, 12,
+        13, 13, 14, 14, 15, 5,  11, 16, 17, 18, 18, 19, 19, 20, 7,  14, 22, 22, 23, 23, 24,
+        24, 25, 8,  18, 27, 27, 28, 28, 29, 29, 30, 10, 21, 32, 32, 33, 33, 34, 34, 35, 12,
+        24, 37, 37, 38, 38, 39, 40, 40, 13, 17, 26, 27, 27, 27, 28, 28, 28, 9}};
+
+    std::vector<std::vector<std::int8_t>> outputs{
+        execute<std::uint8_t, std::int8_t>(function, inputs, "${BACKEND_NAME}")};
+    EXPECT_TRUE(test::all_close(expected_output.front(), outputs.front()));
 }

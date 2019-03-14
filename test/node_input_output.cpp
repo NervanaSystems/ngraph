@@ -32,9 +32,9 @@ TEST(node_input_output, input_create)
     auto y = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
     auto add = make_shared<op::Add>(x, y);
 
-    auto add_in_0 = NodeInput(add, 0);
-    auto add_in_1 = NodeInput(add, 1);
-    auto add_in_2 = NodeInput(add, 2);
+    auto add_in_0 = NodeInput(add.get(), 0);
+    auto add_in_1 = NodeInput(add.get(), 1);
+    auto add_in_2 = NodeInput(add.get(), 2);
 
     EXPECT_EQ(add_in_0.get_node(), add.get());
     EXPECT_EQ(add_in_0.get_index(), 0);

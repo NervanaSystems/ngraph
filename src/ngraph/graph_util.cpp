@@ -164,6 +164,7 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
             input.replace_source_output(replacement, i);
         }
     }
+    replacement->merge_provenance_tags_from(target);
 }
 
 // Check if all paths from X to a result go through Y
