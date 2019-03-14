@@ -32,7 +32,10 @@ namespace ngraph
             {
                 inline NodeVector mul(const Node& node)
                 {
-                    auto axis = node.get_attribute_value<int64_t>("axis", 0);
+                    std::vector<Shape> ng_input_shapes{node.get_ng_inputs().at(0)->get_shape(),
+                                                       node.get_ng_inputs().at(1)->get_shape()};
+                    auto axis = node.get_attribute_value<int64_t>(
+                        "axis", ng_input_shapes[0].size() - ng_input_shapes[1].size());
                     NodeVector ng_inputs{legacy_style_broadcast_for_binary_operation(
                         node.get_ng_inputs().at(0), node.get_ng_inputs().at(1), axis)};
 
