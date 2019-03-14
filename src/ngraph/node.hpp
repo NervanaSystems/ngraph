@@ -231,8 +231,8 @@ namespace ngraph
         std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr() const;
 
         /// Returns the set of inputs using output i
-        const std::set<descriptor::Input*>& get_output_inputs(size_t i) const
-            INPUT_OUTPUT_DEPRECATED;
+        const std::set<descriptor::Input*>&
+            get_output_inputs(size_t i) const INPUT_OUTPUT_DEPRECATED;
 
         /// Returns the number of inputs for the op
         size_t get_input_size() const;
