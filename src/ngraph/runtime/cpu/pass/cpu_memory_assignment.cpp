@@ -107,7 +107,6 @@ void runtime::cpu::pass::CPUMemoryAssignment::process_in_place_concat(
                                 NGRAPH_DEBUG
                                     << "cpu_memory_assignment: change offset, old offset is "
                                     << old_offset << ", new offset is " << offset << std::endl;
-                                offset += input_tensor->size();
 
                                 // check if need to propagate backward
                                 if (arg->is_op())
@@ -129,6 +128,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::process_in_place_concat(
                                     }
                                 }
                             }
+                            offset += input_tensor->size();
                             arg_index++;
                         }
                     }
@@ -159,7 +159,6 @@ void runtime::cpu::pass::CPUMemoryAssignment::propagate_in_place_concat(
                 input_tensor->set_pool_offset(offset);
                 NGRAPH_DEBUG << "cpu_memory_assignment: change offset, old offset is " << old_offset
                              << ", new offset is " << offset;
-                offset += input_tensor->size();
 
                 // check if need to propagate backward
                 if (arg->is_op())
@@ -180,6 +179,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::propagate_in_place_concat(
                     }
                 }
             }
+            offset += input_tensor->size();
             arg_index++;
         }
     }

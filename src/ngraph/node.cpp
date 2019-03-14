@@ -154,14 +154,7 @@ const std::string& Node::get_name() const
 
 void Node::set_friendly_name(const string& name)
 {
-    if (m_friendly_name.empty())
-    {
-        m_friendly_name = name;
-    }
-    else
-    {
-        throw ngraph_error("Node name may be set exactly once");
-    }
+    m_friendly_name = name;
 }
 
 Placement Node::get_placement() const
@@ -182,6 +175,29 @@ size_t Node::get_placement_index() const
 void Node::set_placement_index(size_t placement)
 {
     m_placement_index = placement;
+}
+
+const std::unordered_set<std::string>& Node::get_provenance_tags() const
+{
+    return m_provenance_tags;
+}
+
+void Node::add_provenance_tag(const std::string& tag)
+{
+    m_provenance_tags.insert(tag);
+}
+
+void Node::remove_provenance_tag(const std::string& tag)
+{
+    m_provenance_tags.erase(tag);
+}
+
+void Node::merge_provenance_tags_from(const std::shared_ptr<const Node>& source)
+{
+    for (auto& tag : source->get_provenance_tags())
+    {
+        add_provenance_tag(tag);
+    }
 }
 
 std::shared_ptr<Node> Node::get_argument(size_t index) const
