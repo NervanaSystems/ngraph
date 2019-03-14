@@ -36,14 +36,6 @@ namespace ngraph
         {
         }
 
-        /// \brief Constructs a NodeInput.
-        /// \param node Shared pointer to the node for the input handle.
-        /// \param index The index of the input.
-        NodeInput(std::shared_ptr<Node> node, size_t index)
-            : NodeInput(node.get(), index)
-        {
-        }
-
         /// \return A pointer to the node referenced by this input handle.
         Node* get_node() const { return m_node; }
         /// \return The index of the input referred to by this input handle.
