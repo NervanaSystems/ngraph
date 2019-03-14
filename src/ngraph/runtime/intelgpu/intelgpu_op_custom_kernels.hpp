@@ -102,6 +102,14 @@ namespace ngraph
                                     const Coordinate& uppper_bounds,
                                     const Strides& strides);
 
+            void do_concat_operation(cldnn::topology& topology,
+                                     const std::vector<std::string>& input_names,
+                                     const std::vector<Shape>& input_shapes,
+                                     const std::string& output_name,
+                                     const Shape& output_shape,
+                                     const element::Type& output_type,
+                                     size_t concat_axis);
+
             void do_select_operation(cldnn::topology& topology,
                                      const std::string& input0_name,
                                      const Shape& input0_shape,
@@ -135,6 +143,16 @@ namespace ngraph
                                    const element::Type& output_type,
                                    const std::string& operation,
                                    bool function_operation);
+
+            void do_relu_backprop(cldnn::topology& topology,
+                                  const std::string& input0_name,
+                                  const Shape& input0_shape,
+                                  const element::Type& input0_type,
+                                  const std::string& input1_name,
+                                  const Shape& input1_shape,
+                                  const std::string& output_name,
+                                  const Shape& output_shape,
+                                  const element::Type& output_type);
 
             void do_reverse_operation(cldnn::topology& topology,
                                       const std::string& input_name,

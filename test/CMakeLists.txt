@@ -52,6 +52,7 @@ set(SRC
     reshape_sinking.cpp
     serialize.cpp
     shape.cpp
+    specialize_shapes.cpp
     tensor.cpp
     type_prop.cpp
     util.cpp
@@ -82,6 +83,9 @@ endif()
 if (NGRAPH_CPU_ENABLE)
     list(APPEND SRC core_fusion.cpp builder_quantization.cpp)
     list(APPEND SRC backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_debugger.cpp)
+    if (NOT NGRAPH_DEX_ONLY)
+        list(APPEND SRC cpu_codegen.cpp)
+    endif()
     if (NGRAPH_HALIDE)
         list(APPEND SRC halide.cpp)
     endif()

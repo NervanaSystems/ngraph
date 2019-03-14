@@ -45,6 +45,7 @@
 #include "op/cos.hpp"
 #include "op/cosh.hpp"
 #include "op/depth_to_space.hpp"
+#include "op/dequantize_linear.hpp"
 #include "op/div.hpp"
 #include "op/dropout.hpp"
 #include "op/elu.hpp"
@@ -79,6 +80,8 @@
 #include "op/pad.hpp"
 #include "op/pow.hpp"
 #include "op/prelu.hpp"
+#include "op/quant_conv.hpp"
+#include "op/quantize_linear.hpp"
 #include "op/reciprocal.hpp"
 #include "op/reduce.hpp"
 #include "op/relu.hpp"
@@ -240,6 +243,7 @@ namespace ngraph
             REGISTER_OPERATOR("Cos", 1, cos);
             REGISTER_OPERATOR("Cosh", 1, cosh);
             REGISTER_OPERATOR("DepthToSpace", 1, depth_to_space);
+            REGISTER_OPERATOR("DequantizeLinear", 1, dequantize_linear);
             REGISTER_OPERATOR("Div", 1, div);
             REGISTER_OPERATOR("Div", 7, div);
             REGISTER_OPERATOR("Dropout", 1, dropout);
@@ -278,6 +282,8 @@ namespace ngraph
             REGISTER_OPERATOR("Pad", 1, pad);
             REGISTER_OPERATOR("Pow", 1, pow);
             REGISTER_OPERATOR("PRelu", 1, prelu);
+            REGISTER_OPERATOR("QLinearConv", 1, quant_conv);
+            REGISTER_OPERATOR("QuantizeLinear", 1, quantize_linear);
             REGISTER_OPERATOR("Reciprocal", 1, reciprocal);
             REGISTER_OPERATOR("ReduceLogSum", 1, reduce_log_sum);
             REGISTER_OPERATOR("ReduceLogSumExp", 1, reduce_log_sum_exp);
