@@ -43,8 +43,6 @@ set(SRC
     builder/concat.cpp
     builder/convert.cpp
     builder/convert_layout.cpp
-    builder/quantized_conv.cpp
-    builder/quantized_concat.cpp
     builder/convolution.cpp
     builder/dot.cpp
     builder/embedding_lookup.cpp
@@ -64,6 +62,8 @@ set(SRC
     builder/quantization.cpp
     builder/quantized_avg_pool.cpp
     builder/quantized_conv.cpp
+    builder/quantized_concat.cpp
+    builder/quantized_dot.cpp
     builder/quantized_max_pool.cpp
     builder/reshape.cpp
     builder/reverse.cpp

@@ -2004,6 +2004,8 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::QuantizedConvolutionBiasSignedAdd:
         case OP_TYPEID::QuantizedConvolutionRelu:
         case OP_TYPEID::QuantizedConvolution:
+        case OP_TYPEID::QuantizedDot:
+        case OP_TYPEID::QuantizedDotBias:
         case OP_TYPEID::QuantizedMaxPool:
         case OP_TYPEID::ReplaceSlice:
         case OP_TYPEID::GenerateMask:
