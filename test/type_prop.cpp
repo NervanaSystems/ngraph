@@ -259,7 +259,7 @@ TEST(type_prop, dyn_broadcast_output_partial_shape_dynamic)
 TEST(type_prop, dyn_broadcast_broadcast_shape_et_wrong)
 {
     auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    // wront element type
+    // wrong element type
     auto bc_shape = make_shared<op::Parameter>(element::boolean, Shape{1});
     auto bc_axes = make_shared<op::Parameter>(element::i64, Shape{2});
 
@@ -283,7 +283,7 @@ TEST(type_prop, dyn_broadcast_axes_et_wrong)
 {
     auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
     auto bc_shape = make_shared<op::Parameter>(element::i64, Shape{1});
-    // wront element type
+    // wrong element type
     auto bc_axes = make_shared<op::Parameter>(element::f32, Shape{2});
 
     try
