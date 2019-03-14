@@ -2227,7 +2227,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, import_non_existing_file)
     }
 }
 
-TEST(onnx_${BACKEND_NAME}, model_lstm_fwd_mixed_seq)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_lstm_fwd_mixed_seq)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/lstm_fwd_mixed_seq.prototxt"));
@@ -2320,4 +2320,58 @@ TEST(onnx_${BACKEND_NAME}, model_lstm_fwd_mixed_seq)
         // The discrepancies may occur at most on 7th decimal position.
         EXPECT_TRUE(test::all_close_f(expected_output.at(i), outputs.at(i), 3));
     }
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_quantize_linear)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/quant_lin.prototxt"));
+
+    Inputs inputs;
+    inputs.emplace_back(std::vector<float>{32.25f, 48.34f, 50.f, 83.f});
+    inputs.emplace_back(std::vector<float>{0.5f});
+
+    std::vector<std::vector<std::uint8_t>> expected_output{
+        std::vector<std::uint8_t>{64, 97, 100, 166}};
+
+    std::vector<std::vector<std::uint8_t>> outputs{
+        execute<float, std::uint8_t>(function, inputs, "${BACKEND_NAME}")};
+    EXPECT_TRUE(test::all_close(expected_output.front(), outputs.front()));
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_dequantize_linear)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/dequant_lin.prototxt"));
+
+    std::vector<std::vector<std::uint8_t>> inputs;
+    inputs.emplace_back(std::vector<std::uint8_t>{19, 210, 21, 10});
+
+    Outputs expected_output{std::vector<float>{76.f, 840.f, 84.f, 40.f}};
+
+    Outputs outputs{execute<std::uint8_t, float>(function, inputs, "${BACKEND_NAME}")};
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_quant_conv_linear)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/quant_conv_lin.prototxt"));
+
+    std::vector<std::vector<std::uint8_t>> inputs;
+    inputs.emplace_back(std::vector<std::uint8_t>{
+        1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
+        22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42,
+        43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+        64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81});
+
+    std::vector<std::vector<std::int8_t>> expected_output{std::vector<std::int8_t>{
+        2,  3,  3,  3,  4,  4,  4,  5,  2,  4,  6,  7,  8,  8,  9,  9,  10, 3,  8,  11, 12,
+        13, 13, 14, 14, 15, 5,  11, 16, 17, 18, 18, 19, 19, 20, 7,  14, 22, 22, 23, 23, 24,
+        24, 25, 8,  18, 27, 27, 28, 28, 29, 29, 30, 10, 21, 32, 32, 33, 33, 34, 34, 35, 12,
+        24, 37, 37, 38, 38, 39, 40, 40, 13, 17, 26, 27, 27, 27, 28, 28, 28, 9}};
+
+    std::vector<std::vector<std::int8_t>> outputs{
+        execute<std::uint8_t, std::int8_t>(function, inputs, "${BACKEND_NAME}")};
+    EXPECT_TRUE(test::all_close(expected_output.front(), outputs.front()));
 }

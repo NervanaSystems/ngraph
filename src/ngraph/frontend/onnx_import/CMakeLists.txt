@@ -74,6 +74,8 @@ add_library(onnx_import STATIC
         op/conv_transpose.hpp
         op/depth_to_space.cpp
         op/depth_to_space.hpp
+        op/dequantize_linear.cpp
+        op/dequantize_linear.hpp
         op/div.hpp
         op/dropout.hpp
         op/elu.cpp
@@ -123,6 +125,10 @@ add_library(onnx_import STATIC
         op/pow.hpp
         op/prelu.cpp
         op/prelu.hpp
+        op/quant_conv.cpp
+        op/quant_conv.hpp
+        op/quantize_linear.cpp
+        op/quantize_linear.hpp
         op/reciprocal.cpp
         op/reciprocal.hpp
         op/reduce.cpp
