@@ -193,9 +193,11 @@ TEST(constant_folding, constant_unary_binary)
     auto absn = make_shared<op::Abs>(c);
     auto neg = make_shared<op::Negative>(c);
     auto sqrt = make_shared<op::Sqrt>(d);
+    auto neg_sqrt = make_shared<op::Sqrt>(c);
 
     auto f = make_shared<Function>(NodeVector{add, sub, mul, divn, min, max, absn, neg, sqrt},
                                    ParameterVector{});
+    auto f_error = make_shared<Function>(NodeVector{neg_sqrt}, ParameterVector{});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ConstantFolding>();
@@ -220,6 +222,7 @@ TEST(constant_folding, constant_unary_binary)
     ASSERT_EQ(get_result_constant<int>(f, 6), abs_neg_expected);
     ASSERT_EQ(get_result_constant<int>(f, 7), abs_neg_expected);
     ASSERT_EQ(get_result_constant<int>(f, 8), sqrt_expected);
+    ASSERT_ANY_THROW(pass_manager.run_passes(f_error));
 }
 
 TEST(constant_folding, const_dequantize)

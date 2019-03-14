@@ -414,6 +414,11 @@ shared_ptr<op::Constant> make_constant_unary(shared_ptr<op::Constant> constant,
     }
     else if (std::dynamic_pointer_cast<op::Sqrt>(unary))
     {
+        std::vector<T> values{constant->get_vector<T>()};
+        if (std::any_of(values.begin(), values.end(), [](T i) { return i < 0; }))
+        {
+            throw ngraph_error("Square root of negative value");
+        }
         runtime::reference::sqrt<T>(
             constant->get_vector<T>().data(), out_vec.data(), shape_size(out_shape));
     }
