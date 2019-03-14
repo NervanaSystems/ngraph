@@ -35,8 +35,8 @@ namespace ngraph
             /// \param broadcast_axes Node that produces the axis positions (0-based) in the result that are being broadcast. The
             ///                        remaining axes in shape must be the same as the shape of arg.
             DynBroadcast(const std::shared_ptr<Node>& arg,
-                      const std::shared_ptr<Node>& shape,
-                      const std::shared_ptr<Node>& broadcast_axes);
+                         const std::shared_ptr<Node>& shape,
+                         const std::shared_ptr<Node>& broadcast_axes);
 
             void validate_and_infer_types() override;
 
@@ -44,7 +44,6 @@ namespace ngraph
                 copy_with_new_args(const NodeVector& new_args) const override;
 
         protected:
-
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
         };
