@@ -113,3 +113,8 @@ pad_reflect_1d_bottom_neg_bigger_than_tensor
 pad_reflect_1d_multi_reflect
 pad_reflect_2d
 pad_reflect_2d_with_neg
+
+# Quantized operators are not supported on gpu backend
+model_dequantize_linear
+model_quantize_linear
+model_quant_conv_linear
