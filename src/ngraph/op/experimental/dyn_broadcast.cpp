@@ -34,7 +34,7 @@ void op::DynBroadcast::validate_and_infer_types()
     //TODO: potenially make the type more flexible to include other integer types
     auto shape_et = get_input_element_type(1);
     NODE_VALIDATION_CHECK(this,
-                          shape_et == element::Type_t::i64,
+                          shape_et.compatible(element::Type_t::i64),
                           "DynBroadcast shape must have element type i64, but has ",
                           shape_et);
 
