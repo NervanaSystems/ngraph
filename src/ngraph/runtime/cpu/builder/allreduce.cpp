@@ -50,7 +50,7 @@ namespace ngraph
                 for (auto nd : node->get_control_dependencies()) {
                   dependencies.push_back(nd->get_name());
                 }
-                std::cout << ng::join(dependencies);
+                std::cout << join(dependencies);
                 std::cout << "] -> " << "\n";
                 NGRAPH_DEBUG_PRINT(
                     "AllReduce Queued[%d]: Function: %s Node: %s %s Size: "
