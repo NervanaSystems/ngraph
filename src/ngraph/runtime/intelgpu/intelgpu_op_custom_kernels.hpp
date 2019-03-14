@@ -23,6 +23,7 @@
 #include "ngraph/axis_set.hpp"
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/coordinate.hpp"
+#include "ngraph/coordinate_diff.hpp"
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
