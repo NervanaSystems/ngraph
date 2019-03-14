@@ -1027,5 +1027,13 @@ TEST(cpu_test, conv_test_winograd)
         mkldnn_primitive_desc_query(conv_pd.get(), mkldnn_query_convolution_d, 0, &temp_conv_desc);
         return temp_conv_desc->alg_kind;
     };
-    EXPECT_EQ(mkldnn::algorithm::convolution_winograd, get_conv_algo_kind());
+
+    if (convolution_algo == mkldnn::algorithm::convolution_auto)
+    {
+        EXPECT_EQ(mkldnn::algorithm::convolution_winograd, get_conv_algo_kind());
+    }
+    else
+    {
+        EXPECT_EQ(mkldnn::algorithm::convolution_direct, get_conv_algo_kind());
+    }
 }
