@@ -9126,10 +9126,9 @@ TEST(type_prop, pad_deduce_too_small_for_edge)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string(
-                "EDGE padding mode requires an input of dimension of at least 1 at each axis"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("EDGE padding mode requires an input of dimension of at "
+                                         "least 1 at each spatial axis"));
     }
     catch (...)
     {
@@ -9154,10 +9153,9 @@ TEST(type_prop, pad_deduce_too_small_for_reflect)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string(
-                "REFLECT padding mode requires an input of dimension of at least 2 at each axis"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("REFLECT padding mode requires an input of dimension of "
+                                         "at least 2 at each spatial axis"));
     }
     catch (...)
     {
