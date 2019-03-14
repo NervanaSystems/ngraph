@@ -336,6 +336,8 @@ set (SRC
     shape.hpp
     shape_util.cpp
     shape_util.hpp
+    specialize_shapes.cpp
+    specialize_shapes.hpp
     state/rng_state.cpp
     strides.cpp
     strides.hpp
