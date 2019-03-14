@@ -61,6 +61,7 @@ string runtime::intelgpu::get_opencl_type_min_max_value(const element::Type& ngr
     case element::Type_t::u16: return is_min ? "0" : "USHRT_MAX";
     case element::Type_t::i8: return is_min ? "CHAR_MIN" : "CHAR_MAX";
     case element::Type_t::u8: return is_min ? "0" : "UCHAR_MAX";
+    case element::Type_t::boolean: return is_min ? "0" : "1";
     }
 
     throw ngraph_error("Unsupported type '" + ngraph_type.c_type_string() +
@@ -1383,6 +1384,58 @@ void runtime::intelgpu::do_eltwise_kernel(cldnn::topology& topology,
     topology.add(op_eltwise);
 }
 
+void runtime::intelgpu::do_relu_backprop(cldnn::topology& topology,
+                                         const string& input0_name,
+                                         const Shape& input0_shape,
+                                         const element::Type& input0_type,
+                                         const string& input1_name,
+                                         const Shape& input1_shape,
+                                         const string& output_name,
+                                         const Shape& output_shape,
+                                         const element::Type& output_type)
+{
+    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const string entry_point_name = "relubackprop_" + output_name;
+    const string input0_type_name = get_opencl_type_name(input0_type);
+    const string output_type_name = get_opencl_type_name(output_type);
+    const string zero_input0_const = "convert_" + input0_type_name + "(0)";
+    const string zero_output_const = "convert_" + output_type_name + "(0)";
+
+    CodeWriter writer;
+    vector<size_t> gws;
+
+    gen_func_def(writer,
+                 entry_point_name,
+                 {2, input0_type_name},
+                 {input0_shape, input1_shape},
+                 output_type_name,
+                 output_shape);
+
+    writer.block_begin();
+    {
+        // Main loops
+        gws = generate_loops(writer, output_shape, true);
+
+        writer << "output" << access_dims(output_shape) << " = (input0" << access_dims(input0_shape)
+               << " > " << zero_input0_const << ") ? input1" << access_dims(input1_shape) << " : "
+               << zero_output_const << ";\n";
+
+        // Closing brackets for main loops
+        generate_loops(writer, output_shape, false);
+    }
+    writer.block_end();
+
+    const cldnn::custom_gpu_primitive op_reluback(output_name,
+                                                  {input0_name, input1_name},
+                                                  {writer.get_code()},
+                                                  entry_point_name,
+                                                  get_kernel_args(2, 1),
+                                                  "",
+                                                  layout,
+                                                  gws);
+    topology.add(op_reluback);
+}
+
 void runtime::intelgpu::do_reverse_operation(cldnn::topology& topology,
                                              const string& input_name,
                                              const Shape& input_shape,
@@ -1642,8 +1695,42 @@ void runtime::intelgpu::do_convert_operation(cldnn::topology& topology,
     {
         gws = generate_loops(writer, output_shape, true);
 
-        writer << "output" << access_dims(output_shape) << " = convert_" << output_type_name
-               << "(input0" << access_dims(output_shape) << ");\n";
+        if (((input_type.get_type_enum() == element::Type_t::f64) ||
+             (input_type.get_type_enum() == element::Type_t::f32)) &&
+            (output_type.get_type_enum() != element::Type_t::boolean))
+        {
+            // this is the workaround for OpenCL to be same as with CPU floating point operations
+            writer << input_type_name << " input_var = input0" << access_dims(output_shape) << ";\n"
+                   << output_type_name << " output_var = 0;\n";
+
+            writer << "if (input_var > " << get_opencl_type_min_max_value(output_type, false);
+            if (!output_type.is_real())
+            {
+                writer << " || isnan(input_var)";
+            }
+            writer << ")\n";
+            writer.block_begin();
+            {
+                writer << "output_var = " << get_opencl_type_min_max_value(output_type, true)
+                       << ";\n";
+            }
+            writer.block_end();
+
+            writer << "else\n";
+
+            writer.block_begin();
+            {
+                writer << "output_var = convert_" << output_type_name << "(input_var);\n";
+            }
+            writer.block_end();
+
+            writer << "output" << access_dims(output_shape) << " = output_var;\n";
+        }
+        else
+        {
+            writer << "output" << access_dims(output_shape) << " = convert_" << output_type_name
+                   << "(input0" << access_dims(output_shape) << ");\n";
+        }
 
         generate_loops(writer, output_shape, false);
     }
