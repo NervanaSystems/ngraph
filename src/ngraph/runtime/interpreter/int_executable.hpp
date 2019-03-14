@@ -34,6 +34,7 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/experimental/dyn_broadcast.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
@@ -1264,6 +1265,7 @@ private:
             }
             break;
         }
+        case OP_TYPEID::DynBroadcast:
         default: throw unsupported_op("Unsupported op '" + node.description() + "'");
 #pragma GCC diagnostic pop
         }

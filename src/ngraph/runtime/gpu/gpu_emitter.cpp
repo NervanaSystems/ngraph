@@ -57,6 +57,7 @@
 #include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/dyn_broadcast.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
@@ -1359,6 +1360,11 @@ std::string runtime::gpu::GPU_Emitter::emit_TopK(EMIT_ARGS)
         dtypes, input_shape, topk_axis, topk_k, index_elem_type, compute_max);
 
     return compiled_function->add_to_runtime(index, function_name, args, out);
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_DynBroadcast(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 string runtime::gpu::GPU_Emitter::node_names(const vector<GPUTensorWrapper>& args,

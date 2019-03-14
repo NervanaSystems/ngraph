@@ -51,7 +51,6 @@ set (SRC
     op/avg_pool.cpp
     op/batch_norm.cpp
     op/broadcast.cpp
-    op/dyn_broadcast.cpp
     op/ceiling.cpp
     op/concat.cpp
     op/constant.cpp
@@ -65,6 +64,7 @@ set (SRC
     op/embedding_lookup.cpp
     op/equal.cpp
     op/exp.cpp
+    op/experimental/dyn_broadcast.cpp
     op/experimental/generate_mask.cpp
     op/experimental/quantized_avg_pool.cpp
     op/experimental/quantized_conv_bias.cpp
