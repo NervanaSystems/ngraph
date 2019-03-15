@@ -235,12 +235,14 @@ std::list<std::shared_ptr<ngraph::Node>>
         if (!node_map.exists(node))
         {
             // get (already) cloned arguments and clone the node
-            NodeVector cloned_args;
-            for (auto arg : node->get_arguments())
+            OutputVector cloned_source_outputs;
+            for (size_t i = 0; i < node->get_input_size(); i++)
             {
-                cloned_args.push_back(node_map.get(arg));
+                NodeOutput output = node->get_input_source_output(i);
+                cloned_source_outputs.emplace_back(node_map.get(output.get_node()),
+                                                   output.get_index());
             }
-            auto cloned_node = node->copy_with_new_args(cloned_args);
+            auto cloned_node = node->copy_with_new_source_outputs(cloned_source_outputs);
 
             //copy control dependencies
             for (auto cdep : node->get_control_dependencies())

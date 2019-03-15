@@ -70,8 +70,8 @@ static shared_ptr<op::Reshape> combine_reshapes(shared_ptr<op::Reshape> r1,
 
 static void insert_reshape(shared_ptr<Node> target, shared_ptr<Node> reshape, size_t input_index)
 {
-    auto arg = target->get_argument(input_index);
-    auto new_reshape = reshape->copy_with_new_args({arg});
+    auto arg = target->get_input_source_output(input_index);
+    auto new_reshape = reshape->copy_with_new_source_outputs({arg});
     target->replace_input_source_output(input_index, new_reshape, 0);
 }
 
@@ -200,7 +200,7 @@ void swim(NodeInput input, shared_ptr<op::Reshape> reshape)
         else
         {
             //materialize
-            auto new_reshape = csw.reshape->copy_with_new_args({n});
+            auto new_reshape = csw.reshape->copy_with_new_source_outputs({n});
             NGRAPH_DEBUG << "Materializing new reshape " << describe_reshape(new_reshape);
             csw.input.replace_source_output(new_reshape, 0);
         }

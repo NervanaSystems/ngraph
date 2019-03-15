@@ -40,8 +40,8 @@ namespace ngraph
                 {
                 }
 
-                virtual std::shared_ptr<Node>
-                    copy_with_new_source_outputs(const OutputVector& new_source_outputs) const override
+                virtual std::shared_ptr<Node> copy_with_new_source_outputs(
+                    const OutputVector& new_source_outputs) const override
                 {
                     throw ngraph_error("Uncopyable");
                 }

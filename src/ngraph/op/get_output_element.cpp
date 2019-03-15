@@ -49,6 +49,14 @@ shared_ptr<Node> op::GetOutputElement::copy_with_new_args(const NodeVector& new_
     return make_shared<GetOutputElement>(new_args.at(0), m_n);
 }
 
+std::shared_ptr<Node>
+    op::GetOutputElement::copy_with_new_source_outputs(const OutputVector& new_source_outputs) const
+{
+    // FIXME(amprocte): I am NOT entirely sure this is the right thing to do. Hopefully it'll work
+    // until we retire copy_with_new_args.
+    return make_shared<GetOutputElement>(new_source_outputs.at(0).get_node(), get_n());
+}
+
 NodeVector op::GetOutputElement::get_arguments() const
 {
     return NodeVector{get_input_source_output(0).get_node()};

@@ -33,7 +33,8 @@ op::GenerateMask::GenerateMask(const NodeOutput& training,
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::GenerateMask::copy_with_new_source_outputs(const OutputVector& new_source_outputs) const
+shared_ptr<Node>
+    op::GenerateMask::copy_with_new_source_outputs(const OutputVector& new_source_outputs) const
 {
     check_new_source_outputs_count(this, new_source_outputs);
     return make_shared<GenerateMask>(
