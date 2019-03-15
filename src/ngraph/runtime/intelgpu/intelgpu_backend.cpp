@@ -233,11 +233,12 @@ static void do_universal_unary(cldnn::topology& topology,
                                const shared_ptr<Node>& op,
                                const string& operation,
                                cldnn_activation_func mode,
+                               bool force_custom = false,
                                const cldnn_activation_additional_params& param = {0.f, 0.f})
 {
     arguments_check(op, 1, 1);
 
-    if (get_input_type(op) != element::f32)
+    if (force_custom || (get_input_type(op) != element::f32))
     {
         do_custom_unary(topology, op, operation);
     }
@@ -1155,13 +1156,29 @@ shared_ptr<runtime::Executable>
         {
             arguments_check(op, 2, 1);
 
-            const cldnn_activation_additional_params& param = {0.f, 0.f};
-            const cldnn::activation_grad cldnn_activ_grad(get_output_name(op),
-                                                          get_input_name(op, 1),
-                                                          get_input_name(op, 0),
-                                                          activation_grad_relu,
-                                                          param);
-            topology.add(cldnn_activ_grad);
+            if (get_input_type(op) != element::f32 || get_input_type(op, 1) != element::f32 ||
+                get_output_type(op) != element::f32 || get_output_shape(op).size() > 4)
+            {
+                do_relu_backprop(topology,
+                                 get_input_name(op, 0),
+                                 get_input_shape(op, 0),
+                                 get_input_type(op, 0),
+                                 get_input_name(op, 1),
+                                 get_input_shape(op, 1),
+                                 get_output_name(op),
+                                 get_output_shape(op),
+                                 get_output_type(op));
+            }
+            else
+            {
+                const cldnn_activation_additional_params& param = {0.f, 0.f};
+                const cldnn::activation_grad cldnn_activ_grad(get_output_name(op),
+                                                              get_input_name(op, 1),
+                                                              get_input_name(op, 0),
+                                                              activation_grad_relu,
+                                                              param);
+                topology.add(cldnn_activ_grad);
+            }
             break;
         }
         case OP_TYPEID::Abs:
@@ -1211,7 +1228,8 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::Log:
         {
-            do_universal_unary(topology, op, "log(input_var)", activation_log);
+            // clDNN doesn't provide required accuracy
+            do_universal_unary(topology, op, "log(input_var)", activation_log, true);
             break;
         }
         case OP_TYPEID::Exp:
@@ -1222,7 +1240,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::Negative:
         {
             const cldnn_activation_additional_params param = {-1.f, 0.f};
-            do_universal_unary(topology, op, "-(input_var)", activation_linear, param);
+            do_universal_unary(topology, op, "-(input_var)", activation_linear, false, param);
             break;
         }
         case OP_TYPEID::Relu:
@@ -1985,6 +2003,8 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::QuantizedConvolutionBiasSignedAdd:
         case OP_TYPEID::QuantizedConvolutionRelu:
         case OP_TYPEID::QuantizedConvolution:
+        case OP_TYPEID::QuantizedDot:
+        case OP_TYPEID::QuantizedDotBias:
         case OP_TYPEID::QuantizedMaxPool:
         case OP_TYPEID::ReplaceSlice:
         case OP_TYPEID::GenerateMask:
@@ -1992,6 +2012,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::StopGradient:
         case OP_TYPEID::TopK:
+        case OP_TYPEID::Transpose:
         case OP_TYPEID::EmbeddingLookup:
         case OP_TYPEID::Passthrough:
         {
