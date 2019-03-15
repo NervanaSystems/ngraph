@@ -224,7 +224,8 @@ bool runtime::gpu::GPU_Backend::is_supported(const Node& op) const
                                    "SelectAndScatter",
                                    "StopGradient",
                                    "EmbeddingLookup",
-                                   "GenerateMask"};
+                                   "GenerateMask",
+                                   "Transpose"};
 
     set<string> float_only = {"MaxPoolBackprop", "AvgPoolBackprop", "MaxPool", "Dot"};
 
