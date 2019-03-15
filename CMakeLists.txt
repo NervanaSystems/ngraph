@@ -58,10 +58,10 @@ set(NGRAPH_INCLUDE_PATH
 )
 
 if (APPLE)
-    # Enable CMAKE_<LANG>_COMPILER_ID AppleClang
-    cmake_policy(SET CMP0025 NEW)
     # Enable MACOS_RPATH by default.
     cmake_policy(SET CMP0042 NEW)
+    # Enable CMAKE_<LANG>_COMPILER_ID AppleClang
+    cmake_policy(SET CMP0025 NEW)
 endif()
 
 project (ngraph LANGUAGES C CXX)

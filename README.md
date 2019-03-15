@@ -14,7 +14,7 @@ workloads on CPU for inference, please refer to the links below.
 
 |  Framework (Version)       | Installation guide                     | Notes  
 |----------------------------|----------------------------------------|-----------------------------------
-| TensorFlow* 1.12           | [Pip install](https://github.com/NervanaSystems/ngraph-tf/tree/v0.8.0#option-1-use-a-pre-built-ngraph-tensorflow-bridge) or [Build from source](https://github.com/NervanaSystems/ngraph-tf/tree/v0.8.0#option-2-build-ngraph-bridge-from-source-using-tensorflow-source)   | 20 [Validated workloads]
+| TensorFlow* 1.12           | [Pip install](https://github.com/NervanaSystems/ngraph-tf#option-1-use-a-pre-built-ngraph-tensorflow-bridge) or [Build from source](https://github.com/NervanaSystems/ngraph-tf#option-2-build-ngraph-bridge-from-source)   | 20 [Validated workloads]
 | MXNet* 1.3                 | [Pip install](https://github.com/NervanaSystems/ngraph-mxnet#Installation) or [Build from source](https://github.com/NervanaSystems/ngraph-mxnet#building-with-ngraph-support)| 18 [Validated workloads]   
 | ONNX 1.3                   | [Pip install](https://github.com/NervanaSystems/ngraph-onnx#installation)                          | 14 [Validated workloads] 
 
@@ -32,7 +32,7 @@ The Python wheels for nGraph have been tested and are supported on the following
 Frameworks using nGraph Compiler stack to execute workloads have shown 
 [**up to 45X**](https://ai.intel.com/ngraph-compiler-stack-beta-release/) 
 performance boost when compared to native framework implementations. We've also 
-seen performance boosts running workloads that are not included on the list of 
+seen performance boosts running workloads that are not included on the list of  
 [Validated workloads], thanks to nGraph's powerful subgraph pattern matching.
 
 Additionally we have integrated nGraph with [PlaidML] to provide deep learning 
@@ -92,7 +92,7 @@ to improve it:
 [Documentation]: https://ngraph.nervanasys.com/docs/latest
 [build the Library]: https://ngraph.nervanasys.com/docs/latest/buildlb.html
 [Getting Started Guides]: Getting-started-guides
-[Validated workloads]: https://ngraph.nervanasys.com/docs/latest/frameworks/validation.html
+[Validated workloads]: https://ngraph.nervanasys.com/docs/latest/frameworks/validated/list.html
 [Functional]: https://github.com/NervanaSystems/ngraph-onnx/ 
 [How to contribute]: How-to-contribute
 [framework integration guides]: https://ngraph.nervanasys.com/docs/latest/frameworks/index.html
@@ -100,7 +100,7 @@ to improve it:
 [Github issues]: https://github.com/NervanaSystems/ngraph/issues
 [contrib guide]: https://ngraph.nervanasys.com/docs/latest/project/contribution-guide.html
 [pull request]: https://github.com/NervanaSystems/ngraph/pulls
-[how to import]: https://ngraph.nervanasys.com/docs/latest/howto/import.html
+[how to import]: https://ngraph.nervanasys.com/docs/latest/core/constructing-graphs/import.html
 [ngraph_wireframes_with_notice]: doc/sphinx/source/graphics/readme_stack.png "nGraph wireframe"
 [ngraph_diagram_with fw_hw]: doc/sphinx/source/graphics/main_diagram_fw_hw.png "nGraph stack with current framework & backend support"
 [ngraph-compiler-stack-readme]: doc/sphinx/source/graphics/ngraph-compiler-stack-readme.png "nGraph Compiler Stack"
@@ -111,4 +111,3 @@ to improve it:
 [nGraph-ONNX]: https://github.com/NervanaSystems/ngraph-onnx/blob/master/README.md
 [nGraph-ONNX adaptable]: https://ai.intel.com/adaptable-deep-learning-solutions-with-ngraph-compiler-and-onnx/
 [nGraph for PyTorch developers]: https://ai.intel.com/investing-in-the-pytorch-developer-community
-[Validated workloads]: https://ngraph.nervanasys.com/docs/latest/frameworks/genre-validation.html

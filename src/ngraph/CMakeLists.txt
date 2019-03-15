@@ -140,6 +140,12 @@ set (SRC
     op/experimental/quantized_max_pool.hpp
     op/experimental/shape_of.cpp
     op/experimental/shape_of.hpp
+    op/experimental/quantized_dot.cpp
+    op/experimental/quantized_dot.hpp
+    op/experimental/quantized_dot_bias.cpp
+    op/experimental/quantized_dot_bias.hpp
+    op/experimental/transpose.cpp
+    op/experimental/transpose.hpp
     op/floor.cpp
     op/floor.hpp
     op/get_output_element.cpp
@@ -332,6 +338,8 @@ set (SRC
     shape.hpp
     shape_util.cpp
     shape_util.hpp
+    specialize_shapes.cpp
+    specialize_shapes.hpp
     state/rng_state.cpp
     strides.cpp
     strides.hpp
