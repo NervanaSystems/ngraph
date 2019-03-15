@@ -57,7 +57,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_1d_max_all)
     EXPECT_EQ((vector<int32_t>{5, 4, 3, 2, 1, 0}), read_vector<int32_t>(result0));
     auto h1 = backend->compile(f1);
     h1->call_with_validate({result1}, {a});
-    EXPECT_TRUE(test::all_close_f((vector<float>{6, 5, 4, 3, 2, 1}), read_vector<float>(result1)));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{6, 5, 4, 3, 2, 1}), read_vector<float>(result1), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_1d_max_partial)
@@ -82,7 +83,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_1d_max_partial)
     EXPECT_EQ((vector<int32_t>{5, 4, 3}), read_vector<int32_t>(result0));
     auto h1 = backend->compile(f1);
     h1->call_with_validate({result1}, {a});
-    EXPECT_TRUE(test::all_close_f((vector<float>{6, 5, 4}), read_vector<float>(result1)));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{6, 5, 4}), read_vector<float>(result1), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_1d_max_one)
@@ -107,7 +109,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_1d_max_one)
     EXPECT_EQ((vector<int32_t>{5}), read_vector<int32_t>(result0));
     auto h1 = backend->compile(f1);
     h1->call_with_validate({result1}, {a});
-    EXPECT_TRUE(test::all_close_f((vector<float>{6}), read_vector<float>(result1)));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{6}), read_vector<float>(result1), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_1d_min_all)
@@ -132,7 +135,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_1d_min_all)
     EXPECT_EQ((vector<int32_t>{5, 4, 3, 2, 1, 0}), read_vector<int32_t>(result0));
     auto h1 = backend->compile(f1);
     h1->call_with_validate({result1}, {a});
-    EXPECT_TRUE(test::all_close_f((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(result1)));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(result1), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_1d_min_partial)
@@ -157,7 +161,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_1d_min_partial)
     EXPECT_EQ((vector<int32_t>{5, 4, 3}), read_vector<int32_t>(result0));
     auto h1 = backend->compile(f1);
     h1->call_with_validate({result1}, {a});
-    EXPECT_TRUE(test::all_close_f((vector<float>{1, 2, 3}), read_vector<float>(result1)));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{1, 2, 3}), read_vector<float>(result1), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_1d_min_one)
@@ -182,7 +187,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_1d_min_one)
     EXPECT_EQ((vector<int32_t>{5}), read_vector<int32_t>(result0));
     auto h1 = backend->compile(f1);
     h1->call_with_validate({result1}, {a});
-    EXPECT_TRUE(test::all_close_f((vector<float>{1}), read_vector<float>(result1)));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{1}), read_vector<float>(result1), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_3d_max_all)
@@ -208,7 +214,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_3d_max_all)
     auto h1 = backend->compile(f1);
     h1->call_with_validate({result1}, {a});
     EXPECT_TRUE(test::all_close_f((vector<float>{10, 12, 9, 4, 8, 2, 11, 7, 6, 3, 5, 1}),
-                                  read_vector<float>(result1)));
+                                  read_vector<float>(result1),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_int64)
@@ -234,7 +241,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_int64)
     auto h1 = backend->compile(f1);
     h1->call_with_validate({result1}, {a});
     EXPECT_TRUE(test::all_close_f((vector<float>{10, 12, 9, 4, 8, 2, 11, 7, 6, 3, 5, 1}),
-                                  read_vector<float>(result1)));
+                                  read_vector<float>(result1),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_5d_max_partial)
@@ -297,7 +305,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_5d_max_partial)
                        206, 278, 214, 286, 199, 271, 207, 279, 215, 287, 200, 272, 241, 280,
                        216, 288, 193, 265, 201, 273, 209, 281, 194, 266, 202, 274, 210, 262,
                        175, 127, 183, 255, 191, 263, 176, 248, 208, 256, 212, 284}),
-        read_vector<float>(result1)));
+        read_vector<float>(result1),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_3d_max_partial)
@@ -322,8 +331,9 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_3d_max_partial)
     EXPECT_EQ((vector<int32_t>{1, 1, 0, 2, 2, 2, 0, 1}), read_vector<int32_t>(result0));
     auto h1 = backend->compile(f1);
     h1->call_with_validate({result1}, {a});
-    EXPECT_TRUE(
-        test::all_close_f((vector<float>{10, 12, 9, 4, 11, 7, 6, 3}), read_vector<float>(result1)));
+    EXPECT_TRUE(test::all_close_f((vector<float>{10, 12, 9, 4, 11, 7, 6, 3}),
+                                  read_vector<float>(result1),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_3d_max_one)
@@ -348,7 +358,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_3d_max_one)
     EXPECT_EQ((vector<int32_t>{1, 1, 2, 2}), read_vector<int32_t>(result0));
     auto h1 = backend->compile(f1);
     h1->call_with_validate({result1}, {a});
-    EXPECT_TRUE(test::all_close_f((vector<float>{10, 12, 11, 7}), read_vector<float>(result1)));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{10, 12, 11, 7}), read_vector<float>(result1), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_3d_min_all)
@@ -374,7 +385,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_3d_min_all)
     auto h1 = backend->compile(f1);
     h1->call_with_validate({result1}, {a});
     EXPECT_TRUE(test::all_close_f((vector<float>{8, 2, 10, 4, 12, 9, 5, 1, 6, 3, 11, 7}),
-                                  read_vector<float>(result1)));
+                                  read_vector<float>(result1),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_3d_min_partial)
@@ -399,8 +411,9 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_3d_min_partial)
     EXPECT_EQ((vector<int32_t>{2, 0, 1, 2, 1, 0, 0, 1}), read_vector<int32_t>(result0));
     auto h1 = backend->compile(f1);
     h1->call_with_validate({result1}, {a});
-    EXPECT_TRUE(
-        test::all_close_f((vector<float>{8, 2, 10, 4, 5, 1, 6, 3}), read_vector<float>(result1)));
+    EXPECT_TRUE(test::all_close_f((vector<float>{8, 2, 10, 4, 5, 1, 6, 3}),
+                                  read_vector<float>(result1),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_3d_min_one)
@@ -425,7 +438,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_3d_min_one)
     EXPECT_EQ((vector<int32_t>{2, 0, 1, 0}), read_vector<int32_t>(result0));
     auto h1 = backend->compile(f1);
     h1->call_with_validate({result1}, {a});
-    EXPECT_TRUE(test::all_close_f((vector<float>{8, 2, 5, 1}), read_vector<float>(result1)));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{8, 2, 5, 1}), read_vector<float>(result1), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_2d_max_all)
@@ -451,7 +465,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_2d_max_all)
     auto h1 = backend->compile(f1);
     h1->call_with_validate({result1}, {a});
     EXPECT_TRUE(test::all_close_f((vector<float>{12, 11, 10, 9, 8, 7, 6, 2, 5, 3, 1, 4}),
-                                  read_vector<float>(result1)));
+                                  read_vector<float>(result1),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_2d_max_partial)
@@ -476,8 +491,9 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_2d_max_partial)
     EXPECT_EQ((vector<int32_t>{1, 3, 0, 0, 1, 3}), read_vector<int32_t>(result0));
     auto h1 = backend->compile(f1);
     h1->call_with_validate({result1}, {a});
-    EXPECT_TRUE(
-        test::all_close_f((vector<float>{12, 11, 10, 9, 8, 7}), read_vector<float>(result1)));
+    EXPECT_TRUE(test::all_close_f((vector<float>{12, 11, 10, 9, 8, 7}),
+                                  read_vector<float>(result1),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_2d_max_one)
@@ -502,7 +518,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_2d_max_one)
     EXPECT_EQ((vector<int32_t>{1, 3, 0}), read_vector<int32_t>(result0));
     auto h1 = backend->compile(f1);
     h1->call_with_validate({result1}, {a});
-    EXPECT_TRUE(test::all_close_f((vector<float>{12, 11, 10}), read_vector<float>(result1)));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{12, 11, 10}), read_vector<float>(result1), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_2d_min_all)
@@ -528,7 +545,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_2d_min_all)
     auto h1 = backend->compile(f1);
     h1->call_with_validate({result1}, {a});
     EXPECT_TRUE(test::all_close_f((vector<float>{3, 1, 4, 6, 2, 5, 9, 8, 7, 12, 11, 10}),
-                                  read_vector<float>(result1)));
+                                  read_vector<float>(result1),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_2d_min_partial)
@@ -553,7 +571,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_2d_min_partial)
     EXPECT_EQ((vector<int32_t>{3, 2, 1, 2, 0, 2}), read_vector<int32_t>(result0));
     auto h1 = backend->compile(f1);
     h1->call_with_validate({result1}, {a});
-    EXPECT_TRUE(test::all_close_f((vector<float>{3, 1, 4, 6, 2, 5}), read_vector<float>(result1)));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{3, 1, 4, 6, 2, 5}), read_vector<float>(result1), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_2d_min_one)
@@ -578,7 +597,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_2d_min_one)
     EXPECT_EQ((vector<int32_t>{3, 2, 1}), read_vector<int32_t>(result0));
     auto h1 = backend->compile(f1);
     h1->call_with_validate({result1}, {a});
-    EXPECT_TRUE(test::all_close_f((vector<float>{3, 1, 4}), read_vector<float>(result1)));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{3, 1, 4}), read_vector<float>(result1), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_3d_large_input_max)

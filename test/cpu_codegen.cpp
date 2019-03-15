@@ -46,13 +46,16 @@ TEST(cpu_codegen, abc)
     auto handle = backend->compile(f, pass_config);
     handle->call_with_validate({result}, {a, b, c});
     EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
-                                  (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector()));
+                                  (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector(),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 
     handle->call_with_validate({result}, {b, a, c});
     EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
-                                  (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector()));
+                                  (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector(),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 
     handle->call_with_validate({result}, {a, c, b});
     EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
-                                  (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector()));
+                                  (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector(),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }

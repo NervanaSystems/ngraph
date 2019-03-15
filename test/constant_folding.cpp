@@ -46,7 +46,7 @@ TEST(constant_folding, constant_reshape)
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<float>();
 
-    ASSERT_TRUE(test::all_close_f(values_in, values_out));
+    ASSERT_TRUE(test::all_close_f(values_in, values_out, MIN_FLOAT_TOLERANCE_BITS));
 }
 
 TEST(constant_folding, constant_reshape_permute)
@@ -72,7 +72,7 @@ TEST(constant_folding, constant_reshape_permute)
     auto values_out = new_const->get_vector<double>();
 
     vector<double> values_permute{0, 4, 1, 5, 2, 6, 3, 7};
-    ASSERT_TRUE(test::all_close_f(values_permute, values_out));
+    ASSERT_TRUE(test::all_close_f(values_permute, values_out, MIN_FLOAT_TOLERANCE_BITS));
 }
 
 TEST(constant_folding, constant_broadcast)

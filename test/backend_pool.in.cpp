@@ -55,7 +55,8 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_1d_1channel_1image)
     handle->call_with_validate({result}, {a});
     EXPECT_TRUE(test::all_close_f(
         (test::NDArray<float, 3>({{{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0}}}).get_vector()),
-        read_vector<float>(result)));
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, max_pool_1d_1channel_2image)
@@ -81,7 +82,8 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_1d_1channel_2image)
     EXPECT_TRUE(test::all_close_f((test::NDArray<float, 3>({{{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0}},
                                                             {{2, 2, 1, 1, 0, 2, 2, 2, 1, 1, 1, 2}}})
                                        .get_vector()),
-                                  read_vector<float>(result)));
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, max_pool_1d_2channel_2image)
@@ -113,7 +115,8 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_1d_2channel_2image)
 
               {{2, 2, 1, 1, 0, 2, 2, 2, 1, 1, 1, 2}, {2, 1, 1, 1, 2, 2, 2, 0, 1, 1, 2, 2}}})
              .get_vector()),
-        read_vector<float>(result)));
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image)
@@ -177,7 +180,8 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image)
                                                               {2, 2, 2},
                                                               {1, 1, 2}}}})
                                        .get_vector()),
-                                  read_vector<float>(result)));
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 //this test cover the case with multiple image and with asymetric pad
@@ -237,7 +241,8 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image_asym_pad)
                                                              {{2, 2}, // img 1 chan 1
                                                               {2, 2}}}})
                                        .get_vector()),
-                                  read_vector<float>(result)));
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 // MaxPool2D1ChannelTests test fixture for test setup reuse
@@ -287,7 +292,8 @@ NGRAPH_TEST_F(${BACKEND_NAME}, MaxPool2D1ChannelTests, max_pool_2d_1channel_1ima
                                                              {2, 2, 2, 2, 2},
                                                              {2, 2, 1, 0, 0}}}})
                                       .get_vector(),
-                                  read_vector<float>(result)));
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST_F(${BACKEND_NAME}, MaxPool2D1ChannelTests, max_pool_2d_1channel_1image_padded)
@@ -323,7 +329,8 @@ NGRAPH_TEST_F(${BACKEND_NAME}, MaxPool2D1ChannelTests, max_pool_2d_1channel_1ima
                                                               {2, 2, 2, 2, 2},
                                                               {2, 2, 1, 0, 0}}}})
                                        .get_vector()),
-                                  read_vector<float>(result)));
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 // Test to make sure that negative elements and padding are handled properly. Added this because
@@ -361,7 +368,8 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_padded_negative_values)
     EXPECT_TRUE(test::all_close_f(
         (test::NDArray<float, 4>({{{{-1, -1, -2, -2, -1, -1, -1, -2, -2, -2, -2, -2, -3, -4, -5}}}})
              .get_vector()),
-        read_vector<float>(result)));
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_strided)
@@ -394,7 +402,8 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_strided)
     handle->call_with_validate({result}, {a});
     EXPECT_TRUE(test::all_close_f(
         (test::NDArray<float, 4>({{{{3, 2, 2}, {2, 2, 3}, {2, 2, 2}}}}).get_vector()),
-        read_vector<float>(result)));
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, max_pool_3d)
@@ -426,7 +435,8 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_3d)
     auto cpu_results = execute(cpu_f, args, "${BACKEND_NAME}");
     for (size_t i = 0; i < cpu_results.size(); i++)
     {
-        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+        EXPECT_TRUE(
+            test::all_close_f(cpu_results.at(i), int_results.at(i), MIN_FLOAT_TOLERANCE_BITS));
     }
 }
 
