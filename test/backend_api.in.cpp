@@ -76,3 +76,24 @@ NGRAPH_TEST(${BACKEND_NAME}, create_tensor_2)
     vector<float> expected = {6, 8, 10, 12};
     EXPECT_EQ(read_vector<float>(result), expected);
 }
+
+// This tests a backend's implementation of the three parameter version of create_tensor
+NGRAPH_TEST(${BACKEND_NAME}, tensor_copy_from)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    vector<float> av = {1, 2, 3, 4};
+    vector<float> bv = {5, 6, 7, 8};
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::f32, shape);
+    copy_data(a, av);
+    copy_data(b, bv);
+
+    a->copy_from(*b);
+    EXPECT_EQ(read_vector<float>(a), bv);
+}
