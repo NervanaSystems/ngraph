@@ -77,7 +77,7 @@ NGRAPH_TEST(${BACKEND_NAME}, create_tensor_2)
     EXPECT_EQ(read_vector<float>(result), expected);
 }
 
-// This tests a backend's implementation of the three parameter version of create_tensor
+// This tests a backend's implementation of the copy_from for tensor 
 NGRAPH_TEST(${BACKEND_NAME}, tensor_copy_from)
 {
     Shape shape{2, 2};
