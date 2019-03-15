@@ -358,6 +358,7 @@ def main():
 #include "ngraph/ngraph.hpp"
 #include "util/test_tools.hpp"
 #include "util/autodiff/numeric_compare.hpp"
+#include "util/all_close_f.hpp"
 #include "util/test_control.hpp"
 
 using namespace std;
