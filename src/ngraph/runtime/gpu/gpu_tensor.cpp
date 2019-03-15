@@ -102,7 +102,7 @@ void runtime::gpu::GPUTensor::copy_from(const runtime::Tensor& source)
     catch (const std::bad_cast& e)
     {
         throw invalid_argument(
-            "runtime::gpu::GPUTensor::copy_from source master be a GPUTensor. ErrMsg:" +
+            "runtime::gpu::GPUTensor::copy_from source must be a GPUTensor. ErrMsg:\n" +
             std::string(e.what()));
     }
 }
