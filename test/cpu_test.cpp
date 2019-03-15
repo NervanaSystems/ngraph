@@ -977,7 +977,6 @@ TEST(cpu_test, conv_test_winograd)
         memory::desc({conv_weights_tz}, memory::data_type::f32, memory::format::any);
     auto conv_dst_md = memory::desc({conv_dst_tz}, memory::data_type::f32, memory::format::any);
     mkldnn::algorithm convolution_algo = mkldnn_utils::can_use_conv_auto();
-
     /* create a convolution primitive descriptor */
     auto conv_desc = convolution_forward::desc(prop_kind::forward,
                                                convolution_algo,
@@ -1022,13 +1021,31 @@ TEST(cpu_test, conv_test_winograd)
         conv_pd, conv_src_memory, conv_weights_memory, conv_user_bias_memory, conv_dst_memory);
 
     auto get_conv_algo_kind = [&]() {
-
         mkldnn_convolution_desc_t* temp_conv_desc = {0};
         mkldnn_primitive_desc_query(conv_pd.get(), mkldnn_query_convolution_d, 0, &temp_conv_desc);
         return temp_conv_desc->alg_kind;
     };
 
-    if (convolution_algo == mkldnn::algorithm::convolution_auto)
+    // this check is needed, since conv_auto selects winograd implementation only on AVX512 flavours
+    auto one_of_avx512 = [&]() {
+        auto jit_kind = std::string(conv_pd.impl_info_str());
+        size_t delim_pos = jit_kind.find(':');
+        if (delim_pos == std::string::npos)
+        {
+            return false;
+        }
+        auto isa_type = jit_kind.substr(delim_pos + 1, jit_kind.size());
+        if (isa_type == "avx512_core" || isa_type == "avx512_core_vnni")
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    };
+
+    if ((convolution_algo == mkldnn::algorithm::convolution_auto) && one_of_avx512())
     {
         EXPECT_EQ(mkldnn::algorithm::convolution_winograd, get_conv_algo_kind());
     }
