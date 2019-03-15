@@ -49,7 +49,7 @@ NGRAPH_TEST(${BACKEND_NAME}, abs)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{1, 2, 0, 4.75f}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1, 2, 0, 4.75f}), read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, acos)
@@ -67,18 +67,7 @@ NGRAPH_TEST(${BACKEND_NAME}, acos)
     auto result = backend->create_tensor(element::f32, shape);
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_TRUE(test::all_close_f(vector<float>{3.14159265f,
-                                                2.41885841f,
-                                                2.09439510f,
-                                                1.82347658f,
-                                                1.69612416f,
-                                                1.57079633f,
-                                                1.44546850f,
-                                                1.31811607f,
-                                                1.04719755f,
-                                                0.72273425f,
-                                                0.00000000f},
-                                  read_vector<float>(result)));
+    EXPECT_TRUE(test::all_close_f(vector<float>{3.14159265f, 2.41885841f, 2.09439510f, 1.82347658f, 1.69612416f, 1.57079633f, 1.44546850f, 1.31811607f, 1.04719755f, 0.72273425f, 0.00000000f}, read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, asin)
@@ -96,18 +85,7 @@ NGRAPH_TEST(${BACKEND_NAME}, asin)
     auto result = backend->create_tensor(element::f32, shape);
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_TRUE(test::all_close_f(vector<float>{-1.57079633f,
-                                                -0.84806208f,
-                                                -0.52359878f,
-                                                -0.25268026f,
-                                                -0.12532783f,
-                                                0.00000000f,
-                                                0.12532783f,
-                                                0.25268026f,
-                                                0.52359878f,
-                                                0.84806208f,
-                                                1.57079633f},
-                                  read_vector<float>(result)));
+    EXPECT_TRUE(test::all_close_f(vector<float>{-1.57079633f, -0.84806208f, -0.52359878f, -0.25268026f, -0.12532783f, 0.00000000f, 0.12532783f, 0.25268026f, 0.52359878f, 0.84806208f, 1.57079633f}, read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, atan)
@@ -125,18 +103,7 @@ NGRAPH_TEST(${BACKEND_NAME}, atan)
     auto result = backend->create_tensor(element::f32, shape);
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_TRUE(test::all_close_f(vector<float>{-1.32581766f,
-                                                -1.10714872f,
-                                                -0.78539816f,
-                                                -0.46364761f,
-                                                -0.24497866f,
-                                                0.00000000f,
-                                                0.24497866f,
-                                                0.46364761f,
-                                                0.78539816f,
-                                                1.10714872f,
-                                                1.32581766f},
-                                  read_vector<float>(result)));
+    EXPECT_TRUE(test::all_close_f(vector<float>{-1.32581766f, -1.10714872f, -0.78539816f, -0.46364761f, -0.24497866f, 0.00000000f, 0.24497866f, 0.46364761f, 0.78539816f, 1.10714872f, 1.32581766f}, read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, ceiling)
@@ -154,7 +121,7 @@ NGRAPH_TEST(${BACKEND_NAME}, ceiling)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{-2.0f, -2.0f, 1.0f, 5.0f}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{-2.0f, -2.0f, 1.0f, 5.0f}), read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, cos)
@@ -172,18 +139,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cos)
     auto result = backend->create_tensor(element::f32, shape);
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_TRUE(test::all_close_f(vector<float>{1.00000000f,
-                                                0.96891242f,
-                                                0.96891242f,
-                                                0.87758256f,
-                                                0.87758256f,
-                                                0.54030231f,
-                                                0.54030231f,
-                                                -0.41614684f,
-                                                -0.41614684f,
-                                                -0.65364362f,
-                                                -0.65364362f},
-                                  read_vector<float>(result)));
+    EXPECT_TRUE(test::all_close_f(vector<float>{1.00000000f, 0.96891242f, 0.96891242f, 0.87758256f, 0.87758256f, 0.54030231f, 0.54030231f, -0.41614684f, -0.41614684f, -0.65364362f, -0.65364362f}, read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, cosh)
@@ -200,8 +156,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cosh)
     copy_data(a, input);
     auto result = backend->create_tensor(element::f32, shape);
 
-    std::transform(
-        input.begin(), input.end(), input.begin(), [](float x) -> float { return coshf(x); });
+    std::transform(input.begin(), input.end(), input.begin(), [](float x) -> float { return coshf(x); });
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
@@ -223,9 +178,7 @@ NGRAPH_TEST(${BACKEND_NAME}, exp)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_TRUE(test::all_close_f(
-        vector<float>{expf(-4), expf(-3), expf(-2), expf(-1), expf(0), expf(1), expf(2), expf(3)},
-        read_vector<float>(result)));
+    EXPECT_TRUE(test::all_close_f(vector<float>{expf(-4), expf(-3), expf(-2), expf(-1), expf(0), expf(1), expf(2), expf(3)}, read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, floor)
@@ -243,7 +196,7 @@ NGRAPH_TEST(${BACKEND_NAME}, floor)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{-3.0f, -2.0f, 0.0f, 4.0f}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{-3.0f, -2.0f, 0.0f, 4.0f}), read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, floor_int32)
@@ -261,8 +214,7 @@ NGRAPH_TEST(${BACKEND_NAME}, floor_int32)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<int32_t>{-2, -136314888, 0x40000010, 0x40000001}),
-              read_vector<int32_t>(result));
+    EXPECT_EQ((vector<int32_t>{-2, -136314888, 0x40000010, 0x40000001}), read_vector<int32_t>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, log)
@@ -276,14 +228,7 @@ NGRAPH_TEST(${BACKEND_NAME}, log)
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{0.125f, 0.25f, 0.5f, 1.f, 2.f, 4.f, 8.f, 16.f});
-    vector<float> loga{-2.07944154f,
-                       -1.38629436f,
-                       -0.69314718f,
-                       0.00000000f,
-                       0.69314718f,
-                       1.38629436f,
-                       2.07944154f,
-                       2.77258872f};
+    vector<float> loga{-2.07944154f, -1.38629436f, -0.69314718f, 0.00000000f, 0.69314718f, 1.38629436f, 2.07944154f, 2.77258872f};
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
@@ -306,7 +251,7 @@ NGRAPH_TEST(${BACKEND_NAME}, negative)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{-1, 2, 0, 4.75f, -8.75f, 8.75f}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{-1, 2, 0, 4.75f, -8.75f, 8.75f}), read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, not)
@@ -342,7 +287,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sign)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{1, -1, 0, -1, 1, 0}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1, -1, 0, -1, 1, 0}), read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, sin)
@@ -360,18 +305,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sin)
     auto result = backend->create_tensor(element::f32, shape);
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_TRUE(test::all_close_f(vector<float>{0.00000000f,
-                                                0.24740396f,
-                                                -0.24740396f,
-                                                0.47942554f,
-                                                -0.47942554f,
-                                                0.84147098f,
-                                                -0.84147098f,
-                                                0.90929743f,
-                                                -0.90929743f,
-                                                -0.75680250f,
-                                                0.75680250f},
-                                  read_vector<float>(result)));
+    EXPECT_TRUE(test::all_close_f(vector<float>{0.00000000f, 0.24740396f, -0.24740396f, 0.47942554f, -0.47942554f, 0.84147098f, -0.84147098f, 0.90929743f, -0.90929743f, -0.75680250f, 0.75680250f}, read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, sinh)
@@ -388,8 +322,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sinh)
     copy_data(a, input);
     auto result = backend->create_tensor(element::f32, shape);
 
-    std::transform(
-        input.begin(), input.end(), input.begin(), [](float x) -> float { return sinhf(x); });
+    std::transform(input.begin(), input.end(), input.begin(), [](float x) -> float { return sinhf(x); });
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
@@ -429,18 +362,7 @@ NGRAPH_TEST(${BACKEND_NAME}, tan)
     auto result = backend->create_tensor(element::f32, shape);
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_TRUE(test::all_close_f(vector<float>{0.00000000f,
-                                                0.25534192f,
-                                                -0.25534192f,
-                                                0.54630249f,
-                                                -0.54630249f,
-                                                1.55740772f,
-                                                -1.55740772f,
-                                                -2.18503986f,
-                                                2.18503986f,
-                                                1.15782128f,
-                                                -1.15782128f},
-                                  read_vector<float>(result)));
+    EXPECT_TRUE(test::all_close_f(vector<float>{0.00000000f, 0.25534192f, -0.25534192f, 0.54630249f, -0.54630249f, 1.55740772f, -1.55740772f, -2.18503986f, 2.18503986f, 1.15782128f, -1.15782128f}, read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, tanh)
@@ -457,8 +379,7 @@ NGRAPH_TEST(${BACKEND_NAME}, tanh)
     copy_data(a, input);
     auto result = backend->create_tensor(element::f32, shape);
 
-    std::transform(
-        input.begin(), input.end(), input.begin(), [](float x) -> float { return tanhf(x); });
+    std::transform(input.begin(), input.end(), input.begin(), [](float x) -> float { return tanhf(x); });
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});

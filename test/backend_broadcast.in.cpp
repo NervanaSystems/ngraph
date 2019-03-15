@@ -39,8 +39,7 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_scalar_vector)
     Shape shape_a{};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{4};
-    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0}),
-                                   ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -51,7 +50,7 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_scalar_vector)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{6, 6, 6, 6}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{6, 6, 6, 6}), read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, broadcast_scalar_matrix)
@@ -59,8 +58,7 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_scalar_matrix)
     Shape shape_a{};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2};
-    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0, 1}),
-                                   ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0, 1}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -71,7 +69,7 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_scalar_matrix)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{6, 6, 6, 6}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{6, 6, 6, 6}), read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, broadcast_scalar_tensor)
@@ -79,8 +77,7 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_scalar_tensor)
     Shape shape_a{};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 2};
-    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0, 1, 2}),
-                                   ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0, 1, 2}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -91,15 +88,14 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_scalar_tensor)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{6, 6, 6, 6, 6, 6, 6, 6}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{6, 6, 6, 6, 6, 6, 6, 6}), read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, broadcast_trivial)
 {
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f =
-        make_shared<Function>(make_shared<op::Broadcast>(A, shape, AxisSet{}), ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape, AxisSet{}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -110,7 +106,7 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_trivial)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{2, 4, 6, 8, 16, 32, 64, 128}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{2, 4, 6, 8, 16, 32, 64, 128}), read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, broadcast_vector_colwise)
@@ -118,8 +114,7 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_vector_colwise)
     Shape shape_a{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{3, 4};
-    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{1}),
-                                   ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{1}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -130,7 +125,7 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_vector_colwise)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3}), read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, broadcast_vector_rowwise)
@@ -138,8 +133,7 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_vector_rowwise)
     Shape shape_a{4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{3, 4};
-    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0}),
-                                   ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -150,7 +144,7 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_vector_rowwise)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}), read_vector<float>(result)));
 }
 
 // Test hybrid mechanism after broadcast
@@ -172,7 +166,7 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_vector_rowwise_reversed)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{4, 3, 2, 1, 4, 3, 2, 1, 4, 3, 2, 1}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{4, 3, 2, 1, 4, 3, 2, 1, 4, 3, 2, 1}), read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, broadcast_vector_rowwise_int64)
@@ -180,8 +174,7 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_vector_rowwise_int64)
     Shape shape_a{4};
     auto A = make_shared<op::Parameter>(element::i64, shape_a);
     Shape shape_r{3, 4};
-    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0}),
-                                   ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -200,8 +193,7 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_scalar_to_matrix_int64)
     Shape shape_a{1};
     auto A = make_shared<op::Parameter>(element::i64, shape_a);
     Shape shape_r{3, 1};
-    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0}),
-                                   ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -220,8 +212,7 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_scalar_to_matrix_int32)
     Shape shape_a{1};
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     Shape shape_r{3, 1};
-    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0}),
-                                   ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -242,8 +233,7 @@ static void broadcast_test_helper(const Shape& shape_a, const Shape& shape_r, co
     vector<float> inp_data(shape_size<const Shape>(shape_a));
     iota(inp_data.begin(), inp_data.end(), 1);
 
-    auto f =
-        make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, axis), ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, axis), ParameterVector{A});
 
     auto ref_backend = runtime::Backend::create("INTERPRETER");
     auto wrk_backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -261,7 +251,7 @@ static void broadcast_test_helper(const Shape& shape_a, const Shape& shape_r, co
     auto ref_handle = ref_backend->compile(f);
     wrk_handle->call_with_validate({wrk_result}, {wrk_a});
     ref_handle->call_with_validate({ref_result}, {ref_a});
-    EXPECT_EQ(read_vector<float>(ref_result), read_vector<float>(wrk_result));
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(ref_result), read_vector<float>(wrk_result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, broadcast_algo_vector_middle)
@@ -388,8 +378,7 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_matrix_0)
     Shape shape_a{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 2};
-    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0}),
-                                   ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -400,7 +389,7 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_matrix_0)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{1, 2, 3, 4, 1, 2, 3, 4}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1, 2, 3, 4, 1, 2, 3, 4}), read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, broadcast_matrix_1)
@@ -408,8 +397,7 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_matrix_1)
     Shape shape_a{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 2};
-    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{1}),
-                                   ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{1}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -420,7 +408,7 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_matrix_1)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{1, 2, 1, 2, 3, 4, 3, 4}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1, 2, 1, 2, 3, 4, 3, 4}), read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, broadcast_matrix_2)
@@ -428,8 +416,7 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_matrix_2)
     Shape shape_a{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 2};
-    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{2}),
-                                   ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{2}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -440,7 +427,7 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_matrix_2)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{1, 1, 2, 2, 3, 3, 4, 4}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1, 1, 2, 2, 3, 3, 4, 4}), read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, constant_broadcast)
