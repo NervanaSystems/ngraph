@@ -729,12 +729,10 @@ TEST(cpu_test, memory_reuse_mxnet_densenet121)
 
     ngraph::pass::PassConfig pass_config;
     pass_config.set_pass_attribute("CPUMemoryAssignment::ReuseMemory", true);
-    auto cpu_backend = std::unique_ptr<runtime::cpu::CPU_Backend>(
-        static_cast<runtime::cpu::CPU_Backend*>(backend.release()));
 
     auto cpu_f_new_reuse = make_function(file_name);
 
-    shared_ptr<runtime::Executable> handle = cpu_backend->compile(cpu_f_new_reuse, pass_config);
+    shared_ptr<runtime::Executable> handle = backend->compile(cpu_f_new_reuse, pass_config);
     for (auto it = 0; it < 2; it++)
     {
         handle->call_with_validate(result_tensors, arg_tensors);
@@ -779,6 +777,7 @@ TEST(cpu_test, memory_reuse_destructive_oi_relu)
 
     shared_ptr<runtime::Executable> handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b, c});
+    ASSERT_NE(handle, nullptr);
     EXPECT_EQ(read_vector<float>(result), expected);
 }
 
@@ -806,6 +805,7 @@ TEST(cpu_test, memory_reuse_cacheable_no_destructive_oi_relu)
     vector<float> expected{0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
     shared_ptr<runtime::Executable> handle = backend->compile(f);
+    ASSERT_NE(handle, nullptr);
     handle->call_with_validate({result}, {a, b, c});
     EXPECT_EQ(read_vector<float>(result), expected);
 
@@ -868,6 +868,7 @@ TEST(cpu_test, memory_reuse_in_place_slice_after_in_place_concat)
     auto result = backend->create_tensor(element::f32, shape_r);
 
     shared_ptr<runtime::Executable> handle = backend->compile(f);
+    ASSERT_NE(handle, nullptr);
     handle->call_with_validate({result}, {a, b, c, d});
     EXPECT_EQ((vector<float>{3, 7}), read_vector<float>(result));
 }

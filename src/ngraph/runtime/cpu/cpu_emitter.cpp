@@ -55,6 +55,8 @@
 #include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
+#include "ngraph/op/experimental/quantized_dot.hpp"
+#include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -2288,8 +2290,7 @@ namespace ngraph
                     writer << "                         {" << join(convolution->get_padding_above())
                            << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_data_dilation_strides()) << "},\n";
-                    writer << "                         0, 1, 1, 0, 0, 1, false);\n";
+                           << join(convolution->get_data_dilation_strides()) << "});\n";
                 }
             }
 
@@ -2323,24 +2324,25 @@ namespace ngraph
                 }
                 else
                 {
-                    writer << "reference::convolution<" << out[0].get_type() << ">("
-                           << args[0].get_name() << ",\n";
+                    writer << "reference::convolution_backprop_filters<" << out[0].get_type()
+                           << ">(" << args[0].get_name() << ",\n";
                     writer << "                         " << args[1].get_name() << ",\n";
                     writer << "                         " << out[0].get_name() << ",\n";
+                    writer << "                         {" << join(convolution->get_filters_shape())
+                           << "},\n";
                     writer << "                         {" << join(arg0_shape) << "},\n";
                     writer << "                         {" << join(arg1_shape) << "},\n";
                     writer << "                         {" << join(result_shape) << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_window_movement_strides_backward()) << "},\n";
+                           << join(convolution->get_window_dilation_strides_forward()) << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_window_dilation_strides_backward()) << "},\n";
+                           << join(convolution->get_window_movement_strides_forward()) << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_padding_below_backward()) << "},\n";
+                           << join(convolution->get_padding_below_forward()) << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_padding_above_backward()) << "},\n";
+                           << join(convolution->get_padding_above_forward()) << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_data_dilation_strides_backward()) << "},\n";
-                    writer << "                         1, 0, 0, 1, 1, 0, false);\n";
+                           << join(convolution->get_data_dilation_strides_forward()) << "});\n";
                 }
             }
 
@@ -2375,24 +2377,25 @@ namespace ngraph
                 else
                 {
                     // Note that args[1] and args[0] are switched here from the usual order.
-                    writer << "reference::convolution<" << out[0].get_type() << ">("
+                    writer << "reference::convolution_backprop_data<" << out[0].get_type() << ">("
                            << args[1].get_name() << ",\n";
                     writer << "                         " << args[0].get_name() << ",\n";
                     writer << "                         " << out[0].get_name() << ",\n";
+                    writer << "                         {"
+                           << join(convolution->get_data_batch_shape()) << "},\n";
                     writer << "                         {" << join(arg1_shape) << "},\n";
                     writer << "                         {" << join(arg0_shape) << "},\n";
                     writer << "                         {" << join(result_shape) << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_window_movement_strides_backward()) << "},\n";
+                           << join(convolution->get_data_dilation_strides_forward()) << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_window_dilation_strides_backward()) << "},\n";
+                           << join(convolution->get_window_dilation_strides_forward()) << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_padding_below_backward()) << "},\n";
+                           << join(convolution->get_padding_below_forward()) << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_padding_above_backward()) << "},\n";
+                           << join(convolution->get_padding_above_forward()) << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_data_dilation_strides_backward()) << "},\n";
-                    writer << "                         0, 1, 0, 1, 0, 1, true);\n";
+                           << join(convolution->get_window_movement_strides_forward()) << "});\n";
                 }
             }
 
@@ -2494,6 +2497,60 @@ namespace ngraph
                 {
                     throw ngraph_error(
                         "QuantizedConvolutionBiasSignedAdd is only supported with MKLDNN kernel.");
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedDotBias)
+            {
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto qip_index =
+                        mkldnn_emitter->build_inner_product<ngraph::op::QuantizedDotBias>(
+                            node, args, out);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(qip_index);
+
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << args[2].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(qip_index) << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error("QuantizedDotBias is only supported with MKLDNN kernel.");
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedDot)
+            {
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto qip_index = mkldnn_emitter->build_inner_product<ngraph::op::QuantizedDot>(
+                        node, args, out);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(qip_index);
+
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << out[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(qip_index) << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error("unsupported parameters for QuantizedDot");
                 }
             }
 

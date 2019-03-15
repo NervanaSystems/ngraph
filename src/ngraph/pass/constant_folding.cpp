@@ -118,7 +118,7 @@ shared_ptr<op::Constant> fold_constant_pad(shared_ptr<op::Constant> constant,
     return make_shared<op::Constant>(constant->get_element_type(), out_shape, out_vec);
 }
 
-void ngraph::pass::ConstantFolding::construct_constant_pad()
+void pass::ConstantFolding::construct_constant_pad()
 {
     auto is_constant = pattern::has_class<op::Constant>();
     auto constant_label = make_shared<pattern::op::Label>(element::f32, Shape{6}, is_constant);
@@ -183,7 +183,7 @@ void ngraph::pass::ConstantFolding::construct_constant_pad()
     this->add_matcher(pad_matcher);
 }
 
-void ngraph::pass::ConstantFolding::construct_constant_reshape()
+void pass::ConstantFolding::construct_constant_reshape()
 {
     auto constant_label = make_shared<pattern::op::Label>(
         element::f32, Shape{2, 4}, pattern::has_class<op::Constant>());
@@ -270,7 +270,7 @@ shared_ptr<op::Constant> fold_constant_broadcast(shared_ptr<op::Constant> consta
     return make_shared<op::Constant>(constant->get_element_type(), out_shape, out_vec);
 }
 
-void ngraph::pass::ConstantFolding::construct_constant_broadcast()
+void pass::ConstantFolding::construct_constant_broadcast()
 {
     auto constant_label =
         make_shared<pattern::op::Label>(element::f32, Shape{2}, pattern::has_class<op::Constant>());
@@ -398,7 +398,7 @@ bool is_supported_binary_op(std::shared_ptr<Node> n)
             std::dynamic_pointer_cast<op::Minimum>(n));
 }
 
-void ngraph::pass::ConstantFolding::construct_constant_binary()
+void pass::ConstantFolding::construct_constant_binary()
 {
     auto a = make_shared<pattern::op::Label>(
         element::f32, Shape{2, 4}, pattern::has_class<op::Constant>());
@@ -515,7 +515,7 @@ shared_ptr<op::Constant> fold_constant_unary(shared_ptr<op::Constant> constant,
     return make_shared<op::Constant>(constant->get_element_type(), out_shape, out_vec);
 }
 
-void ngraph::pass::ConstantFolding::construct_constant_unary()
+void pass::ConstantFolding::construct_constant_unary()
 {
     auto constant_label = make_shared<pattern::op::Label>(
         element::f32, Shape{2, 4}, pattern::has_class<op::Constant>());
@@ -601,7 +601,7 @@ shared_ptr<op::Constant> fold_constant_dequantize(shared_ptr<op::Constant> const
     return make_shared<op::Constant>(dequant->get_element_type(), out_shape, out_vec);
 }
 
-void ngraph::pass::ConstantFolding::construct_constant_dequantize()
+void pass::ConstantFolding::construct_constant_dequantize()
 {
     auto constant_label =
         make_shared<pattern::op::Label>(element::u8, Shape{2}, pattern::has_class<op::Constant>());
@@ -675,7 +675,7 @@ shared_ptr<op::Constant> fold_constant_quantize(shared_ptr<op::Constant> constan
     return make_shared<op::Constant>(quant->get_element_type(), out_shape, out_vec);
 }
 
-void ngraph::pass::ConstantFolding::construct_constant_quantize()
+void pass::ConstantFolding::construct_constant_quantize()
 {
     auto constant_label =
         make_shared<pattern::op::Label>(element::f32, Shape{2}, pattern::has_class<op::Constant>());

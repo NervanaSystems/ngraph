@@ -238,6 +238,10 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
     {
         return ::testing::AssertionFailure() << "a.size() != b.size() for all_close_f comparison.";
     }
+    if (a.size() == 0)
+    {
+        return ::testing::AssertionSuccess() << "No elements to compare";
+    }
     vector<uint32_t> distances = float_distances(a, b);
 
     // e.g. for float with 24 bit mantissa, 2 bit accuracy, and hard-coded 8 bit exponent_bits
@@ -338,6 +342,11 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
     {
         return ::testing::AssertionFailure() << "a.size() != b.size() for all_close_f comparison.";
     }
+    if (a.size() == 0)
+    {
+        return ::testing::AssertionSuccess() << "No elements to compare";
+    }
+
     vector<uint64_t> distances = float_distances(a, b);
 
     // e.g. for double with 52 bit mantissa, 2 bit accuracy, and hard-coded 11 bit exponent_bits
