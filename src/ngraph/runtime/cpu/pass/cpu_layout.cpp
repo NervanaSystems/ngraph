@@ -140,7 +140,7 @@ static shared_ptr<Node>
     shared_ptr<Node> new_node;
     if (replace_node)
     {
-        new_node = node->copy_with_new_args(new_args);
+        new_node = node->copy_with_new_source_outputs(new_args);
         if (node->is_output())
         {
             external_function->get_function()->replace_node(node, new_node);
@@ -232,7 +232,7 @@ static void set_native_layouts(runtime::cpu::CPU_ExternalFunction* external_func
     shared_ptr<Node> new_node;
     if (replace_node)
     {
-        new_node = node->copy_with_new_args(new_args);
+        new_node = node->copy_with_new_source_outputs(new_args);
         if (node->is_output())
         {
             external_function->get_function()->replace_node(node, new_node);
