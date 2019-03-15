@@ -60,22 +60,9 @@ NodeVector make_zeros(std::shared_ptr<Node> x)
     return zeros;
 }
 
-autodiff::Adjoints::Adjoints(const NodeVector& ys, const NodeVector& cs)
+autodiff::Adjoints::Adjoints(const OutputVector& ys, const OutputVector& cs)
 {
-    if (ys.size() != cs.size())
-    {
-        throw ngraph_error("ys and cs must be equal size");
-    }
-
-    for (size_t i = 0; i < ys.size(); i++)
-    {
-        if (ys.at(i)->get_output_size() > 1 || cs.at(i)->get_output_size() > 1)
-        {
-            throw ngraph_error(
-                "Adjoints for multi-output ops aren't supported directly.\nProvide deltas for "
-                "corresponding GetOutputElements instead");
-        }
-    }
+    NGRAPH_ASSERT(ys.size() == cs.size());
 
     // Pass 1 determines which nodes contribute to y as well as setting up a reverse
     // topological sort.
@@ -87,7 +74,11 @@ autodiff::Adjoints::Adjoints(const NodeVector& ys, const NodeVector& cs)
     std::unordered_set<std::shared_ptr<Node>> visited_nodes;
 
     // Nodes we should check
-    std::list<std::shared_ptr<Node>> nodes_to_check(ys.cbegin(), ys.cend());
+    std::list<std::shared_ptr<Node>> nodes_to_check;
+    for (auto& output : ys)
+    {
+        nodes_to_check.push_back(output.get_node());
+    }
     while (nodes_to_check.size() > 0)
     {
         auto node = nodes_to_check.front();
@@ -96,17 +87,18 @@ autodiff::Adjoints::Adjoints(const NodeVector& ys, const NodeVector& cs)
         {
             continue;
         }
-        for (auto arg : node->get_arguments())
+        for (size_t i = 0; i < node->get_input_size(); i++)
         {
-            auto count_it = parent_counts.find(arg);
+            auto source_node = node->get_input_source_output(i).get_node();
+            auto count_it = parent_counts.find(source_node);
             if (count_it == parent_counts.end())
             {
-                parent_counts[arg] = 1;
-                nodes_to_check.push_front(arg);
+                parent_counts[source_node] = 1;
+                nodes_to_check.push_front(source_node);
             }
             else
             {
-                parent_counts[arg]++;
+                parent_counts[source_node]++;
             }
         }
         visited_nodes.insert(node);
@@ -116,32 +108,47 @@ autodiff::Adjoints::Adjoints(const NodeVector& ys, const NodeVector& cs)
     // before a node is visited.
     for (size_t i = 0; i < ys.size(); i++)
     {
-        Node* n = ys.at(i).get();
-        NodeVector t{cs.at(i)};
-        std::pair<Node*, NodeVector> pair = std::make_pair(n, t);
-        m_adjoint_map.insert(std::make_pair(ys.at(i).get(), NodeVector{cs.at(i)}));
+        m_adjoint_map.insert(std::make_pair(ys.at(i).get_node().get(), OutputVector{cs.at(i)}));
     }
 
-    nodes_to_check.assign(ys.cbegin(), ys.cend());
+    nodes_to_check.clear();
+    for (auto& output : ys)
+    {
+        nodes_to_check.push_back(output.get_node());
+    }
     while (nodes_to_check.size() > 0)
     {
         auto node = nodes_to_check.front();
         nodes_to_check.pop_front();
         // Look for nodes that will be available when this node is done
-        for (auto arg : node->get_arguments())
+        for (size_t i = 0; i < node->get_input_size(); i++)
         {
-            auto count_it = parent_counts.find(arg);
+            auto source_node = node->get_input_source_output(i).get_node();
+            auto count_it = parent_counts.find(source_node);
             count_it->second--;
             if (0 == count_it->second)
             {
-                nodes_to_check.push_front(arg);
+                nodes_to_check.push_front(source_node);
             }
         }
-        node->generate_adjoints(*this, get(node));
+        try
+        {
+            node->build_backprop(*this, get(node));
+        }
+        catch (const Node::BuildBackpropNotImplemented&)
+        {
+            auto& outputs = get(node);
+            NodeVector as_nodes;
+            for (auto& output : outputs)
+            {
+                as_nodes.push_back(get_output_element(output.get_node(), output.get_index()));
+            }
+            node->generate_adjoints(*this, as_nodes);
+        }
     }
 }
 
-const NodeVector& autodiff::Adjoints::get(const std::shared_ptr<Node>& x)
+const OutputVector& autodiff::Adjoints::get(const std::shared_ptr<Node>& x)
 {
     auto adjoint_it = m_adjoint_map.find(x.get());
     if (m_adjoint_map.end() == adjoint_it)
@@ -168,6 +175,11 @@ void autodiff::Adjoints::add_delta(const std::shared_ptr<Node>& x,
         deltas.at(output_index) = std::make_shared<op::Add>(deltas.at(output_index), delta);
         adjoint_it->second = deltas;
     }
+}
+
+void autodiff::Adjoints::add_output_delta(const NodeOutput& x, const NodeOutput& delta)
+{
+    add_delta(x.get_node(), get_output_element(delta.get_node(), delta.get_index()), x.get_index());
 }
 
 //This doesn't need an index since slice can only sit on top of GOE
@@ -212,5 +224,5 @@ std::shared_ptr<Node> autodiff::Adjoints::backprop_node(const std::shared_ptr<No
     {
         throw ngraph_error("backprop_node is called for multi-output node");
     }
-    return deltas.at(0);
+    return get_output_element(deltas.at(0).get_node(), deltas.at(0).get_index());
 }

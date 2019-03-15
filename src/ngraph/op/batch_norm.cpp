@@ -72,43 +72,26 @@ std::shared_ptr<ngraph::Node> ngraph::op::BatchNormTraining::copy_with_new_sourc
         new_source_outputs.at(2), new_source_outputs.at(0), new_source_outputs.at(1), m_epsilon);
 }
 
-void ngraph::op::BatchNormTraining::generate_adjoints(autodiff::Adjoints& adjoints,
-                                                      const NodeVector& deltas)
+void ngraph::op::BatchNormTraining::build_backprop(autodiff::Adjoints& adjoints,
+                                                   const OutputVector& deltas)
 {
-    auto gamma = get_argument(0);
-    auto beta = get_argument(1);
-    auto input = get_argument(2);
-    std::shared_ptr<Node> mean = nullptr;
-    std::shared_ptr<Node> var = nullptr;
+    auto gamma = get_input_source_output(0);
+    auto beta = get_input_source_output(1);
+    auto input = get_input_source_output(2);
 
-    // Extract mean and variance outputs from BatchNormBase
-    // as these are used by BatchNormTrainingBackprop.
-    // The users of the outputs (GetOutputElements' Inputs) aren't sorted
-    // and get_n() is used to sort the inputs in the same order as Batchnorm's outputs
-    // Next, Mean and Variance (`at(1)` and `at(2)`) are extracted
-    // Please see `add_output` in `BatchNormBase::BatchNormBase` for more details
+    auto mean = NodeOutput(shared_from_this(), 1);
+    auto var = NodeOutput(shared_from_this(), 2);
 
-    auto goes = op::get_output_elements(shared_from_this());
-    mean = goes.at(1);
-    var = goes.at(2);
-    if (!mean)
-    {
-        throw ngraph_error("GetOutputElement for mean is missing");
-    }
-
-    if (!var)
-    {
-        throw ngraph_error("GetOutputElement for variance is missing");
-    }
     auto bbn = std::make_shared<op::BatchNormTrainingBackprop>(
         input, gamma, beta, mean, var, deltas.at(0), get_eps_value());
-    auto dinput = std::make_shared<op::GetOutputElement>(bbn, 0);
-    auto dgamma = std::make_shared<op::GetOutputElement>(bbn, 1);
-    auto dbeta = std::make_shared<op::GetOutputElement>(bbn, 2);
 
-    adjoints.add_delta(input, dinput);
-    adjoints.add_delta(gamma, dgamma);
-    adjoints.add_delta(beta, dbeta);
+    auto dinput = NodeOutput(bbn, 0);
+    auto dgamma = NodeOutput(bbn, 1);
+    auto dbeta = NodeOutput(bbn, 2);
+
+    adjoints.add_output_delta(input, dinput);
+    adjoints.add_output_delta(gamma, dgamma);
+    adjoints.add_output_delta(beta, dbeta);
 }
 
 ngraph::op::BatchNormInference::BatchNormInference(const NodeOutput& input,

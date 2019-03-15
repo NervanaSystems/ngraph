@@ -22,6 +22,7 @@
 
 #include "ngraph/coordinate.hpp"
 #include "ngraph/node_vector.hpp"
+#include "ngraph/output_vector.hpp"
 #include "ngraph/strides.hpp"
 
 namespace ngraph
@@ -44,7 +45,7 @@ namespace ngraph
             ///
             /// \param y The dependent value
             /// \param c An expression for where to evaluate the derivatives
-            Adjoints(const NodeVector& y, const NodeVector& c);
+            Adjoints(const OutputVector& y, const OutputVector& c);
 
             Adjoints(const Adjoints& adjoints) = default;
             Adjoints& operator=(const Adjoints& adjoints) = default;
@@ -53,7 +54,7 @@ namespace ngraph
             /// \brief (dy/dx)(c)
             ///
             /// \param x The node whose adjoint is desired.
-            const NodeVector& get(const std::shared_ptr<Node>& x);
+            const OutputVector& get(const std::shared_ptr<Node>& x);
 
             /// \brief Add a backprop contribution to x's adjoint
             ///
@@ -62,6 +63,8 @@ namespace ngraph
             void add_delta(const std::shared_ptr<Node>& x,
                            const std::shared_ptr<Node>& delta,
                            size_t output_index = 0);
+
+            void add_output_delta(const NodeOutput& x, const NodeOutput& delta);
 
             /// \brief Add a backprop contribution to a slice of x's adjoint
             ///
@@ -78,8 +81,9 @@ namespace ngraph
 
             std::shared_ptr<Node> backprop_node(const std::shared_ptr<Node>& x);
 
-        protected:
-            std::map<Node*, NodeVector> m_adjoint_map;
+        private:
+            // Maps each node N to vectors of n NodeOutputs, where N itself has n outputs.
+            std::map<Node*, OutputVector> m_adjoint_map;
         };
     }
 }

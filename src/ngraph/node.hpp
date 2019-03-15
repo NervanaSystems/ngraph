@@ -29,7 +29,6 @@
 #include <vector>
 
 #include "ngraph/assertion.hpp"
-#include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/check.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
@@ -57,10 +56,15 @@
 
 namespace ngraph
 {
+    class Function;
     class NodeInput;
     class NodeOutput;
     class OutputVector;
 
+    namespace autodiff
+    {
+        class Adjoints;
+    }
     namespace pass
     {
         class GetOutputElementElimination;
@@ -130,7 +134,15 @@ namespace ngraph
              size_t output_size = 1);
 
         virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
+        virtual void build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+        {
+            throw BuildBackpropNotImplemented();
+        }
+
     public:
+        class BuildBackpropNotImplemented : std::exception
+        {
+        };
         virtual ~Node();
         void revalidate_and_infer_types() { validate_and_infer_types(); }
         // Called after transition

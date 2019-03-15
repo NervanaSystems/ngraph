@@ -100,7 +100,7 @@ namespace ngraph
         }
 
     private:
-        const std::shared_ptr<Node> m_node;
-        const size_t m_index;
+        /*const*/ std::shared_ptr<Node> m_node;
+        /*const*/ size_t m_index;
     };
 } // namespace ngraph
