@@ -81,8 +81,6 @@ NGRAPH_TEST(${BACKEND_NAME}, create_tensor_2)
 NGRAPH_TEST(${BACKEND_NAME}, tensor_copy_from)
 {
     Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, shape);
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
