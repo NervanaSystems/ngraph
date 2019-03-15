@@ -217,7 +217,7 @@ TEST(type_prop, dyn_broadcast_shape_wrong_rank)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), "DynBroadcast shape must have rank compatible to 1");
+        EXPECT_HAS_SUBSTRING(error.what(), "DynBroadcast shape rank must be 1");
     }
     catch (...)
     {
@@ -238,7 +238,7 @@ TEST(type_prop, dyn_broadcast_axes_wrong_rank)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), "DynBroadcast axes must have rank compatible to 1");
+        EXPECT_HAS_SUBSTRING(error.what(), "DynBroadcast axes rank must be 1");
     }
     catch (...)
     {

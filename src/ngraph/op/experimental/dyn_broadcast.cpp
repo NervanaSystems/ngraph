@@ -42,7 +42,7 @@ void op::DynBroadcast::validate_and_infer_types()
     auto broadcast_shape_rank = get_input_partial_shape(1).rank();
     NODE_VALIDATION_CHECK(this,
                           broadcast_shape_rank.compatible(1),
-                          "DynBroadcast shape must have rank compatible to 1, but has ",
+                          "DynBroadcast shape rank must be 1, but has ",
                           broadcast_shape_rank);
 
     // axes node should have integer data type. For now we only allow i64
@@ -57,7 +57,7 @@ void op::DynBroadcast::validate_and_infer_types()
     auto axes_shape_rank = get_input_partial_shape(2).rank();
     NODE_VALIDATION_CHECK(this,
                           axes_shape_rank.compatible(1),
-                          "DynBroadcast axes must have rank compatible to 1, but has ",
+                          "DynBroadcast axes rank must be 1, but has ",
                           axes_shape_rank);
 
     set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
@@ -69,7 +69,7 @@ shared_ptr<Node> op::DynBroadcast::copy_with_new_args(const NodeVector& new_args
     return make_shared<DynBroadcast>(new_args.at(0), new_args.at(1), new_args.at(2));
 }
 
-/// TODO: This function is not implemented!
+// TODO: This function is not implemented!
 void op::DynBroadcast::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
     throw ngraph_error("generate_adjoints not implemented for DynBroadcast");
