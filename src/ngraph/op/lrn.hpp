@@ -44,7 +44,7 @@ namespace ngraph
             LRN(const NodeOutput& arg, double alpha, double beta, double bias, size_t size);
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                copy_with_new_source_outputs(const OutputVector& new_source_outputs) const override;
 
             double get_alpha() const { return m_alpha; }
             double get_beta() const { return m_beta; }

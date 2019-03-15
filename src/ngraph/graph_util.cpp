@@ -597,7 +597,8 @@ void ngraph::plot_graph(
 
 std::set<NodeInput> ngraph::get_node_inputs_from(Node& src, Node& dst)
 {
-    std::set<NodeInput> result = dst.get_node_inputs();
+    std::vector<NodeInput> all_inputs_vec = dst.get_node_inputs();
+    std::set<NodeInput> result(all_inputs_vec.begin(), all_inputs_vec.end());
 
     for (auto it = std::begin(result); it != std::end(result); it++)
     {
@@ -612,7 +613,8 @@ std::set<NodeInput> ngraph::get_node_inputs_from(Node& src, Node& dst)
 
 std::set<NodeOutput> ngraph::get_node_outputs_to(Node& src, Node& dst)
 {
-    std::set<NodeOutput> result = src.get_node_outputs();
+    OutputVector all_outputs_vec = src.get_node_outputs();
+    std::set<NodeOutput> result(all_outputs_vec.begin(), all_outputs_vec.end());
 
     for (auto it = std::begin(result); it != std::end(result); it++)
     {

@@ -73,7 +73,7 @@ namespace ngraph
             void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                copy_with_new_source_outputs(const OutputVector& new_source_outputs) const override;
 
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
@@ -118,7 +118,7 @@ namespace ngraph
             void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                copy_with_new_source_outputs(const OutputVector& new_source_outputs) const override;
 
             const Shape& get_forward_arg_shape() const { return m_forward_arg_shape; }
             const Shape& get_window_shape() const { return m_window_shape; }

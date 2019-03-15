@@ -69,7 +69,7 @@ namespace ngraph
 
             double get_eps_value() const { return m_epsilon; }
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                copy_with_new_source_outputs(const OutputVector& new_source_outputs) const override;
 
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
@@ -128,7 +128,7 @@ namespace ngraph
 
             double get_eps_value() const { return m_epsilon; }
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                copy_with_new_source_outputs(const OutputVector& new_source_outputs) const override;
 
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
@@ -172,7 +172,7 @@ namespace ngraph
 
             double get_eps_value() const { return m_epsilon; }
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                copy_with_new_source_outputs(const OutputVector& new_source_outputs) const override;
 
         private:
             static constexpr size_t INPUT_GAMMA = 0;

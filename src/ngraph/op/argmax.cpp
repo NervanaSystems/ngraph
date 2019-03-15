@@ -19,8 +19,9 @@
 using namespace std;
 using namespace ngraph;
 
-shared_ptr<Node> op::ArgMax::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node>
+    op::ArgMax::copy_with_new_source_outputs(const OutputVector& new_source_outputs) const
 {
-    check_new_args_count(this, new_args);
-    return make_shared<ArgMax>(new_args.at(0), m_axis, this->get_element_type());
+    check_new_source_outputs_count(this, new_source_outputs);
+    return make_shared<ArgMax>(new_source_outputs.at(0), m_axis, this->get_element_type());
 }

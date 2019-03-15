@@ -39,7 +39,7 @@ namespace ngraph
             void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                copy_with_new_source_outputs(const OutputVector& new_source_outputs) const override;
 
             /// \return A set containing the indices of the broadcast axes (0-based).
             const AxisSet& get_broadcast_axes() const { return m_broadcast_axes; }
@@ -76,7 +76,7 @@ namespace ngraph
                           const AxisSet& initial_broadcast_axes);
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                copy_with_new_source_outputs(const OutputVector& new_source_outputs) const override;
 
             void infer_shape() override;
             const AxisSet& get_initial_broadcast_axes() const { return m_initial_broadcast_axes; }

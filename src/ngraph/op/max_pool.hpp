@@ -58,7 +58,7 @@ namespace ngraph
             MaxPool(const NodeOutput& arg, const Shape& window_shape);
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                copy_with_new_source_outputs(const OutputVector& new_source_outputs) const override;
 
             /// \return The window shape.
             const Shape& get_window_shape() const { return m_window_shape; }
@@ -103,7 +103,7 @@ namespace ngraph
                             const Shape& padding_above);
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                copy_with_new_source_outputs(const OutputVector& new_source_outputs) const override;
 
             void validate_and_infer_types() override;
 

@@ -28,10 +28,10 @@ op::Tan::Tan(const NodeOutput& arg)
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::Tan::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Tan::copy_with_new_source_outputs(const OutputVector& new_source_outputs) const
 {
-    check_new_args_count(this, new_args);
-    return make_shared<Tan>(new_args.at(0));
+    check_new_source_outputs_count(this, new_source_outputs);
+    return make_shared<Tan>(new_source_outputs.at(0));
 }
 
 void op::Tan::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)

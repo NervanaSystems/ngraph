@@ -123,10 +123,11 @@ void op::Slice::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), PartialShape{result_dims});
 }
 
-shared_ptr<Node> op::Slice::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node>
+    op::Slice::copy_with_new_source_outputs(const OutputVector& new_source_outputs) const
 {
-    check_new_args_count(this, new_args);
-    return make_shared<Slice>(new_args.at(0), m_lower_bounds, m_upper_bounds, m_strides);
+    check_new_source_outputs_count(this, new_source_outputs);
+    return make_shared<Slice>(new_source_outputs.at(0), m_lower_bounds, m_upper_bounds, m_strides);
 }
 
 void op::Slice::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)

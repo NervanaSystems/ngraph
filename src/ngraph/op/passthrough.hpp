@@ -41,12 +41,13 @@ public:
     Passthrough(const std::string& logical_type, // aka "What this operation is doing"
                 const std::string& language,     // The language the implementation is written in
                 const std::string& function,     // The operation implementation
-                const NodeVector& args,
+                const OutputVector& args,
                 std::vector<std::tuple<element::Type, PartialShape>> outputs);
 
     void validate_and_infer_types() final;
 
-    std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const final;
+    std::shared_ptr<Node>
+        copy_with_new_source_outputs(const OutputVector& new_source_outputs) const final;
 
     const std::string& logical_type() const { return m_logical_type; }
     const std::string& language() const { return m_language; }

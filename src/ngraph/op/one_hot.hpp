@@ -53,7 +53,7 @@ namespace ngraph
             OneHot(const NodeOutput& arg, const PartialShape& shape, size_t one_hot_axis);
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                copy_with_new_source_outputs(const OutputVector& new_source_outputs) const override;
 
             /// \return The index of the one-hot axis.
             size_t get_one_hot_axis() const { return m_one_hot_axis; }

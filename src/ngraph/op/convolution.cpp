@@ -183,11 +183,12 @@ op::Convolution::Convolution(const NodeOutput& data_batch, const NodeOutput& fil
 {
 }
 
-shared_ptr<Node> op::Convolution::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node>
+    op::Convolution::copy_with_new_source_outputs(const OutputVector& new_source_outputs) const
 {
-    check_new_args_count(this, new_args);
-    return make_shared<Convolution>(new_args.at(0),
-                                    new_args.at(1),
+    check_new_source_outputs_count(this, new_source_outputs);
+    return make_shared<Convolution>(new_source_outputs.at(0),
+                                    new_source_outputs.at(1),
                                     m_window_movement_strides,
                                     m_window_dilation_strides,
                                     m_padding_below,
@@ -385,12 +386,13 @@ void op::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjoints
     adjoints.add_delta(f, filter_deconv_bprop);
 }
 
-shared_ptr<Node> op::ConvolutionBackpropData::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::ConvolutionBackpropData::copy_with_new_source_outputs(
+    const OutputVector& new_source_outputs) const
 {
-    check_new_args_count(this, new_args);
+    check_new_source_outputs_count(this, new_source_outputs);
     return make_shared<ConvolutionBackpropData>(m_data_batch_shape,
-                                                new_args.at(0),
-                                                new_args.at(1),
+                                                new_source_outputs.at(0),
+                                                new_source_outputs.at(1),
                                                 m_window_movement_strides_forward,
                                                 m_window_dilation_strides_forward,
                                                 m_padding_below_forward,
@@ -528,13 +530,13 @@ void op::ConvolutionBackpropFilters::validate_and_infer_types()
     set_output_type(0, forward_result_et, m_filters_shape);
 }
 
-shared_ptr<Node>
-    op::ConvolutionBackpropFilters::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::ConvolutionBackpropFilters::copy_with_new_source_outputs(
+    const OutputVector& new_source_outputs) const
 {
-    check_new_args_count(this, new_args);
-    return make_shared<ConvolutionBackpropFilters>(new_args.at(0),
+    check_new_source_outputs_count(this, new_source_outputs);
+    return make_shared<ConvolutionBackpropFilters>(new_source_outputs.at(0),
                                                    m_filters_shape,
-                                                   new_args.at(1),
+                                                   new_source_outputs.at(1),
                                                    m_window_movement_strides_forward,
                                                    m_window_dilation_strides_forward,
                                                    m_padding_below_forward,

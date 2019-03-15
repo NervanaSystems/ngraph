@@ -40,7 +40,7 @@ namespace ngraph
                              const Shape& padding_above);
             void validate_and_infer_types() override;
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                copy_with_new_source_outputs(const OutputVector& new_source_outputs) const override;
             const Shape& get_window_shape() const { return m_window_shape; }
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
             const Shape& get_padding_below() const { return m_padding_below; }

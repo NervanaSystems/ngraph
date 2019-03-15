@@ -33,11 +33,11 @@ op::GenerateMask::GenerateMask(const NodeOutput& training,
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::GenerateMask::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::GenerateMask::copy_with_new_source_outputs(const OutputVector& new_source_outputs) const
 {
-    check_new_args_count(this, new_args);
+    check_new_source_outputs_count(this, new_source_outputs);
     return make_shared<GenerateMask>(
-        new_args.at(0), m_shape, m_element_type, m_seed, m_probability);
+        new_source_outputs.at(0), m_shape, m_element_type, m_seed, m_probability);
 }
 
 void ngraph::op::GenerateMask::validate_and_infer_types()

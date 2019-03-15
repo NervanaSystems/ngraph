@@ -54,11 +54,11 @@ namespace ngraph
 
             size_t get_reduction_axes_count() const { return m_reduction_axes_count; }
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override
+                copy_with_new_source_outputs(const OutputVector& new_source_outputs) const override
             {
-                check_new_args_count(this, new_args);
+                check_new_source_outputs_count(this, new_source_outputs);
                 return std::make_shared<Dot>(
-                    new_args.at(0), new_args.at(1), m_reduction_axes_count);
+                    new_source_outputs.at(0), new_source_outputs.at(1), m_reduction_axes_count);
             }
 
         protected:

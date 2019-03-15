@@ -127,7 +127,7 @@ namespace ngraph
             void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                copy_with_new_source_outputs(const OutputVector& new_source_outputs) const override;
             void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override;
 
             /// \return The window movement strides.
@@ -189,7 +189,7 @@ namespace ngraph
 
             void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override;
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                copy_with_new_source_outputs(const OutputVector& new_source_outputs) const override;
 
             /// \return The data batch shape.
             const Shape& get_data_batch_shape() const { return m_data_batch_shape; }
@@ -258,7 +258,7 @@ namespace ngraph
             void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                copy_with_new_source_outputs(const OutputVector& new_source_outputs) const override;
 
             /// \return The filters tensor shape.
             const Shape& get_filters_shape() const { return m_filters_shape; }

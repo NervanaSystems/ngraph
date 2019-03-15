@@ -21,7 +21,7 @@
 ngraph::op::Passthrough::Passthrough(const std::string& logical_type,
                                      const std::string& language,
                                      const std::string& function,
-                                     const NodeVector& args,
+                                     const OutputVector& args,
                                      std::vector<std::tuple<element::Type, PartialShape>> outputs)
     : Op{"Passthrough", args}
     , m_logical_type{logical_type}
@@ -56,14 +56,14 @@ void ngraph::op::Passthrough::validate_and_infer_types()
     }
 }
 
-std::shared_ptr<ngraph::Node>
-    ngraph::op::Passthrough::copy_with_new_args(const NodeVector& new_args) const
+std::shared_ptr<ngraph::Node> ngraph::op::Passthrough::copy_with_new_source_outputs(
+    const OutputVector& new_source_outputs) const
 {
-    if (new_args.size() != get_input_size())
+    if (new_source_outputs.size() != get_input_size())
     {
         throw ngraph_error{
             "Passthrough node input counts cannot be changed for a given Passthrough function"};
     }
     return std::make_shared<Passthrough>(
-        description(), m_language, m_function, new_args, m_output_shapes);
+        description(), m_language, m_function, new_source_outputs, m_output_shapes);
 }

@@ -105,10 +105,11 @@ void op::Reshape::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), m_output_shape);
 }
 
-shared_ptr<Node> op::Reshape::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node>
+    op::Reshape::copy_with_new_source_outputs(const OutputVector& new_source_outputs) const
 {
-    check_new_args_count(this, new_args);
-    return make_shared<Reshape>(new_args.at(0), m_input_order, m_output_shape);
+    check_new_source_outputs_count(this, new_source_outputs);
+    return make_shared<Reshape>(new_source_outputs.at(0), m_input_order, m_output_shape);
 }
 
 void op::Reshape::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)

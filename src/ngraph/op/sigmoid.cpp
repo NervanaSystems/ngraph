@@ -21,10 +21,11 @@
 using namespace std;
 using namespace ngraph;
 
-shared_ptr<Node> op::Sigmoid::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node>
+    op::Sigmoid::copy_with_new_source_outputs(const OutputVector& new_source_outputs) const
 {
-    check_new_args_count(this, new_args);
-    return make_shared<Sigmoid>(new_args.at(0));
+    check_new_source_outputs_count(this, new_source_outputs);
+    return make_shared<Sigmoid>(new_source_outputs.at(0));
 }
 
 op::Sigmoid::Sigmoid(const NodeOutput& arg)
@@ -39,10 +40,11 @@ op::SigmoidBackprop::SigmoidBackprop(const NodeOutput& arg, const NodeOutput& de
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::SigmoidBackprop::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node>
+    op::SigmoidBackprop::copy_with_new_source_outputs(const OutputVector& new_source_outputs) const
 {
-    check_new_args_count(this, new_args);
-    return make_shared<SigmoidBackprop>(new_args.at(0), new_args.at(1));
+    check_new_source_outputs_count(this, new_source_outputs);
+    return make_shared<SigmoidBackprop>(new_source_outputs.at(0), new_source_outputs.at(1));
 }
 
 void op::Sigmoid::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)

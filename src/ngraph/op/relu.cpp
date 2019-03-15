@@ -20,16 +20,17 @@
 using namespace std;
 using namespace ngraph;
 
-op::Relu::Relu(shared_ptr<Node> arg)
+op::Relu::Relu(const NodeOutput& arg)
     : UnaryElementwiseArithmetic("Relu", {arg})
 {
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::Relu::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node>
+    op::Relu::copy_with_new_source_outputs(const OutputVector& new_source_outputs) const
 {
-    check_new_args_count(this, new_args);
-    return make_shared<Relu>(new_args.at(0));
+    check_new_source_outputs_count(this, new_source_outputs);
+    return make_shared<Relu>(new_source_outputs.at(0));
 }
 
 op::ReluBackprop::ReluBackprop(const NodeOutput& arg, const NodeOutput& delta)
@@ -38,10 +39,11 @@ op::ReluBackprop::ReluBackprop(const NodeOutput& arg, const NodeOutput& delta)
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::ReluBackprop::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node>
+    op::ReluBackprop::copy_with_new_source_outputs(const OutputVector& new_source_outputs) const
 {
-    check_new_args_count(this, new_args);
-    return make_shared<ReluBackprop>(new_args.at(0), new_args.at(1));
+    check_new_source_outputs_count(this, new_source_outputs);
+    return make_shared<ReluBackprop>(new_source_outputs.at(0), new_source_outputs.at(1));
 }
 
 void op::Relu::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)

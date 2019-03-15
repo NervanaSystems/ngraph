@@ -25,6 +25,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/node_input.hpp"
 #include "ngraph/node_output.hpp"
+#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/placement.hpp"
@@ -240,6 +241,26 @@ void Node::add_control_dependency(std::shared_ptr<Node> node)
     m_control_dependencies.insert(node);
 }
 
+// Default implementation. To be removed once copy_with_new_args is retired.
+std::shared_ptr<Node> Node::copy_with_new_args(const NodeVector& new_args) const
+{
+    return copy_with_new_source_outputs(new_args);
+}
+
+// Default implementation. To be made pure virtual once copy_with_new_args is retired.
+std::shared_ptr<Node>
+    Node::copy_with_new_source_outputs(const OutputVector& new_source_outputs) const
+{
+    NodeVector goes;
+
+    for (auto& output : new_source_outputs)
+    {
+        goes.push_back(get_output_element(output.get_node(), output.get_index()));
+    }
+
+    return copy_with_new_args(goes);
+}
+
 std::vector<std::shared_ptr<Function>> Node::get_functions() const
 {
     return std::vector<std::shared_ptr<Function>>{};
@@ -450,6 +471,19 @@ void ngraph::check_new_args_count(const Node* node, const NodeVector& new_args)
                           new_args.size());
 }
 
+void ngraph::check_new_source_outputs_count(const Node* node,
+                                            const OutputVector& new_source_outputs)
+{
+    NODE_VALIDATION_CHECK(node,
+                          new_source_outputs.size() == node->get_input_size(),
+                          "copy_with_new_source_outputs() expected ",
+                          node->get_input_size(),
+                          " source output",
+                          (node->get_input_size() == 1 ? "" : "s"),
+                          " but got ",
+                          new_source_outputs.size());
+}
+
 const std::shared_ptr<Node>& ngraph::check_single_output_arg(const std::shared_ptr<Node>& node,
                                                              size_t i)
 {
@@ -557,25 +591,25 @@ void Node::remove_output_target_input(size_t output_index, const NodeInput& targ
         .remove_input(&(target_input.get_node()->m_inputs.at(target_input.get_index())));
 }
 
-std::set<NodeInput> Node::get_node_inputs()
+std::vector<NodeInput> Node::get_node_inputs()
 {
-    std::set<NodeInput> result;
+    std::vector<NodeInput> result;
 
     for (size_t i = 0; i < get_input_size(); i++)
     {
-        result.emplace(this, i);
+        result.emplace_back(this, i);
     }
 
     return result;
 }
 
-std::set<NodeOutput> Node::get_node_outputs()
+OutputVector Node::get_node_outputs()
 {
-    std::set<NodeOutput> result;
+    OutputVector result;
 
     for (size_t i = 0; i < get_output_size(); i++)
     {
-        result.emplace(shared_from_this(), i);
+        result.emplace_back(shared_from_this(), i);
     }
 
     return result;

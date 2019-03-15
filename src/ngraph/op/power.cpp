@@ -28,10 +28,11 @@ op::Power::Power(const NodeOutput& arg0, const NodeOutput& arg1)
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::Power::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node>
+    op::Power::copy_with_new_source_outputs(const OutputVector& new_source_outputs) const
 {
-    check_new_args_count(this, new_args);
-    return make_shared<Power>(new_args.at(0), new_args.at(1));
+    check_new_source_outputs_count(this, new_source_outputs);
+    return make_shared<Power>(new_source_outputs.at(0), new_source_outputs.at(1));
 }
 
 void op::Power::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)

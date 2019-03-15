@@ -64,12 +64,12 @@ void ngraph::op::BatchNormTraining::validate_and_infer_types()
     set_output_type(2, result_et, result_channel_shape);
 }
 
-std::shared_ptr<ngraph::Node>
-    ngraph::op::BatchNormTraining::copy_with_new_args(const NodeVector& new_args) const
+std::shared_ptr<ngraph::Node> ngraph::op::BatchNormTraining::copy_with_new_source_outputs(
+    const OutputVector& new_source_outputs) const
 {
-    check_new_args_count(this, new_args);
+    check_new_source_outputs_count(this, new_source_outputs);
     return std::make_shared<BatchNormTraining>(
-        new_args.at(2), new_args.at(0), new_args.at(1), m_epsilon);
+        new_source_outputs.at(2), new_source_outputs.at(0), new_source_outputs.at(1), m_epsilon);
 }
 
 void ngraph::op::BatchNormTraining::generate_adjoints(autodiff::Adjoints& adjoints,
@@ -159,12 +159,16 @@ void ngraph::op::BatchNormInference::validate_and_infer_types()
     set_output_type(0, result_et, result_batch_shape);
 }
 
-std::shared_ptr<ngraph::Node>
-    ngraph::op::BatchNormInference::copy_with_new_args(const NodeVector& new_args) const
+std::shared_ptr<ngraph::Node> ngraph::op::BatchNormInference::copy_with_new_source_outputs(
+    const OutputVector& new_source_outputs) const
 {
-    check_new_args_count(this, new_args);
-    return std::make_shared<BatchNormInference>(
-        new_args.at(2), new_args.at(0), new_args.at(1), new_args.at(3), new_args.at(4), m_epsilon);
+    check_new_source_outputs_count(this, new_source_outputs);
+    return std::make_shared<BatchNormInference>(new_source_outputs.at(2),
+                                                new_source_outputs.at(0),
+                                                new_source_outputs.at(1),
+                                                new_source_outputs.at(3),
+                                                new_source_outputs.at(4),
+                                                m_epsilon);
 }
 
 ngraph::op::BatchNormTrainingBackprop::BatchNormTrainingBackprop(const NodeOutput& input,
@@ -244,15 +248,15 @@ void ngraph::op::BatchNormTrainingBackprop::validate_and_infer_types()
     set_output_type(2, result_et, result_channel_shape);
 }
 
-std::shared_ptr<ngraph::Node>
-    ngraph::op::BatchNormTrainingBackprop::copy_with_new_args(const NodeVector& new_args) const
+std::shared_ptr<ngraph::Node> ngraph::op::BatchNormTrainingBackprop::copy_with_new_source_outputs(
+    const OutputVector& new_source_outputs) const
 {
-    check_new_args_count(this, new_args);
-    return std::make_shared<op::BatchNormTrainingBackprop>(new_args.at(2),
-                                                           new_args.at(0),
-                                                           new_args.at(1),
-                                                           new_args.at(3),
-                                                           new_args.at(4),
-                                                           new_args.at(5),
+    check_new_source_outputs_count(this, new_source_outputs);
+    return std::make_shared<op::BatchNormTrainingBackprop>(new_source_outputs.at(2),
+                                                           new_source_outputs.at(0),
+                                                           new_source_outputs.at(1),
+                                                           new_source_outputs.at(3),
+                                                           new_source_outputs.at(4),
+                                                           new_source_outputs.at(5),
                                                            m_epsilon);
 }

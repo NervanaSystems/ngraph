@@ -40,11 +40,12 @@ void op::Result::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
 }
 
-shared_ptr<Node> op::Result::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node>
+    op::Result::copy_with_new_source_outputs(const OutputVector& new_source_outputs) const
 {
-    check_new_args_count(this, new_args);
+    check_new_source_outputs_count(this, new_source_outputs);
 
-    auto res = make_shared<Result>(new_args.at(0));
+    auto res = make_shared<Result>(new_source_outputs.at(0));
     if (res)
     {
         res->set_needs_default_layout(m_needs_default_layout);

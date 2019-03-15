@@ -155,7 +155,7 @@ namespace ngraph
             }
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                copy_with_new_source_outputs(const OutputVector& new_source_outputs) const override;
 
             /// \return The initialization literals for the tensor constant.
             std::vector<std::string> get_value_strings() const;
@@ -313,7 +313,7 @@ namespace ngraph
             }
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                copy_with_new_source_outputs(const OutputVector& new_source_outputs) const override;
 
         protected:
             void infer_element_type() override;

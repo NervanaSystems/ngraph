@@ -79,10 +79,11 @@ void op::Broadcast::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), m_shape);
 }
 
-shared_ptr<Node> op::Broadcast::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node>
+    op::Broadcast::copy_with_new_source_outputs(const OutputVector& new_source_outputs) const
 {
-    check_new_args_count(this, new_args);
-    return make_shared<Broadcast>(new_args.at(0), m_shape, m_broadcast_axes);
+    check_new_source_outputs_count(this, new_source_outputs);
+    return make_shared<Broadcast>(new_source_outputs.at(0), m_shape, m_broadcast_axes);
 }
 
 void op::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
@@ -103,13 +104,15 @@ op::BroadcastLike::BroadcastLike(const NodeOutput& arg,
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::BroadcastLike::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node>
+    op::BroadcastLike::copy_with_new_source_outputs(const OutputVector& new_source_outputs) const
 {
-    if (new_args.size() != 2)
+    if (new_source_outputs.size() != 2)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return make_shared<BroadcastLike>(new_args.at(0), new_args.at(1), m_initial_broadcast_axes);
+    return make_shared<BroadcastLike>(
+        new_source_outputs.at(0), new_source_outputs.at(1), m_initial_broadcast_axes);
 }
 
 void op::BroadcastLike::infer_shape()

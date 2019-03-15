@@ -46,7 +46,7 @@ namespace ngraph
             Power(const NodeOutput& arg0, const NodeOutput& arg1);
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                copy_with_new_source_outputs(const OutputVector& new_source_outputs) const override;
 
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,

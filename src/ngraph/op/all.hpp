@@ -36,7 +36,7 @@ namespace ngraph
             All(const NodeOutput& arg, const AxisSet& reduction_axes);
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                copy_with_new_source_outputs(const OutputVector& new_source_outputs) const override;
 
             /// \return The default value for All.
             virtual std::shared_ptr<Node> get_default_value() const override

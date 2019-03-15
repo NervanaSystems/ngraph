@@ -36,10 +36,10 @@ namespace ngraph
             /// \brief Constructs a Relu operation.
             ///
             /// \param arg Node that produces the input tensor.
-            Relu(std::shared_ptr<ngraph::Node> arg);
+            Relu(const NodeOutput& arg);
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                copy_with_new_source_outputs(const OutputVector& new_args) const override;
 
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
@@ -53,11 +53,11 @@ namespace ngraph
             /// \brief Constructs a ReluBackprop operation.
             ///
             /// \param arg Output that produces the relu forward input tensor.
-            /// \param arg Output that produces the backprop delta tensor.
+            /// \param delta Output that produces the backprop delta tensor.
             ReluBackprop(const NodeOutput& arg, const NodeOutput& delta);
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                copy_with_new_source_outputs(const OutputVector& new_args) const override;
         };
     }
 }

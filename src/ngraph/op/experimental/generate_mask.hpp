@@ -38,7 +38,7 @@ namespace ngraph
                          double prob);
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                copy_with_new_source_outputs(const OutputVector& new_source_outputs) const override;
 
             /// \brief Returns the probability of a trial generating 1 (i.e. an element being kept)
             double get_probability() const { return m_probability; }

@@ -88,7 +88,7 @@ void op::QuantizedConcat::validate_and_infer_types()
     set_output_type(0, inputs_et, concatenated_shape);
 }
 
-shared_ptr<Node> op::QuantizedConcat::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::QuantizedConcat::copy_with_new_source_outputs(const OutputVector& new_source_outputs) const
 {
-    return make_shared<QuantizedConcat>(new_args, m_concatenation_axis);
+    return make_shared<QuantizedConcat>(new_source_outputs, m_concatenation_axis);
 }

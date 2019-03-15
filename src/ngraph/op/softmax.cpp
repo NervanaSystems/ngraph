@@ -56,10 +56,11 @@ op::Softmax::Softmax(const NodeOutput& arg, const AxisSet& axes)
     }
 }
 
-shared_ptr<Node> op::Softmax::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node>
+    op::Softmax::copy_with_new_source_outputs(const OutputVector& new_source_outputs) const
 {
-    check_new_args_count(this, new_args);
-    return make_shared<Softmax>(new_args.at(0), m_axes);
+    check_new_source_outputs_count(this, new_source_outputs);
+    return make_shared<Softmax>(new_source_outputs.at(0), m_axes);
 }
 
 void op::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)

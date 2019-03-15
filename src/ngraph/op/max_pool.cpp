@@ -86,10 +86,11 @@ op::MaxPool::MaxPool(const NodeOutput& arg, const Shape& window_shape)
 {
 }
 
-shared_ptr<Node> op::MaxPool::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node>
+    op::MaxPool::copy_with_new_source_outputs(const OutputVector& new_source_outputs) const
 {
-    check_new_args_count(this, new_args);
-    return make_shared<MaxPool>(new_args.at(0),
+    check_new_source_outputs_count(this, new_source_outputs);
+    return make_shared<MaxPool>(new_source_outputs.at(0),
                                 m_window_shape,
                                 m_window_movement_strides,
                                 m_padding_below,
@@ -175,22 +176,23 @@ void op::MaxPoolBackprop::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), forward_arg_shape);
 }
 
-shared_ptr<Node> op::MaxPoolBackprop::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node>
+    op::MaxPoolBackprop::copy_with_new_source_outputs(const OutputVector& new_source_outputs) const
 {
-    check_new_args_count(this, new_args);
+    check_new_source_outputs_count(this, new_source_outputs);
     if (this->get_arguments().size() == 3)
     {
-        return make_shared<op::MaxPoolBackprop>(new_args.at(0),
-                                                new_args.at(1),
-                                                new_args.at(2),
+        return make_shared<op::MaxPoolBackprop>(new_source_outputs.at(0),
+                                                new_source_outputs.at(1),
+                                                new_source_outputs.at(2),
                                                 m_window_shape,
                                                 m_window_movement_strides,
                                                 m_padding_below,
                                                 m_padding_above);
     }
 
-    return make_shared<op::MaxPoolBackprop>(new_args.at(0),
-                                            new_args.at(1),
+    return make_shared<op::MaxPoolBackprop>(new_source_outputs.at(0),
+                                            new_source_outputs.at(1),
                                             m_window_shape,
                                             m_window_movement_strides,
                                             m_padding_below,

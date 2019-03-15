@@ -93,11 +93,12 @@ void op::TopK::validate_and_infer_types()
     set_output_type(1, input_element_type, output_shape);
 }
 
-shared_ptr<Node> op::TopK::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node>
+    op::TopK::copy_with_new_source_outputs(const OutputVector& new_source_outputs) const
 {
-    check_new_args_count(this, new_args);
+    check_new_source_outputs_count(this, new_source_outputs);
     return make_shared<TopK>(
-        new_args.at(0), m_top_k_axis, m_index_element_type, m_k, m_compute_max);
+        new_source_outputs.at(0), m_top_k_axis, m_index_element_type, m_k, m_compute_max);
 }
 
 void op::TopK::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)

@@ -87,10 +87,11 @@ void op::Concat::validate_and_infer_types()
     set_output_type(0, inputs_et, concatenated_shape);
 }
 
-shared_ptr<Node> op::Concat::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node>
+    op::Concat::copy_with_new_source_outputs(const OutputVector& new_source_outputs) const
 {
-    // TODO(amprocte): Should we check the new_args count here?
-    return make_shared<Concat>(new_args, m_concatenation_axis);
+    // TODO(amprocte): Should we check the new_source_outputs count here?
+    return make_shared<Concat>(new_source_outputs, m_concatenation_axis);
 }
 
 void op::Concat::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)

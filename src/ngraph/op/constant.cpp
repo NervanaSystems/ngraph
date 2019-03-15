@@ -158,9 +158,10 @@ vector<string> op::Constant::get_value_strings() const
     return rc;
 }
 
-shared_ptr<Node> op::Constant::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node>
+    op::Constant::copy_with_new_source_outputs(const OutputVector& new_source_outputs) const
 {
-    check_new_args_count(this, new_args);
+    check_new_source_outputs_count(this, new_source_outputs);
     return make_shared<Constant>(m_element_type, m_shape, m_data);
 }
 
@@ -169,9 +170,10 @@ shared_ptr<op::Constant> op::ScalarConstantLikeBase::as_constant() const
     return std::make_shared<op::Constant>(m_element_type, m_shape, m_data);
 }
 
-std::shared_ptr<Node> op::ScalarConstantLike::copy_with_new_args(const NodeVector& new_args) const
+std::shared_ptr<Node> op::ScalarConstantLike::copy_with_new_source_outputs(
+    const OutputVector& new_source_outputs) const
 {
-    return std::make_shared<ScalarConstantLike>(new_args.at(0), m_value);
+    return std::make_shared<ScalarConstantLike>(new_source_outputs.at(0), m_value);
 }
 
 void op::ScalarConstantLike::infer_element_type()

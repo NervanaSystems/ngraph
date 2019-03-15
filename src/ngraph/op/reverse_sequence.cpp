@@ -92,11 +92,12 @@ void op::ReverseSequence::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), output_shape);
 }
 
-shared_ptr<Node> op::ReverseSequence::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node>
+    op::ReverseSequence::copy_with_new_source_outputs(const OutputVector& new_source_outputs) const
 {
-    check_new_args_count(this, new_args);
-    auto res =
-        make_shared<ReverseSequence>(new_args.at(0), new_args.at(1), m_batch_axis, m_seq_axis);
+    check_new_source_outputs_count(this, new_source_outputs);
+    auto res = make_shared<ReverseSequence>(
+        new_source_outputs.at(0), new_source_outputs.at(1), m_batch_axis, m_seq_axis);
     return res;
 }
 

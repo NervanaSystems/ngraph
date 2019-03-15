@@ -74,7 +74,7 @@ namespace ngraph
             void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                copy_with_new_source_outputs(const OutputVector& new_source_outputs) const override;
 
             /// \return The order in which to iterate over input axes.
             const AxisVector& get_input_order() const { return m_input_order; }

@@ -38,8 +38,9 @@ void op::AllReduce::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
 }
 
-shared_ptr<Node> op::AllReduce::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node>
+    op::AllReduce::copy_with_new_source_outputs(const OutputVector& new_source_outputs) const
 {
-    check_new_args_count(this, new_args);
-    return make_shared<AllReduce>(new_args.at(0));
+    check_new_source_outputs_count(this, new_source_outputs);
+    return make_shared<AllReduce>(new_source_outputs.at(0));
 }

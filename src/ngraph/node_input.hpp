@@ -37,7 +37,9 @@ namespace ngraph
         }
 
         /// \return A pointer to the node referenced by this input handle.
-        Node* get_node() const { return m_node; }
+        Node* get_node() const & { return m_node; }
+        /// \return A pointer to the node referenced by this input handle.
+        const Node* get_node() const && { return m_node; }
         /// \return The index of the input referred to by this input handle.
         size_t get_index() const { return m_index; }
         /// \return The element type of the input referred to by this input handle.
