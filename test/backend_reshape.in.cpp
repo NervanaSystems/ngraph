@@ -454,7 +454,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_transposed_shape_change)
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
     EXPECT_TRUE(test::all_close_f((vector<float>{1, 7, 2, 8, 3, 9, 4, 10, 5, 11, 6, 12}),
-                                read_vector<float>(result)));
+                                  read_vector<float>(result)));
 }
 
 //

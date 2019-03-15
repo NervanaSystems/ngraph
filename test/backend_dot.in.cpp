@@ -93,7 +93,16 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_4d_5d_multi_axis)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_TRUE(test::all_close_f((vector<float>{6942., 7020., 7098., 7176., 7254., 7332., 7410., 7488., 7566., 7644., 7722., 7800., 16590., 16812., 17034., 17256., 17478., 17700., 17922., 18144., 18366., 18588., 18810., 19032., 26238., 26604., 26970., 27336., 27702., 28068., 28434., 28800., 29166., 29532., 29898., 30264., 35886., 36396., 36906., 37416., 37926., 38436., 38946., 39456., 39966., 40476., 40986., 41496., 45534., 46188., 46842., 47496., 48150., 48804., 49458., 50112., 50766., 51420., 52074., 52728., 55182., 55980., 56778., 57576., 58374., 59172., 59970., 60768., 61566., 62364., 63162., 63960.}), read_vector<float>(result)));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{6942.,  7020.,  7098.,  7176.,  7254.,  7332.,  7410.,  7488.,  7566.,
+                       7644.,  7722.,  7800.,  16590., 16812., 17034., 17256., 17478., 17700.,
+                       17922., 18144., 18366., 18588., 18810., 19032., 26238., 26604., 26970.,
+                       27336., 27702., 28068., 28434., 28800., 29166., 29532., 29898., 30264.,
+                       35886., 36396., 36906., 37416., 37926., 38436., 38946., 39456., 39966.,
+                       40476., 40986., 41496., 45534., 46188., 46842., 47496., 48150., 48804.,
+                       49458., 50112., 50766., 51420., 52074., 52728., 55182., 55980., 56778.,
+                       57576., 58374., 59172., 59970., 60768., 61566., 62364., 63162., 63960.}),
+        read_vector<float>(result)));
 }
 
 //
@@ -207,7 +216,16 @@ NGRAPH_TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis_big_fp64_VERY_SLOW)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_TRUE(test::all_close_f(vector<double>{2.48832025919525478400e+18, 2.48832051839533977600e+18, 2.48832077759658444800e+18, 2.48832103679413504000e+18, 2.48832129599669350400e+18, 2.48832155519793971200e+18, 2.48832181439802265600e+18, 2.48832207359808000000e+18, 2.48832233279813580800e+18, 2.48832259199822028800e+18, 2.48832285119946496000e+18, 2.48832311040043008000e+18, 2.48832336959957401600e+18, 2.48832362880081817600e+18, 2.48832388800090368000e+18, 2.48832414720096000000e+18, 2.48832440640101478400e+18, 2.48832466560109772800e+18, 2.48832492480234188800e+18, 2.48832518400031897600e+18}, read_vector<double>(result)));
+    EXPECT_TRUE(test::all_close_f(
+        vector<double>{
+            2.48832025919525478400e+18, 2.48832051839533977600e+18, 2.48832077759658444800e+18,
+            2.48832103679413504000e+18, 2.48832129599669350400e+18, 2.48832155519793971200e+18,
+            2.48832181439802265600e+18, 2.48832207359808000000e+18, 2.48832233279813580800e+18,
+            2.48832259199822028800e+18, 2.48832285119946496000e+18, 2.48832311040043008000e+18,
+            2.48832336959957401600e+18, 2.48832362880081817600e+18, 2.48832388800090368000e+18,
+            2.48832414720096000000e+18, 2.48832440640101478400e+18, 2.48832466560109772800e+18,
+            2.48832492480234188800e+18, 2.48832518400031897600e+18},
+        read_vector<double>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, dot_0_0)
@@ -445,7 +463,9 @@ NGRAPH_TEST(${BACKEND_NAME}, dot3d_3d)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_TRUE(test::all_close_f((vector<float>{11, 14, 17, 20, 23, 30, 37, 44, 35, 46, 57, 68, 47, 62, 77, 92}), read_vector<float>(result)));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{11, 14, 17, 20, 23, 30, 37, 44, 35, 46, 57, 68, 47, 62, 77, 92}),
+        read_vector<float>(result)));
 }
 
 //
@@ -484,14 +504,19 @@ NGRAPH_TEST(${BACKEND_NAME}, dot3d_2d)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
-    copy_data(a, vector<float>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23});
+    copy_data(a, vector<float>{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11,
+                               12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23});
     auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11});
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_TRUE(test::all_close_f((vector<float>{20, 23, 26, 29, 56, 68, 80, 92, 92, 113, 134, 155, 128, 158, 188, 218, 164, 203, 242, 281, 200, 248, 296, 344, 236, 293, 350, 407, 272, 338, 404, 470}), read_vector<float>(result)));
+    EXPECT_TRUE(
+        test::all_close_f((vector<float>{20,  23,  26,  29,  56,  68,  80,  92,  92,  113, 134,
+                                         155, 128, 158, 188, 218, 164, 203, 242, 281, 200, 248,
+                                         296, 344, 236, 293, 350, 407, 272, 338, 404, 470}),
+                          read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, dot_scalar_tensor_arg0)
@@ -513,7 +538,8 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_scalar_tensor_arg0)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_TRUE(test::all_close_f((vector<float>{6, 12, 18, 24, 30, 36, 42, 48}), read_vector<float>(result)));
+    EXPECT_TRUE(test::all_close_f((vector<float>{6, 12, 18, 24, 30, 36, 42, 48}),
+                                  read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, dot_scalar_tensor_arg1)
@@ -535,7 +561,8 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_scalar_tensor_arg1)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_TRUE(test::all_close_f((vector<float>{6, 12, 18, 24, 30, 36, 42, 48}), read_vector<float>(result)));
+    EXPECT_TRUE(test::all_close_f((vector<float>{6, 12, 18, 24, 30, 36, 42, 48}),
+                                  read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, dot_scalar_scalar)
@@ -602,7 +629,8 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_matrix_vector)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_TRUE(test::all_close_f((vector<float>{190, 486, 782, 1078}), read_vector<float>(result)));
+    EXPECT_TRUE(
+        test::all_close_f((vector<float>{190, 486, 782, 1078}), read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, dot_matrix_vector_int64)
@@ -677,7 +705,9 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_3d_multi_axis)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_TRUE(test::all_close_f((vector<float>{2938., 3016., 3094., 3172., 3250., 7042., 7264., 7486., 7708., 7930.}), read_vector<float>(result)));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{2938., 3016., 3094., 3172., 3250., 7042., 7264., 7486., 7708., 7930.}),
+        read_vector<float>(result)));
 }
 
 //
@@ -700,8 +730,10 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_3d_multi_axis)
 //
 NGRAPH_TEST(${BACKEND_NAME}, dot_3d_one_axis_arbitrary)
 {
-    vector<float> a_data{6, 61, 2, 3, 5, 21, 75, 23, 23, 0, 23, 2, 35, 67, 1, 2, 9, 16, 2, 3, 6, 1, 8, 0};
-    vector<float> b_data{9, 1, 4, 6, 3, 5, 1, 36, 7, 3, 5, 0, 1, 20, 35, 2, 1, 0, 1, 25, 3, 6, 7, 8};
+    vector<float> a_data{6,  61, 2, 3, 5, 21, 75, 23, 23, 0, 23, 2,
+                         35, 67, 1, 2, 9, 16, 2,  3,  6,  1, 8,  0};
+    vector<float> b_data{9, 1,  4,  6, 3, 5, 1, 36, 7, 3, 5, 0,
+                         1, 20, 35, 2, 1, 0, 1, 25, 3, 6, 7, 8};
 
     Shape shape_a{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -724,5 +756,11 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_3d_one_axis_arbitrary)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_TRUE(test::all_close_f((vector<float>{483, 189, 331, 86, 85, 1262, 2155, 354, 83, 18, 58, 543, 77, 241, 325, 286, 859, 144, 438, 1025, 317, 973, 1041, 2930, 163, 69, 117, 50, 29, 472, 819, 62, 785, 236, 476, 235, 175, 1521, 2387, 1402, 97, 29, 69, 412, 63, 286, 429, 218, 45, 11, 29, 162, 27, 106, 149, 126, 65, 25, 44, 6, 11, 165, 281, 52}), read_vector<float>(result)));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{483,  189, 331, 86,  85,  1262, 2155, 354, 83,  18,   58,   543,  77,
+                       241,  325, 286, 859, 144, 438,  1025, 317, 973, 1041, 2930, 163,  69,
+                       117,  50,  29,  472, 819, 62,   785,  236, 476, 235,  175,  1521, 2387,
+                       1402, 97,  29,  69,  412, 63,   286,  429, 218, 45,   11,   29,   162,
+                       27,   106, 149, 126, 65,  25,   44,   6,   11,  165,  281,  52}),
+        read_vector<float>(result)));
 }
