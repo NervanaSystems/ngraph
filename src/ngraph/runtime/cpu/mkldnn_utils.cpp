@@ -709,10 +709,12 @@ bool runtime::cpu::mkldnn_utils::can_use_mkldnn_batchnorm_fprop(const ngraph::No
 
 const mkldnn_version_t* runtime::cpu::mkldnn_utils::get_mkldnn_version()
 {
+#if defined(MKLDNN_VERSION_MAJOR) && defined(MKLDNN_VERSION_MINOR) && defined(MKLDNN_VERSION_PATCH)
     return mkldnn_version();
+#endif
 }
 
-mkldnn::algorithm runtime::cpu::mkldnn_utils::can_use_conv_auto()
+mkldnn::algorithm runtime::cpu::mkldnn_utils::get_conv_algo()
 {
 #if defined(MKLDNN_VERSION_MAJOR) && defined(MKLDNN_VERSION_MINOR) && defined(MKLDNN_VERSION_PATCH)
     auto mkldnn_version = runtime::cpu::mkldnn_utils::get_mkldnn_version();
@@ -728,6 +730,7 @@ mkldnn::algorithm runtime::cpu::mkldnn_utils::can_use_conv_auto()
     return mkldnn::algorithm::convolution_direct;
 #endif
 }
+
 bool runtime::cpu::mkldnn_utils::can_use_mkldnn_batchnorm_bprop(const ngraph::Node* node)
 {
     auto input_rank = node->get_input_shape(2).size();
