@@ -108,5 +108,4 @@ several ways:
 
 * Reduces sheer node count, 
 * Provides mappability to MKL-DNN, which has an accelerated group convolution implementation, and 
-* Eliminates unnecessary temporary nodes, 
-* ... and so on.
+* Eliminates unnecessary temporary nodes.
