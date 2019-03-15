@@ -922,143 +922,10 @@ TEST(cpu_test, rotated_pooling)
         make_f(false, false), make_f(false, false), "INTERPRETER", "CPU"); // 5D MaxPool
 }
 
-TEST(cpu_test, check_conv_heuristics)
-{
-    // This test creates the conv_primitive and checks for the winograd algo selection
-    // from mkldnn conv heuristic.
-    using namespace mkldnn;
-    using namespace ngraph::runtime::cpu;
-
-    engine cpu_engine(engine::cpu, 0);
-    const int batch = 64;
-    std::vector<float> net_src(batch * 3 * 224 * 224);
-    std::vector<float> net_dst(batch * 3 * 3 * 3);
-
-    /* initializing non-zero values for src */
-    for (size_t i = 0; i < net_src.size(); ++i)
-        net_src[i] = sinf(static_cast<float>(i));
-
-    memory::dims conv_src_tz = {batch, 3, 224, 224};
-    memory::dims conv_weights_tz = {64, 3, 3, 3};
-    memory::dims conv_bias_tz = {64};
-    memory::dims conv_dst_tz = {64, 64, 224, 224};
-    memory::dims conv_strides = {1, 1};
-    auto conv_padding = {1, 1};
-
-    std::vector<float> conv_weights(std::accumulate(
-        conv_weights_tz.begin(), conv_weights_tz.end(), 1, std::multiplies<uint32_t>()));
-    std::vector<float> conv_bias(
-        std::accumulate(conv_bias_tz.begin(), conv_bias_tz.end(), 1, std::multiplies<uint32_t>()));
-
-    /* initializing non-zero values for weights and bias */
-    for (size_t i = 0; i < conv_weights.size(); ++i)
-        conv_weights[i] = sinf(static_cast<float>(i));
-    for (size_t i = 0; i < conv_bias.size(); ++i)
-        conv_bias[i] = sinf(static_cast<float>(i));
-
-    /* create memory for user data */
-    auto conv_user_src_memory =
-        memory({{{conv_src_tz}, memory::data_type::f32, memory::format::nchw}, cpu_engine},
-               net_src.data());
-    auto conv_user_weights_memory =
-        memory({{{conv_weights_tz}, memory::data_type::f32, memory::format::oihw}, cpu_engine},
-               conv_weights.data());
-    auto conv_user_bias_memory =
-        memory({{{conv_bias_tz}, memory::data_type::f32, memory::format::x}, cpu_engine},
-               conv_bias.data());
-
-    /* create mmemory descriptors for convolution data w/ no specified
-     * format(`any`)
-     * format `any` lets a primitive(convolution in this case)
-     * chose the memory format preferred for best performance. */
-    auto conv_src_md = memory::desc({conv_src_tz}, memory::data_type::f32, memory::format::any);
-    auto conv_bias_md = memory::desc({conv_bias_tz}, memory::data_type::f32, memory::format::any);
-    auto conv_weights_md =
-        memory::desc({conv_weights_tz}, memory::data_type::f32, memory::format::any);
-    auto conv_dst_md = memory::desc({conv_dst_tz}, memory::data_type::f32, memory::format::any);
-    mkldnn::algorithm convolution_algo = mkldnn_utils::get_conv_algo();
-    /* create a convolution primitive descriptor */
-    auto conv_desc = convolution_forward::desc(prop_kind::forward,
-                                               convolution_algo,
-                                               conv_src_md,
-                                               conv_weights_md,
-                                               conv_bias_md,
-                                               conv_dst_md,
-                                               conv_strides,
-                                               conv_padding,
-                                               conv_padding,
-                                               padding_kind::zero);
-    auto conv_pd = convolution_forward::primitive_desc(conv_desc, cpu_engine);
-
-    /* create reorder primitives between user input and conv src if needed */
-    auto conv_src_memory = conv_user_src_memory;
-    bool reorder_conv_src = false;
-    primitive conv_reorder_src;
-    if (memory::primitive_desc(conv_pd.src_primitive_desc()) !=
-        conv_user_src_memory.get_primitive_desc())
-    {
-        conv_src_memory = memory(conv_pd.src_primitive_desc());
-        conv_reorder_src = reorder(conv_user_src_memory, conv_src_memory);
-        reorder_conv_src = true;
-    }
-
-    auto conv_weights_memory = conv_user_weights_memory;
-    bool reorder_conv_weights = false;
-    primitive conv_reorder_weights;
-    if (memory::primitive_desc(conv_pd.weights_primitive_desc()) !=
-        conv_user_weights_memory.get_primitive_desc())
-    {
-        conv_weights_memory = memory(conv_pd.weights_primitive_desc());
-        conv_reorder_weights = reorder(conv_user_weights_memory, conv_weights_memory);
-        reorder_conv_weights = true;
-    }
-
-    /* create memory primitive for conv dst */
-    auto conv_dst_memory = memory(conv_pd.dst_primitive_desc());
-
-    /* finally create a convolution primitive */
-    auto conv = convolution_forward(
-        conv_pd, conv_src_memory, conv_weights_memory, conv_user_bias_memory, conv_dst_memory);
-
-    auto get_conv_algo_kind = [&]() {
-        mkldnn_convolution_desc_t* temp_conv_desc = {0};
-        mkldnn_primitive_desc_query(conv_pd.get(), mkldnn_query_convolution_d, 0, &temp_conv_desc);
-        return temp_conv_desc->alg_kind;
-    };
-
-    // this check is needed, since conv_auto selects winograd implementation only on AVX512 flavours
-    auto one_of_avx512 = [&]() {
-        auto jit_kind = std::string(conv_pd.impl_info_str());
-        size_t delim_pos = jit_kind.find(':');
-        if (delim_pos == std::string::npos)
-        {
-            return false;
-        }
-        auto isa_type = jit_kind.substr(delim_pos + 1, jit_kind.size());
-        if (isa_type == "avx512_core" || isa_type == "avx512_core_vnni")
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    };
-
-    if ((convolution_algo == mkldnn::algorithm::convolution_auto) && one_of_avx512())
-    {
-        EXPECT_EQ(mkldnn::algorithm::convolution_winograd, get_conv_algo_kind());
-    }
-    else
-    {
-        EXPECT_EQ(mkldnn::algorithm::convolution_direct, get_conv_algo_kind());
-    }
-}
-
 TEST(cpu_test, conv_test_winograd)
 {
     /*  This test checks for the cpu specific graph pass handling for conv_winograd implementation. 
-        On SKX with MKLDNN verionon > v0.18.0, mkldnn_verbose should match the following
+        On SKX with MKLDNN version >= v0.18.0, mkldnn_verbose should match the following
 
         mkldnn_verbose,info,Intel(R) MKL-DNN v0.18.0 (Git Hash 863ff6e7042cec7d2e29897fe9f0872e0888b0fc),Intel(R) Advanced Vector Extensions 512 (Intel(R) AVX-512) with AVX512BW, AVX512VL, and AVX512DQ extensions
         mkldnn_verbose,create,reorder,simple:any,undef,in:f32_nchw out:f32_OIhw16i16o,num:1,64x3x3x3,0.0129395
@@ -1083,7 +950,6 @@ TEST(cpu_test, conv_test_winograd)
         return make_shared<Function>(conv, ParameterVector{input, filter});
 
     };
-
     auto backend = runtime::Backend::create("CPU");
     auto cpu_f = make_function();
 
@@ -1095,6 +961,5 @@ TEST(cpu_test, conv_test_winograd)
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
-
     auto cpu_results = execute(cpu_f, args, "CPU");
 }
