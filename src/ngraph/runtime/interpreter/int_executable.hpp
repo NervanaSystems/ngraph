@@ -1247,6 +1247,7 @@ private:
             }
             break;
         }
+        case OP_TYPEID::Transpose:
         default: throw unsupported_op("Unsupported op '" + node.description() + "'");
 #pragma GCC diagnostic pop
         }
