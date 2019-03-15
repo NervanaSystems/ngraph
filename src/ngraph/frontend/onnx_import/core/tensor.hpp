@@ -121,7 +121,8 @@ namespace ngraph
                 template <typename T>
                 inline std::vector<T> get_data(const onnx::TensorProto& tensor)
                 {
-                    throw ngraph::onnx_import::error::tensor::unsupported_data_type{tensor.data_type()};
+                    throw ngraph::onnx_import::error::tensor::unsupported_data_type{
+                        tensor.data_type()};
                 }
 
                 template <>
