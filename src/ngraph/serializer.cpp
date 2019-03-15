@@ -57,6 +57,7 @@
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
+#include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
@@ -1193,6 +1194,11 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::TopK>(args[0], top_k_axis, target_type, k, compute_max);
                 break;
             }
+            case OP_TYPEID::Transpose:
+            {
+                node = make_shared<op::Transpose>(args[0], args[1]);
+                break;
+            }
             case OP_TYPEID::StopGradient:
             {
                 node = make_shared<op::StopGradient>(args[0]);
@@ -1766,6 +1772,8 @@ static json write(const Node& n, bool binary_constant_data)
         node["k"] = tmp->get_k();
         node["compute_max"] = tmp->get_compute_max();
         break;
+    }
+    case OP_TYPEID::Transpose: { break;
     }
     case OP_TYPEID::UnknownOp: { break;
     }
