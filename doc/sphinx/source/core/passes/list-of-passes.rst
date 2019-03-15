@@ -1,7 +1,12 @@
 .. core/passes/list-of-passes:
 
 List of passes
-==============
+##############
+
+The kinds of compiler passes available can be broken down into different buckets:
+
+Graph Optimization Passes
+=========================
 
 .. csv-table::
    :header: "Graph Optimization Passes", "More Detail"
@@ -16,14 +21,20 @@ List of passes
    ``ReshapeSinking``, :ref:`reshape_transpose_sink`
 
 
+Node Optimization Passes
+========================
+
 .. csv-table::
    :header: "Node Optimization Passes", "More Detail"
    :widths: 29, 31
    :escape: ~
 
-   ``NopElimination``, :ref:`reshape_transpose_elim`
-   ``ZeroDimTensorElimination``, :ref:`reshape_transpose_sink`
+   ``NopElimination``, ""
+   ``ZeroDimTensorElimination``, ""
 
+
+Memory Assignment Passes
+========================
 
 .. csv-table::
    :header: "Memory Assignment Passes", "More Detail"
@@ -36,6 +47,9 @@ List of passes
    ``PropagateCacheability``, ""
 
 
+Codegen Passes
+==============
+
 .. csv-table::
    :header: "Codegen Passes", "More Detail"
    :widths: 29, 31
@@ -43,6 +57,9 @@ List of passes
 
    ``CommonFunctionCollection``, ""
 
+
+Debug Passes
+============
 
 .. csv-table::
    :header: "Debug Passes", "More Detail"
@@ -52,8 +69,11 @@ List of passes
    ``DumpSorted``, ""
    ``MemoryVisualize``, ""
    ``Serialization``, ""
-   ``VisualizeTree, ""
+   ``VisualizeTree``, ""
 
+
+Maintenance Passes
+==================
 
 .. csv-table::
    :header: "Maintenance Passes", "More Detail"
@@ -63,7 +83,6 @@ List of passes
    ``GetOutputElementElimination``, ""
    ``LikeReplacement``, ""
    ``ValidateGraph``, ""
-   ``VisualizeTree, ""
 
 
 
