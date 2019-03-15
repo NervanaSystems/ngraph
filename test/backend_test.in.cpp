@@ -1841,52 +1841,6 @@ NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_int64)
               read_vector<int64_t>(result));
 }
 
-// TODO: Kahan sum only works in limited cases with CPU / Interpreter backend
-NGRAPH_TEST(${BACKEND_NAME}, kahan_sum_to_scalar)
-{
-    Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), ParameterVector{A});
-
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
-    // Create some tensors for input/output
-    float epsilon = 9.5367431640625e-7f;
-    auto a = backend->create_tensor(element::f32, shape);
-    copy_data(a, vector<float>{epsilon, -1.f, 0.f, 1.f});
-    auto result = backend->create_tensor(element::f32, Shape{});
-
-    auto handle = backend->compile(f);
-    handle->call_with_validate({result}, {a});
-    EXPECT_TRUE(test::all_close_f(vector<float>{epsilon}, read_vector<float>(result)));
-}
-
-// TODO: Kahan sum only works in limited cases with CPU / Interpreter backend
-NGRAPH_TEST(${BACKEND_NAME}, kahan_sum_3d_to_vector)
-{
-    Shape shape_a{3, 3, 3};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    Shape shape_rt{3};
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), ParameterVector{A});
-
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::f32, shape_a);
-    float epsilon_a = 1.220703125e-4f;
-    float epsilon_b = 3.0517578125e-5f;
-    float epsilon_c = 7.62939453125e-6f;
-    copy_data(a, vector<float>{1,  1,  1,  1,  1,  1,  epsilon_a, epsilon_b, epsilon_c,
-                               1,  1,  1,  1,  1,  1,  -1,        -1,        -1,
-                               -1, -1, -1, -1, -1, -1, -1,        -1,        -1});
-    auto result = backend->create_tensor(element::f32, shape_rt);
-
-    auto handle = backend->compile(f);
-    handle->call_with_validate({result}, {a});
-    EXPECT_TRUE(test::all_close_f(vector<float>{epsilon_a, epsilon_b, epsilon_c},
-                                  read_vector<float>(result)));
-}
-
 NGRAPH_TEST(${BACKEND_NAME}, constant_equality_bool)
 {
     Shape shape{4};
