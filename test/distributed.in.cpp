@@ -52,6 +52,6 @@ TEST(distributed_${BACKEND_NAME}, allreduce)
 
         auto handle = backend->compile(f);
         handle->call_with_validate({result}, {a});
-        EXPECT_EQ(v, read_vector<float>(result));
+        EXPECT_TRUE(test::all_close_f(v, read_vector<float>(result)));
     }
 }
