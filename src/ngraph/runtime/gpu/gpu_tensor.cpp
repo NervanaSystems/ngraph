@@ -90,17 +90,19 @@ void runtime::gpu::GPUTensor::copy_from(const runtime::Tensor& source)
 
         if (get_element_count() != src.get_element_count())
         {
-            throw invalid_argument("runtime::gpu::GPUTensor::copy_from element count must match");
+            throw invalid_argument("runtime::gpu::GPUTensor::copy_from element count must match.");
         }
         if (get_element_type() != src.get_element_type())
         {
-            throw invalid_argument("runtime::gpu::GPUTensor::copy_from element types must match");
+            throw invalid_argument("runtime::gpu::GPUTensor::copy_from element types must match.");
         }
         runtime::gpu::cuda_memcpyDtD(
             m_allocated_buffer_pool, src.m_allocated_buffer_pool, source.get_size_in_bytes());
     }
     catch (const std::bad_cast& e)
     {
-        throw invalid_argument("runtime::gpu::GPUTensor::copy_from source master be a GPUTensor");
+        throw invalid_argument(
+            "runtime::gpu::GPUTensor::copy_from source master be a GPUTensor. ErrMsg:" +
+            std::string(e.what()));
     }
 }
