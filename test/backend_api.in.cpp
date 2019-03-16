@@ -77,7 +77,7 @@ NGRAPH_TEST(${BACKEND_NAME}, create_tensor_2)
     EXPECT_EQ(read_vector<float>(result), expected);
 }
 
-// This tests a backend's implementation of the copy_from for tensor 
+// This tests a backend's implementation of the copy_from for tensor
 NGRAPH_TEST(${BACKEND_NAME}, tensor_copy_from)
 {
     Shape shape{2, 2};
@@ -93,5 +93,5 @@ NGRAPH_TEST(${BACKEND_NAME}, tensor_copy_from)
     copy_data(b, bv);
 
     a->copy_from(*b);
-    EXPECT_EQ(read_vector<float>(a), bv);
+    EXPECT_TRUE(test::all_close(bv, read_vector<float>(a), 0.0f, 0.0f));
 }
