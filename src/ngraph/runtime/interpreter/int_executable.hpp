@@ -59,6 +59,7 @@
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/runtime/hybrid/op/function_call.hpp"
 #include "ngraph/runtime/interpreter/node_wrapper.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/acos.hpp"
@@ -145,9 +146,9 @@ namespace ngraph
         {
             class INTBackend;
             class INTExecutable;
-        }
-    }
-}
+        } // namespace interpreter
+    }     // namespace runtime
+} // namespace ngraph
 
 class ngraph::runtime::interpreter::INTExecutable : public Executable
 {
@@ -186,7 +187,6 @@ private:
                    const std::vector<std::shared_ptr<HostTensor>>& args)
     {
         const Node& node = node_wrapper.get_node();
-        std::string node_op = node.description();
 
 // We want to check that every OP_TYPEID enumeration is included in the list.
 // These GCC flags enable compile-time checking so that if an enumeration
@@ -551,38 +551,26 @@ private:
                                       c->get_window_dilation_strides(),
                                       c->get_padding_below(),
                                       c->get_padding_above(),
-                                      c->get_data_dilation_strides(),
-                                      0,
-                                      1,
-                                      1,
-                                      0,
-                                      0,
-                                      1,
-                                      false);
+                                      c->get_data_dilation_strides());
+
             break;
         }
         case OP_TYPEID::ConvolutionBackpropFilters:
         {
             const op::ConvolutionBackpropFilters* c =
                 static_cast<const op::ConvolutionBackpropFilters*>(&node);
-            reference::convolution<T>(args[0]->get_data_ptr<const T>(),
-                                      args[1]->get_data_ptr<const T>(),
-                                      out[0]->get_data_ptr<T>(),
-                                      node.get_input_shape(0),
-                                      node.get_input_shape(1),
-                                      node.get_output_shape(0),
-                                      c->get_window_movement_strides_backward(),
-                                      c->get_window_dilation_strides_backward(),
-                                      c->get_padding_below_backward(),
-                                      c->get_padding_above_backward(),
-                                      c->get_data_dilation_strides_backward(),
-                                      1,
-                                      0,
-                                      0,
-                                      1,
-                                      1,
-                                      0,
-                                      false);
+            reference::convolution_backprop_filter<T>(
+                args[0]->get_data_ptr<const T>(), // input
+                args[1]->get_data_ptr<const T>(), // delta_convolution_output
+                out[0]->get_data_ptr<T>(),        // delta_filter
+                c->get_input_shape(0),            // input_shape
+                c->get_input_shape(1),            // convolution_output_shape
+                c->get_filters_shape(),           // filter_shape
+                c->get_window_dilation_strides_forward(),
+                c->get_window_movement_strides_forward(),
+                c->get_padding_below_forward(),
+                c->compute_backward_in_pad_above(),
+                c->get_data_dilation_strides_forward());
             break;
         }
         case OP_TYPEID::ConvolutionBackpropData:
@@ -590,24 +578,17 @@ private:
             // Note that args[1] and args[0] are switched here from the usual order.
             const op::ConvolutionBackpropData* c =
                 static_cast<const op::ConvolutionBackpropData*>(&node);
-            reference::convolution<T>(args[1]->get_data_ptr<const T>(),
-                                      args[0]->get_data_ptr<const T>(),
-                                      out[0]->get_data_ptr<T>(),
-                                      node.get_input_shape(1),
-                                      node.get_input_shape(0),
-                                      node.get_output_shape(0),
-                                      c->get_window_movement_strides_backward(),
-                                      c->get_window_dilation_strides_backward(),
-                                      c->get_padding_below_backward(),
-                                      c->get_padding_above_backward(),
-                                      c->get_data_dilation_strides_backward(),
-                                      0,
-                                      1,
-                                      0,
-                                      1,
-                                      0,
-                                      1,
-                                      true);
+            reference::convolution_backprop_in<T>(args[1]->get_data_ptr<const T>(),
+                                                  args[0]->get_data_ptr<const T>(),
+                                                  out[0]->get_data_ptr<T>(),
+                                                  c->get_input_shape(1),
+                                                  c->get_input_shape(0),
+                                                  c->get_data_batch_shape(),
+                                                  c->get_data_dilation_strides_forward(),
+                                                  c->get_window_dilation_strides_forward(),
+                                                  c->compute_backward_delta_out_pad_below(),
+                                                  c->compute_backward_delta_out_pad_above(),
+                                                  c->get_window_movement_strides_forward());
             break;
         }
         case OP_TYPEID::Cos:
@@ -739,6 +720,29 @@ private:
             size_t element_count = shape_size(node.get_output_shape(0));
             reference::exp<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
+            break;
+        }
+        case OP_TYPEID::FunctionCall:
+        {
+            auto f = static_cast<const runtime::hybrid::op::FunctionCall*>(&node);
+            auto backend = f->get_backend();
+            auto executable = f->get_executable();
+
+            std::vector<std::shared_ptr<Tensor>> outputs;
+            std::vector<std::shared_ptr<Tensor>> inputs;
+            for (const std::shared_ptr<HostTensor>& t : out)
+            {
+                auto backend_tensor = backend->create_tensor(
+                    t->get_element_type(), t->get_shape(), t->get_data_ptr());
+                outputs.push_back(backend_tensor);
+            }
+            for (const std::shared_ptr<HostTensor>& t : args)
+            {
+                auto backend_tensor = backend->create_tensor(
+                    t->get_element_type(), t->get_shape(), t->get_data_ptr());
+                inputs.push_back(backend_tensor);
+            }
+            executable->call(outputs, inputs);
             break;
         }
         case OP_TYPEID::Floor:
@@ -1015,6 +1019,8 @@ private:
         case OP_TYPEID::QuantizedConvolutionRelu:
         case OP_TYPEID::QuantizedConvolution:
         case OP_TYPEID::QuantizedMaxPool:
+        case OP_TYPEID::QuantizedDotBias:
+        case OP_TYPEID::QuantizedDot:
         {
             throw unsupported_op("Unsupported op '" + node.description() +
                                  "' in Interpreter back end.");
@@ -1241,6 +1247,7 @@ private:
             }
             break;
         }
+        case OP_TYPEID::Transpose:
         default: throw unsupported_op("Unsupported op '" + node.description() + "'");
 #pragma GCC diagnostic pop
         }

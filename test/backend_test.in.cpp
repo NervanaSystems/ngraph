@@ -115,7 +115,7 @@ NGRAPH_TEST(${BACKEND_NAME}, node_name)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = A + B;
-    C->set_name("a node name");
+    C->set_friendly_name("a node name");
     auto f = make_shared<Function>(C, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -1204,6 +1204,23 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_zero_length_1d_middle)
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), read_vector<float>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, concat_zero_zero)
+{
+    Shape shape{0};
+    auto constant_1 = op::Constant::create(element::f32, shape, {1});
+    auto concat_1 = make_shared<op::Concat>(NodeVector{constant_1, constant_1}, 0);
+
+    auto f = make_shared<Function>(concat_1, ParameterVector{});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    auto result = backend->create_tensor(element::f32, shape);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {});
+
+    EXPECT_EQ(vector<float>{}, read_vector<float>(result));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, concat_zero_length_4d_middle)
 {
     Shape shape_a{2, 2, 1, 1};
@@ -1822,52 +1839,6 @@ NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_int64)
     handle->call_with_validate({result}, {});
     EXPECT_EQ((vector<int64_t>{0x4000000000000001, 0x4000000000000002}),
               read_vector<int64_t>(result));
-}
-
-// TODO: Kahan sum only works in limited cases with CPU / Interpreter backend
-NGRAPH_TEST(${BACKEND_NAME}, kahan_sum_to_scalar)
-{
-    Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), ParameterVector{A});
-
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
-    // Create some tensors for input/output
-    float epsilon = 9.5367431640625e-7f;
-    auto a = backend->create_tensor(element::f32, shape);
-    copy_data(a, vector<float>{epsilon, -1.f, 0.f, 1.f});
-    auto result = backend->create_tensor(element::f32, Shape{});
-
-    auto handle = backend->compile(f);
-    handle->call_with_validate({result}, {a});
-    EXPECT_TRUE(test::all_close_f(vector<float>{epsilon}, read_vector<float>(result)));
-}
-
-// TODO: Kahan sum only works in limited cases with CPU / Interpreter backend
-NGRAPH_TEST(${BACKEND_NAME}, kahan_sum_3d_to_vector)
-{
-    Shape shape_a{3, 3, 3};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    Shape shape_rt{3};
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), ParameterVector{A});
-
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::f32, shape_a);
-    float epsilon_a = 1.220703125e-4f;
-    float epsilon_b = 3.0517578125e-5f;
-    float epsilon_c = 7.62939453125e-6f;
-    copy_data(a, vector<float>{1,  1,  1,  1,  1,  1,  epsilon_a, epsilon_b, epsilon_c,
-                               1,  1,  1,  1,  1,  1,  -1,        -1,        -1,
-                               -1, -1, -1, -1, -1, -1, -1,        -1,        -1});
-    auto result = backend->create_tensor(element::f32, shape_rt);
-
-    auto handle = backend->compile(f);
-    handle->call_with_validate({result}, {a});
-    EXPECT_TRUE(test::all_close_f(vector<float>{epsilon_a, epsilon_b, epsilon_c},
-                                  read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, constant_equality_bool)
@@ -2844,7 +2815,7 @@ NGRAPH_TEST(${BACKEND_NAME}, computation_reuse)
     Shape shape_a{1, 16, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{32, 16, 1, 1};
-    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto B = make_shared<op::Parameter>(element::f32, shape_b, true);
     Shape shape_r{1, 32, 2, 2};
     auto conv = make_shared<op::Convolution>(A,
                                              B,

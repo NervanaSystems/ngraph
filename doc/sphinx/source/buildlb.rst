@@ -1,18 +1,22 @@
 .. buildlb.rst:
 
-######################
-Build the C++ Library 
-######################
+###########################
+nGraph Library for backends 
+###########################
+
+This section details how to build the C++ version of the nGraph Library, which 
+is targeted toward developers working on kernel-specific operations, 
+optimizations, or on deep learning solutions that leverage custom backends. 
 
 * :ref:`ubuntu`
 * :ref:`centos`
 
 
-Build Environments
-==================
+Prerequisites
+=============
 
-Release |release| of |project| supports Linux\*-based systems  
-with the following packages and prerequisites: 
+Release |release| of |project| supports Linux\*-based systems with the following 
+packages and prerequisites: 
 
 .. csv-table::
    :header: "Operating System", "Compiler", "Build System", "Status", "Additional Packages"
@@ -37,22 +41,52 @@ flag in this case, because the prebuilt tarball supplied on llvm.org is not
 compatible with a gcc 4.8-based build.)
 
 
-Installation Steps
-==================
+The ``default`` build
+---------------------
+
+Running ``cmake`` with no build flags defaults to the following settings; adjust 
+as needed: 
+
+.. code-block:: console 
+
+   -- NGRAPH_UNIT_TEST_ENABLE:         ON
+   -- NGRAPH_TOOLS_ENABLE:             ON
+   -- NGRAPH_CPU_ENABLE:               ON
+   -- NGRAPH_INTELGPU_ENABLE:          OFF
+   -- NGRAPH_GPU_ENABLE:               OFF
+   -- NGRAPH_INTERPRETER_ENABLE:       ON
+   -- NGRAPH_NOP_ENABLE:               ON
+   -- NGRAPH_GPUH_ENABLE:              OFF
+   -- NGRAPH_GENERIC_CPU_ENABLE:       OFF
+   -- NGRAPH_DEBUG_ENABLE:             OFF
+   -- NGRAPH_ONNX_IMPORT_ENABLE:       OFF
+   -- NGRAPH_DEX_ONLY:                 OFF
+   -- NGRAPH_CODE_COVERAGE_ENABLE:     OFF
+   -- NGRAPH_LIB_VERSIONING_ENABLE:    OFF
+   -- NGRAPH_PYTHON_BUILD_ENABLE:      OFF
+   -- NGRAPH_USE_PREBUILT_LLVM:        OFF
+   -- NGRAPH_PLAIDML_ENABLE:           OFF
+   -- NGRAPH_DISTRIBUTED_ENABLE:       OFF
 
 .. important:: The default :program:`cmake` procedure (no build flags) will  
    install ``ngraph_dist`` to an OS-level location like ``/usr/bin/ngraph_dist``
    or ``/usr/lib/ngraph_dist``. Here we specify how to build locally to the
    location of ``~/ngraph_dist`` with the cmake target ``-DCMAKE_INSTALL_PREFIX=~/ngraph_dist``. 
-   All of the nGraph Library documentation presumes that ``ngraph_dist`` 
-   gets installed locally. The system location can be used just as easily by 
-   customizing paths on that system. See the :file:`ngraph/CMakeLists.txt` 
-   file to change or customize the default CMake procedure.
+
+
+All of the nGraph Library documentation presumes that ``ngraph_dist`` gets 
+installed locally. The system location can be used just as easily by customizing 
+paths on that system. See the :file:`ngraph/CMakeLists.txt` file to change or 
+customize the default CMake procedure.
+
+
+Install steps
+-------------
 
 .. _ubuntu:
 
 Ubuntu 16.04
--------------
+~~~~~~~~~~~~
 
 The process documented here will work on Ubuntu\* 16.04 (LTS) or on Ubuntu 
 18.04 (LTS).
@@ -102,7 +136,7 @@ The process documented here will work on Ubuntu\* 16.04 (LTS) or on Ubuntu
    
    .. code-block:: console
 
-      $ cmake .. [-DNGRAPH_USE_PREBUILT_LLVM=TRUE] [-DNGRAPH_TARGET_ARCH=skylake-avx512]   
+      $ cmake .. [-DNGRAPH_USE_PREBUILT_LLVM=OFF] [-DNGRAPH_TARGET_ARCH=skylake-avx512]   
 
 #. Run ``$ make`` and ``make install`` to install ``libngraph.so`` and the 
    header files to ``~/ngraph_dist``:
@@ -123,7 +157,7 @@ The process documented here will work on Ubuntu\* 16.04 (LTS) or on Ubuntu
 .. _centos: 
 
 CentOS 7.4
------------
+~~~~~~~~~~
 
 The process documented here will work on CentOS 7.4.
 
@@ -190,13 +224,11 @@ according to those conventions. These scripts require the command
    $ ln -s /usr/local/opt/llvm@3.9/bin/clang-format $HOME/bin/clang-format-3.9
    $ echo 'export PATH=$HOME/bin:$PATH' >> $HOME/.bash_profile
 
-
 Testing the build 
 =================
 
-The |InG| library code base uses GoogleTest's\* `googletest framework`_ 
-for unit tests. The ``cmake`` command from the :doc:`buildlb` guide 
-automatically downloaded a copy of the needed ``gtest`` files when 
+We use the `googletest framework`_ from Google for unit tests. The ``cmake`` 
+command automatically downloaded a copy of the needed ``gtest`` files when 
 it configured the build directory.
 
 To perform unit tests on the install:
@@ -212,8 +244,8 @@ To perform unit tests on the install:
       $ make check
 
 
-Compile a framework with ``libngraph``
-======================================
+Adding framework support
+========================
 
 After building and installing nGraph on your system, there are two likely 
 paths for what you'll want to do next: either compile a framework to run a DL 
@@ -221,17 +253,17 @@ training model, or load an import of an "already-trained" model for inference
 on an Intel nGraph-enabled backend.
 
 For the former case, this early |version|, :doc:`frameworks/index`, 
-can help you get started with a training a model on a supported framework. 
+can help you get started with a training a model with a supported framework or 
+companion tool. 
 
 * :doc:`MXNet<frameworks/tensorflow_integ>` framework,  
 * :doc:`TensorFlow<frameworks/mxnet_integ>` framework,
-* :doc:`ONNX & ONNXIFI<frameworks/onnx_integ>`, and
-* :doc:`PaddlePaddle<frameworks/paddle_integ>` framework.
-
+* :doc:`PaddlePaddle<frameworks/paddle_integ>` framework, or
+* :doc:`ONNX<frameworks/onnx_integ>` and the ONNXIFI tool. 
 
 For the latter case, if you've followed a tutorial from `ONNX`_, and you have an 
-exported, serialized model, you can skip the section on frameworks and go directly
-to our :doc:`core/constructing-graphs/import` documentation. 
+exported, serialized model, you can skip the section on frameworks and go 
+directly to our :doc:`core/constructing-graphs/import` documentation. 
 
 Please keep in mind that both of these are under continuous development, and will 
 be updated frequently in the coming months. Stay tuned!  
@@ -242,6 +274,6 @@ be updated frequently in the coming months. Stay tuned!
 .. _breathe: https://breathe.readthedocs.io/en/latest/
 .. _llvm.org: https://www.llvm.org 
 .. _NervanaSystems: https://github.com/NervanaSystems/ngraph/blob/master/README.md
-.. _googletest framework: https://github.com/google/googletest.git
 .. _ONNX: http://onnx.ai
 .. _website docs: http://ngraph.nervanasys.com/docs/latest/
+.. _googletest framework: https://github.com/google/googletest.git

@@ -61,15 +61,15 @@ descriptions:
    :widths: 23, 53, 13, 23
    :escape: ~
 
-   ``ngraph``, The Intel nGraph C++ API, `Nngraph`_, Implicit namespace omitted from most API documentation
-   ``builder``, "Convenience functions that create additional graph nodes to implement commonly-used recipes; for example, auto-broadcast", `Nbuilder`_, Coming Soon
-   ``descriptor``, Descriptors are compile-time representations of objects that will appear at run-time, `Ndescriptor`_, Coming Soon
-   ``op``, Ops used in graph construction, `Nop`_, :doc:`../ops/index`
-   ``runtime``, The objects and methods used for executing the graph, `Nruntime`_, :doc:`../backend-support/cpp-api`
+   ``ngraph``, The Intel nGraph C++ API, `ngraph`_, Implicit namespace omitted from most API documentation
+   ``builder``, "Convenience functions that create additional graph nodes to implement commonly-used recipes; for example, auto-broadcast", `builder`_, Coming Soon
+   ``descriptor``, Descriptors are compile-time representations of objects that will appear at run-time, `descriptor`_, Coming Soon
+   ``op``, Ops used in graph construction, `op`_, :doc:`../ops/index`
+   ``runtime``, The objects and methods used for executing the graph, `runtime`_, :doc:`../backend-support/cpp-api`
 
 
-.. _Nngraph: https://github.com/NervanaSystems/ngraph/tree/master/src/ngraph
-.. _Nbuilder: https://github.com/NervanaSystems/ngraph/tree/master/src/ngraph/builder
-.. _Ndescriptor: https://github.com/NervanaSystems/ngraph/tree/master/src/ngraph/descriptor
-.. _Nop: https://github.com/NervanaSystems/ngraph/tree/master/src/ngraph/op
-.. _Nruntime: https://github.com/NervanaSystems/ngraph/tree/master/src/ngraph/runtime
+.. _ngraph: https://github.com/NervanaSystems/ngraph/tree/master/src/ngraph
+.. _builder: https://github.com/NervanaSystems/ngraph/tree/master/src/ngraph/builder
+.. _descriptor: https://github.com/NervanaSystems/ngraph/tree/master/src/ngraph/descriptor
+.. _op: https://github.com/NervanaSystems/ngraph/tree/master/src/ngraph/op
+.. _runtime: https://github.com/NervanaSystems/ngraph/tree/master/src/ngraph/runtime

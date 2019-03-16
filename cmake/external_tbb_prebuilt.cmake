@@ -16,12 +16,15 @@
 
 include(ExternalProject)
 
-set(ARCHIVE_FILE_BASE tbb2019_20181203oss)
+
+set(NGRAPH_TBB_VERSION "2019_U3")
+set(NGRAPH_TBB_SUB_VERSION "tbb2019_20181203oss")
+
 if (WIN32)
-    set(TBB_FILE https://github.com/01org/tbb/releases/download/2019_U3/${ARCHIVE_FILE_BASE}_win.zip)
+    set(TBB_FILE https://github.com/01org/tbb/releases/download/${NGRAPH_TBB_VERSION}/${NGRAPH_TBB_SUB_VERSION}_win.zip)
     set(TBB_SHA1_HASH 1989458a49e780d76248edac13b963f80c9a460c)
 elseif(APPLE)
-    set(TBB_FILE https://github.com/01org/tbb/releases/download/2019_U3/${ARCHIVE_FILE_BASE}_mac.tgz)
+    set(TBB_FILE https://github.com/01org/tbb/releases/download/${NGRAPH_TBB_VERSION}/${NGRAPH_TBB_SUB_VERSION}_mac.tgz)
     set(TBB_SHA1_HASH 36926fb46add578b88a5c7e19652b94bb612e4be)
 endif()
 
@@ -39,7 +42,7 @@ ExternalProject_Add(
     )
 
 ExternalProject_Get_Property(ext_tbb SOURCE_DIR)
-set(INSTALL_DIR ${SOURCE_DIR}/${ARCHIVE_FILE_BASE})
+set(INSTALL_DIR ${SOURCE_DIR}/${NGRAPH_TBB_SUB_VERSION})
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(TBB_LIB_NAME tbb_debug)
@@ -53,7 +56,7 @@ if (WIN32)
     ExternalProject_Add_Step(
         ext_tbb
         CopyTBB
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${INSTALL_DIR}/bin/intel64/vc14/${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${INSTALL_DIR}/bin/intel64/vc14/${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}
         COMMENT "Move tbb shared libraries to ngraph build directory"
         DEPENDEES download
         )
@@ -61,7 +64,7 @@ if (WIN32)
     ExternalProject_Add_Step(
         ext_tbb
         CopyTBBIMP
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${INSTALL_DIR}/lib/intel64/vc14/${TBB_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX} ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${INSTALL_DIR}/lib/intel64/vc14/${TBB_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX} ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${TBB_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX}
         COMMENT "Move tbb libraries to ngraph build directory"
         DEPENDEES download
         )
@@ -75,7 +78,7 @@ elseif(APPLE)
     )
 
     add_custom_command(TARGET ext_tbb POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${INSTALL_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${INSTALL_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_SHARED_LIBRARY_PREFIX}${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}
         COMMENT "Move tbb libraries to ngraph build directory"
     )
 

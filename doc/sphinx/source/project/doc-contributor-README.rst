@@ -15,11 +15,10 @@
 .. limitations under the License.
 .. ---------------------------------------------------------------------------
 
-nGraph Library docs  
-===================
+Contributing to documentation
+=============================
 
-Read this for changes affecting anything in ``ngraph/doc``
-----------------------------------------------------------
+.. important:: Read this for changes affecting **anything** in ``ngraph/doc``
 
 For updates to the Intel® nGraph Library ``/doc`` repo, please submit a PR with 
 any changes or ideas you'd like integrated. This helps us maintain trackability 
@@ -105,8 +104,8 @@ style guide.
 
 .. build-docs:
 
-Build the documentation
-=======================
+How to build the documentation
+-------------------------------
 
 
 .. note:: Stuck on how to generate the html? Run these commands; they assume 

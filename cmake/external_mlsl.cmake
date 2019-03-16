@@ -43,12 +43,28 @@ ExternalProject_Add(
     EXCLUDE_FROM_ALL TRUE
     )
 
+add_library(libmlsl INTERFACE)
 ExternalProject_Get_Property(MLSL SOURCE_DIR)
 ExternalProject_Get_Property(MLSL INSTALL_DIR)
-add_library(libmlsl INTERFACE)
+set(MLSL_LIB_DIR ${INSTALL_DIR}/intel64/lib/thread)
+set(MLSL_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}mlsl${CMAKE_SHARED_LIBRARY_SUFFIX})
+set(MPI_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}mpi${CMAKE_SHARED_LIBRARY_SUFFIX})
+set(FABRIC_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}fabric${CMAKE_SHARED_LIBRARY_SUFFIX})
+ExternalProject_Add_Step(
+    MLSL
+    CopyMLSL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${MLSL_LIB_DIR} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}
+    COMMENT "Copy mlsl runtime libraries to ngraph build directory."
+    DEPENDEES install
+    )
 target_include_directories(libmlsl SYSTEM INTERFACE ${SOURCE_DIR}/include)
-target_link_libraries(libmlsl INTERFACE ${INSTALL_DIR}/intel64/lib/thread/libmlsl.so)
-link_directories(${INSTALL_DIR}/intel64/lib/thread)
+
+set(MLSL_LINK_LIBRARIES
+    ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MLSL_LIB}
+    ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MPI_LIB}
+    ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${FABRIC_LIB})
+
+target_link_libraries(libmlsl PRIVATE INTERFACE ${MLSL_LINK_LIBRARIES})
 add_dependencies(libmlsl MLSL)
 
 #installation
