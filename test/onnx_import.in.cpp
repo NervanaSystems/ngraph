@@ -2280,3 +2280,22 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_quant_conv_linear)
         execute<std::uint8_t, std::int8_t>(function, inputs, "${BACKEND_NAME}")};
     EXPECT_TRUE(test::all_close(expected_output.front(), outputs.front()));
 }
+
+TEST(onnx_${BACKEND_NAME}, model_conv_resnetv24_conv0_fwd)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/conv_resnetv24_conv0_fwd.onnx"));
+
+    Inputs inputs{};
+    inputs.emplace_back(read_binary_file<float>(
+        file_util::path_join(TEST_FILES, "onnx/conv_resnetv24_conv0_fwd_X.bin")));
+    inputs.emplace_back(read_binary_file<float>(
+        file_util::path_join(TEST_FILES, "onnx/conv_resnetv24_conv0_fwd_W.bin")));
+
+    Outputs expected_outputs{read_binary_file<float>(
+        file_util::path_join(TEST_FILES, "onnx/conv_resnetv24_conv0_fwd_output.bin"))};
+
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
