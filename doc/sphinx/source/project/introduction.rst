@@ -4,6 +4,7 @@
 Introduction
 ############
 
+
 Developers working to craft solutions with :abbr:`Artificial Intelligence (AI)`
 face a steep learning curve in taking their concepts from design to production. 
 It can be difficult to create a :abbr:`Deep Learning (DL)` model capable of 
@@ -36,6 +37,7 @@ acceleration for any upcoming DL ASICs, but also unlocks a massive performance b
 for existing hardware targets such as CPUs and GPUs, in the context-aware stack of a 
 graph-based neural network. This solution also addresses the scalability issue with 
 kernel libraries which is a popular solution to accelerate deep learning performance.  
+
 
 Motivations
 ===========
