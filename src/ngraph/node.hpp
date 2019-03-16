@@ -133,16 +133,8 @@ namespace ngraph
              const std::vector<NodeOutput>& source_outputs,
              size_t output_size = 1);
 
-        virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
-        virtual void build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
-        {
-            throw BuildBackpropNotImplemented();
-        }
-
+        virtual void build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas) {}
     public:
-        class BuildBackpropNotImplemented : std::exception
-        {
-        };
         virtual ~Node();
         void revalidate_and_infer_types() { validate_and_infer_types(); }
         // Called after transition

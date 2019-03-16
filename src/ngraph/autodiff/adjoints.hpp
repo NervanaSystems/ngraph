@@ -58,28 +58,17 @@ namespace ngraph
 
             /// \brief Add a backprop contribution to x's adjoint
             ///
-            /// \param x The adjoint node
+            /// \param x The adjoint output
             /// \param delta A backprop contribution
-            void add_delta(const std::shared_ptr<Node>& x,
-                           const std::shared_ptr<Node>& delta,
-                           size_t output_index = 0);
-
             void add_output_delta(const NodeOutput& x, const NodeOutput& delta);
 
             /// \brief Add a backprop contribution to a slice of x's adjoint
             ///
-            /// \param x The adjoint node
+            /// \param x The adjoint output
             /// \param delta A backprop contribution
             /// \param lower_bounds Lower bounds of slice to add to
             /// \param upper_bounds Upper bounds of slice to add to
             /// \param strides Strides of slice to add to
-            void add_delta_to_slice(const std::shared_ptr<Node>& x,
-                                    const std::shared_ptr<Node>& delta,
-                                    const Coordinate& lower_bounds,
-                                    const Coordinate& upper_bounds,
-                                    const Strides& strides,
-                                    size_t output_index = 0);
-
             void add_output_delta_to_slice(const NodeOutput& x,
                                            const NodeOutput& delta,
                                            const Coordinate& lower_bounds,

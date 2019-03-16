@@ -35,27 +35,19 @@
 
 using namespace ngraph;
 
-std::shared_ptr<Node> make_zero(const std::shared_ptr<Node>& node)
+NodeOutput make_zero(const NodeOutput& node)
 {
     std::shared_ptr<Node> zero = std::make_shared<op::ScalarConstantLike>(node, 0.0);
     std::shared_ptr<Node> bzero = std::make_shared<op::BroadcastLike>(zero, node, AxisSet{});
     return bzero;
 }
 
-NodeVector make_zeros(std::shared_ptr<Node> x)
+OutputVector make_zeros(std::shared_ptr<Node> x)
 {
-    NodeVector zeros;
-    if (x->get_output_size() > 1)
+    OutputVector zeros;
+    for (size_t i = 0; i < x->get_output_size(); ++i)
     {
-        auto goes = op::get_output_elements(x);
-        for (size_t i = 0; i < goes.size(); ++i)
-        {
-            zeros.push_back(make_zero(goes.at(i)));
-        }
-    }
-    else
-    {
-        zeros.push_back(make_zero(x));
+        zeros.push_back(make_zero(NodeOutput(x, i)));
     }
     return zeros;
 }
@@ -120,6 +112,7 @@ autodiff::Adjoints::Adjoints(const OutputVector& ys, const OutputVector& cs)
     {
         auto node = nodes_to_check.front();
         nodes_to_check.pop_front();
+
         // Look for nodes that will be available when this node is done
         for (size_t i = 0; i < node->get_input_size(); i++)
         {
@@ -131,20 +124,8 @@ autodiff::Adjoints::Adjoints(const OutputVector& ys, const OutputVector& cs)
                 nodes_to_check.push_front(source_node);
             }
         }
-        try
-        {
-            node->build_backprop(*this, get(node));
-        }
-        catch (const Node::BuildBackpropNotImplemented&)
-        {
-            auto& outputs = get(node);
-            NodeVector as_nodes;
-            for (auto& output : outputs)
-            {
-                as_nodes.push_back(get_output_element(output.get_node(), output.get_index()));
-            }
-            node->generate_adjoints(*this, as_nodes);
-        }
+
+        node->build_backprop(*this, get(node));
     }
 }
 
@@ -158,65 +139,20 @@ const OutputVector& autodiff::Adjoints::get(const std::shared_ptr<Node>& x)
     return adjoint_it->second;
 }
 
-void autodiff::Adjoints::add_delta(const std::shared_ptr<Node>& x,
-                                   const std::shared_ptr<Node>& delta,
-                                   size_t output_index)
-{
-    auto adjoint_it = m_adjoint_map.find(x.get());
-    if (m_adjoint_map.end() == adjoint_it)
-    {
-        auto zeros = make_zeros(x);
-        zeros.at(output_index) = delta;
-        m_adjoint_map.insert({x.get(), zeros});
-    }
-    else
-    {
-        auto& deltas = adjoint_it->second;
-        deltas.at(output_index) = std::make_shared<op::Add>(deltas.at(output_index), delta);
-        adjoint_it->second = deltas;
-    }
-}
-
 void autodiff::Adjoints::add_output_delta(const NodeOutput& x, const NodeOutput& delta)
 {
-    add_delta(x.get_node(), get_output_element(delta.get_node(), delta.get_index()), x.get_index());
-}
-
-//This doesn't need an index since slice can only sit on top of GOE
-void autodiff::Adjoints::add_delta_to_slice(const std::shared_ptr<Node>& x,
-                                            const std::shared_ptr<Node>& delta,
-                                            const Coordinate& lower_bounds,
-                                            const Coordinate& upper_bounds,
-                                            const Strides& strides,
-                                            size_t output_index)
-{
-    if (!(x->get_output_element_type(0).compatible(delta->get_output_element_type(0))) ||
-        !(x->get_output_partial_shape(0).rank().compatible(
-            delta->get_output_partial_shape(0).rank())))
-    {
-        throw ngraph_error(
-            "Autodiff internal error: Mismatch on backprop and op in add_delta_to_slice.");
-    }
-
-    auto adjoint_it = m_adjoint_map.find(x.get());
+    auto adjoint_it = m_adjoint_map.find(x.get_node().get());
     if (m_adjoint_map.end() == adjoint_it)
     {
-        auto zeros = make_zeros(x);
-        zeros.at(output_index) = std::make_shared<op::ReplaceSlice>(
-            zeros.at(output_index), delta, lower_bounds, upper_bounds, strides);
-        m_adjoint_map.insert({x.get(), zeros});
+        auto zeros = make_zeros(x.get_node());
+        zeros.at(x.get_index()) = delta;
+        m_adjoint_map.insert({x.get_node().get(), zeros});
     }
     else
     {
         auto& deltas = adjoint_it->second;
-        deltas.at(output_index) = std::make_shared<op::ReplaceSlice>(
-            deltas.at(output_index),
-            std::make_shared<op::Slice>(
-                deltas.at(output_index), lower_bounds, upper_bounds, strides) +
-                delta,
-            lower_bounds,
-            upper_bounds,
-            strides);
+        deltas.at(x.get_index()) = std::make_shared<op::Add>(deltas.at(x.get_index()), delta);
+        adjoint_it->second = deltas;
     }
 }
 
@@ -226,12 +162,33 @@ void autodiff::Adjoints::add_output_delta_to_slice(const NodeOutput& x,
                                                    const Coordinate& upper_bounds,
                                                    const Strides& strides)
 {
-    add_delta_to_slice(x.get_node(),
-                       get_output_element(delta.get_node(), delta.get_index()),
-                       lower_bounds,
-                       upper_bounds,
-                       strides,
-                       x.get_index());
+    if (!(x.get_element_type().compatible(delta.get_element_type())) ||
+        !(x.get_partial_shape().rank().compatible(delta.get_partial_shape().rank())))
+    {
+        throw ngraph_error(
+            "Autodiff internal error: Mismatch on backprop and op in add_delta_to_slice.");
+    }
+
+    auto adjoint_it = m_adjoint_map.find(x.get_node().get());
+    if (m_adjoint_map.end() == adjoint_it)
+    {
+        auto zeros = make_zeros(x.get_node());
+        zeros.at(x.get_index()) = std::make_shared<op::ReplaceSlice>(
+            zeros.at(x.get_index()), delta, lower_bounds, upper_bounds, strides);
+        m_adjoint_map.insert({x.get_node().get(), zeros});
+    }
+    else
+    {
+        auto& deltas = adjoint_it->second;
+        deltas.at(x.get_index()) = std::make_shared<op::ReplaceSlice>(
+            deltas.at(x.get_index()),
+            std::make_shared<op::Slice>(
+                deltas.at(x.get_index()), lower_bounds, upper_bounds, strides) +
+                delta,
+            lower_bounds,
+            upper_bounds,
+            strides);
+    }
 }
 
 std::shared_ptr<Node> autodiff::Adjoints::backprop_node(const std::shared_ptr<Node>& x)
