@@ -18,7 +18,7 @@
 
 #include "ngraph/file_util.hpp"
 #include "ngraph/runtime/backend.hpp"
-#include "ngraph/runtime/backend_manager.hpp"
+//#include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/util.hpp"
 
@@ -37,6 +37,11 @@ unique_ptr<runtime::Backend> runtime::Backend::create(const string& type)
 vector<string> runtime::Backend::get_registered_devices()
 {
     return BackendManager::get_registered_backends();
+}
+
+DL_HANDLE runtime::Backend::get_handlex(const std::string& type)
+{
+    return BackendManager::get_handle(type);
 }
 
 bool runtime::Backend::is_supported(const Node& node) const
