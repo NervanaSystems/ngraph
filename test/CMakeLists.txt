@@ -14,6 +14,10 @@
 # limitations under the License.
 # ******************************************************************************
 
+if(LINUX)
+    set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+endif()
+
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "4.0.0")
         # gtest has issues with this with v1.8.x
@@ -52,6 +56,7 @@ set(SRC
     reshape_sinking.cpp
     serialize.cpp
     shape.cpp
+    specialize_shapes.cpp
     tensor.cpp
     type_prop.cpp
     util.cpp
@@ -82,6 +87,9 @@ endif()
 if (NGRAPH_CPU_ENABLE)
     list(APPEND SRC core_fusion.cpp builder_quantization.cpp)
     list(APPEND SRC backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_debugger.cpp)
+    if (NOT NGRAPH_DEX_ONLY)
+        list(APPEND SRC cpu_codegen.cpp)
+    endif()
     if (NGRAPH_HALIDE)
         list(APPEND SRC halide.cpp)
     endif()
@@ -123,6 +131,7 @@ set(MULTI_TEST_SRC
     autodiff.in.cpp
     backend_all.in.cpp
     backend_any.in.cpp
+    backend_api.in.cpp
     backend_binary_elementwise.in.cpp
     backend_broadcast.in.cpp
     backend_comparison.in.cpp

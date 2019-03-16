@@ -21,7 +21,7 @@
 #include <string>
 #include <vector>
 
-#include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/executable.hpp"
 
 namespace ngraph
 {

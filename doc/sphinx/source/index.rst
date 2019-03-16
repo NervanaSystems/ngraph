@@ -48,6 +48,12 @@ nGraph Compiler stack
    core/passes/passes.rst
    buildlb.rst
    
+.. toctree::
+   :maxdepth: 1
+   :caption: Python API
+
+   python_api/index.rst
+
    
 .. toctree::
    :maxdepth: 1

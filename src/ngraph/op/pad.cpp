@@ -38,31 +38,49 @@ void op::Pad::validate_and_infer_types()
 {
     element::Type result_et;
 
-    NODE_VALIDATION_ASSERT(
-        this, element::Type::merge(result_et, get_input_element_type(0), get_input_element_type(1)))
-        << "Argument element types do not match (arg0 element type: " << get_input_element_type(0)
-        << ", arg1 element type: " << get_input_element_type(1) << ").";
+    NODE_VALIDATION_CHECK(
+        this,
+        element::Type::merge(result_et, get_input_element_type(0), get_input_element_type(1)),
+        "Argument element types do not match (arg0 element type: ",
+        get_input_element_type(0),
+        ", arg1 element type: ",
+        get_input_element_type(1),
+        ").");
 
-    NODE_VALIDATION_ASSERT(this, get_input_partial_shape(1).compatible(PartialShape{}))
-        << "Argument for padding value is not a scalar (shape: " << get_input_partial_shape(1)
-        << ").";
+    NODE_VALIDATION_CHECK(this,
+                          get_input_partial_shape(1).compatible(PartialShape{}),
+                          "Argument for padding value is not a scalar (shape: ",
+                          get_input_partial_shape(1),
+                          ").");
 
     auto arg_shape = get_input_partial_shape(0);
 
-    NODE_VALIDATION_ASSERT(this,
-                           m_padding_below.size() == m_padding_above.size() &&
-                               m_padding_below.size() == m_padding_interior.size())
-        << "Ranks for padding below (" << m_padding_below << "), padding above (" << m_padding_above
-        << ") and interior padding (" << m_padding_interior << ") "
-        << "do not match.";
+    NODE_VALIDATION_CHECK(this,
+                          m_padding_below.size() == m_padding_above.size() &&
+                              m_padding_below.size() == m_padding_interior.size(),
+                          "Ranks for padding below (",
+                          m_padding_below,
+                          "), padding above (",
+                          m_padding_above,
+                          ") and interior padding (",
+                          m_padding_interior,
+                          ") ",
+                          "do not match.");
 
     size_t implied_rank = m_padding_below.size();
 
-    NODE_VALIDATION_ASSERT(this, arg_shape.rank().compatible(implied_rank))
-        << "Rank for padding below/padding above/interior padding does not match the rank of the "
-        << "data argument (padding below: " << m_padding_below << ", "
-        << ", padding above: " << m_padding_above << ", interior padding: " << m_padding_interior
-        << ").";
+    NODE_VALIDATION_CHECK(
+        this,
+        arg_shape.rank().compatible(implied_rank),
+        "Rank for padding below/padding above/interior padding does not match the rank of the ",
+        "data argument (padding below: ",
+        m_padding_below,
+        ", ",
+        ", padding above: ",
+        m_padding_above,
+        ", interior padding: ",
+        m_padding_interior,
+        ").");
 
     std::vector<Dimension> result_dims(implied_rank, Dimension::dynamic());
 

@@ -52,8 +52,11 @@
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
+#include "ngraph/op/experimental/quantized_dot.hpp"
+#include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
+#include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
@@ -430,6 +433,12 @@ static shared_ptr<ngraph::Function>
         try
         {
             string node_name = node_js.at("name").get<string>();
+            string friendly_name;
+            auto it = node_js.find("friendly_name");
+            if (it != node_js.end())
+            {
+                friendly_name = it->get<string>();
+            }
             string node_op = node_js.at("op").get<string>();
             vector<string> node_inputs = node_js.at("inputs").get<vector<string>>();
             vector<string> control_deps_inputs =
@@ -598,12 +607,13 @@ static shared_ptr<ngraph::Function>
                     node_js.count("element_type") == 0 ? node_js.at("value_type") : node_js;
                 auto element_type = read_element_type(type_node_js.at("element_type"));
                 auto shape = type_node_js.at("shape");
-                try
+                auto value_it = node_js.find("value");
+                if (value_it != node_js.end())
                 {
-                    auto value = node_js.at("value").get<vector<string>>();
+                    auto value = value_it->get<vector<string>>();
                     node = make_shared<op::Constant>(element_type, shape, value);
                 }
-                catch (...)
+                else
                 {
                     node = const_data_callback(node_name, element_type, shape);
                 }
@@ -1023,6 +1033,10 @@ static shared_ptr<ngraph::Function>
                                                  data_dilation_strides.get<std::vector<size_t>>());
                 break;
             }
+            case OP_TYPEID::QuantizedDotBias: { break;
+            }
+            case OP_TYPEID::QuantizedDot: { break;
+            }
             case OP_TYPEID::QuantizedMaxPool:
             {
                 auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
@@ -1174,6 +1188,11 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::TopK>(args[0], top_k_axis, target_type, k, compute_max);
                 break;
             }
+            case OP_TYPEID::Transpose:
+            {
+                node = make_shared<op::Transpose>(args[0], args[1]);
+                break;
+            }
             case OP_TYPEID::StopGradient:
             {
                 node = make_shared<op::StopGradient>(args[0]);
@@ -1193,17 +1212,21 @@ static shared_ptr<ngraph::Function>
                 node->add_control_dependency(node_map.at(name));
             }
 
-            node->set_friendly_name(node_name);
+            if (!friendly_name.empty())
+            {
+                node->set_friendly_name(friendly_name);
+            }
             node_map[node_name] = node;
         }
         catch (...)
         {
             string node_name;
-            try
+            auto it = node_js.find("name");
+            if (it != node_js.end())
             {
-                node_name = node_js.at("name").get<string>();
+                node_name = it->get<string>();
             }
-            catch (...)
+            else
             {
                 node_name = "UNKNOWN";
             }
@@ -1251,7 +1274,11 @@ static shared_ptr<ngraph::Function>
 static json write(const Node& n, bool binary_constant_data)
 {
     json node;
-    node["name"] = n.get_friendly_name();
+    node["name"] = n.get_name();
+    if (n.get_name() != n.get_friendly_name())
+    {
+        node["friendly_name"] = n.get_friendly_name();
+    }
     node["op"] = n.description();
     // TODO Multiple outputs
     json inputs = json::array();
@@ -1630,6 +1657,10 @@ static json write(const Node& n, bool binary_constant_data)
         node["data_dilation_strides"] = tmp->get_data_dilation_strides();
         break;
     }
+    case OP_TYPEID::QuantizedDotBias: { break;
+    }
+    case OP_TYPEID::QuantizedDot: { break;
+    }
     case OP_TYPEID::QuantizedMaxPool:
     {
         auto tmp = dynamic_cast<const op::QuantizedMaxPool*>(&n);
@@ -1733,6 +1764,8 @@ static json write(const Node& n, bool binary_constant_data)
         node["k"] = tmp->get_k();
         node["compute_max"] = tmp->get_compute_max();
         break;
+    }
+    case OP_TYPEID::Transpose: { break;
     }
     case OP_TYPEID::UnknownOp: { break;
     }

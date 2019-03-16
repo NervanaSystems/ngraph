@@ -84,10 +84,13 @@ std::string ngraph::get_timestamp()
     auto timer = std::chrono::system_clock::to_time_t(now);
 
     // convert to broken time
-    std::tm* bt = std::localtime(&timer);
-
     char buffer[256];
-    strftime(buffer, sizeof(buffer), "%H:%M:%S", bt);
+    buffer[0] = 0;
+    std::tm* bt = std::localtime(&timer);
+    if (bt)
+    {
+        strftime(buffer, sizeof(buffer), "%H:%M:%S", bt);
+    }
 
     std::ostringstream timestamp;
     timestamp << buffer;
@@ -110,7 +113,7 @@ void ngraph::LogPrintf(const char* fmt, ...)
 #pragma GCC diagnostic pop
     va_end(args2);
 
-#ifdef NGRAPH_DISTRIBUTED_OMPI_ENABLE
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
     ngraph::Distributed dist;
     std::printf("%s [RANK: %d]: %s\n", get_timestamp().c_str(), dist.get_rank(), buf.data());
 #else
