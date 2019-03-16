@@ -245,6 +245,13 @@ namespace ngraph
         /// Set device placement
         void set_placement_index(size_t placement);
 
+        const std::unordered_set<std::string>& get_provenance_tags() const;
+        void add_provenance_tag(const std::string& tag);
+        void remove_provenance_tag(const std::string& tag);
+
+        // to be used when nodes are replaced
+        void merge_provenance_tags_from(const std::shared_ptr<const Node>& source);
+
         /// Get input descriptor that is connected to src
         descriptor::Input* get_input_from(const std::shared_ptr<Node>& src);
 
@@ -268,24 +275,12 @@ namespace ngraph
         std::string m_friendly_name;
         const std::string m_unique_name;
         static std::atomic<size_t> m_next_instance_id;
+        std::unordered_set<std::string> m_provenance_tags;
         std::deque<descriptor::Input> m_inputs;
         std::deque<descriptor::Output> m_outputs;
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
         Placement m_placement = Placement::DEFAULT;
         size_t m_placement_index = placement_invalid;
-    };
-
-    class NodeValidationError : public AssertionFailure
-    {
-    public:
-        NodeValidationError(std::string what)
-            : AssertionFailure(what)
-        {
-        }
-        NodeValidationError(const char* what)
-            : AssertionFailure(what)
-        {
-        }
     };
 
     class NodeValidationFailure : public CheckFailure
@@ -321,12 +316,5 @@ namespace ngraph
     void check_new_args_count(const Node* node, const NodeVector& new_args);
 } // namespace ngraph
 
-#define NODE_VALIDATION_ASSERT(node, cond)                                                         \
-    NGRAPH_ASSERT_STREAM_WITH_LOC(                                                                 \
-        ::ngraph::NodeValidationError, cond, ::ngraph::node_validation_assertion_string(node))
-#define NODE_VALIDATION_FAIL(node)                                                                 \
-    NGRAPH_FAIL_STREAM_WITH_LOC(::ngraph::NodeValidationError,                                     \
-                                ::ngraph::node_validation_assertion_string(node))
-
 #define NODE_VALIDATION_CHECK(node, cond, ...)                                                     \
-    NGRAPH_CHECK(::NodeValidationFailure, (node), (cond), __VA_ARGS__)
+    NGRAPH_CHECK(::ngraph::NodeValidationFailure, (node), (cond), __VA_ARGS__)
