@@ -72,8 +72,8 @@ std::shared_ptr<ngraph::Node> ngraph::op::BatchNormTraining::copy_with_new_sourc
         new_source_outputs.at(2), new_source_outputs.at(0), new_source_outputs.at(1), m_epsilon);
 }
 
-void ngraph::op::BatchNormTraining::build_backprop(autodiff::Adjoints& adjoints,
-                                                   const OutputVector& deltas)
+void ngraph::op::BatchNormTraining::generate_adjoints(autodiff::Adjoints& adjoints,
+                                                      const OutputVector& deltas)
 {
     auto gamma = get_input_source_output(0);
     auto beta = get_input_source_output(1);

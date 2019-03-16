@@ -33,7 +33,7 @@ shared_ptr<Node>
     return make_shared<Subtract>(new_source_outputs.at(0), new_source_outputs.at(1));
 }
 
-void op::Subtract::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::Subtract::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 

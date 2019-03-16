@@ -125,7 +125,7 @@ autodiff::Adjoints::Adjoints(const OutputVector& ys, const OutputVector& cs)
             }
         }
 
-        node->build_backprop(*this, get(node));
+        node->generate_adjoints(*this, get(node));
     }
 }
 

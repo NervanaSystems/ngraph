@@ -199,7 +199,7 @@ shared_ptr<Node>
                                             m_padding_above);
 }
 
-void op::MaxPool::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 

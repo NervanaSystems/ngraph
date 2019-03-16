@@ -60,7 +60,7 @@ shared_ptr<Node>
     return make_shared<Reverse>(new_source_outputs.at(0), m_reversed_axes);
 }
 
-void op::Reverse::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::Reverse::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 

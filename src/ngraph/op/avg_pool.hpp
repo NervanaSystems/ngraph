@@ -75,8 +75,8 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_source_outputs(const OutputVector& new_source_outputs) const override;
 
-            virtual void build_backprop(autodiff::Adjoints& adjoints,
-                                        const OutputVector& deltas) override;
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const OutputVector& deltas) override;
 
             /// \return The window shape.
             const Shape& get_window_shape() const { return m_window_shape; }

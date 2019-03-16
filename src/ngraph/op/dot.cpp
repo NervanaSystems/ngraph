@@ -176,7 +176,7 @@ shared_ptr<op::Reshape> make_reshape_axes_to_front(const NodeOutput& n,
     return make_shared<op::Reshape>(n, input_order, output_shape);
 }
 
-void op::Dot::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::Dot::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 

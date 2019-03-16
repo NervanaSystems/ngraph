@@ -45,8 +45,8 @@ namespace ngraph
             /// \brief Returns the seed value supplied to a random generator
             unsigned int get_seed() const { return m_seed; }
         protected:
-            virtual void build_backprop(autodiff::Adjoints& adjoints,
-                                        const OutputVector& deltas) override
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const OutputVector& deltas) override
             {
             }
 

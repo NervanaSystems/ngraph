@@ -71,7 +71,7 @@ op::BatchDot::BatchDot(const NodeOutput& a, const NodeOutput& b, bool transpose_
     set_output_type(0, a.get_element_type(), dot_shape);
 }
 
-void op::BatchDot::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::BatchDot::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0); // NxIxK
 

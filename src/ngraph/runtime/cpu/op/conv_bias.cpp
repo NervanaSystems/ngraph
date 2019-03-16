@@ -144,7 +144,8 @@ shared_ptr<Node> op::ConvolutionBias::copy_with_new_args(const NodeVector& new_a
                                                 m_with_relu));
 }
 
-void op::ConvolutionBias::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::ConvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints,
+                                            const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 

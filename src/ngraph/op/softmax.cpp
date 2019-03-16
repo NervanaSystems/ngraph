@@ -63,7 +63,7 @@ shared_ptr<Node>
     return make_shared<Softmax>(new_source_outputs.at(0), m_axes);
 }
 
-void op::Softmax::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 

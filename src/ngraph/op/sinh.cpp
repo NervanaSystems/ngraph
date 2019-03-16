@@ -34,7 +34,7 @@ shared_ptr<Node>
     return make_shared<Sinh>(new_source_outputs.at(0));
 }
 
-void op::Sinh::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::Sinh::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 

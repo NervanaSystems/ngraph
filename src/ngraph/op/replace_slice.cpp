@@ -176,7 +176,7 @@ shared_ptr<Node>
                                      m_strides);
 }
 
-void op::ReplaceSlice::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::ReplaceSlice::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 

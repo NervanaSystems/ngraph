@@ -193,8 +193,8 @@ shared_ptr<Node> op::GroupConvolutionBias::copy_with_new_args(const NodeVector& 
                                                      get_alpha()));
 }
 
-void op::GroupConvolutionBias::build_backprop(autodiff::Adjoints& adjoints,
-                                              const OutputVector& deltas)
+void op::GroupConvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints,
+                                                 const OutputVector& deltas)
 {
-    throw ngraph_error("GroupConvolutionBias build_backprop not supported implemented");
+    throw ngraph_error("GroupConvolutionBias generate_adjoints not supported implemented");
 }

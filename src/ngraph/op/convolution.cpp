@@ -196,7 +196,7 @@ shared_ptr<Node>
                                     m_data_dilation_strides);
 }
 
-void op::Convolution::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::Convolution::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
@@ -303,8 +303,8 @@ void op::ConvolutionBackpropData::validate_and_infer_types()
     set_output_type(0, forward_result_et, m_data_batch_shape);
 }
 
-void op::ConvolutionBackpropData::build_backprop(autodiff::Adjoints& adjoints,
-                                                 const OutputVector& deltas)
+void op::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjoints,
+                                                    const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 

@@ -60,8 +60,8 @@ namespace ngraph
             /// \return The set of axes to reverse.
             const AxisSet& get_reversed_axes() const { return m_reversed_axes; }
         protected:
-            virtual void build_backprop(autodiff::Adjoints& adjoints,
-                                        const OutputVector& deltas) override;
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const OutputVector& deltas) override;
 
             const AxisSet m_reversed_axes;
         };

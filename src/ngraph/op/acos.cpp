@@ -45,7 +45,7 @@ shared_ptr<Node>
     return make_shared<Acos>(new_source_outputs.at(0));
 }
 
-void op::Acos::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::Acos::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 

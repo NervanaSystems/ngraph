@@ -33,7 +33,7 @@ shared_ptr<Node> op::Sin::copy_with_new_source_outputs(const OutputVector& new_s
     return make_shared<Sin>(new_source_outputs.at(0));
 }
 
-void op::Sin::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::Sin::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 

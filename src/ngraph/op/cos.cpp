@@ -34,7 +34,7 @@ shared_ptr<Node> op::Cos::copy_with_new_source_outputs(const OutputVector& new_s
     return make_shared<Cos>(new_source_outputs.at(0));
 }
 
-void op::Cos::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::Cos::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 

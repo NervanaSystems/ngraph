@@ -40,7 +40,7 @@ shared_ptr<Node>
     return make_shared<Convert>(new_source_outputs.at(0), m_element_type);
 }
 
-void op::Convert::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::Convert::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 

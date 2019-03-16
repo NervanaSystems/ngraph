@@ -50,7 +50,7 @@ shared_ptr<Node> op::LRN::copy_with_new_source_outputs(const OutputVector& new_s
     return make_shared<op::LRN>(new_source_outputs.at(0), m_alpha, m_beta, m_bias, m_size);
 }
 
-void op::LRN::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::LRN::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     throw ngraph_error("NYI");
 }

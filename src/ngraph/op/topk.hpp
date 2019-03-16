@@ -57,8 +57,8 @@ namespace ngraph
             element::Type m_index_element_type;
             size_t m_k;
             bool m_compute_max;
-            virtual void build_backprop(autodiff::Adjoints& adjoints,
-                                        const OutputVector& deltas) override;
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const OutputVector& deltas) override;
         };
     }
 }

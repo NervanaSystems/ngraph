@@ -35,7 +35,7 @@ shared_ptr<Node>
     return make_shared<Power>(new_source_outputs.at(0), new_source_outputs.at(1));
 }
 
-void op::Power::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::Power::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 

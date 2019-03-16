@@ -101,7 +101,7 @@ namespace ngraph
     /// or a (possibly empty) tuple of values.
     class Node : public std::enable_shared_from_this<Node>
     {
-        // So Adjoints can call build_backprop
+        // So Adjoints can call generate_adjoints
         friend class autodiff::Adjoints;
         friend class descriptor::Input;
         friend class NodeInput;                         // for private_get_inputs
@@ -133,7 +133,7 @@ namespace ngraph
              const std::vector<NodeOutput>& source_outputs,
              size_t output_size = 1);
 
-        virtual void build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas) {}
+        virtual void generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas) {}
     public:
         virtual ~Node();
         void revalidate_and_infer_types() { validate_and_infer_types(); }

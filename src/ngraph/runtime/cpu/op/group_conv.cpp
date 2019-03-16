@@ -92,7 +92,8 @@ shared_ptr<Node> op::GroupConvolution::copy_with_new_args(const NodeVector& new_
                                              this->get_shape());
 }
 
-void op::GroupConvolution::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::GroupConvolution::generate_adjoints(autodiff::Adjoints& adjoints,
+                                             const OutputVector& deltas)
 {
     throw ngraph_error("NYI");
 }

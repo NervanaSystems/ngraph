@@ -163,7 +163,7 @@ shared_ptr<Node>
     return shared_ptr<op::AvgPoolBackprop>(avpn);
 }
 
-void op::AvgPool::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 

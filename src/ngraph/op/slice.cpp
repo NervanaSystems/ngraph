@@ -130,7 +130,7 @@ shared_ptr<Node>
     return make_shared<Slice>(new_source_outputs.at(0), m_lower_bounds, m_upper_bounds, m_strides);
 }
 
-void op::Slice::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::Slice::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 

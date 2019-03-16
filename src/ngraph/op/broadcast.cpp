@@ -86,7 +86,7 @@ shared_ptr<Node>
     return make_shared<Broadcast>(new_source_outputs.at(0), m_shape, m_broadcast_axes);
 }
 
-void op::Broadcast::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 

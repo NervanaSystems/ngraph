@@ -101,7 +101,7 @@ shared_ptr<Node>
         new_source_outputs.at(0), m_top_k_axis, m_index_element_type, m_k, m_compute_max);
 }
 
-void op::TopK::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::TopK::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     throw ngraph_error("Forward-propagation-only operation");
 }

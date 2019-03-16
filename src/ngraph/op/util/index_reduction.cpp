@@ -72,8 +72,8 @@ void op::util::IndexReduction::validate_and_infer_types()
     set_output_type(0, m_index_element_type, output_shape);
 }
 
-void op::util::IndexReduction::build_backprop(autodiff::Adjoints& adjoints,
-                                              const OutputVector& deltas)
+void op::util::IndexReduction::generate_adjoints(autodiff::Adjoints& adjoints,
+                                                 const OutputVector& deltas)
 {
     throw ngraph_error("Forward-propagation-only operation");
 }

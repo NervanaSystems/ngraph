@@ -44,7 +44,7 @@ shared_ptr<Node>
     return make_shared<Asin>(new_source_outputs.at(0));
 }
 
-void op::Asin::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::Asin::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 

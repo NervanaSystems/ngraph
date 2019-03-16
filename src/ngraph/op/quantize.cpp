@@ -163,7 +163,7 @@ shared_ptr<Node>
                                  m_round_mode);
 }
 
-void op::Quantize::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::Quantize::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     throw ngraph_error("Forward-propagation-only operation");
 }
