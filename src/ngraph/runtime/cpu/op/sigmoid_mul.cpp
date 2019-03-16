@@ -89,20 +89,17 @@ shared_ptr<Node> op::SigmoidMultiply::copy_with_new_args(const NodeVector& new_a
         new_args.at(0), new_args.at(1), m_input_type[0], m_input_type[1]);
 }
 
-void op::SigmoidMultiply::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::SigmoidMultiply::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
-    auto input_0 = get_argument(0);
-    auto input_1 = get_argument(1);
+    auto input_0 = get_input_source_output(0);
+    auto input_1 = get_input_source_output(1);
 
     auto sigmoid_mul_backprop =
         make_shared<op::SigmoidMultiplyBackprop>(input_0, input_1, delta, m_input_type);
 
-    auto input_0_delta = make_shared<op::GetOutputElement>(sigmoid_mul_backprop, 0);
-    auto input_1_delta = make_shared<op::GetOutputElement>(sigmoid_mul_backprop, 1);
-
-    adjoints.add_delta(input_0, input_0_delta);
-    adjoints.add_delta(input_1, input_1_delta);
+    adjoints.add_output_delta(input_0, NodeOutput(sigmoid_mul_backprop, 0));
+    adjoints.add_output_delta(input_1, NodeOutput(sigmoid_mul_backprop, 1));
 }
 
 op::SigmoidMultiplyBackprop::SigmoidMultiplyBackprop(const NodeOutput& input_0,

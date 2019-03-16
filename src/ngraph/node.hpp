@@ -330,7 +330,6 @@ namespace ngraph
         std::unordered_set<std::string> m_provenance_tags;
         std::deque<descriptor::Input> m_inputs;
         std::deque<descriptor::Output> m_outputs;
-        std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
         Placement m_placement = Placement::DEFAULT;
         size_t m_placement_index = placement_invalid;
 

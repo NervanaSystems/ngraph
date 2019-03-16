@@ -62,7 +62,7 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override;
+            void build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas) override;
 
         protected:
             Strides m_window_movement_strides;

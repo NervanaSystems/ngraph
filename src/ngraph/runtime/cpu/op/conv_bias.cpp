@@ -144,29 +144,29 @@ shared_ptr<Node> op::ConvolutionBias::copy_with_new_args(const NodeVector& new_a
                                                 m_with_relu));
 }
 
-void op::ConvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::ConvolutionBias::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
-    auto data = get_argument(0);
-    const auto data_shape = data->get_shape();
+    auto data = get_input_source_output(0);
+    const auto data_shape = data.get_shape();
 
-    auto filter = get_argument(1);
-    const auto filter_shape = filter->get_shape();
+    auto filter = get_input_source_output(1);
+    const auto filter_shape = filter.get_shape();
 
-    auto bias = get_argument(2);
-    const auto bias_shape = bias->get_shape();
+    auto bias = get_input_source_output(2);
+    const auto bias_shape = bias.get_shape();
 
     // using regular convolution backprop for data
-    adjoints.add_delta(data,
-                       make_shared<op::ConvolutionBackpropData>(data_shape,
-                                                                filter,
-                                                                delta,
-                                                                m_window_movement_strides,
-                                                                m_window_dilation_strides,
-                                                                m_padding_below,
-                                                                m_padding_above,
-                                                                m_data_dilation_strides));
+    adjoints.add_output_delta(data,
+                              make_shared<op::ConvolutionBackpropData>(data_shape,
+                                                                       filter,
+                                                                       delta,
+                                                                       m_window_movement_strides,
+                                                                       m_window_dilation_strides,
+                                                                       m_padding_below,
+                                                                       m_padding_above,
+                                                                       m_data_dilation_strides));
 
     auto filter_bias_backprop =
         make_shared<op::ConvolutionBiasBackpropFiltersBias>(data,
@@ -178,11 +178,9 @@ void op::ConvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints, const 
                                                             m_padding_below,
                                                             m_padding_above,
                                                             m_data_dilation_strides);
-    auto filter_delta = make_shared<op::GetOutputElement>(filter_bias_backprop, 0);
-    auto bias_delta = make_shared<op::GetOutputElement>(filter_bias_backprop, 1);
 
-    adjoints.add_delta(filter, filter_delta);
-    adjoints.add_delta(bias, bias_delta);
+    adjoints.add_output_delta(filter, NodeOutput(filter_bias_backprop, 0));
+    adjoints.add_output_delta(bias, NodeOutput(filter_bias_backprop, 1));
 }
 
 op::ConvolutionBiasBackpropFiltersBias::ConvolutionBiasBackpropFiltersBias(

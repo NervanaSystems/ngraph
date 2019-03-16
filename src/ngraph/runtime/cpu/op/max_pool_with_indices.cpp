@@ -353,8 +353,8 @@ shared_ptr<Node>
     return shared_ptr<op::MaxPoolWithIndicesBackprop>(mpbp);
 }
 
-void op::MaxPoolWithIndices::generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas)
+void op::MaxPoolWithIndices::build_backprop(autodiff::Adjoints& adjoints,
+                                            const OutputVector& deltas)
 {
     throw ngraph_error("Differentation of MaxPoolWithIndices isn't supported");
 }

@@ -71,12 +71,12 @@ op::BatchDot::BatchDot(const NodeOutput& a, const NodeOutput& b, bool transpose_
     set_output_type(0, a.get_element_type(), dot_shape);
 }
 
-void op::BatchDot::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::BatchDot::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0); // NxIxK
 
-    auto a = get_inputs().at(0).get_output().get_node(); // NxIxJ (maybe transposed)
-    auto b = get_inputs().at(1).get_output().get_node(); // NxJxK (maybe transposed)
+    auto a = get_input_source_output(0); // NxIxJ (maybe transposed)
+    auto b = get_input_source_output(1); // NxJxK (maybe transposed)
 
     auto batch_transpose = [](const shared_ptr<Node>& node) {
         const auto& batch_shape = node->get_shape();
@@ -91,20 +91,20 @@ void op::BatchDot::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVec
     // if a is transposed, the result need to be transposed to match original a shape.
     if (m_transpose_a)
     {
-        adjoints.add_delta(a, batch_transpose(delta_dot_b));
+        adjoints.add_output_delta(a, batch_transpose(delta_dot_b));
     }
     else
     {
-        adjoints.add_delta(a, delta_dot_b);
+        adjoints.add_output_delta(a, delta_dot_b);
     }
 
     auto a_dot_delta = make_shared<BatchDot>(a, delta, !m_transpose_a, false); // JI.IK->JK
     if (m_transpose_b)
     {
-        adjoints.add_delta(b, batch_transpose(a_dot_delta));
+        adjoints.add_output_delta(b, batch_transpose(a_dot_delta));
     }
     else
     {
-        adjoints.add_delta(b, a_dot_delta);
+        adjoints.add_output_delta(b, a_dot_delta);
     }
 }
