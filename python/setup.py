@@ -240,6 +240,7 @@ sources = [
 
 package_dir = {
     'ngraph': PYNGRAPH_ROOT_DIR + '/ngraph',
+    'ngraph.onnx': PYNGRAPH_ROOT_DIR + '/ngraph/onnx',
     'ngraph.utils': PYNGRAPH_ROOT_DIR + '/ngraph/utils',
     'ngraph.impl': PYNGRAPH_ROOT_DIR + '/ngraph/impl',
     'ngraph.impl.op': PYNGRAPH_ROOT_DIR + '/ngraph/impl/op',
@@ -249,6 +250,7 @@ package_dir = {
 }
 packages = [
     'ngraph',
+    'ngraph.onnx',
     'ngraph.utils',
     'ngraph.impl',
     'ngraph.impl.op',
