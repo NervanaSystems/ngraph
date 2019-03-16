@@ -32,7 +32,7 @@ Glossary
 
    function graph
 
-      The Intel nGraph Library uses a function graph to represent an
+      The nGraph Library uses a function graph to represent an
       ``op``'s parameters and results.
 
    fusion

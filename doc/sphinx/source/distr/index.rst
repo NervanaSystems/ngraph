@@ -1,13 +1,13 @@
 .. distr/index.rst: 
 
-##############################
-Distributed Training in nGraph
-##############################
+################################
+Distributed training with nGraph
+################################
 
 
-.. important:: Distributed training is not officially supported in version |version|;
-   however, some configuration options have worked for nGraph devices with mixed or 
-   limited success in testing environments.
+.. important:: Distributed training is not officially supported in version 
+   |version|; however, some configuration options have worked for nGraph devices 
+   with mixed or limited success in testing environments.
 
 
 Why distributed training?
@@ -47,7 +47,8 @@ distributed training. Deployments using nGraph Library with supported backends
 can be configured to train with data parallelism and will soon work with model 
 parallelism. Distributing workloads is increasingly important, as more data and 
 bigger models mean the ability to :doc:`../core/constructing-graphs/distribute-train` 
-work with larger and larger datasets, or to work with models having many layers that aren't designed to fit to a single device.  
+work with larger and larger datasets, or to work with models having many layers 
+that aren't designed to fit to a single device.  
 
 Distributed training with data parallelism splits the data and each worker 
 node has the same model; during each iteration, the gradients are aggregated 
