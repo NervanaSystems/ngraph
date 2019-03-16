@@ -50,8 +50,8 @@ namespace ngraph
                       const Shape& shape,
                       const AxisSet& broadcast_axes);
 
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
+            virtual void build_backprop(autodiff::Adjoints& adjoints,
+                                        const OutputVector& deltas) override;
 
             virtual void infer_shape() {}
             Shape m_shape;

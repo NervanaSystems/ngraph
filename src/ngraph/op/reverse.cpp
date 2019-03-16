@@ -60,11 +60,11 @@ shared_ptr<Node>
     return make_shared<Reverse>(new_source_outputs.at(0), m_reversed_axes);
 }
 
-void op::Reverse::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Reverse::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
+    auto x = get_input_source_output(0);
 
-    adjoints.add_delta(x, make_shared<op::Reverse>(delta, m_reversed_axes));
+    adjoints.add_output_delta(x, make_shared<op::Reverse>(delta, m_reversed_axes));
 }

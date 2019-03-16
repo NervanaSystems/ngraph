@@ -31,15 +31,15 @@ shared_ptr<Node> op::Add::copy_with_new_source_outputs(const OutputVector& new_s
     return make_shared<Add>(new_source_outputs.at(0), new_source_outputs.at(1));
 }
 
-void op::Add::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Add::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
-    auto y = get_argument(1);
+    auto x = get_input_source_output(0);
+    auto y = get_input_source_output(1);
 
-    adjoints.add_delta(x, delta);
-    adjoints.add_delta(y, delta);
+    adjoints.add_output_delta(x, delta);
+    adjoints.add_output_delta(y, delta);
 }
 
 shared_ptr<Node> ngraph::operator+(const NodeOutput& arg0, const NodeOutput& arg1)

@@ -176,19 +176,21 @@ shared_ptr<Node>
                                      m_strides);
 }
 
-void op::ReplaceSlice::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::ReplaceSlice::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
-    auto y = get_argument(1);
+    auto x = get_input_source_output(0);
+    auto y = get_input_source_output(1);
     auto& y_element_type = get_input_element_type(1);
     auto y_shape = get_input_shape(1);
 
     auto zeros_shaped_like_y = op::Constant::create(y_element_type, y_shape, {0.0});
 
-    adjoints.add_delta(x,
-                       make_shared<op::ReplaceSlice>(
-                           delta, zeros_shaped_like_y, m_lower_bounds, m_upper_bounds, m_strides));
-    adjoints.add_delta(y, make_shared<op::Slice>(delta, m_lower_bounds, m_upper_bounds, m_strides));
+    adjoints.add_output_delta(
+        x,
+        make_shared<op::ReplaceSlice>(
+            delta, zeros_shaped_like_y, m_lower_bounds, m_upper_bounds, m_strides));
+    adjoints.add_output_delta(
+        y, make_shared<op::Slice>(delta, m_lower_bounds, m_upper_bounds, m_strides));
 }

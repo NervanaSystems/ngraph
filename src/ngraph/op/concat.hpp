@@ -43,8 +43,8 @@ namespace ngraph
             /// \return The concatenation axis.
             size_t get_concatenation_axis() const { return m_concatenation_axis; }
         protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
+            virtual void build_backprop(autodiff::Adjoints& adjoints,
+                                        const OutputVector& deltas) override;
             const size_t m_concatenation_axis;
         };
     }

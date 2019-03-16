@@ -34,13 +34,13 @@ shared_ptr<Node> op::Tan::copy_with_new_source_outputs(const OutputVector& new_s
     return make_shared<Tan>(new_source_outputs.at(0));
 }
 
-void op::Tan::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Tan::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
+    auto x = get_input_source_output(0);
 
     auto c = make_shared<op::Cos>(x);
 
-    adjoints.add_delta(x, delta / (c * c));
+    adjoints.add_output_delta(x, delta / (c * c));
 }

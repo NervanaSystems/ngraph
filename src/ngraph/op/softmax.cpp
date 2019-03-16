@@ -63,7 +63,7 @@ shared_ptr<Node>
     return make_shared<Softmax>(new_source_outputs.at(0), m_axes);
 }
 
-void op::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Softmax::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
@@ -88,6 +88,5 @@ void op::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVect
     auto adjoint =
         z - builder::make_with_numpy_broadcast<op::Multiply>(shared_from_this(), zreshape);
 
-    auto x = get_argument(0);
-    adjoints.add_delta(x, adjoint);
+    adjoints.add_output_delta(get_input_source_output(0), adjoint);
 }

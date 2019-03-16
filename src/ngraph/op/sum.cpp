@@ -32,12 +32,12 @@ shared_ptr<Node> op::Sum::copy_with_new_source_outputs(const OutputVector& new_s
     return make_shared<Sum>(new_source_outputs.at(0), m_reduction_axes);
 }
 
-void op::Sum::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Sum::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
+    auto x = get_input_source_output(0);
     auto& x_shape = get_input_shape(0);
 
-    adjoints.add_delta(x, make_shared<op::Broadcast>(delta, x_shape, m_reduction_axes));
+    adjoints.add_output_delta(x, make_shared<op::Broadcast>(delta, x_shape, m_reduction_axes));
 }

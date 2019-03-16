@@ -49,8 +49,8 @@ namespace ngraph
 
             const ngraph::AxisSet& get_axes() const { return m_axes; }
         protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
+            virtual void build_backprop(autodiff::Adjoints& adjoints,
+                                        const OutputVector& deltas) override;
 
         private:
             ngraph::element::Type m_type;

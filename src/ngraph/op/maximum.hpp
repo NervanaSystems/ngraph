@@ -37,8 +37,8 @@ namespace ngraph
 
             virtual bool is_commutative() override { return true; }
         protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
+            virtual void build_backprop(autodiff::Adjoints& adjoints,
+                                        const OutputVector& deltas) override;
         };
     }
 }

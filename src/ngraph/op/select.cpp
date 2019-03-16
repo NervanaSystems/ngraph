@@ -68,17 +68,17 @@ shared_ptr<Node>
         new_source_outputs.at(0), new_source_outputs.at(1), new_source_outputs.at(2));
 }
 
-void op::Select::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Select::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
-    auto p = get_argument(0);
-    auto x = get_argument(1);
-    auto y = get_argument(2);
+    auto p = get_input_source_output(0);
+    auto x = get_input_source_output(1);
+    auto y = get_input_source_output(2);
 
-    auto p_as_x_type = make_shared<op::Convert>(p, x->get_element_type());
-    auto not_p_as_y_type = make_shared<op::Convert>(make_shared<op::Not>(p), y->get_element_type());
+    auto p_as_x_type = make_shared<op::Convert>(p, x.get_element_type());
+    auto not_p_as_y_type = make_shared<op::Convert>(make_shared<op::Not>(p), y.get_element_type());
 
-    adjoints.add_delta(x, delta * p_as_x_type);
-    adjoints.add_delta(y, delta * not_p_as_y_type);
+    adjoints.add_output_delta(x, delta * p_as_x_type);
+    adjoints.add_output_delta(y, delta * not_p_as_y_type);
 }

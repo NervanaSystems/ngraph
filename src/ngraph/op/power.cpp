@@ -35,15 +35,15 @@ shared_ptr<Node>
     return make_shared<Power>(new_source_outputs.at(0), new_source_outputs.at(1));
 }
 
-void op::Power::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Power::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
-    auto y = get_argument(1);
+    auto x = get_input_source_output(0);
+    auto y = get_input_source_output(1);
 
     auto log_x = make_shared<op::Log>(x);
 
-    adjoints.add_delta(x, delta * y * shared_from_this() / x);
-    adjoints.add_delta(y, delta * shared_from_this() * log_x);
+    adjoints.add_output_delta(x, delta * y * shared_from_this() / x);
+    adjoints.add_output_delta(y, delta * shared_from_this() * log_x);
 }

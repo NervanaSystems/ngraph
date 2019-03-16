@@ -196,35 +196,35 @@ shared_ptr<Node>
                                     m_data_dilation_strides);
 }
 
-void op::Convolution::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Convolution::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
-    const auto x_shape = x->get_shape();
+    auto x = get_input_source_output(0);
+    const auto x_shape = x.get_shape();
 
-    auto f = get_argument(1);
-    const auto f_shape = f->get_shape();
+    auto f = get_input_source_output(1);
+    const auto f_shape = f.get_shape();
 
-    adjoints.add_delta(x,
-                       make_shared<op::ConvolutionBackpropData>(x_shape,
-                                                                f,
-                                                                delta,
-                                                                m_window_movement_strides,
-                                                                m_window_dilation_strides,
-                                                                m_padding_below,
-                                                                m_padding_above,
-                                                                m_data_dilation_strides));
+    adjoints.add_output_delta(x,
+                              make_shared<op::ConvolutionBackpropData>(x_shape,
+                                                                       f,
+                                                                       delta,
+                                                                       m_window_movement_strides,
+                                                                       m_window_dilation_strides,
+                                                                       m_padding_below,
+                                                                       m_padding_above,
+                                                                       m_data_dilation_strides));
 
-    adjoints.add_delta(f,
-                       make_shared<op::ConvolutionBackpropFilters>(x,
-                                                                   f_shape,
-                                                                   delta,
-                                                                   m_window_movement_strides,
-                                                                   m_window_dilation_strides,
-                                                                   m_padding_below,
-                                                                   m_padding_above,
-                                                                   m_data_dilation_strides));
+    adjoints.add_output_delta(f,
+                              make_shared<op::ConvolutionBackpropFilters>(x,
+                                                                          f_shape,
+                                                                          delta,
+                                                                          m_window_movement_strides,
+                                                                          m_window_dilation_strides,
+                                                                          m_padding_below,
+                                                                          m_padding_above,
+                                                                          m_data_dilation_strides));
 }
 
 op::ConvolutionBackpropData::ConvolutionBackpropData(const Shape& data_batch_shape,
@@ -303,16 +303,16 @@ void op::ConvolutionBackpropData::validate_and_infer_types()
     set_output_type(0, forward_result_et, m_data_batch_shape);
 }
 
-void op::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjoints,
-                                                    const NodeVector& deltas)
+void op::ConvolutionBackpropData::build_backprop(autodiff::Adjoints& adjoints,
+                                                 const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(1);
-    const auto x_shape = x->get_shape();
+    auto x = get_input_source_output(1);
+    const auto x_shape = x.get_shape();
 
-    auto f = get_argument(0);
-    const auto f_shape = f->get_shape();
+    auto f = get_input_source_output(0);
+    const auto f_shape = f.get_shape();
 
     auto data_conv = make_shared<op::Convolution>(delta,
                                                   f,
@@ -322,7 +322,7 @@ void op::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjoints
                                                   m_padding_above_forward,
                                                   m_data_dilation_strides_forward);
 
-    adjoints.add_delta(x, data_conv);
+    adjoints.add_output_delta(x, data_conv);
 
     Strides window_movement_strides = m_window_dilation_strides_forward;
     Strides window_dilation_strides = m_data_dilation_strides_forward;
@@ -355,14 +355,14 @@ void op::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjoints
                 m_data_dilation_strides_forward[i]);
     }
 
-    auto swap_NC = [](const shared_ptr<Node> n) {
-        AxisVector ax_order = ngraph::get_default_order(n->get_shape());
+    auto swap_NC = [](const NodeOutput& n) {
+        AxisVector ax_order = ngraph::get_default_order(n.get_shape());
         ax_order[0] = 1;
         ax_order[1] = 0;
 
-        auto new_shape = n->get_shape();
-        new_shape[0] = n->get_shape()[1];
-        new_shape[1] = n->get_shape()[0];
+        auto new_shape = n.get_shape();
+        new_shape[0] = n.get_shape()[1];
+        new_shape[1] = n.get_shape()[0];
 
         return make_shared<op::Reshape>(n, ax_order, new_shape);
     };
@@ -383,7 +383,7 @@ void op::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjoints
         axes.insert(i);
     }
     filter_deconv_bprop = make_shared<ngraph::op::Reverse>(filter_deconv_bprop, axes);
-    adjoints.add_delta(f, filter_deconv_bprop);
+    adjoints.add_output_delta(f, filter_deconv_bprop);
 }
 
 shared_ptr<Node> op::ConvolutionBackpropData::copy_with_new_source_outputs(

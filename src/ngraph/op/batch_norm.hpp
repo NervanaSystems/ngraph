@@ -50,7 +50,7 @@ namespace ngraph
             //   [1] - The per-channel means of (pre-normalized) 'input'.
             //   [2] - The per-channel variances of (pre-normalized) 'input'.
             //
-            // AUTODIFF SUPPORT: yes: 'generate_adjoints(...)' works as expected.
+            // AUTODIFF SUPPORT: yes: 'build_backprop(...)' works as expected.
             //
             // SHAPE DETAILS:
             //   gamma:     must have rank 1, with the same span as input's channel axis.
@@ -107,7 +107,7 @@ namespace ngraph
             // OUTPUT VALUE: a single tensor with the normalized value of 'input'.
             //
             // AUTODIFF SUPPORT:
-            //   - 'generate_adjoints(...) may throw an exception.
+            //   - 'build_backprop(...) may throw an exception.
             //
             // SHAPE DETAILS:
             //   gamma:    must have rank 1, with the same span as input's channel axis.
@@ -131,8 +131,8 @@ namespace ngraph
                 copy_with_new_source_outputs(const OutputVector& new_source_outputs) const override;
 
         protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override
+            virtual void build_backprop(autodiff::Adjoints& adjoints,
+                                        const OutputVector& deltas) override
             {
                 throw ngraph_error("Invalid operation");
             }

@@ -112,7 +112,7 @@ shared_ptr<Node>
     return make_shared<Reshape>(new_source_outputs.at(0), m_input_order, m_output_shape);
 }
 
-void op::Reshape::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Reshape::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
@@ -142,5 +142,5 @@ void op::Reshape::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVect
         reshape = make_shared<op::Reshape>(reshape, x_input_order, x_shape);
     }
 
-    adjoints.add_delta(get_argument(0), reshape);
+    adjoints.add_output_delta(get_input_source_output(0), reshape);
 }

@@ -47,10 +47,11 @@ shared_ptr<Node>
     return make_shared<SigmoidBackprop>(new_source_outputs.at(0), new_source_outputs.at(1));
 }
 
-void op::Sigmoid::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Sigmoid::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
-    auto backprop = make_shared<op::SigmoidBackprop>(get_argument(0), delta);
-    adjoints.add_delta(get_argument(0), backprop);
+    auto backprop = make_shared<op::SigmoidBackprop>(get_input_source_output(0), delta);
+
+    adjoints.add_output_delta(get_input_source_output(0), backprop);
 }

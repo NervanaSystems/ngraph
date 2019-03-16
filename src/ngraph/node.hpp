@@ -101,7 +101,7 @@ namespace ngraph
     /// or a (possibly empty) tuple of values.
     class Node : public std::enable_shared_from_this<Node>
     {
-        // So Adjoints can call generate_adjoints
+        // So Adjoints can call build_backprop
         friend class autodiff::Adjoints;
         friend class descriptor::Input;
         friend class NodeInput;                         // for private_get_inputs

@@ -44,8 +44,3 @@ shared_ptr<Node>
     check_new_source_outputs_count(this, new_source_outputs);
     return make_shared<Parameter>(m_element_type, m_partial_shape);
 }
-
-void op::Parameter::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
-{
-    auto delta = deltas.at(0);
-}

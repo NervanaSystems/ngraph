@@ -53,9 +53,9 @@ shared_ptr<Node>
     return res;
 }
 
-void op::Result::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Result::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
-    adjoints.add_delta(get_argument(0), delta);
+    adjoints.add_output_delta(get_input_source_output(0), delta);
 }

@@ -30,10 +30,6 @@ namespace ngraph
         /// Basic graph operations do not need parameters attached to a function.
         class Parameter : public op::Op
         {
-        protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
-
         public:
             /// \brief Constructions a tensor-typed parameter node.
             ///

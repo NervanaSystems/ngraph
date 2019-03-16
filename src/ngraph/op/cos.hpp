@@ -35,8 +35,8 @@ namespace ngraph
                 copy_with_new_source_outputs(const OutputVector& new_source_outputs) const override;
 
         protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
+            virtual void build_backprop(autodiff::Adjoints& adjoints,
+                                        const OutputVector& deltas) override;
         };
     }
 }

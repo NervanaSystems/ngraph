@@ -94,33 +94,34 @@ shared_ptr<Node>
     return make_shared<Concat>(new_source_outputs, m_concatenation_axis);
 }
 
-void op::Concat::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Concat::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
     auto concat_result_shape = get_output_shape(0);
 
-    Coordinate arg_delta_slice_lower = Coordinate(concat_result_shape.size(), 0);
-    Coordinate arg_delta_slice_upper = concat_result_shape;
-    Coordinate arg_delta_slice_strides = Coordinate(concat_result_shape.size(), 1);
+    Coordinate input_delta_slice_lower = Coordinate(concat_result_shape.size(), 0);
+    Coordinate input_delta_slice_upper = concat_result_shape;
+    Coordinate input_delta_slice_strides = Coordinate(concat_result_shape.size(), 1);
 
     size_t pos = 0;
 
-    for (auto arg : get_arguments())
+    for (size_t i = 0; i < get_input_size(); i++)
     {
-        auto arg_shape = arg->get_shape();
+        auto input_shape = get_input_shape(i);
 
-        auto slice_width = arg_shape[m_concatenation_axis];
+        auto slice_width = input_shape[m_concatenation_axis];
 
         size_t next_pos = pos + slice_width;
 
-        arg_delta_slice_lower[m_concatenation_axis] = pos;
-        arg_delta_slice_upper[m_concatenation_axis] = next_pos;
+        input_delta_slice_lower[m_concatenation_axis] = pos;
+        input_delta_slice_upper[m_concatenation_axis] = next_pos;
 
-        adjoints.add_delta(
-            arg,
-            make_shared<op::Slice>(
-                delta, arg_delta_slice_lower, arg_delta_slice_upper, arg_delta_slice_strides));
+        adjoints.add_output_delta(get_input_source_output(i),
+                                  make_shared<op::Slice>(delta,
+                                                         input_delta_slice_lower,
+                                                         input_delta_slice_upper,
+                                                         input_delta_slice_strides));
 
         pos = next_pos;
     }

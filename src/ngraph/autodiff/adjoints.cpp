@@ -187,7 +187,8 @@ void autodiff::Adjoints::add_delta_to_slice(const std::shared_ptr<Node>& x,
                                             const std::shared_ptr<Node>& delta,
                                             const Coordinate& lower_bounds,
                                             const Coordinate& upper_bounds,
-                                            const Strides& strides)
+                                            const Strides& strides,
+                                            size_t output_index)
 {
     if (!(x->get_output_element_type(0).compatible(delta->get_output_element_type(0))) ||
         !(x->get_output_partial_shape(0).rank().compatible(
@@ -200,21 +201,37 @@ void autodiff::Adjoints::add_delta_to_slice(const std::shared_ptr<Node>& x,
     auto adjoint_it = m_adjoint_map.find(x.get());
     if (m_adjoint_map.end() == adjoint_it)
     {
-        auto zero = make_zero(x);
-        NodeVector zeros{
-            std::make_shared<op::ReplaceSlice>(zero, delta, lower_bounds, upper_bounds, strides)};
+        auto zeros = make_zeros(x);
+        zeros.at(output_index) = std::make_shared<op::ReplaceSlice>(
+            zeros.at(output_index), delta, lower_bounds, upper_bounds, strides);
         m_adjoint_map.insert({x.get(), zeros});
     }
     else
     {
         auto& deltas = adjoint_it->second;
-        deltas.at(0) = std::make_shared<op::ReplaceSlice>(
-            deltas.at(0),
-            std::make_shared<op::Slice>(deltas.at(0), lower_bounds, upper_bounds, strides) + delta,
+        deltas.at(output_index) = std::make_shared<op::ReplaceSlice>(
+            deltas.at(output_index),
+            std::make_shared<op::Slice>(
+                deltas.at(output_index), lower_bounds, upper_bounds, strides) +
+                delta,
             lower_bounds,
             upper_bounds,
             strides);
     }
+}
+
+void autodiff::Adjoints::add_output_delta_to_slice(const NodeOutput& x,
+                                                   const NodeOutput& delta,
+                                                   const Coordinate& lower_bounds,
+                                                   const Coordinate& upper_bounds,
+                                                   const Strides& strides)
+{
+    add_delta_to_slice(x.get_node(),
+                       get_output_element(delta.get_node(), delta.get_index()),
+                       lower_bounds,
+                       upper_bounds,
+                       strides,
+                       x.get_index());
 }
 
 std::shared_ptr<Node> autodiff::Adjoints::backprop_node(const std::shared_ptr<Node>& x)

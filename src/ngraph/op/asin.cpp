@@ -44,18 +44,20 @@ shared_ptr<Node>
     return make_shared<Asin>(new_source_outputs.at(0));
 }
 
-void op::Asin::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Asin::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
+    auto x = get_input_source_output(0);
 
-    auto one = make_shared<op::Constant>(x->get_element_type(), Shape{}, vector<string>{"1"});
+    auto one = make_shared<op::Constant>(x.get_element_type(), Shape{}, vector<string>{"1"});
 
     AxisSet axes;
-    for (size_t i = 0; i < x->get_shape().size(); i++)
+    for (size_t i = 0; i < x.get_shape().size(); i++)
+    {
         axes.insert(i);
-    auto ones = make_shared<op::Broadcast>(one, x->get_shape(), axes);
+    }
+    auto ones = make_shared<op::Broadcast>(one, x.get_shape(), axes);
 
-    adjoints.add_delta(x, delta / make_shared<op::Sqrt>(ones - x * x));
+    adjoints.add_output_delta(x, delta / make_shared<op::Sqrt>(ones - x * x));
 }

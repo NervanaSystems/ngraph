@@ -160,7 +160,7 @@ shared_ptr<Node>
                                    m_axes);
 }
 
-void op::Dequantize::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Dequantize::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     throw ngraph_error("Forward-propagation-only operation");
 }

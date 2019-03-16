@@ -45,14 +45,14 @@ shared_ptr<Node>
     return make_shared<Acos>(new_source_outputs.at(0));
 }
 
-void op::Acos::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Acos::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
+    auto x = get_input_source_output(0);
 
     auto one = make_shared<op::ScalarConstantLike>(x, 1.0);
     auto ones = make_shared<op::BroadcastLike>(one, x, AxisSet());
 
-    adjoints.add_delta(x, -delta / make_shared<op::Sqrt>(ones - x * x));
+    adjoints.add_output_delta(x, -delta / make_shared<op::Sqrt>(ones - x * x));
 }

@@ -43,8 +43,8 @@ namespace ngraph
             size_t get_batch_axis() const { return m_batch_axis; }
             size_t get_sequence_axis() const { return m_seq_axis; }
         protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
+            virtual void build_backprop(autodiff::Adjoints& adjoints,
+                                        const OutputVector& deltas) override;
 
         private:
             size_t m_batch_axis{0};

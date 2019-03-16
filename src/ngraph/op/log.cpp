@@ -32,11 +32,11 @@ shared_ptr<Node> op::Log::copy_with_new_source_outputs(const OutputVector& new_s
     return make_shared<Log>(new_source_outputs.at(0));
 }
 
-void op::Log::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Log::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
+    auto x = get_input_source_output(0);
 
-    adjoints.add_delta(x, delta / x);
+    adjoints.add_output_delta(x, delta / x);
 }

@@ -77,7 +77,14 @@ namespace ngraph
                                     const std::shared_ptr<Node>& delta,
                                     const Coordinate& lower_bounds,
                                     const Coordinate& upper_bounds,
-                                    const Strides& strides);
+                                    const Strides& strides,
+                                    size_t output_index = 0);
+
+            void add_output_delta_to_slice(const NodeOutput& x,
+                                           const NodeOutput& delta,
+                                           const Coordinate& lower_bounds,
+                                           const Coordinate& upper_bounds,
+                                           const Strides& strides);
 
             std::shared_ptr<Node> backprop_node(const std::shared_ptr<Node>& x);
 

@@ -32,11 +32,11 @@ shared_ptr<Node> op::Exp::copy_with_new_source_outputs(const OutputVector& new_s
     return make_shared<Exp>(new_source_outputs.at(0));
 }
 
-void op::Exp::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Exp::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
+    auto x = get_input_source_output(0);
 
-    adjoints.add_delta(x, delta * shared_from_this());
+    adjoints.add_output_delta(x, delta * shared_from_this());
 }

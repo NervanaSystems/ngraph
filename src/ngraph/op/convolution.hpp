@@ -128,7 +128,7 @@ namespace ngraph
 
             virtual std::shared_ptr<Node>
                 copy_with_new_source_outputs(const OutputVector& new_source_outputs) const override;
-            void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override;
+            void build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas) override;
 
             /// \return The window movement strides.
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
@@ -187,7 +187,7 @@ namespace ngraph
 
             void validate_and_infer_types() override;
 
-            void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override;
+            void build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas) override;
             virtual std::shared_ptr<Node>
                 copy_with_new_source_outputs(const OutputVector& new_source_outputs) const override;
 

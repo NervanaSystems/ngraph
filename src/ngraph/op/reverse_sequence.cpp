@@ -101,10 +101,10 @@ shared_ptr<Node>
     return res;
 }
 
-void op::ReverseSequence::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::ReverseSequence::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
-    auto x = get_argument(0);
+    auto x = get_input_source_output(0);
     auto rs_delta =
         make_shared<ReverseSequence>(deltas.at(0), get_argument(1), m_batch_axis, m_seq_axis);
-    adjoints.add_delta(x, rs_delta);
+    adjoints.add_output_delta(x, rs_delta);
 }

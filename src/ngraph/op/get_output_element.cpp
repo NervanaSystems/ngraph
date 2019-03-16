@@ -62,11 +62,11 @@ NodeVector op::GetOutputElement::get_arguments() const
     return NodeVector{get_input_source_output(0).get_node()};
 }
 
-void op::GetOutputElement::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::GetOutputElement::build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
-    adjoints.add_delta(get_input_source_output(0).get_node(), delta, get_n());
+    adjoints.add_output_delta(NodeOutput(get_input_source_output(0).get_node(), get_n()), delta);
 }
 
 NodeVector op::get_output_elements(const shared_ptr<Node>& mon)

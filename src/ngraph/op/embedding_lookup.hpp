@@ -44,7 +44,7 @@ namespace ngraph
 
             void validate_and_infer_types() override;
 
-            void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override
+            void build_backprop(autodiff::Adjoints& adjoints, const OutputVector& deltas) override
             {
                 throw ngraph_error("Not yet implemented");
             }

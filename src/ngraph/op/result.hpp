@@ -41,8 +41,8 @@ namespace ngraph
             void set_needs_default_layout(bool val) { m_needs_default_layout = val; }
             bool needs_default_layout() const { return m_needs_default_layout; }
         protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
+            virtual void build_backprop(autodiff::Adjoints& adjoints,
+                                        const OutputVector& deltas) override;
 
         private:
             bool m_needs_default_layout{false};
