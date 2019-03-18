@@ -16,14 +16,14 @@ Then follow the steps below.
     $ git clone https://github.com/NervanaSystems/ngraph.git
     $ mkdir build
     $ cd build/
-    $ ../ngraph/contrib/docker/make-manylinux1.sh
+    $ ../ngraph/contrib/manylinux1/make-manylinux1.sh
 
 After this procedure completes, the `python/dist` directory should contain Python packages.
 
     $ ls python/dist
-    ngraph_core-0.12.0-cp27-cp27m-manylinux1.whl
-    ngraph_core-0.12.0-cp34-cp34m-manylinux1.whl
-    ngraph_core-0.12.0-cp36-cp36m-manylinux1.whl
-    ngraph_core-0.12.0-cp27-cp27mu-manylinux1.whl
-    ngraph_core-0.12.0-cp35-cp35m-manylinux1.whl
-    ngraph_core-0.12.0-cp37-cp37m-manylinux1.whl
+    ngraph_core-0.15.0-cp27-cp27m-manylinux1.whl
+    ngraph_core-0.15.0-cp34-cp34m-manylinux1.whl
+    ngraph_core-0.15.0-cp36-cp36m-manylinux1.whl
+    ngraph_core-0.15.0-cp27-cp27mu-manylinux1.whl
+    ngraph_core-0.15.0-cp35-cp35m-manylinux1.whl
+    ngraph_core-0.15.0-cp37-cp37m-manylinux1.whl
