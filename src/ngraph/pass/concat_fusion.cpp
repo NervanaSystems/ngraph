@@ -212,7 +212,6 @@ bool ngraph::pass::SelfConcatFusion::run_on_function(std::shared_ptr<Function> f
                 concat_vectors.push_back(
                     make_pair(NodeVector{concat_op}, std::vector<size_t>{concat_axis}));
                 print_state_of_bounded_vectors();
-                
             }
             else
             {

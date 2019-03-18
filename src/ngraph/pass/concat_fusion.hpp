@@ -24,8 +24,8 @@ namespace ngraph
     {
         class ConcatElimination;
         class SelfConcatFusion;
-    } // namespace pass
-} // namespace ngraph
+    }
+}
 
 class ngraph::pass::ConcatElimination : public ngraph::pass::GraphRewrite
 {
@@ -39,26 +39,6 @@ public:
 private:
     void construct_concat_elimination();
 };
-
-// class ngraph::pass::SelfConcatFusion : public ngraph::pass::RecurrentGraphRewrite
-/* class ngraph::pass::SelfConcatFusion : public ngraph::pass::GraphRewrite
-{
-public:
-    SelfConcatFusion()
-        : GraphRewrite()
-    {
-        construct_self_concat_fusion();
-    }
-
-private:
-    void construct_self_concat_fusion();
-    void construct_self_concat_pattern_vectors();
-
-    bool check_self_concat_op(const std::shared_ptr<Node>&);
-    bool check_source_is_concat(const std::shared_ptr<Node>&, const std::shared_ptr<Node>&);
-
-    std::vector<NodeVector> m_concat_pattern_vectors;
-}; */
 
 class ngraph::pass::SelfConcatFusion : public ngraph::pass::FunctionPass
 {
