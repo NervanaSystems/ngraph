@@ -262,9 +262,9 @@ class BdistWheel(bdist_wheel):
 
 
 setup_requires = [
-        'numpy==1.15.4; python_version == "3.4"',
-        'numpy; python_version != "3.4"',
-        ]
+    'numpy==1.15.4; python_version == "3.4"',
+    'numpy; python_version != "3.4"',
+]
 try:
     import pip
     try:
