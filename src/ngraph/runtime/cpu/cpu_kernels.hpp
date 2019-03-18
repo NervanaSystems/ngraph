@@ -19,6 +19,7 @@
 #include <cstddef>
 #include <cstdint>
 
+#if defined(CPU_OPENMP)
 // CBLAS types and wrappers
 
 namespace cblas
@@ -106,21 +107,7 @@ namespace cblas
                            const int64_t* group_size);
     }
 }
-
-namespace mkl
-{
-    extern "C" {
-    void MKL_Somatcopy(char ordering,
-                       char trans,
-                       size_t rows,
-                       size_t cols,
-                       const float alpha,
-                       const float* A,
-                       size_t lda,
-                       float* B,
-                       size_t ldb);
-    }
-}
+#endif
 
 namespace ngraph
 {

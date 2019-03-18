@@ -77,6 +77,9 @@ if(NGRAPH_TBB_ENABLE)
 endif()
 
 set_source_files_properties(compiler.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES}")
+if(NGRAPH_OPENMP_ENABLE)
+    target_compile_definitions(codegen PRIVATE CODEGEN_OPENMP)
+endif()
 
 # Generate the resource file containing all headers used by the codegen compiler
 add_custom_target(header_resource

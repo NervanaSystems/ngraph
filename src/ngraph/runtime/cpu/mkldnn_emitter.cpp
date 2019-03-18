@@ -38,10 +38,12 @@ MKLDNNEmitter::~MKLDNNEmitter()
     for (auto p : m_mkldnn_primitives)
         delete p;
 #ifndef _WIN32
+#if defined(CPU_OPENMP)
     //To avoid memory leak in mkldnn, release any buffers that are not free'd yet.
     //https://software.intel.com/en-us/mkl-linux-developer-guide-avoiding-memory-leaks-in-intel-mkl
     //mkl_free_buffers() is not exposed at this point, hence using mkl_serv_free_buffers()
     mkldnn_utils::mkl_serv_free_buffers();
+#endif
 #endif
 }
 

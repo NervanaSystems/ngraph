@@ -232,9 +232,11 @@ void codegen::CompilerCore::initialize()
     LO->CXXExceptions = 1;
     LO->WChar = 1;
     LO->RTTI = 1;
+#if defined(CODEGEN_OPENMP)
     // Enable OpenMP for Eigen
     LO->OpenMP = 1;
     LO->OpenMPUseTLS = 1;
+#endif
 
     // CodeGen options
     auto& CGO = m_compiler->getInvocation().getCodeGenOpts();
