@@ -38,6 +38,7 @@
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
 #include "util/all_close.hpp"
+#include "util/all_close_f.hpp"
 #include "util/autodiff/backprop_function.hpp"
 #include "util/autodiff/numeric_compare.hpp"
 #include "util/ndarray.hpp"
@@ -891,7 +892,8 @@ TEST(cpu_test, memory_reuse_in_place_slice_after_in_place_reshape_from_constant)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {});
-    EXPECT_EQ((vector<float>{-5., -6., -7., -8.}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        vector<float>{-5., -6., -7., -8.}, read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 TEST(cpu_test, convert_inplace)
