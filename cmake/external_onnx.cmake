@@ -59,8 +59,23 @@ ExternalProject_Get_Property(ext_onnx SOURCE_DIR BINARY_DIR)
 
 set(ONNX_INCLUDE_DIR ${SOURCE_DIR}/onnx)
 set(ONNX_PROTO_INCLUDE_DIR ${BINARY_DIR}/onnx)
-set(ONNX_LIBRARY ${BINARY_DIR}/libonnx.a)
-set(ONNX_PROTO_LIBRARY ${BINARY_DIR}/libonnx_proto.a)
+if (WIN32)
+    set(ONNX_LIBRARY ${BINARY_DIR}/${CMAKE_BUILD_TYPE}/onnx.lib)
+    set(ONNX_PROTO_LIBRARY ${BINARY_DIR}/${CMAKE_BUILD_TYPE}/onnx_proto.lib)
+
+    ExternalProject_Add_Step(
+        ext_onnx
+        CopyONNX
+        COMMAND ${CMAKE_COMMAND} -E copy ${BINARY_DIR}/${CMAKE_BUILD_TYPE}/onnx.lib ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/onnx.lib
+        COMMAND ${CMAKE_COMMAND} -E copy ${BINARY_DIR}/${CMAKE_BUILD_TYPE}/onnx_proto.lib ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/onnx_proto.lib
+        COMMENT "Copy onnx libraries to ngraph build directory."
+        DEPENDEES install
+    )
+
+else()
+    set(ONNX_LIBRARY ${BINARY_DIR}/libonnx.a)
+    set(ONNX_PROTO_LIBRARY ${BINARY_DIR}/libonnx_proto.a)
+endif()
 set(ONNX_LIBRARIES ${ONNX_LIBRARY} ${ONNX_PROTO_LIBRARY})
 
 if (NOT TARGET onnx::libonnx)
