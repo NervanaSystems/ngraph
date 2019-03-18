@@ -27,6 +27,26 @@ How to use?
 #. A single iteration of the executable is executed by calling the ``call``
    method on the ``Executable`` object.
 
+.. figure:: ../graphics/execution-interface.png
+   :width: 650px
+
+   The execution interface for nGraph 
+
+
+The nGraph execution API for ``Executable`` objects is a simple, five-method 
+interface; each backend implements the following five functions:
+
+
+* The ``create_tensor()`` method allows the bridge to create tensor objects 
+  in host memory or an accelerator's memory.
+* The ``write()`` and ``read()`` methods are used to transfer raw data into 
+  and out of tensors that reside in off-host memory.
+* The ``compile()`` method instructs the backend to prepare an nGraph function 
+  for later execution.
+* And, finally, the ``call()`` method is used to invoke an nGraph function 
+  against a particular set of tensors.
+
+
 
 .. _backend-api:
 
