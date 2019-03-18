@@ -1,7 +1,5 @@
 # need to check
 computation_reuse
-# cuda does not support throw
-divide_by_zero_int32
 # int64 is not supprted by cuDNN
 dot_matrix_vector_int64
 generate_mask
