@@ -31,20 +31,8 @@ if(NGRAPH_TBB_ENABLE)
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/tbb")
 
     include(${TBB_ROOT}/cmake/TBBBuild.cmake)
-    if(CMAKE_OSX_SYSROOT)
-        tbb_build(TBB_ROOT ${TBB_ROOT}
-                  MAKE_ARGS tbb_build_dir=${CMAKE_CURRENT_BINARY_DIR}/tbb_build
-                            tbb_build_prefix=tbb
-                            stdver=c++11
-                            SDKROOT=${CMAKE_OSX_SYSROOT}
-                  CONFIG_DIR TBB_DIR)
-    else()
-        tbb_build(TBB_ROOT ${TBB_ROOT}
-                  MAKE_ARGS tbb_build_dir=${CMAKE_CURRENT_BINARY_DIR}/tbb_build
-                            tbb_build_prefix=tbb
-                            stdver=c++11
-                  CONFIG_DIR TBB_DIR)
-    endif()
+    tbb_build(TBB_ROOT ${TBB_ROOT} MAKE_ARGS tbb_build_dir=${CMAKE_CURRENT_BINARY_DIR}/tbb_build
+                tbb_build_prefix=tbb CONFIG_DIR TBB_DIR)
     find_package(TBB REQUIRED tbb)
     if (NOT TBB_FOUND)
         message(FATAL_ERROR "TBB is needed by the CPU backend and was not found")
