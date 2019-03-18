@@ -48,5 +48,7 @@ public:
 
 private:
     void update_concat_pattern_vectors(const std::shared_ptr<Node>&, size_t);
+    void remove_single_concat_op_pattern();
+
     std::vector<std::pair<NodeVector, std::vector<size_t>>> m_concat_pattern_vectors;
 };

@@ -146,6 +146,22 @@ void ngraph::pass::SelfConcatFusion::update_concat_pattern_vectors(
     }
 }
 
+void ngraph::pass::SelfConcatFusion::remove_single_concat_op_pattern()
+{
+    auto iter = m_concat_pattern_vectors.begin();
+    while (iter != m_concat_pattern_vectors.end())
+    {
+        if (iter->first.size() == 1)
+        {
+            iter = m_concat_pattern_vectors.erase(iter);
+        }
+        else
+        {
+            iter++;
+        }
+    }
+}
+
 bool ngraph::pass::SelfConcatFusion::run_on_function(std::shared_ptr<Function> function)
 {
     bool modify_graph = false;
@@ -156,6 +172,7 @@ bool ngraph::pass::SelfConcatFusion::run_on_function(std::shared_ptr<Function> f
     };
 
     auto print_state_of_bounded_vectors = [this]() {
+        std::cout << "------------------------" << std::endl;
         std::cout << "STATE of BOUNDED VECTORS: " << std::endl;
         std::cout << "------------------------" << std::endl;
         std::cout << "Number of vectors: " << this->m_concat_pattern_vectors.size() << std::endl;
@@ -170,11 +187,7 @@ bool ngraph::pass::SelfConcatFusion::run_on_function(std::shared_ptr<Function> f
                 std::cout << it->get_name() << " ";
             }
             std::cout << std::endl;
-            for (auto it : iter_concat_axis)
-            {
-                std::cout << it << ", ";
-            }
-            std::cout << std::endl;
+            std::cout << join(iter_concat_axis) << std::endl;
             c++;
         }
         std::cout << "------------------------" << std::endl;
@@ -222,10 +235,11 @@ bool ngraph::pass::SelfConcatFusion::run_on_function(std::shared_ptr<Function> f
             }
         }
     }
-    std::cout << this->m_concat_pattern_vectors.size() << std::endl;
-    print_state_of_bounded_vectors();
 
-    // Remove the elements of concat_vetors with size = 1; Only fuse concats when there are more than 1 self concats in a row
+    // Remove the elements of concat_vetors with size = 1; 
+    // Only fuse concats when there are more than 1 self concats in a row
+    remove_single_concat_op_pattern();
+
     auto scalarize_dim = [](std::vector<size_t> concat_axis_vector,
                             const Shape& input_shape) -> Shape {
 
@@ -240,13 +254,11 @@ bool ngraph::pass::SelfConcatFusion::run_on_function(std::shared_ptr<Function> f
                 scalarized_shape.push_back(input_shape[i]);
             }
         }
-        std::cout << "scalarized_shape: " << join(scalarized_shape) << std::endl;
         return scalarized_shape;
     };
-    std::cout << this->m_concat_pattern_vectors.size() << std::endl;
+
     for (auto concat_op_pair : this->m_concat_pattern_vectors)
     {
-        std::cout << this->m_concat_pattern_vectors.size() << std::endl;
         auto bounded_concat_ops = concat_op_pair.first;
         auto concat_axis_vector = concat_op_pair.second;
 
@@ -256,9 +268,8 @@ bool ngraph::pass::SelfConcatFusion::run_on_function(std::shared_ptr<Function> f
         const Shape& input_shape = first_bounded_concat->get_input_shape(0);
 
         auto scalarized_shape = scalarize_dim(concat_axis_vector, input_shape);
-        std::cout << "scalarized_shape outside: " << join(scalarized_shape) << std::endl;
+        std::cout << "scalarized_shape: " << join(scalarized_shape) << std::endl;
         AxisVector axis_order = get_default_order(input_shape);
-        std::cout << "Default axis order: " << join(axis_order) << std::endl;
         auto reshape = std::make_shared<op::Reshape>(driver_op, axis_order, scalarized_shape);
         auto last_bounded_concat_op = bounded_concat_ops.back();
         auto broadcast_out_shape = last_bounded_concat_op->get_shape();
