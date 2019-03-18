@@ -51,7 +51,7 @@ NGRAPH_TEST(${BACKEND_NAME}, create_tensor_1)
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
     vector<float> expected = {6, 8, 10, 12};
-    EXPECT_EQ(read_vector<float>(result), expected);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected, MIN_FLOAT_TOLERANCE_BITS));
 }
 
 // This tests a backend's implementation of the three parameter version of create_tensor
@@ -74,7 +74,7 @@ NGRAPH_TEST(${BACKEND_NAME}, create_tensor_2)
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
     vector<float> expected = {6, 8, 10, 12};
-    EXPECT_EQ(read_vector<float>(result), expected);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected, MIN_FLOAT_TOLERANCE_BITS));
 }
 
 // This tests a backend's implementation of the copy_from for tensor
