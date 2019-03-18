@@ -31,8 +31,8 @@ namespace ngraph
         {
             class HybridExecutable;
         }
-    }
-}
+    } // namespace runtime
+} // namespace ngraph
 
 class ngraph::runtime::hybrid::HybridExecutable : public runtime::Executable
 {
@@ -45,7 +45,7 @@ public:
     bool call(const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& outputs,
               const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& inputs) override;
 
-    template<typename T>
+    template <typename T>
     std::shared_ptr<T> get_as() const
     {
         return std::dynamic_pointer_cast<T>(m_executable);

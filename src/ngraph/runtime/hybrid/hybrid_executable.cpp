@@ -40,7 +40,7 @@ runtime::hybrid::HybridExecutable::HybridExecutable(
     , m_backend_list{backend_list}
     , m_debug_enabled{debug_enabled}
 {
-    if(backend_list.size() == 0)
+    if (backend_list.size() == 0)
     {
         throw runtime_error("Hybrid Executable constructed with zero-sized backend list");
     }
