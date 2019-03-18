@@ -873,6 +873,30 @@ TEST(cpu_test, memory_reuse_in_place_slice_after_in_place_concat)
     EXPECT_TRUE(test::all_close_f((vector<float>{3, 7}), read_vector<float>(result)));
 }
 
+TEST(cpu_test, memory_reuse_in_place_slice_after_in_place_reshape_from_constant)
+{
+    Shape shape_a{2, 1, 2, 2};
+    Shape shape_r{2, 1, 2, 2};
+    vector<float> a_data(shape_size(shape_a));
+    iota(a_data.begin(), a_data.end(), 1);
+
+    auto A = op::Constant::create(element::f32, shape_a, a_data);
+    auto reshape = make_shared<op::Reshape>(A, AxisVector{0, 1, 2, 3}, shape_r);
+    Shape shape{1, 1, 2, 2};
+    auto slice = make_shared<op::Slice>(reshape, Coordinate{1, 0, 0, 0}, Coordinate{2, 1, 2, 2});
+    auto neg = make_shared<op::Negative>(slice);
+    auto f = make_shared<Function>(neg, ParameterVector{});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    auto result = backend->create_tensor(element::f32, shape);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {});
+    EXPECT_TRUE(test::all_close_f(
+        vector<float>{-5., -6., -7., -8.}, read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+}
+
 TEST(cpu_test, convert_inplace)
 {
     Shape shape{2, 2};
