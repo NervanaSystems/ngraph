@@ -140,6 +140,12 @@ set (SRC
     op/experimental/quantized_max_pool.hpp
     op/experimental/shape_of.cpp
     op/experimental/shape_of.hpp
+    op/experimental/quantized_dot.cpp
+    op/experimental/quantized_dot.hpp
+    op/experimental/quantized_dot_bias.cpp
+    op/experimental/quantized_dot_bias.hpp
+    op/experimental/transpose.cpp
+    op/experimental/transpose.hpp
     op/floor.cpp
     op/floor.hpp
     op/get_output_element.cpp
@@ -419,8 +425,6 @@ target_link_libraries(ngraph PRIVATE libjson)
 target_compile_definitions(ngraph PUBLIC NGRAPH_VERSION="${NGRAPH_VERSION}")
 
 if (LINUX)
-    set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--rpath,$ORIGIN")
-
     # nGraph links against one or more libraries (ex. LLVM) but we don't want to
     # export these symbols as part of the DSO. This is a GNU ld (and derivatives) specific
     # option so making this portable is still an open issue. As a note for the future,

@@ -99,3 +99,6 @@ one_hot_scalar_oob_in_3
 model_dequantize_linear
 model_quantize_linear
 model_quant_conv_linear
+
+# This should be implemented
+create_tensor_2
