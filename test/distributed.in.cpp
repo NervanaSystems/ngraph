@@ -24,6 +24,7 @@
 #include "ngraph/file_util.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/serializer.hpp"
+#include "util/all_close_f.hpp"
 #include "util/random.hpp"
 
 using namespace std;
@@ -52,6 +53,6 @@ TEST(distributed_${BACKEND_NAME}, allreduce)
 
         auto handle = backend->compile(f);
         handle->call_with_validate({result}, {a});
-        EXPECT_EQ(v, read_vector<float>(result));
+        EXPECT_TRUE(test::all_close_f(v, read_vector<float>(result)));
     }
 }
