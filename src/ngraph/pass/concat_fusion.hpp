@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
@@ -46,5 +47,6 @@ public:
     virtual bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
 
 private:
+    void update_concat_pattern_vectors(const std::shared_ptr<Node>&, size_t);
     std::vector<std::pair<NodeVector, std::vector<size_t>>> m_concat_pattern_vectors;
 };

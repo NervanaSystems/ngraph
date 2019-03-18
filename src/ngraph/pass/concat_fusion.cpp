@@ -35,18 +35,9 @@ using namespace ngraph;
 
 bool check_self_concat_op(const std::shared_ptr<Node>& op)
 {
-    bool is_self_concat = true;
-    auto arg = op->get_argument(0);
-    for (size_t i = 1; i < op->get_input_size(); i++)
-    {
-        if (op->get_argument(i) != arg)
-        {
-            is_self_concat = false;
-            break;
-        }
-    }
-
-    return is_self_concat;
+    auto input_args = op->get_arguments();
+    std::set<std::shared_ptr<Node>> input_args_set(input_args.begin(), input_args.end());
+    return (input_args_set.size() == 1);
 }
 
 bool check_concat_axis_dim_value(const std::shared_ptr<Node>& concat_op)
@@ -97,25 +88,6 @@ bool valid_self_concat(const std::shared_ptr<Node>& Op)
     return true;
 }
 
-bool check_source_is_concat(const std::shared_ptr<Node>& concat_op,
-                            const std::shared_ptr<Node>& source_of_concat_op)
-{
-    bool is_source_concat = true;
-    for (size_t i = 0; i < concat_op->get_input_size(); i++)
-    {
-        if (concat_op->get_argument(i) != source_of_concat_op)
-        {
-            is_source_concat = false;
-            std::cout << "NGRAPH_DEBUG inside function: source is not concat "
-                      << concat_op->get_name() << " trying to match source "
-                      << source_of_concat_op->get_name() << std::endl;
-            break;
-        }
-    }
-
-    return is_source_concat;
-}
-
 void pass::ConcatElimination::construct_concat_elimination()
 {
     auto op_label = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 3});
@@ -142,6 +114,57 @@ void pass::ConcatElimination::construct_concat_elimination()
 
     auto m = std::make_shared<pattern::Matcher>(concat_label, callback);
     this->add_matcher(m);
+}
+
+/* bool check_source_is_concat(const std::shared_ptr<Node>& concat_op,
+                            const std::shared_ptr<Node>& source_of_concat_op)
+{
+    bool is_source_concat = true;
+    for (size_t i = 0; i < concat_op->get_input_size(); i++)
+    {
+        if (concat_op->get_argument(i) != source_of_concat_op)
+        {
+            is_source_concat = false;
+            std::cout << "NGRAPH_DEBUG inside function: source is not concat "
+                      << concat_op->get_name() << " trying to match source "
+                      << source_of_concat_op->get_name() << std::endl;
+            break;
+        }
+    }
+
+    return is_source_concat;
+} */
+
+void ngraph::pass::SelfConcatFusion::update_concat_pattern_vectors(
+    const std::shared_ptr<Node>& concat_op, size_t concat_axis)
+{
+    bool concat_source_found = false;
+    for (auto& concat_pattern_vec : this->m_concat_pattern_vectors)
+    {
+        auto last_op_in_pattern_vec = concat_pattern_vec.first.back();
+        std::cout << "NGRAPH_DEBUG: " << concat_op->get_name() << " trying to match source "
+                  << last_op_in_pattern_vec->get_name() << std::endl;
+        if (concat_op->get_argument(0) == last_op_in_pattern_vec)
+        {
+            std::cout << "MATCHED SOURCE " << concat_op->get_name() << " and "
+                      << last_op_in_pattern_vec->get_name() << std::endl;
+            concat_pattern_vec.first.push_back(concat_op);
+            concat_pattern_vec.second.push_back(concat_axis);
+            concat_source_found = true;
+            break;
+        }
+        else
+        {
+            std::cout << "COULD NOT MATCH SOURCE " << concat_op->get_name() << " and "
+                      << last_op_in_pattern_vec->get_name() << std::endl;
+        }
+    }
+
+    if (!concat_source_found)
+    {
+        this->m_concat_pattern_vectors.push_back(
+            make_pair(NodeVector{concat_op}, std::vector<size_t>{concat_axis}));
+    }
 }
 
 bool ngraph::pass::SelfConcatFusion::run_on_function(std::shared_ptr<Function> function)
@@ -215,7 +238,7 @@ bool ngraph::pass::SelfConcatFusion::run_on_function(std::shared_ptr<Function> f
             }
             else
             {
-                auto& last_concat = concat_vectors.back().first.back();
+                /*                 auto& last_concat = concat_vectors.back().first.back();
                 std::cout << "NGRAPH_DEBUG: " << concat_op->get_name() << " trying to match source "
                           << last_concat->get_name() << std::endl;
                 if (check_source_is_concat(concat_op, last_concat))
@@ -233,7 +256,9 @@ bool ngraph::pass::SelfConcatFusion::run_on_function(std::shared_ptr<Function> f
                     concat_vectors.push_back(
                         make_pair(NodeVector{concat_op}, std::vector<size_t>{concat_axis}));
                     print_state_of_bounded_vectors();
-                }
+                } */
+                update_concat_pattern_vectors(concat_op, concat_axis);
+                print_state_of_bounded_vectors();
             }
         }
     }
