@@ -3,8 +3,8 @@
 .. _sitemap.rst:
 
 .. toctree::
-   :maxdepth: 1 
-
+   :includehidden:
+ 
    Introduction <project/introduction.rst>
    Framework support <frameworks/index.rst>
    nGraph Core <core/overview.rst>
@@ -12,5 +12,5 @@
    Distributed training <distr/index.rst>
    Diagnostics and visualization <diagnostics/nbench.rst>
    Tutorials <tutorials/index.rst>
-   Project <project/index.rst> 
+   Project <project/index.rst>
 
