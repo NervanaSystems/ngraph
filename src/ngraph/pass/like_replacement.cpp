@@ -40,7 +40,7 @@ static bool replace_broadcast_like(const std::shared_ptr<ngraph::Node>& node)
     // Replace a broadcast like with the broadcast to eliminate the pseudo-dependency on the "like" argument
     auto broadcast_like = static_pointer_cast<op::BroadcastLike>(node);
     replace_node(node,
-                 make_shared<op::Broadcast>(broadcast_like->get_argument(0),
+                 make_shared<op::Broadcast>(broadcast_like->get_input_source_output(0),
                                             broadcast_like->get_broadcast_shape(),
                                             broadcast_like->get_broadcast_axes()));
     return true;

@@ -298,6 +298,7 @@ namespace ngraph
         static const size_t placement_invalid = -1;
 
         NodeOutput get_input_source_output(size_t input_index) const;
+        OutputVector get_input_source_outputs() const;
         descriptor::Tensor& get_input_tensor(size_t input_index) const;
         void replace_input_source_output(size_t input_index, const NodeOutput& src_output);
         void replace_input_source_output(size_t input_index,

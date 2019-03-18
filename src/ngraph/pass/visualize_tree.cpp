@@ -36,21 +36,17 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
         // map<size_t, list<node_ptr>> dependent_nodes;
         traverse_nodes(f, [&](shared_ptr<Node> node) {
             size_t i = 0;
-            for (auto arg : node->get_arguments())
+            for (auto source_output : node->get_input_source_outputs())
             {
-                m_ss << add_attributes(arg);
+                auto source_node = source_output.get_node();
+                m_ss << add_attributes(source_node);
                 m_ss << add_attributes(node);
-                m_ss << "    " << arg->get_name() << " -> " << node->get_name();
+                m_ss << "    " << source_node->get_name() << " -> " << node->get_name();
 
                 if (getenv("NGRAPH_VISUALIZE_EDGE_LABELS") != nullptr)
                 {
-                    size_t output = 0;
-                    if (auto goe = dynamic_pointer_cast<op::GetOutputElement>(node))
-                    {
-                        output = goe->get_n();
-                    }
                     stringstream label_edge;
-                    label_edge << "[label=\" " << output << " -> " << i << " \"]";
+                    label_edge << "[label=\" " << source_output.get_index() << " -> " << i << " \"]";
                     m_ss << label_edge.str();
                 }
 

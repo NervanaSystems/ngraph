@@ -50,15 +50,16 @@ bool pass::PropagateCacheability::run_on_function(shared_ptr<Function> function)
             else
             {
                 bool cacheable = true;
-                for (auto arg : node->get_arguments())
+                for (size_t i = 0; i < node->get_input_size(); i++)
                 {
-                    NGRAPH_DEBUG << "propagate cacheability: arg is " << arg->get_name();
-                    if (arg->is_op())
+                    auto source_node = node->get_input_source_output(i).get_node();
+                    NGRAPH_DEBUG << "propagate cacheability: source_node is " << source_node->get_name();
+                    if (source_node->is_op())
                     {
-                        auto arg_op = static_pointer_cast<op::Op>(arg);
-                        auto arg_op_annotations = arg_op->get_op_annotations();
-                        NGRAPH_ASSERT(arg_op_annotations);
-                        if (!arg_op_annotations->is_cacheable())
+                        auto source_node_op = static_pointer_cast<op::Op>(source_node);
+                        auto source_node_op_annotations = source_node_op->get_op_annotations();
+                        NGRAPH_ASSERT(source_node_op_annotations);
+                        if (!source_node_op_annotations->is_cacheable())
                         {
                             cacheable = false;
                             break;

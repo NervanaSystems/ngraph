@@ -568,6 +568,19 @@ NodeOutput Node::get_input_source_output(size_t input_index) const
     return NodeOutput(output_descriptor.get_node(), output_descriptor.get_index());
 }
 
+OutputVector Node::get_input_source_outputs() const
+{
+    OutputVector result;
+
+    for (auto& input_descriptor : m_inputs)
+    {
+        auto& output_descriptor = input_descriptor.get_output();
+        result.emplace_back(output_descriptor.get_node(), output_descriptor.get_index());
+    }
+
+    return result;
+}
+
 descriptor::Tensor& Node::get_input_tensor(size_t i) const
 {
     return m_inputs.at(i).get_output().get_tensor();
