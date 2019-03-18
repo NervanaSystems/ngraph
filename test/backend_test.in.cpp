@@ -105,8 +105,8 @@ NGRAPH_TEST(${BACKEND_NAME}, function_name)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
+                                  (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector()));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, node_name)
@@ -130,8 +130,8 @@ NGRAPH_TEST(${BACKEND_NAME}, node_name)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
+                                  (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector()));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, aliased_output)
@@ -165,13 +165,13 @@ NGRAPH_TEST(${BACKEND_NAME}, aliased_output)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({out1, out2, out3, out4, out5, out6, out7}, {a, b});
-    EXPECT_EQ(expectedC, read_vector<float>(out1));
-    EXPECT_EQ(expectedC, read_vector<float>(out2));
-    EXPECT_EQ(expectedD, read_vector<float>(out3));
-    EXPECT_EQ(expectedD, read_vector<float>(out4));
-    EXPECT_EQ(expectedC, read_vector<float>(out5));
-    EXPECT_EQ(expectedE, read_vector<float>(out6));
-    EXPECT_EQ(expectedE, read_vector<float>(out7));
+    EXPECT_TRUE(test::all_close_f(expectedC, read_vector<float>(out1), MIN_FLOAT_TOLERANCE_BITS));
+    EXPECT_TRUE(test::all_close_f(expectedC, read_vector<float>(out2), MIN_FLOAT_TOLERANCE_BITS));
+    EXPECT_TRUE(test::all_close_f(expectedD, read_vector<float>(out3), MIN_FLOAT_TOLERANCE_BITS));
+    EXPECT_TRUE(test::all_close_f(expectedD, read_vector<float>(out4), MIN_FLOAT_TOLERANCE_BITS));
+    EXPECT_TRUE(test::all_close_f(expectedC, read_vector<float>(out5), MIN_FLOAT_TOLERANCE_BITS));
+    EXPECT_TRUE(test::all_close_f(expectedE, read_vector<float>(out6), MIN_FLOAT_TOLERANCE_BITS));
+    EXPECT_TRUE(test::all_close_f(expectedE, read_vector<float>(out7), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, parameter_as_output)
@@ -192,7 +192,7 @@ NGRAPH_TEST(${BACKEND_NAME}, parameter_as_output)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ(read_vector<float>(result), expected);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected, MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, abc)
@@ -217,16 +217,16 @@ NGRAPH_TEST(${BACKEND_NAME}, abc)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b, c});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
+                                  (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector()));
 
     handle->call_with_validate({result}, {b, a, c});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
+                                  (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector()));
 
     handle->call_with_validate({result}, {a, c, b});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
+                                  (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector()));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, abc_int64)
@@ -286,8 +286,8 @@ NGRAPH_TEST(${BACKEND_NAME}, multiple_result)
     auto handle = backend->compile(f);
     handle->call_with_validate({r0, r1}, {a, b, c});
 
-    EXPECT_EQ((vector<float>{6, 8, 10, 12}), read_vector<float>(r0));
-    EXPECT_EQ((vector<float>{54, 80, 110, 144}), read_vector<float>(r1));
+    EXPECT_TRUE(test::all_close_f((vector<float>{6, 8, 10, 12}), read_vector<float>(r0)));
+    EXPECT_TRUE(test::all_close_f((vector<float>{54, 80, 110, 144}), read_vector<float>(r1)));
 }
 
 template <typename T>
@@ -380,7 +380,6 @@ public:
                                                  variance.get_vector(),
                                                  normed_input.get_vector());
     }
-
     bool test_gamma()
     {
         return test(Input{{1.0, 2.0, 3.0}, {-1.0, -2.0, -3.0}},
@@ -390,7 +389,6 @@ public:
                     Variance{1.0, 1.0, 1.0},
                     NormedInput{{2.0, 6.0, 12.0}, {-2.0, -6.0, -12.0}});
     }
-
     bool test_beta()
     {
         return test(Input{{1.0, 2.0, 3.0}, {-1.0, -2.0, -3.0}},
@@ -400,7 +398,6 @@ public:
                     Variance{1.0, 1.0, 1.0},
                     NormedInput{{3.0, 0.0, 6.0}, {1.0, -4.0, 0.0}});
     }
-
     bool test_mean()
     {
         return test(Input{{1.0, 2.0, 3.0}, {-1.0, -2.0, -3.0}},
@@ -410,7 +407,6 @@ public:
                     Variance{1.0, 1.0, 1.0},
                     NormedInput{{3.0, 0.0, 6.0}, {1.0, -4.0, 0.0}});
     }
-
     bool test_variance()
     {
         return test(Input{{1.0, 2.0, 3.0}, {-1.0, -2.0, -3.0}},
@@ -478,7 +474,6 @@ public:
                                                  variance.get_vector(),
                                                  normed_input.get_vector());
     }
-
     bool test_gamma()
     {
         return test(Input{{1.0, 2.0, 3.0}, {-1.0, -2.0, -3.0}},
@@ -488,7 +483,6 @@ public:
                     Variance{0.75, 0.75, 0.75},
                     NormedInput{{2.0, 6.0, 12.0}, {-2.0, -6.0, -12.0}});
     }
-
     bool test_beta()
     {
         return test(Input{{1.0, 2.0, 3.0}, {-1.0, -2.0, -3.0}},
@@ -498,7 +492,6 @@ public:
                     Variance{0.75, 0.75, 0.75},
                     NormedInput{{3.0, 0.0, 6.0}, {1.0, -4.0, 0.0}});
     }
-
     bool test_mean()
     {
         return test(Input{{1.0, 2.0, 3.0}, {-1.0, -2.0, -3.0}},
@@ -508,7 +501,6 @@ public:
                     Variance{0.75, 0.75, 0.75},
                     NormedInput{{3.0, 0.0, 6.0}, {1.0, -4.0, 0.0}});
     }
-
     bool test_variance()
     {
         return test(Input{{3.0, 5.0, 1.0}, {-3.0, -5.0, -1.0}},
@@ -634,7 +626,6 @@ public:
                                       const NormedInput& normed_input,
                                       const Mean& mean,
                                       const Variance& variance)
-
     {
         return BatchNormTrainingTester<T>::call(input.get_vector(),
                                                 gamma.get_vector(),
@@ -643,7 +634,6 @@ public:
                                                 mean.get_vector(),
                                                 variance.get_vector());
     }
-
     std::tuple<bool, bool, bool> test_mean_variance()
     {
         return test(Input{{0.0, 1.0, 0.0},
@@ -671,7 +661,6 @@ public:
                     Mean{0.0, 1.0, 0.0},
                     Variance{4.0, 4.0, 0.25});
     }
-
     std::tuple<bool, bool, bool> test_gamma_beta()
     {
         return test(Input{{0.0, 1.0, 0.0},
@@ -762,8 +751,10 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_matrix_colwise)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b, c});
-    EXPECT_EQ((vector<float>{2, 4, 1, 2, 4, 2, 3, 5, 8, 16, 8, 16, 32, 7, 11, 13}),
-              read_vector<float>(result));
+    EXPECT_TRUE(
+        test::all_close_f((vector<float>{2, 4, 1, 2, 4, 2, 3, 5, 8, 16, 8, 16, 32, 7, 11, 13}),
+                          read_vector<float>(result),
+                          MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, concat_matrix_rowwise)
@@ -791,8 +782,10 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_matrix_rowwise)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b, c});
-    EXPECT_EQ((vector<float>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 2, 3, 5, 7, 11, 13}),
-              read_vector<float>(result));
+    EXPECT_TRUE(
+        test::all_close_f((vector<float>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 2, 3, 5, 7, 11, 13}),
+                          read_vector<float>(result),
+                          MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, concat_matrix_int64)
@@ -862,7 +855,8 @@ NGRAPH_TEST_P(${BACKEND_NAME}, concat_vector_params, concat_vector_large)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, inputs_value);
-    EXPECT_EQ(ref_result, read_vector<float>(result));
+    EXPECT_TRUE(
+        test::all_close_f(ref_result, read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 // concat_vector_large case generation
@@ -899,7 +893,9 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_vector)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b, c});
-    EXPECT_EQ((vector<float>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 18, 19}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 18, 19}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, concat_4d_tensor)
@@ -925,7 +921,8 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_4d_tensor)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b, c});
-    EXPECT_EQ((vector<float>{1, 2, 3}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{1, 2, 3}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, concat_2d_tensor)
@@ -951,7 +948,8 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_2d_tensor)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b, c});
-    EXPECT_EQ((vector<float>{1, 2, 3}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{1, 2, 3}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, concat_in_place_2d_tensor)
@@ -983,7 +981,8 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_in_place_2d_tensor)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b, c, d});
-    EXPECT_EQ((vector<float>{3, 7, 2}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{3, 7, 2}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, concat_in_place_propagate_2d_tensor)
@@ -1016,7 +1015,8 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_in_place_propagate_2d_tensor)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b, c, d});
-    EXPECT_EQ((vector<float>{3, 7, 2}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{3, 7, 2}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 // from numpy import *
@@ -1109,7 +1109,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_5d)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b, c});
-    EXPECT_EQ(
+    EXPECT_TRUE(test::all_close_f(
         (vector<float>{
             1.,    2.,    3.,    4.,    5.,    6.,    7.,    8.,    9.,    10.,   11.,   12.,
             13.,   14.,   15.,   16.,   17.,   18.,   19.,   20.,   21.,   22.,   23.,   24.,
@@ -1138,7 +1138,8 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_5d)
             139.,  140.,  141.,  142.,  143.,  144.,  1091., 1092., 1093., 1094., 1095., 1096.,
             1097., 1098., 1099., 1100., 1101., 1102., 1103., 1104., 1105., 1106., 1107., 1108.,
             2061., 2062., 2063., 2064., 2065., 2066., 2067., 2068., 2069., 2070., 2071., 2072.}),
-        read_vector<float>(result));
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, concat_zero_length_1d_last)
@@ -1167,7 +1168,8 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_zero_length_1d_last)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{1, 2, 3, 4}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, concat_zero_length_1d_middle)
@@ -1201,7 +1203,9 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_zero_length_1d_middle)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b, c});
-    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, concat_zero_zero)
@@ -1218,7 +1222,8 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_zero_zero)
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {});
 
-    EXPECT_EQ(vector<float>{}, read_vector<float>(result));
+    EXPECT_TRUE(
+        test::all_close_f(vector<float>{}, read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, concat_zero_length_4d_middle)
@@ -1252,7 +1257,9 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_zero_length_4d_middle)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b, c});
-    EXPECT_EQ((vector<float>{1, 5, 2, 6, 3, 7, 4, 8}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1, 5, 2, 6, 3, 7, 4, 8}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, lrn)
@@ -1312,7 +1319,9 @@ NGRAPH_TEST(${BACKEND_NAME}, select)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b, c});
-    EXPECT_EQ((vector<float>{11, 2, 3, 14, 15, 6, 17, 8}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{11, 2, 3, 14, 15, 6, 17, 8}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, tensor_constant)
@@ -1328,7 +1337,9 @@ NGRAPH_TEST(${BACKEND_NAME}, tensor_constant)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {});
-    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, tensor_2constant)
@@ -1345,8 +1356,12 @@ NGRAPH_TEST(${BACKEND_NAME}, tensor_2constant)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result0, result1}, {});
-    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), read_vector<float>(result0));
-    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), read_vector<float>(result1));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}),
+                                  read_vector<float>(result0),
+                                  MIN_FLOAT_TOLERANCE_BITS));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}),
+                                  read_vector<float>(result1),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_with_op)
@@ -1362,7 +1377,9 @@ NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_with_op)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {});
-    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, constant_multi_use)
@@ -1396,7 +1413,7 @@ NGRAPH_TEST(${BACKEND_NAME}, convert_int32_float32)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{281, 2, 3, 4}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{281, 2, 3, 4}), read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, convert_uint16_float32)
@@ -1414,7 +1431,8 @@ NGRAPH_TEST(${BACKEND_NAME}, convert_uint16_float32)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{1, 2, 3, 4}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, convert_int32_bool)
@@ -1472,7 +1490,8 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_scalar)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{312}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{312}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, slice_matrix)
@@ -1492,7 +1511,8 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_matrix)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{2, 3, 6, 7, 10, 11}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{2, 3, 6, 7, 10, 11}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, slice_vector)
@@ -1512,7 +1532,9 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_vector)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, slice_matrix_axis_0_overlap)
@@ -1538,7 +1560,9 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_matrix_axis_0_overlap)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ((vector<float>{12, 16, 20, 24, 28, 32, 36, 40}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{12, 16, 20, 24, 28, 32, 36, 40}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, slice_matrix_axis_0_in_place)
@@ -1560,7 +1584,9 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_matrix_axis_0_in_place)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{10, 12, 14, 16, 18, 20, 22, 24}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{10, 12, 14, 16, 18, 20, 22, 24}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, slice_matrix_axis_0_in_place_twice)
@@ -1583,7 +1609,8 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_matrix_axis_0_in_place_twice)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{14, 16, 18, 20}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{14, 16, 18, 20}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, slice_matrix_axis_0_in_place_twice_overlap)
@@ -1607,7 +1634,9 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_matrix_axis_0_in_place_twice_overlap)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{22, 24, 26, 28, 30, 32, 34, 36}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{22, 24, 26, 28, 30, 32, 34, 36}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, slice_matrix_axis_0_in_place_with_reshape)
@@ -1632,7 +1661,9 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_matrix_axis_0_in_place_with_reshape)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{12, 13, 14, 15, 17, 18, 19, 20}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{12, 13, 14, 15, 17, 18, 19, 20}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, slice_matrix_strided)
@@ -1652,7 +1683,8 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_matrix_strided)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{4, 7, 12, 15}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{4, 7, 12, 15}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, slice_3d)
@@ -1678,7 +1710,9 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_3d)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{21, 22, 25, 26, 37, 38, 41, 42}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{21, 22, 25, 26, 37, 38, 41, 42}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, slice_3d_strided)
@@ -1704,7 +1738,9 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_3d_strided)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{0, 2, 8, 10, 32, 34, 40, 42}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{0, 2, 8, 10, 32, 34, 40, 42}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, slice_3d_strided_different_strides)
@@ -1730,7 +1766,9 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_3d_strided_different_strides)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{0, 3, 8, 11, 32, 35, 40, 43}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{0, 3, 8, 11, 32, 35, 40, 43}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, slice_3d_strided_different_strides_int64)
@@ -1778,7 +1816,7 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_3d_start_just_oob)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{}), read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, scalar_constant_float32)
@@ -1793,7 +1831,8 @@ NGRAPH_TEST(${BACKEND_NAME}, scalar_constant_float32)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {});
-    EXPECT_EQ(vector<float>{4.75f}, read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        vector<float>{4.75f}, read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, scalar_constant_int64)
@@ -1824,7 +1863,9 @@ NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_float32)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {});
-    EXPECT_EQ((vector<float>{4.75f, 4.5f, -5.25f, 0.0f}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{4.75f, 4.5f, -5.25f, 0.0f}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_int64)
@@ -1883,7 +1924,8 @@ NGRAPH_TEST(${BACKEND_NAME}, replace_slice_scalar)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ((vector<float>{808}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{808}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, replace_slice_matrix_inplace)
@@ -1910,8 +1952,10 @@ NGRAPH_TEST(${BACKEND_NAME}, replace_slice_matrix_inplace)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ((vector<float>{1, 102, 103, 4, 5, 106, 107, 8, 9, 110, 111, 12, 13, 14, 15, 16}),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{1, 102, 103, 4, 5, 106, 107, 8, 9, 110, 111, 12, 13, 14, 15, 16}),
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, replace_slice_matrix)
@@ -1935,8 +1979,10 @@ NGRAPH_TEST(${BACKEND_NAME}, replace_slice_matrix)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ((vector<float>{1, 102, 103, 4, 5, 106, 107, 8, 9, 110, 111, 12, 13, 14, 15, 16}),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{1, 102, 103, 4, 5, 106, 107, 8, 9, 110, 111, 12, 13, 14, 15, 16}),
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, replace_slice_vector)
@@ -1960,9 +2006,10 @@ NGRAPH_TEST(${BACKEND_NAME}, replace_slice_vector)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ(
+    EXPECT_TRUE(test::all_close_f(
         (vector<float>{0, 1, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 14, 15}),
-        read_vector<float>(result));
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, replace_slice_3d)
@@ -1992,14 +2039,15 @@ NGRAPH_TEST(${BACKEND_NAME}, replace_slice_3d)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ((vector<float>{0,  1,  2,  3,  4,  5,   6,   7,  8,  9,   10,  11, 12, 13, 14, 15,
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{0,  1,  2,  3,  4,  5,   6,   7,  8,  9,   10,  11, 12, 13, 14, 15,
 
-                             16, 17, 18, 19, 20, 921, 922, 23, 24, 925, 926, 27, 28, 29, 30, 31,
+                       16, 17, 18, 19, 20, 921, 922, 23, 24, 925, 926, 27, 28, 29, 30, 31,
 
-                             32, 33, 34, 35, 36, 937, 938, 39, 40, 941, 942, 43, 44, 45, 46, 47,
+                       32, 33, 34, 35, 36, 937, 938, 39, 40, 941, 942, 43, 44, 45, 46, 47,
 
-                             48, 49, 50, 51, 52, 53,  54,  55, 56, 57,  58,  59, 60, 61, 62, 63}),
-              read_vector<float>(result));
+                       48, 49, 50, 51, 52, 53,  54,  55, 56, 57,  58,  59, 60, 61, 62, 63}),
+        read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, replace_slice_3d_strided)
@@ -2030,14 +2078,16 @@ NGRAPH_TEST(${BACKEND_NAME}, replace_slice_3d_strided)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ((vector<float>{900, 1,  902, 3,  4,  5,  6,  7,  908, 9,  910, 11, 12, 13, 14, 15,
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{900, 1,  902, 3,  4,  5,  6,  7,  908, 9,  910, 11, 12, 13, 14, 15,
 
-                             16,  17, 18,  19, 20, 21, 22, 23, 24,  25, 26,  27, 28, 29, 30, 31,
+                       16,  17, 18,  19, 20, 21, 22, 23, 24,  25, 26,  27, 28, 29, 30, 31,
 
-                             932, 33, 934, 35, 36, 37, 38, 39, 940, 41, 942, 43, 44, 45, 46, 47,
+                       932, 33, 934, 35, 36, 37, 38, 39, 940, 41, 942, 43, 44, 45, 46, 47,
 
-                             48,  49, 50,  51, 52, 53, 54, 55, 56,  57, 58,  59, 60, 61, 62, 63}),
-              read_vector<float>(result));
+                       48,  49, 50,  51, 52, 53, 54, 55, 56,  57, 58,  59, 60, 61, 62, 63}),
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, replace_slice_3d_strided_different_strides)
@@ -2068,14 +2118,16 @@ NGRAPH_TEST(${BACKEND_NAME}, replace_slice_3d_strided_different_strides)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ((vector<float>{900, 1,  2,  903, 4,  5,  6,  7,  908, 9,  10, 911, 12, 13, 14, 15,
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{900, 1,  2,  903, 4,  5,  6,  7,  908, 9,  10, 911, 12, 13, 14, 15,
 
-                             16,  17, 18, 19,  20, 21, 22, 23, 24,  25, 26, 27,  28, 29, 30, 31,
+                       16,  17, 18, 19,  20, 21, 22, 23, 24,  25, 26, 27,  28, 29, 30, 31,
 
-                             932, 33, 34, 935, 36, 37, 38, 39, 940, 41, 42, 943, 44, 45, 46, 47,
+                       932, 33, 34, 935, 36, 37, 38, 39, 940, 41, 42, 943, 44, 45, 46, 47,
 
-                             48,  49, 50, 51,  52, 53, 54, 55, 56,  57, 58, 59,  60, 61, 62, 63}),
-              read_vector<float>(result));
+                       48,  49, 50, 51,  52, 53, 54, 55, 56,  57, 58, 59,  60, 61, 62, 63}),
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, reverse_0d)
@@ -2093,7 +2145,8 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_0d)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{6}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{6}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, reverse_1d_nochange)
@@ -2111,7 +2164,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_1d_nochange)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{0, 1, 2, 3, 4, 5, 6, 7}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{0, 1, 2, 3, 4, 5, 6, 7}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, reverse_1d_0)
@@ -2129,7 +2184,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_1d_0)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{7, 6, 5, 4, 3, 2, 1, 0}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{7, 6, 5, 4, 3, 2, 1, 0}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, reverse_2d_nochange)
@@ -2148,9 +2205,10 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_2d_nochange)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ(
+    EXPECT_TRUE(test::all_close_f(
         (test::NDArray<float, 2>({{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}}).get_vector()),
-        read_vector<float>(result));
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, reverse_2d_0)
@@ -2169,9 +2227,10 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_2d_0)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ(
+    EXPECT_TRUE(test::all_close_f(
         (test::NDArray<float, 2>({{9, 10, 11}, {6, 7, 8}, {3, 4, 5}, {0, 1, 2}}).get_vector()),
-        read_vector<float>(result));
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, reverse_2d_1)
@@ -2190,9 +2249,10 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_2d_1)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ(
+    EXPECT_TRUE(test::all_close_f(
         (test::NDArray<float, 2>({{2, 1, 0}, {5, 4, 3}, {8, 7, 6}, {11, 10, 9}}).get_vector()),
-        read_vector<float>(result));
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, reverse_2d_01)
@@ -2211,9 +2271,10 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_2d_01)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ(
+    EXPECT_TRUE(test::all_close_f(
         (test::NDArray<float, 2>({{11, 10, 9}, {8, 7, 6}, {5, 4, 3}, {2, 1, 0}}).get_vector()),
-        read_vector<float>(result));
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_nochange)
@@ -2234,10 +2295,12 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_nochange)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((test::NDArray<float, 3>({{{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}},
-                                        {{12, 13, 14}, {15, 16, 17}, {18, 19, 20}, {21, 22, 23}}})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (test::NDArray<float, 3>({{{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}},
+                                  {{12, 13, 14}, {15, 16, 17}, {18, 19, 20}, {21, 22, 23}}})
+             .get_vector()),
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_0)
@@ -2258,10 +2321,12 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_0)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((test::NDArray<float, 3>({{{12, 13, 14}, {15, 16, 17}, {18, 19, 20}, {21, 22, 23}},
-                                        {{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}}})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (test::NDArray<float, 3>({{{12, 13, 14}, {15, 16, 17}, {18, 19, 20}, {21, 22, 23}},
+                                  {{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}}})
+             .get_vector()),
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_1)
@@ -2282,10 +2347,12 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_1)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((test::NDArray<float, 3>({{{9, 10, 11}, {6, 7, 8}, {3, 4, 5}, {0, 1, 2}},
-                                        {{21, 22, 23}, {18, 19, 20}, {15, 16, 17}, {12, 13, 14}}})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (test::NDArray<float, 3>({{{9, 10, 11}, {6, 7, 8}, {3, 4, 5}, {0, 1, 2}},
+                                  {{21, 22, 23}, {18, 19, 20}, {15, 16, 17}, {12, 13, 14}}})
+             .get_vector()),
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_2)
@@ -2306,10 +2373,12 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_2)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((test::NDArray<float, 3>({{{2, 1, 0}, {5, 4, 3}, {8, 7, 6}, {11, 10, 9}},
-                                        {{14, 13, 12}, {17, 16, 15}, {20, 19, 18}, {23, 22, 21}}})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (test::NDArray<float, 3>({{{2, 1, 0}, {5, 4, 3}, {8, 7, 6}, {11, 10, 9}},
+                                  {{14, 13, 12}, {17, 16, 15}, {20, 19, 18}, {23, 22, 21}}})
+             .get_vector()),
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_01)
@@ -2330,10 +2399,12 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_01)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((test::NDArray<float, 3>({{{21, 22, 23}, {18, 19, 20}, {15, 16, 17}, {12, 13, 14}},
-                                        {{9, 10, 11}, {6, 7, 8}, {3, 4, 5}, {0, 1, 2}}})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (test::NDArray<float, 3>({{{21, 22, 23}, {18, 19, 20}, {15, 16, 17}, {12, 13, 14}},
+                                  {{9, 10, 11}, {6, 7, 8}, {3, 4, 5}, {0, 1, 2}}})
+             .get_vector()),
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_02)
@@ -2354,10 +2425,12 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_02)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((test::NDArray<float, 3>({{{14, 13, 12}, {17, 16, 15}, {20, 19, 18}, {23, 22, 21}},
-                                        {{2, 1, 0}, {5, 4, 3}, {8, 7, 6}, {11, 10, 9}}})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (test::NDArray<float, 3>({{{14, 13, 12}, {17, 16, 15}, {20, 19, 18}, {23, 22, 21}},
+                                  {{2, 1, 0}, {5, 4, 3}, {8, 7, 6}, {11, 10, 9}}})
+             .get_vector()),
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_12)
@@ -2378,10 +2451,12 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_12)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((test::NDArray<float, 3>({{{11, 10, 9}, {8, 7, 6}, {5, 4, 3}, {2, 1, 0}},
-                                        {{23, 22, 21}, {20, 19, 18}, {17, 16, 15}, {14, 13, 12}}})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (test::NDArray<float, 3>({{{11, 10, 9}, {8, 7, 6}, {5, 4, 3}, {2, 1, 0}},
+                                  {{23, 22, 21}, {20, 19, 18}, {17, 16, 15}, {14, 13, 12}}})
+             .get_vector()),
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_012)
@@ -2403,10 +2478,12 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_012)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((test::NDArray<float, 3>({{{23, 22, 21}, {20, 19, 18}, {17, 16, 15}, {14, 13, 12}},
-                                        {{11, 10, 9}, {8, 7, 6}, {5, 4, 3}, {2, 1, 0}}})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (test::NDArray<float, 3>({{{23, 22, 21}, {20, 19, 18}, {17, 16, 15}, {14, 13, 12}},
+                                  {{11, 10, 9}, {8, 7, 6}, {5, 4, 3}, {2, 1, 0}}})
+             .get_vector()),
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, numeric_float_nan)
@@ -2807,7 +2884,7 @@ NGRAPH_TEST(${BACKEND_NAME}, convolution_outlining)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ(vector<float>{expected_result}, read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(vector<float>{expected_result}, read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, computation_reuse)
@@ -2848,7 +2925,7 @@ NGRAPH_TEST(${BACKEND_NAME}, computation_reuse)
 
     b->set_stale(false);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ(rv_saved, rv);
+    EXPECT_TRUE(test::all_close_f(rv_saved, rv));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, pad_interior_1d)
@@ -2876,10 +2953,12 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_interior_1d)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ((test::NDArray<float, 1>(
-                   {1, 2112, 2112, 2, 2112, 2112, 3, 2112, 2112, 4, 2112, 2112, 5, 2112, 2112, 6})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (test::NDArray<float, 1>(
+             {1, 2112, 2112, 2, 2112, 2112, 3, 2112, 2112, 4, 2112, 2112, 5, 2112, 2112, 6})
+             .get_vector()),
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_1d)
@@ -2907,10 +2986,12 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_1d)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ((test::NDArray<float, 1>(
-                   {2112, 2112, 2112, 2112, 1, 2, 3, 4, 5, 6, 2112, 2112, 2112, 2112, 2112})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (test::NDArray<float, 1>(
+             {2112, 2112, 2112, 2112, 1, 2, 3, 4, 5, 6, 2112, 2112, 2112, 2112, 2112})
+             .get_vector()),
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, pad_interior_exterior_1d)
@@ -2938,11 +3019,13 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_interior_exterior_1d)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ((test::NDArray<float, 1>({2112, 2112, 2112, 2112, 1,    2112, 2112, 2, 2112,
-                                        2112, 3,    2112, 2112, 4,    2112, 2112, 5, 2112,
-                                        2112, 6,    2112, 2112, 2112, 2112, 2112})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (test::NDArray<float, 1>({2112, 2112, 2112, 2112, 1,    2112, 2112, 2, 2112,
+                                  2112, 3,    2112, 2112, 4,    2112, 2112, 5, 2112,
+                                  2112, 6,    2112, 2112, 2112, 2112, 2112})
+             .get_vector()),
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, pad_interior_exterior_2d)
@@ -2970,15 +3053,16 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_interior_exterior_2d)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ((test::NDArray<float, 2>({{9, 9, 9, 9, 9, 9},
-                                        {1, 9, 2, 9, 3, 9},
-                                        {9, 9, 9, 9, 9, 9},
-                                        {9, 9, 9, 9, 9, 9},
-                                        {4, 9, 5, 9, 6, 9},
-                                        {9, 9, 9, 9, 9, 9},
-                                        {9, 9, 9, 9, 9, 9}})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((test::NDArray<float, 2>({{9, 9, 9, 9, 9, 9},
+                                                            {1, 9, 2, 9, 3, 9},
+                                                            {9, 9, 9, 9, 9, 9},
+                                                            {9, 9, 9, 9, 9, 9},
+                                                            {4, 9, 5, 9, 6, 9},
+                                                            {9, 9, 9, 9, 9, 9},
+                                                            {9, 9, 9, 9, 9, 9}})
+                                       .get_vector()),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_2d_0x0)
@@ -3006,13 +3090,14 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_2d_0x0)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ((test::NDArray<float, 2>({{2112, 2112, 2112, 2112, 2112},
-                                        {2112, 2112, 2112, 2112, 2112},
-                                        {2112, 2112, 2112, 2112, 2112},
-                                        {2112, 2112, 2112, 2112, 2112},
-                                        {2112, 2112, 2112, 2112, 2112}})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((test::NDArray<float, 2>({{2112, 2112, 2112, 2112, 2112},
+                                                            {2112, 2112, 2112, 2112, 2112},
+                                                            {2112, 2112, 2112, 2112, 2112},
+                                                            {2112, 2112, 2112, 2112, 2112},
+                                                            {2112, 2112, 2112, 2112, 2112}})
+                                       .get_vector()),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_2d_0x3)
@@ -3040,13 +3125,14 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_2d_0x3)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ((test::NDArray<float, 2>({{2112, 2112, 2112, 2112, 2112},
-                                        {2112, 2112, 2112, 2112, 2112},
-                                        {2112, 2112, 2112, 2112, 2112},
-                                        {2112, 2112, 2112, 2112, 2112},
-                                        {2112, 2112, 2112, 2112, 2112}})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((test::NDArray<float, 2>({{2112, 2112, 2112, 2112, 2112},
+                                                            {2112, 2112, 2112, 2112, 2112},
+                                                            {2112, 2112, 2112, 2112, 2112},
+                                                            {2112, 2112, 2112, 2112, 2112},
+                                                            {2112, 2112, 2112, 2112, 2112}})
+                                       .get_vector()),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_2d_3x0)
@@ -3074,13 +3160,14 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_2d_3x0)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ((test::NDArray<float, 2>({{2112, 2112, 2112, 2112, 2112},
-                                        {2112, 2112, 2112, 2112, 2112},
-                                        {2112, 2112, 2112, 2112, 2112},
-                                        {2112, 2112, 2112, 2112, 2112},
-                                        {2112, 2112, 2112, 2112, 2112}})
-                   .get_vector()),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((test::NDArray<float, 2>({{2112, 2112, 2112, 2112, 2112},
+                                                            {2112, 2112, 2112, 2112, 2112},
+                                                            {2112, 2112, 2112, 2112, 2112},
+                                                            {2112, 2112, 2112, 2112, 2112},
+                                                            {2112, 2112, 2112, 2112, 2112}})
+                                       .get_vector()),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_4d_1x2x2x2)
@@ -3125,7 +3212,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_4d_1x2x2x2)
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
     // clang-format off
-    EXPECT_EQ((test::NDArray<float, 4>(
+    EXPECT_TRUE(test::all_close_f((test::NDArray<float, 4>(
         {
             {
                 {
@@ -3142,7 +3229,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_4d_1x2x2x2)
                 }
             }
         }).get_vector()),
-        read_vector<float>(result));
+        read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
     // clang-format on
 }
 
@@ -3178,7 +3265,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_interior_exterior_4d_2x0x3x2)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ(expected, read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 // This test covers the case with multiple image and with asymetric pad
@@ -3231,35 +3318,36 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_2channel_2image_asym)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ((test::NDArray<float, 4>({{{{0, 1, 0, 2, 42, 42}, // img 0 chan 0
-                                          {0, 3, 2, 0, 42, 42},
-                                          {2, 0, 0, 0, 42, 42},
-                                          {0, 2, 1, 0, 42, 42},
-                                          {42, 42, 42, 42, 42, 42},
-                                          {42, 42, 42, 42, 42, 42}},
+    EXPECT_TRUE(test::all_close_f((test::NDArray<float, 4>({{{{0, 1, 0, 2, 42, 42}, // img 0 chan 0
+                                                              {0, 3, 2, 0, 42, 42},
+                                                              {2, 0, 0, 0, 42, 42},
+                                                              {0, 2, 1, 0, 42, 42},
+                                                              {42, 42, 42, 42, 42, 42},
+                                                              {42, 42, 42, 42, 42, 42}},
 
-                                         {{0, 0, 0, 2, 42, 42}, // img 1 chan 0
-                                          {0, 2, 3, 0, 42, 42},
-                                          {2, 0, 1, 0, 42, 42},
-                                          {2, 0, 0, 0, 42, 42},
-                                          {42, 42, 42, 42, 42, 42},
-                                          {42, 42, 42, 42, 42, 42}}},
+                                                             {{0, 0, 0, 2, 42, 42}, // img 1 chan 0
+                                                              {0, 2, 3, 0, 42, 42},
+                                                              {2, 0, 1, 0, 42, 42},
+                                                              {2, 0, 0, 0, 42, 42},
+                                                              {42, 42, 42, 42, 42, 42},
+                                                              {42, 42, 42, 42, 42, 42}}},
 
-                                        {{{0, 2, 1, 1, 42, 42}, // img 1 chan 0
-                                          {0, 0, 2, 0, 42, 42},
-                                          {0, 0, 1, 2, 42, 42},
-                                          {0, 0, 0, 0, 42, 42},
-                                          {42, 42, 42, 42, 42, 42},
-                                          {42, 42, 42, 42, 42, 42}},
+                                                            {{{0, 2, 1, 1, 42, 42}, // img 1 chan 0
+                                                              {0, 0, 2, 0, 42, 42},
+                                                              {0, 0, 1, 2, 42, 42},
+                                                              {0, 0, 0, 0, 42, 42},
+                                                              {42, 42, 42, 42, 42, 42},
+                                                              {42, 42, 42, 42, 42, 42}},
 
-                                         {{2, 1, 0, 0, 42, 42}, // img 1 chan 1
-                                          {0, 2, 0, 0, 42, 42},
-                                          {1, 1, 2, 0, 42, 42},
-                                          {1, 0, 0, 0, 42, 42},
-                                          {42, 42, 42, 42, 42, 42},
-                                          {42, 42, 42, 42, 42, 42}}}})
-                   .get_vector()),
-              read_vector<float>(result));
+                                                             {{2, 1, 0, 0, 42, 42}, // img 1 chan 1
+                                                              {0, 2, 0, 0, 42, 42},
+                                                              {1, 1, 2, 0, 42, 42},
+                                                              {1, 0, 0, 0, 42, 42},
+                                                              {42, 42, 42, 42, 42, 42},
+                                                              {42, 42, 42, 42, 42, 42}}}})
+                                       .get_vector()),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 // Trivial case with no reduced axes.
@@ -3278,7 +3366,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_trivial)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1, 2, 3, 4}), read_vector<float>(result)));
 }
 
 // Failure has been reported at 5D for some reason
@@ -3298,9 +3386,9 @@ NGRAPH_TEST(${BACKEND_NAME}, product_trivial_5d)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                                                 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}),
+                                  read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, product_to_scalar)
@@ -3318,11 +3406,11 @@ NGRAPH_TEST(${BACKEND_NAME}, product_to_scalar)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{24}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{24}), read_vector<float>(result)));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(a));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1, 2, 3, 4}), read_vector<float>(a)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, product_matrix_columns)
@@ -3341,11 +3429,11 @@ NGRAPH_TEST(${BACKEND_NAME}, product_matrix_columns)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{15, 48}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{15, 48}), read_vector<float>(result)));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, product_matrix_rows)
@@ -3364,11 +3452,11 @@ NGRAPH_TEST(${BACKEND_NAME}, product_matrix_rows)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{2, 12, 30}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{2, 12, 30}), read_vector<float>(result)));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, product_matrix_rows_zero)
@@ -3388,11 +3476,11 @@ NGRAPH_TEST(${BACKEND_NAME}, product_matrix_rows_zero)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{1, 1, 1}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1, 1, 1}), read_vector<float>(result)));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{}), read_vector<float>(a));
+    EXPECT_TRUE(test::all_close_f((vector<float>{}), read_vector<float>(a)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, product_matrix_cols_zero)
@@ -3413,11 +3501,11 @@ NGRAPH_TEST(${BACKEND_NAME}, product_matrix_cols_zero)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{1, 1}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1, 1}), read_vector<float>(result)));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{}), read_vector<float>(a));
+    EXPECT_TRUE(test::all_close_f((vector<float>{}), read_vector<float>(a)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, product_vector_zero)
@@ -3437,11 +3525,11 @@ NGRAPH_TEST(${BACKEND_NAME}, product_vector_zero)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{1}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1}), read_vector<float>(result)));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{}), read_vector<float>(a));
+    EXPECT_TRUE(test::all_close_f((vector<float>{}), read_vector<float>(a)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, product_matrix_to_scalar_zero_by_zero)
@@ -3461,11 +3549,11 @@ NGRAPH_TEST(${BACKEND_NAME}, product_matrix_to_scalar_zero_by_zero)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{1}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1}), read_vector<float>(result)));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{}), read_vector<float>(a));
+    EXPECT_TRUE(test::all_close_f((vector<float>{}), read_vector<float>(a)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, product_3d_to_matrix_most_sig)
@@ -3485,16 +3573,16 @@ NGRAPH_TEST(${BACKEND_NAME}, product_3d_to_matrix_most_sig)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{1 * 10 * 19,
-                             2 * 11 * 20,
-                             3 * 12 * 21,
-                             4 * 13 * 22,
-                             5 * 14 * 23,
-                             6 * 15 * 24,
-                             7 * 16 * 25,
-                             8 * 17 * 26,
-                             9 * 18 * 27}),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1 * 10 * 19,
+                                                 2 * 11 * 20,
+                                                 3 * 12 * 21,
+                                                 4 * 13 * 22,
+                                                 5 * 14 * 23,
+                                                 6 * 15 * 24,
+                                                 7 * 16 * 25,
+                                                 8 * 17 * 26,
+                                                 9 * 18 * 27}),
+                                  read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, product_3d_to_matrix_least_sig)
@@ -3514,16 +3602,16 @@ NGRAPH_TEST(${BACKEND_NAME}, product_3d_to_matrix_least_sig)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{1 * 2 * 3,
-                             4 * 5 * 6,
-                             7 * 8 * 9,
-                             10 * 11 * 12,
-                             13 * 14 * 15,
-                             16 * 17 * 18,
-                             19 * 20 * 21,
-                             22 * 23 * 24,
-                             25 * 26 * 27}),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1 * 2 * 3,
+                                                 4 * 5 * 6,
+                                                 7 * 8 * 9,
+                                                 10 * 11 * 12,
+                                                 13 * 14 * 15,
+                                                 16 * 17 * 18,
+                                                 19 * 20 * 21,
+                                                 22 * 23 * 24,
+                                                 25 * 26 * 27}),
+                                  read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, product_3d_to_vector)
@@ -3543,10 +3631,11 @@ NGRAPH_TEST(${BACKEND_NAME}, product_3d_to_vector)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{1.0f * 10.0f * 19.0f * 4.0f * 13.0f * 22.0f * 7.0f * 16.0f * 25.0f,
-                             2.0f * 11.0f * 20.0f * 5.0f * 14.0f * 23.0f * 8.0f * 17.0f * 26.0f,
-                             3.0f * 12.0f * 21.0f * 6.0f * 15.0f * 24.0f * 9.0f * 18.0f * 27.0f}),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{1.0f * 10.0f * 19.0f * 4.0f * 13.0f * 22.0f * 7.0f * 16.0f * 25.0f,
+                       2.0f * 11.0f * 20.0f * 5.0f * 14.0f * 23.0f * 8.0f * 17.0f * 26.0f,
+                       3.0f * 12.0f * 21.0f * 6.0f * 15.0f * 24.0f * 9.0f * 18.0f * 27.0f}),
+        read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, product_3d_to_scalar)
@@ -3567,11 +3656,11 @@ NGRAPH_TEST(${BACKEND_NAME}, product_3d_to_scalar)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_TRUE(test::all_close(vector<float>{1.0f * 10.0f * 9.0f * 4.0f * 13.0f * 6.0f * 7.0f *
-                                              12.0f * 3.0f * 2.0f * 11.0f * 8.0f * 5.0f * 14.0f *
-                                              5.0f * 8.0f * 11.0f * 2.0f * 3.0f * 12.0f * 7.0f *
-                                              6.0f * 13.0f * 4.0f * 9.0f * 10.0f * 1.0f},
-                                read_vector<float>(result)));
+    EXPECT_TRUE(test::all_close_f(vector<float>{1.0f * 10.0f * 9.0f * 4.0f * 13.0f * 6.0f * 7.0f *
+                                                12.0f * 3.0f * 2.0f * 11.0f * 8.0f * 5.0f * 14.0f *
+                                                5.0f * 8.0f * 11.0f * 2.0f * 3.0f * 12.0f * 7.0f *
+                                                6.0f * 13.0f * 4.0f * 9.0f * 10.0f * 1.0f},
+                                  read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, product_3d_eliminate_zero_dim)
@@ -3593,7 +3682,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_3d_eliminate_zero_dim)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{1, 1, 1, 1, 1, 1}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1, 1, 1, 1, 1, 1}), read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, product_2d_to_scalar_int32)
@@ -3675,7 +3764,8 @@ NGRAPH_TEST(${BACKEND_NAME}, max_trivial)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{1, 2, 3, 4}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, max_trivial_int8)
@@ -3713,9 +3803,10 @@ NGRAPH_TEST(${BACKEND_NAME}, max_trivial_5d)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                                                 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, max_trivial_5d_int32)
@@ -3754,11 +3845,12 @@ NGRAPH_TEST(${BACKEND_NAME}, max_to_scalar)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{4}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{4}), read_vector<float>(result)));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(a));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{1, 2, 3, 4}), read_vector<float>(a), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, max_to_scalar_int8)
@@ -3795,11 +3887,12 @@ NGRAPH_TEST(${BACKEND_NAME}, max_matrix_columns)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{5, 6}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{5, 6}), read_vector<float>(result)));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, max_matrix_rows)
@@ -3818,11 +3911,12 @@ NGRAPH_TEST(${BACKEND_NAME}, max_matrix_rows)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{2, 4, 6}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{2, 4, 6}), read_vector<float>(result)));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, max_matrix_rows_int32)
@@ -3872,7 +3966,8 @@ NGRAPH_TEST(${BACKEND_NAME}, max_matrix_rows_zero)
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{}), read_vector<float>(a));
+    EXPECT_TRUE(
+        test::all_close_f((vector<float>{}), read_vector<float>(a), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, max_matrix_rows_zero_int32)
@@ -3924,7 +4019,8 @@ NGRAPH_TEST(${BACKEND_NAME}, max_matrix_cols_zero)
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{}), read_vector<float>(a));
+    EXPECT_TRUE(
+        test::all_close_f((vector<float>{}), read_vector<float>(a), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, max_vector_zero)
@@ -3948,7 +4044,8 @@ NGRAPH_TEST(${BACKEND_NAME}, max_vector_zero)
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{}), read_vector<float>(a));
+    EXPECT_TRUE(
+        test::all_close_f((vector<float>{}), read_vector<float>(a), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, max_matrix_to_scalar_zero_by_zero)
@@ -3972,7 +4069,8 @@ NGRAPH_TEST(${BACKEND_NAME}, max_matrix_to_scalar_zero_by_zero)
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{}), read_vector<float>(a));
+    EXPECT_TRUE(
+        test::all_close_f((vector<float>{}), read_vector<float>(a), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, max_3d_to_matrix_most_sig)
@@ -3992,7 +4090,9 @@ NGRAPH_TEST(${BACKEND_NAME}, max_3d_to_matrix_most_sig)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{19, 20, 21, 22, 23, 24, 25, 26, 27}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{19, 20, 21, 22, 23, 24, 25, 26, 27}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, max_3d_to_matrix_least_sig)
@@ -4012,7 +4112,9 @@ NGRAPH_TEST(${BACKEND_NAME}, max_3d_to_matrix_least_sig)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{3, 6, 9, 12, 15, 18, 21, 24, 27}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{3, 6, 9, 12, 15, 18, 21, 24, 27}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, max_3d_to_vector)
@@ -4032,7 +4134,9 @@ NGRAPH_TEST(${BACKEND_NAME}, max_3d_to_vector)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{25.0f, 26.0f, 27.0f}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{25.0f, 26.0f, 27.0f}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, max_3d_to_scalar)
@@ -4052,7 +4156,8 @@ NGRAPH_TEST(${BACKEND_NAME}, max_3d_to_scalar)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{14.0f}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{14.0f}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, max_3d_to_scalar_int32)
@@ -4092,7 +4197,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_3d_to_scalar_double)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<double>{14}), read_vector<double>(result));
+    EXPECT_TRUE(test::all_close_f((vector<double>{14}), read_vector<double>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, max_3d_eliminate_zero_dim)
@@ -4135,7 +4240,8 @@ NGRAPH_TEST(${BACKEND_NAME}, min_trivial)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{1, 2, 3, 4}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 // Failure has been reported at 5D for some reason
@@ -4155,9 +4261,10 @@ NGRAPH_TEST(${BACKEND_NAME}, min_trivial_5d)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}),
-              read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                                                 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, min_trivial_5d_int32)
@@ -4196,11 +4303,13 @@ NGRAPH_TEST(${BACKEND_NAME}, min_to_scalar)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{1}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{1}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(a));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{1, 2, 3, 4}), read_vector<float>(a), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, min_to_scalar_int8)
@@ -4241,11 +4350,13 @@ NGRAPH_TEST(${BACKEND_NAME}, min_matrix_columns)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{1, 2}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{1, 2}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, min_matrix_rows)
@@ -4264,11 +4375,13 @@ NGRAPH_TEST(${BACKEND_NAME}, min_matrix_rows)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{1, 3, 5}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{1, 3, 5}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, min_matrix_rows_int32)
@@ -4318,7 +4431,8 @@ NGRAPH_TEST(${BACKEND_NAME}, min_matrix_rows_zero)
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{}), read_vector<float>(a));
+    EXPECT_TRUE(
+        test::all_close_f((vector<float>{}), read_vector<float>(a), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, min_matrix_cols_zero)
@@ -4345,7 +4459,8 @@ NGRAPH_TEST(${BACKEND_NAME}, min_matrix_cols_zero)
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{}), read_vector<float>(a));
+    EXPECT_TRUE(
+        test::all_close_f((vector<float>{}), read_vector<float>(a), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, min_vector_zero)
@@ -4369,7 +4484,8 @@ NGRAPH_TEST(${BACKEND_NAME}, min_vector_zero)
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{}), read_vector<float>(a));
+    EXPECT_TRUE(
+        test::all_close_f((vector<float>{}), read_vector<float>(a), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, min_matrix_to_scalar_zero_by_zero)
@@ -4393,7 +4509,8 @@ NGRAPH_TEST(${BACKEND_NAME}, min_matrix_to_scalar_zero_by_zero)
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{}), read_vector<float>(a));
+    EXPECT_TRUE(
+        test::all_close_f((vector<float>{}), read_vector<float>(a), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, min_3d_to_matrix_most_sig)
@@ -4413,7 +4530,9 @@ NGRAPH_TEST(${BACKEND_NAME}, min_3d_to_matrix_most_sig)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, min_3d_to_matrix_least_sig)
@@ -4433,7 +4552,9 @@ NGRAPH_TEST(${BACKEND_NAME}, min_3d_to_matrix_least_sig)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{1, 4, 7, 10, 13, 16, 19, 22, 25}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1, 4, 7, 10, 13, 16, 19, 22, 25}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, min_3d_to_vector)
@@ -4453,7 +4574,8 @@ NGRAPH_TEST(${BACKEND_NAME}, min_3d_to_vector)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{1, 2, 3}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{1, 2, 3}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, min_3d_to_scalar)
@@ -4473,7 +4595,8 @@ NGRAPH_TEST(${BACKEND_NAME}, min_3d_to_scalar)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{1}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{1}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, min_3d_to_scalar_int32)
@@ -4537,7 +4660,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sigmoid_n1c1h2w2)
     auto handle = backend->compile(func);
     handle->call_with_validate({result}, {a});
     vector<float> expected{0.73105858f, 0.98201379f, 0.73105858f, 0.98201379f};
-    ASSERT_TRUE(read_vector<float>(result) == expected);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, sigmoid_n1c1h4)
@@ -4557,7 +4680,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sigmoid_n1c1h4)
     auto handle = backend->compile(func);
     handle->call_with_validate({result}, {a});
     vector<float> expected{0.73105858f, 0.98201379f, 0.73105858f, 0.98201379f};
-    ASSERT_TRUE(read_vector<float>(result) == expected);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, sigmoid_bprop_n1c1h4)
@@ -4601,7 +4724,7 @@ NGRAPH_TEST(${BACKEND_NAME}, relu_2Dfprop)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ(read_vector<float>(result), expected);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected, MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, relu_4Dfprop)
@@ -4621,7 +4744,7 @@ NGRAPH_TEST(${BACKEND_NAME}, relu_4Dfprop)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ(read_vector<float>(result), expected);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected, MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, fuse_max_with_constant_zero_input_as_relu)
@@ -4642,7 +4765,7 @@ NGRAPH_TEST(${BACKEND_NAME}, fuse_max_with_constant_zero_input_as_relu)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {b});
-    EXPECT_EQ(read_vector<float>(result), expected);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected, MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, relu_2Dbackprop)
@@ -4665,7 +4788,7 @@ NGRAPH_TEST(${BACKEND_NAME}, relu_2Dbackprop)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, delta});
-    EXPECT_EQ(read_vector<float>(result), expected);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected, MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, relu_4Dbackprop)
@@ -4688,7 +4811,7 @@ NGRAPH_TEST(${BACKEND_NAME}, relu_4Dbackprop)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, delta});
-    EXPECT_EQ(read_vector<float>(result), expected);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected, MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, softmax_all)
@@ -4951,13 +5074,13 @@ NGRAPH_TEST(${BACKEND_NAME}, multiple_backends)
 
     auto handle1 = backend1->compile(f);
     handle1->call_with_validate({result1}, {a1, b1});
-    EXPECT_EQ(read_vector<float>(result1),
-              (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result1),
+                                  (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector()));
 
     auto handle2 = backend2->compile(g);
     handle2->call_with_validate({result2}, {a2, b2});
-    EXPECT_EQ(read_vector<float>(result2),
-              (test::NDArray<float, 2>({{5, 12}, {21, 32}})).get_vector());
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result2),
+                                  (test::NDArray<float, 2>({{5, 12}, {21, 32}})).get_vector()));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, tensorview_custom_mem)
@@ -4989,7 +5112,7 @@ NGRAPH_TEST(${BACKEND_NAME}, tensorview_custom_mem)
     // result should be in memory without needing explict read
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ((vector<float>{2, 2, 2, 2}), rv);
+    EXPECT_TRUE(test::all_close_f((vector<float>{2, 2, 2, 2}), rv, MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, validate_call_input_count)
@@ -5601,14 +5724,14 @@ NGRAPH_TEST(${BACKEND_NAME}, generate_mask)
     handle->call_with_validate({result_tv1, result_tv2}, {});
     auto result1 = read_vector<float>(result_tv1);
     auto result2 = read_vector<float>(result_tv2);
-    ASSERT_EQ(result1, result2);
+    ASSERT_TRUE(test::all_close_f(result1, result2));
     ASSERT_FALSE(std::any_of(result1.begin(), result1.end(), is_not_zero_or_one));
     handle->call_with_validate({result_tv1, result_tv2}, {});
     auto result1_2 = read_vector<float>(result_tv1);
     auto result2_2 = read_vector<float>(result_tv2);
-    ASSERT_NE(result1, result1_2);
+    ASSERT_FALSE(test::all_close_f(result1, result1_2));
     ASSERT_FALSE(std::any_of(result1_2.begin(), result1_2.end(), is_not_zero_or_one));
-    ASSERT_NE(result2, result2_2);
+    ASSERT_FALSE(test::all_close_f(result2, result2_2));
     ASSERT_FALSE(std::any_of(result2_2.begin(), result2_2.end(), is_not_zero_or_one));
 }
 
@@ -5679,8 +5802,9 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({y}, {x});
-    EXPECT_EQ((vector<output_c_type>{0, 0, 2, 4, 4, 4, 6, 8, 8, 8, 10, 12}),
-              read_vector<output_c_type>(y));
+    EXPECT_TRUE(test::all_close_f((vector<output_c_type>{0, 0, 2, 4, 4, 4, 6, 8, 8, 8, 10, 12}),
+                                  read_vector<output_c_type>(y),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, quantize_zero_offset)
@@ -5750,8 +5874,9 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize_zero_offset)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({y}, {x});
-    EXPECT_EQ((vector<output_c_type>{0, 0, 2, 4, 4, 4, 6, 8, 8, 8, 10, 12}),
-              read_vector<output_c_type>(y));
+    EXPECT_TRUE(test::all_close_f((vector<output_c_type>{0, 0, 2, 4, 4, 4, 6, 8, 8, 8, 10, 12}),
+                                  read_vector<output_c_type>(y),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, quantize_axes)
@@ -5821,8 +5946,9 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize_axes)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({y}, {x});
-    EXPECT_EQ((vector<output_c_type>{0, 2, 2, 3, 3, 6, 8, 8, 8, 10, 10, 10}),
-              read_vector<output_c_type>(y));
+    EXPECT_TRUE(test::all_close_f((vector<output_c_type>{0, 2, 2, 3, 3, 6, 8, 8, 8, 10, 10, 10}),
+                                  read_vector<output_c_type>(y),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, quantize_int8)
@@ -5892,8 +6018,10 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize_int8)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({y}, {x});
-    EXPECT_EQ((vector<output_c_type>{0, 0, 2, -4, 4, -4, 6, -8, 8, -8, 10, -12}),
-              read_vector<output_c_type>(y));
+    EXPECT_TRUE(
+        test::all_close_f((vector<output_c_type>{0, 0, 2, -4, 4, -4, 6, -8, 8, -8, 10, -12}),
+                          read_vector<output_c_type>(y),
+                          MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, quantize_int8_zero_offset)
@@ -5963,8 +6091,10 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize_int8_zero_offset)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({y}, {x});
-    EXPECT_EQ((vector<output_c_type>{0, 0, 2, -4, 4, -4, 6, -8, 8, -8, 10, -12}),
-              read_vector<output_c_type>(y));
+    EXPECT_TRUE(
+        test::all_close_f((vector<output_c_type>{0, 0, 2, -4, 4, -4, 6, -8, 8, -8, 10, -12}),
+                          read_vector<output_c_type>(y),
+                          MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, quantize_int32)
@@ -6034,8 +6164,10 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize_int32)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({y}, {x});
-    EXPECT_EQ((vector<output_c_type>{0, 0, 2, -4, 4, -4, 6, -8, 8, -8, 10, -12}),
-              read_vector<output_c_type>(y));
+    EXPECT_TRUE(
+        test::all_close_f((vector<output_c_type>{0, 0, 2, -4, 4, -4, 6, -8, 8, -8, 10, -12}),
+                          read_vector<output_c_type>(y),
+                          MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, quantize_int32_zero_offset)
@@ -6105,8 +6237,10 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize_int32_zero_offset)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({y}, {x});
-    EXPECT_EQ((vector<output_c_type>{0, 0, 2, -4, 4, -4, 6, -8, 8, -8, 10, -12}),
-              read_vector<output_c_type>(y));
+    EXPECT_TRUE(
+        test::all_close_f((vector<output_c_type>{0, 0, 2, -4, 4, -4, 6, -8, 8, -8, 10, -12}),
+                          read_vector<output_c_type>(y),
+                          MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, quantize_clamp_uint8)
@@ -6652,8 +6786,9 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize_dynamic_offset)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({y}, {x, Scale, Offset});
-    EXPECT_EQ((vector<output_c_type>{-256.0f, -250.0f, 0.0f, 254.0f}),
-              read_vector<output_c_type>(y));
+    EXPECT_TRUE(test::all_close_f((vector<output_c_type>{-256.0f, -250.0f, 0.0f, 254.0f}),
+                                  read_vector<output_c_type>(y),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, quantize_dynamic_offset)
