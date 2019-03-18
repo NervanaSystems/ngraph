@@ -15,7 +15,9 @@
 # ******************************************************************************
 
 if (NGRAPH_GENERIC_CPU_ENABLE)
-    find_package(OpenMP)
+    if(NGRAPH_OPENMP_ENABLE)
+        find_package(OpenMP)
+    endif()
     if (OPENMP_FOUND)
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")

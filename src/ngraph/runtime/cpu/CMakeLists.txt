@@ -14,7 +14,9 @@
 # limitations under the License.
 # ******************************************************************************
 
-include(FindOpenMP)
+if(NGRAPH_OPENMP_ENABLE)
+    include(FindOpenMP)
+endif()
 
 set(SRC
     cpu_backend.cpp

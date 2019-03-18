@@ -111,6 +111,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     endif()
 endif()
 
+if(NGRAPH_OPENMP_ENABLE)
 ExternalProject_Add(
     ext_mkl
     PREFIX mkl
@@ -175,6 +176,8 @@ else()
         ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${OMP_LIB})
 endif()
 
+endif(NGRAPH_OPENMP_ENABLE)
+
 set(MKLDNN_GIT_REPO_URL https://github.com/intel/mkl-dnn)
 set(MKLDNN_GIT_TAG ${NGRAPH_MKLDNN_GIT_TAG})
 set(MKLDNN_PATCH_FILE mkldnn.patch)
@@ -205,6 +208,7 @@ if (WIN32)
             -DMKLDNN_ENABLE_CONCURRENT_EXEC=ON
             -DMKLROOT=${MKL_ROOT}
             -DMKLDNN_LIB_VERSIONING_ENABLE=${NGRAPH_LIB_VERSIONING_ENABLE}
+            -DMKLDNN_OPENMP_ENABLE=${NGRAPH_OPENMP_ENABLE}
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/stamp"
         DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/download"
@@ -239,6 +243,7 @@ else()
             -DMKLDNN_ENABLE_CONCURRENT_EXEC=ON
             -DMKLROOT=${MKL_ROOT}
             -DMKLDNN_LIB_VERSIONING_ENABLE=${NGRAPH_LIB_VERSIONING_ENABLE}
+            -DMKLDNN_OPENMP_ENABLE=${NGRAPH_OPENMP_ENABLE}
             "-DARCH_OPT_FLAGS=-march=${NGRAPH_TARGET_ARCH} -mtune=${NGRAPH_TARGET_ARCH} ${MKLDNN_FLAG}"
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/stamp"
@@ -286,6 +291,7 @@ else()
     endif()
 endif()
 
+if(NGRAPH_OPENMP_ENABLE)
 ExternalProject_Add_Step(
     ext_mkldnn
     PrepareMKL
@@ -293,10 +299,13 @@ ExternalProject_Add_Step(
     DEPENDEES download
     DEPENDERS configure
     )
+endif(NGRAPH_OPENMP_ENABLE)
 
 add_library(libmkldnn INTERFACE)
 add_dependencies(libmkldnn ext_mkldnn)
 target_include_directories(libmkldnn SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/mkldnn/include)
+
+if(NGRAPH_OPENMP_ENABLE)
 if (WIN32)
     target_link_libraries(libmkldnn INTERFACE
         ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${MKLDNN_IMPLIB}
@@ -308,8 +317,20 @@ else()
         libmkl
     )
 endif()
+else()
+if (WIN32)
+    target_link_libraries(libmkldnn INTERFACE
+        ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${MKLDNN_IMPLIB}
+    )
+else()
+    target_link_libraries(libmkldnn INTERFACE
+        ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}
+    )
+endif()
+endif(NGRAPH_OPENMP_ENABLE)
 
 if(WIN32)
+    if(NGRAPH_OPENMP_ENABLE)
     install(
         FILES
             ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLML_LIB}
@@ -322,7 +343,18 @@ if(WIN32)
             ${NGRAPH_INSTALL_LIB}
         OPTIONAL
         )
+    else()
+    install(
+        FILES
+            ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}
+            ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${MKLDNN_IMPLIB}
+        DESTINATION
+            ${NGRAPH_INSTALL_LIB}
+        OPTIONAL
+        )
+    endif(NGRAPH_OPENMP_ENABLE)
 else()
+    if(NGRAPH_OPENMP_ENABLE)
     install(
         FILES
             ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLML_LIB}
@@ -332,6 +364,15 @@ else()
             ${NGRAPH_INSTALL_LIB}
         OPTIONAL
         )
+    else()
+    install(
+        FILES
+            ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}
+        DESTINATION
+            ${NGRAPH_INSTALL_LIB}
+        OPTIONAL
+        )
+    endif(NGRAPH_OPENMP_ENABLE)
     if(NGRAPH_LIB_VERSIONING_ENABLE)
         install(
             FILES
