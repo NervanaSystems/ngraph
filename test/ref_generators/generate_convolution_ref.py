@@ -22,7 +22,9 @@ import random
 from operator import mul
 
 # Generates an array of random floating point literals of the given length, from a fixed seed.
-def random_array_float_literals(length,seed=8086):
+
+
+def random_array_float_literals(length, seed=8086):
     literals = []
 
     random.seed(seed)
@@ -35,23 +37,27 @@ def random_array_float_literals(length,seed=8086):
     return literals
 
 # Elementwise addition on tuples.
-def tuple_plus(t1,t2):
+
+
+def tuple_plus(t1, t2):
     assert(len(t1) == len(t2))
 
     res = ()
 
-    for (x,y) in zip(list(t1),list(t2)):
+    for (x, y) in zip(list(t1), list(t2)):
         res = res + (x+y,)
 
     return res
 
 # Elementwise multiplication on tuples.
-def tuple_times(t1,t2):
+
+
+def tuple_times(t1, t2):
     assert(len(t1) == len(t2))
 
     res = ()
 
-    for (x,y) in zip(list(t1),list(t2)):
+    for (x, y) in zip(list(t1), list(t2)):
         res = res + (x*y,)
 
     return res
@@ -74,6 +80,8 @@ def tuple_times(t1,t2):
 # Where the D's are computed according to TensorFlow-style "valid" convolution rules, but *after* padding.
 # See https://www.tensorflow.org/api_docs/python/tf/nn/convolution.
 #
+
+
 def convolution_ref(data_batch, filter, move_strides, filter_dilation, below_pads, above_pads, data_dilation):
     assert(len(data_batch.shape) == len(filter.shape))
     assert(len(data_batch.shape) > 2)
@@ -85,33 +93,41 @@ def convolution_ref(data_batch, filter, move_strides, filter_dilation, below_pad
 
     # dilate the input batch
     new_item_shape = (np.array(data_batch.shape[2:]) - 1) * data_dilation + 1
-    new_data_batch_shape = list(np.array(data_batch.shape[:2])) + list(new_item_shape)
+    new_data_batch_shape = list(
+        np.array(data_batch.shape[:2])) + list(new_item_shape)
     new_data_batch = np.zeros(new_data_batch_shape)
 
-    for n in range(0, new_data_batch_shape[0]) :
-        for c in range(0, new_data_batch_shape[1]) :
+    for n in range(0, new_data_batch_shape[0]):
+        for c in range(0, new_data_batch_shape[1]):
             if new_data_batch.ndim == 3:
                 new_data_batch[n, c, 0::data_dilation[0]] = data_batch[n][c]
             elif new_data_batch.ndim == 4:
-                new_data_batch[n, c, 0::data_dilation[0], 0::data_dilation[1]] = data_batch[n][c]
+                new_data_batch[n, c, 0::data_dilation[0],
+                               0::data_dilation[1]] = data_batch[n][c]
             elif new_data_batch.ndim == 5:
-                new_data_batch[n, c, 0::data_dilation[0], 0::data_dilation[1], 0::data_dilation[2]] = data_batch[n][c]
+                new_data_batch[n, c, 0::data_dilation[0],
+                               0::data_dilation[1], 0::data_dilation[2]] = data_batch[n][c]
             elif new_data_batch.ndim == 6:
-                new_data_batch[n, c, 0::data_dilation[0], 0::data_dilation[1], 0::data_dilation[2], 0::data_dilation[3]] = data_batch[n][c]
+                new_data_batch[n, c, 0::data_dilation[0], 0::data_dilation[1],
+                               0::data_dilation[2], 0::data_dilation[3]] = data_batch[n][c]
             else:
                 assert(False)
 
     data_batch = new_data_batch
 
     # Pad the input batch wherever the pads are positive.
-    below_pads_pos = (0,0) + tuple(np.clip(below_pads,0,None))  # Have to add values for the spatial and channel dims.
-    above_pads_pos = (0,0) + tuple(np.clip(above_pads,0,None))  # Have to add values for the spatial and channel dims.
-    data_batch = np.pad(data_batch, zip(below_pads_pos,above_pads_pos), mode='constant', constant_values=0)
+    # Have to add values for the spatial and channel dims.
+    below_pads_pos = (0, 0) + tuple(np.clip(below_pads, 0, None))
+    # Have to add values for the spatial and channel dims.
+    above_pads_pos = (0, 0) + tuple(np.clip(above_pads, 0, None))
+    data_batch = np.pad(data_batch, list(
+        zip(below_pads_pos, above_pads_pos)), mode='constant', constant_values=0)
 
     # Slice the input batch wherever the pads are negative.
-    slice_bottoms = (0,0) + tuple (-np.clip(below_pads,None,0))
-    slice_tops = (0,0) + tuple (np.clip(above_pads,None,0))
-    slices = map(lambda p: slice(p[0],p[1] if p[1] < 0 else None),zip(slice_bottoms,slice_tops))
+    slice_bottoms = (0, 0) + tuple(-np.clip(below_pads, None, 0))
+    slice_tops = (0, 0) + tuple(np.clip(above_pads, None, 0))
+    slices = list(map(lambda p: slice(
+        p[0], p[1] if p[1] < 0 else None), zip(slice_bottoms, slice_tops)))
     data_batch = data_batch[slices]
 
     item_count = data_batch.shape[0]               # N
@@ -122,18 +138,20 @@ def convolution_ref(data_batch, filter, move_strides, filter_dilation, below_pad
 
     # This is not used in computation but we will calculate it for a check to make sure the window fits.
     window_physical_shape = []
-    for (d_in,d_virt,dil) in zip(input_item_shape,window_virtual_shape,filter_dilation):
+    for (d_in, d_virt, dil) in zip(input_item_shape, window_virtual_shape, filter_dilation):
         d_phys = (d_virt - 1) * dil + 1
-        assert(d_phys <= input_item_shape)
+        assert(d_phys <= d_in)
         window_physical_shape.append(d_phys)
 
     output_item_shape = []  # D'1,...,D'n
-    for (d_in,d_win,dil,mov) in zip (input_item_shape,window_virtual_shape,filter_dilation,move_strides):
-        d_out = int(math.ceil((float(d_in) - (float(d_win) - 1.0) * float(dil))/float(mov))) # Formula is taken from TF's definition for VALID convolution.
+    for (d_in, d_win, dil, mov) in zip(input_item_shape, window_virtual_shape, filter_dilation, move_strides):
+        # Formula is taken from TF's definition for VALID convolution.
+        d_out = int(
+            math.ceil((float(d_in) - (float(d_win) - 1.0) * float(dil))/float(mov)))
         assert(d_out > 0)
         output_item_shape.append(d_out)
 
-    output_shape = [item_count,co_count]+output_item_shape # N,Co,D'1,...,D'n
+    output_shape = [item_count, co_count]+output_item_shape  # N,Co,D'1,...,D'n
     output_batch = np.zeros(output_shape)
 
     # Walk over the output batch space.
@@ -151,16 +169,19 @@ def convolution_ref(data_batch, filter, move_strides, filter_dilation, below_pad
             ci, filter_pos = filter_index[0], filter_index[1:]
 
             # Build up the coordinate within the space N,Ci,D1,...,Dn that we need to read from in the input batch.
-            input_index = (item,ci) + (tuple_plus(tuple_times(output_pos,move_strides),tuple_times(filter_pos,filter_dilation)))
+            input_index = (item, ci) + (tuple_plus(tuple_times(output_pos,
+                                                               move_strides), tuple_times(filter_pos, filter_dilation)))
 
             # Add to the sum-of-products.
-            output_batch[output_index] = output_batch[output_index] + filter[(co,) + filter_index] * data_batch[input_index]
+            output_batch[output_index] = output_batch[output_index] + \
+                filter[(co,) + filter_index] * data_batch[input_index]
 
             filter_it.iternext()
 
         output_it.iternext()
 
     return output_batch
+
 
 def shape_str(shape):
     result = ''
@@ -173,6 +194,7 @@ def shape_str(shape):
             result = result + (',%d' % d)
     return result
 
+
 def scalar_str(x):
     result = ('%.1000g' % x)
     # This next part is a bit stupid.
@@ -181,6 +203,7 @@ def scalar_str(x):
     else:
         result = "%.8ff" % float(result)
     return result
+
 
 def data_str(data):
     result = ''
@@ -193,20 +216,31 @@ def data_str(data):
             result = result + ',' + scalar_str(x)
     return result
 
-def emit_test(t,f):
+
+def shape_size(shape):
+    result = 1
+    for l in shape:
+        result = result * l
+    return result
+
+
+def emit_test(t, f):
     test_name, input_batch_shape, filters_shape, move_strides, filter_dilation, below_pads, above_pads, data_dilation, bprop = t
 
-    input_batch_literals = random_array_float_literals(reduce(mul,input_batch_shape))
-    filters_literals = random_array_float_literals(reduce(mul, filters_shape))
-
-    input_batch_array = np.array(map(lambda s: np.float32(s),input_batch_literals))
+    input_batch_literals = random_array_float_literals(
+        shape_size(input_batch_shape))
+    filters_literals = random_array_float_literals(shape_size(filters_shape))
+    input_batch_array = np.array(
+        list(map(lambda s: np.float32(s), input_batch_literals)))
     input_batch_array.shape = input_batch_shape
-    filters_array = np.array(map(lambda s: np.float32(s),filters_literals))
+    filters_array = np.array(
+        list(map(lambda s: np.float32(s), filters_literals)))
     filters_array.shape = filters_shape
 
-    print ("Generating convolution test '%s'..." % test_name)
+    print("Generating convolution test '%s'..." % test_name)
 
-    output_batch_data = convolution_ref(input_batch_array,filters_array,move_strides,filter_dilation,below_pads,above_pads,data_dilation)
+    output_batch_data = convolution_ref(
+        input_batch_array, filters_array, move_strides, filter_dilation, below_pads, above_pads, data_dilation)
 
     template = '''
 // !!!!!!!!!!!!!! THIS FILE IS AUTOGENERATED OUTSIDE OF THE BUILD PROCESS !!!!!!!!!!!!!!
@@ -253,70 +287,95 @@ NGRAPH_TEST (${BACKEND_NAME}, %s)
     %sEXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {a, b}, .01f, .01f));
 }
 '''
-    f.write (template % (test_name,
-                         shape_str(input_batch_shape),
-                         shape_str(filters_shape),
-                         shape_str(output_batch_data.shape),
-                         shape_str(move_strides),
-                         shape_str(filter_dilation),
-                         shape_str(below_pads),
-                         shape_str(above_pads),
-                         shape_str(data_dilation),
-                         ",".join(map(lambda s: "%.8ff" % float(s),input_batch_literals)),
-                         ",".join(map(lambda s: "%.8ff" % float(s),filters_literals)),
-                         data_str(output_batch_data),
-                         bprop));
+    f.write(template % (test_name,
+                        shape_str(input_batch_shape),
+                        shape_str(filters_shape),
+                        shape_str(output_batch_data.shape),
+                        shape_str(move_strides),
+                        shape_str(filter_dilation),
+                        shape_str(below_pads),
+                        shape_str(above_pads),
+                        shape_str(data_dilation),
+                        ",".join(map(lambda s: "%.8ff" %
+                                     float(s), input_batch_literals)),
+                        ",".join(map(lambda s: "%.8ff" %
+                                     float(s), filters_literals)),
+                        data_str(output_batch_data),
+                        bprop))
+
 
 #                                                                              filter                                      data
 #         test name                                skip list   i             batch shape   filts shape   stride    dilation  below-pads  above-pads  dilation   bprop?
 tests = [
-         ("convolution_2d_1item",                  (1,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (1,1),     ""),
-         ("convolution_2d_1item_padded_1_1x1_1",   (1,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (1,1),      (1,1),      (1,1),     ""),
-         ("convolution_2d_1item_padded_2_3x4_5",   (1,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (2,3),      (4,5),      (1,1),     ""),
-         ("convolution_2d_2items",                 (2,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (1,1),     ""),
-         ("convolution_2d_2items_strided",         (2,1,3,5),    (2,1,2,2),    (2,2),    (1,1),    (0,0),      (0,0),      (1,1),     ""),
-         ("convolution_2d_2items_strided_padded",  (2,1,3,5),    (2,1,2,2),    (2,2),    (1,1),    (4,2),      (5,7),      (1,1),     ""),
-         ("convolution_2d_2items_strided_padded_same",(2,1,3,5), (2,1,2,2),    (2,2),    (1,1),    (2,2),      (2,2),      (1,1),     ""),
-         ("convolution_2d_2items_dilated",         (2,1,3,5),    (2,1,2,2),    (1,1),    (2,2),    (0,0),      (0,0),      (1,1),     ""),
-         ("convolution_2d_2items_dilated_padded",  (2,1,3,5),    (2,1,2,2),    (1,1),    (2,2),    (4,2),      (5,7),      (1,1),     ""),
-         ("convolution_3d_2items",                 (2,1,3,5,8),  (2,1,2,2,3),  (1,1,1),  (1,1,1),  (0,0,0),    (0,0,0),    (1,1,1),   ""),
-         ("convolution_4d_2items",                 (2,1,3,5,8,7),(2,1,2,2,3,1),(1,1,1,1),(1,1,1,1),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), "// "),
-         ("convolution_4d_4items",                 (4,3,3,5,8,7),(4,3,2,2,3,1),(1,1,1,1),(1,1,1,1),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), "// "),
-         ("convolution_4d_4items_padded_neg",      (4,3,3,5,8,7),(4,3,2,2,3,1),(1,1,1,1),(1,1,1,1),(-1,2,-3,2),(1,0,0,-3), (1,1,1,1), "// "),
-         ("convolution_4d_4items_strided",         (4,3,3,5,8,7),(4,3,2,2,3,1),(2,1,3,2),(1,1,1,1),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), "// "),
-         ("convolution_4d_4items_dilated",         (4,3,3,5,8,7),(4,3,2,2,3,1),(1,1,1,1),(2,1,3,2),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), "// "),
-         ("convolution_4d_4items_strided_dilated", (4,3,8,8,8,8),(4,3,2,2,3,1),(3,2,2,3),(2,1,3,2),(0,0,0,0),  (0,0,0,0),  (1,1,1,1), "// "),
-         ("convolution_4d_4items_strided_dilated_padded",
-                                                   (4,3,8,8,8,8),(4,3,2,2,3,1),(3,2,2,3),(2,1,3,2),(2,4,6,8),  (1,3,5,7),  (1,1,1,1), "// "),
-         ("convolution_4d_4items_strided_dilated_padded_neg",
-                                                   (4,3,8,8,8,8),(4,3,2,2,3,1),(3,2,2,3),(2,1,3,2),(-2,4,0,5), (1,3,-1,-4),(1,1,1,1), "// "),
-         ("convolution_4d_4items_strided_dilated_padded_same",
-                                                   (4,3,8,8,8,8),(4,3,2,2,3,1),(3,2,2,3),(2,1,3,2),(3,3,3,3),  (3,3,3,3),  (1,1,1,1), "// "),
-         ("convolution_2d_1item_1o1i_data_dilated",(1,1,3,5),    (1,1,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     ""),
-         ("convolution_2d_1item_2o1i_data_dilated",(1,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     ""),
-         ("convolution_2d_1item_2o2i_data_dilated",(1,2,3,5),    (2,2,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     ""),
-         ("convolution_2d_1item_5o3i_data_dilated",(1,3,3,5),    (5,3,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     ""),
-         ("convolution_2d_2item_5o3i_data_dilated",(2,3,3,5),    (5,3,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     ""),
-         ("convolution_2d_8item_large_5o3i_data_dilated",
-                                                   (8,3,16,16),  (5,3,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "// "),
-         ("convolution_2d_8item_large_5o3i_uneven_filter_data_dilated",
-                                                   (8,3,16,16),  (5,3,2,3),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "// "),
-         ("convolution_2d_8item_large_5o3i_uneven_filter_uneven_data_dilation_data_dilated",
-                                                   (8,3,16,16),  (5,3,2,3),    (1,1),    (1,1),    (0,0),      (0,0),      (2,3),     "// "),
-         ("convolution_3d_2item_large_5o3i_uneven_filter_uneven_data_dilation_data_dilated",
-                                                   (2,3,8,8,8),  (5,3,2,3,4),  (1,1,1),  (1,1,1),  (0,0,0),    (0,0,0),    (2,3,2),   "// "),
-         ("convolution_3d_1item_large_5o3i_padded_uneven_filter_uneven_data_dilation_data_dilated",
-                                                   (1,3,8,8,8),  (5,3,2,3,4),  (1,1,1),  (1,1,1),  (2,1,2),    (1,2,3),    (2,3,2),   "// "),
-         ("convolution_3d_2item_large_5o3i_padded_strided_uneven_filter_uneven_data_dilation_data_dilated",
-                                                   (2,3,8,8,8),  (5,3,2,3,4),  (2,3,2),  (1,1,1),  (2,1,2),    (1,2,3),    (2,3,2),   "// "),
-         ("convolution_3d_2item_large_5o3i_padded_strided_uneven_filter_uneven_data_dilation_filter_dilated_data_dilated",
-                                                   (2,3,8,8,8),  (5,3,2,3,4),  (2,3,2),  (3,2,2),  (2,1,2),    (1,2,3),    (2,3,2),   "// "),
-        ]
+    ("convolution_2d_1item",                  (1, 1, 3, 5),    (2, 1, 2, 2),
+     (1, 1),    (1, 1),    (0, 0),      (0, 0),      (1, 1),     ""),
+    ("convolution_2d_1item_padded_1_1x1_1",   (1, 1, 3, 5),    (2, 1, 2, 2),
+     (1, 1),    (1, 1),    (1, 1),      (1, 1),      (1, 1),     ""),
+    ("convolution_2d_1item_padded_2_3x4_5",   (1, 1, 3, 5),    (2, 1, 2, 2),
+     (1, 1),    (1, 1),    (2, 3),      (4, 5),      (1, 1),     ""),
+    ("convolution_2d_2items",                 (2, 1, 3, 5),    (2, 1, 2, 2),
+     (1, 1),    (1, 1),    (0, 0),      (0, 0),      (1, 1),     ""),
+    ("convolution_2d_2items_strided",         (2, 1, 3, 5),    (2, 1, 2, 2),
+     (2, 2),    (1, 1),    (0, 0),      (0, 0),      (1, 1),     ""),
+    ("convolution_2d_2items_strided_padded",  (2, 1, 3, 5),    (2, 1, 2, 2),
+     (2, 2),    (1, 1),    (4, 2),      (5, 7),      (1, 1),     ""),
+    ("convolution_2d_2items_strided_padded_same", (2, 1, 3, 5), (2, 1, 2, 2),
+     (2, 2),    (1, 1),    (2, 2),      (2, 2),      (1, 1),     ""),
+    ("convolution_2d_2items_dilated",         (2, 1, 3, 5),    (2, 1, 2, 2),
+     (1, 1),    (2, 2),    (0, 0),      (0, 0),      (1, 1),     ""),
+    ("convolution_2d_2items_dilated_padded",  (2, 1, 3, 5),    (2, 1, 2, 2),
+     (1, 1),    (2, 2),    (4, 2),      (5, 7),      (1, 1),     ""),
+    ("convolution_3d_2items",                 (2, 1, 3, 5, 8),  (2, 1, 2, 2, 3),
+     (1, 1, 1),  (1, 1, 1),  (0, 0, 0),    (0, 0, 0),    (1, 1, 1),   ""),
+    ("convolution_4d_2items",                 (2, 1, 3, 5, 8, 7), (2, 1, 2, 2, 3, 1),
+     (1, 1, 1, 1), (1, 1, 1, 1), (0, 0, 0, 0),  (0, 0, 0, 0),  (1, 1, 1, 1), "// "),
+    ("convolution_4d_4items",                 (4, 3, 3, 5, 8, 7), (4, 3, 2, 2, 3, 1),
+     (1, 1, 1, 1), (1, 1, 1, 1), (0, 0, 0, 0),  (0, 0, 0, 0),  (1, 1, 1, 1), "// "),
+    ("convolution_4d_4items_padded_neg",      (4, 3, 3, 5, 8, 7), (4, 3, 2, 2, 3, 1),
+     (1, 1, 1, 1), (1, 1, 1, 1), (-1, 2, -3, 2), (1, 0, 0, -3), (1, 1, 1, 1), "// "),
+    ("convolution_4d_4items_strided",         (4, 3, 3, 5, 8, 7), (4, 3, 2, 2, 3, 1),
+     (2, 1, 3, 2), (1, 1, 1, 1), (0, 0, 0, 0),  (0, 0, 0, 0),  (1, 1, 1, 1), "// "),
+    ("convolution_4d_4items_dilated",         (4, 3, 3, 5, 8, 7), (4, 3, 2, 2, 3, 1),
+     (1, 1, 1, 1), (2, 1, 3, 2), (0, 0, 0, 0),  (0, 0, 0, 0),  (1, 1, 1, 1), "// "),
+    ("convolution_4d_4items_strided_dilated", (4, 3, 8, 8, 8, 8), (4, 3, 2, 2, 3, 1),
+     (3, 2, 2, 3), (2, 1, 3, 2), (0, 0, 0, 0),  (0, 0, 0, 0),  (1, 1, 1, 1), "// "),
+    ("convolution_4d_4items_strided_dilated_padded",
+     (4, 3, 8, 8, 8, 8), (4, 3, 2, 2, 3, 1), (3, 2, 2, 3), (2, 1, 3, 2), (2, 4, 6, 8),  (1, 3, 5, 7),  (1, 1, 1, 1), "// "),
+    ("convolution_4d_4items_strided_dilated_padded_neg",
+     (4, 3, 8, 8, 8, 8), (4, 3, 2, 2, 3, 1), (3, 2, 2, 3), (2, 1, 3, 2), (-2, 4, 0, 5), (1, 3, -1, -4), (1, 1, 1, 1), "// "),
+    ("convolution_4d_4items_strided_dilated_padded_same",
+     (4, 3, 8, 8, 8, 8), (4, 3, 2, 2, 3, 1), (3, 2, 2, 3), (2, 1, 3, 2), (3, 3, 3, 3),  (3, 3, 3, 3),  (1, 1, 1, 1), "// "),
+    ("convolution_2d_1item_1o1i_data_dilated", (1, 1, 3, 5),    (1, 1, 2, 2),
+     (1, 1),    (1, 1),    (0, 0),      (0, 0),      (2, 2),     ""),
+    ("convolution_2d_1item_2o1i_data_dilated", (1, 1, 3, 5),    (2, 1, 2, 2),
+     (1, 1),    (1, 1),    (0, 0),      (0, 0),      (2, 2),     ""),
+    ("convolution_2d_1item_2o2i_data_dilated", (1, 2, 3, 5),    (2, 2, 2, 2),
+     (1, 1),    (1, 1),    (0, 0),      (0, 0),      (2, 2),     ""),
+    ("convolution_2d_1item_5o3i_data_dilated", (1, 3, 3, 5),    (5, 3, 2, 2),
+     (1, 1),    (1, 1),    (0, 0),      (0, 0),      (2, 2),     ""),
+    ("convolution_2d_2item_5o3i_data_dilated", (2, 3, 3, 5),    (5, 3, 2, 2),
+     (1, 1),    (1, 1),    (0, 0),      (0, 0),      (2, 2),     ""),
+    ("convolution_2d_8item_large_5o3i_data_dilated",
+     (8, 3, 16, 16),  (5, 3, 2, 2),    (1, 1),    (1, 1),    (0, 0),      (0, 0),      (2, 2),     "// "),
+    ("convolution_2d_8item_large_5o3i_uneven_filter_data_dilated",
+     (8, 3, 16, 16),  (5, 3, 2, 3),    (1, 1),    (1, 1),    (0, 0),      (0, 0),      (2, 2),     "// "),
+    ("convolution_2d_8item_large_5o3i_uneven_filter_uneven_data_dilation_data_dilated",
+     (8, 3, 16, 16),  (5, 3, 2, 3),    (1, 1),    (1, 1),    (0, 0),      (0, 0),      (2, 3),     "// "),
+    ("convolution_3d_2item_large_5o3i_uneven_filter_uneven_data_dilation_data_dilated",
+     (2, 3, 8, 8, 8),  (5, 3, 2, 3, 4),  (1, 1, 1),  (1, 1, 1),  (0, 0, 0),    (0, 0, 0),    (2, 3, 2),   "// "),
+    ("convolution_3d_1item_large_5o3i_padded_uneven_filter_uneven_data_dilation_data_dilated",
+     (1, 3, 8, 8, 8),  (5, 3, 2, 3, 4),  (1, 1, 1),  (1, 1, 1),  (2, 1, 2),    (1, 2, 3),    (2, 3, 2),   "// "),
+    ("convolution_3d_2item_large_5o3i_padded_strided_uneven_filter_uneven_data_dilation_data_dilated",
+     (2, 3, 8, 8, 8),  (5, 3, 2, 3, 4),  (2, 3, 2),  (1, 1, 1),  (2, 1, 2),    (1, 2, 3),    (2, 3, 2),   "// "),
+    ("convolution_3d_2item_large_5o3i_padded_strided_uneven_filter_uneven_data_dilation_filter_dilated_data_dilated",
+     (2, 3, 8, 8, 8),  (5, 3, 2, 3, 4),  (2, 3, 2),  (3, 2, 2),  (2, 1, 2),    (1, 2, 3),    (2, 3, 2),   "// "),
+]
+
 
 def main():
-    assert(len(sys.argv)>1)
+    assert(len(sys.argv) > 1)
 
-    f = open(sys.argv[1],'w')
+    f = open(sys.argv[1], 'w')
     f.write('''//*****************************************************************************
 // Copyright 2017-2019 Intel Corporation
 //
@@ -374,13 +433,14 @@ constexpr int tolerance = FLOAT_MANTISSA_BITS - three_quarters_of_available_bits
 ''')
 
     for t in tests:
-        emit_test(t,f)
+        emit_test(t, f)
 
     f.write('''
 // clang-format on
 ''')
 
     f.close()
+
 
 if __name__ == "__main__":
     main()
