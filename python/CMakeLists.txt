@@ -14,13 +14,19 @@
 # limitations under the License.
 # ******************************************************************************
 
-if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
-    message(FATAL_ERROR "Please call from nGraph !")
-endif()
+if(NGRAPH_MANYLINUX_ENABLE)
+    if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
+        message(FATAL_ERROR "Please call from nGraph !")
+    endif()
 
-if (WIN32)
-    message(WARNING "Python API is not supported on Windows!")
-    return()
+    if (WIN32)
+        message(WARNING "Python API is not supported on Windows!")
+        return()
+    endif()
+else()
+    cmake_minimum_required (VERSION 3.1)
+
+    project (pyngraph)
 endif()
 
 include(ExternalProject)
@@ -36,6 +42,26 @@ ExternalProject_Add(
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
 )
+
+set(BUILD_SH_IN "${CMAKE_SOURCE_DIR}/python/configure_file/build_wheel.sh.in")
+set(BUILD_SH    "${CMAKE_BINARY_DIR}/python/build_wheel.sh")
+configure_file(${BUILD_SH_IN} ${BUILD_SH} @ONLY)
+
+add_custom_command(
+        OUTPUT ${CMAKE_BINARY_DIR}/python/dist/
+        POST_BUILD
+        WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}
+        COMMAND make -C ../ DESTDIR=python/_install install && bash build_wheel.sh
+)
+
+add_custom_target(python_wheel DEPENDS ngraph ${CMAKE_BINARY_DIR}/python/dist/)
+if (NGRAPH_CPU_ENABLE)
+    add_dependencies(python_wheel libmkldnn)
+endif()
+
+if (NOT NGRAPH_MANYLINUX_ENABLE)
+    return()
+endif()
 
 set(NGRAPH_DEPS_INCLUDE ${CMAKE_SOURCE_DIR}/src)
 set(NGRAPH_DEPS_LIB     ${NGRAPH_BUILD_DIR})
@@ -190,5 +216,5 @@ else()
     list(APPEND WHEEL_DEPS ${CMAKE_CURRENT_BINARY_DIR}/wheel37.timestamp)
 endif()
 
-add_custom_target(python_wheel DEPENDS ${WHEEL_DEPS})
+add_custom_target(manylinux_wheel DEPENDS ${WHEEL_DEPS})
 
