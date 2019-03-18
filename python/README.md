@@ -51,9 +51,9 @@ print('Result = ', result)
 ```
 
 [frontend_onnx]: https://pypi.org/project/ngraph-onnx/
-[frontend_mxnet]: https://pypi.org/project/ngraph-mxnet/
+[frontend_mxnet]: https://pypi.org/project/ngraph-mxnet/ 
 [frontend_tf]: https://pypi.org/project/ngraph-tensorflow-bridge/
 [ngraph_github]: https://github.com/NervanaSystems/ngraph "nGraph on GitHub"
 [ngraph_building]: https://github.com/NervanaSystems/ngraph/blob/master/python/BUILDING.md "Building nGraph"
 [api_python]: https://ngraph.nervanasys.com/docs/latest/python_api/ "nGraph's Python API documentation"
-[api_cpp]: https://ngraph.nervanasys.com/docs/latest/howto/
+[api_cpp]: https://ngraph.nervanasys.com/docs/latest/howto/ 
