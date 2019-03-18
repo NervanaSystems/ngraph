@@ -1490,7 +1490,8 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_scalar)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_TRUE(test::all_close_f((vector<float>{312}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{312}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, slice_matrix)
@@ -1830,7 +1831,8 @@ NGRAPH_TEST(${BACKEND_NAME}, scalar_constant_float32)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {});
-    EXPECT_TRUE(test::all_close_f(vector<float>{4.75f}, read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+    EXPECT_TRUE(test::all_close_f(
+        vector<float>{4.75f}, read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, scalar_constant_int64)
@@ -2084,7 +2086,8 @@ NGRAPH_TEST(${BACKEND_NAME}, replace_slice_3d_strided)
                        932, 33, 934, 35, 36, 37, 38, 39, 940, 41, 942, 43, 44, 45, 46, 47,
 
                        48,  49, 50,  51, 52, 53, 54, 55, 56,  57, 58,  59, 60, 61, 62, 63}),
-        read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, replace_slice_3d_strided_different_strides)
@@ -2123,7 +2126,8 @@ NGRAPH_TEST(${BACKEND_NAME}, replace_slice_3d_strided_different_strides)
                        932, 33, 34, 935, 36, 37, 38, 39, 940, 41, 42, 943, 44, 45, 46, 47,
 
                        48,  49, 50, 51,  52, 53, 54, 55, 56,  57, 58, 59,  60, 61, 62, 63}),
-        read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, reverse_0d)
@@ -2953,7 +2957,8 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_interior_1d)
         (test::NDArray<float, 1>(
              {1, 2112, 2112, 2, 2112, 2112, 3, 2112, 2112, 4, 2112, 2112, 5, 2112, 2112, 6})
              .get_vector()),
-        read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_1d)
@@ -2985,7 +2990,8 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_1d)
         (test::NDArray<float, 1>(
              {2112, 2112, 2112, 2112, 1, 2, 3, 4, 5, 6, 2112, 2112, 2112, 2112, 2112})
              .get_vector()),
-        read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, pad_interior_exterior_1d)
@@ -3018,7 +3024,8 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_interior_exterior_1d)
                                   2112, 3,    2112, 2112, 4,    2112, 2112, 5, 2112,
                                   2112, 6,    2112, 2112, 2112, 2112, 2112})
              .get_vector()),
-        read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, pad_interior_exterior_2d)
@@ -3124,7 +3131,8 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_2d_0x3)
                                                             {2112, 2112, 2112, 2112, 2112},
                                                             {2112, 2112, 2112, 2112, 2112}})
                                        .get_vector()),
-                                  read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_2d_3x0)
@@ -4501,7 +4509,8 @@ NGRAPH_TEST(${BACKEND_NAME}, min_matrix_to_scalar_zero_by_zero)
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_TRUE(test::all_close_f((vector<float>{}), read_vector<float>(a), MIN_FLOAT_TOLERANCE_BITS));
+    EXPECT_TRUE(
+        test::all_close_f((vector<float>{}), read_vector<float>(a), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, min_3d_to_matrix_most_sig)
@@ -5794,7 +5803,8 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize)
     auto handle = backend->compile(f);
     handle->call_with_validate({y}, {x});
     EXPECT_TRUE(test::all_close_f((vector<output_c_type>{0, 0, 2, 4, 4, 4, 6, 8, 8, 8, 10, 12}),
-                                  read_vector<output_c_type>(y), MIN_FLOAT_TOLERANCE_BITS));
+                                  read_vector<output_c_type>(y),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, quantize_zero_offset)
@@ -5865,7 +5875,8 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize_zero_offset)
     auto handle = backend->compile(f);
     handle->call_with_validate({y}, {x});
     EXPECT_TRUE(test::all_close_f((vector<output_c_type>{0, 0, 2, 4, 4, 4, 6, 8, 8, 8, 10, 12}),
-                                  read_vector<output_c_type>(y), MIN_FLOAT_TOLERANCE_BITS));
+                                  read_vector<output_c_type>(y),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, quantize_axes)
@@ -5936,7 +5947,8 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize_axes)
     auto handle = backend->compile(f);
     handle->call_with_validate({y}, {x});
     EXPECT_TRUE(test::all_close_f((vector<output_c_type>{0, 2, 2, 3, 3, 6, 8, 8, 8, 10, 10, 10}),
-                                  read_vector<output_c_type>(y), MIN_FLOAT_TOLERANCE_BITS));
+                                  read_vector<output_c_type>(y),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, quantize_int8)
@@ -6008,7 +6020,8 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize_int8)
     handle->call_with_validate({y}, {x});
     EXPECT_TRUE(
         test::all_close_f((vector<output_c_type>{0, 0, 2, -4, 4, -4, 6, -8, 8, -8, 10, -12}),
-                          read_vector<output_c_type>(y), MIN_FLOAT_TOLERANCE_BITS));
+                          read_vector<output_c_type>(y),
+                          MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, quantize_int8_zero_offset)
@@ -6080,7 +6093,8 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize_int8_zero_offset)
     handle->call_with_validate({y}, {x});
     EXPECT_TRUE(
         test::all_close_f((vector<output_c_type>{0, 0, 2, -4, 4, -4, 6, -8, 8, -8, 10, -12}),
-                          read_vector<output_c_type>(y), MIN_FLOAT_TOLERANCE_BITS));
+                          read_vector<output_c_type>(y),
+                          MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, quantize_int32)
@@ -6152,7 +6166,8 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize_int32)
     handle->call_with_validate({y}, {x});
     EXPECT_TRUE(
         test::all_close_f((vector<output_c_type>{0, 0, 2, -4, 4, -4, 6, -8, 8, -8, 10, -12}),
-                          read_vector<output_c_type>(y), MIN_FLOAT_TOLERANCE_BITS));
+                          read_vector<output_c_type>(y),
+                          MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, quantize_int32_zero_offset)
@@ -6224,7 +6239,8 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize_int32_zero_offset)
     handle->call_with_validate({y}, {x});
     EXPECT_TRUE(
         test::all_close_f((vector<output_c_type>{0, 0, 2, -4, 4, -4, 6, -8, 8, -8, 10, -12}),
-                          read_vector<output_c_type>(y), MIN_FLOAT_TOLERANCE_BITS));
+                          read_vector<output_c_type>(y),
+                          MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, quantize_clamp_uint8)
@@ -6771,7 +6787,8 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize_dynamic_offset)
     auto handle = backend->compile(f);
     handle->call_with_validate({y}, {x, Scale, Offset});
     EXPECT_TRUE(test::all_close_f((vector<output_c_type>{-256.0f, -250.0f, 0.0f, 254.0f}),
-                                  read_vector<output_c_type>(y), MIN_FLOAT_TOLERANCE_BITS));
+                                  read_vector<output_c_type>(y),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, quantize_dynamic_offset)
