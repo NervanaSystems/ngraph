@@ -15,11 +15,10 @@
 .. limitations under the License.
 .. ---------------------------------------------------------------------------
 
-Contributing Documentation
-==========================
+Contributing to documentation
+=============================
 
-Read this for changes affecting anything in ``ngraph/doc``
-----------------------------------------------------------
+.. important:: Read this for changes affecting **anything** in ``ngraph/doc``
 
 For updates to the Intel® nGraph Library ``/doc`` repo, please submit a PR with 
 any changes or ideas you'd like integrated. This helps us maintain trackability 

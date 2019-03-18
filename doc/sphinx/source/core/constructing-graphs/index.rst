@@ -1,6 +1,6 @@
 .. howto/index: 
 
-Constructing Graphs
+Constructing graphs
 ===================
 
 .. toctree::
