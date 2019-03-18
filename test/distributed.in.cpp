@@ -68,7 +68,8 @@ TEST(distributed_${BACKEND_NAME}, broadcastdistributed)
     auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>(4, 0));
 
-    auto processIdx = MLSL::Environment::GetEnv().GetProcessIdx();
+    DistributedSetup distsetup;
+    auto processIdx = distsetup.get_comm_rank();
     if (processIdx == 0)
     {
         copy_data(a, v);

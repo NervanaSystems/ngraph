@@ -252,6 +252,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::BroadcastDistributed)
             {
                 const element::Type& element_type = args[0].get_element_type();
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
                 auto data_type = "MLSL::DT_FLOAT";
 
                 if (element_type == element::f32)
@@ -269,6 +270,26 @@ namespace ngraph
                        << ", 0, MLSL::GT_DATA);\n";
                 writer << "ctx->mlsl_env->Wait(req);\n";
                 writer.block_end();
+#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
+                auto data_type = "MPI_FLOAT";
+
+                if (element_type == element::f32)
+                {
+                    data_type = "MPI_FLOAT";
+                }
+                else if (element_type == element::f64)
+                {
+                    data_type = "MPI_DOUBLE";
+                }
+
+                writer.block_begin();
+                writer << "MPI_Bcast(" << args[0].get_name() << ", "
+                       << args[0].get_size() << ", " << data_type
+                       << ", 0, MPI_COMM_WORLD);\n";
+                writer.block_end();
+#else
+                throw ngraph_error("Distributed Library not supported/mentioned");
+#endif
             }
 #endif
 

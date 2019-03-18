@@ -437,6 +437,12 @@ private:
                                        broadcast_axes);
             break;
         }
+        case OP_TYPEID::BroadcastDistributed: {
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
+            break; // It requires in-place output support
+#endif
+            break;
+        }
         case OP_TYPEID::BroadcastLike: break;
         case OP_TYPEID::Ceiling:
         {

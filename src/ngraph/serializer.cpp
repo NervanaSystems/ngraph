@@ -584,6 +584,11 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Broadcast>(args[0], shape, axes);
                 break;
             }
+            case OP_TYPEID::BroadcastDistributed:
+            {
+                node = make_shared<op::BroadcastDistributed>(args[0]);
+                break;
+            }
             case OP_TYPEID::BroadcastLike:
             {
                 auto initial_axes = node_js.at("initial_axes").get<set<size_t>>();
@@ -900,11 +905,6 @@ static shared_ptr<ngraph::Function>
             case OP_TYPEID::Minimum:
             {
                 node = make_shared<op::Minimum>(args[0], args[1]);
-                break;
-            }
-            case OP_TYPEID::BroadcastDistributed:
-            {
-                node = make_shared<op::BroadcastDistributed>(args[0]);
                 break;
             }
             case OP_TYPEID::Multiply:
@@ -1404,6 +1404,8 @@ static json write(const Node& n, bool binary_constant_data)
         node["axes"] = tmp->get_broadcast_axes();
         node["shape"] = tmp->get_broadcast_shape();
         break;
+    }
+    case OP_TYPEID::BroadcastDistributed: { break;
     }
     case OP_TYPEID::BroadcastLike:
     {

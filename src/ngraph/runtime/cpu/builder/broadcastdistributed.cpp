@@ -61,6 +61,21 @@ namespace ngraph
                 };
 #elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
                 auto data_type = MPI_FLOAT;
+
+                if (args[0].get_element_type() == element::f32)
+                {
+                    data_type = MPI_FLOAT;
+                }
+                else if (args[0].get_element_type() == element::f64)
+                {
+                    data_type = MPI_DOUBLE;
+                }
+
+                auto functor = [&, count, data_type](CPURuntimeContext* ctx,
+                                                     CPUExecutionContext* ectx) {
+                    MPI_Bcast(
+                        arg_tensor, count, data_type, 0, MPI_COMM_WORLD);
+                };
 #else
                 throw ngraph_error("Distributed Library not supported/mentioned");
 #endif
