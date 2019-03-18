@@ -99,8 +99,6 @@ namespace ngraph
         // So Adjoints can call generate_adjoints
         friend class autodiff::Adjoints;
         friend class descriptor::Input;
-        friend class NodeInput;                         // for private_get_inputs
-        friend class pass::GetOutputElementElimination; // for private_get_inputs
         friend void replace_node_users_arguments(std::shared_ptr<Node> target,
                                                  std::shared_ptr<Node> replacement);
         friend std::pair<std::shared_ptr<op::Result>, std::shared_ptr<op::Parameter>>
@@ -315,9 +313,6 @@ namespace ngraph
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
         Placement m_placement = Placement::DEFAULT;
         size_t m_placement_index = placement_invalid;
-
-    private:
-        std::deque<descriptor::Input>& private_get_inputs() { return m_inputs; }
     };
 
     class NodeValidationFailure : public CheckFailure

@@ -121,7 +121,8 @@ namespace ngraph
                 template <typename T>
                 inline std::vector<T> get_data(const onnx::TensorProto& tensor)
                 {
-                    throw error::tensor::unsupported_data_type{tensor.data_type()};
+                    throw ngraph::onnx_import::error::tensor::unsupported_data_type{
+                        tensor.data_type()};
                 }
 
                 template <>
@@ -135,7 +136,7 @@ namespace ngraph
                     {
                         return detail::__get_data<double>(tensor.double_data());
                     }
-                    if ((tensor.data_type() == onnx::TensorProto_DataType_FLOAT) or
+                    if ((tensor.data_type() == onnx::TensorProto_DataType_FLOAT) ||
                         (tensor.data_type() == onnx::TensorProto_DataType_FLOAT16))
                     {
                         return detail::__get_data<double>(tensor.float_data());
@@ -162,7 +163,7 @@ namespace ngraph
                     {
                         return detail::__get_raw_data<float>(tensor.raw_data());
                     }
-                    if ((tensor.data_type() == onnx::TensorProto_DataType_FLOAT) or
+                    if ((tensor.data_type() == onnx::TensorProto_DataType_FLOAT) ||
                         (tensor.data_type() == onnx::TensorProto_DataType_FLOAT16))
                     {
                         return detail::__get_data<float>(tensor.float_data());
