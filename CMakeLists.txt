@@ -64,7 +64,7 @@ if (APPLE)
     cmake_policy(SET CMP0025 NEW)
 endif()
 
-project (ngraph LANGUAGES C CXX)
+project (ngraph)
 
 if (UNIX AND NOT APPLE)
     set(LINUX TRUE)
