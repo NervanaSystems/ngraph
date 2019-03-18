@@ -40,7 +40,7 @@ infrastructure designed to be compatible with many upcoming DL ASICs while
 also unlocking a massive performance boost on any existing hardware targets 
 in a network, whether they are CPUs, GPUs, or other custom silicon. nGraph 
 provides optimization opportunities at the graph level, where the 
-network-to-device compilation can be managed with a series of “subgraphs” 
+network-to-device compilation can be managed with a series of "subgraphs"
 that can be handled in either a static or a dynamic manner. With such a 
 graph-based neural network, it's possible to extract context semantics 
 that make it easier to work with larger datasets, data that must be encrypted, 
@@ -66,22 +66,27 @@ However, kernel libraries have three main problems:
 #. There are too many kernels to write, and they require expert knowledge.
 
 The nGraph Compiler stack is designed to address the first two problems. nGraph 
-applies graph-level optimizations by taking computational graph from deep learning 
-frameworks and reconstructing it with nGraph IR (Intermediate Representations). 
-nGraph IR centralizes computational graphs from various frameworks and provides 
-a unified way to connect backends for targeted hardware. To address the third 
-problem, it integrates with PlaidML to generate code in LLVM, OpenCL, OpenGL, 
-Cuda and Metal with low-level optimizations automatically applied. 
+applies graph-level optimizations by taking the computational graph from a deep 
+learning framework like TensorFlow* and reconstructing it with the nGraph 
+:abbr:`Intermediate Representation (IR)`. The nGraph IR centralizes computational 
+graphs from various frameworks and provides a unified way to connect backends 
+for targeted hardware. From here, PlaidML or one of the nGraph custom 
+transformers can generate code various forms including LLVM, OpenCL, OpenGL, 
+Cuda and Metal. This generated code is where the low-level optimizations 
+are automatically applied.  The result is a more efficient execution that does 
+not require any manual kernel integration work for most hardware targets. 
 
-The following three sections explore the aformentioned three problems in more 
-detail. 
+What follows here is more detail about how our solution addresses these 
+problems. 
+
 
 1. Absence of graph-level optimizations
 ---------------------------------------
 
-The diagram below illustrates a simple example of how a deep learning framework 
-integrated with a kernel library is capable of running each operation in a 
-computational graph optimally, but the graph itself may not be optimial: 
+The diagram below illustrates a simple example of how a deep learning 
+framework, when integrated with a kernel library, is capable of running each 
+operation in a computational graph optimally, but the graph itself may not be 
+optimial: 
 
 .. _figure-A:
 
@@ -89,31 +94,56 @@ computational graph optimally, but the graph itself may not be optimial:
    :width: 555px
    :alt: 
 
-The graph is constructed to execute (A+B)*C, but we can further optimize the graph to be represented as A*C. From the first graph shown on the left, the operation on the constant B be can be computed at the compile time (known as constant folding), and the graph can be further simplified to the one on the right because the constant has value of zero. Without such graph level optimizations, a deep learning framework with a kernel library will compute all operations, and the resulting computation will be sub-optimal. 
+The following computation is constructed to execute ``(A+B)*C``, but in the 
+context of nGraph, we can further optimize the graph to be represented as A*C. 
+From the first graph shown on the left, the operation on the constant B be 
+can be computed at the compile time (known as constant folding), and the 
+graph can be further simplified to the one on the right because the constant 
+has value of zero. Without such graph-level optimizations, a deep learning 
+framework with a kernel library will compute all operations, and the resulting 
+execution will be sub-optimal. 
+
 
 2. Reduced scalability 
 ----------------------
 
-Integrating kernel libraries into frameworks is increasingly becoming non-trivial due to growing number of new deep learning accelerators. For each new deep learning accelator, a kernel library must be developed by team of experts. This labor intensive work is further amplified by the number of frameworks as indicated in the following diagram with orange lines. 
+Integrating kernel libraries with frameworks is increasingly becoming 
+non-trivial due to the growing number of new deep learning accelerators. 
+For each new deep learning accelerator, a custom kernel library integration 
+must be implemented by a team of experts. This labor-intensive work is 
+further amplified if you want your DL accelerator to support a number of 
+different frameworks. The work must be revisited any time you upgrade or 
+expand your network's hardware. Each integration is unique to the framework 
+and its set of deep learning operators, its view on memory layout, its 
+feature set, etc.
 
 .. _figure-B:
 
 .. figure:: ../graphics/intro_kernel_to_fw_accent.png
    :width: 555px
    :alt: 
-      
-Each individual framework must be manually integrated with each hardware-specific kernel library. Each integration 
-is unique to the framework and its set of deep learning operators, its view on 
-memory layout, its feature set, etc. Each of these connections, then, represents 
-significant work for what will ultimately be a brittle setup that is enormously 
-expensive to maintain.  
 
-nGraph solves this problem with nGraph bridges that connect to the deep learning frameworks. nGraph bridges take computational graphs from supported deep learning frameworks, and they reconstruct the graph using nGraph IR with a few primitive nGraph operations. With the unified computational graph, kernel libraries no longer need to be separately integrated to each deep learning frameworks. Instead, the libraries only need to support nGraph primitive operations, and this approach streamlines integration process for the backend.  
+   Each of these connections represents significant work for what will 
+   ultimately be a brittle setup that is enormously expensive to maintain.
+
+nGraph solves this problem with nGraph bridges that connect to the deep learning 
+frameworks. A bridge takes a computational graphs and reconstructs it in the 
+nGraph IR with a few primitive nGraph operations. With the unified computational 
+graph, kernel libraries no longer need to be separately integrated to each deep 
+learning framework. Instead, the libraries only need to support nGraph primitive 
+operations, and this approach streamlines integration process for the backend.  
+
 
 3. Increasing number of kernels 
 -------------------------------
 
-As mentioned in the pervious section, kernel libraries need to be integrated with multiple deep learning frameworks, and this arduous task becomes even harder due to increased numbers of required kernels for achieving optimial performance. The number of required kernels is product of number of chip designs, data types, operations, and the cardinality of each parameter for each operation. In the past, the number of required kernels was limited, but as the AI research and industry rapidly develops, the final product of required kernels is increasing exponentially. 
+Kernel libraries need to be integrated with multiple deep learning frameworks, and 
+this arduous task becomes even harder due to increased numbers of required kernels 
+for achieving optimial performance. The number of required kernels is product of 
+number of chip designs, data types, operations, and the cardinality of each parameter 
+for each operation. In the past, the number of required kernels was limited, but as 
+the AI research and industry rapidly develops, the final product of required kernels 
+is increasing exponentially. 
 
 .. _figure-C:
 
