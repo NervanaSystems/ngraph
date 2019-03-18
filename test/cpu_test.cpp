@@ -38,6 +38,7 @@
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
 #include "util/all_close.hpp"
+#include "util/all_close_f.hpp"
 #include "util/autodiff/backprop_function.hpp"
 #include "util/autodiff/numeric_compare.hpp"
 #include "util/ndarray.hpp"
@@ -149,16 +150,16 @@ TEST(cpu_test, abc_tbb)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b, c});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
+                                  (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector()));
 
     handle->call_with_validate({result}, {b, a, c});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
+                                  (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector()));
 
     handle->call_with_validate({result}, {a, c, b});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
+                                  (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector()));
 
     if (!use_tbb)
     {
@@ -219,7 +220,7 @@ TEST(cpu_test, mkldnn_layouts)
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
 
-    EXPECT_EQ(vector<float>{expected_result}, rv);
+    EXPECT_TRUE(test::all_close_f(vector<float>{expected_result}, rv));
 }
 
 TEST(cpu_test, reshape_layout_optimizations1)
@@ -776,7 +777,7 @@ TEST(cpu_test, memory_reuse_destructive_oi_relu)
     shared_ptr<runtime::Executable> handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b, c});
     ASSERT_NE(handle, nullptr);
-    EXPECT_EQ(read_vector<float>(result), expected);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected));
 }
 
 TEST(cpu_test, memory_reuse_cacheable_no_destructive_oi_relu)
@@ -805,12 +806,12 @@ TEST(cpu_test, memory_reuse_cacheable_no_destructive_oi_relu)
     shared_ptr<runtime::Executable> handle = backend->compile(f);
     ASSERT_NE(handle, nullptr);
     handle->call_with_validate({result}, {a, b, c});
-    EXPECT_EQ(read_vector<float>(result), expected);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected));
 
     a->set_stale(false);
     b->set_stale(false);
     handle->call_with_validate({result}, {a, b, c});
-    EXPECT_EQ(read_vector<float>(result), expected);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected));
 }
 
 TEST(cpu_test, memory_reuse_in_place_concat_after_in_place_slice)
@@ -833,8 +834,9 @@ TEST(cpu_test, memory_reuse_in_place_concat_after_in_place_slice)
     shared_ptr<runtime::Executable> handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
 
-    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 5, 6, 7, 8, 9, 10, 11, 12}),
-              read_vector<float>(result));
+    EXPECT_TRUE(
+        test::all_close_f((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 5, 6, 7, 8, 9, 10, 11, 12}),
+                          read_vector<float>(result)));
 }
 
 TEST(cpu_test, memory_reuse_in_place_slice_after_in_place_concat)
@@ -868,7 +870,7 @@ TEST(cpu_test, memory_reuse_in_place_slice_after_in_place_concat)
     shared_ptr<runtime::Executable> handle = backend->compile(f);
     ASSERT_NE(handle, nullptr);
     handle->call_with_validate({result}, {a, b, c, d});
-    EXPECT_EQ((vector<float>{3, 7}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{3, 7}), read_vector<float>(result)));
 }
 
 TEST(cpu_test, convert_inplace)

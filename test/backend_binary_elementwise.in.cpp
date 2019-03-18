@@ -53,8 +53,8 @@ NGRAPH_TEST(${BACKEND_NAME}, add)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
+                                  (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector()));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, add_overload)
@@ -76,8 +76,8 @@ NGRAPH_TEST(${BACKEND_NAME}, add_overload)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
+                                  (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector()));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, multiply)
@@ -99,8 +99,8 @@ NGRAPH_TEST(${BACKEND_NAME}, multiply)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{5, 12}, {21, 32}})).get_vector());
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
+                                  (test::NDArray<float, 2>({{5, 12}, {21, 32}})).get_vector()));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, multiply_overload)
@@ -122,8 +122,8 @@ NGRAPH_TEST(${BACKEND_NAME}, multiply_overload)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{5, 12}, {21, 32}})).get_vector());
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
+                                  (test::NDArray<float, 2>({{5, 12}, {21, 32}})).get_vector()));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, divide)
@@ -145,7 +145,7 @@ NGRAPH_TEST(${BACKEND_NAME}, divide)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ((vector<float>{2, 2, 2, 2}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{2, 2, 2, 2}), read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, divide_int32)
@@ -189,7 +189,7 @@ NGRAPH_TEST(${BACKEND_NAME}, divide_overload)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ((vector<float>{2, 2, 2, 2}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{2, 2, 2, 2}), read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, divide_adjoint_stability)
@@ -235,8 +235,10 @@ NGRAPH_TEST(${BACKEND_NAME}, divide_adjoint_stability)
 
     auto handle = backend->compile(bf);
     handle->call_with_validate({resulta, resultb}, {a, b, c});
-    EXPECT_EQ((vector<float>{0.5, 0.5, 0.5, 0.5}), read_vector<float>(resulta));
-    EXPECT_EQ((vector<float>{-0.0, -0.0, -0.25, -0.25}), read_vector<float>(resultb));
+    EXPECT_TRUE(
+        test::all_close_f((vector<float>{0.5, 0.5, 0.5, 0.5}), read_vector<float>(resulta)));
+    EXPECT_TRUE(
+        test::all_close_f((vector<float>{-0.0, -0.0, -0.25, -0.25}), read_vector<float>(resultb)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, divide_by_zero_float32)
@@ -325,7 +327,8 @@ NGRAPH_TEST(${BACKEND_NAME}, maximum)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ((vector<float>{1, 8, 4, 17, 0, 0.5, 2, 1.5}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1, 8, 4, 17, 0, 0.5, 2, 1.5}),
+                                  read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, minimum)
@@ -346,7 +349,8 @@ NGRAPH_TEST(${BACKEND_NAME}, minimum)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ((vector<float>{1, 2, -8, 8, -.5, 0, 1, 1}), read_vector<float>(result));
+    EXPECT_TRUE(
+        test::all_close_f((vector<float>{1, 2, -8, 8, -.5, 0, 1, 1}), read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, minimum_int32)
@@ -452,7 +456,7 @@ NGRAPH_TEST(${BACKEND_NAME}, power)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_TRUE(test::all_close(vector<float>{1, 1, 729, 125}, read_vector<float>(result)));
+    EXPECT_TRUE(test::all_close_f(vector<float>{1, 1, 729, 125}, read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, subtract)
@@ -473,7 +477,7 @@ NGRAPH_TEST(${BACKEND_NAME}, subtract)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ((vector<float>{1, 2, 4, 8}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1, 2, 4, 8}), read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, subtract_overload)
@@ -494,5 +498,5 @@ NGRAPH_TEST(${BACKEND_NAME}, subtract_overload)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ((vector<float>{1, 2, 4, 8}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1, 2, 4, 8}), read_vector<float>(result)));
 }
