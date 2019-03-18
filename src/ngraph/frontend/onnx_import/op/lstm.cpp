@@ -468,7 +468,7 @@ namespace ngraph
                     ///
                     /// \brief      Gets the masked node according to sequence lenght in a batch.
                     ///
-                    /// \note       Zeros out values of set them to default value for inputs with
+                    /// \note       Zeros out values or sets them to default value for inputs with
                     ///             sequence lenght shorter than currently procssed time step.
                     ///
                     /// \param[in]  data           The input node.
