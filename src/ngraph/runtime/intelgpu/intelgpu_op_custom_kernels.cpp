@@ -41,6 +41,7 @@ string runtime::intelgpu::get_opencl_type_name(const element::Type& ngraph_type)
     case element::Type_t::u16: return "ushort";
     case element::Type_t::i8: return "char";
     case element::Type_t::u8: return "uchar";
+    case element::Type_t::boolean: return "bool";
     }
 
     return ngraph_type.c_type_string();
