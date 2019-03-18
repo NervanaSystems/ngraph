@@ -518,10 +518,21 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(list<shared
                                 }
                                 if (!no_in_place)
                                 {
+                                    auto bufferID = get_bufferID(input_tensor);
+                                    auto input_buffer_it = m_bufferID_to_tensorSets.find(bufferID);
+                                    NGRAPH_ASSERT(input_buffer_it !=
+                                                  m_bufferID_to_tensorSets.end());
+
                                     if (node->description() == "Slice")
                                     {
-                                        // build in place slice chain
-                                        in_place_slice_chain.insert(output_tensor);
+                                        if (input_buffer_it->second.first !=
+                                            CPUTensorRole::CONSTANT)
+                                        {
+                                            // build in place slice chain
+                                            in_place_slice_chain.insert(output_tensor);
+                                            input_buffer_it->second.second.insert(output_tensor);
+                                            m_tensor_to_bufferID[output_tensor] = bufferID;
+                                        }
                                     }
                                     else
                                     {
@@ -531,13 +542,9 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(list<shared
                                         {
                                             in_place_slice_chain.insert(output_tensor);
                                         }
+                                        input_buffer_it->second.second.insert(output_tensor);
+                                        m_tensor_to_bufferID[output_tensor] = bufferID;
                                     }
-                                    auto bufferID = get_bufferID(input_tensor);
-                                    auto input_buffer_it = m_bufferID_to_tensorSets.find(bufferID);
-                                    NGRAPH_ASSERT(input_buffer_it !=
-                                                  m_bufferID_to_tensorSets.end());
-                                    input_buffer_it->second.second.insert(output_tensor);
-                                    m_tensor_to_bufferID[output_tensor] = bufferID;
                                 }
                             }
                         }
