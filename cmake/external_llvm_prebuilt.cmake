@@ -21,46 +21,19 @@ find_package(ZLIB REQUIRED)
 # Override default LLVM binaries
 if(NOT DEFINED LLVM_TARBALL_URL)
     if(APPLE)
-        set(NGRAPH_LLVM_VERSION 7.0.0)
+        set(NGRAPH_LLVM_VERSION 5.0.2)
         set(LLVM_TARBALL_URL http://releases.llvm.org/${NGRAPH_LLVM_VERSION}/clang+llvm-${NGRAPH_LLVM_VERSION}-x86_64-apple-darwin.tar.xz)
-    elseif(LINUX)
-        set(NGRAPH_LLVM_VERSION 7.0.1)
-        if(EXISTS /etc/lsb-release)
-            execute_process(COMMAND grep DISTRIB_RELEASE /etc/lsb-release OUTPUT_VARIABLE UBUNTU_VER_LINE)
-            string(REGEX MATCH "[0-9.]+" UBUNTU_VER ${UBUNTU_VER_LINE})
-            message(STATUS "Ubuntu version: ${UBUNTU_VER} detected.")
-            if(UBUNTU_VER MATCHES "14.04")
-                set(LLVM_TARBALL_URL http://releases.llvm.org/${NGRAPH_LLVM_VERSION}/clang+llvm-${NGRAPH_LLVM_VERSION}-x86_64-linux-gnu-ubuntu-14.04.tar.xz)
-            elseif(UBUNTU_VER MATCHES "16.04")
-                set(LLVM_TARBALL_URL http://releases.llvm.org/${NGRAPH_LLVM_VERSION}/clang+llvm-${NGRAPH_LLVM_VERSION}-x86_64-linux-gnu-ubuntu-16.04.tar.xz)
-            elseif(UBUNTU_VER MATCHES "18.04")
-                set(LLVM_TARBALL_URL http://releases.llvm.org/${NGRAPH_LLVM_VERSION}/clang+llvm-${NGRAPH_LLVM_VERSION}-x86_64-linux-gnu-ubuntu-18.04.tar.xz)
-            else()
-                message(FATAL_ERROR "Prebuilt LLVM: unsupported Ubuntu version.")
-            endif()
-        else()
-            message(FATAL_ERROR "Prebuilt LLVM: Only Ubuntu Linux is supported.")
-        endif()
     else()
-        message(FATAL_ERROR "Prebuilt LLVM: unsupported OS.")
+        set(NGRAPH_LLVM_VERSION 5.0.2)
+        set(LLVM_TARBALL_URL http://releases.llvm.org/${NGRAPH_LLVM_VERSION}/clang+llvm-${NGRAPH_LLVM_VERSION}-x86_64-linux-gnu-ubuntu-16.04.tar.xz)
     endif()
 endif()
 
 if(NOT DEFINED LLVM_SHA1_HASH)
     if(APPLE)
-        set(LLVM_SHA1_HASH c86ebd8ba491d2d65aba487fb21c60d8cad3d2a8)
-    elseif(LINUX)
-        if(UBUNTU_VER MATCHES "14.04")
-            set(LLVM_SHA1_HASH caf149635742622a3a5b220146ff34f9202b8670)
-        elseif(UBUNTU_VER MATCHES "16.04")
-            set(LLVM_SHA1_HASH 41db01a3b216df4fc22fae9c44e248889f9a01ed)
-        elseif(UBUNTU_VER MATCHES "18.04")
-            set(LLVM_SHA1_HASH f7553a0d66092ca0bbe1eab2af405523a18bafba)
-        else()
-            message(FATAL_ERROR "Prebuilt LLVM: unsupported Ubuntu version.")
-        endif()
+        set(LLVM_SHA1_HASH 8c8ce5cb5e057aa6806275c3f28cd09b09f48b9b)
     else()
-        message(FATAL_ERROR "Prebuilt LLVM: unsupported OS.")
+        set(LLVM_SHA1_HASH d16c7bfaa67b82042bedd5891809a608733cfc0e)
     endif()
 endif()
 
@@ -90,15 +63,7 @@ set(LLVM_LINK_LIBS
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangCodeGen${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangParse${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangSema${CMAKE_STATIC_LIBRARY_SUFFIX}
-    # Disable static analyzer
-    #${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangStaticAnalyzerFrontend${CMAKE_STATIC_LIBRARY_SUFFIX}
-    #${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangStaticAnalyzerCheckers${CMAKE_STATIC_LIBRARY_SUFFIX}
-    #${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangStaticAnalyzerCore${CMAKE_STATIC_LIBRARY_SUFFIX}
-    # 5.0.2 does not have
-    ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangCrossTU${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangAnalysis${CMAKE_STATIC_LIBRARY_SUFFIX}
-    # Disabled arc migrate
-    #${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangARCMigrate${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangRewriteFrontend${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangEdit${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangAST${CMAKE_STATIC_LIBRARY_SUFFIX}
@@ -140,8 +105,6 @@ set(LLVM_LINK_LIBS
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMTarget${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMCoroutines${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMipo${CMAKE_STATIC_LIBRARY_SUFFIX}
-    # 5.0.2 does not have
-    ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMAggressiveInstCombine${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMInstrumentation${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMVectorize${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMScalarOpts${CMAKE_STATIC_LIBRARY_SUFFIX}

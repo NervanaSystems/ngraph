@@ -18,7 +18,7 @@ include(cmake/external_hwloc.cmake)
 
 include(ExternalProject)
 
-set(NGRAPH_LLVM_VERSION 8.0.0)
+set(NGRAPH_LLVM_VERSION 5.0.2)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     if (DEFINED NGRAPH_USE_CXX_ABI)
@@ -29,10 +29,8 @@ endif()
 ExternalProject_Add(
     ext_clang
     PREFIX clang
-    #URL http://releases.llvm.org/${NGRAPH_LLVM_VERSION}/cfe-${NGRAPH_LLVM_VERSION}.src.tar.xz
-    #URL_HASH SHA1=427e12762836d808583fb4149c033d02de0a8db2
-    URL http://prereleases.llvm.org/8.0.0/rc5/cfe-8.0.0rc5.src.tar.xz
-    URL_HASH SHA1=b2e37038d64f097f396c7fe5181349c337da9551
+    URL http://releases.llvm.org/${NGRAPH_LLVM_VERSION}/cfe-${NGRAPH_LLVM_VERSION}.src.tar.xz
+    URL_HASH SHA1=6581765ec52f8a6354ab56a8e55a8cac1aa5e388
     DOWNLOAD_NO_PROGRESS TRUE
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
@@ -47,10 +45,8 @@ set(CLANG_SOURCE_DIR ${SOURCE_DIR})
 ExternalProject_Add(
     ext_openmp
     PREFIX openmp
-    #URL http://releases.llvm.org/${NGRAPH_LLVM_VERSION}/openmp-${NGRAPH_LLVM_VERSION}.src.tar.xz
-    #URL_HASH SHA1=3b931dcafbe6e621c9d99617235fd63f222c2ba2
-    URL http://prereleases.llvm.org/8.0.0/rc5/openmp-8.0.0rc5.src.tar.xz
-    URL_HASH SHA1=006e8734f642d831ce591eab3aa8d20c18e24962
+    URL http://releases.llvm.org/${NGRAPH_LLVM_VERSION}/openmp-${NGRAPH_LLVM_VERSION}.src.tar.xz
+    URL_HASH SHA1=0e78a7646b63e074e31b6a65e15446af0bdf3c07
     DOWNLOAD_NO_PROGRESS TRUE
     PATCH_COMMAND git apply ${CMAKE_SOURCE_DIR}/cmake/omprt.patch
     CONFIGURE_COMMAND ""
@@ -98,10 +94,8 @@ ExternalProject_Add(
     ext_llvm
     PREFIX llvm
     DEPENDS ${LLVM_DEPENDS}
-    #URL http://releases.llvm.org/${NGRAPH_LLVM_VERSION}/llvm-${NGRAPH_LLVM_VERSION}.src.tar.xz
-    #URL_HASH SHA1=f97632fcc3186eb0d396492ef8acfc807648580f
-    URL http://prereleases.llvm.org/8.0.0/rc5/llvm-8.0.0rc5.src.tar.xz
-    URL_HASH SHA1=37c0c3b5596fb05a64e75dbc0eafaf738dadc8ca
+    URL http://releases.llvm.org/${NGRAPH_LLVM_VERSION}/llvm-${NGRAPH_LLVM_VERSION}.src.tar.xz
+    URL_HASH SHA1=576d005305335049b89608d897d7ec184d99c6e1
     DOWNLOAD_NO_PROGRESS TRUE
     CMAKE_GENERATOR ${CMAKE_GENERATOR}
     CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
@@ -123,7 +117,6 @@ ExternalProject_Add(
                 -DLLVM_ENABLE_BINDINGS=OFF
                 -DLLVM_ENABLE_TERMINFO=OFF
                 -DLLVM_ENABLE_ZLIB=OFF
-                ${ALLOW_LLVM_OLD_TOOLCHAIN}
                 -DLIBOMP_OMPT_SUPPORT=OFF
                 ${LIBOMP_MANYLINUX_ARGS}
                 -DCLANG_BUILD_TOOLS=OFF
@@ -148,22 +141,6 @@ if(NGRAPH_MANYLINUX_ENABLE)
 endif()
 
 set(LLVM_LINK_LIBS
-    #[[
-    # 5.0.2 does not have
-    # clangCrossTU
-    # 5.0.2 does not have, only used for building some clang tools
-    # clangHandleCXX
-    # clangHandleLLVM
-    # 5.0.2 does not have
-    # clangToolingInclusions
-    # 5.0.2 does not have
-    # LLVMAggressiveInstCombine
-    # LLVMFuzzMutate
-    # LLVMMCA
-    # LLVMOptRemarks
-    # LLVMTextAPI
-    # LLVMWindowsManifest
-    ]]
     # Do not change order of libraries !!!
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangTooling${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangFrontendTool${CMAKE_STATIC_LIBRARY_SUFFIX}
@@ -173,15 +150,7 @@ set(LLVM_LINK_LIBS
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangCodeGen${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangParse${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangSema${CMAKE_STATIC_LIBRARY_SUFFIX}
-    # Disable static analyzer
-    #${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangStaticAnalyzerFrontend${CMAKE_STATIC_LIBRARY_SUFFIX}
-    #${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangStaticAnalyzerCheckers${CMAKE_STATIC_LIBRARY_SUFFIX}
-    #${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangStaticAnalyzerCore${CMAKE_STATIC_LIBRARY_SUFFIX}
-    # 5.0.2 does not have
-    ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangCrossTU${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangAnalysis${CMAKE_STATIC_LIBRARY_SUFFIX}
-    # Disabled arc migrate
-    #${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangARCMigrate${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangRewriteFrontend${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangEdit${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangAST${CMAKE_STATIC_LIBRARY_SUFFIX}
@@ -223,8 +192,6 @@ set(LLVM_LINK_LIBS
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMTarget${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMCoroutines${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMipo${CMAKE_STATIC_LIBRARY_SUFFIX}
-    # 5.0.2 does not have
-    ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMAggressiveInstCombine${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMInstrumentation${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMVectorize${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMScalarOpts${CMAKE_STATIC_LIBRARY_SUFFIX}
@@ -244,10 +211,7 @@ set(LLVM_LINK_LIBS
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMBinaryFormat${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMSupport${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMDemangle${CMAKE_STATIC_LIBRARY_SUFFIX}
-    m
 )
-
-ExternalProject_Get_Property(ext_llvm INSTALL_DIR)
 
 if(LINUX OR APPLE)
     set(LLVM_LINK_LIBS ${LLVM_LINK_LIBS} m)
