@@ -54,8 +54,11 @@
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
+#include "ngraph/op/experimental/quantized_dot.hpp"
+#include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
+#include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
@@ -1042,6 +1045,10 @@ static shared_ptr<ngraph::Function>
                                                  data_dilation_strides.get<std::vector<size_t>>());
                 break;
             }
+            case OP_TYPEID::QuantizedDotBias: { break;
+            }
+            case OP_TYPEID::QuantizedDot: { break;
+            }
             case OP_TYPEID::QuantizedMaxPool:
             {
                 auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
@@ -1191,6 +1198,11 @@ static shared_ptr<ngraph::Function>
                 auto compute_max = node_js.at("compute_max").get<bool>();
                 auto target_type = read_element_type(node_js.at("index_element_type"));
                 node = make_shared<op::TopK>(args[0], top_k_axis, target_type, k, compute_max);
+                break;
+            }
+            case OP_TYPEID::Transpose:
+            {
+                node = make_shared<op::Transpose>(args[0], args[1]);
                 break;
             }
             case OP_TYPEID::StopGradient:
@@ -1661,6 +1673,10 @@ static json write(const Node& n, bool binary_constant_data)
         node["data_dilation_strides"] = tmp->get_data_dilation_strides();
         break;
     }
+    case OP_TYPEID::QuantizedDotBias: { break;
+    }
+    case OP_TYPEID::QuantizedDot: { break;
+    }
     case OP_TYPEID::QuantizedMaxPool:
     {
         auto tmp = dynamic_cast<const op::QuantizedMaxPool*>(&n);
@@ -1764,6 +1780,8 @@ static json write(const Node& n, bool binary_constant_data)
         node["k"] = tmp->get_k();
         node["compute_max"] = tmp->get_compute_max();
         break;
+    }
+    case OP_TYPEID::Transpose: { break;
     }
     case OP_TYPEID::UnknownOp: { break;
     }

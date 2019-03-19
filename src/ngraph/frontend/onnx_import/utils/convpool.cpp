@@ -93,6 +93,10 @@ namespace ngraph
                                              const Strides& strides,
                                              const std::string& auto_pad)
                 {
+                    if (auto_pad == "VALID")
+                    {
+                        return CoordinateDiff(input_shape.size());
+                    }
                     CoordinateDiff pads_begin;
                     CoordinateDiff pads_end;
                     // Omit {N,C} axes
