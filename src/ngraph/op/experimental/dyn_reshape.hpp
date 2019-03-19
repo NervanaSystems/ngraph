@@ -34,10 +34,10 @@ namespace ngraph
             /// \brief Constructs a dynamic reshape operation. This operation does not perform transpose.
             ///
             /// \param arg The tensor to be reshaped.
-            /// \param output_shape The node that defines output shape.
+            /// \param pattern The node that defines output shape pattern.
             ///        If the input shape is \f$(a_0,\dots,a_{k-1})\f$ then the output shape must
             ///        be of the form \f$(b_0,\dots,b_{j-1})\f$ where \f$\Pi(a_i) = \Pi(b_i)\f$.
-            DynReshape(const std::shared_ptr<Node>& arg, const std::shared_ptr<Node>& shape);
+            DynReshape(const std::shared_ptr<Node>& arg, const std::shared_ptr<Node>& pattern);
 
             void validate_and_infer_types() override;
 

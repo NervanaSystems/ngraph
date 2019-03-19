@@ -12387,3 +12387,215 @@ TEST(type_prop, transpose_input_order_et_wrong)
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
+
+TEST(type_prop, dynshape_arg_static_pattern_static_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto pattern = make_shared<op::Parameter>(element::i64, Shape{4});
+
+    auto r = make_shared<op::DynReshape>(arg, pattern);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+}
+
+TEST(type_prop, dynshape_arg_rank_static_dynamic_pattern_static_ok)
+{
+    auto arg = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+    auto pattern = make_shared<op::Parameter>(element::i64, Shape{4});
+
+    auto r = make_shared<op::DynReshape>(arg, pattern);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+}
+
+TEST(type_prop, dynreshape_arg_static_pattern_rank_static_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto pattern = make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+
+    auto r = make_shared<op::DynReshape>(arg, pattern);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
+}
+
+TEST(type_prop, dynreshape_arg_rank_static_dynamic_pattern_rank_static_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+    auto pattern = make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+
+    auto r = make_shared<op::DynReshape>(arg, pattern);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
+}
+
+TEST(type_prop, dynreshape_arg_rank_dynamic_pattern_rank_static_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto pattern = make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+
+    auto r = make_shared<op::DynReshape>(arg, pattern);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
+}
+
+TEST(type_prop, dynreshape_arg_rank_dynamic_pattern_rank_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto pattern = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+
+    auto r = make_shared<op::Transpose>(arg, pattern);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
+}
+
+TEST(type_prop, dynreshape_arg_rank_static_dynamic_pattern_rank_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+    auto pattern = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+
+    auto r = make_shared<op::DynReshape>(arg, pattern);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
+}
+
+TEST(type_prop, dynreshape_arg_static_pattern_static_pattern_not_vector)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape{2, 4, 6, 8});
+    auto pattern = make_shared<op::Parameter>(element::i64, PartialShape{2, 2});
+
+    try
+    {
+        auto r = make_shared<op::DynReshape>(arg, pattern);
+        FAIL() << "Did not detect input order not vector";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Pattern shape must have rank 1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, dynreshape_arg_static_pattern_rank_static_dynamic_not_vector)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape{2, 4, 6, 8});
+    auto pattern = make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+
+    try
+    {
+        auto r = make_shared<op::DynReshape>(arg, pattern);
+        FAIL() << "Did not detect input order not vector";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Pattern shape must have rank 1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, dynreshape_arg_rank_static_dynamic_pattern_static_not_vector)
+{
+    auto arg = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+    auto pattern = make_shared<op::Parameter>(element::i64, PartialShape{2, 2});
+
+    try
+    {
+        auto r = make_shared<op::DynReshape>(arg, pattern);
+        FAIL() << "Did not detect input order not vector";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Pattern shape must have rank 1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, dynreshape_arg_rank_static_dynamic_pattern_rank_static_dynamic_not_vector)
+{
+    auto arg = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+    auto pattern = make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+
+    try
+    {
+        auto r = make_shared<op::DynReshape>(arg, pattern);
+        FAIL() << "Did not detect input order not vector";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Pattern shape must have rank 1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, dynreshape_arg_rank_dynamic_pattern_rank_static_dynamic_not_vector)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto pattern = make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+
+    try
+    {
+        auto r = make_shared<op::DynReshape>(arg, pattern);
+        FAIL() << "Did not detect input order not vector";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Pattern shape must have rank 1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, dynreshape_pattern_et_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto pattern = make_shared<op::Parameter>(element::dynamic, Shape{4});
+
+    auto r = make_shared<op::DynReshape>(arg, pattern);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+}
+TEST(type_prop, dynreshape_pattern_et_wrong)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto pattern = make_shared<op::Parameter>(element::boolean, Shape{4});
+
+    try
+    {
+        auto r = make_shared<op::DynReshape>(arg, pattern);
+        FAIL() << "Did not detect input element type not i64";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Pattern must have element type i64."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}

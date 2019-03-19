@@ -38,12 +38,12 @@ void op::DynSlice::validate_and_infer_types()
     // check data types
     NODE_VALIDATION_CHECK(this,
                           lower_bounds_et.compatible(element::Type_t::i64),
-                          "lower_bounds element type must be i64.");
+                          "Lower bounds must have element type i64.");
     NODE_VALIDATION_CHECK(this,
                           upper_bounds_et.compatible(element::Type_t::i64),
-                          "upper_bounds element type must be i64.");
+                          "Upper bounds must have element type i64.");
     NODE_VALIDATION_CHECK(
-        this, strides_et.compatible(element::Type_t::i64), "strides element type should be i64.");
+        this, strides_et.compatible(element::Type_t::i64), "Strides must have element type i64");
 
     // check shapes
     auto arg_rank = get_input_partial_shape(0).rank();
@@ -52,16 +52,16 @@ void op::DynSlice::validate_and_infer_types()
     auto strides_rank = get_input_partial_shape(3).rank();
     NODE_VALIDATION_CHECK(this,
                           lower_bounds_rank.compatible(1),
-                          "lower_bounds should have rank 1, got ",
+                          "Lower bounds must have rank 1, got ",
                           lower_bounds_rank,
                           ".");
     NODE_VALIDATION_CHECK(this,
                           upper_bounds_rank.compatible(1),
-                          "upper_bounds should have rank 1, got ",
+                          "Upper bounds must have rank 1, got ",
                           upper_bounds_rank,
                           ".");
     NODE_VALIDATION_CHECK(
-        this, strides_rank.compatible(1), "strides should have rank 1, got ", strides_rank, ".");
+        this, strides_rank.compatible(1), "Strides must have rank 1, got ", strides_rank, ".");
 
     set_output_type(0, get_input_element_type(0), PartialShape::dynamic(arg_rank));
 }

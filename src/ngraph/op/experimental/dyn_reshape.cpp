@@ -34,13 +34,13 @@ void op::DynReshape::validate_and_infer_types()
     auto pattern_et = get_input_element_type(1);
     // check data types
     NODE_VALIDATION_CHECK(
-        this, pattern_et.compatible(element::Type_t::i64), "pattern element type must be i64.");
+        this, pattern_et.compatible(element::Type_t::i64), "Pattern must have element type i64.");
 
     // check shapes
     const PartialShape& pattern_shape = get_input_partial_shape(1);
     NODE_VALIDATION_CHECK(this,
                           pattern_shape.rank().compatible(1),
-                          "pattern shape should have rank 1, got ",
+                          "Pattern shape must have rank 1, got ",
                           pattern_shape.rank(),
                           ".");
     Rank output_rank = pattern_shape.rank().is_dynamic() ? Rank::dynamic() : pattern_shape[0];
