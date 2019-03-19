@@ -155,15 +155,11 @@ void ngraph::pass::SelfConcatFusion::remove_single_concat_op_pattern()
     }
 }
 
-bool ngraph::pass::SelfConcatFusion::run_on_function(std::shared_ptr<Function> function)
+void ngraph::pass::SelfConcatFusion::construct_concat_patterns(
+    const std::shared_ptr<pattern::Matcher>& matcher,
+    const std::shared_ptr<pattern::op::Label>& concat_op_label,
+    const std::shared_ptr<Node>& n)
 {
-    bool modify_graph = false;
-    auto has_multiple_inputs = [](std::shared_ptr<Node> n) {
-        auto input_size = n->get_input_size();
-        auto root = std::dynamic_pointer_cast<op::Concat>(n);
-        return (root && input_size > 1);
-    };
-
     auto print_state_of_bounded_vectors = [this]() {
         std::cout << "------------------------" << std::endl;
         std::cout << "STATE of BOUNDED VECTORS: " << std::endl;
@@ -186,51 +182,62 @@ bool ngraph::pass::SelfConcatFusion::run_on_function(std::shared_ptr<Function> f
         std::cout << "------------------------" << std::endl;
     };
 
+    if (matcher->match(n))
+    {
+        auto concat_op = matcher->get_pattern_map()[concat_op_label];
+        if (!std::dynamic_pointer_cast<op::Concat>(concat_op))
+        {
+            NGRAPH_DEBUG << "Incorrect Match";
+            return;
+        }
+        std::cout << concat_op->get_name() << std::endl;
+        if (!valid_self_concat(concat_op))
+        {
+            std::cout << "NGRAPH_DEBUG: " << concat_op->get_name() << " is not a valid self concat"
+                      << std::endl;
+            return;
+        }
+        else
+        {
+            std::cout << "NGRAPH_DEBUG: " << concat_op->get_name() << " is a VALID self concat"
+                      << std::endl;
+        }
+
+        auto& concat_vectors = this->m_concat_pattern_vectors;
+        size_t concat_axis =
+            std::static_pointer_cast<op::Concat>(concat_op)->get_concatenation_axis();
+        if (concat_vectors.empty())
+        {
+            concat_vectors.push_back(
+                make_pair(NodeVector{concat_op}, std::vector<size_t>{concat_axis}));
+            print_state_of_bounded_vectors();
+        }
+        else
+        {
+            update_concat_pattern_vectors(concat_op, concat_axis);
+            print_state_of_bounded_vectors();
+        }
+    }
+}
+
+bool ngraph::pass::SelfConcatFusion::run_on_function(std::shared_ptr<Function> function)
+{
+    bool modify_graph = false;
+    auto has_multiple_inputs = [](std::shared_ptr<Node> n) {
+        auto input_size = n->get_input_size();
+        auto root = std::dynamic_pointer_cast<op::Concat>(n);
+        return (root && input_size > 1);
+    };
+
     auto concat_op_label =
         std::make_shared<pattern::op::Label>(element::f32, Shape{1, 3}, has_multiple_inputs);
     auto matcher = std::make_shared<pattern::Matcher>(concat_op_label);
     for (auto n : function->get_ordered_ops())
     {
-        if (matcher->match(n))
-        {
-            auto concat_op = matcher->get_pattern_map()[concat_op_label];
-            if (!std::dynamic_pointer_cast<op::Concat>(concat_op))
-            {
-                NGRAPH_DEBUG << "Incorrect Match";
-                continue;
-            }
-            std::cout << concat_op->get_name() << std::endl;
-            if (!valid_self_concat(concat_op))
-            {
-                std::cout << "NGRAPH_DEBUG: " << concat_op->get_name()
-                          << " is not a valid self concat" << std::endl;
-                continue;
-            }
-            else
-            {
-                std::cout << "NGRAPH_DEBUG: " << concat_op->get_name() << " is a VALID self concat"
-                          << std::endl;
-            }
-
-            auto& concat_vectors = this->m_concat_pattern_vectors;
-            size_t concat_axis =
-                std::static_pointer_cast<op::Concat>(concat_op)->get_concatenation_axis();
-            if (concat_vectors.empty())
-            {
-                concat_vectors.push_back(
-                    make_pair(NodeVector{concat_op}, std::vector<size_t>{concat_axis}));
-                print_state_of_bounded_vectors();
-            }
-            else
-            {
-                update_concat_pattern_vectors(concat_op, concat_axis);
-                print_state_of_bounded_vectors();
-            }
-        }
+        construct_concat_patterns(matcher, concat_op_label, n);
     }
 
-    // Remove the elements of concat_vetors with size = 1;
-    // Only fuse concats when there are more than 1 self concats in a row
+    // Remove the elements of concat_vetors with size = 1; Only fuse concats when there are more than 1 self concats in a row
     remove_single_concat_op_pattern();
 
     auto scalarize_dim = [](std::vector<size_t> concat_axis_vector,
