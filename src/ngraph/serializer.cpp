@@ -746,14 +746,14 @@ static shared_ptr<ngraph::Function>
                 }
                 break;
             }
-            case OP_TYPEID::Dyn_Reshape:
+            case OP_TYPEID::DynReshape:
             {
                 node = make_shared<op::DynReshape>(args[0], args[1]);
                 break;
             }
-            case OP_TYPEID::Dyn_Slice:
+            case OP_TYPEID::DynSlice:
             {
-                node = make_shared<op::DynSlice>(args[0], args[1]);
+                node = make_shared<op::DynSlice>(args[0], args[1], args[2], args[3]);
                 break;
             }
             case OP_TYPEID::EmbeddingLookup:
@@ -1487,9 +1487,9 @@ static json write(const Node& n, bool binary_constant_data)
         node["reduction_axes_count"] = tmp->get_reduction_axes_count();
         break;
     }
-    case OP_TYPEID::Dyn_Reshape: { break;
+    case OP_TYPEID::DynReshape: { break;
     }
-    case OP_TYPEID::Dyn_Slice: { break;
+    case OP_TYPEID::DynSlice: { break;
     }
     case OP_TYPEID::EmbeddingLookup: { break;
     }

@@ -29,25 +29,8 @@ op::DynSlice::DynSlice(const shared_ptr<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-op::DynSlice::DynSlice(const shared_ptr<Node>& arg,
-                       const shared_ptr<Node>& lower_bounds,
-                       const shared_ptr<Node>& upper_bounds)
-    : Op("DynSlice", check_single_output_args({arg, lower_bounds, upper_bounds}))
-{
-    constructor_validate_and_infer_types();
-}
-
 void op::DynSlice::validate_and_infer_types()
 {
-    // If we only have 3 args, it means strides should have default value 1.
-    if (get_input_size() == 3)
-    {
-        // TODO: need DynConstant?
-        //m_strides = make_shared<ngraph::op::DynConstant>(element::Type_t::i64,
-        //                                                 PartialShape::dynamic(),
-        //                                                 {1});
-        throw ngraph_error("Constant strides not implemented for DynSlice");
-    }
     auto lower_bounds_et = get_input_element_type(1);
     auto upper_bounds_et = get_input_element_type(2);
     auto strides_et = get_input_element_type(3);
@@ -55,10 +38,10 @@ void op::DynSlice::validate_and_infer_types()
     // check data types
     NODE_VALIDATION_CHECK(this,
                           lower_bounds_et.compatible(element::Type_t::i64),
-                          "lower_bounds element type should be i64.");
+                          "lower_bounds element type must be i64.");
     NODE_VALIDATION_CHECK(this,
                           upper_bounds_et.compatible(element::Type_t::i64),
-                          "upper_bounds element type should be i64.");
+                          "upper_bounds element type must be i64.");
     NODE_VALIDATION_CHECK(
         this, strides_et.compatible(element::Type_t::i64), "strides element type should be i64.");
 
