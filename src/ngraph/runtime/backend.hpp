@@ -41,6 +41,18 @@ namespace ngraph
 class ngraph::runtime::Backend
 {
 public:
+    template <typename TOpType, typename... TArg>
+    std::shared_ptr<ngraph::Node> construct_node(TArg&&... Args)
+    {
+        // TODO: assert that TOpType is a backend specific node
+        return std::make_shared<TOpType>(std::forward<TArg>(Args)...);
+    }
+
+    int sumxxxxyyyy(int x, int y)
+    {
+        return x + y;
+    }
+
     virtual ~Backend();
     /// \brief Create a new Backend object
     /// \param type The name of a registered backend, such as "CPU" or "GPU".
