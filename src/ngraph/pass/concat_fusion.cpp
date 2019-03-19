@@ -220,6 +220,47 @@ void ngraph::pass::SelfConcatFusion::construct_concat_patterns(
     }
 }
 
+bool ngraph::pass::SelfConcatFusion::replace_patterns(
+    const std::pair<NodeVector, std::vector<size_t>>& concat_op_pair)
+{
+    auto scalarize_dim = [](std::vector<size_t> concat_axis_vector,
+                            const Shape& input_shape) -> Shape {
+
+        std::cout << "Concat_axis_vetor: " << join(concat_axis_vector) << std::endl;
+        std::cout << "Input Shape: " << join(input_shape) << std::endl;
+        Shape scalarized_shape;
+        for (size_t i = 0; i < input_shape.size(); i++)
+        {
+            auto it = std::find(concat_axis_vector.begin(), concat_axis_vector.end(), i);
+            if (it == concat_axis_vector.end())
+            {
+                scalarized_shape.push_back(input_shape[i]);
+            }
+        }
+        return scalarized_shape;
+    };
+    auto bounded_concat_ops = concat_op_pair.first;
+    auto concat_axis_vector = concat_op_pair.second;
+
+    auto& first_bounded_concat = (*bounded_concat_ops.begin());
+    auto driver_op = first_bounded_concat->get_argument(0);
+    std::cout << driver_op->get_name() << std::endl;
+    const Shape& input_shape = first_bounded_concat->get_input_shape(0);
+
+    auto scalarized_shape = scalarize_dim(concat_axis_vector, input_shape);
+    std::cout << "scalarized_shape: " << join(scalarized_shape) << std::endl;
+    AxisVector axis_order = get_default_order(input_shape);
+    auto reshape = std::make_shared<op::Reshape>(driver_op, axis_order, scalarized_shape);
+    auto last_bounded_concat_op = bounded_concat_ops.back();
+    auto broadcast_out_shape = last_bounded_concat_op->get_shape();
+    std::cout << "Broadcast out shape: " << join(broadcast_out_shape) << std::endl;
+    auto broadcast =
+        std::make_shared<op::Broadcast>(reshape, broadcast_out_shape, concat_axis_vector);
+
+    replace_node(last_bounded_concat_op, broadcast);
+    return true;
+}
+
 bool ngraph::pass::SelfConcatFusion::run_on_function(std::shared_ptr<Function> function)
 {
     bool modify_graph = false;
@@ -237,48 +278,11 @@ bool ngraph::pass::SelfConcatFusion::run_on_function(std::shared_ptr<Function> f
         construct_concat_patterns(matcher, concat_op_label, n);
     }
 
-    // Remove the elements of concat_vetors with size = 1; Only fuse concats when there are more than 1 self concats in a row
     remove_single_concat_op_pattern();
-
-    auto scalarize_dim = [](std::vector<size_t> concat_axis_vector,
-                            const Shape& input_shape) -> Shape {
-
-        std::cout << "Concat_axis_vetor: " << join(concat_axis_vector) << std::endl;
-        std::cout << "Input Shape: " << join(input_shape) << std::endl;
-        Shape scalarized_shape;
-        for (size_t i = 0; i < input_shape.size(); i++)
-        {
-            auto it = std::find(concat_axis_vector.begin(), concat_axis_vector.end(), i);
-            if (it == concat_axis_vector.end())
-            {
-                scalarized_shape.push_back(input_shape[i]);
-            }
-        }
-        return scalarized_shape;
-    };
 
     for (auto concat_op_pair : this->m_concat_pattern_vectors)
     {
-        auto bounded_concat_ops = concat_op_pair.first;
-        auto concat_axis_vector = concat_op_pair.second;
-
-        auto& first_bounded_concat = (*bounded_concat_ops.begin());
-        auto driver_op = first_bounded_concat->get_argument(0);
-        std::cout << driver_op->get_name() << std::endl;
-        const Shape& input_shape = first_bounded_concat->get_input_shape(0);
-
-        auto scalarized_shape = scalarize_dim(concat_axis_vector, input_shape);
-        std::cout << "scalarized_shape: " << join(scalarized_shape) << std::endl;
-        AxisVector axis_order = get_default_order(input_shape);
-        auto reshape = std::make_shared<op::Reshape>(driver_op, axis_order, scalarized_shape);
-        auto last_bounded_concat_op = bounded_concat_ops.back();
-        auto broadcast_out_shape = last_bounded_concat_op->get_shape();
-        std::cout << "Broadcast out shape: " << join(broadcast_out_shape) << std::endl;
-        auto broadcast =
-            std::make_shared<op::Broadcast>(reshape, broadcast_out_shape, concat_axis_vector);
-
-        replace_node(last_bounded_concat_op, broadcast);
-        modify_graph = true;
+        modify_graph = replace_patterns(concat_op_pair);
     }
 
     return modify_graph;

@@ -54,6 +54,7 @@ private:
     void construct_concat_patterns(const std::shared_ptr<pattern::Matcher>&,
                                    const std::shared_ptr<pattern::op::Label>&,
                                    const std::shared_ptr<Node>&);
+    bool replace_patterns(const std::pair<NodeVector, std::vector<size_t>>&);
 
     std::vector<std::pair<NodeVector, std::vector<size_t>>> m_concat_pattern_vectors;
 };
