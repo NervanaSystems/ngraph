@@ -84,14 +84,6 @@ namespace ngraph
                 */
                 mkldnn::algorithm get_conv_algo();
 
-                /** Intel(R) MKL-DNN Version type */
-                /* typedef struct {
-                    int    major;
-                    int    minor;
-                    int    patch;
-                    const char *hash;
-                } mkldnn_version_t; */
-                const mkldnn_version_t* get_mkldnn_version();
                 bool use_mkldnn_kernel(const ngraph::Node* node);
                 void assign_mkldnn_kernel(Node* node);
 

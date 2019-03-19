@@ -41,6 +41,20 @@ using namespace mkldnn;
 using namespace ngraph;
 using namespace std;
 
+#if defined(MKLDNN_VERSION_MAJOR) && defined(MKLDNN_VERSION_MINOR) && defined(MKLDNN_VERSION_PATCH)
+/** Intel(R) MKL-DNN Version type */
+/* typedef struct {
+    int    major;
+    int    minor;
+    int    patch;
+    const char *hash;
+} mkldnn_version_t; */
+static const mkldnn_version_t* get_mkldnn_version()
+{
+    return mkldnn_version();
+}
+#endif
+
 std::map<element::Type, const mkldnn::memory::data_type>&
     runtime::cpu::mkldnn_utils::get_mkldnn_data_type_map()
 {
@@ -707,28 +721,16 @@ bool runtime::cpu::mkldnn_utils::can_use_mkldnn_batchnorm_fprop(const ngraph::No
     }
 }
 
-const mkldnn_version_t* runtime::cpu::mkldnn_utils::get_mkldnn_version()
-{
-#if defined(MKLDNN_VERSION_MAJOR) && defined(MKLDNN_VERSION_MINOR) && defined(MKLDNN_VERSION_PATCH)
-    return mkldnn_version();
-#endif
-}
-
 mkldnn::algorithm runtime::cpu::mkldnn_utils::get_conv_algo()
 {
 #if defined(MKLDNN_VERSION_MAJOR) && defined(MKLDNN_VERSION_MINOR) && defined(MKLDNN_VERSION_PATCH)
-    auto mkldnn_version = runtime::cpu::mkldnn_utils::get_mkldnn_version();
+    auto mkldnn_version = get_mkldnn_version();
     if (mkldnn_version->major >= 0 && mkldnn_version->minor >= 18 && mkldnn_version->patch >= 0)
     {
         return mkldnn::algorithm::convolution_auto;
     }
-    else
-    {
-        return mkldnn::algorithm::convolution_direct;
-    }
-#else
-    return mkldnn::algorithm::convolution_direct;
 #endif
+    return mkldnn::algorithm::convolution_direct;
 }
 
 bool runtime::cpu::mkldnn_utils::can_use_mkldnn_batchnorm_bprop(const ngraph::Node* node)
