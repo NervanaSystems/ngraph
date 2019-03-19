@@ -84,7 +84,7 @@ namespace ngraph
                     {
                         pad_shape.emplace_back(std::max((output.at(idx) - 1) * strides.at(idx) +
                                                             kernel.at(idx) - input.at(idx),
-                                                        0ULL));
+                                                        0UL));
                     }
                     return pad_shape;
                 }
