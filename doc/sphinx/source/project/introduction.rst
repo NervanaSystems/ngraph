@@ -21,7 +21,7 @@ handling compute for specialized kinds of :abbr:`Machine Learning (ML)` or
 :abbr:`DL (Deep Learning)` operations; this approach essentially designs a 
 custom network infrastructure *around* specific problems AI is supposed to 
 solve. For example, many companies are actively developing specialized 
-:abbr:`ASICs (Application Specific Integrated Circuits)` to speed-up 
+:abbr:`Application Specific Integrated Circuits (ASICs)` to speed-up 
 training (one kind of ASIC) or to reduce inference latency (another kind 
 of ASIC) in their cloud-based or local data centers. This approach works 
 great for :abbr:`Cloud Service Providers (CSPs)` and others that have 
@@ -62,7 +62,7 @@ operator-level optimizations.
 
 However, kernel libraries have three main problems: 
 
-#. Kernel libraries do not support graph level optimizations.
+#. Kernel libraries do not support graph-level optimizations.
 #. Framework integration of kernel libraries does not scale.
 #. There are too many kernels to write, and they require expert knowledge.
 
@@ -102,14 +102,14 @@ be computed at the compile time (known as constant folding), and the graph can
 be further simplified to the one on the right because the constant has value of 
 zero. Without such graph-level optimizations, a deep learning framework with a 
 kernel library will compute all operations, and the resulting execution will be 
-sub-optimal. 
+suboptimal. 
 
 
 Problem: Reduced scalability 
 ----------------------------
 
 Integrating kernel libraries with frameworks is increasingly becoming 
-non-trivial due to the growing number of new deep learning accelerators. 
+nontrivial due to the growing number of new deep learning accelerators. 
 For each new deep learning accelerator, a custom kernel library integration 
 must be implemented by a team of experts. This labor-intensive work is 
 further amplified if you want your DL accelerator to support a number of 
@@ -175,7 +175,7 @@ in compute with more transformers on denser and more data-heavy
 :abbr:`Deep Learning Networks (DNNs)`, and making it easier to apply advances in 
 :abbr:`Machine Learning (ML)` to different of industries and problems. 
 
-For developers with a network already in-place, using the nGraph Compiler stack 
+For developers with a network already in place, using the nGraph Compiler stack 
 can further accelerate a network and allows for a quicker adaptation of models 
 and easier upgrade of hardware.
 
