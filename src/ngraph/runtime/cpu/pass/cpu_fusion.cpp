@@ -24,6 +24,8 @@
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/node_input.hpp"
+#include "ngraph/node_output.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
@@ -793,16 +795,16 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
 
         auto pattern_map = m.get_pattern_map();
         auto m_bn = std::static_pointer_cast<op::BatchNormTraining>(
-            m.get_match_root()->get_argument(0)->get_inputs().at(0).get_output().get_node());
+            m.get_match_root()->get_argument(0)->get_input_source_output(0).get_node());
 
         if (!mkldnn_utils::can_use_mkldnn_batchnorm_fprop(m_bn.get()))
         {
             return false;
         }
-        std::vector<std::shared_ptr<Node>> mgoes(m_bn->get_outputs().size());
-        for (auto bn_in : m_bn->get_output_inputs(0))
+        std::vector<Node*> mgoes(m_bn->get_output_size());
+        for (auto bn_in : m_bn->get_output_target_inputs(0))
         {
-            auto mgoe = std::dynamic_pointer_cast<op::GetOutputElement>(bn_in->get_node());
+            auto mgoe = dynamic_cast<op::GetOutputElement*>(bn_in.get_node());
             NGRAPH_ASSERT(mgoe);
             mgoes[mgoe->get_n()] = mgoe;
         }
@@ -813,7 +815,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
             return false;
         }
 
-        mgoes[0] = m.get_match_root(); // replace relu instead of its GetOutputElement
+        mgoes[0] = m.get_match_root().get(); // replace relu instead of its GetOutputElement
 
         auto bn_relu = std::make_shared<op::BatchNormTrainingRelu>(
             m_bn->get_eps_value(), pattern_map[gamma], pattern_map[beta], pattern_map[input]);
@@ -826,7 +828,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
 
         for (size_t i = 0; i < mgoes.size(); i++)
         {
-            ngraph::replace_node(mgoes.at(i), new_nodes[i]);
+            ngraph::replace_node(mgoes.at(i)->shared_from_this(), new_nodes[i]);
         }
         return true;
     };
@@ -862,7 +864,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu_global_sta
 
         auto pattern_map = m.get_pattern_map();
 
-        auto bn_match = m.get_match_root()->get_inputs().at(0).get_output().get_node();
+        auto bn_match = m.get_match_root()->get_input_source_output(0).get_node();
         if (bn_match->get_users().size() > 1)
         {
             NGRAPH_DEBUG << "Relu isn't the only user of BatchNorm's output";

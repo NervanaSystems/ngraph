@@ -21,6 +21,8 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/node_input.hpp"
+#include "ngraph/node_output.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -186,27 +188,25 @@ bool ngraph::runtime::cpu::pass::CPULoopKernelFusion::run_on_function(
         for (size_t i = 0; i < outputs.size(); i++)
         {
             auto ith_goe = std::make_shared<ngraph::op::GetOutputElement>(lk, i);
-            auto& ith_output = ith_goe->get_outputs().at(0);
 
-            if (outputs.at(i)->get_outputs().size() > 1)
+            if (outputs.at(i)->get_output_size() > 1)
             {
                 throw ngraph_error(
                     "support for fusing multi-output nodes in loop kernels isn't yet implemented");
             }
 
             // TODO: revisit when we need support for multi-output nodes
-            auto& orig_output = outputs.at(i)->get_outputs().at(0);
+            NodeOutput orig_output(outputs.at(i), 0);
 
-            // this is needed since replace_output modifies orig_output.get_inputs()
-            std::set<ngraph::descriptor::Input*> inputs_copy{begin(orig_output.get_inputs()),
-                                                             end(orig_output.get_inputs())};
+            std::set<NodeInput> inputs_copy = orig_output.get_target_inputs();
             for (auto input : inputs_copy)
             {
                 // this user is NOT internal to this loop kernel
                 // so it needs to be replaced with corresponding lk's GOE
-                if (lk_nodes_set.count(input->get_node()) == 0)
+                if (lk_nodes_set.count(input.get_node()->shared_from_this()) == 0)
                 {
-                    input->replace_output(ith_output);
+                    auto ith_output = NodeOutput(ith_goe, 0);
+                    input.replace_source_output(ith_output);
                 }
             }
         }

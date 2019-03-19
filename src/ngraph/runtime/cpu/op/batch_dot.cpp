@@ -75,8 +75,8 @@ void op::BatchDot::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVec
 {
     auto delta = deltas.at(0); // NxIxK
 
-    auto a = get_inputs().at(0).get_output().get_node(); // NxIxJ (maybe transposed)
-    auto b = get_inputs().at(1).get_output().get_node(); // NxJxK (maybe transposed)
+    auto a = get_argument(0); // NxIxJ (maybe transposed)
+    auto b = get_argument(1); // NxJxK (maybe transposed)
 
     auto batch_transpose = [](const shared_ptr<Node>& node) {
         const auto& batch_shape = node->get_shape();

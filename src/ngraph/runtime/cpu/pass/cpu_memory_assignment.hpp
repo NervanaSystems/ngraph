@@ -60,7 +60,7 @@ private:
     void process_in_place_slice(std::list<std::shared_ptr<Node>> nodes);
 
     // propagate slice when its arg comes from function input
-    void propagate_in_place_slice(ngraph::descriptor::Input* input, size_t input_index);
+    void propagate_in_place_slice(const NodeInput& input, size_t input_index);
 
     // build buffer sets maps
     void build_buffer_sets_maps(std::list<std::shared_ptr<Node>>& ops);

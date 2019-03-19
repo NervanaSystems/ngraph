@@ -17,6 +17,8 @@
 #include "ngraph/runtime/cpu/pass/cpu_horizontal_fusion.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/node_input.hpp"
+#include "ngraph/node_output.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
@@ -82,8 +84,7 @@ bool has_same_attributes(const std::shared_ptr<ngraph::op::ConvolutionBias> conv
 void ngraph::runtime::cpu::pass::CPUHorizontalFusion::cpu_conv_horizontal_fusion()
 {
     auto has_multiple_users = [](std::shared_ptr<Node> n) {
-        auto inputs = n->get_output_inputs(0);
-        return inputs.size() > 1;
+        return n->get_output_target_inputs(0).size() > 1;
     };
 
     auto data_conv = std::make_shared<pattern::op::Label>(

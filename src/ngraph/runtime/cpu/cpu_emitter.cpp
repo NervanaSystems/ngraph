@@ -23,6 +23,8 @@
 #include <unordered_map>
 #include <vector>
 #include "ngraph/node.hpp"
+#include "ngraph/node_input.hpp"
+#include "ngraph/node_output.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"
 #include "ngraph/op/add.hpp"
@@ -3903,14 +3905,13 @@ namespace ngraph
 
             // GOEE doesn't see GOEs in subgraphs that are hidden inside LoopKernels
             // we have to manually propagate the source output
-            static const ngraph::descriptor::Output*
-                get_goe_input_output(ngraph::descriptor::Output* output)
+            static const NodeOutput get_goe_input_output(const NodeOutput& output)
             {
                 auto it = output;
                 while (auto goe =
-                           std::dynamic_pointer_cast<ngraph::op::GetOutputElement>(it->get_node()))
+                           std::dynamic_pointer_cast<ngraph::op::GetOutputElement>(it.get_node()))
                 {
-                    it = &goe->get_inputs().at(goe->get_n()).get_output();
+                    it = goe->get_input_source_output(goe->get_n());
                 }
                 return it;
             }
@@ -3918,8 +3919,7 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::runtime::cpu::op::LoopKernel)
             {
-                std::unordered_map<const ngraph::descriptor::Output*, std::string>
-                    loop_symbol_table;
+                std::map<NodeOutput, std::string> loop_symbol_table;
                 // pre-fill symbol table with inputs
 
                 const ngraph::runtime::cpu::op::LoopKernel* clk =
@@ -3931,7 +3931,7 @@ namespace ngraph
                 for (size_t i = 0; i < args.size(); i++)
                 {
                     std::string sname = std::string(args[i].get_name()) + "[i]";
-                    auto entry = std::make_pair(&clk->get_inputs().at(i).get_output(), sname);
+                    auto entry = std::make_pair(clk->get_input_source_output(i), sname);
                     loop_symbol_table.insert(entry);
                 }
 
@@ -3941,7 +3941,7 @@ namespace ngraph
                 {
                     std::string sname = std::string(out[i].get_name()) + "[i]";
                     // TODO: no support for multiple-output ops in loop kernel
-                    auto entry = std::make_pair(&output_nodes.at(i)->get_outputs().at(0), sname);
+                    auto entry = std::make_pair(NodeOutput(output_nodes.at(i), 0), sname);
                     loop_symbol_table.insert(entry);
                 }
 
@@ -3954,7 +3954,7 @@ namespace ngraph
                 for (size_t i = 0; i < node_list.size(); i++)
                 {
                     auto op_node = node_list[i];
-                    auto op = &op_node->get_outputs().at(0);
+                    auto op = NodeOutput(op_node, 0);
                     std::string tmp;
                     if (loop_symbol_table.count(op) == 0)
                     {
@@ -3964,7 +3964,7 @@ namespace ngraph
                         auto entry = std::make_pair(op, tmp);
                         loop_symbol_table.insert(entry);
                         // declare a new tmp
-                        writer << op->get_element_type().c_type_string() << " ";
+                        writer << op.get_element_type().c_type_string() << " ";
                     }
                     else
                     {
@@ -3974,17 +3974,17 @@ namespace ngraph
 
                     // prepare arguments
                     std::vector<std::string> sargs;
-                    for (auto& input : op_node->get_inputs())
+                    for (auto input : op_node->get_node_inputs())
                     {
                         // args are expected to be in a map already
                         sargs.push_back(
-                            loop_symbol_table.at(get_goe_input_output(&input.get_output())));
+                            loop_symbol_table.at(get_goe_input_output(input.get_source_output())));
                     }
 
                     if (std::dynamic_pointer_cast<ngraph::op::Relu>(op_node))
                     {
                         auto casted_zero = std::string("static_cast<") +
-                                           op->get_element_type().c_type_string() +
+                                           op.get_element_type().c_type_string() +
                                            std::string(">(0)");
                         sargs.push_back(casted_zero);
                     }

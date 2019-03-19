@@ -39,6 +39,8 @@
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/node_input.hpp"
+#include "ngraph/node_output.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"
 #include "ngraph/op/add.hpp"
@@ -626,7 +628,7 @@ using namespace ngraph::runtime;
             if (c)
             {
                 m_active_constants.push_back(node);
-                shared_ptr<descriptor::Tensor> tv = node->get_outputs()[0].get_tensor_ptr();
+                shared_ptr<descriptor::Tensor> tv = node->get_output_tensor_ptr(0);
                 string type = tv->get_element_type().c_type_string();
                 writer << "static " << type << "* " << tv->get_name() << " = ((" << type << "*)("
                        << c->get_data_ptr() << "));\n";
@@ -674,7 +676,7 @@ using namespace ngraph::runtime;
         {
             if (dynamic_cast<ngraph::op::Constant*>(node.get()))
             {
-                shared_ptr<descriptor::Tensor> tv = node->get_outputs()[0].get_tensor_ptr();
+                shared_ptr<descriptor::Tensor> tv = node->get_output_tensor_ptr(0);
                 constants.insert(tv.get());
             }
         }
@@ -700,9 +702,9 @@ using namespace ngraph::runtime;
         {
             if (!node->is_parameter() && !node->is_constant())
             {
-                for (const descriptor::Input& input : node->get_inputs())
+                for (NodeInput input : node->get_node_inputs())
                 {
-                    const descriptor::Output& output = input.get_output();
+                    NodeOutput output = input.get_source_output();
                     shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
                     tensor_index_map.insert({tv->get_name(), tensor_index++});
                 }
@@ -748,7 +750,7 @@ using namespace ngraph::runtime;
         {
             for (size_t i = 0; i < param->get_output_size(); ++i)
             {
-                auto output_tensor = &param->get_outputs().at(i).get_tensor();
+                auto output_tensor = &param->get_output_tensor(i);
                 param_index_map[output_tensor->get_name()] = arg_index;
                 auto tensor_set = get_tensor_set(output_tensor);
 
@@ -817,15 +819,15 @@ using namespace ngraph::runtime;
             vector<TensorViewWrapper> in;
             vector<string> node_input_names;
             vector<string> node_output_names;
-            for (const descriptor::Input& input : node->get_inputs())
+            for (NodeInput input : node->get_node_inputs())
             {
-                const descriptor::Output& output = input.get_output();
+                NodeOutput output = input.get_source_output();
                 shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
                 in.push_back(TensorViewWrapper(tv, m_variable_name_map[tv->get_name()]));
                 node_input_names.emplace_back(tv->get_name());
             }
             vector<TensorViewWrapper> out;
-            for (const descriptor::Output& output : node->get_outputs())
+            for (NodeOutput output : node->get_node_outputs())
             {
                 shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
                 out.push_back(TensorViewWrapper(tv, m_variable_name_map[tv->get_name()]));
@@ -876,9 +878,9 @@ using namespace ngraph::runtime;
             if (!node->is_parameter() && !node->is_constant())
             {
                 writer << "if (ctx->first_iteration ";
-                for (const descriptor::Input& input : node->get_inputs())
+                for (NodeInput input : node->get_node_inputs())
                 {
-                    const descriptor::Output& output = input.get_output();
+                    NodeOutput output = input.get_source_output();
                     shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
                     auto input_name = tv->get_name();
 
@@ -1267,7 +1269,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
     {
         for (size_t i = 0; i < param->get_output_size(); ++i)
         {
-            auto output_tensor = &param->get_outputs().at(i).get_tensor();
+            auto output_tensor = &param->get_output_tensor(i);
             auto tensor_set = get_tensor_set(output_tensor);
 
             auto& stale = tensor_stale[output_tensor->get_name()];
@@ -1313,9 +1315,9 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         }
         vector<TensorViewWrapper> in;
         vector<string> in_names;
-        for (const descriptor::Input& input : node->get_inputs())
+        for (NodeInput input : node->get_node_inputs())
         {
-            const descriptor::Output& output = input.get_output();
+            NodeOutput output = input.get_source_output();
             shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
             in.push_back(TensorViewWrapper(tv, tv->get_name()));
             in_names.push_back(tv->get_name());
@@ -1323,7 +1325,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         vector<TensorViewWrapper> out;
         vector<string> out_names;
 
-        for (const descriptor::Output& output : node->get_outputs())
+        for (NodeOutput output : node->get_node_outputs())
         {
             shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
             out.push_back(TensorViewWrapper(tv, tv->get_name()));
@@ -1445,16 +1447,16 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             {
                 continue;
             }
-            for (const descriptor::Input& input : node->get_inputs())
+            for (NodeInput input : node->get_node_inputs())
             {
-                const descriptor::Output& output = input.get_output();
+                NodeOutput output = input.get_source_output();
                 shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
                 temp << &tensor_data[tv->get_name()];
                 node_inputs.push_back(tv->get_name() + "(" + temp.str() + ")");
                 temp.str("");
             }
 
-            for (const descriptor::Output& output : node->get_outputs())
+            for (NodeOutput output : node->get_node_outputs())
             {
                 shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
                 temp << &tensor_data[tv->get_name()];
@@ -1838,7 +1840,7 @@ bool runtime::cpu::CPU_ExternalFunction::is_functionally_identical(
     return node_cache.at(&n1) == node_cache.at(&n2);
 }
 
-string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(const Node& node,
+string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(Node& node,
                                                                const string& function_name)
 {
     CodeWriter writer;
@@ -1854,9 +1856,9 @@ string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(const Node& node,
     vector<TensorViewWrapper> in;
     size_t arg_index = 0;
     set<string> arg_names;
-    for (const descriptor::Input& input : node.get_inputs())
+    for (NodeInput input : node.get_node_inputs())
     {
-        const descriptor::Output& output = input.get_output();
+        NodeOutput output = input.get_source_output();
         shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
         TensorViewWrapper tvw{tv, "_arg" + to_string(arg_index)};
         if (arg_names.find(tvw.get_name()) == arg_names.end())
@@ -1872,7 +1874,7 @@ string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(const Node& node,
         in.push_back(tvw);
     }
     vector<TensorViewWrapper> out;
-    for (const descriptor::Output& output : node.get_outputs())
+    for (NodeOutput output : node.get_node_outputs())
     {
         shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
         TensorViewWrapper tvw{tv, "_out" + to_string(arg_index)};

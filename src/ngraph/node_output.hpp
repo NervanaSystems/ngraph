@@ -59,6 +59,13 @@ namespace ngraph
             return m_node->get_output_partial_shape(m_index);
         }
 
+        /// \return A shared pointer to the tensor descriptor for the output refererd to by this
+        ///         output handle.
+        std::shared_ptr<descriptor::Tensor> get_tensor_ptr() const
+        {
+            return m_node->get_output_tensor_ptr(m_index);
+        }
+
         /// \return A set containing handles for all inputs targeted by the output referenced by
         ///        this output handle.
         std::set<NodeInput> get_target_inputs() const;
@@ -93,7 +100,7 @@ namespace ngraph
         }
 
     private:
-        const std::shared_ptr<Node> m_node;
-        const size_t m_index;
+        std::shared_ptr<Node> m_node;
+        size_t m_index;
     };
 } // namespace ngraph

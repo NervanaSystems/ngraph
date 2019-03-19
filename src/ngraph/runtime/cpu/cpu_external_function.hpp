@@ -200,7 +200,7 @@ namespace ngraph
                     const Node&,
                     const Node&,
                     const std::unordered_map<const Node*, std::string>& node_cache);
-                std::string emit_op_as_function(const Node&, const std::string& function_name);
+                std::string emit_op_as_function(Node&, const std::string& function_name);
                 std::string strip_comments(const std::string&);
 
                 std::unique_ptr<codegen::Compiler> m_compiler;

@@ -202,7 +202,7 @@ namespace ngraph
                     auto& arg4_tensor = external_function->get_tensor_data(args[4].get_name());
                     auto& arg5_tensor = external_function->get_tensor_data(args[5].get_name());
                     auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
-                    size_t arg3_size = node->get_inputs()[3].get_tensor().size();
+                    size_t arg3_size = node->get_input_tensor(3).size();
 
                     auto scales_size = shape_size(args[4].get_shape());
                     auto sum_scales_size = shape_size(args[5].get_shape());
@@ -296,7 +296,7 @@ namespace ngraph
                     auto& arg4_tensor = external_function->get_tensor_data(args[4].get_name());
                     auto& arg5_tensor = external_function->get_tensor_data(args[5].get_name());
                     auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
-                    size_t arg3_size = node->get_inputs()[3].get_tensor().size();
+                    size_t arg3_size = node->get_input_tensor(3).size();
 
                     auto scales_size = shape_size(args[4].get_shape());
                     auto sum_scales_size = shape_size(args[5].get_shape());

@@ -504,6 +504,11 @@ void Node::validate_and_infer_elementwise_logical()
     set_output_type(0, element::boolean, args_pshape);
 }
 
+void Node::replace_input_source_output(size_t input_index, const NodeOutput& source_output)
+{
+    replace_input_source_output(input_index, source_output.get_node(), source_output.get_index());
+}
+
 void Node::replace_input_source_output(size_t input_index,
                                        const std::shared_ptr<Node>& src_node,
                                        size_t output_index)

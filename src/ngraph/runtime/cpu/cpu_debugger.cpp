@@ -149,7 +149,7 @@ bool runtime::cpu::CPU_Debugger::add_tracepoint(
 
         auto op_name = op->get_name();
         std::vector<void**> poutputs;
-        for (size_t i = 0; i < op->get_outputs().size(); i++)
+        for (size_t i = 0; i < op->get_output_size(); i++)
         {
             poutputs.push_back(&external_function->get_tensor_data(op_name + "_" + to_string(i)));
         }

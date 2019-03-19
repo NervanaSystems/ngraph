@@ -27,6 +27,8 @@
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/node_input.hpp"
+#include "ngraph/node_output.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
@@ -94,9 +96,9 @@ static shared_ptr<Node>
                            to_string(node->get_input_size()) + ")");
     }
 
-    for (const descriptor::Input& input : node->get_inputs())
+    for (NodeInput input : node->get_node_inputs())
     {
-        const auto& output = input.get_output();
+        NodeOutput output = input.get_source_output();
         auto tv = output.get_tensor_ptr();
         auto tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_layout());
         if (!tvl)
@@ -186,9 +188,9 @@ static void set_native_layouts(runtime::cpu::CPU_ExternalFunction* external_func
     std::vector<shared_ptr<Node>> new_args;
     bool replace_node = false;
     uint32_t index = 0;
-    for (descriptor::Input& input : node->get_inputs())
+    for (NodeInput input : node->get_node_inputs())
     {
-        const auto& output = input.get_output();
+        NodeOutput output = input.get_source_output();
         auto tv = output.get_tensor_ptr();
         auto et = tv->get_element_type();
         auto shape = tv->get_shape();
@@ -212,7 +214,7 @@ static void set_native_layouts(runtime::cpu::CPU_ExternalFunction* external_func
                 }
                 else
                 {
-                    input.replace_output(new_node->get_outputs().at(0));
+                    input.replace_source_output(NodeOutput(new_node, 0));
                 }
                 NGRAPH_DEBUG << "Inserted conversion node " << new_node->get_name() << " between "
                              << output.get_node()->get_name()
@@ -1581,7 +1583,7 @@ namespace ngraph
                 {
                     auto result = static_cast<const ngraph::op::Result*>(node.get());
                     auto cpu_tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(
-                        node->get_inputs()[0].get_output().get_tensor_ptr()->get_tensor_layout());
+                        node->get_input_source_output(0).get_tensor_ptr()->get_tensor_layout());
 
                     if (result->needs_default_layout() || !cpu_tvl->is_mkldnn_layout() ||
                         cpu_tvl->get_size() * cpu_tvl->get_element_type().size() !=
@@ -1692,7 +1694,7 @@ namespace ngraph
                     bool skip_input_reorder = false;
 
                     auto tvl =
-                        node->get_inputs()[0].get_output().get_tensor_ptr()->get_tensor_layout();
+                        node->get_input_source_output(0).get_tensor_ptr()->get_tensor_layout();
                     auto cpu_tvl = dynamic_cast<runtime::cpu::LayoutDescriptor*>(tvl.get());
                     if (cpu_tvl && cpu_tvl->is_mkldnn_layout())
                     {

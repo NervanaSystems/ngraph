@@ -50,6 +50,8 @@
 
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/node_input.hpp"
+#include "ngraph/node_output.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/slice.hpp"
@@ -102,7 +104,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
             AxisVector axis_list = ngraph::get_default_order(shape);
 
             auto index = 0;
-            for (descriptor::Input& input : concat->get_inputs())
+            for (NodeInput input : concat->get_node_inputs())
             {
                 // no tensors with zero-sized dimensions after zero_dim_tensor_elimination
                 NGRAPH_ASSERT(shape_size(input.get_shape()) != 0);
@@ -118,7 +120,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                     break;
                 }
 
-                const auto& output = input.get_output();
+                NodeOutput output = input.get_source_output();
                 auto arg = output.get_node();
                 if (arg->is_constant() || arg->is_parameter())
                 {
@@ -147,13 +149,13 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                     }
                 }
 
-                if (output.get_inputs().size() != 1)
+                if (output.get_target_inputs().size() != 1)
                 {
                     // check if we can do in place concat
                     auto concat_count = 0;
-                    for (auto output_input : output.get_inputs())
+                    for (auto output_input : output.get_target_inputs())
                     {
-                        auto user = output_input->get_node();
+                        auto user = output_input.get_node();
                         if (user->description() == "Concat")
                         {
                             concat_count++;
@@ -294,7 +296,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
 
             // If input layout is in non-native layout, we need more complicated checks for
             // slice contiguity. Bail out for now.
-            auto input_tensor = slice->get_inputs().at(0).get_output().get_tensor_ptr();
+            auto input_tensor = slice->get_input_source_output(0).get_tensor_ptr();
             auto native_md = mkldnn_utils::create_blocked_mkldnn_md(
                 in_shape,
                 input_tensor->get_tensor_layout()->get_strides(),
