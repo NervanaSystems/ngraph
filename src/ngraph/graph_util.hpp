@@ -319,6 +319,6 @@ namespace ngraph
         const std::string& filename,
         std::function<void(const Node& node, std::vector<std::string>& attributes)> = nullptr);
 
-    std::set<NodeInput> get_node_inputs_from(Node& src, Node& dst);
-    std::set<NodeOutput> get_node_outputs_to(Node& src, Node& dst);
+    std::vector<NodeInput> get_node_inputs_from(Node& src, Node& dst);
+    std::vector<NodeOutput> get_node_outputs_to(Node& src, Node& dst);
 }

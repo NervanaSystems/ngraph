@@ -540,25 +540,25 @@ void Node::remove_output_target_input(size_t output_index, const NodeInput& targ
         .remove_input(&(target_input.get_node()->m_inputs.at(target_input.get_index())));
 }
 
-std::set<NodeInput> Node::get_node_inputs()
+std::vector<NodeInput> Node::get_node_inputs()
 {
-    std::set<NodeInput> result;
+    std::vector<NodeInput> result;
 
     for (size_t i = 0; i < get_input_size(); i++)
     {
-        result.emplace(this, i);
+        result.emplace_back(this, i);
     }
 
     return result;
 }
 
-std::set<NodeOutput> Node::get_node_outputs()
+std::vector<NodeOutput> Node::get_node_outputs()
 {
-    std::set<NodeOutput> result;
+    std::vector<NodeOutput> result;
 
     for (size_t i = 0; i < get_output_size(); i++)
     {
-        result.emplace(shared_from_this(), i);
+        result.emplace_back(shared_from_this(), i);
     }
 
     return result;

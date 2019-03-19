@@ -287,8 +287,8 @@ namespace ngraph
                                          size_t output_index);
         std::set<NodeInput> get_output_target_inputs(size_t output_index) const;
         void remove_output_target_input(size_t output_index, const NodeInput& target_input);
-        std::set<NodeInput> get_node_inputs();
-        std::set<NodeOutput> get_node_outputs();
+        std::vector<NodeInput> get_node_inputs();
+        std::vector<NodeOutput> get_node_outputs();
 
     protected:
         void set_output_size(size_t n);

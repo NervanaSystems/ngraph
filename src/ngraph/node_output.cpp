@@ -14,8 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/node_input.hpp"
 #include "ngraph/node_output.hpp"
+#include "ngraph/node_input.hpp"
 
 using namespace ngraph;
 

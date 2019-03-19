@@ -55,11 +55,11 @@ namespace ngraph
         /// \return A handle to the output that is connected to this input.
         NodeOutput get_source_output() const;
 
-        /// \brief Replaces the source output of this node.
+        /// \brief Replaces the source output of this input.
         /// \param new_source_output A handle for the output that will replace this input's source.
         void replace_source_output(const NodeOutput& new_source_output) const;
 
-        /// \brief Replaces the source output of this node.
+        /// \brief Replaces the source output of this input.
         /// \param new_source_node The node for the output that will replace this input's source.
         /// \param output_index The index of the output that will replace this input's source.
         void replace_source_output(const std::shared_ptr<Node>& new_source_node,
