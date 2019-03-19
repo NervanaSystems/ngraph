@@ -181,7 +181,8 @@ and easier upgrade of hardware.
 
 This documentation provides technical details of nGraph's core functionality, framework 
 and backend integrations. Creating a compiler stack like nGraph and PlaidML 
-requires expert knowledge, and we hope nGraph and PlaidML will lift burden for 
+requires expert knowledge, and we hope nGraph and PlaidML will lift the burden 
+for:
 
 #. Framework owners looking to support new hardware and custom chips.
 #. Data scientists and ML developers wishing to accelerate deep learning 
