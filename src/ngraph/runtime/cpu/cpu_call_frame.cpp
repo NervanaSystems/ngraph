@@ -17,7 +17,6 @@
 #include <algorithm>
 
 #include "ngraph/runtime/aligned_buffer.hpp"
-#include "ngraph/runtime/cpu/cpu_aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
@@ -146,6 +145,7 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
     size_t alignment = runtime::cpu::CPU_ExternalFunction::s_memory_pool_alignment;
 
     ngraph::runtime::cpu::CPUAllocator* allocator = nullptr;
+    ngraph::runtime::Allocator* _allocator = nullptr;
     if (m_framework_allocator && m_framework_deallocator)
     {
         auto fw_allocator =
@@ -160,7 +160,7 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
 
     for (auto buffer_size : m_external_function->get_memory_buffer_sizes())
     {
-        auto buffer = new CPUAlignedBuffer(buffer_size, alignment, allocator);
+        auto buffer = new AlignedBuffer(buffer_size, alignment, _allocator);
         ctx->memory_buffers.push_back(buffer);
     }
     const auto& mkldnn_emitter = m_external_function->get_mkldnn_emitter();
