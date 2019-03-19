@@ -77,13 +77,6 @@ bool valid_self_concat(const std::shared_ptr<Node>& Op)
         return false;
     }
 
-    if (!check_concat_has_no_fan_out(Op))
-    {
-        NGRAPH_DEBUG << "Self concat has fan out";                         // TODO
-        std::cout << "NGRAPH_DEBUG: Self concat has fan out" << std::endl; // TODO
-        return false;
-    }
-
     return true;
 }
 
@@ -122,7 +115,8 @@ void ngraph::pass::SelfConcatFusion::update_concat_pattern_vectors(
         auto last_op_in_pattern_vec = concat_pattern_vec.first.back();
         std::cout << "NGRAPH_DEBUG: " << concat_op->get_name() << " trying to match source "
                   << last_op_in_pattern_vec->get_name() << std::endl;
-        if (concat_op->get_argument(0) == last_op_in_pattern_vec)
+        if ((concat_op->get_argument(0) == last_op_in_pattern_vec) &&
+            (check_concat_has_no_fan_out(last_op_in_pattern_vec)))
         {
             std::cout << "MATCHED SOURCE " << concat_op->get_name() << " and "
                       << last_op_in_pattern_vec->get_name() << std::endl;

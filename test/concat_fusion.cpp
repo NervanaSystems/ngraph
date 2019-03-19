@@ -48,12 +48,51 @@
 using namespace ngraph;
 using namespace std;
 
+TEST(concat_fusion, single_branch)
+{
+    Shape shape_a{128, 2048, 1, 1};
+    auto generate_func = [shape_a]() {
+        auto A = make_shared<op::Parameter>(element::f32, shape_a);
+
+        auto concat_1 = make_shared<op::Concat>(NodeVector{A}, 2);
+        auto concat_2 = make_shared<op::Concat>(NodeVector{concat_1}, 2);
+        auto concat_3 = make_shared<op::Concat>(
+            NodeVector{concat_2, concat_2, concat_2, concat_2, concat_2, concat_2, concat_2}, 2);
+        auto concat_4 = make_shared<op::Concat>(
+            NodeVector{concat_3, concat_3, concat_3, concat_3, concat_3, concat_3, concat_3}, 3);
+        auto f_concat_1 = make_shared<Function>(NodeVector{concat_4}, ParameterVector{A});
+        return f_concat_1;
+    };
+
+    auto baseline_f = generate_func();
+    auto optimized_f = generate_func();
+    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::VisualizeTree>("before_single_branch.pdf");
+    pass_manager.register_pass<pass::ConcatElimination>();
+    pass_manager.register_pass<pass::SelfConcatFusion>();
+    pass_manager.register_pass<pass::VisualizeTree>("after_single_branch.pdf");
+    pass_manager.run_passes(optimized_f);
+
+    test::Uniform<float> rng(0.0f, 100.0f);
+    vector<vector<float>> args;
+    vector<float> tensor_val(shape_size(baseline_input_shape));
+    rng.initialize(tensor_val);
+    args.push_back(tensor_val);
+
+    auto baseline_results = execute(baseline_f, args, "CPU");
+    auto optimized_results = execute(optimized_f, args, "CPU");
+
+    EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
+}
+
 TEST(concat_fusion, multiple_branches_1)
 {
     Shape shape_a{128, 2048, 1, 1};
     auto generate_func = [shape_a]() {
         auto A = make_shared<op::Parameter>(element::f32, shape_a);
-        // Function 0
+
         auto concat_1 = make_shared<op::Concat>(NodeVector{A}, 2);
         auto concat_2 = make_shared<op::Concat>(NodeVector{concat_1}, 2);
         auto concat_3 = make_shared<op::Concat>(
@@ -134,7 +173,7 @@ TEST(concat_fusion, non_fusable_self_concat)
     auto generate_func = [shape_a, shape_b]() {
         auto A = make_shared<op::Parameter>(element::f32, shape_a);
         auto B = make_shared<op::Parameter>(element::f32, shape_b);
-        // Function 0
+
         auto concat_1 = make_shared<op::Concat>(NodeVector{A, A, A, A}, 1);
         auto concat_2 = make_shared<op::Concat>(
             NodeVector{concat_1, concat_1, concat_1, concat_1, concat_1, concat_1, concat_1}, 2);
@@ -145,8 +184,7 @@ TEST(concat_fusion, non_fusable_self_concat)
         auto concat_6 = make_shared<op::Concat>(NodeVector{concat_5, concat_5, concat_5}, 2);
         auto broadcast = make_shared<op::Broadcast>(concat_6, Shape{128, 8, 7, 3}, AxisSet{1});
         auto add = make_shared<op::Add>(concat_4, broadcast);
-        auto f_concat_1 =
-            make_shared<Function>(NodeVector{add}, ParameterVector{A, B});
+        auto f_concat_1 = make_shared<Function>(NodeVector{add}, ParameterVector{A, B});
         return f_concat_1;
     };
 
@@ -160,6 +198,55 @@ TEST(concat_fusion, non_fusable_self_concat)
     pass_manager.register_pass<pass::ConcatElimination>();
     pass_manager.register_pass<pass::SelfConcatFusion>();
     pass_manager.register_pass<pass::VisualizeTree>("after_non_fusable_self_concat.pdf");
+    pass_manager.run_passes(optimized_f);
+
+    test::Uniform<float> rng(0.0f, 100.0f);
+    vector<vector<float>> args;
+    vector<float> tensor_val_1(shape_size(baseline_input_shape_1));
+    vector<float> tensor_val_2(shape_size(baseline_input_shape_2));
+    rng.initialize(tensor_val_1);
+    rng.initialize(tensor_val_2);
+    args.push_back(tensor_val_1);
+    args.push_back(tensor_val_2);
+
+    auto baseline_results = execute(baseline_f, args, "CPU");
+    auto optimized_results = execute(optimized_f, args, "CPU");
+
+    EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
+}
+
+TEST(concat_fusion, self_concat_with_fan_out)
+{
+    Shape shape_a{8, 1, 1, 1};
+    Shape shape_b{8, 4, 1, 1};
+    auto generate_func = [shape_a, shape_b]() {
+        auto A = make_shared<op::Parameter>(element::f32, shape_a);
+        auto B = make_shared<op::Parameter>(element::f32, shape_b);
+
+        auto concat_1 = make_shared<op::Concat>(NodeVector{A, A, A, A, A, A, A}, 2);
+        auto concat_2 =
+            make_shared<op::Concat>(NodeVector{concat_1, concat_1, concat_1, concat_1}, 1);
+        auto concat_3 =
+            make_shared<op::Concat>(NodeVector{concat_2, concat_2, concat_2, concat_2}, 3);
+
+        auto concat_4 = make_shared<op::Concat>(NodeVector{B, B, B, B, B, B, B}, 2);
+        auto concat_5 = make_shared<op::Concat>(NodeVector{concat_4, concat_4, concat_4}, 3);
+        auto concat_6 = make_shared<op::Concat>(NodeVector{concat_2, concat_4}, 3);
+        auto f_concat_1 =
+            make_shared<Function>(NodeVector{concat_3, concat_6}, ParameterVector{A, B});
+        return f_concat_1;
+    };
+
+    auto baseline_f = generate_func();
+    auto optimized_f = generate_func();
+    auto baseline_input_shape_1 = baseline_f->get_parameters().at(0)->get_shape();
+    auto baseline_input_shape_2 = baseline_f->get_parameters().at(1)->get_shape();
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::VisualizeTree>("before_self_concat_with_fan_out.pdf");
+    pass_manager.register_pass<pass::ConcatElimination>();
+    pass_manager.register_pass<pass::SelfConcatFusion>();
+    pass_manager.register_pass<pass::VisualizeTree>("after_self_concat_with_fan_out.pdf");
     pass_manager.run_passes(optimized_f);
 
     test::Uniform<float> rng(0.0f, 100.0f);
