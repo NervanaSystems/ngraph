@@ -46,24 +46,37 @@ void op::DynSlice::validate_and_infer_types()
         this, strides_et.compatible(element::Type_t::i64), "Strides must have element type i64");
 
     // check shapes
-    auto arg_rank = get_input_partial_shape(0).rank();
-    auto lower_bounds_rank = get_input_partial_shape(1).rank();
-    auto upper_bounds_rank = get_input_partial_shape(2).rank();
-    auto strides_rank = get_input_partial_shape(3).rank();
+    auto arg_shape = get_input_partial_shape(0);
+    auto lower_bounds_shape = get_input_partial_shape(1);
+    auto upper_bounds_shape = get_input_partial_shape(2);
+    auto strides_shape = get_input_partial_shape(3);
     NODE_VALIDATION_CHECK(this,
-                          lower_bounds_rank.compatible(1),
-                          "Lower bounds must have rank 1, got ",
-                          lower_bounds_rank,
+                          lower_bounds_shape.rank().compatible(1),
+                          "Lower bounds shape must have rank 1, got ",
+                          lower_bounds_shape.rank(),
                           ".");
     NODE_VALIDATION_CHECK(this,
-                          upper_bounds_rank.compatible(1),
-                          "Upper bounds must have rank 1, got ",
-                          upper_bounds_rank,
+                          upper_bounds_shape.rank().compatible(1),
+                          "Upper bounds shape must have rank 1, got ",
+                          upper_bounds_shape.rank(),
                           ".");
-    NODE_VALIDATION_CHECK(
-        this, strides_rank.compatible(1), "Strides must have rank 1, got ", strides_rank, ".");
+    NODE_VALIDATION_CHECK(this,
+                          strides_shape.rank().compatible(1),
+                          "Strides shape must have rank 1, got ",
+                          strides_shape.rank(),
+                          ".");
 
-    set_output_type(0, get_input_element_type(0), PartialShape::dynamic(arg_rank));
+    NODE_VALIDATION_CHECK(this,
+                          lower_bounds_shape.compatible(PartialShape{arg_shape.rank()}),
+                          "Lower bounds must have shape [n], where n is the rank of arg.");
+    NODE_VALIDATION_CHECK(this,
+                          upper_bounds_shape.compatible(PartialShape{arg_shape.rank()}),
+                          "Upper bounds must have shape [n], where n is the rank of arg.");
+    NODE_VALIDATION_CHECK(this,
+                          strides_shape.compatible(PartialShape{arg_shape.rank()}),
+                          "Strides shape must have shape [n], where n is the rank of arg.");
+
+    set_output_type(0, get_input_element_type(0), PartialShape::dynamic(arg_shape.rank()));
 }
 
 shared_ptr<Node> op::DynSlice::copy_with_new_args(const NodeVector& new_args) const
