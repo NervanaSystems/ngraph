@@ -52,7 +52,6 @@ bool check_concat_has_no_fan_out(const std::shared_ptr<Node>& op)
 {
     auto users = op->get_users();
     std::set<std::shared_ptr<Node>> user_set(users.begin(), users.end());
-    // std::cout << op->get_name() << " : " << users.size() << " : " << user_set.size() << std::endl;
     size_t num_unique_users = user_set.size();
     return (num_unique_users == 1);
 }
@@ -236,7 +235,7 @@ bool ngraph::pass::SelfConcatFusion::run_on_function(std::shared_ptr<Function> f
         }
     }
 
-    // Remove the elements of concat_vetors with size = 1; 
+    // Remove the elements of concat_vetors with size = 1;
     // Only fuse concats when there are more than 1 self concats in a row
     remove_single_concat_op_pattern();
 
