@@ -47,7 +47,7 @@ it's also possible to extract context semantics that make it much easier to
 work with many of the new and emerging problems in Deep Learning including 
 larger datasets, data that must be encrypted, and data-in-motion. Our solution 
 also addresses the scalability issue with kernel libraries, the current 
-popular solution to accelerating deep learning performance. O
+popular solution to accelerating deep learning performance. 
 
 
 Motivations
@@ -68,14 +68,14 @@ However, kernel libraries have three main problems:
 
 The nGraph Compiler stack is designed to address the first two problems. nGraph 
 applies graph-level optimizations by taking the computational graph from a deep 
-learning framework like TensorFlow* and reconstructing it with the nGraph 
+learning framework like TensorFlow\* and reconstructing it with the nGraph 
 :abbr:`Intermediate Representation (IR)`. The nGraph IR centralizes computational 
 graphs from various frameworks and provides a unified way to connect backends 
-for targeted hardware. From here, PlaidML or one of the nGraph custom 
-transformers can generate code various forms including LLVM, OpenCL, OpenGL, 
-Cuda and Metal. This generated code is where the low-level optimizations 
-are automatically applied.  The result is a more efficient execution that does 
-not require any manual kernel integration work for most hardware targets. 
+for targeted hardware. From here, PlaidML or one of the nGraph transformers can 
+generate code in various forms, including LLVM, OpenCL, OpenGL, Cuda and Metal. 
+This generated code is where the low-level optimizations are automatically 
+applied.  The result is a more efficient execution that does not require any 
+manual kernel integration work for most hardware targets. 
 
 What follows here is more detail about how our solution addresses these 
 problems. 
@@ -96,13 +96,13 @@ optimal:
    :alt: 
 
 The following computation is constructed to execute ``(A+B)*C``, but in the 
-context of nGraph, we can further optimize the graph to be represented as A*C. 
-From the first graph shown on the left, the operation on the constant B be 
-can be computed at the compile time (known as constant folding), and the 
-graph can be further simplified to the one on the right because the constant 
-has value of zero. Without such graph-level optimizations, a deep learning 
-framework with a kernel library will compute all operations, and the resulting 
-execution will be sub-optimal. 
+context of nGraph, we can further optimize the graph to be represented as ``A*C``. 
+From the first graph shown on the left, the operation on the constant ``B`` can 
+be computed at the compile time (known as constant folding), and the graph can 
+be further simplified to the one on the right because the constant has value of 
+zero. Without such graph-level optimizations, a deep learning framework with a 
+kernel library will compute all operations, and the resulting execution will be 
+sub-optimal. 
 
 
 Problem: Reduced scalability 
@@ -183,12 +183,11 @@ This documentation provides technical details of nGraph's core functionality, fr
 and backend integrations. Creating a compiler stack like nGraph and PlaidML 
 requires expert knowledge, and we hope nGraph and PlaidML will lift burden for 
 
-1. Framework owners looking to support new hardware and custom chips.
-2. Data scientists and ML developers wishing to accelerate deep learning performance.
-3. New DL accelerator developers creating an end-to-end software stack from a deep 
+#. Framework owners looking to support new hardware and custom chips.
+#. Data scientists and ML developers wishing to accelerate deep learning 
+   performance.
+#. New DL accelerator developers creating an end-to-end software stack from a deep 
    learning framework to their silicon.  
-
-
 
 
 .. _more transistors on denser and denser circuits: https://www.intel.com/content/www/us/en/silicon-innovations/moores-law-technology.html
