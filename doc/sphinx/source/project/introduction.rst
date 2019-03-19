@@ -173,7 +173,7 @@ fundamental efficiencies behind Moore's Law are not dead; rather than fitting
 `more transistors on denser and denser circuits`_, we're enabling advances 
 in compute with more transformers on denser and more data-heavy 
 :abbr:`Deep Learning Networks (DNNs)`, and making it easier to apply advances in 
-:abbr:`Machine Learning (ML)` to different of industries and problems. 
+:abbr:`Machine Learning (ML)` to different industries and problems. 
 
 For developers with a network already in place, using the nGraph Compiler stack 
 can further accelerate a network and allows for a quicker adaptation of models 
