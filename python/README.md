@@ -8,7 +8,7 @@ Processors (Intel® Nervana™ NNPs), while also unlocking a massive performance
 boost on any existing hardware targets in your neural network: both GPUs 
 and CPUs. Using its flexible infrastructure, you will find it becomes 
 much easier to create Deep Learning (DL) models that can adhere to the 
-"write once, run anywhere" mantra that enable your AI solutions to easily
+"write once, run anywhere" mantra that enables your AI solutions to easily
 go from concept to production to scale.
 
 Frameworks using nGraph to execute workloads have shown [up to 45X] performance 
