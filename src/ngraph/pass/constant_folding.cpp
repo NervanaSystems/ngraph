@@ -32,6 +32,7 @@
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
@@ -48,6 +49,7 @@
 #include "ngraph/runtime/reference/quantize.hpp"
 #include "ngraph/runtime/reference/relu.hpp"
 #include "ngraph/runtime/reference/reshape.hpp"
+#include "ngraph/runtime/reference/sqrt.hpp"
 #include "ngraph/runtime/reference/subtract.hpp"
 
 using namespace std;
@@ -385,7 +387,7 @@ void pass::ConstantFolding::construct_constant_binary()
 bool is_supported_unary_op(std::shared_ptr<Node> n)
 {
     return std::dynamic_pointer_cast<op::Abs>(n) || std::dynamic_pointer_cast<op::Negative>(n) ||
-           std::dynamic_pointer_cast<op::Relu>(n);
+           std::dynamic_pointer_cast<op::Relu>(n) || std::dynamic_pointer_cast<op::Sqrt>(n);
 }
 
 template <class T>
@@ -408,6 +410,16 @@ shared_ptr<op::Constant> make_constant_unary(shared_ptr<op::Constant> constant,
     else if (std::dynamic_pointer_cast<op::Relu>(unary))
     {
         runtime::reference::relu<T>(
+            constant->get_vector<T>().data(), out_vec.data(), shape_size(out_shape));
+    }
+    else if (std::dynamic_pointer_cast<op::Sqrt>(unary))
+    {
+        std::vector<T> values{constant->get_vector<T>()};
+        if (std::any_of(values.begin(), values.end(), [](T i) { return i < 0; }))
+        {
+            throw ngraph_error("Square root of negative value");
+        }
+        runtime::reference::sqrt<T>(
             constant->get_vector<T>().data(), out_vec.data(), shape_size(out_shape));
     }
     else

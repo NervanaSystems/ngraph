@@ -264,48 +264,6 @@ NGRAPH_TEST(${BACKEND_NAME}, divide_by_zero_float32)
                              std::numeric_limits<float>::infinity()}),
               read_vector<float>(result));
 }
-#ifdef NGRAPH_DISTRIBUTED_ENABLE
-NGRAPH_TEST(${BACKEND_NAME}, DISABLED_divide_by_zero_int32)
-#else
-NGRAPH_TEST(${BACKEND_NAME}, divide_by_zero_int32)
-#endif
-{
-    Shape shape{2, 2};
-
-    auto A = make_shared<op::Parameter>(element::i32, shape);
-    auto B = make_shared<op::Parameter>(element::i32, shape);
-    auto f = make_shared<Function>(make_shared<op::Divide>(A, B), ParameterVector{A, B});
-
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::i32, shape);
-    copy_data(a, vector<int>{2, 4, 8, 16});
-    auto b = backend->create_tensor(element::i32, shape);
-    copy_data(b, vector<int>{0, 0, 0, 0});
-    auto result = backend->create_tensor(element::i32, shape);
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wused-but-marked-unused"
-#pragma clang diagnostic ignored "-Wcovered-switch-default"
-
-    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-    EXPECT_DEATH_IF_SUPPORTED(
-        {
-            try
-            {
-                auto handle = backend->compile(f);
-                handle->call_with_validate({result}, {a, b});
-            }
-            catch (...)
-            {
-                abort();
-            }
-        },
-        "");
-
-#pragma clang diagnostic pop
-}
 
 NGRAPH_TEST(${BACKEND_NAME}, maximum)
 {
