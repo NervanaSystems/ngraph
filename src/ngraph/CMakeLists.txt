@@ -128,6 +128,8 @@ set (SRC
     op/equal.hpp
     op/exp.cpp
     op/exp.hpp
+    op/experimental/dyn_pad.cpp
+    op/experimental/dyn_pad.hpp
     op/experimental/generate_mask.cpp
     op/experimental/generate_mask.hpp
     op/experimental/quantized_avg_pool.cpp
@@ -150,6 +152,7 @@ set (SRC
     op/experimental/quantized_dot_bias.hpp
     op/experimental/transpose.cpp
     op/experimental/transpose.hpp
+    
     op/floor.cpp
     op/floor.hpp
     op/get_output_element.cpp

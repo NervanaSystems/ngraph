@@ -47,6 +47,7 @@
 #include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/dyn_pad.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
@@ -745,6 +746,11 @@ static shared_ptr<ngraph::Function>
                     size_t reduction_axes_count = obj.get<size_t>();
                     node = make_shared<op::Dot>(args[0], args[1], reduction_axes_count);
                 }
+                break;
+            }
+            case OP_TYPEID::DynPad:
+            {
+                node = make_shared<op::DynPad>(args[0], args[1], args[2]);
                 break;
             }
             case OP_TYPEID::EmbeddingLookup:
@@ -1488,6 +1494,8 @@ static json write(const Node& n, bool binary_constant_data)
         break;
     }
     case OP_TYPEID::EmbeddingLookup: { break;
+    }
+    case OP_TYPEID::DynPad: { break;
     }
     case OP_TYPEID::Equal: { break;
     }

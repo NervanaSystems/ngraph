@@ -88,6 +88,7 @@
 #include "ngraph/runtime/reference/embedding_lookup.hpp"
 #include "ngraph/runtime/reference/equal.hpp"
 #include "ngraph/runtime/reference/exp.hpp"
+#include "ngraph/op/experimental/dyn_pad.hpp"
 #include "ngraph/runtime/reference/floor.hpp"
 #include "ngraph/runtime/reference/generate_mask.hpp"
 #include "ngraph/runtime/reference/greater.hpp"
@@ -1248,6 +1249,7 @@ private:
             break;
         }
         case OP_TYPEID::Transpose:
+        case OP_TYPEID::DynPad:
         default: throw unsupported_op("Unsupported op '" + node.description() + "'");
 #pragma GCC diagnostic pop
         }

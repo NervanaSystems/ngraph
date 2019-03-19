@@ -2015,6 +2015,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::Transpose:
         case OP_TYPEID::EmbeddingLookup:
         case OP_TYPEID::Passthrough:
+        case OP_TYPEID::DynBroadcast:
         {
             throw unsupported_op("Unsupported op '" + op->description() +
                                  "' in IntelGPU back end.");
