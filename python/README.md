@@ -3,8 +3,8 @@
 [nGraph][ngraph_github] is an open-source graph compiler for Artificial 
 Neural Networks (ANNs). The nGraph Compiler stack provides an inherently 
 efficient graph-based compilation infrastructure designed to be compatible 
-with the many of the upcoming ASICs, like the Intel®
-Nervana™ NNPs), while also unlocking a massive performance 
+with the many of the upcoming ASICs, like the Intel(R) Nervana(TM) Neural Network 
+Processors (Intel(R) Nervana(TM) NNPs), while also unlocking a massive performance 
 boost on any existing hardware targets in your neural network: both GPUs 
 and CPUs. Using its flexible infrastructure, you will find it becomes 
 much easier to create Deep Learning (DL) models that can adhere to the 
@@ -26,8 +26,8 @@ You can also create your own custom framework to integrate directly with the
 ## Installation
 
 nGraph is available as binary wheels you can install from PyPI. nGraph binary 
-wheels are currently tested on Ubuntu 16.04 and require a CPU with Intel® Advanced Vector Extensions 512 (Intel® AVX-512)
-instructions. instructions. For 
+wheels are currently tested on Ubuntu 16.04 and require a CPU with 
+Intel(R) Advanced Vector Extensions 512 (Intel(R) AVX-512) instructions. For 
 other systems, you may want to [build][ngraph_building] from sources.
 
 Installing nGraph Python API from PyPI is easy:
