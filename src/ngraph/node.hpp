@@ -38,21 +38,15 @@
 #include "ngraph/placement.hpp"
 
 // We are working on deprecating the descriptor::Input and descriptor::Output classes. Currently,
-// they are still used extensively by the backends, so we make this deprecation optional while the
-// work is in progress.
-
-// TODO: Get rid of all the preprocessor junk here, once descriptor::Input and descriptor::Output
-// have actually been eliminated.
-
-// Uncomment the following line to enable the deprecation of methods handling descriptor::Input
-// and descriptor::Output.
-// #define NGRAPH_DEPRECATE_INPUT_OUTPUT_CLASSES
-
-#ifdef NGRAPH_DEPRECATE_INPUT_OUTPUT_CLASSES
-#define INPUT_OUTPUT_DEPRECATED __attribute__((deprecated))
-#undef NGRAPH_DEPRECATE_INPUT_OUTPUT_CLASSES
+// they are still used by the backends, so we make this deprecation optional while the work is in
+// progress.
+//
+// Enable the deprecation with -DNGRAPH_DEPRECATE_IO_DESCRIPTORS=ON at cmake time.
+#ifdef NGRAPH_DEPRECATE_IO_DESCRIPTORS
+#define INPUT_OUTPUT_DESCRIPTOR_DEPRECATED __attribute__((deprecated))
+#undef NGRAPH_DEPRECATE_IO_DESCRIPTORS
 #else
-#define INPUT_OUTPUT_DEPRECATED
+#define INPUT_OUTPUT_DESCRIPTOR_DEPRECATED
 #endif
 
 namespace ngraph
@@ -99,6 +93,8 @@ namespace ngraph
         // So Adjoints can call generate_adjoints
         friend class autodiff::Adjoints;
         friend class descriptor::Input;
+        friend class NodeInput;                         // Temporary for access to m_inputs
+        friend class pass::GetOutputElementElimination; // Temporary for access to m_inputs
         friend void replace_node_users_arguments(std::shared_ptr<Node> target,
                                                  std::shared_ptr<Node> replacement);
         friend std::pair<std::shared_ptr<op::Result>, std::shared_ptr<op::Parameter>>
@@ -174,19 +170,17 @@ namespace ngraph
         virtual std::ostream& write_short_description(std::ostream&) const;
         virtual std::ostream& write_long_description(std::ostream&) const;
 
-        // TODO: Deprecate
-        std::deque<descriptor::Input>& get_inputs() INPUT_OUTPUT_DEPRECATED { return m_inputs; }
-        // TODO: Deprecate
-        const std::deque<descriptor::Input>& get_inputs() const INPUT_OUTPUT_DEPRECATED
+        std::deque<descriptor::Input>& get_inputs() INPUT_OUTPUT_DESCRIPTOR_DEPRECATED
         {
             return m_inputs;
         }
-        // Deprecated
-        // TODO: Remove from unit tests.
-        std::deque<descriptor::Output>& get_outputs() INPUT_OUTPUT_DEPRECATED;
-        // Deprecated
-        // TODO: Remove from unit tests.
-        const std::deque<descriptor::Output>& get_outputs() const INPUT_OUTPUT_DEPRECATED;
+        const std::deque<descriptor::Input>& get_inputs() const INPUT_OUTPUT_DESCRIPTOR_DEPRECATED
+        {
+            return m_inputs;
+        }
+        std::deque<descriptor::Output>& get_outputs() INPUT_OUTPUT_DESCRIPTOR_DEPRECATED;
+        const std::deque<descriptor::Output>&
+            get_outputs() const INPUT_OUTPUT_DESCRIPTOR_DEPRECATED;
 
         /// Get control dependencies registered on the node
         const std::set<std::shared_ptr<Node>>& get_control_dependencies() const;
@@ -230,7 +224,7 @@ namespace ngraph
 
         /// Returns the set of inputs using output i
         const std::set<descriptor::Input*>&
-            get_output_inputs(size_t i) const INPUT_OUTPUT_DEPRECATED;
+            get_output_inputs(size_t i) const INPUT_OUTPUT_DESCRIPTOR_DEPRECATED;
 
         /// Returns the number of inputs for the op
         size_t get_input_size() const;
