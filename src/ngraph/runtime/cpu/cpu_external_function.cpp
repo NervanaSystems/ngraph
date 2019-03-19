@@ -72,6 +72,8 @@
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
+#include "ngraph/op/experimental/quantized_dot.hpp"
+#include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -355,6 +357,8 @@ static const runtime::cpu::OpMap dispatcher{
      &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolutionBiasAdd>},
     {TI(ngraph::op::QuantizedConvolutionBiasSignedAdd),
      &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolutionBiasSignedAdd>},
+    {TI(ngraph::op::QuantizedDotBias), &runtime::cpu::CPU_Emitter::emit<op::QuantizedDotBias>},
+    {TI(ngraph::op::QuantizedDot), &runtime::cpu::CPU_Emitter::emit<op::QuantizedDot>},
     {TI(ngraph::op::ConvolutionRelu), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionRelu>},
     {TI(ngraph::op::QuantizedConvolution),
      &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolution>},
@@ -678,16 +682,11 @@ using namespace ngraph::runtime;
         }
 
         bool temporaries_used = false;
-        size_t worst_case_tmp_size = 0;
         for (shared_ptr<Node> node : ordered_ops)
         {
             if (node->liveness_new_list.size() > 0)
             {
                 temporaries_used = true;
-                for (descriptor::Tensor* tensor : node->liveness_new_list)
-                {
-                    worst_case_tmp_size += tensor->size();
-                }
             }
         }
         if (temporaries_used)
@@ -897,6 +896,7 @@ using namespace ngraph::runtime;
 
                 // Always enable nodes computing output tensors or nodes whose outputs might get
                 // overwritten due to inplace kernels
+                // TODO (jbobba) - Do we need to handle cacheability
                 if (computes_result(node.get()) || possibly_overwritten(node.get()))
                 {
                     writer << " || 1";
@@ -1272,7 +1272,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             auto output_tensor = &param->get_outputs().at(i).get_tensor();
             auto tensor_set = get_tensor_set(output_tensor);
 
-            auto stale = tensor_stale[output_tensor->get_name()];
+            auto& stale = tensor_stale[output_tensor->get_name()];
             // process all tensors in the set containing the output tensor of the parameter
             for (auto& ele_t : tensor_set)
             {
@@ -1337,6 +1337,8 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         handler->second(this, node.get(), in, out);
 
         auto cacheable = true;
+        auto reuse_memory = pass_config.get_pass_attribute("CPUMemoryAssignment::ReuseMemory") ||
+                            pass_config.get_pass_attribute("ReuseMemory");
         if (node->is_op())
         {
             auto op = std::static_pointer_cast<ngraph::op::Op>(node);
@@ -1345,7 +1347,9 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         }
 
         bool disable_caching =
-            !cacheable || computes_result(node.get()) || possibly_overwritten(node.get());
+            (reuse_memory &&
+             !cacheable) // Check cacheability only if we are reusing intermediate tensors
+            || computes_result(node.get()) || possibly_overwritten(node.get());
 
         vector<reference_wrapper<bool>> in_stale, out_stale;
         for (const auto& name : in_names)
@@ -1361,7 +1365,14 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         }
         for (const auto& name : out_names)
         {
-            out_stale.emplace_back(tensor_stale[name]);
+            if (tensor_alias.count(name))
+            {
+                out_stale.emplace_back(tensor_stale[tensor_alias[name]]);
+            }
+            else
+            {
+                out_stale.emplace_back(tensor_stale[name]);
+            }
         }
 
         function<bool(CPURuntimeContext*)> enable;

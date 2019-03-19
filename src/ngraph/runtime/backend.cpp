@@ -64,3 +64,18 @@ bool runtime::Backend::is_supported_property(const Property prop) const
 void runtime::Backend::remove_compiled_function(std::shared_ptr<Executable> exec)
 {
 }
+
+void* runtime::Backend::get_device_memory_alloc()
+{
+    return nullptr;
+}
+
+void* runtime::Backend::get_device_memory_dealloc()
+{
+    return nullptr;
+}
+
+bool runtime::Backend::is_device_memory()
+{
+    return false;
+}

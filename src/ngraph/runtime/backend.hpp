@@ -112,4 +112,8 @@ public:
     virtual bool is_supported_property(const Property prop) const;
 
     virtual void remove_compiled_function(std::shared_ptr<Executable> exec);
+
+    virtual void* get_device_memory_alloc();
+    virtual void* get_device_memory_dealloc();
+    virtual bool is_device_memory();
 };

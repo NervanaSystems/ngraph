@@ -23,6 +23,7 @@ namespace ngraph
     namespace runtime
     {
         class AlignedBuffer;
+        class Allocator;
     }
 }
 
@@ -32,7 +33,9 @@ namespace ngraph
 class ngraph::runtime::AlignedBuffer
 {
 public:
-    AlignedBuffer(size_t byte_size, size_t alignment);
+    AlignedBuffer(size_t byte_size,
+                  size_t alignment,
+                  ngraph::runtime::Allocator* allocator = nullptr);
     AlignedBuffer();
     ~AlignedBuffer();
 
@@ -46,5 +49,6 @@ private:
 
     char* m_allocated_buffer;
     char* m_aligned_buffer;
+    ngraph::runtime::Allocator* m_allocator;
     size_t m_byte_size;
 };

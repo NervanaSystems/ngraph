@@ -44,8 +44,6 @@ set(SRC
     builder/concat.cpp
     builder/convert.cpp
     builder/convert_layout.cpp
-    builder/quantized_conv.cpp
-    builder/quantized_concat.cpp
     builder/convolution.cpp
     builder/dot.cpp
     builder/embedding_lookup.cpp
@@ -65,6 +63,8 @@ set(SRC
     builder/quantization.cpp
     builder/quantized_avg_pool.cpp
     builder/quantized_conv.cpp
+    builder/quantized_concat.cpp
+    builder/quantized_dot.cpp
     builder/quantized_max_pool.cpp
     builder/reshape.cpp
     builder/reverse.cpp
@@ -193,7 +193,7 @@ if (NGRAPH_CPU_ENABLE)
         endif()
     endif()
 
-    add_dependencies(cpu_backend ext_mkldnn ext_eigen)
+    add_dependencies(cpu_backend libmkldnn ext_eigen)
     target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libmkl libeigen libjson libtbb)
     if (NOT NGRAPH_DEX_ONLY)
         target_link_libraries(cpu_backend PUBLIC codegen)
