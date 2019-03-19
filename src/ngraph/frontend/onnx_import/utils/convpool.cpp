@@ -82,8 +82,9 @@ namespace ngraph
                     Shape pad_shape;
                     for (std::size_t idx = 0; idx < input.size(); ++idx)
                     {
-                        pad_shape.emplace_back((output.at(idx) - 1) * strides.at(idx) +
-                                               kernel.at(idx) - input.at(idx));
+                        pad_shape.emplace_back(std::max((output.at(idx) - 1) * strides.at(idx) +
+                                                            kernel.at(idx) - input.at(idx),
+                                                        0ULL));
                     }
                     return pad_shape;
                 }
