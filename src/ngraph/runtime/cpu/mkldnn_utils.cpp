@@ -678,10 +678,15 @@ bool runtime::cpu::mkldnn_utils::is_mkldnn_padded_layout(const mkldnn::memory::d
 
 bool runtime::cpu::mkldnn_utils::use_mkldnn_kernel(const ngraph::Node* node)
 {
-    auto op_annotations = static_cast<const ngraph::op::Op*>(node)->get_op_annotations();
-    return (op_annotations &&
-            static_pointer_cast<ngraph::runtime::cpu::CPUOpAnnotations>(op_annotations)
-                ->is_mkldnn_op());
+    if (auto* op_node = dynamic_cast<const ngraph::op::Op*>(node))
+    {
+        auto op_annotations = op_node->get_op_annotations();
+        return (op_annotations &&
+                static_pointer_cast<ngraph::runtime::cpu::CPUOpAnnotations>(op_annotations)
+                    ->is_mkldnn_op());
+    }
+
+    return false;
 }
 
 void runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(Node* node)

@@ -165,6 +165,7 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
             input->replace_output(replacement->get_outputs().at(i));
         }
     }
+    replacement->merge_provenance_tags_from(target);
 }
 
 // Check if all paths from X to a result go through Y
@@ -185,7 +186,7 @@ bool ngraph::is_post_dominated(Node* X, Node* Y)
         stack.pop_front();
         if (curr != Y)
         {
-            for (auto next : curr->get_users())
+            for (const auto& next : curr->get_users())
             {
                 if (visited.count(next.get()) == 0)
                 {
@@ -458,7 +459,7 @@ NodeVector ngraph::get_subgraph_outputs(const NodeVector& nodes,
             continue;
         }
 
-        for (auto u : n->get_users())
+        for (const auto& u : n->get_users())
         {
             if (nodes_set.count(u) == 0 && (!ignore_unused || is_used(u.get())))
             {
@@ -487,7 +488,7 @@ bool ngraph::is_used(Node* node)
             instances_seen.insert(n);
         }
         stack.pop_front();
-        for (auto arg : n->get_users())
+        for (const auto& arg : n->get_users())
         {
             if (instances_seen.count(arg.get()) == 0)
             {
@@ -501,7 +502,7 @@ bool ngraph::is_used(Node* node)
 size_t ngraph::get_user_count(Node* node)
 {
     size_t count = 0;
-    for (auto node_user : node->get_users())
+    for (const auto& node_user : node->get_users())
     {
         count += is_used(node_user.get());
     }
