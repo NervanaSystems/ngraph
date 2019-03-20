@@ -30,6 +30,13 @@ op::DynPad::DynPad(const std::shared_ptr<Node>& arg,
 
 void op::DynPad::validate_and_infer_types()
 {
+
+    auto arg_t = get_input_element_type(0);
+    auto padding_value_t = get_input_element_type(3);
+    NODE_VALIDATION_CHECK(this,
+                          arg_t.compatible(padding_value_t),
+                          "Padding value and arg type mismatch");
+                          
     // shape node should have integer data type. For now we only allow i64
     //TODO: potenially make the type more flexible to include other integer types
     auto padding_below_et = get_input_element_type(1);
@@ -44,14 +51,14 @@ void op::DynPad::validate_and_infer_types()
                           "DynPad shape must have element type i64, but has ",
                           padding_above_et);
 
-    // - padding_value is of scalar shape or rank is unknown
-    auto padding_value_rank = get_input_partial_shape(2).rank();
+    
+
+    // padding_value is of scalar shape or rank is unknown
+    auto padding_value_rank = get_input_partial_shape(3).rank();
     NODE_VALIDATION_CHECK(this,
                           padding_value_rank.is_dynamic() || padding_value_rank.compatible(0),
                           "DynPad arg is not scalar (rank = 0), but has rank = ",
                           padding_value_rank);
-    
-
     
     auto arg_shape = get_input_partial_shape(0);
     auto arg_rank = arg_shape.rank();
@@ -59,31 +66,45 @@ void op::DynPad::validate_and_infer_types()
     auto pd_bl_rank = pd_bl_shape.rank();
     auto pd_ab_shape = get_input_partial_shape(2);
     auto pd_ab_rank = pd_bl_shape.rank();
+    auto output_rank = Rank::dynamic();
 
-    auto out_shape = PartialShape::dynamic();
+    NODE_VALIDATION_CHECK(this, pd_bl_rank.compatible(1), "Partial shape of padding below must be 1");
+    NODE_VALIDATION_CHECK(this, pd_ab_rank.compatible(1), "Partial shape of padding above must be 1");
 
-    // Shapes of padding_below/above and arg must be rank compatible
-    // Merge all ranks into the output shape. Also checks if ranks are compatible. 
-    NODE_VALIDATION_CHECK(this,
-                          out_shape.merge_rank(arg_rank) && 
-                          out_shape.merge_rank(pd_bl_rank) && 
-                          out_shape.merge_rank(pd_ab_rank),
-                          "DynPad tensor and padding shapes are not of compatible ranks. arg, pd_bl, pd_ab = ",
-                          arg_rank, pd_bl_rank, pd_ab_rank);
+    if (arg_rank.is_static()) 
+    {
+        // if padding below shape is fully static, check that ranks match
+        NODE_VALIDATION_CHECK(this, 
+                              pd_bl_shape.is_dynamic() || static_cast<Rank>(pd_bl_shape[0]).compatible(arg_rank) , 
+                              "Arg and padding below ranks mismatch");
 
-    // Infer output shape from input shapes.
-    // We only infer forward here. 
-    // TODO: It is possible to infer side-ways for other args. E.g. if arg_shape is fully static, then we know the rank of padding shapes .. etc. 
-    out_shape = arg_shape + pd_bl_shape;
-    out_shape = out_shape + pd_ab_shape;
+        NODE_VALIDATION_CHECK(this, 
+                              pd_ab_shape.is_dynamic() || static_cast<Rank>(pd_ab_shape[0]).compatible(arg_rank) , 
+                              "Arg and padding above ranks mismatch");
+        output_rank = arg_rank;                              
+    }
+    else
+    {
+        // arg's rank is dynamic
+        // check if padding above and below have matching ranks
+        
+        NODE_VALIDATION_CHECK(this, 
+                              pd_bl_shape.is_dynamic() || pd_ab_shape.is_dynamic() 
+                              || pd_bl_shape[0].compatible(pd_ab_shape[0]) , 
+                              "Padding below and above ranks mismatch");
 
-    set_output_type(0, get_input_element_type(0), out_shape);
+        output_rank = pd_bl_shape.is_static() ? pd_bl_shape[0] : pd_ab_shape[0];
+    }
+
+    auto out_shape = PartialShape::dynamic(output_rank);
+
+    set_output_type(0, arg_t, out_shape);
 }
 
 shared_ptr<Node> op::DynPad::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<DynPad>(new_args.at(0), new_args.at(1), new_args.at(2));
+    return make_shared<DynPad>(new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3));
 }
 
 // TODO: This function is not implemented!

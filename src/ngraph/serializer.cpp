@@ -750,7 +750,7 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::DynPad:
             {
-                node = make_shared<op::DynPad>(args[0], args[1], args[2]);
+                node = make_shared<op::DynPad>(args[0], args[1], args[2], args[3]);
                 break;
             }
             case OP_TYPEID::EmbeddingLookup:
