@@ -1,8 +1,8 @@
 .. broadcastdistributed.rst:
 
-#########
+#####################
 BroadcastDistributed
-#########
+#####################
 
 .. code-block:: cpp
 
@@ -12,8 +12,8 @@ BroadcastDistributed
 Description
 ===========
 
-Combines values from all processes or devices and distributes the result back
-to all processes or devices.
+Broadcast values from one process or device (root) to the rest processes or 
+devices of the communicator.
 
 
 Inputs
@@ -33,7 +33,7 @@ Outputs (in place)
 +-----------------+-------------------------+--------------------------------+
 | Name            | Element Type            | Shape                          |
 +=================+=========================+================================+
-| ``arg``      | ``element::f32``        | Same as ``arg``                |
+| ``arg``         | ``element::f32``        | Same as ``arg``                |
 |                 | ``element::f64``        |                                |
 +-----------------+-------------------------+--------------------------------+
 
