@@ -81,10 +81,11 @@ TEST(concat_fusion, single_branch)
     rng.initialize(tensor_val);
     args.push_back(tensor_val);
 
-    auto baseline_results = execute(baseline_f, args, "CPU");
-    auto optimized_results = execute(optimized_f, args, "CPU");
+    auto baseline_results = execute(baseline_f, args, "INTERPRETER");
+    auto optimized_results = execute(optimized_f, args, "INTERPRETER");
 
     EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
+
 }
 
 TEST(concat_fusion, multiple_branches_1)
@@ -160,8 +161,8 @@ TEST(concat_fusion, multiple_branches_2)
     rng.initialize(tensor_val);
     args.push_back(tensor_val);
 
-    auto baseline_results = execute(baseline_f, args, "CPU");
-    auto optimized_results = execute(optimized_f, args, "CPU");
+    auto baseline_results = execute(baseline_f, args, "INTERPRETER");
+    auto optimized_results = execute(optimized_f, args, "INTERPRETER");
 
     EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
 }
@@ -209,8 +210,8 @@ TEST(concat_fusion, non_fusable_self_concat)
     args.push_back(tensor_val_1);
     args.push_back(tensor_val_2);
 
-    auto baseline_results = execute(baseline_f, args, "CPU");
-    auto optimized_results = execute(optimized_f, args, "CPU");
+    auto baseline_results = execute(baseline_f, args, "INTERPRETER");
+    auto optimized_results = execute(optimized_f, args, "INTERPRETER");
 
     EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
 }
@@ -258,8 +259,8 @@ TEST(concat_fusion, self_concat_with_fan_out)
     args.push_back(tensor_val_1);
     args.push_back(tensor_val_2);
 
-    auto baseline_results = execute(baseline_f, args, "CPU");
-    auto optimized_results = execute(optimized_f, args, "CPU");
+    auto baseline_results = execute(baseline_f, args, "INTERPRETER");
+    auto optimized_results = execute(optimized_f, args, "INTERPRETER");
 
     EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
 }
