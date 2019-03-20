@@ -81,6 +81,7 @@
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
 #include "util/all_close.hpp"
+#include "util/all_close_f.hpp"
 #include "util/autodiff/backprop_function.hpp"
 #include "util/autodiff/numeric_compare.hpp"
 #include "util/matcher.hpp"
@@ -167,7 +168,7 @@ TEST(cpu_fusion, gemm_cpu_broadcast_row)
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
     vector<float> expected{11, 30, 38, 111};
-    EXPECT_EQ(read_vector<float>(result), expected);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected, MIN_FLOAT_TOLERANCE_BITS));
 }
 
 TEST(cpu_fusion, gemm_cpu_broadcast_column)
@@ -199,7 +200,7 @@ TEST(cpu_fusion, gemm_cpu_broadcast_column)
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
     vector<float> expected{11, 29, 39, 111};
-    EXPECT_EQ(read_vector<float>(result), expected);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected, MIN_FLOAT_TOLERANCE_BITS));
 }
 
 TEST(cpu_fusion, gemm_cpu_broadcast_matrix)
@@ -235,7 +236,7 @@ TEST(cpu_fusion, gemm_cpu_broadcast_matrix)
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
     vector<float> expected{10, 28, 37, 109};
-    ASSERT_TRUE(read_vector<float>(result) == expected);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected, MIN_FLOAT_TOLERANCE_BITS));
 }
 
 TEST(cpu_fusion, gemm_cpu_no_bias)
@@ -268,7 +269,7 @@ TEST(cpu_fusion, gemm_cpu_no_bias)
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
     vector<float> expected{9, 27, 36, 108};
-    ASSERT_TRUE(read_vector<float>(result) == expected);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected, MIN_FLOAT_TOLERANCE_BITS));
 }
 
 TEST(cpu_fusion, cpu_fusion_pass_basic)
@@ -1500,7 +1501,7 @@ TEST(cpu_fusion, backwards_maxpool_with_indices_n4_c1_hw4_2x2_max)
 
     auto handle = backend->compile(df);
     handle->call_with_validate({output}, {input, ep});
-    ASSERT_TRUE(read_vector<float>(output) == expected);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(output), expected, MIN_FLOAT_TOLERANCE_BITS));
 }
 
 #if defined(NGRAPH_HALIDE)
@@ -1587,7 +1588,7 @@ TEST(cpu_fusion, loop_kernel_embedded_graph_halide)
     vector<float> expected{-2, -6, -4, -8};
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ(read_vector<float>(result), expected);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected, MIN_FLOAT_TOLERANCE_BITS));
 }
 
 TEST(cpu_fusion, loop_kernel_two_inputs_one_output_halide)
@@ -1614,7 +1615,7 @@ TEST(cpu_fusion, loop_kernel_two_inputs_one_output_halide)
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
 
-    EXPECT_EQ(read_vector<float>(result), expected);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected, MIN_FLOAT_TOLERANCE_BITS));
 }
 
 TEST(cpu_fusion, loop_kernel_multiple_outputs_halide)
@@ -1670,9 +1671,9 @@ TEST(cpu_fusion, loop_kernel_multiple_outputs_halide)
     vector<float> expected1{5, 11, 5, 17};
     vector<float> expected2{2, 7, 5, 14};
     vector<float> expected3{-3, -3, -3, -9};
-    EXPECT_EQ(read_vector<float>(r1), expected1);
-    EXPECT_EQ(read_vector<float>(r2), expected2);
-    EXPECT_EQ(read_vector<float>(r3), expected3);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(r1), expected1, MIN_FLOAT_TOLERANCE_BITS));
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(r2), expected2, MIN_FLOAT_TOLERANCE_BITS));
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(r3), expected3, MIN_FLOAT_TOLERANCE_BITS));
 }
 
 TEST(cpu_fusion, loop_kernel_copy_with_new_args)
@@ -2167,7 +2168,7 @@ TEST(cpu_fusion, group_convolution)
     auto handle = backend->compile(f);
     handle->call_with_validate({group_result, lower_result, upper_result},
                                {a_, b_, c_, d_, e_, f_});
-    ASSERT_EQ(rv, erv);
+    EXPECT_TRUE(test::all_close_f(rv, erv));
 }
 
 TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
