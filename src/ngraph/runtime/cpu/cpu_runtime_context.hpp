@@ -39,7 +39,7 @@ namespace ngraph
 {
     namespace runtime
     {
-            class AlignedBuffer;
+        class AlignedBuffer;
     }
     class State;
 }

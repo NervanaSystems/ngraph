@@ -34,6 +34,6 @@ class ngraph::runtime::Allocator
 {
 public:
     virtual ~Allocator() = default;
-    virtual void* Malloc(void*, size_t size, size_t alignment);
-    virtual void Free(void* ptr, void*);
+    virtual void* Malloc(void* handle, size_t size, size_t alignment);
+    virtual void Free(void* handle, void* ptr);
 };

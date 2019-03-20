@@ -143,10 +143,8 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
 
     // Create temporary buffer pools
     size_t alignment = runtime::cpu::CPU_ExternalFunction::s_memory_pool_alignment;
-
-    ngraph::runtime::cpu::CPUAllocator* allocator = nullptr;
-    ngraph::runtime::Allocator* _allocator = nullptr;
-    if (m_framework_allocator && m_framework_deallocator)
+    ngraph::runtime::Allocator* allocator = new ngraph::runtime::cpu::CPUAllocator();
+    /*if (m_framework_allocator && m_framework_deallocator)
     {
         auto fw_allocator =
             new ngraph::runtime::FrameworkAllocator(m_framework_allocator, m_framework_deallocator);
@@ -156,11 +154,11 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
     {
         auto sys_allocator = new ngraph::runtime::SystemAllocator();
         allocator = new ngraph::runtime::cpu::CPUAllocator(sys_allocator, alignment);
-    }
+    }*/
 
     for (auto buffer_size : m_external_function->get_memory_buffer_sizes())
     {
-        auto buffer = new AlignedBuffer(buffer_size, alignment, _allocator);
+        auto buffer = new AlignedBuffer(buffer_size, alignment, allocator);
         ctx->memory_buffers.push_back(buffer);
     }
     const auto& mkldnn_emitter = m_external_function->get_mkldnn_emitter();

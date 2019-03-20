@@ -16,7 +16,7 @@
 
 #include "ngraph/runtime/allocator.hpp"
 
-void* ngraph::runtime::Allocator::Malloc(void*, size_t size, size_t alignment)
+void* ngraph::runtime::Allocator::Malloc(void* handle, size_t size, size_t alignment)
 {
     void* ptr = malloc(size);
 
@@ -29,7 +29,7 @@ void* ngraph::runtime::Allocator::Malloc(void*, size_t size, size_t alignment)
     return ptr;
 }
 
-void ngraph::runtime::Allocator::Free(void* ptr, void*)
+void ngraph::runtime::Allocator::Free(void* handle, void* ptr)
 {
     if (ptr)
     {

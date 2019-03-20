@@ -38,10 +38,6 @@ namespace ngraph
     class NodeMap;
     class stopwatch;
 
-    // aliases for framework provided function pointers as defined in onnx runtime
-    using AllocateFunc = void* (*)(void*, size_t, size_t);
-    using DestroyFunc = void (*)(void*, void*);
-
     namespace runtime
     {
         class Backend;

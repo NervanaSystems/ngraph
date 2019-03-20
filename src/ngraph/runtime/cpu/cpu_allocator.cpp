@@ -15,31 +15,24 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/cpu/cpu_allocator.hpp"
-#include <string>
-#include "ngraph/runtime/cpu/cpu_external_function.hpp"
 
-ngraph::runtime::cpu::CPUAllocator::CPUAllocator(ngraph::runtime::Allocator* allocator,
-                                                 size_t alignment)
-    : m_allocator(std::move(allocator))
-    , m_alignment(alignment)
+namespace ngraph
 {
+    namespace runtime
+    {
+        namespace cpu
+        {
+            CPUAllocator::CPUAllocator() {}
+            CPUAllocator::~CPUAllocator() {}
+            CPUAllocator& GetCPUAllocator()
+            {
+                static CPUAllocator cpu_allocator;
+                return cpu_allocator;
+            }
+        }
+    }
 }
-
-ngraph::runtime::cpu::CPUAllocator::~CPUAllocator()
-{
-}
-
-void* ngraph::runtime::cpu::CPUAllocator::malloc(size_t size)
-{
-    return m_allocator->cpu_malloc(nullptr, size, m_alignment);
-}
-
-void ngraph::runtime::cpu::CPUAllocator::free(void* ptr)
-{
-    m_allocator->cpu_free(nullptr, ptr);
-}
-
-ngraph::runtime::SystemAllocator::SystemAllocator()
+/*ngraph::runtime::SystemAllocator::SystemAllocator()
 {
 }
 
@@ -56,4 +49,4 @@ ngraph::runtime::FrameworkAllocator::FrameworkAllocator(AllocateFunc& allocator,
     : m_allocator(allocator)
     , m_deallocator(deallocator)
 {
-}
+}*/

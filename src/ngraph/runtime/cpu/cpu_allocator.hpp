@@ -1,4 +1,4 @@
-//*****************************************************************************
+//****************************************************************************
 // Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,11 +20,11 @@
 #include <cstdint>
 #include "ngraph/except.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
+#include "ngraph/runtime/allocator.hpp"
+#include "ngraph/runtime/backend.hpp"
 #include "ngraph/util.hpp"
 
-using AllocateFunc = void* (*)(void*, size_t, size_t);
-using DestroyFunc = void (*)(void*, void*);
-
+using namespace ngraph;
 namespace mkl
 {
     extern "C" {
@@ -45,46 +45,54 @@ namespace ngraph
     namespace runtime
     {
         class Allocator;
-        class SystemAllocator;
-        class FrameworkAllocator;
+        //class SystemAllocator;
+        //class FrameworkAllocator;
         namespace cpu
         {
             class CPUAllocator;
+            extern CPUAllocator& GetCPUAllocator();
         }
     }
 }
 
-// This class will be instantiated in the CPUCallFrame with the allocator object which will be used for the
-// device memory allocation
-class ngraph::runtime::cpu::CPUAllocator
+class ngraph::runtime::cpu::CPUAllocator : public ngraph::runtime::Allocator
 {
 public:
-    CPUAllocator(ngraph::runtime::Allocator* alloctor, size_t alignment);
+    CPUAllocator();
     ~CPUAllocator();
 
-    void* malloc(size_t size);
-    void free(void* ptr);
-
-private:
-    std::unique_ptr<ngraph::runtime::Allocator> m_allocator;
-    size_t m_alignment;
+    void* Malloc(void* handle, size_t size, size_t alignment) override
+    {
+        void* ptr = malloc(size);
+        // check for exception
+        if (size != 0 && !ptr)
+        {
+            throw ngraph_error("malloc failed to allocate memory of size " + std::to_string(size));
+            throw std::bad_alloc();
+        }
+        return ptr;
+    }
+    void Free(void* handle, void* ptr) override
+    {
+        if (ptr)
+        {
+            free(ptr);
+        }
+    }
 };
 
-// Abstarct class for the allocator, for allocating and deallocating device memory
+/*// Abstarct class for the allocator
 class ngraph::runtime::Allocator
 {
 public:
-    virtual ~Allocator() = default;
     virtual void* cpu_malloc(void*, size_t size, size_t alignment) = 0;
     virtual void cpu_free(void* ptr, void*) = 0;
 };
 
-// SystemAllocator overides and implements "cpu_malloc" & "cpu_free" of Alloctaor interface class
-// this class uses system library malloc and free for device memory allocation
 class ngraph::runtime::SystemAllocator : public ngraph::runtime::Allocator
 {
 public:
-    SystemAllocator();
+    SystemAllocator(size_t alignment);
     ~SystemAllocator();
 
     void* cpu_malloc(void*, size_t size, size_t alignment) override
@@ -107,14 +115,15 @@ public:
             free(ptr);
         }
     }
+
+private:
+    size_t m_alignment;
 };
 
-// FrameworkAllocator overides and implements "cpu_malloc" & "cpu_free" of Alloctaor interface class,
-// this class uses framework provide allocators and deallocators for device memory allocation
 class ngraph::runtime::FrameworkAllocator : public ngraph::runtime::Allocator
 {
 public:
-    FrameworkAllocator(AllocateFunc& allocator, DestroyFunc& deallocator);
+    FrameworkAllocator(AllocateFunc allocator, DestroyFunc deallocator, size_t alignment);
     ~FrameworkAllocator();
 
     void* cpu_malloc(void*, size_t size, size_t alignment) override
@@ -141,4 +150,5 @@ public:
 private:
     AllocateFunc m_allocator;
     DestroyFunc m_deallocator;
-};
+    size_t m_alignment;
+};*/
