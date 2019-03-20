@@ -69,7 +69,6 @@ TEST(distributed_${BACKEND_NAME}, broadcastdistributed)
     copy_data(result, vector<float>(4, 0));
 
     DistributedSetup distsetup;
-    auto comm_size = distsetup.get_comm_size();
     auto processIdx = distsetup.get_comm_rank();
     if (processIdx == 0)
     {
