@@ -389,28 +389,6 @@ namespace ngraph
                     const memory::desc result_desc(
                         mkldnn_result_shape, et_result, memory::format::any);
 
-                    auto emit_debug_info = [&]() {
-                        std::cout << "node_name: " << node->get_name() << std::endl;
-                        std::cout << "input_shape: " << join(mkldnn_arg0_shape) << std::endl;
-                        std::cout << "filter_shape: " << join(mkldnn_arg1_shape) << std::endl;
-                        if (use_bias)
-                        {
-                            auto bias_shape = node->get_input_shape(2);
-                            memory::dims mkldnn_bias_shape(bias_shape.begin(), bias_shape.end());
-                            std::cout << "bias_shape:  " << join(bias_shape) << std::endl;
-                        }
-                        std::cout << "result_shape: " << join(mkldnn_result_shape) << std::endl;
-                        std::cout << "mkldnn_filter_strides: " << join(mkldnn_filter_strides)
-                                  << std::endl;
-                        std::cout << "mkldnn_dialted_strides: " << join(mkldnn_dilated_strides)
-                                  << std::endl;
-                        std::cout << "mkldnn_padding_below: " << join(mkldnn_padding_below)
-                                  << std::endl;
-                        std::cout << "mkldnn_padding_above: " << join(mkldnn_padding_above)
-                                  << std::endl;
-                    };
-
-                    emit_debug_info();
                     std::unique_ptr<convolution_forward::desc> fwd_desc{nullptr};
                     if (use_bias)
                     {
@@ -437,48 +415,9 @@ namespace ngraph
                         }
                         catch (const mkldnn::error& e)
                         {
-                            /*if ((arg0_shape.size() == 4 && arg1_shape.size() == 4) ||
-                                (arg0_shape.size() == 5 && arg1_shape.size() == 5))
-                            {
-                                auto input_default_format = arg0_shape.size() == 4
-                                                                ? mkldnn::memory::format::nchw
-                                                                : mkldnn::memory::format::ncdhw;
-                                auto filter_default_format = arg0_shape.size() == 4
-                                                                 ? mkldnn::memory::format::oihw
-                                                                 : mkldnn::memory::format::oidhw;
-                                auto default_desc_i = mkldnn_utils::create_default_mkldnn_md(
-                                    node.get(), 0, false, input_default_format);
-                                auto default_desc_f = mkldnn_utils::create_default_mkldnn_md(
-                                    node.get(), 1, false, filter_default_format);
-                                auto default_desc_b = mkldnn_utils::create_default_mkldnn_md(
-                                    node.get(), 2, false, memory::format::x);
-                                auto default_desc_o = mkldnn_utils::create_default_mkldnn_md(
-                                    node.get(), 0, true, input_default_format);
-                                i_mds.push_back(default_desc_i);
-                                i_mds.push_back(default_desc_f);
-                                i_mds.push_back(default_desc_b);
-                                o_mds.push_back(default_desc_o);
-
-                                fwd_desc.reset(
-                                    new convolution_forward::desc(prop_kind::forward,
-                                                                  algorithm::convolution_direct,
-                                                                  default_desc_i,
-                                                                  default_desc_f,
-                                                                  default_desc_b, // with bias
-                                                                  default_desc_o,
-                                                                  mkldnn_filter_strides,
-                                                                  mkldnn_dilated_strides,
-                                                                  mkldnn_padding_below,
-                                                                  mkldnn_padding_above,
-                                                                  padding_kind::zero));
-                            }
-                            else*/
-                            {
-                                emit_debug_info();
-                                throw ngraph_error(
-                                    "setting layouts on Convolution failed with MKLDNN error: " +
-                                    e.message);
-                            }
+                            throw ngraph_error(
+                                "setting layouts on Convolution failed with MKLDNN error: " +
+                                e.message);
                         }
                     }
                     else
@@ -499,44 +438,9 @@ namespace ngraph
                         }
                         catch (const mkldnn::error& e)
                         {
-                            /*if ((arg0_shape.size() == 4 && arg1_shape.size() == 4) ||
-                                (arg0_shape.size() == 5 && arg1_shape.size() == 5))
-                            {
-                                auto input_default_format = arg0_shape.size() == 4
-                                                                ? mkldnn::memory::format::nchw
-                                                                : mkldnn::memory::format::ncdhw;
-                                auto filter_default_format = arg0_shape.size() == 4
-                                                                 ? mkldnn::memory::format::oihw
-                                                                 : mkldnn::memory::format::oidhw;
-                                auto default_desc_i = mkldnn_utils::create_default_mkldnn_md(
-                                    node.get(), 0, false, input_default_format);
-                                auto default_desc_f = mkldnn_utils::create_default_mkldnn_md(
-                                    node.get(), 1, false, filter_default_format);
-                                auto default_desc_o = mkldnn_utils::create_default_mkldnn_md(
-                                    node.get(), 0, true, input_default_format);
-                                i_mds.push_back(default_desc_i);
-                                i_mds.push_back(default_desc_f);
-                                o_mds.push_back(default_desc_o);
-
-                                fwd_desc.reset(
-                                    new convolution_forward::desc(prop_kind::forward,
-                                                                  algorithm::convolution_direct,
-                                                                  default_desc_i,
-                                                                  default_desc_f,
-                                                                  default_desc_o,
-                                                                  mkldnn_filter_strides,
-                                                                  mkldnn_dilated_strides,
-                                                                  mkldnn_padding_below,
-                                                                  mkldnn_padding_above,
-                                                                  padding_kind::zero));
-                            }
-                            else*/
-                            {
-                                emit_debug_info();
-                                throw ngraph_error(
-                                    "setting layouts on Convolution failed with MKLDNN error: " +
-                                    e.message);
-                            }
+                            throw ngraph_error(
+                                "setting layouts on Convolution failed with MKLDNN error: " +
+                                e.message);
                         }
                     }
                     convolution_forward::primitive_desc prim_desc(*fwd_desc, cpu_engine);

@@ -920,25 +920,22 @@ TEST(cpu_test, rotated_pooling)
         make_f(false, false), make_f(false, false), "INTERPRETER", "CPU"); // 5D MaxPool
 }
 
-TEST(cpu_test, rotated_convolution)
+TEST(cpu_test, conv_negative_padding)
 {
-    auto make_f = [&](bool is_4d, bool with_bias) {
+    auto make_f = [&]() {
+        Shape shape_a{1, 16, 2, 2};
+        auto A = make_shared<op::Parameter>(element::f32, shape_a);
+        Shape shape_b{32, 16, 1, 1};
+        auto B = make_shared<op::Parameter>(element::f32, shape_b);
+        auto conv1 = make_shared<op::Convolution>(A,
+                                                  B,
+                                                  Strides{1, 1},
+                                                  Strides{1, 1},
+                                                  CoordinateDiff{-1, -1},
+                                                  CoordinateDiff{0, 0},
+                                                  Strides{1, 1});
+        return make_shared<Function>(conv1, ParameterVector{A, B});
 
-        auto input_shape = is_4d ? Shape{ 256, 6, 40, 40, 1} : Shape{ 256, 6, 40, 40, 1};
-        auto rotate_order = is_4d ? AxisVector{4, 0, 1, 2, 3} : AxisVector{4, 0, 1, 2, 3};
-        auto conv_shape = is_4d ? Shape{1, 256, 6, 40, 40} : Shape{1, 256, 6, 40, 40};
-        auto input = make_shared<op::Parameter>(element::f32, input_shape); // C, H, W, N
-        auto transpose = make_shared<op::Reshape>(input, rotate_order, conv_shape);
-        auto filter = make_shared<op::Parameter>(element::f32, Shape{512, 256, 1, 1, 1});
-
-        auto conv = make_shared<op::Convolution>(transpose,
-                                                 filter,
-                                                 Strides{1, 2, 2},
-                                                 Strides{1, 1, 1},
-                                                 CoordinateDiff{0, 0, 0},
-                                                 CoordinateDiff{0, -1, -1},
-                                                 Strides{1, 1, 1});
-        return make_shared<Function>(conv, ParameterVector{input, filter});
     };
-    compare_backends(make_f(true, true), make_f(true, true), "CPU", "CPU");
+    compare_backends(make_f(), make_f(), "CPU", "INTERPRETER");
 }
