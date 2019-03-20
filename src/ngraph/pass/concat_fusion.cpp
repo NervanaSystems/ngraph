@@ -147,7 +147,7 @@ void ngraph::pass::SelfConcatFusion::construct_concat_patterns(
     auto print_state_of_bounded_vectors = [this]() -> std::string {
         std::stringstream ss;
         ss << "-----------------------------------------------------------" << std::endl;
-        ss << "STATE of bounded <pattern vector, concat axis> pair vectors: " << std::endl;
+        ss << "State of bounded <pattern vector, concat axis> pair vectors: " << std::endl;
         ss << "-----------------------------------------------------------" << std::endl;
         ss << "Number of pair vectors: " << this->m_concat_pattern_vectors.size() << std::endl;
         size_t c = 0;
