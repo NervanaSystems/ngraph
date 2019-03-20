@@ -17,7 +17,7 @@
 
 #ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
 #include <mlsl.hpp>
-#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE 
+#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
 #include <mpi.h>
 #endif
 
@@ -73,8 +73,7 @@ namespace ngraph
 
                 auto functor = [&, count, data_type](CPURuntimeContext* ctx,
                                                      CPUExecutionContext* ectx) {
-                    MPI_Bcast(
-                        arg_tensor, count, data_type, 0, MPI_COMM_WORLD);
+                    MPI_Bcast(arg_tensor, count, data_type, 0, MPI_COMM_WORLD);
                 };
 #else
                 throw ngraph_error("Distributed Library not supported/mentioned");

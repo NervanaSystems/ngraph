@@ -28,6 +28,7 @@ void regclass_pyngraph_op_BroadcastDistributed(py::module m)
                std::shared_ptr<ngraph::op::BroadcastDistributed>,
                ngraph::op::Op>
         broadcastdistributed(m, "BroadcastDistributed");
-    broadcastdistributed.doc() = "ngraph.impl.op.BroadcastDistributed wraps ngraph::op::BroadcastDistributed";
+    broadcastdistributed.doc() =
+        "ngraph.impl.op.BroadcastDistributed wraps ngraph::op::BroadcastDistributed";
     broadcastdistributed.def(py::init<const std::shared_ptr<ngraph::Node>&>());
 }

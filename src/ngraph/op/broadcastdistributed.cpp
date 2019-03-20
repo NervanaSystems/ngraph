@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/distbroadcast.hpp"
+#include "ngraph/op/broadcastdistributed.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -27,12 +27,13 @@ op::BroadcastDistributed::BroadcastDistributed(const shared_ptr<Node>& arg)
 
 void op::BroadcastDistributed::validate_and_infer_types()
 {
-    NODE_VALIDATION_ASSERT(this,
-                           get_input_element_type(0).is_dynamic() ||
-                               get_input_element_type(0) == element::f32 ||
-                               get_input_element_type(0) == element::f64)
-        << "Only element types f32 and f64 are supported (argument element type: "
-        << get_input_element_type(0) << ").";
+    NODE_VALIDATION_CHECK(this,
+                          get_input_element_type(0).is_dynamic() ||
+                              get_input_element_type(0) == element::f32 ||
+                              get_input_element_type(0) == element::f64,
+                          "Only element types f32 and f64 are supported (argument element type: ",
+                          get_input_element_type(0),
+                          ").");
 
     set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
 }

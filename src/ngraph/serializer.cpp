@@ -1565,8 +1565,6 @@ static json write(const Node& n, bool binary_constant_data)
     }
     case OP_TYPEID::Minimum: { break;
     }
-    case OP_TYPEID::BroadcastDistributed: { break;
-    }
     case OP_TYPEID::Multiply: { break;
     }
     case OP_TYPEID::Negative: { break;

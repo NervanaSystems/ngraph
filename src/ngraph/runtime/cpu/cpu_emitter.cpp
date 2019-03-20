@@ -283,9 +283,8 @@ namespace ngraph
                 }
 
                 writer.block_begin();
-                writer << "MPI_Bcast(" << args[0].get_name() << ", "
-                       << args[0].get_size() << ", " << data_type
-                       << ", 0, MPI_COMM_WORLD);\n";
+                writer << "MPI_Bcast(" << args[0].get_name() << ", " << args[0].get_size() << ", "
+                       << data_type << ", 0, MPI_COMM_WORLD);\n";
                 writer.block_end();
 #else
                 throw ngraph_error("Distributed Library not supported/mentioned");

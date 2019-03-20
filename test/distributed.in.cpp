@@ -65,18 +65,18 @@ TEST(distributed_${BACKEND_NAME}, broadcastdistributed)
     auto backend = runtime::Backend::create("CPU");
 
     auto v = vector<float>{1, 2, 3, 4};
-    auto a = backend->create_tensor(element::f32, shape);
-    copy_data(a, vector<float>(4, 0));
+    auto result = backend->create_tensor(element::f32, shape);
+    copy_data(result, vector<float>(4, 0));
 
     DistributedSetup distsetup;
+    auto comm_size = distsetup.get_comm_size();
     auto processIdx = distsetup.get_comm_rank();
     if (processIdx == 0)
     {
-        copy_data(a, v);
+        copy_data(result, v);
     }
 
-    auto result = backend->create_tensor(element::f32, shape);
-
-    backend->call_with_validate(backend->compile(f), {a}, {a});
-    EXPECT_EQ(v, read_vector<float>(a));
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {result});
+    EXPECT_EQ(v, read_vector<float>(result));
 }
