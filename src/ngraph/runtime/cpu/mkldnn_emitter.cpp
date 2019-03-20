@@ -1994,6 +1994,24 @@ size_t MKLDNNEmitter::convolution_forward_init(bool with_bias)
     return m_mkldnn_primitives.size() - 1;
 }
 
+size_t MKLDNNEmitter::inner_product_forward_init(bool with_bias)
+{
+    size_t size = m_mkldnn_primitives.size();
+    if (with_bias)
+    {
+        // Inputs, Weights, Bias, Results, inner_product
+        m_mkldnn_primitives.resize(size + 5, nullptr);
+        m_primitive_deps[m_mkldnn_primitives.size() - 1] = {size, size + 1, size + 2, size + 3};
+    }
+    else
+    {
+        // Inputs, Weights, Results, inner_product
+        m_mkldnn_primitives.resize(size + 4, nullptr);
+        m_primitive_deps[m_mkldnn_primitives.size() - 1] = {size, size + 1, size + 2};
+    }
+    return m_mkldnn_primitives.size() - 1;
+}
+
 size_t MKLDNNEmitter::reserve_primitive_space(size_t count, bool new_workspace)
 {
     size_t size = m_mkldnn_primitives.size();
@@ -2007,4 +2025,77 @@ size_t MKLDNNEmitter::reserve_primitive_space(size_t count, bool new_workspace)
         m_primitive_deps[m_mkldnn_primitives.size() - 1].push_back(0);
     }
     return m_mkldnn_primitives.size() - 1;
+}
+
+size_t MKLDNNEmitter::build_quantized_inner_product_forward(
+    const mkldnn::memory::desc& input_data_desc,
+    const mkldnn::memory::desc& weights_desc,
+    const mkldnn::memory::desc& bias_desc,
+    const mkldnn::memory::desc& result_desc,
+    const float scale,
+    const mkldnn::post_ops& pops)
+{
+    size_t input_data_index = build_memory_primitive(input_data_desc);
+    size_t weights_index = build_memory_primitive(weights_desc);
+    size_t bias_index = build_memory_primitive(bias_desc);
+    size_t result_index = build_memory_primitive(result_desc);
+    std::vector<float> output_scale;
+    output_scale.push_back(scale);
+    // mkldnn inner_product attr
+    mkldnn::primitive_attr ip_attr;
+    ip_attr.set_post_ops(pops);
+    /* Specify the rounding mode */
+    ip_attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);
+    /* Specify the scales array and corresponding mask */
+    ip_attr.set_output_scales(0, output_scale);
+    // mkldnn inner_product
+    size_t ip_index =
+        insert_primitive(new mkldnn::inner_product_forward({{
+                                                                mkldnn::prop_kind::forward_scoring,
+                                                                input_data_desc,
+                                                                weights_desc,
+                                                                bias_desc,
+                                                                result_desc,
+                                                            },
+                                                            ip_attr,
+                                                            executor::global_cpu_engine},
+                                                           *m_mkldnn_primitives[input_data_index],
+                                                           *m_mkldnn_primitives[weights_index],
+                                                           *m_mkldnn_primitives[bias_index],
+                                                           *m_mkldnn_primitives[result_index]));
+    m_primitive_deps[ip_index] = {input_data_index, weights_index, bias_index, result_index};
+    return ip_index;
+}
+
+size_t MKLDNNEmitter::build_quantized_inner_product_forward(
+    const mkldnn::memory::desc& input_data_desc,
+    const mkldnn::memory::desc& weights_desc,
+    const mkldnn::memory::desc& result_desc,
+    const float scale,
+    const mkldnn::post_ops& pops)
+{
+    size_t input_data_index = build_memory_primitive(input_data_desc);
+    size_t weights_index = build_memory_primitive(weights_desc);
+    size_t result_index = build_memory_primitive(result_desc);
+    std::vector<float> output_scale;
+    output_scale.push_back(scale);
+    // mkldnn inner_product attr
+    mkldnn::primitive_attr ip_attr;
+    ip_attr.set_post_ops(pops);
+    /* Specify the rounding mode */
+    ip_attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);
+    /* Specify the scales array and corresponding mask */
+    ip_attr.set_output_scales(0, output_scale);
+    // mkldnn inner_product
+    size_t ip_index = insert_primitive(new mkldnn::inner_product_forward(
+        {{
+             mkldnn::prop_kind::forward_scoring, input_data_desc, weights_desc, result_desc,
+         },
+         ip_attr,
+         executor::global_cpu_engine},
+        *m_mkldnn_primitives[input_data_index],
+        *m_mkldnn_primitives[weights_index],
+        *m_mkldnn_primitives[result_index]));
+    m_primitive_deps[ip_index] = {input_data_index, weights_index, result_index};
+    return ip_index;
 }

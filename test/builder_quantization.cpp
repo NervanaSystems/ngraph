@@ -1181,3 +1181,207 @@ TEST(builder, scaled_quantize_concat_unsigned_varying)
     EXPECT_EQ((vector<uint8_t>{5, 1, 0, 0, 2, 4, 1, 3, 5, 1, 5, 100, 6, 8, 10, 7, 9, 50}),
               read_vector<uint8_t>(result));
 }
+
+// QuantizedDot
+TEST(builder, dynamic_scaled_QD)
+{
+    Shape shape_a{4, 3}; // input shape
+    vector<uint8_t> a_data = {209, 122, 39, 11, 33, 243, 250, 216, 159, 18, 181, 187};
+    Shape shape_b{3, 3}; // filter shape
+    vector<int8_t> b_data = {11, 15, 80, 50, -6, -3, -6, 78, 113};
+
+    Shape shape_r{4, 3}; // output shape
+
+    auto make_function = [shape_a, shape_b](bool requantize, bool with_relu) {
+        auto A = make_shared<op::Parameter>(element::u8, shape_a);
+        auto B = make_shared<op::Parameter>(element::i8, shape_b);
+        auto C = make_shared<op::Parameter>(element::f32, Shape{1});
+        auto D = make_shared<op::Parameter>(element::f32, Shape{1});
+        auto E = make_shared<op::Parameter>(element::f32, Shape{1});
+        auto F = make_shared<op::Parameter>(element::f32, Shape{1});
+        auto G = make_shared<op::Parameter>(element::f32, Shape{1});
+        auto H = make_shared<op::Parameter>(element::f32, Shape{1});
+        auto CV =
+            ngraph::builder::ScaledQuantizedDot(A, B, C, D, E, F, G, H, requantize, with_relu);
+        return make_shared<Function>(NodeVector{CV}, ParameterVector{A, B, C, D, E, F, G, H});
+    };
+
+    auto backend = runtime::Backend::create("CPU");
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::u8, shape_a);
+    copy_data(a, a_data);
+    auto b = backend->create_tensor(element::i8, shape_b);
+    copy_data(b, b_data);
+    auto d = backend->create_tensor(element::f32, Shape{1});
+    copy_data(d, vector<float>{-127.0f});
+    auto e = backend->create_tensor(element::f32, Shape{1});
+    copy_data(e, vector<float>{127.0f});
+    auto e_a = backend->create_tensor(element::f32, Shape{1});
+    copy_data(e_a, vector<float>{0.1f});
+    auto g = backend->create_tensor(element::f32, Shape{1});
+    copy_data(g, vector<float>{0.9f});
+    auto h = backend->create_tensor(element::f32, Shape{1});
+    copy_data(h, vector<float>{37.618633f});
+    auto i = backend->create_tensor(element::f32, Shape{1});
+    copy_data(i, vector<float>{2.236754f});
+
+    // QuantizedDot (no requantize, no relu)
+    auto f_nrequantize = make_function(false, false);
+    auto f_nrequantize_r = backend->create_tensor(element::f32, shape_r);
+    auto f_nrequantize_handle = backend->compile(f_nrequantize);
+    f_nrequantize_handle->call_with_validate({f_nrequantize_r}, {a, b, d, e, e_a, g, h, i});
+    EXPECT_EQ((vector<float>{25.584705352783203,
+                             33.88588333129883,
+                             44.71411895751953,
+                             70.78588104248047,
+                             -1.3305882215499878,
+                             105.76588439941406,
+                             66.03529357910156,
+                             37.86000061035156,
+                             117.58235168457031,
+                             63.0811767578125,
+                             -2.6364705562591553,
+                             124.02706146240234}),
+              read_vector<float>(f_nrequantize_r));
+
+    // QuantizedDot with relu
+    auto f_nrequantize_relu = make_function(false, true);
+    auto f_nrequantize_relu_r = backend->create_tensor(element::f32, shape_r);
+    auto f_nrequantize_relu_handle = backend->compile(f_nrequantize_relu);
+    f_nrequantize_relu_handle->call_with_validate({f_nrequantize_relu_r},
+                                                  {a, b, d, e, e_a, g, h, i});
+    EXPECT_EQ((vector<float>{25.584705352783203,
+                             33.88588333129883,
+                             44.71411895751953,
+                             70.78588104248047,
+                             -0.0,
+                             105.76588439941406,
+                             66.03529357910156,
+                             37.86000061035156,
+                             117.58235168457031,
+                             63.0811767578125,
+                             -0.0,
+                             124.02706146240234}),
+              read_vector<float>(f_nrequantize_relu_r));
+
+    // QuantizedDot with requantize and no relu
+    auto f_requantize = make_function(true, false);
+    auto f_requantize_r = backend->create_tensor(element::i8, shape_r);
+    auto handle = backend->compile(f_requantize);
+    handle->call_with_validate({f_requantize_r}, {a, b, d, e, e_a, g, h, i});
+    EXPECT_EQ((vector<int8_t>{86, 114, 127, 127, -4, 127, 127, 127, 127, 127, -9, 127}),
+              read_vector<int8_t>(f_requantize_r));
+
+    // QuantizedDot with requantize and relu
+    auto f_requantize_relu = make_function(true, true);
+    auto f_requantize_relu_r = backend->create_tensor(element::u8, shape_r);
+    auto f_requantize_relu_handle = backend->compile(f_requantize_relu);
+    f_requantize_relu_handle->call_with_validate({f_requantize_relu_r}, {a, b, d, e, e_a, g, h, i});
+    EXPECT_EQ((vector<uint8_t>{173, 230, 255, 255, 0, 255, 255, 255, 255, 255, 0, 255}),
+              read_vector<uint8_t>(f_requantize_relu_r));
+}
+
+// QuantizedDotBias
+TEST(builder, dynamic_scaled_QD_with_bias)
+{
+    Shape shape_a{4, 3}; // input shape
+    vector<uint8_t> a_data = {209, 122, 39, 11, 33, 243, 250, 216, 159, 18, 181, 187};
+    Shape shape_b{3, 3}; // filter shape
+    vector<int8_t> b_data = {11, 15, 80, 50, -6, -3, -6, 78, 113};
+    Shape shape_c{3}; // bias shape
+    vector<int32_t> c_data = {192, 49, 23};
+
+    Shape shape_r{4, 3}; // output shape
+
+    auto make_function = [shape_a, shape_b, shape_c](bool requantize, bool with_relu) {
+        auto A = make_shared<op::Parameter>(element::u8, shape_a);
+        auto B = make_shared<op::Parameter>(element::i8, shape_b);
+        auto Bias = make_shared<op::Parameter>(element::i32, shape_c);
+        auto C = make_shared<op::Parameter>(element::f32, Shape{1});
+        auto D = make_shared<op::Parameter>(element::f32, Shape{1});
+        auto E = make_shared<op::Parameter>(element::f32, Shape{1});
+        auto F = make_shared<op::Parameter>(element::f32, Shape{1});
+        auto G = make_shared<op::Parameter>(element::f32, Shape{1});
+        auto H = make_shared<op::Parameter>(element::f32, Shape{1});
+        auto CV = ngraph::builder::ScaledQuantizedDotBias(
+            A, B, Bias, C, D, E, F, G, H, requantize, with_relu);
+        return make_shared<Function>(NodeVector{CV}, ParameterVector{A, B, Bias, C, D, E, F, G, H});
+    };
+
+    auto backend = runtime::Backend::create("CPU");
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::u8, shape_a);
+    copy_data(a, a_data);
+    auto b = backend->create_tensor(element::i8, shape_b);
+    copy_data(b, b_data);
+    auto c = backend->create_tensor(element::i32, Shape{3});
+    copy_data(c, c_data);
+    auto d = backend->create_tensor(element::f32, Shape{1});
+    copy_data(d, vector<float>{-127.0f});
+    auto e = backend->create_tensor(element::f32, Shape{1});
+    copy_data(e, vector<float>{127.0f});
+    auto e_a = backend->create_tensor(element::f32, Shape{1});
+    copy_data(e_a, vector<float>{0.1f});
+    auto g = backend->create_tensor(element::f32, Shape{1});
+    copy_data(g, vector<float>{0.9f});
+    auto h = backend->create_tensor(element::f32, Shape{1});
+    copy_data(h, vector<float>{37.618633f});
+    auto i = backend->create_tensor(element::f32, Shape{1});
+    copy_data(i, vector<float>{2.236754f});
+
+    // QuantizedDotBias (no requantize, no relu)
+    auto f_nrequantize = make_function(false, false);
+    auto f_nrequantize_r = backend->create_tensor(element::f32, shape_r);
+    auto f_nrequantize_handle = backend->compile(f_nrequantize);
+    f_nrequantize_handle->call_with_validate({f_nrequantize_r}, {a, b, c, d, e, e_a, g, h, i});
+    EXPECT_EQ((vector<float>{26.262351989746094,
+                             34.05882263183594,
+                             44.79529571533203,
+                             71.46353149414062,
+                             -1.1576470136642456,
+                             105.84706115722656,
+                             66.71294403076172,
+                             38.03293991088867,
+                             117.66352844238281,
+                             63.75882339477539,
+                             -2.463529348373413,
+                             124.10823822021484}),
+              read_vector<float>(f_nrequantize_r));
+
+    // QuantizedDotBias with relu
+    auto f_nrequantize_relu = make_function(false, true);
+    auto f_nrequantize_relu_r = backend->create_tensor(element::f32, shape_r);
+    auto f_nrequantize_relu_handle = backend->compile(f_nrequantize_relu);
+    f_nrequantize_relu_handle->call_with_validate({f_nrequantize_relu_r},
+                                                  {a, b, c, d, e, e_a, g, h, i});
+    EXPECT_EQ((vector<float>{26.262351989746094,
+                             34.05882263183594,
+                             44.79529571533203,
+                             71.46353149414062,
+                             -0.0,
+                             105.84706115722656,
+                             66.71294403076172,
+                             38.03293991088867,
+                             117.66352844238281,
+                             63.75882339477539,
+                             -0.0,
+                             124.10823822021484}),
+              read_vector<float>(f_nrequantize_relu_r));
+
+    // QuantizedDotBias with requantize and no relu
+    auto f_requantize = make_function(true, false);
+    auto f_requantize_r = backend->create_tensor(element::i8, shape_r);
+    auto handle = backend->compile(f_requantize);
+    handle->call_with_validate({f_requantize_r}, {a, b, c, d, e, e_a, g, h, i});
+    EXPECT_EQ((vector<int8_t>{89, 115, 127, 127, -4, 127, 127, 127, 127, 127, -8, 127}),
+              read_vector<int8_t>(f_requantize_r));
+
+    // QuantizedDotBias with requantize and relu
+    auto f_requantize_relu = make_function(true, true);
+    auto f_requantize_relu_r = backend->create_tensor(element::u8, shape_r);
+    auto f_requantize_relu_handle = backend->compile(f_requantize_relu);
+    f_requantize_relu_handle->call_with_validate({f_requantize_relu_r},
+                                                 {a, b, c, d, e, e_a, g, h, i});
+    EXPECT_EQ((vector<uint8_t>{178, 231, 255, 255, 0, 255, 255, 255, 255, 255, 0, 255}),
+              read_vector<uint8_t>(f_requantize_relu_r));
+}
