@@ -100,7 +100,7 @@ namespace ngraph
                     // MKLDNN doesnt support negative padding
                     for (auto s : convolution->get_padding_above())
                     {
-                        if (s == -1)
+                        if (s < 0)
                         {
                             return false;
                         }
@@ -108,7 +108,7 @@ namespace ngraph
 
                     for (auto s : convolution->get_padding_below())
                     {
-                        if (s == -1)
+                        if (s < 0)
                         {
                             return false;
                         }
