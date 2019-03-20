@@ -97,7 +97,6 @@ namespace ngraph
                     {
                         return CoordinateDiff(input_shape.size());
                     }
-
                     CoordinateDiff pads_begin;
                     CoordinateDiff pads_end;
                     // Omit {N,C} axes
