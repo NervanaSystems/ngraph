@@ -152,7 +152,6 @@ set (SRC
     op/experimental/quantized_dot_bias.hpp
     op/experimental/transpose.cpp
     op/experimental/transpose.hpp
-    
     op/floor.cpp
     op/floor.hpp
     op/get_output_element.cpp

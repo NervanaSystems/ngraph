@@ -12393,7 +12393,6 @@ TEST(type_prop, dyn_pad_pad_value_test)
     auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
     auto pad_b = make_shared<op::Parameter>(element::i64, Shape{3});
     auto pad_a = make_shared<op::Parameter>(element::i64, Shape{3});
-    
 
     // padding value matches tensor data-type
     try 
@@ -12411,9 +12410,7 @@ TEST(type_prop, dyn_pad_pad_value_test)
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 
-
     // padding value is scalar
-
     try 
     {
         auto pad_v = make_shared<op::Parameter>(element::f32, Shape{3});
@@ -12428,13 +12425,10 @@ TEST(type_prop, dyn_pad_pad_value_test)
     {
         FAIL() << "Deduced type check failed for unexpected reason";
     }
-
 }
 
 TEST(type_prop, dyn_pad_wrong_ranks)
 {
-    
-    
     auto pad_v = make_shared<op::Parameter>(element::f32, Shape{});
     try 
     {

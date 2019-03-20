@@ -51,8 +51,6 @@ void op::DynPad::validate_and_infer_types()
                           "DynPad shape must have element type i64, but has ",
                           padding_above_et);
 
-    
-
     // padding_value is of scalar shape or rank is unknown
     auto padding_value_rank = get_input_partial_shape(3).rank();
     NODE_VALIDATION_CHECK(this,
