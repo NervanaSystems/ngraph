@@ -85,7 +85,6 @@ TEST(concat_fusion, single_branch)
     auto optimized_results = execute(optimized_f, args, "INTERPRETER");
 
     EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
-
 }
 
 TEST(concat_fusion, multiple_branches_1)
