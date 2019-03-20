@@ -1949,14 +1949,10 @@ namespace ngraph
                     writer.block_end();
 
                     writer << "size_t pos = pos_raw;\n"
-                           << "if (pos >= " << bounds << ")\n";
-
+                           << "if (pos < " << bounds << ")\n";
                     writer.block_begin();
-                    writer << "throw(std::range_error(\"One-hot: value is out of category "
-                              "range\"));\n";
-                    writer.block_end();
-
                     writer << "out_vector(pos, 0) = 1;\n";
+                    writer.block_end();
 
                     writer.block_end();
                 }
@@ -1983,14 +1979,11 @@ namespace ngraph
                     writer << "size_t pos = pos_raw;\n";
                     writer << "bool found = false;\n";
 
-                    writer << "if (pos >= " << bounds << ")\n";
+                    writer << "if (pos < " << bounds << ")\n";
                     writer.block_begin();
-                    writer << "throw(std::range_error(\"One-hot: value is out of category "
-                              "range\"));\n";
-                    writer.block_end();
-
                     writer << "out_vector"
                            << (oh->get_one_hot_axis() == 0 ? "(pos, i)" : "(i, pos)") << " = 1;\n";
+                    writer.block_end();
 
                     writer.block_end();
 
