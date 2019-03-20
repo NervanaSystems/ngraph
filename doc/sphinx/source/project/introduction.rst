@@ -21,7 +21,7 @@ handling compute for specialized kinds of :abbr:`Machine Learning (ML)` or
 :abbr:`DL (Deep Learning)` operations; this approach essentially designs a 
 custom network infrastructure *around* specific problems AI is supposed to 
 solve. For example, many companies are actively developing specialized 
-:abbr:`Application Specific Integrated Circuits (ASICs)` to speed-up 
+:abbr:`Application-Specific Integrated Circuits (ASICs)` to speed-up 
 training (one kind of ASIC) or to reduce inference latency (another kind 
 of ASIC) in their cloud-based or local data centers. This approach works 
 great for :abbr:`Cloud Service Providers (CSPs)` and others that have 
@@ -167,28 +167,29 @@ Solution: nGraph and PlaidML
 
 Each of the problems above can be solved with nGraph and PlaidML. We developed 
 nGraph and integrated it with PlaidML so developers wanting to craft solutions 
-with :abbr:`Artificial Intelligence (AI)` won't have to face such a steep 
+with :abbr:`AI (Artificial Intelligence)` won't have to face such a steep 
 learning curve in taking their concepts from design to production to scale. The 
 fundamental efficiencies behind Moore's Law are not dead; rather than fitting 
 `more transistors on denser and denser circuits`_, we're enabling advances 
 in compute with more transformers on denser and more data-heavy 
-:abbr:`Deep Learning Networks (DNNs)`, and making it easier to apply advances in 
+:abbr:`Deep Learning Networks (DNNs)`, and making it easier to apply  
 :abbr:`Machine Learning (ML)` to different industries and problems. 
 
-For developers with a network already in place, using the nGraph Compiler stack 
-can further accelerate a network and allows for a quicker adaptation of models 
-and easier upgrade of hardware.
+For developers with a neural network already in place, executing workloads using 
+the nGraph Compiler provides further performance benefits and allows for quicker 
+adaptation of models. It also make it much easier to upgrade hardware 
+infrastructure pieces as workloads grow and require more careful balancing.
 
-This documentation provides technical details of nGraph's core functionality, framework 
-and backend integrations. Creating a compiler stack like nGraph and PlaidML 
-requires expert knowledge, and we hope nGraph and PlaidML will lift the burden 
-for:
+This documentation provides technical details of nGraph's core functionality, 
+framework and backend integrations. Creating a compiler stack like nGraph and 
+PlaidML requires expert knowledge, and we're confident that nGraph and PlaidML 
+will make life easier for many kinds of developers: 
 
 #. Framework owners looking to support new hardware and custom chips.
 #. Data scientists and ML developers wishing to accelerate deep learning 
    performance.
-#. New DL accelerator developers creating an end-to-end software stack from a deep 
-   learning framework to their silicon.  
+#. New DL accelerator developers creating an end-to-end software stack from 
+   a deep learning framework to their silicon.  
 
 
 .. _more transistors on denser and denser circuits: https://www.intel.com/content/www/us/en/silicon-innovations/moores-law-technology.html
