@@ -56,12 +56,20 @@ namespace ngraph
 class ngraph::runtime::cpu::CPUAllocator : public ngraph::runtime::Allocator
 {
 public:
-    CPUAllocator();
+    CPUAllocator(runtime::AllocateFunc alloc, runtime::DestroyFunc dealloc);
     ~CPUAllocator();
 
     void* Malloc(void* handle, size_t size, size_t alignment)
     {
-        void* ptr = malloc(size);
+        void* ptr;
+        if (m_alloc)
+        {
+            ptr = m_alloc(handle, size, alignment);
+        }
+        else
+        {
+            ptr = malloc(size);
+        }
         // check for exception
         if (size != 0 && !ptr)
         {
@@ -74,7 +82,18 @@ public:
     {
         if (ptr)
         {
-            free(ptr);
+            if (m_dealloc)
+            {
+                m_dealloc(handle, ptr);
+            }
+            else
+            {
+                free(ptr);
+            }
         }
     }
+
+private:
+    runtime::AllocateFunc m_alloc;
+    runtime::DestroyFunc m_dealloc;
 };

@@ -143,7 +143,8 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
 
     // Create temporary buffer pools
     size_t alignment = runtime::cpu::CPU_ExternalFunction::s_memory_pool_alignment;
-    ngraph::runtime::Allocator* allocator = new ngraph::runtime::cpu::CPUAllocator();
+    ngraph::runtime::Allocator* allocator =
+        new ngraph::runtime::cpu::CPUAllocator(nullptr, nullptr);
     /*if (m_framework_allocator && m_framework_deallocator)
     {
         auto fw_allocator =

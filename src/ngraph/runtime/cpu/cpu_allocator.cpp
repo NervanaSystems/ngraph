@@ -22,31 +22,17 @@ namespace ngraph
     {
         namespace cpu
         {
-            CPUAllocator::CPUAllocator() {}
+            CPUAllocator::CPUAllocator(runtime::AllocateFunc alloc, runtime::DestroyFunc dealloc)
+                : m_alloc(alloc)
+                , m_dealloc(dealloc)
+            {
+            }
             CPUAllocator::~CPUAllocator() {}
             CPUAllocator& GetCPUAllocator()
             {
-                static CPUAllocator cpu_allocator;
+                static CPUAllocator cpu_allocator(nullptr, nullptr);
                 return cpu_allocator;
             }
         }
     }
 }
-/*ngraph::runtime::SystemAllocator::SystemAllocator()
-{
-}
-
-ngraph::runtime::SystemAllocator::~SystemAllocator()
-{
-}
-
-ngraph::runtime::FrameworkAllocator::~FrameworkAllocator()
-{
-}
-
-ngraph::runtime::FrameworkAllocator::FrameworkAllocator(AllocateFunc& allocator,
-                                                        DestroyFunc& deallocator)
-    : m_allocator(allocator)
-    , m_deallocator(deallocator)
-{
-}*/
