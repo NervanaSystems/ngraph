@@ -67,9 +67,6 @@ namespace ngraph
                 bool is_supported(const Node& node) const override;
                 bool is_supported_property(const Property prop) const override;
 
-                //static inline void* MallocHook(size_t size);
-                //static inline void FreeHook(void *ptr);
-
             private:
                 std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<Executable>>
                     m_exec_map;

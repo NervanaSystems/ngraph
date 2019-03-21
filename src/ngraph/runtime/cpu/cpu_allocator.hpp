@@ -45,8 +45,6 @@ namespace ngraph
     namespace runtime
     {
         class Allocator;
-        //class SystemAllocator;
-        //class FrameworkAllocator;
         namespace cpu
         {
             class CPUAllocator;
@@ -61,7 +59,7 @@ public:
     CPUAllocator();
     ~CPUAllocator();
 
-    void* Malloc(void* handle, size_t size, size_t alignment) override
+    void* Malloc(void* handle, size_t size, size_t alignment)
     {
         void* ptr = malloc(size);
         // check for exception
@@ -72,7 +70,7 @@ public:
         }
         return ptr;
     }
-    void Free(void* handle, void* ptr) override
+    void Free(void* handle, void* ptr)
     {
         if (ptr)
         {
@@ -80,75 +78,3 @@ public:
         }
     }
 };
-
-/*// Abstarct class for the allocator
-class ngraph::runtime::Allocator
-{
-public:
-    virtual void* cpu_malloc(void*, size_t size, size_t alignment) = 0;
-    virtual void cpu_free(void* ptr, void*) = 0;
-};
-
-class ngraph::runtime::SystemAllocator : public ngraph::runtime::Allocator
-{
-public:
-    SystemAllocator(size_t alignment);
-    ~SystemAllocator();
-
-    void* cpu_malloc(void*, size_t size, size_t alignment) override
-    {
-        void* ptr = malloc(size);
-
-        // check for exception
-        if (size != 0 && !ptr)
-        {
-            throw ngraph_error("malloc failed to allocate memory of size " + std::to_string(size));
-            throw std::bad_alloc();
-        }
-        return ptr;
-    }
-
-    void cpu_free(void* ptr, void*) override
-    {
-        if (ptr)
-        {
-            free(ptr);
-        }
-    }
-
-private:
-    size_t m_alignment;
-};
-
-class ngraph::runtime::FrameworkAllocator : public ngraph::runtime::Allocator
-{
-public:
-    FrameworkAllocator(AllocateFunc allocator, DestroyFunc deallocator, size_t alignment);
-    ~FrameworkAllocator();
-
-    void* cpu_malloc(void*, size_t size, size_t alignment) override
-    {
-        void* ptr = m_allocator(nullptr, alignment, size);
-
-        // check for exception
-        if (size != 0 && !ptr)
-        {
-            throw ngraph_error("malloc failed to allocate memory of size " + std::to_string(size));
-            throw std::bad_alloc();
-        }
-        return ptr;
-    }
-
-    void cpu_free(void* ptr, void*) override
-    {
-        if (ptr)
-        {
-            m_deallocator(nullptr, ptr);
-        }
-    }
-
-private:
-    AllocateFunc m_allocator;
-    DestroyFunc m_deallocator;
-    size_t m_alignment;
-};*/

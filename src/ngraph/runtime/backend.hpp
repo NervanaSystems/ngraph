@@ -117,7 +117,7 @@ public:
 
     virtual void remove_compiled_function(std::shared_ptr<Executable> exec);
 
-    virtual void* get_device_memory_alloc();
-    virtual void* get_device_memory_dealloc();
+    virtual ngraph::runtime::AllocateFunc get_device_memory_alloc();
+    virtual ngraph::runtime::DestroyFunc get_device_memory_dealloc();
     virtual bool is_device_memory();
 };
