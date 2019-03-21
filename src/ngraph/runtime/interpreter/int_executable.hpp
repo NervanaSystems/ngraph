@@ -136,6 +136,8 @@
 
 #ifdef NGRAPH_DISTRIBUTED_ENABLE
 #include "ngraph/runtime/reference/allreduce.hpp"
+#include "ngraph/runtime/reference/broadcastrecv.hpp"
+#include "ngraph/runtime/reference/broadcastsend.hpp"
 #endif
 
 namespace ngraph
@@ -438,6 +440,24 @@ private:
         }
         case OP_TYPEID::BroadcastDistributed: {
 #ifdef NGRAPH_DISTRIBUTED_ENABLE
+            Distributed dist;
+            int Rank_ID;
+            Rank_ID = dist.get_rank();
+            if (Rank_ID == 0)
+            {
+                reference::broadcastsend<T>(args[0]->get_data_ptr<T>(),
+                                            node.get_input_element_type(0),
+                                            static_cast<int>(shape_size(node.get_input_shape(0))));
+                auto memSize = static_cast<int>(shape_size(node.get_input_shape(0))) *
+                               sizeof(node.get_input_element_type(0));
+                memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), memSize);
+            }
+            else
+            {
+                reference::broadcastrecv<T>(out[0]->get_data_ptr<T>(),
+                                            node.get_input_element_type(0),
+                                            static_cast<int>(shape_size(node.get_input_shape(0))));
+            }
             break;
 #endif
             break;

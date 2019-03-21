@@ -62,7 +62,7 @@ TEST(distributed_${BACKEND_NAME}, broadcastdistributed)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::BroadcastDistributed>(A), ParameterVector{A});
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     auto v = vector<float>{1, 2, 3, 4};
     auto result = backend->create_tensor(element::f32, shape);
