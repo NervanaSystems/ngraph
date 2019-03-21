@@ -6688,12 +6688,12 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_scalar)
 
     auto a = backend->create_tensor(element::f32, input_shape);
     copy_data(a, vector<float>{0});
-    auto result = backend->create_tensor(element::u64, output_shape);
+    auto result = backend->create_tensor(element::i64, output_shape);
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    vector<uint64_t> expected{};
-    EXPECT_EQ(expected, read_vector<uint64_t>(result));
+    vector<int64_t> expected{};
+    EXPECT_EQ(expected, read_vector<int64_t>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, shape_of_vector)
@@ -6708,12 +6708,12 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_vector)
 
     auto a = backend->create_tensor(element::f32, input_shape);
     copy_data(a, vector<float>(2, 0));
-    auto result = backend->create_tensor(element::u64, output_shape);
+    auto result = backend->create_tensor(element::i64, output_shape);
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    vector<uint64_t> expected{2};
-    EXPECT_EQ(expected, read_vector<uint64_t>(result));
+    vector<int64_t> expected{2};
+    EXPECT_EQ(expected, read_vector<int64_t>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, shape_of_matrix)
@@ -6728,12 +6728,12 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_matrix)
 
     auto a = backend->create_tensor(element::f32, input_shape);
     copy_data(a, vector<float>(2 * 4, 0));
-    auto result = backend->create_tensor(element::u64, output_shape);
+    auto result = backend->create_tensor(element::i64, output_shape);
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    vector<uint64_t> expected{2, 4};
-    EXPECT_EQ(expected, read_vector<uint64_t>(result));
+    vector<int64_t> expected{2, 4};
+    EXPECT_EQ(expected, read_vector<int64_t>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, shape_of_5d)
@@ -6748,12 +6748,12 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_5d)
 
     auto a = backend->create_tensor(element::f32, input_shape);
     copy_data(a, vector<float>(2 * 4 * 8 * 16 * 32, 0));
-    auto result = backend->create_tensor(element::u64, output_shape);
+    auto result = backend->create_tensor(element::i64, output_shape);
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    vector<uint64_t> expected{2, 4, 8, 16, 32};
-    EXPECT_EQ(expected, read_vector<uint64_t>(result));
+    vector<int64_t> expected{2, 4, 8, 16, 32};
+    EXPECT_EQ(expected, read_vector<int64_t>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, dequantize_dynamic_offset)

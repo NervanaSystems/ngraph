@@ -45,6 +45,7 @@ namespace ngraph
     }
     namespace op
     {
+        class Constant;
         class Parameter;
         class Result;
     } // namespace op
@@ -109,6 +110,11 @@ namespace ngraph
         // Called after transition
         void delayed_validate_and_infer_types();
 
+        virtual bool as_constants(std::vector<std::shared_ptr<op::Constant>>* results) const
+        {
+            return false;
+        }
+
         /// \brief Get the string name for the type of the node, such as `Add` or `Multiply`.
         ///        The class name, must not contain spaces as it is used for codegen.
         /// \returns A const reference to the node's type name
@@ -137,6 +143,9 @@ namespace ngraph
             Node* n = node.get();
             return std::type_index(typeid(*this)) == std::type_index(typeid(*n));
         }
+
+        void set_input_is_relevant_to_shape(size_t i, bool relevant = true);
+        void set_input_is_relevant_to_value(size_t i, bool relevant = true);
 
         void set_output_type(size_t i,
                              const element::Type& element_type,
