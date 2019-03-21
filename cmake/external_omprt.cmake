@@ -27,14 +27,16 @@ include(cmake/external_hwloc.cmake)
 
 include(ExternalProject)
 
+set(NGRAPH_LLVM_OMPRT_VERSION 8.0.0)
+
 set(OMPRT_INSTALL_PREFIX ${EXTERNAL_PROJECTS_ROOT}/omprt)
 
 ExternalProject_Add(
     ext_omprt
     PREFIX omprt
     DEPENDS ext_hwloc
-    URL http://prereleases.llvm.org/8.0.0/rc5/openmp-8.0.0rc5.src.tar.xz
-    URL_HASH SHA1=006e8734f642d831ce591eab3aa8d20c18e24962
+    URL http://releases.llvm.org/${NGRAPH_LLVM_OMPRT_VERSION}/openmp-${NGRAPH_LLVM_OMPRT_VERSION}.src.tar.xz
+    URL_HASH SHA1=90462a0f720a9a40ecbda9636c24d627b5dc05db
     DOWNLOAD_NO_PROGRESS TRUE
     PATCH_COMMAND git apply ${CMAKE_SOURCE_DIR}/cmake/omprt.patch
     CMAKE_ARGS
