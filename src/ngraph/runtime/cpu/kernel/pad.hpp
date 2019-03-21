@@ -37,8 +37,8 @@ namespace ngraph
                          void* pad_value,
                          const Shape& input_shape,
                          const Shape& output_shape,
-                         const Shape& padding_below,
-                         const Shape& padding_above,
+                         const CoordinateDiff& padding_below,
+                         const CoordinateDiff& padding_above,
                          int arena)
                 {
                     Eigen::array<Eigen::Index, Rank> out_dims, in_dims;
@@ -59,15 +59,61 @@ namespace ngraph
                         in.pad(padding, *static_cast<ElementType*>(pad_value));
                 }
 
+                template <typename ElementType, unsigned int Rank>
+                void pad_and_slice(void* input,
+                                   void* output,
+                                   void* pad_value,
+                                   const Shape& input_shape,
+                                   const Shape& output_shape,
+                                   const CoordinateDiff& padding_below,
+                                   const CoordinateDiff& padding_above,
+                                   int arena)
+                {
+                    Eigen::array<Eigen::Index, Rank> out_dims, in_dims;
+                    Eigen::array<Eigen::IndexPair<size_t>, Rank> padding;
+                    Eigen::array<Eigen::Index, Rank> indices;
+
+                    for (int i = 0; i < Rank; i++)
+                    {
+                        out_dims[i] = output_shape[i];
+                        in_dims[i] = input_shape[i];
+
+                        padding[i] = {
+                            padding_below[i] >= 0 ? static_cast<unsigned long int>(padding_below[i])
+                                                  : 0,
+                            padding_above[i] >= 0 ? static_cast<unsigned long int>(padding_above[i])
+                                                  : 0};
+
+                        if (padding_below[i] < 0)
+                        {
+                            NGRAPH_ASSERT(padding_below[i] > INT_MIN);
+                            indices[i] = -padding_below[i];
+                        }
+                        else
+                        {
+                            indices[i] = 0;
+                        }
+                    }
+
+                    Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> out(
+                        static_cast<ElementType*>(output), out_dims);
+                    Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> in(
+                        static_cast<ElementType*>(input), in_dims);
+
+                    out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
+                        in.pad(padding, *static_cast<ElementType*>(pad_value))
+                            .slice(indices, out_dims);
+                }
+
                 template <typename ElementType>
                 void pad_ref(const void* arg0,
                              const void* arg1,
                              void* out,
                              const Shape& arg0_shape,
                              const Shape& out_shape,
-                             const Shape& padding_below,
-                             const Shape& padding_above,
-                             const Shape& padding_interior,
+                             const CoordinateDiff& padding_below,
+                             const CoordinateDiff& padding_above,
+                             const ngraph::op::PadMode pad_mode,
                              int arena)
                 {
                     reference::pad(static_cast<const ElementType*>(arg0),
@@ -77,7 +123,7 @@ namespace ngraph
                                    out_shape,
                                    padding_below,
                                    padding_above,
-                                   padding_interior);
+                                   pad_mode);
                 }
             }
         }

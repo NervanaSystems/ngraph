@@ -16,6 +16,7 @@
 
 #include <memory>
 
+#include "exceptions.hpp"
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/frontend/onnx_import/op/pad.hpp"
 #include "ngraph/frontend/onnx_import/utils/convpool.hpp"
@@ -37,7 +38,24 @@ namespace ngraph
                     const Shape& data_shape = data->get_shape();
 
                     double value = node.get_attribute_value<double>("value", 0);
-
+                    std::string mode = node.get_attribute_value<std::string>("mode", "constant");
+                    ngraph::op::PadMode pad_mode;
+                    if (mode == "constant")
+                    {
+                        pad_mode = ngraph::op::PadMode::CONSTANT;
+                    }
+                    else if (mode == "reflect")
+                    {
+                        pad_mode = ngraph::op::PadMode::REFLECT;
+                    }
+                    else if (mode == "edge")
+                    {
+                        pad_mode = ngraph::op::PadMode::EDGE;
+                    }
+                    else
+                    {
+                        throw error::InvalidArgument("Unsupported padding mode: [" + mode + "]");
+                    }
                     auto paddings = convpool::get_pads(node, data_shape);
                     ngraph::CoordinateDiff padding_below = paddings.first;
                     ngraph::CoordinateDiff padding_above = paddings.second;
@@ -46,9 +64,9 @@ namespace ngraph
                         data,
                         std::make_shared<ngraph::op::Constant>(
                             data->get_element_type(), ngraph::Shape{}, std::vector<double>{value}),
-                        Shape(padding_below.begin(), padding_below.end()),
-                        Shape(padding_above.begin(), padding_above.end()),
-                        Shape(data_shape.size(), 0))};
+                        padding_below,
+                        padding_above,
+                        pad_mode)};
                 }
 
             } // namespace set_1
