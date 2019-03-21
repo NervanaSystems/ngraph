@@ -204,6 +204,104 @@ TEST(type_prop, broadcast_partial_rank_static_dynamic_shape_mismatch_wrong_size)
     }
 }
 
+TEST(type_prop, dyn_broadcast_shape_wrong_rank)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto bc_shape = make_shared<op::Parameter>(element::i64, Shape{1, 1});
+    auto bc_axes = make_shared<op::Parameter>(element::i64, Shape{1});
+
+    try
+    {
+        auto bc = make_shared<op::DynBroadcast>(arg, bc_shape, bc_axes);
+        FAIL() << "DynBroadcast: wrong shape rank not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "DynBroadcast shape rank must be 1");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, dyn_broadcast_axes_wrong_rank)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto bc_shape = make_shared<op::Parameter>(element::i64, Shape{1});
+    auto bc_axes = make_shared<op::Parameter>(element::i64, Shape{2, 2});
+
+    try
+    {
+        auto bc = make_shared<op::DynBroadcast>(arg, bc_shape, bc_axes);
+        FAIL() << "DynBroadcast: axes shape rank not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "DynBroadcast axes rank must be 1");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, dyn_broadcast_output_partial_shape_dynamic)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto bc_shape = make_shared<op::Parameter>(element::i64, Shape{1});
+    auto bc_axes = make_shared<op::Parameter>(element::i64, Shape{2});
+
+    auto bc = make_shared<op::DynBroadcast>(arg, bc_shape, bc_axes);
+    ASSERT_TRUE(bc->get_output_partial_shape(0).is_dynamic());
+}
+
+TEST(type_prop, dyn_broadcast_broadcast_shape_et_wrong)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    // wrong element type
+    auto bc_shape = make_shared<op::Parameter>(element::boolean, Shape{1});
+    auto bc_axes = make_shared<op::Parameter>(element::i64, Shape{2});
+
+    try
+    {
+        auto bc = make_shared<op::DynBroadcast>(arg, bc_shape, bc_axes);
+        FAIL() << "DynBroadcast: did not detect shape element type not i64";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("DynBroadcast shape must have element type i64"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, dyn_broadcast_axes_et_wrong)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto bc_shape = make_shared<op::Parameter>(element::i64, Shape{1});
+    // wrong element type
+    auto bc_axes = make_shared<op::Parameter>(element::f32, Shape{2});
+
+    try
+    {
+        auto bc = make_shared<op::DynBroadcast>(arg, bc_shape, bc_axes);
+        FAIL() << "DynBroadcast: did not detect axes element type not i64";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("DynBroadcast axes must have element type i64"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
 TEST(type_prop, batchnorm_training_rank_less_than_2)
 {
     auto dummy = make_shared<op::Parameter>(element::f32, Shape{1});

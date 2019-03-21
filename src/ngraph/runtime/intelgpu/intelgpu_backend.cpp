@@ -2012,6 +2012,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::TopK:
         case OP_TYPEID::Transpose:
         case OP_TYPEID::EmbeddingLookup:
+        case OP_TYPEID::DynBroadcast:
         case OP_TYPEID::Passthrough:
         {
             throw unsupported_op("Unsupported op '" + op->description() +
