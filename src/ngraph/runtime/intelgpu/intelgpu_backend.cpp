@@ -1360,8 +1360,7 @@ shared_ptr<runtime::Executable>
             arguments_check(op, 2, 1);
 
             const shared_ptr<op::Pad> pad = static_pointer_cast<op::Pad>(op);
-            const Shape& pad_below = pad->get_padding_below();
-            const Shape& pad_interior = pad->get_padding_interior();
+            const CoordinateDiff& pad_below = pad->get_padding_below();
 
             do_pad_operation(topology,
                              get_input_name(op, 0),
@@ -1370,8 +1369,7 @@ shared_ptr<runtime::Executable>
                              get_output_name(op),
                              get_output_shape(op),
                              get_output_type(op),
-                             pad_below,
-                             pad_interior);
+                             pad_below);
             break;
         }
         case OP_TYPEID::BatchNormTrainingBackprop:
@@ -2014,6 +2012,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::TopK:
         case OP_TYPEID::Transpose:
         case OP_TYPEID::EmbeddingLookup:
+        case OP_TYPEID::DynBroadcast:
         case OP_TYPEID::Passthrough:
         {
             throw unsupported_op("Unsupported op '" + op->description() +
