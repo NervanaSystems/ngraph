@@ -85,6 +85,11 @@ TEST(concat_fusion, single_branch)
     auto optimized_results = execute(optimized_f, args, "INTERPRETER");
 
     EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
+    size_t num_reshapes_optimized = count_ops_of_type<op::Reshape>(optimized_f);
+    size_t num_broadcast_optimzed = count_ops_of_type<op::Broadcast>(optimized_f);
+
+    ASSERT_EQ(num_reshapes_optimized, 1);
+    ASSERT_EQ(num_broadcast_optimzed, 1);
 }
 
 TEST(concat_fusion, multiple_branches_1)
@@ -127,6 +132,12 @@ TEST(concat_fusion, multiple_branches_1)
     auto optimized_results = execute(optimized_f, args, "INTERPRETER");
 
     EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
+
+    size_t num_reshapes_optimized = count_ops_of_type<op::Reshape>(optimized_f);
+    size_t num_broadcast_optimzed = count_ops_of_type<op::Broadcast>(optimized_f);
+
+    ASSERT_EQ(num_reshapes_optimized, 2);
+    ASSERT_EQ(num_broadcast_optimzed, 2);
 }
 
 TEST(concat_fusion, multiple_branches_2)
@@ -164,6 +175,12 @@ TEST(concat_fusion, multiple_branches_2)
     auto optimized_results = execute(optimized_f, args, "INTERPRETER");
 
     EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
+
+    size_t num_reshapes_optimized = count_ops_of_type<op::Reshape>(optimized_f);
+    size_t num_broadcast_optimzed = count_ops_of_type<op::Broadcast>(optimized_f);
+
+    ASSERT_EQ(num_reshapes_optimized, 1);
+    ASSERT_EQ(num_broadcast_optimzed, 1);
 }
 
 TEST(concat_fusion, non_fusable_self_concat)
@@ -213,6 +230,12 @@ TEST(concat_fusion, non_fusable_self_concat)
     auto optimized_results = execute(optimized_f, args, "INTERPRETER");
 
     EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
+
+    size_t num_reshapes_optimized = count_ops_of_type<op::Reshape>(optimized_f);
+    size_t num_broadcast_optimzed = count_ops_of_type<op::Broadcast>(optimized_f);
+
+    ASSERT_EQ(num_reshapes_optimized, 2);
+    ASSERT_EQ(num_broadcast_optimzed, 3);
 }
 
 TEST(concat_fusion, self_concat_with_fan_out)
@@ -262,4 +285,10 @@ TEST(concat_fusion, self_concat_with_fan_out)
     auto optimized_results = execute(optimized_f, args, "INTERPRETER");
 
     EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
+
+    size_t num_reshapes_optimized = count_ops_of_type<op::Reshape>(optimized_f);
+    size_t num_broadcast_optimzed = count_ops_of_type<op::Broadcast>(optimized_f);
+
+    ASSERT_EQ(num_reshapes_optimized, 1);
+    ASSERT_EQ(num_broadcast_optimzed, 1);
 }

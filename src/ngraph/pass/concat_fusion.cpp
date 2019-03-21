@@ -99,7 +99,7 @@ void pass::ConcatElimination::construct_concat_elimination()
         auto root = std::dynamic_pointer_cast<op::Concat>(m.get_match_root());
         if (root && (root->get_input_shape(0) == root->get_output_shape(0)))
         {
-            NGRAPH_DEBUG << " elmimited " << m.get_match_root() << "\n";
+            NGRAPH_DEBUG << " eliminated " << m.get_match_root() << "\n";
             replace_node(m.get_match_root(), op);
 
             return true;
