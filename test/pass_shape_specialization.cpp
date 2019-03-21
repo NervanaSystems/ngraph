@@ -33,8 +33,7 @@ TEST(shape_specialization, as_constants_shape_of)
     auto param = make_shared<op::Parameter>(element::boolean, Shape{2, 4, 6, 8});
     auto shape_of = make_shared<op::ShapeOf>(param);
 
-    vector<shared_ptr<op::Constant>> replacements;
-    ASSERT_TRUE(shape_of->as_constants(&replacements));
+    vector<shared_ptr<op::Constant>> replacements = shape_of->as_constants();
     ASSERT_EQ(replacements.size(), 1);
     ASSERT_EQ(replacements[0]->get_shape(), Shape{4});
     ASSERT_EQ(replacements[0]->get_element_type(), element::i64);

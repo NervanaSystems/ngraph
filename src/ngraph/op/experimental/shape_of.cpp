@@ -32,17 +32,16 @@ void op::ShapeOf::validate_and_infer_types()
     set_output_type(0, element::i64, PartialShape{get_input_partial_shape(0).rank()});
 }
 
-bool op::ShapeOf::as_constants(std::vector<std::shared_ptr<op::Constant>>* results) const
+std::vector<std::shared_ptr<op::Constant>> op::ShapeOf::as_constants() const
 {
     if (get_input_partial_shape(0).is_static())
     {
-        *results = {op::Constant::create(
+        return {op::Constant::create(
             element::i64, Shape{get_input_shape(0).size()}, get_input_shape(0))};
-        return true;
     }
     else
     {
-        return false;
+        return {};
     }
 }
 

@@ -85,8 +85,8 @@ bool pass::ShapeSpecialization::run_on_function(std::shared_ptr<Function> f)
     {
         if (shape_determinants.count(n.get()) > 0)
         {
-            std::vector<std::shared_ptr<op::Constant>> replacement_constants;
-            if (n->as_constants(&replacement_constants))
+            std::vector<std::shared_ptr<op::Constant>> replacement_constants = n->as_constants();
+            if (replacement_constants.size() > 0)
             {
                 NGRAPH_ASSERT(n->get_output_size() == replacement_constants.size());
 
