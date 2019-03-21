@@ -127,6 +127,7 @@ namespace ngraph
     class AxisSet;
     class AxisVector;
     class Coordinate;
+    class CoordinateDiff;
     class Shape;
     class Strides;
 
@@ -141,8 +142,8 @@ namespace ngraph
                                     float* pad_value,
                                     const Shape& input_shape,
                                     const Shape& output_shape,
-                                    const Shape& padding_below,
-                                    const Shape& padding_above,
+                                    const CoordinateDiff& padding_below,
+                                    const CoordinateDiff& padding_above,
                                     int arena);
 
                 void reduce_sum_all_1d_float32(float* input,

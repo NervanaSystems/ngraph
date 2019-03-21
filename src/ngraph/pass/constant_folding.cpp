@@ -86,7 +86,7 @@ shared_ptr<op::Constant> make_constant_pad(shared_ptr<op::Constant> constant,
                                out_shape,
                                pad->get_padding_below(),
                                pad->get_padding_above(),
-                               pad->get_padding_interior());
+                               pad->get_pad_mode());
 
     return make_shared<op::Constant>(constant->get_element_type(), out_shape, out_vec);
 }
@@ -98,12 +98,12 @@ void pass::ConstantFolding::construct_constant_pad()
 
     auto pad_value_label = make_shared<pattern::op::Label>(element::f32, Shape{}, is_constant);
 
-    Shape padding_below{0};
-    Shape padding_above{0};
-    Shape padding_interior{0};
+    CoordinateDiff padding_below{0};
+    CoordinateDiff padding_above{0};
+    op::PadMode pad_mode{op::PadMode::CONSTANT};
 
     auto pad = make_shared<op::Pad>(
-        constant_label, pad_value_label, padding_below, padding_above, padding_interior);
+        constant_label, pad_value_label, padding_below, padding_above, pad_mode);
 
     auto constant_pad_callback = [constant_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_pad_callback against node = "
