@@ -842,14 +842,22 @@ std::string runtime::gpu::GPU_Emitter::emit_Pad(EMIT_ARGS)
     auto padding_below = pad->get_padding_below();
     auto padding_above = pad->get_padding_above();
     auto padding_interior = pad->get_padding_interior();
+    auto pad_mode = pad->get_pad_mode();
+
+    if (pad_mode != op::PadMode::CONSTANT)
+    {
+        throw unsupported_op("Pad modes other than CONSTANT are unsupported");
+    }
 
     auto& cuda_emitter = compiled_function->get_primitive_emitter()->get_cuda_emitter();
+
+    NVShape converted_padding(padding_below.begin(), padding_below.end());
 
     auto index =
         cuda_emitter->build_pad_fill({{args[0].get_type(), args[1].get_type(), out[0].get_type()}},
                                      input_shape,
                                      output_shape,
-                                     padding_below,
+                                     converted_padding,
                                      padding_interior);
 
     return compiled_function->add_to_runtime(index, function_name, args, out);

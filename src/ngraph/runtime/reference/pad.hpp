@@ -21,6 +21,7 @@
 #include "ngraph/assertion.hpp"
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/coordinate_transform.hpp"
+#include "ngraph/op/pad.hpp" // for op::PadMode
 
 namespace ngraph
 {
@@ -34,9 +35,9 @@ namespace ngraph
                      T* out,
                      const Shape& arg0_shape,
                      const Shape& out_shape,
-                     const Shape& padding_below,
-                     const Shape& padding_above,
-                     const Shape& padding_interior)
+                     const CoordinateDiff& padding_below,
+                     const CoordinateDiff& padding_above,
+                     op::PadMode pad_mode)
             {
                 Coordinate input_start(arg0_shape.size(), 0); // start at (0,0,...,0)
                 Coordinate input_end =
@@ -50,30 +51,13 @@ namespace ngraph
                     input_axis_order[i] = i;
                 }
 
-                Strides input_dilation(arg0_shape.size());
-                for (size_t i = 0; i < arg0_shape.size(); i++)
-                {
-                    input_dilation[i] = padding_interior[i] + 1;
-                }
-
-                // Need to cast these to CoordinateDiff in order to make CoordinateTransform happy.
-                CoordinateDiff padding_below_signed;
-                CoordinateDiff padding_above_signed;
-
-                for (size_t i = 0; i < padding_below.size(); i++)
-                {
-                    padding_below_signed.push_back(padding_below[i]);
-                    padding_above_signed.push_back(padding_above[i]);
-                }
-
                 CoordinateTransform input_transform(arg0_shape,
                                                     input_start,
                                                     input_end,
                                                     input_strides,
                                                     input_axis_order,
-                                                    padding_below_signed,
-                                                    padding_above_signed,
-                                                    input_dilation);
+                                                    padding_below,
+                                                    padding_above);
                 CoordinateTransform output_transform(out_shape);
 
                 CoordinateTransform::Iterator output_it = output_transform.begin();
@@ -85,9 +69,100 @@ namespace ngraph
                 {
                     const Coordinate& out_coord = *output_it;
 
-                    T v = input_transform.has_source_coordinate(in_coord)
-                              ? arg0[input_transform.index(in_coord)]
-                              : *arg1;
+                    T v;
+
+                    switch (pad_mode)
+                    {
+                    case op::PadMode::CONSTANT:
+                        // If the coordinate is out of bounds, substitute *arg1.
+                        v = input_transform.has_source_coordinate(in_coord)
+                                ? arg0[input_transform.index(in_coord)]
+                                : *arg1;
+                        break;
+                    case op::PadMode::EDGE:
+                    {
+                        Coordinate c = in_coord; // have to copy because in_coord is const
+
+                        // Truncate each out-of-bound dimension.
+                        for (size_t i = 0; i < c.size(); i++)
+                        {
+                            if (static_cast<ptrdiff_t>(c[i]) < padding_below[i])
+                            {
+                                c[i] = padding_below[i];
+                            }
+
+                            if (static_cast<ptrdiff_t>(c[i]) >=
+                                (padding_below[i] + static_cast<ptrdiff_t>(arg0_shape[i])))
+                            {
+                                c[i] = static_cast<size_t>(
+                                    padding_below[i] + static_cast<ptrdiff_t>(arg0_shape[i]) - 1);
+                            }
+                        }
+                        v = arg0[input_transform.index(c)];
+                        break;
+                    }
+                    case op::PadMode::REFLECT:
+                    {
+                        // The algorithm here is a bit complicated because if the padding is
+                        // bigger than the tensor, we may reflect multiple times.
+                        //
+                        // Example:
+                        //
+                        // Input shape:     [2]
+                        // Padding:         6 below, 6 above
+                        // Output shape:    [14]
+                        //
+                        // Input:                       a b
+                        // Expected output: a b a b a b a b a b a b a b
+                        //
+                        // Computation for coordinate 13 of output:
+                        //
+                        //         . . . . . . a b . . . . .[.] -> (oob above by 6 spaces, so reflection is at top-6)
+                        //         .[.]. . . . a b . . . . . .  -> (oob below by 5 spaces, so reflection is at bottom+5)
+                        //         . . . . . . a b . . .[.]. .  -> (oob above by 4 spaces, so reflection is at top-4)
+                        //         . . .[.]. . a b . . . . . .  -> (oob below by 3 spaces, so reflection is at bottom+3)
+                        //         . . . . . . a b .[.]. . . .  -> (oob above by 2 spaces, so reflection is at top-2)
+                        //         . . . . .[.]a b . . . . . .  -> (oob below by 1 space,  so reflection is at bottom+1)
+                        //         . . . . . . a[b]. . . . . .  -> (no longer oob, so copy from here)
+                        //
+                        // Note that this algorithm works because REFLECT padding only makes sense
+                        // if each dim is >= 2.
+                        Coordinate c = in_coord; // have to copy because in_coord is const
+
+                        for (size_t i = 0; i < c.size(); i++)
+                        {
+                            ptrdiff_t new_dim = c[i];
+                            bool done_reflecting = false;
+
+                            while (!done_reflecting)
+                            {
+                                if (new_dim < padding_below[i])
+                                {
+                                    ptrdiff_t distance_oob = padding_below[i] - new_dim;
+                                    new_dim = padding_below[i] + distance_oob;
+                                }
+                                else if (new_dim >=
+                                         padding_below[i] + static_cast<ptrdiff_t>(arg0_shape[i]))
+                                {
+                                    ptrdiff_t distance_oob =
+                                        new_dim - padding_below[i] -
+                                        (static_cast<ptrdiff_t>(arg0_shape[i]) - 1);
+                                    new_dim = padding_below[i] +
+                                              static_cast<ptrdiff_t>(arg0_shape[i]) - distance_oob -
+                                              1;
+                                }
+                                else
+                                {
+                                    done_reflecting = true;
+                                }
+                            }
+
+                            c[i] = static_cast<size_t>(new_dim);
+                        }
+                        v = arg0[input_transform.index(c)];
+                        break;
+                    }
+                    }
 
                     out[output_transform.index(out_coord)] = v;
 
