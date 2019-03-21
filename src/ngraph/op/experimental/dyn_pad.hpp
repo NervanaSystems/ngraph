@@ -23,21 +23,20 @@ namespace ngraph
     namespace op
     {
         //// \brief Generic padding operation which takes padding below and above as dynamic shapes.
-        //// This is similar to existing Pad operation except padding values are dynamic and no interior padding. 
+        //// This is similar to existing Pad operation except padding values are dynamic and no interior padding.
         class DynPad : public Op
         {
         public:
             /// \brief Perform dynamic padding of a tensor
             ///
             /// \param arg The node producing input tensor to be padded.
-            /// \param padding_below The padding-below widths.
-            /// \param padding_above The padding-above widths.
+            /// \param padding_below The node producing the padding-below widths.
+            /// \param padding_above The node producing the padding-above widths.
             /// \param padding_value The value to be used for padding. Must be scalar.
             DynPad(const std::shared_ptr<Node>& arg,
-            const std::shared_ptr<Node>& padding_below,
-            const std::shared_ptr<Node>& padding_above,
-            const std::shared_ptr<Node>& padding_value);
-
+                   const std::shared_ptr<Node>& padding_below,
+                   const std::shared_ptr<Node>& padding_above,
+                   const std::shared_ptr<Node>& padding_value);
 
             void validate_and_infer_types() override;
 

@@ -12395,15 +12395,14 @@ TEST(type_prop, dyn_pad_pad_value_test)
     auto pad_a = make_shared<op::Parameter>(element::i64, Shape{3});
 
     // padding value matches tensor data-type
-    try 
+    try
     {
         auto pad_v = make_shared<op::Parameter>(element::i32, Shape{});
         auto dyn_pad = make_shared<op::DynPad>(arg, pad_b, pad_a, pad_v);
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), 
-                             "Padding value and arg type mismatch");
+        EXPECT_HAS_SUBSTRING(error.what(), "Padding value and arg type mismatch");
     }
     catch (...)
     {
@@ -12411,15 +12410,14 @@ TEST(type_prop, dyn_pad_pad_value_test)
     }
 
     // padding value is scalar
-    try 
+    try
     {
         auto pad_v = make_shared<op::Parameter>(element::f32, Shape{3});
         auto dyn_pad = make_shared<op::DynPad>(arg, pad_b, pad_a, pad_v);
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), 
-                             "DynPad arg is not scalar");
+        EXPECT_HAS_SUBSTRING(error.what(), "DynPad arg is not scalar");
     }
     catch (...)
     {
@@ -12430,7 +12428,41 @@ TEST(type_prop, dyn_pad_pad_value_test)
 TEST(type_prop, dyn_pad_wrong_ranks)
 {
     auto pad_v = make_shared<op::Parameter>(element::f32, Shape{});
-    try 
+
+    try
+    {
+        auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5});
+        auto pad_b = make_shared<op::Parameter>(element::i64, Shape{3, 4});
+        auto pad_a = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+        auto dyn_pad = make_shared<op::DynPad>(arg, pad_b, pad_a, pad_v);
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Shape of padding below must be of rank 1");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+
+    try
+    {
+        auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5});
+        auto pad_b = make_shared<op::Parameter>(element::i64, Shape{3});
+        auto pad_a = make_shared<op::Parameter>(
+            element::i64, PartialShape{Dimension::dynamic(), Dimension::dynamic()});
+        auto dyn_pad = make_shared<op::DynPad>(arg, pad_b, pad_a, pad_v);
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Shape of padding above must be of rank 1");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+
+    try
     {
         auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5});
         auto pad_b = make_shared<op::Parameter>(element::i64, Shape{3});
@@ -12439,15 +12471,14 @@ TEST(type_prop, dyn_pad_wrong_ranks)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), 
-                             "Arg and padding below ranks mismatch");
+        EXPECT_HAS_SUBSTRING(error.what(), "Arg and padding below ranks mismatch");
     }
     catch (...)
     {
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 
-    try 
+    try
     {
         auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5});
         auto pad_b = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
@@ -12456,15 +12487,14 @@ TEST(type_prop, dyn_pad_wrong_ranks)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), 
-                             "Arg and padding above ranks mismatch");
+        EXPECT_HAS_SUBSTRING(error.what(), "Arg and padding above ranks mismatch");
     }
     catch (...)
     {
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 
-    try 
+    try
     {
         auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
         auto pad_b = make_shared<op::Parameter>(element::i64, Shape{4});
@@ -12473,15 +12503,14 @@ TEST(type_prop, dyn_pad_wrong_ranks)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), 
-                             "Padding below and above ranks mismatch");
+        EXPECT_HAS_SUBSTRING(error.what(), "Padding below and above ranks mismatch");
     }
     catch (...)
     {
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
-    
+
 TEST(type_prop, dyn_pad_output_ranks_arg_static_ok)
 {
     auto pad_v = make_shared<op::Parameter>(element::f32, Shape{});
@@ -12497,7 +12526,8 @@ TEST(type_prop, dyn_pad_output_ranks_arg_static_ok)
 TEST(type_prop, dyn_pad_output_ranks_arg_dynamic_ok)
 {
     auto pad_v = make_shared<op::Parameter>(element::f32, Shape{});
-    auto arg = make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 4, Dimension::dynamic()});
+    auto arg = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), 4, Dimension::dynamic()});
     auto pad_b = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
     auto pad_a = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
     auto dyn_pad = make_shared<op::DynPad>(arg, pad_b, pad_a, pad_v);
@@ -12517,4 +12547,3 @@ TEST(type_prop, dyn_pad_output_ranks_pad_static_ok)
     EXPECT_EQ(dyn_pad->get_output_element_type(0), element::f32);
     EXPECT_TRUE(dyn_pad->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(3)));
 }
-    

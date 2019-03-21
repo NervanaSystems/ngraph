@@ -20,9 +20,9 @@ using namespace std;
 using namespace ngraph;
 
 op::DynPad::DynPad(const std::shared_ptr<Node>& arg,
-            const std::shared_ptr<Node>& padding_below,
-            const std::shared_ptr<Node>& padding_above,
-            const std::shared_ptr<Node>& padding_value)
+                   const std::shared_ptr<Node>& padding_below,
+                   const std::shared_ptr<Node>& padding_above,
+                   const std::shared_ptr<Node>& padding_value)
     : Op("DynPad", check_single_output_args({arg, padding_below, padding_above, padding_value}))
 {
     constructor_validate_and_infer_types();
@@ -30,13 +30,11 @@ op::DynPad::DynPad(const std::shared_ptr<Node>& arg,
 
 void op::DynPad::validate_and_infer_types()
 {
-
     auto arg_t = get_input_element_type(0);
     auto padding_value_t = get_input_element_type(3);
-    NODE_VALIDATION_CHECK(this,
-                          arg_t.compatible(padding_value_t),
-                          "Padding value and arg type mismatch");
-                          
+    NODE_VALIDATION_CHECK(
+        this, arg_t.compatible(padding_value_t), "Padding value and arg type mismatch");
+
     // shape node should have integer data type. For now we only allow i64
     //TODO: potenially make the type more flexible to include other integer types
     auto padding_below_et = get_input_element_type(1);
@@ -54,42 +52,42 @@ void op::DynPad::validate_and_infer_types()
     // padding_value is of scalar shape or rank is unknown
     auto padding_value_rank = get_input_partial_shape(3).rank();
     NODE_VALIDATION_CHECK(this,
-                          padding_value_rank.is_dynamic() || padding_value_rank.compatible(0),
+                          padding_value_rank.compatible(0),
                           "DynPad arg is not scalar (rank = 0), but has rank = ",
                           padding_value_rank);
-    
+
     auto arg_shape = get_input_partial_shape(0);
     auto arg_rank = arg_shape.rank();
     auto pd_bl_shape = get_input_partial_shape(1);
     auto pd_bl_rank = pd_bl_shape.rank();
     auto pd_ab_shape = get_input_partial_shape(2);
-    auto pd_ab_rank = pd_bl_shape.rank();
+    auto pd_ab_rank = pd_ab_shape.rank();
     auto output_rank = Rank::dynamic();
 
-    NODE_VALIDATION_CHECK(this, pd_bl_rank.compatible(1), "Partial shape of padding below must be 1");
-    NODE_VALIDATION_CHECK(this, pd_ab_rank.compatible(1), "Partial shape of padding above must be 1");
+    NODE_VALIDATION_CHECK(
+        this, pd_bl_rank.compatible(1), "Shape of padding below must be of rank 1");
+    NODE_VALIDATION_CHECK(
+        this, pd_ab_rank.compatible(1), "Shape of padding above must be of rank 1");
 
-    if (arg_rank.is_static()) 
+    if (arg_rank.is_static())
     {
-        // if padding below shape is fully static, check that ranks match
-        NODE_VALIDATION_CHECK(this, 
-                              pd_bl_shape.is_dynamic() || static_cast<Rank>(pd_bl_shape[0]).compatible(arg_rank) , 
+        // paddings shapes should be of form {arg_rank} or dynamic
+        NODE_VALIDATION_CHECK(this,
+                              pd_bl_shape.compatible(PartialShape{arg_rank}),
                               "Arg and padding below ranks mismatch");
 
-        NODE_VALIDATION_CHECK(this, 
-                              pd_ab_shape.is_dynamic() || static_cast<Rank>(pd_ab_shape[0]).compatible(arg_rank) , 
+        NODE_VALIDATION_CHECK(this,
+                              pd_ab_shape.compatible(PartialShape{arg_rank}),
                               "Arg and padding above ranks mismatch");
-        output_rank = arg_rank;                              
+        output_rank = arg_rank;
     }
     else
     {
         // arg's rank is dynamic
-        // check if padding above and below have matching ranks
-        
-        NODE_VALIDATION_CHECK(this, 
-                              pd_bl_shape.is_dynamic() || pd_ab_shape.is_dynamic() 
-                              || pd_bl_shape[0].compatible(pd_ab_shape[0]) , 
-                              "Padding below and above ranks mismatch");
+        // Check padding shapes. We already know that both are either ?, {?} or {x}
+        // They must be equal if both of form {x}
+        NODE_VALIDATION_CHECK(
+            this, pd_bl_shape.compatible(pd_ab_shape), "Padding below and above ranks mismatch");
 
         output_rank = pd_bl_shape.is_static() ? pd_bl_shape[0] : pd_ab_shape[0];
     }
