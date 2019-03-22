@@ -42,7 +42,8 @@ namespace ngraph
                 }
                 else if (element_type != element::f32)
                 {
-                    throw std::runtime_error("BroadcastDistributed op supports only f32 and f64 types");
+                    throw std::runtime_error(
+                        "BroadcastDistributed op supports only f32 and f64 types");
                 }
 
                 MLSL::Environment& env = MLSL::Environment::GetEnv();
