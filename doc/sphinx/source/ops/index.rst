@@ -97,7 +97,7 @@ Not currently a comprehensive list.
    batch_norm_training.rst
    batch_norm_training_backprop.rst
    broadcast.rst
-   broadcastdistributed.rst
+   broadcast_distributed.rst
    ceiling.rst
    concat.rst
    constant.rst
