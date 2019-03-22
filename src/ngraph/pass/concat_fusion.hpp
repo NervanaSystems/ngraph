@@ -55,6 +55,5 @@ private:
                                    const std::shared_ptr<pattern::op::Label>&,
                                    const std::shared_ptr<Node>&);
     bool replace_patterns(const NodeVector&);
-    std::vector<size_t> get_concatenation_axis_vector(const NodeVector&);
     std::vector<NodeVector> m_concat_pattern_vectors;
 };

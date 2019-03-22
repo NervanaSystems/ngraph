@@ -85,6 +85,17 @@ namespace
 
         return true;
     }
+
+    std::vector<size_t> get_concatenation_axis_vector(const NodeVector& bounded_concat_ops)
+    {
+        std::vector<size_t> concat_axis_vec;
+        for (auto iter : bounded_concat_ops)
+        {
+            auto concat_op = std::static_pointer_cast<op::Concat>(iter);
+            concat_axis_vec.push_back(concat_op->get_concatenation_axis());
+        }
+        return concat_axis_vec;
+    }
 }
 
 void pass::ConcatElimination::construct_concat_elimination()
@@ -243,18 +254,6 @@ void ngraph::pass::SelfConcatFusion::remove_single_concat_op_pattern()
             iter++;
         }
     }
-}
-
-std::vector<size_t> ngraph::pass::SelfConcatFusion::get_concatenation_axis_vector(
-    const NodeVector& bounded_concat_ops)
-{
-    std::vector<size_t> concat_axis_vec;
-    for (auto iter : bounded_concat_ops)
-    {
-        auto concat_op = std::static_pointer_cast<op::Concat>(iter);
-        concat_axis_vec.push_back(concat_op->get_concatenation_axis());
-    }
-    return concat_axis_vec;
 }
 
 bool ngraph::pass::SelfConcatFusion::replace_patterns(const NodeVector& bounded_concat_ops)
