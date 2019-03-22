@@ -29,6 +29,11 @@ runtime::Backend::~Backend()
 {
 }
 
+DL_HANDLE runtime::Backend::get_handle(const std::string& type)
+{
+    return BackendManager::get_handle(type);
+}
+
 unique_ptr<runtime::Backend> runtime::Backend::create(const string& type)
 {
     return BackendManager::create_backend(type);

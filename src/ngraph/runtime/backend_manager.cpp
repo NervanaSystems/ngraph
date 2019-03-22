@@ -66,6 +66,25 @@ vector<string> runtime::BackendManager::get_registered_backends()
     return rc;
 }
 
+unordered_map<string, DL_HANDLE>& runtime::BackendManager::get_handle_registry()
+{
+    static unordered_map<string, DL_HANDLE> s_handles;
+    return s_handles;
+}
+
+void runtime::BackendManager::register_handle(const string& name, DL_HANDLE h)
+{
+    get_handle_registry()[name] = h;
+}
+
+DL_HANDLE runtime::BackendManager::get_handle(const std::string& type)
+{
+    // TODO: check if this backend has a registered handle. if not throw an error
+    // for now, running with knives
+    return get_handle_registry()[type];
+}
+
+
 unique_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::string& config)
 {
     runtime::Backend* backend = nullptr;
@@ -97,6 +116,7 @@ unique_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
 #endif
             throw runtime_error(ss.str());
         }
+        register_handle(type, handle);
         function<const char*()> get_ngraph_version_string =
             reinterpret_cast<const char* (*)()>(DLSYM(handle, "get_ngraph_version_string"));
         if (!get_ngraph_version_string)

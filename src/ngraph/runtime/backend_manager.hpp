@@ -57,10 +57,18 @@ public:
     /// \returns A vector of all registered devices.
     static std::vector<std::string> get_registered_backends();
 
+    static DL_HANDLE get_handle(const std::string& type);
+
 private:
     static std::unique_ptr<runtime::Backend> create_backend(const std::string& type);
     static std::unordered_map<std::string, new_backend_t>& get_registry();
 
+    static std::unordered_map<std::string, DL_HANDLE>& get_handle_registry();
+
+    static void register_handle(const std::string& name, DL_HANDLE h);
+
+    static std::unordered_map<std::string, DL_HANDLE> s_handles;
+    
     static std::unordered_map<std::string, new_backend_t> s_registered_backend;
 
     static DL_HANDLE open_shared_library(std::string type);
