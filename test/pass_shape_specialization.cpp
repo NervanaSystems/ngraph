@@ -63,3 +63,93 @@ TEST(shape_specialization, specialization_pass_shape_of_transpose)
     ASSERT_EQ(constant_after->get_element_type(), element::i64);
     ASSERT_EQ(constant_after->get_vector<int64_t>(), (vector<int64_t>{1, 0}));
 }
+
+TEST(shape_specialization, as_constants_concat)
+{
+    auto k0 = op::Constant::create(element::i64, Shape{4}, {1, 2, 3, 4});
+    auto k1 = op::Constant::create(element::i64, Shape{3}, {2, 5, 1});
+    auto k2 = op::Constant::create(element::i64, Shape{0}, std::vector<int64_t>{});
+
+    auto concat = make_shared<op::Concat>(NodeVector{k0, k1, k2}, 0);
+
+    vector<shared_ptr<op::Constant>> replacements = concat->as_constants();
+    ASSERT_EQ(replacements.size(), 1);
+    ASSERT_EQ(replacements[0]->get_shape(), Shape{7});
+    ASSERT_EQ(replacements[0]->get_element_type(), element::i64);
+    ASSERT_EQ(replacements[0]->get_vector<int64_t>(), (vector<int64_t>{1, 2, 3, 4, 2, 5, 1}));
+}
+
+TEST(shape_specialization, as_constants_concat_noni64)
+{
+    auto k0 = op::Constant::create(element::i32, Shape{4}, {1, 2, 3, 4});
+    auto k1 = op::Constant::create(element::i32, Shape{3}, {2, 5, 1});
+    auto k2 = op::Constant::create(element::i32, Shape{0}, std::vector<int32_t>{});
+
+    auto concat = make_shared<op::Concat>(NodeVector{k0, k1, k2}, 0);
+
+    vector<shared_ptr<op::Constant>> replacements = concat->as_constants();
+    ASSERT_EQ(replacements.size(), 0);
+}
+
+TEST(shape_specialization, as_constants_concat_nonvec_dim0)
+{
+    auto k0 = op::Constant::create(element::i64, Shape{2, 2}, {1, 2, 3, 4});
+    auto k1 = op::Constant::create(element::i64, Shape{1, 2}, {2, 5});
+    auto k2 = op::Constant::create(element::i64, Shape{0, 2}, std::vector<int64_t>{});
+
+    auto concat = make_shared<op::Concat>(NodeVector{k0, k1, k2}, 0);
+
+    vector<shared_ptr<op::Constant>> replacements = concat->as_constants();
+    ASSERT_EQ(replacements.size(), 0);
+}
+
+TEST(shape_specialization, as_constants_concat_nonvec_dim1)
+{
+    auto k0 = op::Constant::create(element::i64, Shape{2, 2}, {1, 2, 3, 4});
+    auto k1 = op::Constant::create(element::i64, Shape{2, 1}, {2, 5});
+    auto k2 = op::Constant::create(element::i64, Shape{2, 0}, std::vector<int64_t>{});
+
+    auto concat = make_shared<op::Concat>(NodeVector{k0, k1, k2}, 1);
+
+    vector<shared_ptr<op::Constant>> replacements = concat->as_constants();
+    ASSERT_EQ(replacements.size(), 0);
+}
+
+TEST(shape_specialization, as_constants_concat_nonconst)
+{
+    auto k0 = op::Constant::create(element::i64, Shape{2, 2}, {1, 2, 3, 4});
+    auto k1 = op::Constant::create(element::i64, Shape{2, 2}, {2, 5, 2, 5});
+    auto add = k0 + k1;
+
+    auto concat = make_shared<op::Concat>(NodeVector{k0, k1, add}, 0);
+
+    vector<shared_ptr<op::Constant>> replacements = concat->as_constants();
+    ASSERT_EQ(replacements.size(), 0);
+}
+
+TEST(shape_specialization, specialization_pass_concat_transpose)
+{
+    auto param0 = make_shared<op::Parameter>(element::boolean, Shape{4, 6});
+    auto k0 = op::Constant::create(element::i64, Shape{1}, {0});
+    auto k1 = op::Constant::create(element::i64, Shape{1}, {1});
+
+    auto concat = make_shared<op::Concat>(NodeVector{k1, k0}, 0);
+
+    auto transpose = make_shared<op::Transpose>(param0, concat);
+    auto f = make_shared<Function>(transpose, ParameterVector{param0});
+
+    pass::Manager manager;
+    manager.register_pass<pass::ShapeSpecialization>();
+    manager.run_passes(f);
+
+    auto transpose_after =
+        dynamic_pointer_cast<op::Transpose>(f->get_results().at(0)->get_argument(0));
+    ASSERT_NE(transpose_after, nullptr);
+
+    auto constant_after = dynamic_pointer_cast<op::Constant>(transpose_after->get_argument(1));
+    ASSERT_NE(constant_after, nullptr);
+
+    ASSERT_EQ(constant_after->get_shape(), Shape{2});
+    ASSERT_EQ(constant_after->get_element_type(), element::i64);
+    ASSERT_EQ(constant_after->get_vector<int64_t>(), (vector<int64_t>{1, 0}));
+}
