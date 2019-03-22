@@ -49,12 +49,12 @@ public:
     virtual bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
 
 private:
-    void update_concat_pattern_vectors(const std::shared_ptr<Node>&, size_t);
+    void update_concat_pattern_vectors(const std::shared_ptr<Node>&);
     void remove_single_concat_op_pattern();
     void construct_concat_patterns(const std::shared_ptr<pattern::Matcher>&,
                                    const std::shared_ptr<pattern::op::Label>&,
                                    const std::shared_ptr<Node>&);
-    bool replace_patterns(const std::pair<NodeVector, std::vector<size_t>>&);
-
-    std::vector<std::pair<NodeVector, std::vector<size_t>>> m_concat_pattern_vectors;
+    bool replace_patterns(const NodeVector&);
+    std::vector<size_t> get_concatenation_axis_vector(const NodeVector&);
+    std::vector<NodeVector> m_concat_pattern_vectors;
 };

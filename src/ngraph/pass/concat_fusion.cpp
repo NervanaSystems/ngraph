@@ -128,23 +128,21 @@ bool ngraph::pass::SelfConcatFusion::run_on_function(std::shared_ptr<Function> f
     auto print_state_of_bounded_vectors = [this]() -> std::string {
         std::stringstream ss;
         ss << "-----------------------------------------------------------" << std::endl;
-        ss << "State of bounded <pattern vector, concat axis> pair vectors: " << std::endl;
+        ss << "State of bounded pattern node vectors: " << std::endl;
         ss << "-----------------------------------------------------------" << std::endl;
-        ss << "Number of pair vectors: " << this->m_concat_pattern_vectors.size() << std::endl;
+        ss << "Number of pattern node vectors: " << this->m_concat_pattern_vectors.size()
+           << std::endl;
         size_t c = 0;
         for (auto iter : this->m_concat_pattern_vectors)
         {
             ss << "For vector " << c << std::endl;
-            auto iter_node_vec = iter.first;
-            auto iter_concat_axis = iter.second;
+            auto iter_node_vec = iter;
             ss << "concat_op_vector: ";
             for (auto it : iter_node_vec)
             {
                 ss << it->get_name() << " ";
             }
             ss << std::endl;
-            ss << "corresponding concatenation axis vector: " << join(iter_concat_axis)
-               << std::endl;
             c++;
         }
         ss << "-----------------------------" << std::endl;
@@ -163,9 +161,9 @@ bool ngraph::pass::SelfConcatFusion::run_on_function(std::shared_ptr<Function> f
 
     remove_single_concat_op_pattern();
 
-    for (auto concat_op_pair : this->m_concat_pattern_vectors)
+    for (auto concat_op_pattern_node_vector : this->m_concat_pattern_vectors)
     {
-        modify_graph = replace_patterns(concat_op_pair);
+        modify_graph = replace_patterns(concat_op_pattern_node_vector);
     }
 
     return modify_graph;
@@ -198,32 +196,28 @@ void ngraph::pass::SelfConcatFusion::construct_concat_patterns(
         }
 
         auto& concat_vectors = this->m_concat_pattern_vectors;
-        size_t concat_axis =
-            std::static_pointer_cast<op::Concat>(concat_op)->get_concatenation_axis();
         if (concat_vectors.empty())
         {
-            concat_vectors.push_back(
-                make_pair(NodeVector{concat_op}, std::vector<size_t>{concat_axis}));
+            concat_vectors.push_back(NodeVector{concat_op});
         }
         else
         {
-            update_concat_pattern_vectors(concat_op, concat_axis);
+            update_concat_pattern_vectors(concat_op);
         }
     }
 }
 
 void ngraph::pass::SelfConcatFusion::update_concat_pattern_vectors(
-    const std::shared_ptr<Node>& concat_op, size_t concat_axis)
+    const std::shared_ptr<Node>& concat_op)
 {
     bool concat_source_found = false;
     for (auto& concat_pattern_vec : this->m_concat_pattern_vectors)
     {
-        auto last_op_in_pattern_vec = concat_pattern_vec.first.back();
+        auto last_op_in_pattern_vec = concat_pattern_vec.back();
         if ((concat_op->get_argument(0) == last_op_in_pattern_vec) &&
             (check_concat_has_no_fan_out(last_op_in_pattern_vec)))
         {
-            concat_pattern_vec.first.push_back(concat_op);
-            concat_pattern_vec.second.push_back(concat_axis);
+            concat_pattern_vec.push_back(concat_op);
             concat_source_found = true;
             break;
         }
@@ -231,8 +225,7 @@ void ngraph::pass::SelfConcatFusion::update_concat_pattern_vectors(
 
     if (!concat_source_found)
     {
-        this->m_concat_pattern_vectors.push_back(
-            make_pair(NodeVector{concat_op}, std::vector<size_t>{concat_axis}));
+        this->m_concat_pattern_vectors.push_back(NodeVector{concat_op});
     }
 }
 
@@ -241,7 +234,7 @@ void ngraph::pass::SelfConcatFusion::remove_single_concat_op_pattern()
     auto iter = m_concat_pattern_vectors.begin();
     while (iter != m_concat_pattern_vectors.end())
     {
-        if (iter->first.size() == 1)
+        if (iter->size() == 1)
         {
             iter = m_concat_pattern_vectors.erase(iter);
         }
@@ -252,8 +245,19 @@ void ngraph::pass::SelfConcatFusion::remove_single_concat_op_pattern()
     }
 }
 
-bool ngraph::pass::SelfConcatFusion::replace_patterns(
-    const std::pair<NodeVector, std::vector<size_t>>& concat_op_pair)
+std::vector<size_t> ngraph::pass::SelfConcatFusion::get_concatenation_axis_vector(
+    const NodeVector& bounded_concat_ops)
+{
+    std::vector<size_t> concat_axis_vec;
+    for (auto iter : bounded_concat_ops)
+    {
+        auto concat_op = std::static_pointer_cast<op::Concat>(iter);
+        concat_axis_vec.push_back(concat_op->get_concatenation_axis());
+    }
+    return concat_axis_vec;
+}
+
+bool ngraph::pass::SelfConcatFusion::replace_patterns(const NodeVector& bounded_concat_ops)
 {
     auto scalarize_dim = [](std::vector<size_t> concat_axis_vector,
                             const Shape& input_shape) -> Shape {
@@ -269,8 +273,8 @@ bool ngraph::pass::SelfConcatFusion::replace_patterns(
         }
         return scalarized_shape;
     };
-    auto bounded_concat_ops = concat_op_pair.first;
-    auto concat_axis_vector = concat_op_pair.second;
+
+    auto concat_axis_vector = get_concatenation_axis_vector(bounded_concat_ops);
 
     auto& first_bounded_concat = (*bounded_concat_ops.begin());
     auto driver_op = first_bounded_concat->get_argument(0);
