@@ -24,7 +24,6 @@
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/util.hpp"
 
-using namespace ngraph;
 namespace mkl
 {
     extern "C" {
@@ -74,7 +73,6 @@ public:
         if (size != 0 && !ptr)
         {
             throw ngraph_error("malloc failed to allocate memory of size " + std::to_string(size));
-            throw std::bad_alloc();
         }
         return ptr;
     }
