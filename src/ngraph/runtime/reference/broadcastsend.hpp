@@ -36,17 +36,13 @@ namespace ngraph
 #ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
                 auto data_type = MLSL::DT_FLOAT;
 
-                if (element_type == element::f32)
-                {
-                    data_type = MLSL::DT_FLOAT;
-                }
-                else if (element_type == element::f64)
+                if (element_type == element::f64)
                 {
                     data_type = MLSL::DT_DOUBLE;
                 }
-                else
+                else if (element_type != element::f32)
                 {
-                    throw std::runtime_error("DistBroadcast op supports only f32 and f64 types");
+                    throw std::runtime_error("BroadcastDistributed op supports only f32 and f64 types");
                 }
 
                 MLSL::Environment& env = MLSL::Environment::GetEnv();
@@ -57,15 +53,11 @@ namespace ngraph
 #elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
                 auto data_type = MPI_FLOAT;
 
-                if (element_type == element::f32)
-                {
-                    data_type = MPI_FLOAT;
-                }
-                else if (element_type == element::f64)
+                if (element_type == element::f64)
                 {
                     data_type = MPI_DOUBLE;
                 }
-                else
+                else if (element_type != element::f32)
                 {
                     throw std::runtime_error(
                         "BroadcastDistributed op supports only f32 and f64 types");

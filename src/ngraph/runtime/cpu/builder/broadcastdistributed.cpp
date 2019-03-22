@@ -44,11 +44,7 @@ namespace ngraph
 #ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
                 auto data_type = MLSL::DT_FLOAT;
 
-                if (args[0].get_element_type() == element::f32)
-                {
-                    data_type = MLSL::DT_FLOAT;
-                }
-                else if (args[0].get_element_type() == element::f64)
+                if (args[0].get_element_type() == element::f64)
                 {
                     data_type = MLSL::DT_DOUBLE;
                 }
@@ -62,11 +58,7 @@ namespace ngraph
 #elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
                 auto data_type = MPI_FLOAT;
 
-                if (args[0].get_element_type() == element::f32)
-                {
-                    data_type = MPI_FLOAT;
-                }
-                else if (args[0].get_element_type() == element::f64)
+                if (args[0].get_element_type() == element::f64)
                 {
                     data_type = MPI_DOUBLE;
                 }
