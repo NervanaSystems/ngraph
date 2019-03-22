@@ -53,7 +53,7 @@ namespace
 
     bool check_concat_has_no_fan_out(const std::shared_ptr<Node>& op)
     {
-        auto users = op->get_users();
+        auto users = op->get_users(true);
         std::set<std::shared_ptr<Node>> user_set(users.begin(), users.end());
         size_t num_unique_users = user_set.size();
         if (num_unique_users == 1)
@@ -125,29 +125,6 @@ bool ngraph::pass::SelfConcatFusion::run_on_function(std::shared_ptr<Function> f
         return (root && input_size > 1);
     };
 
-    auto concat_op_label =
-        std::make_shared<pattern::op::Label>(element::f32, Shape{1, 3}, has_multiple_inputs);
-    auto matcher = std::make_shared<pattern::Matcher>(concat_op_label);
-    for (auto n : function->get_ordered_ops())
-    {
-        construct_concat_patterns(matcher, concat_op_label, n);
-    }
-
-    remove_single_concat_op_pattern();
-
-    for (auto concat_op_pair : this->m_concat_pattern_vectors)
-    {
-        modify_graph = replace_patterns(concat_op_pair);
-    }
-
-    return modify_graph;
-}
-
-void ngraph::pass::SelfConcatFusion::construct_concat_patterns(
-    const std::shared_ptr<pattern::Matcher>& matcher,
-    const std::shared_ptr<pattern::op::Label>& concat_op_label,
-    const std::shared_ptr<Node>& n)
-{
     auto print_state_of_bounded_vectors = [this]() -> std::string {
         std::stringstream ss;
         ss << "-----------------------------------------------------------" << std::endl;
@@ -174,6 +151,31 @@ void ngraph::pass::SelfConcatFusion::construct_concat_patterns(
         return ss.str();
     };
 
+    auto concat_op_label =
+        std::make_shared<pattern::op::Label>(element::f32, Shape{1, 3}, has_multiple_inputs);
+    auto matcher = std::make_shared<pattern::Matcher>(concat_op_label);
+    for (auto n : function->get_ordered_ops())
+    {
+        construct_concat_patterns(matcher, concat_op_label, n);
+    }
+
+    NGRAPH_DEBUG << print_state_of_bounded_vectors();
+
+    remove_single_concat_op_pattern();
+
+    for (auto concat_op_pair : this->m_concat_pattern_vectors)
+    {
+        modify_graph = replace_patterns(concat_op_pair);
+    }
+
+    return modify_graph;
+}
+
+void ngraph::pass::SelfConcatFusion::construct_concat_patterns(
+    const std::shared_ptr<pattern::Matcher>& matcher,
+    const std::shared_ptr<pattern::op::Label>& concat_op_label,
+    const std::shared_ptr<Node>& n)
+{
     if (matcher->match(n))
     {
         auto concat_op = matcher->get_pattern_map()[concat_op_label];
@@ -202,14 +204,10 @@ void ngraph::pass::SelfConcatFusion::construct_concat_patterns(
         {
             concat_vectors.push_back(
                 make_pair(NodeVector{concat_op}, std::vector<size_t>{concat_axis}));
-
-            NGRAPH_DEBUG << print_state_of_bounded_vectors();
         }
         else
         {
             update_concat_pattern_vectors(concat_op, concat_axis);
-
-            NGRAPH_DEBUG << print_state_of_bounded_vectors();
         }
     }
 }
@@ -221,22 +219,13 @@ void ngraph::pass::SelfConcatFusion::update_concat_pattern_vectors(
     for (auto& concat_pattern_vec : this->m_concat_pattern_vectors)
     {
         auto last_op_in_pattern_vec = concat_pattern_vec.first.back();
-        NGRAPH_DEBUG << "self_concat_fusion: " << concat_op->get_name()
-                     << " trying to match source " << last_op_in_pattern_vec->get_name() << "\n";
         if ((concat_op->get_argument(0) == last_op_in_pattern_vec) &&
             (check_concat_has_no_fan_out(last_op_in_pattern_vec)))
         {
-            NGRAPH_DEBUG << "MATCHED SOURCE " << concat_op->get_name() << " and "
-                         << last_op_in_pattern_vec->get_name() << "\n";
             concat_pattern_vec.first.push_back(concat_op);
             concat_pattern_vec.second.push_back(concat_axis);
             concat_source_found = true;
             break;
-        }
-        else
-        {
-            NGRAPH_DEBUG << "COULD NOT MATCH SOURCE " << concat_op->get_name() << " and "
-                         << last_op_in_pattern_vec->get_name() << "\n";
         }
     }
 
@@ -269,10 +258,6 @@ bool ngraph::pass::SelfConcatFusion::replace_patterns(
     auto scalarize_dim = [](std::vector<size_t> concat_axis_vector,
                             const Shape& input_shape) -> Shape {
 
-        NGRAPH_DEBUG << "self_concat_fusion: In callback scalarize_dim: Concat_axis_vetor: "
-                     << join(concat_axis_vector) << "\n";
-        NGRAPH_DEBUG << "self_concat_fusion: In callback scalarize_dim: Input Shape: "
-                     << join(input_shape) << "\n";
         Shape scalarized_shape;
         for (size_t i = 0; i < input_shape.size(); i++)
         {
@@ -292,14 +277,10 @@ bool ngraph::pass::SelfConcatFusion::replace_patterns(
     const Shape& input_shape = first_bounded_concat->get_input_shape(0);
 
     auto scalarized_shape = scalarize_dim(concat_axis_vector, input_shape);
-    NGRAPH_DEBUG << "self_concat_fusion: scalarized_shape of " << driver_op->get_name()
-                 << " which after reshape feeds into broadcast: " << join(scalarized_shape) << "\n";
     AxisVector axis_order = get_default_order(input_shape);
     auto reshape = std::make_shared<op::Reshape>(driver_op, axis_order, scalarized_shape);
     auto last_bounded_concat_op = bounded_concat_ops.back();
     auto broadcast_out_shape = last_bounded_concat_op->get_shape();
-    NGRAPH_DEBUG << "self_concat_fusion: Broadcast out shape: " << join(broadcast_out_shape)
-                 << std::endl;
     auto broadcast =
         std::make_shared<op::Broadcast>(reshape, broadcast_out_shape, concat_axis_vector);
 
