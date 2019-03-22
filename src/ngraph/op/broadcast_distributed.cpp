@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/broadcastdistributed.hpp"
+#include "ngraph/op/broadcast_distributed.hpp"
 
 using namespace std;
 using namespace ngraph;
