@@ -76,6 +76,7 @@ Not currently a comprehensive list.
    * :doc:`subtract`
    * :doc:`tan`
    * :doc:`tanh`
+   * :doc:`transpose`
 
 
 
@@ -147,6 +148,7 @@ Not currently a comprehensive list.
    subtract.rst
    tan.rst
    tanh.rst
+   transpose.rst
 
 
 .. _more_about: 

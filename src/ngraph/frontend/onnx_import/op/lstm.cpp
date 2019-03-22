@@ -35,11 +35,13 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/greater.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
+#include "ngraph/op/select.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/tanh.hpp"
@@ -380,6 +382,7 @@ namespace ngraph
                             in_x = reshape::squeeze(in_x);
                         }
 
+                        std::int32_t time_step{1};
                         for (const auto& in_x : in_seqs)
                         {
                             // (.) - Denotes element-wise multiplication.
@@ -423,21 +426,26 @@ namespace ngraph
                             o = m_activation_f(clip(add(o, mul(p_o, C)), m_clip_threshold));
                             // ot (.) h(Ct)
                             auto H = mul(o, m_activation_h(C));
-                            h_list.push_back(H);
-                            H_t = H;
-                            C_t = C;
+
+                            // Expand tensors with empty outermost dim, so we can later concatenate
+                            // them.
+                            // Mask hidden state tensor in order to handle mixed sequence lengths.
+                            // This results in zeroing out values in batches with sequence shorter
+                            // than current time_step.
+                            h_list.push_back(
+                                get_masked_node(reshape::expand_dims(H), time_step, 1));
+                            // Reference implementation in ONNX Runtime doesn't mask values of Y_h
+                            // and Y_c outputs, thus here we make sure that only appropriate batches
+                            // (in respect to its sequence length) are updated. Those batches which
+                            // has shorter sequences preserve the last value.
+                            H_t = get_masked_node(H, time_step, 0, H_t);
+                            C_t = get_masked_node(C, time_step, 0, C_t);
+                            time_step++;
                         }
                         // The tensor that concats all the intermediate output values of the hidden.
                         // It has shape [seq_length, batch_size, hidden_size]
-                        NodeVector exp_h_list;
-                        for (const auto& ht : h_list)
-                        {
-                            // Expand tensors with empty outermost dim, so we can later concatenate them.
-                            exp_h_list.push_back(reshape::expand_dims(ht));
-                        }
-
                         std::shared_ptr<ngraph::Node> Y{
-                            std::make_shared<ngraph::op::Concat>(exp_h_list, 0)};
+                            std::make_shared<ngraph::op::Concat>(h_list, 0)};
 
                         // Get back the original order of the output data.
                         if (reverse)
@@ -449,13 +457,68 @@ namespace ngraph
                         // [seq_length, num_directions, batch_size, hidden_size]
                         Y = reshape::expand_dims(Y, 1);
 
-                        // expand C_t so that it has expected shape:
+                        // expand H_t and C_t so that it has expected shape:
                         // [num_directions, batch_size, hidden_size]
+                        auto Y_h = reshape::expand_dims(H_t);
                         auto Y_c = reshape::expand_dims(C_t);
-                        return {Y, exp_h_list.back(), Y_c};
+                        return {Y, Y_h, Y_c};
                     }
 
                 private:
+                    ///
+                    /// \brief      Gets the masked node according to sequence lenght in a batch.
+                    ///
+                    /// \note       Zeros out values or sets them to default value for inputs with
+                    ///             sequence lenght shorter than currently procssed time step.
+                    ///
+                    /// \param[in]  data           The input node.
+                    /// \param[in]  time_step      The current time step denoting sequence lenght.
+                    /// \param[in]  batch_axis     The batch axis index of data tensor.
+                    /// \param[in]  default_value  The default value for masked elements.
+                    ///
+                    /// \return     The masked node.
+                    ///
+                    std::shared_ptr<ngraph::Node> get_masked_node(
+                        const std::shared_ptr<ngraph::Node>& data,
+                        std::int32_t time_step,
+                        std::size_t batch_axis = 0,
+                        const std::shared_ptr<ngraph::Node>& default_value = {nullptr})
+                    {
+                        std::shared_ptr<ngraph::Node> mask_value = default_value;
+                        // Create zero mask value node.
+                        if (!mask_value)
+                        {
+                            mask_value = ngraph::op::Constant::create(
+                                data->get_element_type(),
+                                data->get_shape(),
+                                std::vector<float>(shape_size(data->get_shape()), 0.f));
+                        }
+
+                        // Create predicate nodes. The condition is whether current time step value
+                        // is greater than sequence length for respective batch inputs.
+                        std::shared_ptr<ngraph::Node> curr_time_step_node =
+                            ngraph::op::Constant::create(
+                                element::i32,
+                                data->get_shape(),
+                                std::vector<std::int32_t>(shape_size(data->get_shape()),
+                                                          time_step));
+
+                        std::shared_ptr<ngraph::Node> batch_seq_length =
+                            legacy_style_broadcast_for_binary_operation(
+                                curr_time_step_node, m_seq_lengths, batch_axis)
+                                .at(1);
+
+                        // Create mask node deciding whether or not to mask batch data.
+                        std::shared_ptr<ngraph::Node> mask_condition =
+                            std::make_shared<ngraph::op::Greater>(curr_time_step_node,
+                                                                  batch_seq_length);
+
+                        // Select values depnding on mask_condition.
+                        // Select(<condition>, <true_value>, <false_value>)
+                        return std::make_shared<ngraph::op::Select>(
+                            mask_condition, mask_value, data);
+                    }
+
                     std::shared_ptr<ngraph::Node> m_X;
                     std::shared_ptr<ngraph::Node> m_W;
                     std::shared_ptr<ngraph::Node> m_R;
