@@ -12,8 +12,8 @@ BroadcastDistributed
 Description
 ===========
 
-Broadcast values from one process or device (root) to the rest processes or 
-devices of the communicator.
+Broadcast values from a primary root process or device to other processes or 
+devices within the op communicator.
 
 
 Inputs
