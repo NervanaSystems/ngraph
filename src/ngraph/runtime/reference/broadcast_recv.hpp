@@ -47,7 +47,7 @@ namespace ngraph
 
                 MLSL::Environment& env = MLSL::Environment::GetEnv();
                 MLSL::Distribution* distribution = env.CreateDistribution(env.GetProcessCount(), 1);
-                MLSL::CommReq* req = distribution->Bcast(arg, count, data_type, 0, MLSL::GT_DATA);
+                MLSL::CommReq* req = distribution->Bcast(out, count, data_type, 0, MLSL::GT_DATA);
                 env.Wait(req);
                 env.DeleteDistribution(distribution);
 #elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
