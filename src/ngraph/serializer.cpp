@@ -47,13 +47,17 @@
 #include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/dyn_broadcast.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
+#include "ngraph/op/experimental/quantized_dot.hpp"
+#include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
+#include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
@@ -744,6 +748,11 @@ static shared_ptr<ngraph::Function>
                 }
                 break;
             }
+            case OP_TYPEID::DynBroadcast:
+            {
+                node = make_shared<op::DynBroadcast>(args[0], args[1], args[2]);
+                break;
+            }
             case OP_TYPEID::EmbeddingLookup:
             {
                 node = make_shared<op::EmbeddingLookup>(args[0], args[1]);
@@ -933,11 +942,24 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::Pad:
             {
-                auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
-                auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
+                auto padding_below = node_js.at("padding_below").get<vector<ptrdiff_t>>();
+                auto padding_above = node_js.at("padding_above").get<vector<ptrdiff_t>>();
+
+                // This is a legacy field whose functionality is no longer supported. The new
+                // behavior is equivalent to interior padding of 0, so we will accept it under
+                // those conditions.
                 auto padding_interior = node_js.at("padding_interior").get<vector<size_t>>();
-                node = make_shared<op::Pad>(
-                    args[0], args[1], padding_below, padding_above, padding_interior);
+                NGRAPH_ASSERT(std::all_of(padding_interior.begin(),
+                                          padding_interior.end(),
+                                          [](size_t s) { return s == 0; }))
+                    << "Legacy padding_interior field must be zero everywhere.";
+
+                auto pad_mode = node_js.count("pad_mode") == 0
+                                    ? op::PadMode::CONSTANT
+                                    : static_cast<op::PadMode>(node_js.at("pad_mode"));
+
+                node =
+                    make_shared<op::Pad>(args[0], args[1], padding_below, padding_above, pad_mode);
                 break;
             }
             case OP_TYPEID::Parameter:
@@ -1029,6 +1051,10 @@ static shared_ptr<ngraph::Function>
                                                  padding_above,
                                                  data_dilation_strides.get<std::vector<size_t>>());
                 break;
+            }
+            case OP_TYPEID::QuantizedDotBias: { break;
+            }
+            case OP_TYPEID::QuantizedDot: { break;
             }
             case OP_TYPEID::QuantizedMaxPool:
             {
@@ -1179,6 +1205,11 @@ static shared_ptr<ngraph::Function>
                 auto compute_max = node_js.at("compute_max").get<bool>();
                 auto target_type = read_element_type(node_js.at("index_element_type"));
                 node = make_shared<op::TopK>(args[0], top_k_axis, target_type, k, compute_max);
+                break;
+            }
+            case OP_TYPEID::Transpose:
+            {
+                node = make_shared<op::Transpose>(args[0], args[1]);
                 break;
             }
             case OP_TYPEID::StopGradient:
@@ -1475,6 +1506,8 @@ static json write(const Node& n, bool binary_constant_data)
         node["reduction_axes_count"] = tmp->get_reduction_axes_count();
         break;
     }
+    case OP_TYPEID::DynBroadcast: { break;
+    }
     case OP_TYPEID::EmbeddingLookup: { break;
     }
     case OP_TYPEID::Equal: { break;
@@ -1573,7 +1606,7 @@ static json write(const Node& n, bool binary_constant_data)
         auto tmp = dynamic_cast<const op::Pad*>(&n);
         node["padding_below"] = tmp->get_padding_below();
         node["padding_above"] = tmp->get_padding_above();
-        node["padding_interior"] = tmp->get_padding_interior();
+        node["pad_mode"] = tmp->get_pad_mode();
         break;
     }
     case OP_TYPEID::Parameter:
@@ -1644,6 +1677,10 @@ static json write(const Node& n, bool binary_constant_data)
         node["padding_above"] = tmp->get_padding_above();
         node["data_dilation_strides"] = tmp->get_data_dilation_strides();
         break;
+    }
+    case OP_TYPEID::QuantizedDotBias: { break;
+    }
+    case OP_TYPEID::QuantizedDot: { break;
     }
     case OP_TYPEID::QuantizedMaxPool:
     {
@@ -1748,6 +1785,8 @@ static json write(const Node& n, bool binary_constant_data)
         node["k"] = tmp->get_k();
         node["compute_max"] = tmp->get_compute_max();
         break;
+    }
+    case OP_TYPEID::Transpose: { break;
     }
     case OP_TYPEID::UnknownOp: { break;
     }

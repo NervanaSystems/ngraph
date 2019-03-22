@@ -38,6 +38,8 @@
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
+#include "ngraph/op/experimental/quantized_dot.hpp"
+#include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
@@ -742,6 +744,18 @@ namespace ngraph
                 }
 
                 template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedDotBias)
+                {
+                    runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
+                }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedDot)
+                {
+                    runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
+                }
+
+                template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Dequantize)
                 {
                     auto dequantize = static_cast<op::Dequantize*>(node);
@@ -931,6 +945,10 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Dequantize>},
     {TI(ngraph::op::QuantizedConcat),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedConcat>},
+    {TI(ngraph::op::QuantizedDot),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedDot>},
+    {TI(ngraph::op::QuantizedDotBias),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedDotBias>},
     {TI(ngraph::op::GetOutputElement),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::GetOutputElement>},
 };

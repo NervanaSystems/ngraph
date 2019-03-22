@@ -209,9 +209,12 @@ void ngraph::runtime::plaidml::ImplPad::Apply()
 
     NGRAPH_DEBUG << "Pad below: " << op().get_padding_below();
     NGRAPH_DEBUG << "Pad above: " << op().get_padding_above();
-    NGRAPH_DEBUG << "Pad interior: " << op().get_padding_interior();
     NGRAPH_DEBUG << "Pad input dims: " << op().get_input_shape(0);
     NGRAPH_DEBUG << "Pad output dims: " << op().get_shape();
+
+    // FIXME: Compatibility hack inserted by amprocte, now that nGraph's Pad op no longer supports
+    // interior padding.
+    Shape padding_interior(op.get_padding_below().size(), 0);
 
     auto dim_limit = op().get_shape().size();
 
@@ -231,7 +234,7 @@ void ngraph::runtime::plaidml::ImplPad::Apply()
         std::size_t in_dsize = op().get_input_shape(0).at(idx);
         if (in_dsize)
         {
-            total_pad += op().get_padding_interior().at(idx) * (in_dsize - 1);
+            total_pad += padding_interior.at(idx) * (in_dsize - 1);
         }
         if (!any_zero_dims)
         {
@@ -255,7 +258,7 @@ void ngraph::runtime::plaidml::ImplPad::Apply()
         {
             s << below << " + ";
         }
-        auto interior = op().get_padding_interior().at(idx) + 1;
+        auto interior = padding_interior.at(idx) + 1;
         if (interior != 1)
         {
             s << "(d" << idx + 1 << " * " << interior << ")";

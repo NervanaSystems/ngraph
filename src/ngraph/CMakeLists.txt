@@ -69,6 +69,10 @@ set (SRC
     ngraph_visibility.hpp
     node.cpp
     node.hpp
+    node_input.cpp
+    node_input.hpp
+    node_output.cpp
+    node_output.hpp
     node_vector.hpp
     op/abs.cpp
     op/abs.hpp
@@ -124,6 +128,8 @@ set (SRC
     op/equal.hpp
     op/exp.cpp
     op/exp.hpp
+    op/experimental/dyn_broadcast.cpp
+    op/experimental/dyn_broadcast.hpp
     op/experimental/generate_mask.cpp
     op/experimental/generate_mask.hpp
     op/experimental/quantized_avg_pool.cpp
@@ -140,6 +146,12 @@ set (SRC
     op/experimental/quantized_max_pool.hpp
     op/experimental/shape_of.cpp
     op/experimental/shape_of.hpp
+    op/experimental/quantized_dot.cpp
+    op/experimental/quantized_dot.hpp
+    op/experimental/quantized_dot_bias.cpp
+    op/experimental/quantized_dot_bias.hpp
+    op/experimental/transpose.cpp
+    op/experimental/transpose.hpp
     op/floor.cpp
     op/floor.hpp
     op/get_output_element.cpp
@@ -334,6 +346,8 @@ set (SRC
     shape.hpp
     shape_util.cpp
     shape_util.hpp
+    specialize_shapes.cpp
+    specialize_shapes.hpp
     state/rng_state.cpp
     strides.cpp
     strides.hpp
@@ -419,8 +433,6 @@ target_link_libraries(ngraph PRIVATE libjson)
 target_compile_definitions(ngraph PUBLIC NGRAPH_VERSION="${NGRAPH_VERSION}")
 
 if (LINUX)
-    set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--rpath,$ORIGIN")
-
     # nGraph links against one or more libraries (ex. LLVM) but we don't want to
     # export these symbols as part of the DSO. This is a GNU ld (and derivatives) specific
     # option so making this portable is still an open issue. As a note for the future,

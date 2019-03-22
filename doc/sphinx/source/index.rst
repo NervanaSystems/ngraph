@@ -48,10 +48,16 @@ nGraph Compiler stack
    core/passes/passes.rst
    buildlb.rst
    
+.. toctree::
+   :maxdepth: 1
+   :caption: Python API
+
+   python_api/index.rst
+
    
 .. toctree::
    :maxdepth: 1
-   :caption: Backend support
+   :caption: Backend Support
 
    backend-support/index.rst
    backend-support/cpp-api.rst
@@ -66,7 +72,7 @@ nGraph Compiler stack
 
 .. toctree::
    :maxdepth: 1
-   :caption: Diagnostics and visualization
+   :caption: Diagnostics and Visualization
 
    diagnostics/nbench.rst
    diagnostics/performance-profile.rst
@@ -86,10 +92,10 @@ nGraph Compiler stack
 
    project/release-notes.rst
    project/contribution-guide.rst
+   project/governance.rst
+   project/doc-contributor-README.rst
    project/index.rst 
    glossary.rst
-   project/doc-contributor-README.rst
-
 
 Indices and tables
 ==================
