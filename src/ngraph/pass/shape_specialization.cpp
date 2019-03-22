@@ -99,6 +99,9 @@ bool pass::ShapeSpecialization::run_on_function(std::shared_ptr<Function> f)
                 {
                     NGRAPH_ASSERT(n->get_output_partial_shape(i).relaxes(
                         replacement_constants[i]->get_output_partial_shape(0)));
+                    NGRAPH_ASSERT(n->get_output_element_type(i).is_dynamic() ||
+                                  n->get_output_element_type(i) ==
+                                      replacement_constants[i]->get_output_element_type(0));
 
                     auto& replacement_output = replacement_constants.at(i)->get_outputs().at(0);
                     auto& output = n->get_outputs().at(i);

@@ -116,7 +116,7 @@ namespace ngraph
         /// \returns If conversion is successful, a vector of op::Constant nodes, corresponding
         ///          to this node's outputs in order. If unsuccessful, an empty vector.
         ///
-        /// Conversion does not have to be complete. That maeans that subclasses *may* override
+        /// Conversion does not have to be complete. That means that subclasses *may* override
         /// as_constants, but do not have to. It is allowed for as_constants to return an empty
         /// vector even in cases where the output values are statically computable. Thus, any user
         /// of as_constants must allow for the possibility that conversion will fail (i.e.,
