@@ -126,6 +126,8 @@ set (SRC
     op/embedding_lookup.hpp
     op/equal.cpp
     op/equal.hpp
+    op/erf.cpp
+    op/erf.hpp
     op/exp.cpp
     op/exp.hpp
     op/experimental/dyn_broadcast.cpp
