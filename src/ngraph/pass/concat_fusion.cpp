@@ -33,54 +33,58 @@
 
 using namespace ngraph;
 
-bool check_self_concat_op(const std::shared_ptr<Node>& op)
+namespace
 {
-    auto input_args = op->get_arguments();
-    std::set<std::shared_ptr<Node>> input_args_set(input_args.begin(), input_args.end());
-    return (input_args_set.size() == 1);
-}
-
-bool check_concat_axis_dim_value(const std::shared_ptr<Node>& concat_op)
-{
-    auto input_shape = concat_op->get_input_shape(0);
-    size_t concat_axis = std::static_pointer_cast<op::Concat>(concat_op)->get_concatenation_axis();
-
-    return (input_shape[concat_axis] == 1);
-}
-
-bool check_concat_has_no_fan_out(const std::shared_ptr<Node>& op)
-{
-    auto users = op->get_users();
-    std::set<std::shared_ptr<Node>> user_set(users.begin(), users.end());
-    size_t num_unique_users = user_set.size();
-    if (num_unique_users == 1)
+    bool check_self_concat_op(const std::shared_ptr<Node>& op)
     {
+        auto input_args = op->get_arguments();
+        std::set<std::shared_ptr<Node>> input_args_set(input_args.begin(), input_args.end());
+        return (input_args_set.size() == 1);
+    }
+
+    bool check_concat_axis_dim_value(const std::shared_ptr<Node>& concat_op)
+    {
+        auto input_shape = concat_op->get_input_shape(0);
+        size_t concat_axis =
+            std::static_pointer_cast<op::Concat>(concat_op)->get_concatenation_axis();
+
+        return (input_shape[concat_axis] == 1);
+    }
+
+    bool check_concat_has_no_fan_out(const std::shared_ptr<Node>& op)
+    {
+        auto users = op->get_users();
+        std::set<std::shared_ptr<Node>> user_set(users.begin(), users.end());
+        size_t num_unique_users = user_set.size();
+        if (num_unique_users == 1)
+        {
+            return true;
+        }
+        else
+        {
+            NGRAPH_DEBUG << "self_concat_fusion: " << op->get_name() << " has fan out\n";
+            return false;
+        }
+    }
+
+    bool valid_self_concat(const std::shared_ptr<Node>& Op)
+    {
+        if (!check_self_concat_op(Op))
+        {
+            NGRAPH_DEBUG << "self_concat_fusion: Matcher matched " << Op->get_name()
+                         << " but it is not a self concat\n";
+            return false;
+        }
+
+        if (!check_concat_axis_dim_value(Op))
+        {
+            NGRAPH_DEBUG << "self_concat_fusion: Input shape value along concat axis of "
+                         << Op->get_name() << " is not equal to 1\n";
+            return false;
+        }
+
         return true;
     }
-    else
-    {
-        NGRAPH_DEBUG << "self_concat_fusion: " << op->get_name() << " has fan out\n";
-        return false;
-    }
-}
-
-bool valid_self_concat(const std::shared_ptr<Node>& Op)
-{
-    if (!check_self_concat_op(Op))
-    {
-        NGRAPH_DEBUG << "self_concat_fusion: Matcher matched " << Op->get_name()
-                     << " but it is not a self concat\n";
-        return false;
-    }
-
-    if (!check_concat_axis_dim_value(Op))
-    {
-        NGRAPH_DEBUG << "self_concat_fusion: Input shape value along concat axis of "
-                     << Op->get_name() << " is not equal to 1\n";
-        return false;
-    }
-
-    return true;
 }
 
 void pass::ConcatElimination::construct_concat_elimination()
