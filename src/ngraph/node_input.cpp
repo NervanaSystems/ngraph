@@ -14,21 +14,13 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <pybind11/pybind11.h>
+#include "ngraph/node_input.hpp"
+#include "ngraph/node_output.hpp"
 
-#include "ngraph/coordinate_diff.hpp"
-#include "ngraph/op/pad.hpp"
-#include "pyngraph/ops/pad.hpp"
+using namespace ngraph;
 
-namespace py = pybind11;
-
-void regclass_pyngraph_op_Pad(py::module m)
+NodeOutput NodeInput::get_source_output() const
 {
-    py::class_<ngraph::op::Pad, std::shared_ptr<ngraph::op::Pad>, ngraph::op::Op> pad(m, "Pad");
-    pad.doc() = "ngraph.impl.op.Pad wraps ngraph::op::Pad";
-    pad.def(py::init<const std::shared_ptr<ngraph::Node>&,
-                     const std::shared_ptr<ngraph::Node>&,
-                     const ngraph::CoordinateDiff&,
-                     const ngraph::CoordinateDiff&,
-                     ngraph::op::PadMode>());
+    auto& output_descriptor = m_node->get_inputs().at(m_index).get_output();
+    return NodeOutput(output_descriptor.get_node(), output_descriptor.get_index());
 }

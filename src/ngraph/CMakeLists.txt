@@ -69,6 +69,10 @@ set (SRC
     ngraph_visibility.hpp
     node.cpp
     node.hpp
+    node_input.cpp
+    node_input.hpp
+    node_output.cpp
+    node_output.hpp
     node_vector.hpp
     op/abs.cpp
     op/abs.hpp
@@ -124,6 +128,8 @@ set (SRC
     op/equal.hpp
     op/exp.cpp
     op/exp.hpp
+    op/experimental/dyn_broadcast.cpp
+    op/experimental/dyn_broadcast.hpp
     op/experimental/generate_mask.cpp
     op/experimental/generate_mask.hpp
     op/experimental/quantized_avg_pool.cpp

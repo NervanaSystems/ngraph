@@ -174,16 +174,14 @@ TEST(reshape_sinking, slice_pad)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto pad_value = op::Constant::create<float>(element::f32, Shape{}, std::vector<float>{0.0f});
 
-    Shape padding_below{0, 0, 0, 0};
-    Shape padding_above{0, 1, 1, 0};
-    Shape padding_interior{0, 0, 0, 0};
+    CoordinateDiff padding_below{0, 0, 0, 0};
+    CoordinateDiff padding_above{0, 1, 1, 0};
 
     auto reshape1 = make_shared<op::Reshape>(A, to_nchw, Shape{100, 1, 8, 8});
     auto maxpool =
         make_shared<op::MaxPool>(reshape1, Shape{1, 1}, Strides{2, 2}, Shape{0, 0}, Shape{0, 0});
     auto reshape2 = make_shared<op::Reshape>(maxpool, to_nhwc, Shape{100, 4, 4, 1});
-    auto pad =
-        make_shared<op::Pad>(reshape2, pad_value, padding_below, padding_above, padding_interior);
+    auto pad = make_shared<op::Pad>(reshape2, pad_value, padding_below, padding_above);
     auto slice = make_shared<op::Slice>(
         pad, Coordinate{0, 1, 1, 0}, Coordinate{100, 5, 5, 1}, Strides{1, 1, 1, 1});
 
