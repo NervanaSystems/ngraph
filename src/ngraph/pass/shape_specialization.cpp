@@ -23,6 +23,11 @@ using namespace ngraph;
 
 bool pass::ShapeSpecialization::run_on_function(std::shared_ptr<Function> f)
 {
+    // TODO(amprocte): We are probably reinventing the wheel with the graph traversal here; the
+    // reason is that we need to cut the traversal short in cases where input values are
+    // irrelevant. See if there is a way to reduce this duplication.
+
+    // Set of nodes that must be evaluated to determine the value of shape-relevant inputs.
     std::set<Node*> shape_determinants;
 
     // Step 1: Find root nodes (these are nodes with an output connected to a shape-relevant
