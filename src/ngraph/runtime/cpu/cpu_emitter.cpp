@@ -2955,7 +2955,7 @@ namespace ngraph
                 auto result_shape = out[0].get_shape();
 
                 if (arg0_shape.size() == 4 && args[0].get_element_type() == element::f32 &&
-                    pad->get_padding_interior() == Shape(arg0_shape.size()))
+                    pad->get_pad_mode() == ngraph::op::PadMode::CONSTANT)
                 {
                     writer << "cpu::kernel::pad_4d_float32(" << args[0].get_name() << ",\n"
                            << "                            " << out[0].get_name() << ",\n"
@@ -2969,6 +2969,19 @@ namespace ngraph
                 }
                 else
                 {
+                    std::string pad_mode_string;
+                    switch (pad->get_pad_mode())
+                    {
+                    case ngraph::op::PadMode::CONSTANT:
+                        pad_mode_string = "ngraph::op::PadMode::CONSTANT";
+                        break;
+                    case ngraph::op::PadMode::EDGE:
+                        pad_mode_string = "ngraph::op::PadMode::EDGE";
+                        break;
+                    case ngraph::op::PadMode::REFLECT:
+                        pad_mode_string = "ngraph::op::PadMode::REFLECT";
+                        break;
+                    }
                     writer << "reference::pad<" << out[0].get_type() << ">(" << args[0].get_name()
                            << ",\n";
                     writer << "            " << args[1].get_name() << ",\n";
@@ -2977,7 +2990,7 @@ namespace ngraph
                     writer << "            {" << join(result_shape) << "},\n";
                     writer << "            {" << join(pad->get_padding_below()) << "},\n";
                     writer << "            {" << join(pad->get_padding_above()) << "},\n";
-                    writer << "            {" << join(pad->get_padding_interior()) << "});\n";
+                    writer << "            " << pad_mode_string << ");\n";
                 }
             }
 

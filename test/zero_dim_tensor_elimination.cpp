@@ -100,7 +100,7 @@ TEST(zero_dim_tensor_elimination, zero_const_pad)
     auto A = std::make_shared<op::Parameter>(element::f32, zero_shape);
     auto B = std::make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto pad = std::make_shared<op::Pad>(A, B, Shape{2}, Shape{2}, Shape{0});
+    auto pad = std::make_shared<op::Pad>(A, B, CoordinateDiff{2}, CoordinateDiff{2});
     auto abs_node = std::make_shared<op::Abs>(pad);
     auto constant = std::make_shared<op::Constant>(element::i32, zero_shape, std::vector<string>{});
     auto f = std::make_shared<Function>(NodeVector{abs_node, constant}, ParameterVector{A, B});
@@ -119,7 +119,7 @@ TEST(zero_dim_tensor_elimination, zero_const_slice)
     auto A = std::make_shared<op::Parameter>(element::f32, zero_shape);
     auto B = std::make_shared<op::Parameter>(element::f32, Shape{});
     auto slice = make_shared<op::Slice>(A, Coordinate{0}, Coordinate{0});
-    auto pad = std::make_shared<op::Pad>(A, B, Shape{2}, Shape{2}, Shape{0});
+    auto pad = std::make_shared<op::Pad>(A, B, CoordinateDiff{2}, CoordinateDiff{2});
     auto abs_node = std::make_shared<op::Abs>(pad);
     auto constant = std::make_shared<op::Constant>(element::i32, zero_shape, std::vector<string>{});
     auto f = std::make_shared<Function>(NodeVector{abs_node, constant}, ParameterVector{A, B});
