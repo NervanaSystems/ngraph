@@ -128,6 +128,8 @@ set (SRC
     op/equal.hpp
     op/exp.cpp
     op/exp.hpp
+    op/experimental/dyn_broadcast.cpp
+    op/experimental/dyn_broadcast.hpp
     op/experimental/dyn_pad.cpp
     op/experimental/dyn_pad.hpp
     op/experimental/generate_mask.cpp
