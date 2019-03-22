@@ -17,8 +17,8 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/op/broadcastdistributed.hpp"
-#include "pyngraph/ops/broadcastdistributed.hpp"
+#include "ngraph/op/broadcast_distributed.hpp"
+#include "pyngraph/ops/broadcast_distributed.hpp"
 
 namespace py = pybind11;
 

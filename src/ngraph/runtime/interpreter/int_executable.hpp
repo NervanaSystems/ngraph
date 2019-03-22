@@ -136,8 +136,8 @@
 
 #ifdef NGRAPH_DISTRIBUTED_ENABLE
 #include "ngraph/runtime/reference/allreduce.hpp"
-#include "ngraph/runtime/reference/broadcastrecv.hpp"
-#include "ngraph/runtime/reference/broadcastsend.hpp"
+#include "ngraph/runtime/reference/broadcast_recv.hpp"
+#include "ngraph/runtime/reference/broadcast_send.hpp"
 #endif
 
 namespace ngraph

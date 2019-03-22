@@ -180,7 +180,7 @@
 
 #ifdef NGRAPH_DISTRIBUTED_ENABLE
 #include "ngraph/op/allreduce.hpp"
-#include "ngraph/op/broadcastdistributed.hpp"
+#include "ngraph/op/broadcast_distributed.hpp"
 #endif
 
 using namespace std;
