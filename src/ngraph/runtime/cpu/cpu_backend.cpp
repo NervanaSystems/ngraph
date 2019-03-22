@@ -53,11 +53,10 @@ namespace
 shared_ptr<runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_Backend::make_call_frame(
     const shared_ptr<runtime::cpu::CPU_ExternalFunction>& external_function,
     ngraph::pass::PassConfig& pass_config,
-    AllocateFunc& framework_allocator,
-    DestroyFunc& framework_deallocator)
+    AllocateFunc memory_allocator,
+    DestroyFunc memory_deallocator)
 {
-    return external_function->make_call_frame(
-        pass_config, framework_allocator, framework_deallocator);
+    return external_function->make_call_frame(pass_config, memory_allocator, memory_deallocator);
 }
 
 shared_ptr<runtime::Tensor>
@@ -76,19 +75,14 @@ shared_ptr<runtime::Executable>
     runtime::cpu::CPU_Backend::compile(shared_ptr<Function> func, bool performance_counters_enabled)
 {
     ngraph::pass::PassConfig pass_config;
-
-    // TODO(pruthvi): reseat this with framework provided allocator and deallocator
-    AllocateFunc framework_alloc = nullptr;
-    DestroyFunc framework_dealloc = nullptr;
-    return compile(
-        func, pass_config, framework_alloc, framework_dealloc, performance_counters_enabled);
+    return compile(func, pass_config, nullptr, nullptr, performance_counters_enabled);
 }
 
 shared_ptr<runtime::Executable>
     runtime::cpu::CPU_Backend::compile(shared_ptr<Function> func,
                                        ngraph::pass::PassConfig& pass_config,
-                                       AllocateFunc& framework_allocator,
-                                       DestroyFunc& framework_deallocator,
+                                       AllocateFunc memory_allocator,
+                                       DestroyFunc memory_deallocator,
                                        bool performance_counters_enabled)
 {
     shared_ptr<runtime::Executable> rc;
@@ -99,11 +93,8 @@ shared_ptr<runtime::Executable>
     }
     else
     {
-        rc = make_shared<CPU_Executable>(func,
-                                         pass_config,
-                                         framework_allocator,
-                                         framework_deallocator,
-                                         performance_counters_enabled);
+        rc = make_shared<CPU_Executable>(
+            func, pass_config, memory_allocator, memory_deallocator, performance_counters_enabled);
         m_exec_map.insert({func, rc});
     }
     return rc;
@@ -111,8 +102,8 @@ shared_ptr<runtime::Executable>
 
 runtime::cpu::CPU_Executable::CPU_Executable(shared_ptr<Function> func,
                                              ngraph::pass::PassConfig& pass_config,
-                                             AllocateFunc& framework_allocator,
-                                             DestroyFunc& framework_deallocator,
+                                             AllocateFunc memory_allocator,
+                                             DestroyFunc memory_deallocator,
                                              bool performance_counters_enabled)
 {
     FunctionInstance& instance = m_function_instance;
@@ -121,7 +112,7 @@ runtime::cpu::CPU_Executable::CPU_Executable(shared_ptr<Function> func,
         instance.m_external_function = make_shared<CPU_ExternalFunction>(func);
         instance.m_external_function->m_emit_timing = performance_counters_enabled;
         auto cf = instance.m_external_function->make_call_frame(
-            pass_config, framework_allocator, framework_deallocator);
+            pass_config, memory_allocator, memory_deallocator);
         instance.m_call_frame = dynamic_pointer_cast<CPU_CallFrame>(cf);
     }
     set_parameters_and_results(*func);
@@ -179,6 +170,7 @@ bool runtime::cpu::CPU_Backend::is_supported(const Node& op) const
 {
     return true;
 }
+
 bool runtime::cpu::CPU_Backend::is_supported_property(const Property prop) const
 {
     if (prop == Property::memory_attach)

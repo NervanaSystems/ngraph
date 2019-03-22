@@ -29,7 +29,7 @@ namespace ngraph
         class Allocator;
     }
 }
-// Abstarct class for the allocator, for allocating and deallocating device memory
+// Abstract class for the allocator, for allocating and deallocating device memory
 class ngraph::runtime::Allocator
 {
 public:

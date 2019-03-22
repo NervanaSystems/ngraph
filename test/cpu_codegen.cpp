@@ -43,9 +43,7 @@ TEST(cpu_codegen, abc)
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
     ngraph::pass::PassConfig pass_config{ngraph::pass::CompilationMode::CODEGEN};
-    runtime::AllocateFunc framework_allocator = nullptr;
-    runtime::DestroyFunc framework_deallocator = nullptr;
-    auto handle = backend->compile(f, pass_config, framework_allocator, framework_deallocator);
+    auto handle = backend->compile(f, pass_config);
     handle->call_with_validate({result}, {a, b, c});
     EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
                                   (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector(),

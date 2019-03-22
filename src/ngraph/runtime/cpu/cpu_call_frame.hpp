@@ -59,8 +59,8 @@ namespace ngraph
                               InitContextFuncCG compiled_init_ctx_func,
                               DestroyContextFuncCG compiled_destroy_ctx_func,
                               EntryPoint compiled_function,
-                              AllocateFunc& framework_allocator,
-                              DestroyFunc& framework_deallocator);
+                              AllocateFunc memory_allocator,
+                              DestroyFunc memory_deallocator);
 
                 ~CPU_CallFrame();
 
@@ -90,8 +90,8 @@ namespace ngraph
                 CPURuntimeContext* ctx = nullptr;
 
                 // memeber function pointers to hold the framework allocators
-                AllocateFunc m_framework_allocator;
-                DestroyFunc m_framework_deallocator;
+                AllocateFunc m_memory_allocator;
+                DestroyFunc m_memory_deallocator;
 
                 /* Codegen specific */
 

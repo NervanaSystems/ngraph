@@ -102,8 +102,8 @@ namespace ngraph
                 ~CPU_ExternalFunction();
                 std::shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
                     make_call_frame(ngraph::pass::PassConfig& pass_config,
-                                    AllocateFunc& framework_allocator,
-                                    DestroyFunc& framework_deallocator);
+                                    AllocateFunc memory_allocator,
+                                    DestroyFunc memory_deallocator);
 
                 const LayoutDescriptorPtrs& get_parameter_layout_descriptors();
                 const LayoutDescriptorPtrs& get_result_layout_descriptors();

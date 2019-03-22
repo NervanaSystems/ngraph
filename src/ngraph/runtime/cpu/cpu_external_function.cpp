@@ -507,6 +507,7 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
         R"(
 #include <cmath>
 #include "ngraph/except.hpp"
+#include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_eigen_utils.hpp"
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
 #include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
@@ -1713,8 +1714,8 @@ void*& runtime::cpu::CPU_ExternalFunction::get_tensor_data(const std::string& na
 
 shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
     runtime::cpu::CPU_ExternalFunction::make_call_frame(ngraph::pass::PassConfig& pass_config,
-                                                        AllocateFunc& framework_allocator,
-                                                        DestroyFunc& framework_deallocator)
+                                                        AllocateFunc memory_allocator,
+                                                        DestroyFunc memory_deallocator)
 {
 #if defined(NGRAPH_DEX_ONLY)
     if (pass_config.get_compilation_mode() == ngraph::pass::CompilationMode::CODEGEN)
@@ -1743,8 +1744,8 @@ shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
                                                             m_compiled_init_ctx_func,
                                                             m_compiled_destroy_ctx_func,
                                                             m_compiled_function,
-                                                            framework_allocator,
-                                                            framework_deallocator);
+                                                            memory_allocator,
+                                                            memory_deallocator);
 }
 
 const runtime::cpu::LayoutDescriptorPtrs&
