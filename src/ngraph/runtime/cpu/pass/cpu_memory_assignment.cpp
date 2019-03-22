@@ -718,9 +718,10 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                                     input_op_annotations->is_cacheable() !=
                                         op_annotations->is_cacheable())
                                 {
-                                    NGRAPH_DEBUG << "cpu_memory_assignment: reusing memory with "
-                                                    "non-cacheable input and cacheable output, no "
-                                                    "destructive oi";
+                                    NGRAPH_DEBUG
+                                        << "cpu_memory_assignment: reusing memory with "
+                                           "input and output have different cacheabilities, no "
+                                           "destructive oi";
                                     continue;
                                 }
                             }
