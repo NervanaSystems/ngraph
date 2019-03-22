@@ -193,7 +193,7 @@ bool runtime::gpu::GPU_Executable::call(const vector<shared_ptr<runtime::Tensor>
 
     auto ctx = m_context->m_runtime_context.get();
     instance.m_runtime(instance.m_inputs.data(), instance.m_outputs.data(), ctx);
-
+    runtime::gpu::cuda_sync();
     return true;
 }
 

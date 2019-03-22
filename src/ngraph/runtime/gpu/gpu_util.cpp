@@ -93,6 +93,11 @@ void runtime::gpu::cuda_memset(void* dst, int value, size_t buffer_size)
     CUDA_RT_SAFE_CALL(cudaMemset(dst, value, buffer_size));
 }
 
+void runtime::gpu::cuda_sync()
+{
+    CUDA_SAFE_CALL(cuCtxSynchronize());
+}
+
 namespace
 {
     // Unsigned integer exponentiation by squaring adapted
