@@ -1,7 +1,5 @@
 # need to check
 computation_reuse
-# cuda does not support throw
-divide_by_zero_int32
 # int64 is not supprted by cuDNN
 dot_matrix_vector_int64
 generate_mask
@@ -92,12 +90,32 @@ all_2x2x3_eliminate_dims_0_2
 all_2x2x3_eliminate_dims_1_2
 all_2x2x3_eliminate_dims_0_1_2
 
-# GPU backend uses floats to implement these ops for int32 
+# GPU backend uses floats to implement these ops for int32
 floor_int32
 divide_int32
 one_hot_scalar_oob_in_3
+
+# Unsupported extra pading modes
+pad_edge_1d
+pad_edge_1d_top_neg
+pad_edge_1d_top_neg_bigger_than_tensor
+pad_edge_1d_bottom_neg
+pad_edge_1d_bottom_neg_bigger_than_tensor
+pad_edge_2d
+pad_edge_2d_with_neg
+pad_reflect_1d
+pad_reflect_1d_top_neg
+pad_reflect_1d_top_neg_bigger_than_tensor
+pad_reflect_1d_bottom_neg
+pad_reflect_1d_bottom_neg_bigger_than_tensor
+pad_reflect_1d_multi_reflect
+pad_reflect_2d
+pad_reflect_2d_with_neg
 
 # Quantized operators are not supported on gpu backend
 model_dequantize_linear
 model_quantize_linear
 model_quant_conv_linear
+
+# This should be implemented
+create_tensor_2

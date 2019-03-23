@@ -18,6 +18,7 @@
 #include "gtest/gtest.h"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "util/all_close_f.hpp"
 #include "util/test_tools.hpp"
 
 using namespace ngraph;
@@ -45,7 +46,7 @@ TEST(constant_folding, constant_reshape)
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<float>();
 
-    ASSERT_EQ(values_in, values_out);
+    ASSERT_TRUE(test::all_close_f(values_in, values_out, MIN_FLOAT_TOLERANCE_BITS));
 }
 
 TEST(constant_folding, constant_reshape_permute)
@@ -71,7 +72,7 @@ TEST(constant_folding, constant_reshape_permute)
     auto values_out = new_const->get_vector<double>();
 
     vector<double> values_permute{0, 4, 1, 5, 2, 6, 3, 7};
-    ASSERT_EQ(values_permute, values_out);
+    ASSERT_TRUE(test::all_close_f(values_permute, values_out, MIN_FLOAT_TOLERANCE_BITS));
 }
 
 TEST(constant_folding, constant_broadcast)
@@ -108,12 +109,10 @@ TEST(constant_folding, constant_pad_exterior)
     auto constant = make_shared<op::Constant>(element::i32, shape_in, values_in);
     auto pad_value = make_shared<op::Constant>(element::i32, Shape{}, vector<int>{111});
 
-    Shape padding_below{1};
-    Shape padding_above{2};
-    Shape padding_interior{0};
+    CoordinateDiff padding_below{1};
+    CoordinateDiff padding_above{2};
 
-    auto broadcast =
-        make_shared<op::Pad>(constant, pad_value, padding_below, padding_above, padding_interior);
+    auto broadcast = make_shared<op::Pad>(constant, pad_value, padding_below, padding_above);
     auto f = make_shared<Function>(broadcast, ParameterVector{});
 
     pass::Manager pass_manager;
@@ -132,38 +131,6 @@ TEST(constant_folding, constant_pad_exterior)
     ASSERT_EQ(padded_values, values_out);
 }
 
-TEST(constant_folding, constant_pad_interior)
-{
-    Shape shape_in{2};
-
-    vector<int> values_in{777, 888};
-    auto constant = make_shared<op::Constant>(element::i32, shape_in, values_in);
-    auto pad_value = make_shared<op::Constant>(element::i32, Shape{}, vector<int>{111});
-
-    Shape padding_below{0};
-    Shape padding_above{0};
-    Shape padding_interior{3};
-
-    auto broadcast =
-        make_shared<op::Pad>(constant, pad_value, padding_below, padding_above, padding_interior);
-    auto f = make_shared<Function>(broadcast, ParameterVector{});
-
-    pass::Manager pass_manager;
-    pass_manager.register_pass<pass::ConstantFolding>();
-    pass_manager.run_passes(f);
-
-    ASSERT_EQ(count_ops_of_type<op::Pad>(f), 0);
-    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
-
-    auto new_const =
-        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
-    ASSERT_TRUE(new_const);
-    auto values_out = new_const->get_vector<int>();
-
-    vector<int> padded_values{777, 111, 111, 111, 888};
-    ASSERT_EQ(padded_values, values_out);
-}
-
 template <typename T>
 static std::vector<T> get_result_constant(std::shared_ptr<Function> f, size_t pos)
 {
@@ -178,9 +145,11 @@ TEST(constant_folding, constant_unary_binary)
     vector<int> values_a{1, 2, 3, 4};
     vector<int> values_b{1, 2, 3, 4};
     vector<int> values_c{-1, -1, -1, -1};
+    vector<int> values_d{1, 4, 9, 16};
     auto a = make_shared<op::Constant>(element::i32, shape_in, values_a);
     auto b = make_shared<op::Constant>(element::i32, shape_in, values_b);
     auto c = make_shared<op::Constant>(element::i32, shape_in, values_c);
+    auto d = make_shared<op::Constant>(element::i32, shape_in, values_d);
 
     auto add = a + b;
     auto sub = a - b;
@@ -190,9 +159,12 @@ TEST(constant_folding, constant_unary_binary)
     auto max = make_shared<op::Maximum>(a, c);
     auto absn = make_shared<op::Abs>(c);
     auto neg = make_shared<op::Negative>(c);
+    auto sqrt = make_shared<op::Sqrt>(d);
+    auto neg_sqrt = make_shared<op::Sqrt>(c);
 
-    auto f = make_shared<Function>(NodeVector{add, sub, mul, divn, min, max, absn, neg},
+    auto f = make_shared<Function>(NodeVector{add, sub, mul, divn, min, max, absn, neg, sqrt},
                                    ParameterVector{});
+    auto f_error = make_shared<Function>(NodeVector{neg_sqrt}, ParameterVector{});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ConstantFolding>();
@@ -206,6 +178,7 @@ TEST(constant_folding, constant_unary_binary)
     vector<int> min_expected{-1, -1, -1, -1};
     vector<int> max_expected{1, 2, 3, 4};
     vector<int> abs_neg_expected{1, 1, 1, 1};
+    vector<int> sqrt_expected{1, 2, 3, 4};
 
     ASSERT_EQ(get_result_constant<int>(f, 0), add_expected);
     ASSERT_EQ(get_result_constant<int>(f, 1), sub_expected);
@@ -215,6 +188,8 @@ TEST(constant_folding, constant_unary_binary)
     ASSERT_EQ(get_result_constant<int>(f, 5), max_expected);
     ASSERT_EQ(get_result_constant<int>(f, 6), abs_neg_expected);
     ASSERT_EQ(get_result_constant<int>(f, 7), abs_neg_expected);
+    ASSERT_EQ(get_result_constant<int>(f, 8), sqrt_expected);
+    ASSERT_ANY_THROW(pass_manager.run_passes(f_error));
 }
 
 TEST(constant_folding, const_dequantize)

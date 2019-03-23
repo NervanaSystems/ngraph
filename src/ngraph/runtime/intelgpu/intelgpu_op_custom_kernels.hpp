@@ -23,6 +23,7 @@
 #include "ngraph/axis_set.hpp"
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/coordinate.hpp"
+#include "ngraph/coordinate_diff.hpp"
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
@@ -43,8 +44,7 @@ namespace ngraph
                                   const std::string& output_name,
                                   const Shape& output_shape,
                                   const element::Type& output_type,
-                                  const Shape& pad_below,
-                                  const Shape& pad_interior);
+                                  const CoordinateDiff& pad_below);
 
             void do_max_pool_backprop_operation(cldnn::topology& topology,
                                                 const std::string& input_name,
