@@ -1,5 +1,7 @@
 .. tutorials/index:
 
+:orphan:
+
 ##########
 Tutorials
 ##########

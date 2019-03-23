@@ -19,7 +19,7 @@
 ONNX Support
 ============
 
-nGraph is able to import and execute ONNX models. Models are converted to nGraph's internal representation and converted to ``Function`` objects, which can be compiled and executed on one of nGraph's backends.
+nGraph is able to import and execute ONNX mlsodels. Models are converted to nGraph's internal representation and converted to ``Function`` objects, which can be compiled and executed on one of nGraph's backends.
 
 You can use nGraph's Python API to run an ONNX model and nGraph can be used as an ONNX backend using the add-on package `nGraph-ONNX <ngraph_onnx>`_.
 
