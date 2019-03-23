@@ -1391,7 +1391,9 @@ namespace ngraph
                         }
                     }
                     else
+                    {
                         set_native_layouts(external_function, node);
+                    }
                 }
 
                 template <>
@@ -1422,7 +1424,9 @@ namespace ngraph
                         }
                     }
                     else
+                    {
                         set_native_layouts(external_function, node);
+                    }
                 }
 
                 template <>
