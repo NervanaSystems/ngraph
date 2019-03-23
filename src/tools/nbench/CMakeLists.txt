@@ -52,7 +52,7 @@ if(NGRAPH_DISTRIBUTED_ENABLE)
         target_include_directories(nbench SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
         target_link_libraries(nbench  PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
     else()
-        message(FATAL_ERROR "Distributed Library not supported/mentioned")
+            message(FATAL_ERROR "Distributed Library not supported/mentioned")
     endif()
 endif()
 
