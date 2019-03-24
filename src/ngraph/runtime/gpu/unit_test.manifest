@@ -95,6 +95,23 @@ floor_int32
 divide_int32
 one_hot_scalar_oob_in_3
 
+# Unsupported extra pading modes
+pad_edge_1d
+pad_edge_1d_top_neg
+pad_edge_1d_top_neg_bigger_than_tensor
+pad_edge_1d_bottom_neg
+pad_edge_1d_bottom_neg_bigger_than_tensor
+pad_edge_2d
+pad_edge_2d_with_neg
+pad_reflect_1d
+pad_reflect_1d_top_neg
+pad_reflect_1d_top_neg_bigger_than_tensor
+pad_reflect_1d_bottom_neg
+pad_reflect_1d_bottom_neg_bigger_than_tensor
+pad_reflect_1d_multi_reflect
+pad_reflect_2d
+pad_reflect_2d_with_neg
+
 # Quantized operators are not supported on gpu backend
 model_dequantize_linear
 model_quantize_linear

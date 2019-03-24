@@ -322,13 +322,16 @@ void runtime::intelgpu::do_pad_operation(cldnn::topology& topology,
                                          const string& output_name,
                                          const Shape& output_shape,
                                          const element::Type& output_type,
-                                         const Shape& pad_below,
-                                         const Shape& pad_interior)
+                                         const CoordinateDiff& pad_below)
 {
     const string entry_point_name = "op_pad_" + output_name;
     const size_t cldnn_gws_lim = 3;
     CodeWriter writer;
     vector<size_t> gws;
+
+    // FIXME: Compatibility hack added by amprocte now that interior padding has been removed
+    // from nGraph's Pad op.
+    Shape pad_interior(pad_below.size(), 0);
 
     // The kernel name and parameters
     gen_func_def(writer, entry_point_name, {2, "float"}, {input_shape, {1}}, "float", output_shape);

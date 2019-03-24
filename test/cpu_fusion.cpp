@@ -395,7 +395,7 @@ TEST(cpu_fusion, zero_padded_reshaped_conv)
     auto pad_value = op::Constant::create<float>(element::f32, Shape{}, std::vector<float>{0.0f});
 
     auto pad =
-        make_shared<op::Pad>(X, pad_value, Shape{0, 1, 0, 0}, Shape{0, 0, 1, 0}, Shape{0, 0, 0, 0});
+        make_shared<op::Pad>(X, pad_value, CoordinateDiff{0, 1, 0, 0}, CoordinateDiff{0, 0, 1, 0});
 
     auto reshape = make_shared<op::Reshape>(pad, AxisVector{0, 3, 1, 2}, Shape{1, 1, 3, 3});
 
@@ -425,7 +425,7 @@ TEST(cpu_fusion, zero_padded_conv)
     auto pad_value = op::Constant::create<float>(element::f32, Shape{}, std::vector<float>{0.0f});
 
     auto pad =
-        make_shared<op::Pad>(X, pad_value, Shape{0, 0, 0, 1}, Shape{0, 0, 1, 0}, Shape{0, 0, 0, 0});
+        make_shared<op::Pad>(X, pad_value, CoordinateDiff{0, 0, 0, 1}, CoordinateDiff{0, 0, 1, 0});
 
     auto conv = make_shared<op::Convolution>(pad,
                                              F,
@@ -453,7 +453,7 @@ TEST(cpu_fusion, non_zero_padded_conv)
     auto pad_value = op::Constant::create<float>(element::f32, Shape{}, std::vector<float>{1.0f});
 
     auto pad =
-        make_shared<op::Pad>(X, pad_value, Shape{0, 0, 0, 1}, Shape{0, 0, 1, 0}, Shape{0, 0, 0, 0});
+        make_shared<op::Pad>(X, pad_value, CoordinateDiff{0, 0, 0, 1}, CoordinateDiff{0, 0, 1, 0});
 
     auto conv = make_shared<op::Convolution>(pad,
                                              F,
@@ -481,7 +481,7 @@ TEST(cpu_fusion, zero_padded_conv_backprop_filters)
     auto pad_value = op::Constant::create<float>(element::f32, Shape{}, std::vector<float>{0.0f});
 
     auto pad =
-        make_shared<op::Pad>(X, pad_value, Shape{0, 0, 0, 1}, Shape{0, 0, 1, 0}, Shape{0, 0, 0, 0});
+        make_shared<op::Pad>(X, pad_value, CoordinateDiff{0, 0, 0, 1}, CoordinateDiff{0, 0, 1, 0});
 
     auto conv = make_shared<op::ConvolutionBackpropFilters>(pad,
                                                             Shape{1, 1, 2, 2},
