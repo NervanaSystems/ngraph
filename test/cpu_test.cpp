@@ -989,3 +989,23 @@ TEST(cpu_test, conv_test_winograd)
     }
     auto cpu_results = execute(cpu_f, args, "CPU");
 }
+
+TEST(cpu_test, conv_negative_padding)
+{
+    auto make_f = [&]() {
+        Shape shape_a{1, 16, 2, 2};
+        auto A = make_shared<op::Parameter>(element::f32, shape_a);
+        Shape shape_b{32, 16, 1, 1};
+        auto B = make_shared<op::Parameter>(element::f32, shape_b);
+        auto conv1 = make_shared<op::Convolution>(A,
+                                                  B,
+                                                  Strides{1, 1},
+                                                  Strides{1, 1},
+                                                  CoordinateDiff{-1, -1},
+                                                  CoordinateDiff{0, 0},
+                                                  Strides{1, 1});
+        return make_shared<Function>(conv1, ParameterVector{A, B});
+
+    };
+    compare_backends(make_f(), make_f(), "CPU", "INTERPRETER");
+}
