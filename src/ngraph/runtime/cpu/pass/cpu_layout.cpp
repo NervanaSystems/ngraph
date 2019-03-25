@@ -390,6 +390,7 @@ namespace ngraph
                         mkldnn_arg1_shape, et_weights, memory::format::any);
                     const memory::desc result_desc(
                         mkldnn_result_shape, et_result, memory::format::any);
+
                     std::unique_ptr<convolution_forward::desc> fwd_desc{nullptr};
                     auto convolution_algo = mkldnn_utils::get_conv_algo();
                     if (use_bias)
