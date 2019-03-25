@@ -33,16 +33,13 @@ runtime::cpu::CPU_CallFrame::CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction>
                                            InitContextFuncCG compiled_init_ctx_func,
                                            DestroyContextFuncCG compiled_destroy_ctx_func,
                                            EntryPoint compiled_function,
-                                           AllocateFunc memory_allocator,
-                                           DestroyFunc memory_deallocator)
+                                           std::shared_ptr<ngraph::runtime::Allocator> allocator)
     : m_external_function(external_function)
-    , m_memory_allocator(memory_allocator)
-    , m_memory_deallocator(memory_deallocator)
     , m_compiled_init_ctx_func(compiled_init_ctx_func)
     , m_compiled_destroy_ctx_func(compiled_destroy_ctx_func)
     , m_compiled_function(compiled_function)
 {
-    setup_runtime_context();
+    setup_runtime_context(allocator);
     if (!m_external_function->is_direct_execution())
     {
         // Invoke codegen runtime context initialization function.
@@ -128,7 +125,8 @@ void runtime::cpu::CPU_CallFrame::propagate_layouts(
     }
 }
 
-void runtime::cpu::CPU_CallFrame::setup_runtime_context()
+void runtime::cpu::CPU_CallFrame::setup_runtime_context(
+    std::shared_ptr<ngraph::runtime::Allocator> allocator)
 {
     ctx = new CPURuntimeContext;
     ctx->pc = 0;
@@ -143,9 +141,6 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
 
     // Create temporary buffer pools
     size_t alignment = runtime::cpu::CPU_ExternalFunction::s_memory_pool_alignment;
-    ngraph::runtime::Allocator* allocator =
-        new ngraph::runtime::cpu::CPUAllocator(m_memory_allocator, m_memory_deallocator);
-
     for (auto buffer_size : m_external_function->get_memory_buffer_sizes())
     {
         auto buffer = new AlignedBuffer(buffer_size, alignment, allocator);

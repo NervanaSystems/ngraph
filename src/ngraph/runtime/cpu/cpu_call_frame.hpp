@@ -59,9 +59,7 @@ namespace ngraph
                               InitContextFuncCG compiled_init_ctx_func,
                               DestroyContextFuncCG compiled_destroy_ctx_func,
                               EntryPoint compiled_function,
-                              AllocateFunc memory_allocator,
-                              DestroyFunc memory_deallocator);
-
+                              std::shared_ptr<ngraph::runtime::Allocator> allocator);
                 ~CPU_CallFrame();
 
                 /// \brief Invoke the function with values matching the signature of the function.
@@ -73,7 +71,7 @@ namespace ngraph
                 void propagate_layouts(const std::vector<std::shared_ptr<runtime::Tensor>>& tvs,
                                        const LayoutDescriptorPtrs& layouts) const;
 
-                void setup_runtime_context();
+                void setup_runtime_context(std::shared_ptr<ngraph::runtime::Allocator> allocator);
                 void setup_cg_runtime_context();
                 void cleanup_runtime_context();
 
@@ -88,10 +86,6 @@ namespace ngraph
                 std::shared_ptr<CPU_ExternalFunction> m_external_function;
 
                 CPURuntimeContext* ctx = nullptr;
-
-                // memeber function pointers to hold the framework allocators
-                AllocateFunc m_memory_allocator;
-                DestroyFunc m_memory_deallocator;
 
                 /* Codegen specific */
 

@@ -96,8 +96,6 @@ public:
     /// \returns compiled function or nullptr on failure
     virtual std::shared_ptr<Executable> compile(std::shared_ptr<Function> func,
                                                 ngraph::pass::PassConfig& pass_config,
-                                                AllocateFunc memory_allocator = nullptr,
-                                                DestroyFunc memory_deallocator = nullptr,
                                                 bool enable_performance_data = false);
 
     /// \brief Test if a backend is capable of supporting an op

@@ -1712,10 +1712,8 @@ void*& runtime::cpu::CPU_ExternalFunction::get_tensor_data(const std::string& na
     }
 }
 
-shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
-    runtime::cpu::CPU_ExternalFunction::make_call_frame(ngraph::pass::PassConfig& pass_config,
-                                                        AllocateFunc memory_allocator,
-                                                        DestroyFunc memory_deallocator)
+shared_ptr<ngraph::runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_ExternalFunction::make_call_frame(
+    ngraph::pass::PassConfig& pass_config, std::shared_ptr<ngraph::runtime::Allocator> allocator)
 {
 #if defined(NGRAPH_DEX_ONLY)
     if (pass_config.get_compilation_mode() == ngraph::pass::CompilationMode::CODEGEN)
@@ -1744,8 +1742,7 @@ shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
                                                             m_compiled_init_ctx_func,
                                                             m_compiled_destroy_ctx_func,
                                                             m_compiled_function,
-                                                            memory_allocator,
-                                                            memory_deallocator);
+                                                            allocator);
 }
 
 const runtime::cpu::LayoutDescriptorPtrs&

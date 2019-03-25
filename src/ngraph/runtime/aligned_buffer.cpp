@@ -32,7 +32,7 @@ runtime::AlignedBuffer::AlignedBuffer()
 
 runtime::AlignedBuffer::AlignedBuffer(size_t byte_size,
                                       size_t alignment,
-                                      ngraph::runtime::Allocator* allocator)
+                                      std::shared_ptr<ngraph::runtime::Allocator> allocator)
 {
     m_allocator = allocator;
     m_byte_size = byte_size;
@@ -42,7 +42,7 @@ runtime::AlignedBuffer::AlignedBuffer(size_t byte_size,
         if (m_allocator)
         {
             m_allocated_buffer =
-                static_cast<char*>(allocator->Malloc(nullptr, allocation_size, alignment));
+                static_cast<char*>(m_allocator->Malloc(nullptr, allocation_size, alignment));
         }
         else
         {

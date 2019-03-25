@@ -17,6 +17,7 @@
 #pragma once
 
 #include <cstddef>
+#include <memory>
 
 namespace ngraph
 {
@@ -35,7 +36,7 @@ class ngraph::runtime::AlignedBuffer
 public:
     AlignedBuffer(size_t byte_size,
                   size_t alignment,
-                  ngraph::runtime::Allocator* allocator = nullptr);
+                  std::shared_ptr<ngraph::runtime::Allocator> allocator = nullptr);
     AlignedBuffer();
     ~AlignedBuffer();
 
@@ -47,8 +48,8 @@ private:
     AlignedBuffer(AlignedBuffer&&) = delete;
     AlignedBuffer& operator=(const AlignedBuffer&) = delete;
 
+    std::shared_ptr<ngraph::runtime::Allocator> m_allocator;
     char* m_allocated_buffer;
     char* m_aligned_buffer;
-    ngraph::runtime::Allocator* m_allocator;
     size_t m_byte_size;
 };
