@@ -18,9 +18,47 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/constant.hpp"
 
-using namespace std;
 using namespace ngraph;
 
+//
+// The shape specialization pass transforms a function by replacing, wherever possible, all
+// shape-relevant inputs with constants. For example,
+//
+//
+//          _________
+//         | Param   |
+//         | 2x2x3   |
+//         |_________|
+//              |
+//          ____|____
+//         |    0    |
+//         | ShapeOf |
+//         |_________|
+//      |     |
+//    __|_____|___
+//   |  0     1   |
+//   | DynReshape |
+//   |____________|
+//         |
+//
+// (Where 0 is the data input and 1 is the shape input) would be replaced with:
+//
+//          _____________
+//         |             |
+//         |   Constant  |
+//         | val=[2,2,3] |
+//         |_____________|
+//      |     |
+//    __|_____|___
+//   |  0     1   |
+//   | DynReshape |
+//   |____________|
+//         |
+//
+// Note that replacement will only be attempted on shape-relevant inputs, and will only be
+// successful if the input's value is entirely determined by nodes that can be converted with
+// as_constants().
+//
 bool pass::ShapeSpecialization::run_on_function(std::shared_ptr<Function> f)
 {
     // TODO(amprocte): We are probably reinventing the wheel with the graph traversal here; the

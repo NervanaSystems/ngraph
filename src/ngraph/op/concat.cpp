@@ -105,6 +105,10 @@ std::vector<std::shared_ptr<op::Constant>> op::Concat::as_constants() const
 
     for (size_t i = 0; i < get_input_size(); i++)
     {
+        //
+        // For the time being we will only support int64 here, since that's all that's needed for
+        // static shape propagation.
+        //
         if (get_input_element_type(i) != element::i64)
         {
             return {};

@@ -92,12 +92,10 @@ namespace ngraph
             Node* m_node;   // The node we are an input for
             size_t m_index; // Index into all input tensors
             Output* m_output;
-            bool m_is_relevant_to_shape;
-            bool m_is_relevant_to_value;
 
         private:
-            void set_is_relevant_to_shape(bool relevant) { m_is_relevant_to_shape = relevant; }
-            void set_is_relevant_to_value(bool relevant) { m_is_relevant_to_value = relevant; }
+            bool m_is_relevant_to_shape;
+            bool m_is_relevant_to_value;
             Input(const Input&) = delete;
             Input(Input&&) = delete;
             Input& operator=(const Input&) = delete;
