@@ -2034,6 +2034,12 @@ TEST(cpu_fusion, convbias_affine_folding1)
         return f;
     };
 
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    auto func = make_function();
+    pass_manager.run_passes(func);
+    ASSERT_EQ(count_ops_of_type<op::ConvolutionBiasAdd>(func), 1);
+
     auto int_f = make_function();
     auto cpu_f = make_function();
 
@@ -2075,6 +2081,12 @@ TEST(cpu_fusion, convbias_affine_folding2)
             make_shared<Function>(NodeVector{out}, ParameterVector{input, weights, bias, a, b});
         return f;
     };
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    auto func = make_function();
+    pass_manager.run_passes(func);
+    ASSERT_EQ(count_ops_of_type<op::ConvolutionBiasAdd>(func), 1);
 
     auto int_f = make_function();
     auto cpu_f = make_function();
