@@ -46,6 +46,7 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/equal.hpp"
+#include "ngraph/op/erf.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/experimental/dyn_broadcast.hpp"
 #include "ngraph/op/experimental/dyn_pad.hpp"
@@ -779,6 +780,11 @@ static shared_ptr<ngraph::Function>
             case OP_TYPEID::Equal:
             {
                 node = make_shared<op::Equal>(args[0], args[1]);
+                break;
+            }
+            case OP_TYPEID::Erf:
+            {
+                node = make_shared<op::Erf>(args[0]);
                 break;
             }
             case OP_TYPEID::Exp:
@@ -1535,6 +1541,8 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::EmbeddingLookup: { break;
     }
     case OP_TYPEID::Equal: { break;
+    }
+    case OP_TYPEID::Erf: { break;
     }
     case OP_TYPEID::Exp: { break;
     }
