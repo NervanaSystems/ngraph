@@ -65,3 +65,4 @@ pad_reflect_2d_with_neg
 
 # Not implemented
 erf
+zero_sized_erf

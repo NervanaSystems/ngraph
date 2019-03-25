@@ -18,3 +18,4 @@ all_2x2x3_eliminate_dims_0_1_2
 
 # Not implemented
 erf
+zero_sized_erf

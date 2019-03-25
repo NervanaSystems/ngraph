@@ -122,3 +122,4 @@ create_tensor_2
 
 # Not implemented
 erf
+zero_sized_erf
