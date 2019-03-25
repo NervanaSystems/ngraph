@@ -1995,6 +1995,8 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::AllReduce:
         case OP_TYPEID::BroadcastLike:
+        case OP_TYPEID::DynReshape:
+        case OP_TYPEID::DynSlice:
         case OP_TYPEID::QuantizedAvgPool:
         case OP_TYPEID::QuantizedConvolutionBias:
         case OP_TYPEID::QuantizedConvolutionBiasAdd:

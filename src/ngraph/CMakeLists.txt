@@ -132,6 +132,10 @@ set (SRC
     op/experimental/dyn_broadcast.hpp
     op/experimental/dyn_pad.cpp
     op/experimental/dyn_pad.hpp
+    op/experimental/dyn_reshape.cpp
+    op/experimental/dyn_reshape.hpp
+    op/experimental/dyn_slice.cpp
+    op/experimental/dyn_slice.hpp
     op/experimental/generate_mask.cpp
     op/experimental/generate_mask.hpp
     op/experimental/quantized_avg_pool.cpp
