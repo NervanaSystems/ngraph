@@ -19,17 +19,25 @@
 ONNX Support
 ============
 
-nGraph is able to import and execute ONNX mlsodels. Models are converted to nGraph's internal representation and converted to ``Function`` objects, which can be compiled and executed on one of nGraph's backends.
+nGraph is able to import and execute ONNX models. Models are converted to 
+nGraph's internal representation and converted to ``Function`` objects, which 
+can be compiled and executed on one of nGraph's backends.
 
-You can use nGraph's Python API to run an ONNX model and nGraph can be used as an ONNX backend using the add-on package `nGraph-ONNX <ngraph_onnx>`_.
+You can use nGraph's Python API to run an ONNX model and nGraph can be used 
+as an ONNX backend using the add-on package `nGraph-ONNX <ngraph_onnx>`_.
 
-.. note:: In order to support ONNX, nGraph must be built with the ``NGRAPH_ONNX_IMPORT_ENABLE`` flag. See `Building nGraph-ONNX <ngraph_onnx_building>`_ for more information. All nGraph packages published on PyPI are built with ONNX support.
+
+.. note:: In order to support ONNX, nGraph must be built with the 
+   ``NGRAPH_ONNX_IMPORT_ENABLE`` flag. See `Building nGraph-ONNX 
+   <ngraph_onnx_building>`_ for more information. All nGraph packages 
+   published on PyPI are built with ONNX support.
 
 
 Installation
 ------------
 
-In order to prepare your environment to use nGraph and ONNX, install the Python packages for nGraph, ONNX and NumPy:
+To prepare your environment to use nGraph and ONNX, install the Python packages
+for nGraph, ONNX and NumPy:
 
 ::
 
@@ -48,7 +56,8 @@ For example ResNet-50:
     $ tar -xzvf resnet50.tar.gz
 
 
-Use the following Python commands to convert the downloaded model to an nGraph ``Function``:
+Use the following Python commands to convert the downloaded model to an nGraph 
+``Function``:
 
 .. code-block:: python
 
@@ -65,14 +74,17 @@ Use the following Python commands to convert the downloaded model to an nGraph `
     <Function: 'resnet50' ([1, 1000])>
 
 
-This creates an nGraph ``Function`` object, which can be used to execute a computation on a chosen backend.
+This creates an nGraph ``Function`` object, which can be used to execute a 
+computation on a chosen backend.
 
 
 Running a computation
 ---------------------
 
-You can now create an nGraph ``Runtime`` backend and use it to compile your ``Function`` to a backend-specific ``Computation`` object.
-Finally, you can execute your model by calling the created ``Computation`` object with input data.
+You can now create an nGraph ``Runtime`` backend and use it to compile your 
+``Function`` to a backend-specific ``Computation`` object. Finally, you can 
+execute your model by calling the created ``Computation`` object with input 
+data:
 
 .. code-block:: python
 
@@ -94,7 +106,8 @@ Finally, you can execute your model by calling the created ``Computation`` objec
              ...
 
 
-You can find more information about nGraph and ONNX in the `nGraph-ONNX <ngraph_onnx>`_ GitHub repository.
+Find more information about nGraph and ONNX in the 
+`nGraph-ONNX <ngraph_onnx>`_ GitHub repository.
 
 
 .. _ngraph_onnx: https://github.com/NervanaSystems/ngraph-onnx/
