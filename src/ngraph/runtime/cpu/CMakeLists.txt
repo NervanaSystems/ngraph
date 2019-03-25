@@ -23,7 +23,6 @@ set(SRC
     cpu_executor.cpp
     cpu_external_function.cpp
     cpu_kernels.cpp
-    cpu_allocator.cpp
     cpu_layout_descriptor.cpp
     cpu_op_annotations.cpp
     cpu_tensor_view_wrapper.cpp
