@@ -68,13 +68,11 @@ namespace ngraph
                     for (int i = 0; i < num_thread_pools; i++)
                     {
                         int num_threads_per_pool;
-#if defined(EIGEN_OPENMP)
+
                         // Eigen threadpool will still be used for reductions
                         // and other tensor operations that dont use a parallelFor
-                        num_threads_per_pool = 1;
-#else
                         num_threads_per_pool = GetNumCores();
-#endif
+
                         // User override
                         char* eigen_tp_count = std::getenv("NGRAPH_CPU_EIGEN_THREAD_COUNT");
                         if (eigen_tp_count != nullptr)
