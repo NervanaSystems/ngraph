@@ -1619,7 +1619,7 @@ shared_ptr<runtime::Executable>
                     const cldnn::tensor border_pad_below(0, 0, pad_above.at(1), pad_above.at(0));
                     input_offset_x = 0;
                     input_offset_y = 0;
-                    op_input_name += "_bordered";
+                    op_input_name = op_input_name + "_" + get_output_name(op) + "_bordered";
 
                     const cldnn::border cldnn_border(op_input_name,
                                                      get_input_name(op, 0),
@@ -1719,7 +1719,7 @@ shared_ptr<runtime::Executable>
                     const cldnn::tensor border_pad_below(0, 0, pad_below_x, pad_below_y);
                     input_offset_x = 0;
                     input_offset_y = 0;
-                    op_input_name += "_bordered";
+                    op_input_name = op_input_name + "_" + get_output_name(op) + "_bordered";
                     const cldnn::border cldnn_border(op_input_name,
                                                      get_input_name(op, 0),
                                                      border_pad_above,
@@ -1798,7 +1798,7 @@ shared_ptr<runtime::Executable>
                     // Different input padding for operation workarounded by adding aux layer
                     const cldnn::tensor crop_pad_below(0, 0, -pad_below.at(1), -pad_below.at(0));
                     const cldnn::tensor crop_pad_above(0, 0, -pad_above.at(1), -pad_above.at(0));
-                    op_input_name += "_cropped";
+                    op_input_name = op_input_name + "_" + get_output_name(op) + "_cropped";
 
                     const cldnn::crop cldnn_crop(op_input_name,
                                                  get_input_name(op, 1),
@@ -1995,6 +1995,8 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::AllReduce:
         case OP_TYPEID::BroadcastLike:
+        case OP_TYPEID::DynReshape:
+        case OP_TYPEID::DynSlice:
         case OP_TYPEID::QuantizedAvgPool:
         case OP_TYPEID::QuantizedConvolutionBias:
         case OP_TYPEID::QuantizedConvolutionBiasAdd:
@@ -2014,6 +2016,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::EmbeddingLookup:
         case OP_TYPEID::DynBroadcast:
         case OP_TYPEID::Passthrough:
+        case OP_TYPEID::DynPad:
         {
             throw unsupported_op("Unsupported op '" + op->description() +
                                  "' in IntelGPU back end.");
