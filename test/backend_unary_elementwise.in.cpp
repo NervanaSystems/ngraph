@@ -217,19 +217,24 @@ NGRAPH_TEST(${BACKEND_NAME}, erf)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Erf>(A), ParameterVector{A});
 
-    // TODO: Fix when backends are ready
-    auto backend = runtime::Backend::create("INTERPRETER");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape);
-    copy_data(a, vector<float>{-4, -3, -2, -1, 0, 1, 2, 3});
+    copy_data(a, vector<float>{-4.0f, -3.0f, -2.0f, -1.0f, 0.0f, 1.0f, 2.0f, 3.0f});
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_TRUE(test::all_close_f(
-        vector<float>{erf(-4), erf(-3), erf(-2), erf(-1), erf(0), erf(1), erf(2), erf(3)},
-        read_vector<float>(result)));
+    EXPECT_TRUE(test::all_close_f(vector<float>{erf(-4.0f),
+                                                erf(-3.0f),
+                                                erf(-2.0f),
+                                                erf(-1.0f),
+                                                erf(0.0f),
+                                                erf(1.0f),
+                                                erf(2.0f),
+                                                erf(3.0f)},
+                                  read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, exp)

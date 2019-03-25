@@ -2689,8 +2689,7 @@ NGRAPH_TEST(${BACKEND_NAME}, zero_sized_ceiling)
 
 NGRAPH_TEST(${BACKEND_NAME}, zero_sized_erf)
 {
-    // TODO: Fix when backends are ready
-    make_unary_empty_test<op::Erf>("INTERPRETER");
+    make_unary_empty_test<op::Erf>("${BACKEND_NAME}");
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, zero_sized_exp)
