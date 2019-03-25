@@ -599,6 +599,11 @@ std::string runtime::gpu::GPU_Emitter::emit_Equal(EMIT_ARGS)
     return emit_elementwise<ngraph::op::Equal>(compiled_function, function_name, node, args, out);
 }
 
+std::string runtime::gpu::GPU_Emitter::emit_Erf(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
 std::string runtime::gpu::GPU_Emitter::emit_Exp(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Exp>(compiled_function, function_name, node, args, out);
