@@ -100,7 +100,7 @@ namespace ngraph
                     in_transform_start[in_batch_axis] = batch_index;
                     in_transform_end[in_batch_axis] = batch_index + 1;
                     in_transform_start[in_channel_axis] = 0;
-                    in_transform_end[in_channel_axis] = n_in_channels;
+                    in_transform_end[in_channel_axis] = 1;
 
                     for (size_t i = 2; i < n_spatial_dimensions + 2; i++)
                     {
@@ -124,7 +124,6 @@ namespace ngraph
                     {
                         in_transform_axis_order[i] = i;
                     }
-
                     CoordinateTransform in_transform(in_shape,
                                                      in_transform_start,
                                                      in_transform_end,
@@ -150,7 +149,7 @@ namespace ngraph
                     filter_transform_start[filter_out_channel_axis] = out_channel;
                     filter_transform_end[filter_out_channel_axis] = out_channel + 1;
                     filter_transform_start[filter_in_channel_axis] = 0;
-                    filter_transform_end[filter_in_channel_axis] = n_in_channels;
+                    filter_transform_end[filter_in_channel_axis] = 1;
 
                     for (size_t i = 2; i < n_spatial_dimensions + 2; i++)
                     {
@@ -165,22 +164,34 @@ namespace ngraph
                     //
                     //   out[O] += in[I] * filter[F].
 
-                    T result = 0;
+                    float result = 0;
 
                     CoordinateTransform::Iterator in_it = in_transform.begin();
                     CoordinateTransform::Iterator filter_it = filter_transform.begin();
                     CoordinateTransform::Iterator in_it_end = in_transform.end();
                     CoordinateTransform::Iterator filter_it_end = filter_transform.end();
 
+                    size_t in_channel_stride = row_major_strides(in_shape).at(in_channel_axis);
+                    size_t filter_in_channel_stride =
+                        row_major_strides(filter_shape).at(filter_in_channel_axis);
+
                     while (in_it != in_it_end && filter_it != filter_it_end)
                     {
                         const Coordinate& in_coord = *in_it;
-                        T v = in_transform.has_source_coordinate(in_coord)
-                                  ? in[in_transform.index(in_coord)]
-                                  : 0;
-
-                        result += v * filter[filter_transform.index(*filter_it)];
-
+                        if (in_transform.has_source_coordinate(in_coord))
+                        {
+                            size_t in_idx = in_transform.index(in_coord);
+                            const Coordinate& filter_coord = *filter_it;
+                            size_t filter_idx = filter_transform.index(filter_coord);
+                            for (size_t in_channel = 0; in_channel < n_in_channels; ++in_channel)
+                            {
+                                T in_v = in[in_idx];
+                                T f_v = filter[filter_idx];
+                                result += in_v * f_v;
+                                in_idx += in_channel_stride;
+                                filter_idx += filter_in_channel_stride;
+                            }
+                        }
                         ++in_it;
                         ++filter_it;
                     }
