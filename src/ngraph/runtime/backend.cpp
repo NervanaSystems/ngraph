@@ -65,6 +65,16 @@ void runtime::Backend::remove_compiled_function(std::shared_ptr<Executable> exec
 {
 }
 
+std::shared_ptr<ngraph::runtime::Allocator> runtime::Backend::get_framework_memory_allocator()
+{
+    return nullptr;
+}
+
+void runtime::Backend::set_framework_memory_allocator(
+    const std::shared_ptr<ngraph::runtime::Allocator>& allocator)
+{
+}
+
 ngraph::runtime::AllocateFunc runtime::Backend::get_device_memory_alloc()
 {
     return nullptr;

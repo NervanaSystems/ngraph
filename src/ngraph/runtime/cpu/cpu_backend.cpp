@@ -50,6 +50,14 @@ namespace
     } s_cpu_static_init;
 }
 
+runtime::cpu::CPU_Backend::CPU_Backend()
+{
+    m_allocator = make_shared<ngraph::runtime::Allocator>();
+}
+
+runtime::cpu::CPU_Backend::~CPU_Backend()
+{
+}
 shared_ptr<runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_Backend::make_call_frame(
     const shared_ptr<runtime::cpu::CPU_ExternalFunction>& external_function,
     ngraph::pass::PassConfig& pass_config,
@@ -63,6 +71,17 @@ shared_ptr<runtime::Tensor>
     runtime::cpu::CPU_Backend::create_tensor(const element::Type& element_type, const Shape& shape)
 {
     return make_shared<runtime::cpu::CPUTensorView>(element_type, shape, this);
+}
+
+shared_ptr<ngraph::runtime::Allocator> runtime::cpu::CPU_Backend::get_framework_memory_allocator()
+{
+    return m_allocator;
+}
+
+void runtime::cpu::CPU_Backend::set_framework_memory_allocator(
+    const std::shared_ptr<ngraph::runtime::Allocator>& allocator)
+{
+    m_allocator = allocator;
 }
 
 shared_ptr<runtime::Tensor> runtime::cpu::CPU_Backend::create_tensor(

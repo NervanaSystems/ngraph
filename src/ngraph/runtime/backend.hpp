@@ -20,6 +20,7 @@
 
 #include "ngraph/function.hpp"
 #include "ngraph/pass/pass_config.hpp"
+#include "ngraph/runtime/allocator.hpp"
 #include "ngraph/runtime/executable.hpp"
 #include "ngraph/runtime/performance_counter.hpp"
 #include "ngraph/shape.hpp"
@@ -117,6 +118,9 @@ public:
 
     virtual void remove_compiled_function(std::shared_ptr<Executable> exec);
 
+    virtual std::shared_ptr<ngraph::runtime::Allocator> get_framework_memory_allocator();
+    virtual void set_framework_memory_allocator(
+        const std::shared_ptr<ngraph::runtime::Allocator>& allocator);
     virtual ngraph::runtime::AllocateFunc get_device_memory_alloc();
     virtual ngraph::runtime::DestroyFunc get_device_memory_dealloc();
     virtual bool is_device_memory();

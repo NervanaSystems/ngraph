@@ -18,7 +18,7 @@
 
 void* ngraph::runtime::Allocator::Malloc(void* handle, size_t size, size_t alignment)
 {
-    void* ptr = malloc(size);
+    void* ptr = ngraph::aligned_alloc(alignment, size);
 
     // check for exception
     if (size != 0 && !ptr)
@@ -32,6 +32,6 @@ void ngraph::runtime::Allocator::Free(void* handle, void* ptr)
 {
     if (ptr)
     {
-        free(ptr);
+        ngraph::aligned_free(ptr);
     }
 }
