@@ -712,21 +712,16 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                             auto input_op = std::static_pointer_cast<op::Op>(input_node);
                             if (auto input_op_annotations = input_op->get_op_annotations())
                             {
-                                // when input is cacheable, do not allow destructive oi
-                                if (input_op_annotations->is_cacheable())
-                                {
-                                    NGRAPH_DEBUG << "cpu_memory_assignment: cacheable input, no "
-                                                    "destructive oi";
-                                    continue;
-                                }
                                 // when reusing memory, ops with different cacheabilities are using different memory manager
                                 // and should not share the same buffer.
-                                else if (!m_disable_memory_sharing &&
-                                         op_annotations->is_cacheable())
+                                if (!m_disable_memory_sharing &&
+                                    input_op_annotations->is_cacheable() !=
+                                        op_annotations->is_cacheable())
                                 {
-                                    NGRAPH_DEBUG << "cpu_memory_assignment: reusing memory with "
-                                                    "non-cacheable input and cacheable output, no "
-                                                    "destructive oi";
+                                    NGRAPH_DEBUG
+                                        << "cpu_memory_assignment: reusing memory with "
+                                           "input and output have different cacheabilities, no "
+                                           "destructive oi";
                                     continue;
                                 }
                             }
