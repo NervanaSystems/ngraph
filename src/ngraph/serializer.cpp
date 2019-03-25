@@ -49,6 +49,9 @@
 #include "ngraph/op/erf.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/experimental/dyn_broadcast.hpp"
+#include "ngraph/op/experimental/dyn_pad.hpp"
+#include "ngraph/op/experimental/dyn_reshape.hpp"
+#include "ngraph/op/experimental/dyn_slice.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
@@ -752,6 +755,21 @@ static shared_ptr<ngraph::Function>
             case OP_TYPEID::DynBroadcast:
             {
                 node = make_shared<op::DynBroadcast>(args[0], args[1], args[2]);
+                break;
+            }
+            case OP_TYPEID::DynPad:
+            {
+                node = make_shared<op::DynPad>(args[0], args[1], args[2], args[3]);
+                break;
+            }
+            case OP_TYPEID::DynReshape:
+            {
+                node = make_shared<op::DynReshape>(args[0], args[1]);
+                break;
+            }
+            case OP_TYPEID::DynSlice:
+            {
+                node = make_shared<op::DynSlice>(args[0], args[1], args[2], args[3]);
                 break;
             }
             case OP_TYPEID::EmbeddingLookup:
@@ -1513,6 +1531,12 @@ static json write(const Node& n, bool binary_constant_data)
         break;
     }
     case OP_TYPEID::DynBroadcast: { break;
+    }
+    case OP_TYPEID::DynPad: { break;
+    }
+    case OP_TYPEID::DynReshape: { break;
+    }
+    case OP_TYPEID::DynSlice: { break;
     }
     case OP_TYPEID::EmbeddingLookup: { break;
     }

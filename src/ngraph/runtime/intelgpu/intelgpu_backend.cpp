@@ -1996,6 +1996,8 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::AllReduce:
         case OP_TYPEID::BroadcastLike:
+        case OP_TYPEID::DynReshape:
+        case OP_TYPEID::DynSlice:
         case OP_TYPEID::Erf:
         case OP_TYPEID::QuantizedAvgPool:
         case OP_TYPEID::QuantizedConvolutionBias:
@@ -2016,6 +2018,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::EmbeddingLookup:
         case OP_TYPEID::DynBroadcast:
         case OP_TYPEID::Passthrough:
+        case OP_TYPEID::DynPad:
         {
             throw unsupported_op("Unsupported op '" + op->description() +
                                  "' in IntelGPU back end.");

@@ -49,6 +49,7 @@ runtime::cpu::CPU_CallFrame::CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction>
 
 runtime::cpu::CPU_CallFrame::~CPU_CallFrame()
 {
+    cleanup_runtime_context();
     if (!m_external_function->is_direct_execution())
     {
         NGRAPH_ASSERT(m_compiled_destroy_ctx_func) << "compiled_destroy_ctx_func cannot be null.";
