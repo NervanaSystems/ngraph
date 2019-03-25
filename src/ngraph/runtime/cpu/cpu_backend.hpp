@@ -23,7 +23,6 @@
 #include "ngraph/pass/pass_config.hpp"
 #include "ngraph/runtime/allocator.hpp"
 #include "ngraph/runtime/backend.hpp"
-#include "ngraph/runtime/cpu/cpu_allocator.hpp"
 
 namespace ngraph
 {

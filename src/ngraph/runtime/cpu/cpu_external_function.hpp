@@ -43,7 +43,6 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/pass_config.hpp"
-#include "ngraph/runtime/cpu/cpu_allocator.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
