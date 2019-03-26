@@ -50,12 +50,12 @@ boost compared to native implementations. For a high-level overview, see the
    :maxdepth: 1
    :caption: nGraph Core
 
+   buildlb.rst
    core/overview.rst
    core/fusion/index.rst
    nGraph Core Ops <ops/index.rst>
    core/constructing-graphs/index.rst
    core/passes/passes.rst
-   buildlb.rst
    
 .. toctree::
    :maxdepth: 1
