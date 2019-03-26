@@ -182,16 +182,22 @@ int main(int argc, char** argv)
         {
             for (const string& header_path : path.files)
             {
-                string header_data = read_file_to_string(header_path);
-                string relative_path = header_path.substr(path.search_path.size() + 1);
-                header_data = rewrite_header(header_data, relative_path);
-                // header_data = uncomment(header_data);
-                total_size += header_data.size();
-                total_count++;
-
                 out << "        {";
-                out << "\"" << header_path << "\",\nR\"" << prefix << "(" << header_data << ")"
-                    << prefix << "\"},\n";
+                out << "\"" << header_path << "\",\nR\"" << prefix << "(";
+                string relative_path = header_path.substr(path.search_path.size() + 1);
+                std::ifstream file(header_path);
+                if (file.is_open()) {
+                    std::string line;
+                    while (getline(file, line)) {
+                        header_data = rewrite_header(line, relative_path);
+                        // header_data = uncomment(header_data);
+                        total_size += header_data.size();
+                        out << header_data;
+                    }
+                    file.close();
+                }
+                out << ")" << prefix << "\"},\n";
+                total_count++;
             }
         }
         out << "    };\n";
