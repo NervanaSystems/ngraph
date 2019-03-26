@@ -31,7 +31,7 @@ namespace ngraph
         namespace reference
         {
             template <typename T>
-            void broadcastrecv(T* out, const element::Type element_type, int count)
+            void broadcastdistributed(T* arg, const element::Type element_type, int count)
             {
 #ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
                 auto data_type = MLSL::DT_FLOAT;
@@ -42,12 +42,13 @@ namespace ngraph
                 }
                 else if (element_type != element::f32)
                 {
-                    throw std::runtime_error("DistBroadcast op supports only f32 and f64 types");
+                    throw std::runtime_error(
+                        "BroadcastDistributed op supports only f32 and f64 types");
                 }
 
                 MLSL::Environment& env = MLSL::Environment::GetEnv();
                 MLSL::Distribution* distribution = env.CreateDistribution(env.GetProcessCount(), 1);
-                MLSL::CommReq* req = distribution->Bcast(out, count, data_type, 0, MLSL::GT_DATA);
+                MLSL::CommReq* req = distribution->Bcast(arg, count, data_type, 0, MLSL::GT_DATA);
                 env.Wait(req);
                 env.DeleteDistribution(distribution);
 #elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
@@ -62,7 +63,7 @@ namespace ngraph
                     throw std::runtime_error(
                         "BroadcastDistributed op supports only f32 and f64 types");
                 }
-                MPI_Bcast(out, count, data_type, 0, MPI_COMM_WORLD);
+                MPI_Bcast(arg, count, data_type, 0, MPI_COMM_WORLD);
 #else
                 throw ngraph_error("Distributed Library not supported/mentioned");
 #endif
