@@ -1,12 +1,16 @@
-# Robust Makefile for Sphinx documentation
+
+
+# Robust Makefil for Sphinx documentation
 #
 
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
-SPHINXPROJ    = IntelnGraphlibrary
+SPHINXPROJ    = nGraphCompilerStack
 SOURCEDIR     = source
 BUILDDIR      = build
+
+ALLSPHINXOPTS = ${SOURCEDIR}
 
 # Put it first so that "make" without argument is like "make help".
 help:
@@ -63,19 +67,19 @@ devhelp:
 	@echo "# devhelp"
 
 epub:
-	$(SPHINXBUILD) -b epub source $(BUILDDIR)/epub
+	$(SPHINXBUILD) -b epub $(ALLSPHINXOPTS) $(BUILDDIR)/epub
 	@echo
 	@echo "Build finished. The epub file is in $(BUILDDIR)/epub."
 
 latex:
-	$(SPHINXBUILD) -b latex source $(BUILDDIR)/latex
+	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
 	@echo
 	@echo "Build finished; the LaTeX files are in $(BUILDDIR)/latex."
 	@echo "Run \`make' in that directory to run these through (pdf)latex" \
 	      "(use \`make latexpdf' here to do that automatically)."
 
 latexpdf:
-	$(SPHINXBUILD) -b latex source build/latex
+	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) build/latex
 	@echo "Running LaTeX files through pdflatex..."
 	$(MAKE) -C $(BUILDDIR)/latex all-pdf
 	@echo "pdflatex finished; the PDF files are in $(BUILDDIR)/latex."
@@ -126,3 +130,4 @@ coverage:
 
 gen_python_api_doc:
 	@./generate_python_api_doc.sh
+
