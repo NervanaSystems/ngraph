@@ -216,19 +216,35 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
 
     auto op = make_shared<pattern::op::Label>(element::f32, shape_op);
     auto reshape = make_shared<op::Reshape>(op, AxisVector{0}, shape_r);
-    auto rehape_label = make_shared<pattern::op::Label>(reshape, nullptr, NodeVector{reshape});
+    auto rehape_label = make_shared<pattern::op::Label>(reshape, no_fan_out, NodeVector{reshape});
 
     auto callback = [op, rehape_label](pattern::RecurrentMatcher& m) {
         const auto sequence_len = m.get_number_of_recurrent_matches();
+
         auto reshape_node_vector = m.get_bound_nodes_for_pattern(rehape_label);
+
+        // The bounded node vector is in reverse order. It is convinient to have the
+        // bounded node vector in the correct order
+        std::reverse(std::begin(reshape_node_vector), std::end(reshape_node_vector));
+
+        auto driver_op = reshape_node_vector.front()->get_argument(0);
+        auto last_bounded_reshape_op = reshape_node_vector.back();
+
+        // Need to check if the next to last bouinded op is a reshape since the last reshape is allowed
+        // to have fan-out but the matcher will discard any reshape if it has fan-out
+        auto user_of_last_bounded_reshape_op = last_bounded_reshape_op->get_users(true)[0];
+        if (std::dynamic_pointer_cast<op::Reshape>(user_of_last_bounded_reshape_op))
+        {
+            last_bounded_reshape_op = user_of_last_bounded_reshape_op;
+            reshape_node_vector.push_back(last_bounded_reshape_op);
+        }
         std::cout << sequence_len << std::endl;
         for (auto it : reshape_node_vector)
         {
             std::cout << it->get_name() << " ";
         }
         std::cout << std::endl;
-        auto driver_op = reshape_node_vector.back()->get_argument(0);
-        auto last_bounded_reshape_op = reshape_node_vector.front();
+
         std::cout << driver_op->get_name() << " " << last_bounded_reshape_op->get_name()
                   << std::endl;
         replace_node(last_bounded_reshape_op, driver_op);
