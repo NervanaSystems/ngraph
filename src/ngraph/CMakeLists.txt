@@ -69,6 +69,10 @@ set (SRC
     ngraph_visibility.hpp
     node.cpp
     node.hpp
+    node_input.cpp
+    node_input.hpp
+    node_output.cpp
+    node_output.hpp
     node_vector.hpp
     op/abs.cpp
     op/abs.hpp
@@ -122,8 +126,18 @@ set (SRC
     op/embedding_lookup.hpp
     op/equal.cpp
     op/equal.hpp
+    op/erf.cpp
+    op/erf.hpp
     op/exp.cpp
     op/exp.hpp
+    op/experimental/dyn_broadcast.cpp
+    op/experimental/dyn_broadcast.hpp
+    op/experimental/dyn_pad.cpp
+    op/experimental/dyn_pad.hpp
+    op/experimental/dyn_reshape.cpp
+    op/experimental/dyn_reshape.hpp
+    op/experimental/dyn_slice.cpp
+    op/experimental/dyn_slice.hpp
     op/experimental/generate_mask.cpp
     op/experimental/generate_mask.hpp
     op/experimental/quantized_avg_pool.cpp
@@ -308,6 +322,8 @@ set (SRC
     pass/zero_dim_tensor_elimination.cpp
     pass/zero_dim_tensor_elimination.hpp
     pass/zero_dim_tensor_elimination.hpp
+    pass/concat_fusion.hpp
+    pass/concat_fusion.cpp
     pattern/matcher.cpp
     pattern/matcher.hpp
     pattern/op/any.hpp

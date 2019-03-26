@@ -33,6 +33,7 @@ set(SRC
     build_graph.cpp
     builder_autobroadcast.cpp
     constant_folding.cpp
+    concat_fusion.cpp
     control_dependencies.cpp
     coordinate.cpp
     copy.cpp
@@ -45,6 +46,7 @@ set(SRC
     input_output_assign.cpp
     main.cpp
     misc.cpp
+    node_input_output.cpp
     nop_elimination.cpp
     op.cpp
     partial_shape.cpp
