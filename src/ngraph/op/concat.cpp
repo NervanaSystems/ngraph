@@ -131,6 +131,12 @@ std::vector<std::shared_ptr<op::Constant>> op::Concat::as_constants() const
     for (size_t i = 0; i < get_input_size(); i++)
     {
         auto const_node = static_pointer_cast<op::Constant>(get_argument(i));
+        // A little extra paranoia ahead of the memcpy.
+        NGRAPH_ASSERT(get_input_shape(i) == const_node->get_shape() &&
+                      const_node->get_output_element_type(0) == element::i64);
+        // This memcpy should be safe, because values was initialized to have
+        // sum(0 <= j < num_inputs)(shape_size(get_input_shape(j))) elements, and pos is
+        // sum(0 <= j < i)(shape_size(get_input_shape(j))).
         memcpy(values.data() + pos,
                const_node->get_data_ptr(),
                shape_size(const_node->get_shape()) * sizeof(int64_t));
