@@ -56,6 +56,7 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/equal.hpp"
+#include "ngraph/op/erf.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/experimental/dyn_broadcast.hpp"
 #include "ngraph/op/experimental/dyn_pad.hpp"
@@ -609,6 +610,11 @@ std::string runtime::gpu::GPU_Emitter::emit_EmbeddingLookup(EMIT_ARGS)
 std::string runtime::gpu::GPU_Emitter::emit_Equal(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Equal>(compiled_function, function_name, node, args, out);
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_Erf(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_Exp(EMIT_ARGS)
