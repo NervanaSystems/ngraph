@@ -1494,7 +1494,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_folded_batch_nor
 
 void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_affine_folding()
 {
-    // A * ConvBias (input, filters, bias) + B -> ConvBias (input, filters * A_c)
+    // A * ConvBias (input, filters, bias) -> ConvBias (input, filters * A_c)
     Shape shape{2, 2, 1, 1};
     auto input = std::make_shared<pattern::op::Label>(element::f32, shape);
     auto filters = std::make_shared<pattern::op::Label>(element::f32, shape);
@@ -1542,21 +1542,19 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_affine_folding()
 
         // Check if values are being broadcast along channel (2nd) dimension
         auto is_channel_bcast = [](const std::shared_ptr<op::Broadcast>& bcast) {
-
-            if (bcast->get_argument(0)->get_shape().size() == 0)
+            auto input_shape = bcast->get_argument(0)->get_shape();
+            if (input_shape.size() == 0 || shape_size(input_shape) == 1)
             {
                 return true;
             }
 
-            if (bcast->get_argument(0)->get_shape().size() == 1 &&
-                bcast->get_broadcast_axes() == AxisSet{0, 2, 3})
+            if (input_shape.size() == 1 && bcast->get_broadcast_axes() == AxisSet{0, 2, 3})
             {
                 return true;
             }
 
-            if (bcast->get_argument(0)->get_shape().size() == 2)
+            if (input_shape.size() == 2)
             {
-                auto input_shape = bcast->get_argument(0)->get_shape();
                 if (input_shape[0] == 1 && bcast->get_broadcast_axes() == AxisSet{2, 3})
                     return true;
             }
@@ -1569,19 +1567,29 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_affine_folding()
         }
 
         auto get_bcast_input = [](const std::shared_ptr<op::Broadcast>& bcast) {
-            if (bcast->get_argument(0)->get_shape().size() == 0)
+            auto input_shape = bcast->get_argument(0)->get_shape();
+            if (input_shape.size() == 0)
             {
                 Shape bshape{bcast->get_shape()[1]};
                 return std::static_pointer_cast<ngraph::Node>(
                     std::make_shared<op::Broadcast>(bcast->get_argument(0), bshape, AxisSet{0}));
             }
-            if (bcast->get_argument(0)->get_shape().size() == 1)
+            if (shape_size(input_shape) == 1)
+            {
+                Shape bshape{bcast->get_shape()[1]};
+                return std::static_pointer_cast<ngraph::Node>(std::make_shared<op::Broadcast>(
+                    std::make_shared<op::Reshape>(
+                        bcast->get_argument(0), get_default_order(input_shape), Shape{}),
+                    bshape,
+                    AxisSet{0}));
+            }
+            if (input_shape.size() == 1)
             {
                 return bcast->get_argument(0);
             }
-            if (bcast->get_argument(0)->get_shape().size() == 2)
+            if (input_shape.size() == 2)
             {
-                Shape bshape{bcast->get_argument(0)->get_shape()[1]};
+                Shape bshape{input_shape[1]};
                 return std::static_pointer_cast<ngraph::Node>(std::make_shared<op::Reshape>(
                     bcast->get_argument(0), AxisVector{0, 1}, bshape));
             }
