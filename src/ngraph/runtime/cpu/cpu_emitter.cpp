@@ -49,6 +49,7 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/equal.hpp"
+#include "ngraph/op/erf.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
@@ -3189,6 +3190,28 @@ namespace ngraph
                     writer << "                         {" << join(out[0].get_shape()) << "},\n";
                     writer << "                         {" << join(max->get_reduction_axes())
                            << "});\n";
+                }
+                writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Erf)
+            {
+                writer.block_begin();
+                auto element_count = out[0].get_size();
+                if (args[0].get_element_type() == element::f32 ||
+                    args[0].get_element_type() == element::f64)
+                {
+                    writer << "cpu::kernel::erf<" << args[0].get_element_type().c_type_string()
+                           << ">(" << args[0].get_name() << ", " << out[0].get_name() << ", "
+                           << element_count << ", 0);\n";
+                }
+                else
+                {
+                    writer << "cpu::kernel::reference_erf<"
+                           << args[0].get_element_type().c_type_string() << ">("
+                           << args[0].get_name() << ", " << out[0].get_name() << ", "
+                           << ", " << element_count << ");\n";
                 }
                 writer.block_end();
             }
