@@ -46,7 +46,12 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/equal.hpp"
+#include "ngraph/op/erf.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/dyn_broadcast.hpp"
+#include "ngraph/op/experimental/dyn_pad.hpp"
+#include "ngraph/op/experimental/dyn_reshape.hpp"
+#include "ngraph/op/experimental/dyn_slice.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
@@ -747,6 +752,26 @@ static shared_ptr<ngraph::Function>
                 }
                 break;
             }
+            case OP_TYPEID::DynBroadcast:
+            {
+                node = make_shared<op::DynBroadcast>(args[0], args[1], args[2]);
+                break;
+            }
+            case OP_TYPEID::DynPad:
+            {
+                node = make_shared<op::DynPad>(args[0], args[1], args[2], args[3]);
+                break;
+            }
+            case OP_TYPEID::DynReshape:
+            {
+                node = make_shared<op::DynReshape>(args[0], args[1]);
+                break;
+            }
+            case OP_TYPEID::DynSlice:
+            {
+                node = make_shared<op::DynSlice>(args[0], args[1], args[2], args[3]);
+                break;
+            }
             case OP_TYPEID::EmbeddingLookup:
             {
                 node = make_shared<op::EmbeddingLookup>(args[0], args[1]);
@@ -755,6 +780,11 @@ static shared_ptr<ngraph::Function>
             case OP_TYPEID::Equal:
             {
                 node = make_shared<op::Equal>(args[0], args[1]);
+                break;
+            }
+            case OP_TYPEID::Erf:
+            {
+                node = make_shared<op::Erf>(args[0]);
                 break;
             }
             case OP_TYPEID::Exp:
@@ -936,11 +966,24 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::Pad:
             {
-                auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
-                auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
+                auto padding_below = node_js.at("padding_below").get<vector<ptrdiff_t>>();
+                auto padding_above = node_js.at("padding_above").get<vector<ptrdiff_t>>();
+
+                // This is a legacy field whose functionality is no longer supported. The new
+                // behavior is equivalent to interior padding of 0, so we will accept it under
+                // those conditions.
                 auto padding_interior = node_js.at("padding_interior").get<vector<size_t>>();
-                node = make_shared<op::Pad>(
-                    args[0], args[1], padding_below, padding_above, padding_interior);
+                NGRAPH_ASSERT(std::all_of(padding_interior.begin(),
+                                          padding_interior.end(),
+                                          [](size_t s) { return s == 0; }))
+                    << "Legacy padding_interior field must be zero everywhere.";
+
+                auto pad_mode = node_js.count("pad_mode") == 0
+                                    ? op::PadMode::CONSTANT
+                                    : static_cast<op::PadMode>(node_js.at("pad_mode"));
+
+                node =
+                    make_shared<op::Pad>(args[0], args[1], padding_below, padding_above, pad_mode);
                 break;
             }
             case OP_TYPEID::Parameter:
@@ -1487,9 +1530,19 @@ static json write(const Node& n, bool binary_constant_data)
         node["reduction_axes_count"] = tmp->get_reduction_axes_count();
         break;
     }
+    case OP_TYPEID::DynBroadcast: { break;
+    }
+    case OP_TYPEID::DynPad: { break;
+    }
+    case OP_TYPEID::DynReshape: { break;
+    }
+    case OP_TYPEID::DynSlice: { break;
+    }
     case OP_TYPEID::EmbeddingLookup: { break;
     }
     case OP_TYPEID::Equal: { break;
+    }
+    case OP_TYPEID::Erf: { break;
     }
     case OP_TYPEID::Exp: { break;
     }
@@ -1585,7 +1638,7 @@ static json write(const Node& n, bool binary_constant_data)
         auto tmp = dynamic_cast<const op::Pad*>(&n);
         node["padding_below"] = tmp->get_padding_below();
         node["padding_above"] = tmp->get_padding_above();
-        node["padding_interior"] = tmp->get_padding_interior();
+        node["pad_mode"] = tmp->get_pad_mode();
         break;
     }
     case OP_TYPEID::Parameter:

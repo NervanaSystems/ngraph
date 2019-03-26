@@ -15,3 +15,7 @@ argmax_4D_axis_3_i64_in_i32
 # Even after AnyAllReplacement, these trigger an "Unsupported Reduce" error.
 any_2x2x3_eliminate_dims_0_1_2
 all_2x2x3_eliminate_dims_0_1_2
+
+# Not implemented
+erf
+zero_sized_erf

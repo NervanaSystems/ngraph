@@ -35,6 +35,9 @@
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
+#include "ngraph/op/experimental/dyn_broadcast.hpp"
+#include "ngraph/op/experimental/dyn_broadcast.hpp"
+#include "ngraph/op/experimental/dyn_pad.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -87,6 +90,7 @@
 #include "ngraph/runtime/reference/dot.hpp"
 #include "ngraph/runtime/reference/embedding_lookup.hpp"
 #include "ngraph/runtime/reference/equal.hpp"
+#include "ngraph/runtime/reference/erf.hpp"
 #include "ngraph/runtime/reference/exp.hpp"
 #include "ngraph/runtime/reference/floor.hpp"
 #include "ngraph/runtime/reference/generate_mask.hpp"
@@ -661,6 +665,16 @@ private:
                            dot->get_reduction_axes_count());
             break;
         }
+        case OP_TYPEID::DynReshape:
+        {
+            throw unsupported_op("Unsupported op '" + node.description() + "'");
+            break;
+        }
+        case OP_TYPEID::DynSlice:
+        {
+            throw unsupported_op("Unsupported op '" + node.description() + "'");
+            break;
+        }
         case OP_TYPEID::EmbeddingLookup:
         {
             const op::EmbeddingLookup* embed = static_cast<const op::EmbeddingLookup*>(&node);
@@ -713,6 +727,13 @@ private:
                                 args[1]->get_data_ptr<const T>(),
                                 out[0]->get_data_ptr<char>(),
                                 element_count);
+            break;
+        }
+        case OP_TYPEID::Erf:
+        {
+            size_t element_count = shape_size(node.get_output_shape(0));
+            reference::erf<T>(
+                args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::Exp:
@@ -943,7 +964,7 @@ private:
                            node.get_output_shape(0),
                            pad->get_padding_below(),
                            pad->get_padding_above(),
-                           pad->get_padding_interior());
+                           pad->get_pad_mode());
             break;
         }
         case OP_TYPEID::Power:
@@ -1247,7 +1268,9 @@ private:
             }
             break;
         }
+        case OP_TYPEID::DynBroadcast:
         case OP_TYPEID::Transpose:
+        case OP_TYPEID::DynPad:
         default: throw unsupported_op("Unsupported op '" + node.description() + "'");
 #pragma GCC diagnostic pop
         }
