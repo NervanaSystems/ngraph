@@ -186,9 +186,11 @@ int main(int argc, char** argv)
                 out << "\"" << header_path << "\",\nR\"" << prefix << "(";
                 string relative_path = header_path.substr(path.search_path.size() + 1);
                 std::ifstream file(header_path);
-                if (file.is_open()) {
+                if (file.is_open())
+                {
                     std::string line;
-                    while (getline(file, line)) {
+                    while (getline(file, line))
+                    {
                         line = rewrite_header(line, relative_path);
                         // line = uncomment(line);
                         total_size += line.size();
