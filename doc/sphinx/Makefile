@@ -44,7 +44,7 @@ pickle:
 	@echo "Build finished; now you can process the pickle files."
 
 json: prep
-	$(SPHINXBUILD) -t $(DOC_TAG) -b json source $(BUILDDIR)/json
+	$(SPHINXBUILD) -t $(DOC_TAG) -b json $(ALLSPHINXOPTS) $(BUILDDIR)/json
 	@echo
 	@echo "Build finished; now you can process the JSON files."
 
