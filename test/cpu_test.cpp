@@ -1013,7 +1013,6 @@ TEST(cpu_test, conv_negative_padding)
 
 TEST(cpu_test, guass_error_function_erf)
 {
-    // Expand multiple dimensions. Ensure no extra conversions downstream
     auto make_function = []() -> std::shared_ptr<Function> {
         auto A = make_shared<op::Parameter>(element::f32, Shape{1, 4, 10, 6, 10});
         auto erf = make_shared<op::Erf>(A);
@@ -1039,5 +1038,4 @@ TEST(cpu_test, guass_error_function_erf)
     {
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
     }
-    EXPECT_EQ(count_ops_of_type<runtime::cpu::op::ConvertLayout>(cpu_f), 0);
 }
