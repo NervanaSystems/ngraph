@@ -119,3 +119,7 @@ model_quant_conv_linear
 
 # This should be implemented
 create_tensor_2
+
+# Not implemented
+erf
+zero_sized_erf

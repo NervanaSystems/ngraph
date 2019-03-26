@@ -19,6 +19,7 @@
 ONNX Support
 ============
 
+
 nGraph is able to import and execute ONNX models. Models are converted to 
 nGraph's internal representation and converted to ``Function`` objects, which 
 can be compiled and executed on one of nGraph's backends.
@@ -76,7 +77,6 @@ Use the following Python commands to convert the downloaded model to an nGraph
 
 This creates an nGraph ``Function`` object, which can be used to execute a 
 computation on a chosen backend.
-
 
 Running a computation
 ---------------------
