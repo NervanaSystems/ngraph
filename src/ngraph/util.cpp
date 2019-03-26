@@ -23,6 +23,7 @@
 #include <numeric>
 #include <unordered_set>
 
+#include "ngraph/coordinate_diff.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
@@ -499,6 +500,9 @@ template AxisVector ngraph::apply_permutation<AxisVector>(AxisVector input, Axis
 template Shape ngraph::apply_permutation<Shape>(Shape input, AxisVector order);
 template ngraph::Coordinate ngraph::apply_permutation<ngraph::Coordinate>(ngraph::Coordinate input,
                                                                           ngraph::AxisVector order);
+template ngraph::CoordinateDiff
+    ngraph::apply_permutation<ngraph::CoordinateDiff>(ngraph::CoordinateDiff input,
+                                                      ngraph::AxisVector order);
 template ngraph::Strides ngraph::apply_permutation<ngraph::Strides>(ngraph::Strides input,
                                                                     ngraph::AxisVector order);
 

@@ -17,7 +17,6 @@
 #pragma once
 
 #include <mkldnn.hpp>
-
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/batch_norm.hpp"
@@ -77,6 +76,14 @@ namespace ngraph
                 bool can_use_mkldnn_batchnorm_fprop(const ngraph::Node* node);
                 bool can_use_mkldnn_batchnorm_bprop(const ngraph::Node* node);
 
+                /*  
+                Intel(R) MKL-DNN supports the Winograd algorithm for convolutions with the following sizes:
+                2D convolution (i.e. spatial depth d=1), kernel sizes kh=3,kw=3. strides sh=sw=1.
+                Inference - Based on convolution sizes, MKLDNN chooses between two different tile sizes F(2x2, 3x3) or 
+                F(4x4, 3x3)(refer to Winograd paper for more informartion on tile sizes). Training - Uses F(4x4, 3x3) winograd.
+                */
+                mkldnn::algorithm get_conv_algo();
+
                 bool use_mkldnn_kernel(const ngraph::Node* node);
                 void assign_mkldnn_kernel(Node* node);
 
@@ -85,7 +92,6 @@ namespace ngraph
                 std::map<element::Type, const std::string>& get_mkldnn_data_type_string_map();
                 std::map<mkldnn::memory::format, const std::string>& get_mkldnn_format_string_map();
                 std::set<mkldnn::memory::format>& get_filter_formats();
-
                 template <typename T>
                 bool can_use_mkldnn_conv(ngraph::Node* node)
                 {
@@ -97,6 +103,23 @@ namespace ngraph
                         if (s != 1)
                             return false;
                     }
+                    // MKLDNN doesnt support negative padding
+                    for (auto s : convolution->get_padding_above())
+                    {
+                        if (s < 0)
+                        {
+                            return false;
+                        }
+                    }
+
+                    for (auto s : convolution->get_padding_below())
+                    {
+                        if (s < 0)
+                        {
+                            return false;
+                        }
+                    }
+
                     if (arg0_rank != 4 && arg0_rank != 5)
                     {
                         return false;
