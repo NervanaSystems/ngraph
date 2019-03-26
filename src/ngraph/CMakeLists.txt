@@ -312,6 +312,8 @@ set (SRC
     pass/zero_dim_tensor_elimination.cpp
     pass/zero_dim_tensor_elimination.hpp
     pass/zero_dim_tensor_elimination.hpp
+    pass/concat_fusion.hpp
+    pass/concat_fusion.cpp
     pattern/matcher.cpp
     pattern/matcher.hpp
     pattern/op/any.hpp
