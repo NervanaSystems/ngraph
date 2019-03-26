@@ -79,11 +79,8 @@ void runtime::BackendManager::register_handle(const string& name, DL_HANDLE h)
 
 DL_HANDLE runtime::BackendManager::get_handle(const std::string& type)
 {
-    // TODO: check if this backend has a registered handle. if not throw an error
-    // for now, running with knives
     return get_handle_registry()[type];
 }
-
 
 unique_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::string& config)
 {

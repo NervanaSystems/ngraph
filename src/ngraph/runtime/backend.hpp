@@ -49,6 +49,8 @@ public:
     ///   does not exist.
     static std::unique_ptr<Backend> create(const std::string& type);
 
+    /// \brief Get handle to backend shared library
+    /// \returns backend handle
     static DL_HANDLE get_handle(const std::string& type);
 
     /// \brief Query the list of registered devices
@@ -112,9 +114,4 @@ public:
     virtual bool is_supported_property(const Property prop) const;
 
     virtual void remove_compiled_function(std::shared_ptr<Executable> exec);
-
-    DL_HANDLE get_backend_handle();
-
-    private:
-    DL_HANDLE backend_handle;
 };
