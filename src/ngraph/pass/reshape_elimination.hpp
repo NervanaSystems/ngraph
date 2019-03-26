@@ -23,6 +23,7 @@ namespace ngraph
     namespace pass
     {
         class ReshapeElimination;
+        class RecurrentReshapeElimination;
     }
 }
 
@@ -41,4 +42,17 @@ private:
     void construct_dot_transpose_pattern();
     void construct_identity_reshape_pattern();
     void construct_reshapex2_pattern();
+};
+
+class ngraph::pass::RecurrentReshapeElimination : public ngraph::pass::RecurrentGraphRewrite
+{
+public:
+    RecurrentReshapeElimination()
+        : RecurrentGraphRewrite()
+    {
+        construct_recurrent_reshape();
+    }
+
+private:
+    void construct_recurrent_reshape();
 };

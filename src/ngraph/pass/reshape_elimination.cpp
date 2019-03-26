@@ -192,3 +192,51 @@ void pass::ReshapeElimination::construct_dot_transpose_pattern()
     auto m = make_shared<pattern::Matcher>(preshape, callback);
     this->add_matcher(m);
 }
+
+void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
+{
+    Shape shape_op{3};
+    Shape shape_r{1, 3};
+
+    auto no_fan_out = [](std::shared_ptr<Node> n) {
+        auto users = n->get_users(true);
+        std::set<std::shared_ptr<Node>> user_set(users.begin(), users.end());
+        size_t num_unique_users = user_set.size();
+        if (num_unique_users == 1)
+        {
+            return true;
+        }
+        else
+        {
+            NGRAPH_DEBUG << "recurrent_reshape_elimination: " << n->get_name() << " has fan out\n";
+            return false;
+        }
+
+    };
+
+    auto op = make_shared<pattern::op::Label>(element::f32, shape_op);
+    auto reshape = make_shared<op::Reshape>(op, AxisVector{0}, shape_r);
+    auto rehape_label = make_shared<pattern::op::Label>(reshape, nullptr, NodeVector{reshape});
+
+    auto callback = [op, rehape_label](pattern::RecurrentMatcher& m) {
+        const auto sequence_len = m.get_number_of_recurrent_matches();
+        auto reshape_node_vector = m.get_bound_nodes_for_pattern(rehape_label);
+        std::cout << sequence_len << std::endl;
+        for (auto it : reshape_node_vector)
+        {
+            std::cout << it->get_name() << " ";
+        }
+        std::cout << std::endl;
+        auto driver_op = reshape_node_vector.back()->get_argument(0);
+        auto last_bounded_reshape_op = reshape_node_vector.front();
+        std::cout << driver_op->get_name() << " " << last_bounded_reshape_op->get_name()
+                  << std::endl;
+        replace_node(last_bounded_reshape_op, driver_op);
+        return true;
+
+    };
+    std::set<std::shared_ptr<pattern::op::Label>> empty_correlated_matches;
+    auto m = std::make_shared<pattern::RecurrentMatcher>(
+        rehape_label, op, empty_correlated_matches, callback);
+    this->add_matcher(m);
+}

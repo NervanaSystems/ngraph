@@ -29,13 +29,17 @@
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
+#include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
+#include "util/all_close.hpp"
 #include "util/matcher.hpp"
+#include "util/random.hpp"
 #include "util/test_tools.hpp"
 
 using namespace ngraph;
@@ -105,4 +109,40 @@ TEST(reshape_elimination, dot_transpose_to_dot_w_transpose_args)
     ASSERT_EQ(gdot->get_argument(0)->get_argument(0), x);
     ASSERT_EQ(gdot->get_argument(1)->get_argument(0), W);
     ASSERT_EQ(gdot->get_shape(), (Shape{1, 2}));
+}
+
+TEST(reshape_elimination, recurrent_reshapes)
+{
+    Shape shape_a{128, 2048, 1, 1};
+    auto generate_func = [shape_a]() {
+        auto A = make_shared<op::Parameter>(element::f32, shape_a);
+
+        auto reshape_1 = make_shared<op::Reshape>(A, AxisVector{0, 1, 2, 3}, shape_a);
+        auto reshape_2 = make_shared<op::Reshape>(reshape_1, AxisVector{0, 1, 2, 3}, shape_a);
+        auto reshape_3 = make_shared<op::Reshape>(reshape_2, AxisVector{0, 1, 2, 3}, shape_a);
+        auto f_ = make_shared<Function>(NodeVector{reshape_3}, ParameterVector{A});
+        return f_;
+    };
+
+    auto baseline_f = generate_func();
+    auto optimized_f = generate_func();
+    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::VisualizeTree>("before_recurrent_reshapes.pdf");
+    pass_manager.register_pass<pass::RecurrentReshapeElimination>();
+    //pass_manager.register_pass<pass::ReshapeElimination>();
+    pass_manager.register_pass<pass::VisualizeTree>("after_recurrent_reshapes.pdf");
+    pass_manager.run_passes(optimized_f);
+
+    test::Uniform<float> rng(0.0f, 100.0f);
+    vector<vector<float>> args;
+    vector<float> tensor_val(shape_size(baseline_input_shape));
+    rng.initialize(tensor_val);
+    args.push_back(tensor_val);
+
+    auto baseline_results = execute(baseline_f, args, "INTERPRETER");
+    auto optimized_results = execute(optimized_f, args, "INTERPRETER");
+
+    EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
 }
