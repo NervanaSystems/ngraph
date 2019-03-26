@@ -103,6 +103,23 @@ namespace ngraph
                         if (s != 1)
                             return false;
                     }
+                    // MKLDNN doesnt support negative padding
+                    for (auto s : convolution->get_padding_above())
+                    {
+                        if (s < 0)
+                        {
+                            return false;
+                        }
+                    }
+
+                    for (auto s : convolution->get_padding_below())
+                    {
+                        if (s < 0)
+                        {
+                            return false;
+                        }
+                    }
+
                     if (arg0_rank != 4 && arg0_rank != 5)
                     {
                         return false;
