@@ -44,9 +44,9 @@ ngraph::Shape calculate_broadcast_shape(ngraph::Shape left_shape, ngraph::Shape 
     auto right_rank = right_shape.size();
     auto max_rank = std::max(left_rank, right_rank);
 
-    // left-pad the left_shape with ones
+    // left-pad the left_shape with zeros
     left_shape.insert(std::begin(left_shape), max_rank - left_rank, 0);
-    // left-pad the right_shape with ones
+    // left-pad the right_shape with zeros
     right_shape.insert(std::begin(right_shape), max_rank - right_rank, 0);
 
     for (std::size_t index = 0; index < max_rank; ++index)
