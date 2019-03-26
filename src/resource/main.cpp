@@ -189,10 +189,10 @@ int main(int argc, char** argv)
                 if (file.is_open()) {
                     std::string line;
                     while (getline(file, line)) {
-                        header_data = rewrite_header(line, relative_path);
-                        // header_data = uncomment(header_data);
-                        total_size += header_data.size();
-                        out << header_data;
+                        line = rewrite_header(line, relative_path);
+                        // line = uncomment(line);
+                        total_size += line.size();
+                        out << line;
                     }
                     file.close();
                 }
