@@ -445,18 +445,20 @@ private:
             Rank_ID = dist.get_rank();
             if (Rank_ID == 0)
             {
-                reference::broadcastdistributed<T>(static_cast<T*>(args[0]),
-                                            node.get_input_element_type(0),
-                                            static_cast<int>(shape_size(node.get_input_shape(0))));
+                reference::broadcastdistributed<T>(
+                    static_cast<T*>(args[0]),
+                    node.get_input_element_type(0),
+                    static_cast<int>(shape_size(node.get_input_shape(0))));
                 auto memSize = static_cast<int>(shape_size(node.get_input_shape(0))) *
                                sizeof(node.get_input_element_type(0));
                 memcpy(out[0], args[0], memSize);
             }
             else
             {
-                reference::broadcastdistributed<T>(static_cast<T*>(out[0]),
-                                            node.get_input_element_type(0),
-                                            static_cast<int>(shape_size(node.get_input_shape(0))));
+                reference::broadcastdistributed<T>(
+                    static_cast<T*>(out[0]),
+                    node.get_input_element_type(0),
+                    static_cast<int>(shape_size(node.get_input_shape(0))));
             }
             break;
 #endif
