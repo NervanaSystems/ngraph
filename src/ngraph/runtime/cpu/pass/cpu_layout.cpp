@@ -390,6 +390,7 @@ namespace ngraph
                         mkldnn_arg1_shape, et_weights, memory::format::any);
                     const memory::desc result_desc(
                         mkldnn_result_shape, et_result, memory::format::any);
+
                     std::unique_ptr<convolution_forward::desc> fwd_desc{nullptr};
                     auto convolution_algo = mkldnn_utils::get_conv_algo();
                     if (use_bias)
@@ -1363,54 +1364,68 @@ namespace ngraph
                 template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::Quantize)
                 {
-                    auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
-                    auto tv = node->get_output_tensor_ptr(0);
-                    auto fmt = static_cast<mkldnn::memory::format>(input_md.data.format);
-                    if (fmt == mkldnn_blocked || fmt == mkldnn_format_undef ||
-                        !mkldnn_utils::can_create_mkldnn_md(tv->get_element_type()))
+                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
-                        // Cannot pass through layout information for blocked layouts at the moment
-                        set_native_layouts(external_function, node);
+                        auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                        auto tv = node->get_output_tensor_ptr(0);
+                        auto fmt = static_cast<mkldnn::memory::format>(input_md.data.format);
+                        if (fmt == mkldnn_blocked || fmt == mkldnn_format_undef ||
+                            !mkldnn_utils::can_create_mkldnn_md(tv->get_element_type()))
+                        {
+                            // Cannot pass through layout information for blocked layouts at the moment
+                            set_native_layouts(external_function, node);
+                        }
+                        else
+                        {
+                            // mkldnn expects nhwc for int8, avoids reorder
+                            if (fmt == mkldnn::memory::format::nchw ||
+                                fmt == mkldnn::memory::format::nChw8c ||
+                                fmt == mkldnn::memory::format::nChw16c)
+                            {
+                                fmt = mkldnn::memory::format::nhwc;
+                            }
+                            vector<memory::desc> o_mds;
+                            o_mds.push_back(mkldnn_utils::create_default_mkldnn_md(
+                                node.get(), 0, true, static_cast<memory::format>(fmt)));
+                            set_output_layouts(node, o_mds);
+                        }
                     }
                     else
                     {
-                        // mkldnn expects nhwc for int8, avoids reorder
-                        if (fmt == mkldnn::memory::format::nchw ||
-                            fmt == mkldnn::memory::format::nChw8c ||
-                            fmt == mkldnn::memory::format::nChw16c)
-                        {
-                            fmt = mkldnn::memory::format::nhwc;
-                        }
-                        vector<memory::desc> o_mds;
-                        o_mds.push_back(mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 0, true, static_cast<memory::format>(fmt)));
-                        set_output_layouts(node, o_mds);
+                        set_native_layouts(external_function, node);
                     }
                 }
 
                 template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::Dequantize)
                 {
-                    auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
-                    auto tv = node->get_output_tensor_ptr(0);
-                    auto fmt = static_cast<mkldnn::memory::format>(input_md.data.format);
-                    if (fmt == mkldnn_blocked || fmt == mkldnn_format_undef ||
-                        !mkldnn_utils::can_create_mkldnn_md(tv->get_element_type()))
+                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
-                        // Cannot pass through layout information for blocked layouts at the moment
-                        set_native_layouts(external_function, node);
+                        auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                        auto tv = node->get_output_tensor_ptr(0);
+                        auto fmt = static_cast<mkldnn::memory::format>(input_md.data.format);
+                        if (fmt == mkldnn_blocked || fmt == mkldnn_format_undef ||
+                            !mkldnn_utils::can_create_mkldnn_md(tv->get_element_type()))
+                        {
+                            // Cannot pass through layout information for blocked layouts at the moment
+                            set_native_layouts(external_function, node);
+                        }
+                        else
+                        {
+                            // reorder as default nchw layout
+                            if (fmt == mkldnn::memory::format::nhwc)
+                            {
+                                fmt = mkldnn::memory::format::nchw;
+                            }
+                            vector<memory::desc> o_mds;
+                            o_mds.push_back(mkldnn_utils::create_default_mkldnn_md(
+                                node.get(), 0, true, static_cast<memory::format>(fmt)));
+                            set_output_layouts(node, o_mds);
+                        }
                     }
                     else
                     {
-                        // reorder as default nchw layout
-                        if (fmt == mkldnn::memory::format::nhwc)
-                        {
-                            fmt = mkldnn::memory::format::nchw;
-                        }
-                        vector<memory::desc> o_mds;
-                        o_mds.push_back(mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 0, true, static_cast<memory::format>(fmt)));
-                        set_output_layouts(node, o_mds);
+                        set_native_layouts(external_function, node);
                     }
                 }
 
