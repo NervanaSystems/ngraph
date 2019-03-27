@@ -24,7 +24,6 @@
 #include "ngraph/log.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/broadcast.hpp"
-#include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -211,7 +210,6 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
             NGRAPH_DEBUG << "recurrent_reshape_elimination: " << n->get_name() << " has fan out\n";
             return false;
         }
-
     };
 
     auto op = make_shared<pattern::op::Label>(element::f32, shape_op);
@@ -220,36 +218,43 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
 
     auto callback = [op, rehape_label](pattern::RecurrentMatcher& m) {
         const auto sequence_len = m.get_number_of_recurrent_matches();
-
         auto reshape_node_vector = m.get_bound_nodes_for_pattern(rehape_label);
 
         // The bounded node vector is in reverse order. It is convinient to have the
         // bounded node vector in the correct order
         std::reverse(std::begin(reshape_node_vector), std::end(reshape_node_vector));
 
-        auto driver_op = reshape_node_vector.front()->get_argument(0);
+        auto first_bounded_reshape_op = reshape_node_vector.front();
+        auto driver_op = first_bounded_reshape_op->get_argument(0);
         auto last_bounded_reshape_op = reshape_node_vector.back();
 
-        // Need to check if the next to last bouinded op is a reshape since the last reshape is allowed
+        // Need to check if the next to last bounded op is a reshape since the last reshape is allowed
         // to have fan-out but the matcher will discard any reshape if it has fan-out
         auto user_of_last_bounded_reshape_op = last_bounded_reshape_op->get_users(true)[0];
         if (std::dynamic_pointer_cast<op::Reshape>(user_of_last_bounded_reshape_op))
         {
-            last_bounded_reshape_op = user_of_last_bounded_reshape_op;
-            reshape_node_vector.push_back(last_bounded_reshape_op);
+            reshape_node_vector.push_back(user_of_last_bounded_reshape_op);
+            last_bounded_reshape_op = reshape_node_vector.back();
         }
-        std::cout << sequence_len << std::endl;
+        std::cout << "Num bounded nodes: " << sequence_len << std::endl;
+        std::cout << "Bounded node vector: ";
         for (auto it : reshape_node_vector)
         {
             std::cout << it->get_name() << " ";
         }
         std::cout << std::endl;
 
-        std::cout << driver_op->get_name() << " " << last_bounded_reshape_op->get_name()
-                  << std::endl;
-        replace_node(last_bounded_reshape_op, driver_op);
-        return true;
+        std::cout << "Driver op of " << reshape_node_vector.front()->get_name() << " : "
+                  << driver_op->get_name() << std::endl;
+        std::cout << "Last bounded op: " << last_bounded_reshape_op->get_name() << std::endl;
 
+        if (first_bounded_reshape_op->get_input_shape(0) == last_bounded_reshape_op->get_shape())
+        {
+            replace_node(last_bounded_reshape_op, driver_op);
+            return true;
+        }
+
+        return false;
     };
     std::set<std::shared_ptr<pattern::op::Label>> empty_correlated_matches;
     auto m = std::make_shared<pattern::RecurrentMatcher>(
