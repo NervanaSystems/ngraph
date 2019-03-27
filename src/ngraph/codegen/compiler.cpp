@@ -578,6 +578,22 @@ void codegen::CompilerCore::load_headers_from_resource()
     //     std::string builtin = builtin_root + search_path;
     //     hso.AddPath(builtin, clang::frontend::System, false, false);
     // }
+#ifdef _WIN32
+    for (const pair<std::string, vector<std::string>>& header_info : builtin_headers)
+    {
+        std::string absolute_path = header_info.first;
+        std::string builtin = builtin_root + absolute_path;
+        std::string header_content;
+        for(const std::string& line : header_info.second)
+        {
+            header_content += line;
+        }
+        m_header_strings.emplace_back(header_content);
+        std::unique_ptr<llvm::MemoryBuffer> mb(
+            llvm::MemoryBuffer::getMemBuffer(m_header_strings.back(), builtin));
+        preprocessor_options.addRemappedFile(builtin, mb.release());
+    }
+#else
     for (const pair<std::string, std::string>& header_info : builtin_headers)
     {
         std::string absolute_path = header_info.first;
@@ -586,6 +602,7 @@ void codegen::CompilerCore::load_headers_from_resource()
             llvm::MemoryBuffer::getMemBuffer(header_info.second, builtin));
         preprocessor_options.addRemappedFile(builtin, mb.release());
     }
+#endif
 }
 
 void codegen::CompilerCore::set_precompiled_header_source(const std::string& source)
