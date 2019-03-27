@@ -1103,14 +1103,22 @@ TEST(cpu_fusion, conv_add)
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
 }
 
+
+
 shared_ptr<Function> gen_deconv(const bool add_goe)
 {
-    Shape data_batch_shape{100, 512, 4, 4};
-    Shape filters_shape{64, 512, 4, 4};
+    Shape conv_out_shape{100, 64, 1, 1}; // gd: tmp: deconv_src
+    auto out_delta = std::make_shared<op::Parameter>(element::f32, conv_out_shape);
+
+    //UNCOMMENT: 
+    Shape filters_shape{64, 512, 4, 4}; // weigths
+    //Shape filters_shape{512, 64, 4, 4}; // weigths // NOT what is seen in DCGAN graph
+    Shape bias_shape{512};
+    Shape data_batch_shape{100, 512, 4, 4}; //gd: tmp: deconv_out
+
+
     auto data_label = std::make_shared<pattern::op::Label>(element::f32, data_batch_shape);
     auto filters = std::make_shared<op::Parameter>(element::f32, filters_shape);
-    Shape conv_out_shape{100, 64, 1, 1};
-    auto out_delta = std::make_shared<op::Parameter>(element::f32, conv_out_shape);
 
     auto conv = std::make_shared<op::ConvolutionBackpropData>(data_label->get_shape(),
                                                               filters,
@@ -1122,10 +1130,10 @@ shared_ptr<Function> gen_deconv(const bool add_goe)
                                                               Strides{1, 1});
     auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
 
-    auto mean = std::make_shared<op::Parameter>(element::f32, Shape{512});
-    auto var = std::make_shared<op::Parameter>(element::f32, Shape{512});
-    auto gamma = std::make_shared<op::Parameter>(element::f32, Shape{512});
-    auto beta = std::make_shared<op::Parameter>(element::f32, Shape{512});
+    auto mean = std::make_shared<op::Parameter>(element::f32, bias_shape);
+    auto var = std::make_shared<op::Parameter>(element::f32, bias_shape);
+    auto gamma = std::make_shared<op::Parameter>(element::f32, bias_shape);
+    auto beta = std::make_shared<op::Parameter>(element::f32, bias_shape);
     double eps = 0.001;
     
     auto goe_bn = std::make_shared<op::GetOutputElement>(conv, 0);
@@ -1139,6 +1147,193 @@ shared_ptr<Function> gen_deconv(const bool add_goe)
             ParameterVector{filters, out_delta, gamma, beta, mean, var});
 }
 
+shared_ptr<Function> gen_deconv_temp(const bool add_goe)
+{
+    Shape conv_out_shape{100, 64, 1, 1}; // gd: tmp: deconv_src
+    auto out_delta = std::make_shared<op::Parameter>(element::f32, conv_out_shape);
+
+    //UNCOMMENT: 
+    Shape filters_shape{64, 64, 4, 4}; // weights .. this works
+    //Shape filters_shape{64, 512, 4, 4}; // weights // NOT what is seen in DCGAN graph
+    Shape bias_shape{64};
+    Shape data_batch_shape{100, 64, 4, 4}; //gd: tmp: deconv_out
+
+
+    auto data_label = std::make_shared<pattern::op::Label>(element::f32, data_batch_shape);
+    auto filters = std::make_shared<op::Parameter>(element::f32, filters_shape);
+
+    auto conv = std::make_shared<op::ConvolutionBackpropData>(data_label->get_shape(),
+                                                              filters,
+                                                              out_delta,
+                                                              Strides{1, 1},
+                                                              Strides{1, 1},
+                                                              CoordinateDiff{0, 0},
+                                                              CoordinateDiff{0, 0},
+                                                              Strides{1, 1});
+    auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
+
+    auto mean = std::make_shared<op::Parameter>(element::f32, bias_shape);
+    auto var = std::make_shared<op::Parameter>(element::f32, bias_shape);
+    auto gamma = std::make_shared<op::Parameter>(element::f32, bias_shape);
+    auto beta = std::make_shared<op::Parameter>(element::f32, bias_shape);
+    double eps = 0.001;
+    
+    auto goe_bn = std::make_shared<op::GetOutputElement>(conv, 0);
+
+    // Adding a goe will stop fusion since the patterns wont expect to see this op
+    auto bn =
+        add_goe ? std::make_shared<op::BatchNormInference>(goe_bn, gamma, beta, mean, var, eps)
+                : std::make_shared<op::BatchNormInference>(conv, gamma, beta, mean, var, eps);
+
+    return make_shared<Function>(NodeVector{bn},
+            ParameterVector{filters, out_delta, gamma, beta, mean, var});
+}
+
+/*TEST(cpu_fusion, compare_deconv_temp)
+{
+    Shape shape_a{100, 64, 1, 1};
+    Shape shape_weights{64, 64, 4, 4};
+    Shape data_batch_shape{100, 64, 4, 4}; //gd: tmp: deconv_out
+    Shape shape_bias{64};
+
+    auto make_cpu_function = [shape_a, shape_weights, data_batch_shape]() {
+        auto A = std::make_shared<op::Parameter>(element::f32, shape_a);
+        auto weights = std::make_shared<op::Parameter>(element::f32, shape_weights);
+        auto conv = std::make_shared<op::ConvolutionBackpropData>(data_batch_shape, weights, A, Strides{1, 1}, Strides{1, 1},
+                                                              CoordinateDiff{0, 0},
+                                                              CoordinateDiff{0, 0},
+                                                              Strides{1, 1});
+        auto f = make_shared<Function>(NodeVector{conv}, ParameterVector{weights, A});
+        return f;
+    };
+    auto cpu_f = make_cpu_function();
+    //-----------
+
+    test::Uniform<float> rng(1.0f, 100.0f);
+    vector<vector<float>> args;
+    vector<vector<float>> args2;
+    int i = 0;
+    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    {
+        auto name = param->get_name();
+        std::cout << i++ << ", Name of this param/arg = " << name <<"\n";
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+        args2.push_back(tensor_val);
+    }
+
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    std::cout << "Done exec of conv_bpd \n\n";
+    //--------------
+
+    auto make_cpu_function_deconv = [shape_a, shape_weights, shape_bias, data_batch_shape]() {
+        auto A = std::make_shared<op::Parameter>(element::f32, shape_a);
+        auto weights = std::make_shared<op::Parameter>(element::f32, shape_weights);
+        auto bias = std::make_shared<op::Parameter>(element::f32, shape_bias);
+
+        //auto weights_reshape = std::make_shared<op::Reshape>(weights, AxisVector{0,2,1,3}, Shape{shape_weights[0], shape_weights[2],
+        //                                                          shape_weights[1], shape_weights[3]});
+        auto conv = std::make_shared<op::DeconvolutionBias>(data_batch_shape, 
+                                                              weights, //weights_reshape, 
+                                                              A, bias,
+                                                              Strides{1, 1}, Strides{1, 1},
+                                                              CoordinateDiff{0, 0},
+                                                              CoordinateDiff{0, 0},
+                                                              Strides{1, 1},
+                                                              false);
+        auto f = make_shared<Function>(NodeVector{conv}, ParameterVector{weights, A, bias});
+        return f;
+    };
+    auto cpu_f_dc = make_cpu_function_deconv();
+    //-----------
+
+    
+    test::Uniform<float> rng2(0.0f, 0.0f);
+    vector<float> tensor_val(shape_size(shape_bias));
+    rng2.initialize(tensor_val);
+    args2.push_back(tensor_val);
+
+    auto cpu_results_dc = execute(cpu_f_dc, args2, "CPU");
+
+    EXPECT_TRUE(test::all_close(cpu_results.at(0), cpu_results_dc.at(0)));
+}
+
+TEST(cpu_fusion, compare_deconv)
+{
+    Shape conv_out_shape{100, 64, 1, 1}; // gd: tmp: deconv_src
+    auto out_delta = std::make_shared<op::Parameter>(element::f32, conv_out_shape);
+
+    //UNCOMMENT: 
+    Shape filters_shape{64, 64, 4, 4}; // weights .. this works
+    //Shape filters_shape{64, 512, 4, 4}; // weights // NOT what is seen in DCGAN graph
+    Shape bias_shape{64};
+    Shape data_batch_shape{100, 64, 4, 4}; //gd: tmp: deconv_out
+
+
+    auto data_label = std::make_shared<pattern::op::Label>(element::f32, data_batch_shape);
+    auto filters = std::make_shared<op::Parameter>(element::f32, filters_shape);
+
+    auto conv = std::make_shared<ngraph::op::ConvolutionBackpropData>(data_label->get_shape(),
+                                                              filters,
+                                                              out_delta,
+                                                              Strides{1, 1},
+                                                              Strides{1, 1},
+                                                              CoordinateDiff{0, 0},
+                                                              CoordinateDiff{0, 0},
+                                                              Strides{1, 1});
+    auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
+    auto conv_goe = std::make_shared<op::GetOutputElement>(conv_label, 0);
+    auto func_conv_bpdata = make_shared<Function>(NodeVector{conv_label, conv_goe},
+                                                 ParameterVector{filters, out_delta});
+    NGRAPH_DEBUG << "GD: Generated fuse function";
+    test::Uniform<float> rng(1.0f, 100.0f);
+    vector<vector<float>> args;
+    int i = 0;
+    for (shared_ptr<op::Parameter> param : func_conv_bpdata->get_parameters())
+    {
+        auto name = param->get_name();
+        std::cout << i++ << ", Name of this param/arg = " << name <<"\n";
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    NGRAPH_DEBUG << "GD: execute ConvolutionBackpropData on CPU ";
+    auto conv_bpd_results = execute(func_conv_bpdata, args, "CPU");
+    std::cout << "After ConvolutionBackpropData on CPU\n";
+
+    // Now construct and execute deconvbias (with bias = 0, bias should not have any effect)
+    auto bias = std::make_shared<op::Parameter>(element::f32, bias_shape);
+    auto deconv = std::make_shared<op::DeconvolutionBias>(data_label->get_shape(),
+                                                              filters,
+                                                              out_delta,
+                                                              bias,
+                                                              Strides{1, 1},
+                                                              Strides{1, 1},
+                                                              CoordinateDiff{0, 0},
+                                                              CoordinateDiff{0, 0},
+                                                              Strides{1, 1},
+                                                              false);
+    auto deconv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
+    auto deconv_goe = std::make_shared<op::GetOutputElement>(deconv_label, 0);
+    auto func_deconv = make_shared<Function>(NodeVector{deconv_goe},
+                                                 ParameterVector{filters, out_delta, bias});
+
+    test::Uniform<float> rng2(0.0f, 0.0f);
+    vector<float> tensor_val(shape_size(bias->get_shape()));
+    rng2.initialize(tensor_val);
+    args.push_back(tensor_val);
+    
+    //auto bias_val = op::Constant::create<float>(element::f32, bias->get_shape(), std::vector<float>{0.0f});
+    //args.push_back(bias_val);
+
+    std::cout << "GD: execute DeconvBias on CPU \n";
+    auto deconv_results = execute(func_deconv, args, "CPU");
+
+    //EXPECT_TRUE(test::all_close(conv_bpd_results.at(0), deconv_results.at(0)));
+                                         
+}*/
 TEST(cpu_fusion, fuse_deconv)
 {
     auto func_fuse1 = gen_deconv(false);
@@ -1162,23 +1357,29 @@ TEST(cpu_fusion, fuse_deconv)
 
 TEST(cpu_fusion, deconv_vals)
 {
-    auto fuse_func = gen_deconv(false);
+    auto fuse_func = gen_deconv_temp(false);
+    //auto fuse_func = gen_deconv(false);
+
     auto nofuse_func = gen_deconv(true);
 
     NGRAPH_DEBUG << "GD: Generated fuse function";
     test::Uniform<float> rng(1.0f, 100.0f);
     vector<vector<float>> args;
+    int i = 0;
     for (shared_ptr<op::Parameter> param : fuse_func->get_parameters())
     {
+        auto name = param->get_name();
+        std::cout << i++ << ", Name of this param/arg = " << name <<"\n";
         vector<float> tensor_val(shape_size(param->get_shape()));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
     NGRAPH_DEBUG << "GD: populated values ";
-    auto fuse_results = execute(fuse_func, args, "CPU");
-    NGRAPH_DEBUG << " GD: executed fuse_func";
     auto nofuse_results = execute(nofuse_func, args, "CPU");
     NGRAPH_DEBUG << " GD: executed nofuse_func";
+    std::cout << "---------- \n\n";
+    auto fuse_results = execute(fuse_func, args, "CPU");
+    NGRAPH_DEBUG << " GD: executed fuse_func: fuse_Results: \n " << fuse_results.at(0) << "\n";
 
     EXPECT_TRUE(test::all_close(fuse_results.at(0), nofuse_results.at(0)));
 }

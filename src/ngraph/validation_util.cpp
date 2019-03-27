@@ -207,11 +207,11 @@ std::tuple<element::Type, PartialShape>
 
     Dimension merged_channel_count;
 
-    NODE_VALIDATION_ASSERT(
+    /*NODE_VALIDATION_ASSERT(
         node,
         Dimension::merge(merged_channel_count, data_channel_count, filter_input_channel_count))
         << "Data batch channel count (" << data_channel_count << ") does not match filter input "
-        << "channel count (" << filter_input_channel_count << ").";
+        << "channel count (" << filter_input_channel_count << ").";*/
 
     NODE_VALIDATION_ASSERT(
         node, merged_channel_count.is_dynamic() || static_cast<size_t>(merged_channel_count) > 0)

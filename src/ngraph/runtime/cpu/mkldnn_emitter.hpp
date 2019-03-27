@@ -149,7 +149,7 @@ namespace ngraph
                 }
 
                 size_t
-                    build_deconvolution_forward(const mkldnn::memory::desc& input_data_desc,
+                    build_deconvolutionbias_forward(const mkldnn::memory::desc& input_data_desc,
                                                 const mkldnn::memory::desc& weights_desc,
                                                 const mkldnn::memory::desc& bias_desc,
                                                 const mkldnn::memory::desc& result_desc,
@@ -158,6 +158,16 @@ namespace ngraph
                                                 const ngraph::CoordinateDiff& padding_below,
                                                 const ngraph::CoordinateDiff& padding_above,
                                                 const mkldnn::post_ops& pops = mkldnn::post_ops());
+                size_t
+                    build_deconvolution_forward(const mkldnn::memory::desc& input_data_desc,
+                                                const mkldnn::memory::desc& weights_desc,
+                                                const mkldnn::memory::desc& result_desc,
+                                                const ngraph::Strides& strides,
+                                                const ngraph::Strides& dilation_strides,
+                                                const ngraph::CoordinateDiff& padding_below,
+                                                const ngraph::CoordinateDiff& padding_above,
+                                                const mkldnn::post_ops& pops = mkldnn::post_ops());
+
                 template <typename OP>
                 size_t build_deconvolution(const ngraph::Node* node,
                                            const std::vector<TensorViewWrapper>& args,
@@ -174,8 +184,8 @@ namespace ngraph
                         window_dilation_strides_adjusted.push_back(s - 1);
                     }
 
-                    auto data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                    auto weights_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
+                    auto weights_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto data_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
 
                     // MKLDNN relies on named formats for kernel selection
                     if (weights_desc.data.format == mkldnn_nchw)
@@ -208,7 +218,8 @@ namespace ngraph
                     if (std::is_same<OP, ngraph::op::DeconvolutionBias>())
                     {
                         auto bias_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
-                        return build_deconvolution_forward(
+                        //bias_desc.data.format = mkldnn_format_undef; // This gives seg fault, though as per documentation it should just work.
+                        return build_deconvolutionbias_forward(
                             data_desc,
                             weights_desc,
                             bias_desc,
@@ -222,6 +233,16 @@ namespace ngraph
                     else
                     {
                         // do nothing for now?
+                        // for now, just build_deconv (NO BIAS)
+                        return build_deconvolution_forward(
+                            data_desc,
+                            weights_desc,
+                            result_desc,
+                            convolution->get_window_movement_strides_forward(),
+                            window_dilation_strides_adjusted,
+                            convolution->get_padding_below_forward(),
+                            convolution->get_padding_above_forward(),
+                            ops);
                     }
                 }
 

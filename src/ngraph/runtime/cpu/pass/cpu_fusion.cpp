@@ -1768,6 +1768,65 @@ void ngraph::runtime::cpu::pass::CPUFusion::
     this->add_matcher(m);
 }
 
+/*void ngraph::runtime::cpu::pass::CPUFusion::construct_deconvolution()
+{
+    Shape data_batch_shape{100, 512, 4, 4};
+    Shape filters_shape{64, 512, 4, 4};
+    auto data_label = std::make_shared<pattern::op::Label>(element::f32, data_batch_shape);
+    auto filters = std::make_shared<pattern::op::Label>(element::f32, filters_shape);
+    Shape conv_out_shape{100, 64, 1, 1};
+    auto out_delta = std::make_shared<pattern::op::Label>(element::f32, conv_out_shape);
+
+    auto conv = std::make_shared<op::ConvolutionBackpropData>(data_label->get_shape(),
+                                                              filters,
+                                                              out_delta,
+                                                              Strides{1, 1},
+                                                              Strides{1, 1},
+                                                              CoordinateDiff{0, 0},
+                                                              CoordinateDiff{0, 0},
+                                                              Strides{1, 1});
+    auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
+
+    ngraph::pattern::graph_rewrite_callback callback =
+        [data_label, filters, out_delta, conv_label](
+            pattern::Matcher& m) {
+            NGRAPH_DEBUG << "In callback for deconv affine folding against node = "
+                         << m.get_match_root()->get_name();
+            auto pattern_map = m.get_pattern_map();
+
+            auto m_root = std::dynamic_pointer_cast<op::ConvolutionBackpropData>(m.get_match_root());
+            auto conv_m =
+                std::static_pointer_cast<op::ConvolutionBackpropData>(pattern_map[conv_label]);
+
+            if (conv_m->get_users().size() > 1)
+            {
+                return false;
+            }
+
+            if (conv_m->get_shape().size() != 4) // CHECK: is this still valid?
+            {
+                return false;
+            }
+
+            auto g_conv_bprop_data_bias = std::make_shared<op::DeconvolutionBias>(
+                conv_m->get_data_batch_shape(),
+                new_weights_reshape,
+                pattern_map[out_delta],
+                new_biases,
+                conv_m->get_window_movement_strides_forward(),
+                conv_m->get_window_dilation_strides_forward(),
+                conv_m->get_padding_below_forward(),
+                conv_m->get_padding_above_forward(),
+                conv_m->get_data_dilation_strides_forward(),
+                false);
+            ngraph::replace_node(m.get_match_root(), g_conv_bprop_data_bias);
+            return true;
+        };
+
+    auto m = std::make_shared<ngraph::pattern::Matcher>(conv_label, callback);
+    this->add_matcher(m);
+}*/
+
 void ngraph::runtime::cpu::pass::CPUFusion::construct_deconvolution_affine_folding()
 {
     Shape data_batch_shape{100, 512, 4, 4};
@@ -1835,9 +1894,17 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_deconvolution_affine_foldi
             auto mean_gamma = std::make_shared<op::Multiply>(pattern_map[mean], weight_scaling);
             auto new_biases = std::make_shared<op::Subtract>(pattern_map[beta], mean_gamma);
 
+            //auto order = ngraph::get_default_order(bias_shape);
+            //auto new_weights_reshape = std::make_shared<op::Reshape>(new_weights, AxisVector{1, 0, 2, 3}, 
+            //                            Shape{new_weights->get_shape().at(1), new_weights->get_shape().at(0), 
+            //                                  new_weights->get_shape().at(2), new_weights->get_shape().at(3)});
+
+            //auto conv_bias = std::shared_ptr<Node>(new op::ConvolutionBias(conv, bias_reshape));
+            //ngraph::replace_node(m.get_match_root(), conv_bias);
+
             auto g_conv_bprop_data_bias = std::make_shared<op::DeconvolutionBias>(
                 conv_m->get_data_batch_shape(),
-                new_weights,
+                new_weights, //new_weights_reshape,
                 pattern_map[out_delta],
                 new_biases,
                 conv_m->get_window_movement_strides_forward(),

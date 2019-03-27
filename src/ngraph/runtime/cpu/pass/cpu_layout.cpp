@@ -115,6 +115,7 @@ static shared_ptr<Node>
 
         if (!mkldnn_utils::compare_mkldnn_mds(tvl->get_mkldnn_md(), required_mds[index]))
         {
+            std::cout << "\nindex = " << (int)index << ", required_mds[index] data format = " << required_mds[index].data.format << "\n";
             auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
             layout->set_mkldnn_md(required_mds[index]);
             auto new_node = std::shared_ptr<Node>(
@@ -126,6 +127,11 @@ static shared_ptr<Node>
                          << "(layout: " << tvl->get_mkldnn_md().data.format << ") and "
                          << node->get_name() << "(layout: " << required_mds[index].data.format
                          << ")";
+            std::cout << "Inserted conversion node " << new_node->get_name() << " between "
+                         << output.get_node()->get_name()
+                         << "(layout: " << tvl->get_mkldnn_md().data.format << ") and "
+                         << node->get_name() << "(layout: " << required_mds[index].data.format
+                         << ")\n";
         }
         else
         {
@@ -711,16 +717,18 @@ namespace ngraph
                         auto convolution =
                             static_cast<const ngraph::op::DeconvolutionBias*>(node.get());
 
-                        auto arg0_shape = convolution->get_data_batch_shape();
-                        auto arg1_shape = node->get_input_shape(0);
-                        auto arg2_shape = node->get_input_shape(2);
-                        auto result_shape = node->get_input_shape(1);
+                        auto data_batch_shape = convolution->get_data_batch_shape();
+                        auto weights_shape = node->get_input_shape(0);
+                        auto delta_shape = node->get_input_shape(1);
+                        auto bias_shape = node->get_input_shape(2);
+                        auto result_shape = node->get_output_shape(0);
                         auto filter_strides = convolution->get_window_movement_strides_forward();
                         auto padding_below = convolution->get_padding_below_forward();
                         auto padding_above = convolution->get_padding_above_forward();
 
-                        NGRAPH_DEBUG << "Arg0: " << arg0_shape << ", Arg1: " << arg1_shape << 
-                                    ", Arg2: " << arg2_shape << ", out: "<<result_shape;
+                        std::cout << "cpu_layout: data_batch_shape: " << data_batch_shape << "weights_shape: " << weights_shape <<
+                                     ", delta_shape: " << delta_shape << "bias_shape: " << bias_shape << ", out: "<<result_shape <<"\n";
+
                         Strides window_dilation_strides_adjusted;
 
                         for (size_t s : convolution->get_window_dilation_strides_forward())
@@ -732,9 +740,9 @@ namespace ngraph
                             mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(0));
 
                         engine cpu_engine(engine::cpu, 0);
-                        memory::dims mkldnn_arg0_shape(arg0_shape.begin(), arg0_shape.end());
-                        memory::dims mkldnn_arg1_shape(arg1_shape.begin(), arg1_shape.end());
-                        memory::dims mkldnn_arg2_shape(arg2_shape.begin(), arg2_shape.end());
+                        memory::dims mkldnn_arg0_shape(weights_shape.begin(), weights_shape.end());
+                        memory::dims mkldnn_arg1_shape(delta_shape.begin(), delta_shape.end());
+                        memory::dims mkldnn_arg2_shape(bias_shape.begin(), bias_shape.end());
                         memory::dims mkldnn_result_shape(result_shape.begin(), result_shape.end());
                         memory::dims mkldnn_filter_strides(filter_strides.begin(),
                                                            filter_strides.end());
@@ -746,39 +754,59 @@ namespace ngraph
                         memory::dims mkldnn_padding_above(padding_above.begin(),
                                                           padding_above.end());
 
-                         memory::desc input_desc(mkldnn_arg0_shape, et, memory::format::any);
-                         memory::desc weights_desc(mkldnn_arg1_shape, et, memory::format::any);
+                         memory::desc weights_desc(mkldnn_arg0_shape, et, memory::format::any);
+                         memory::desc delta_desc(mkldnn_arg1_shape, et, memory::format::any);
                          memory::desc bias_desc(mkldnn_arg2_shape, et, memory::format::any);
-                         memory::desc result_desc(
-                            mkldnn_result_shape, et, memory::format::any);
+                         memory::desc result_desc(mkldnn_result_shape, et, memory::format::any);
 
-                        NGRAPH_DEBUG << "GD: creating deconv_desc";
+                        std::cout << "\tcpu_layout: creating deconv_desc\n";
 
                         deconvolution_forward::desc deconv_desc(prop_kind::forward,
                                                                 algorithm::deconvolution_direct,
-                                                                result_desc,   //src_desc
+                                                                delta_desc,   //src_desc
                                                                 weights_desc, //weights_desc
                                                                 bias_desc,    //bias_desc
-                                                                input_desc,  // dst_desc
+                                                                result_desc,  // dst_desc
                                                                 mkldnn_filter_strides,
                                                                 mkldnn_padding_below,
                                                                 mkldnn_padding_above,
                                                                 padding_kind::zero);
-                        NGRAPH_DEBUG << "GD: creating deconv_prim_desc";
+                        
+
+                        std::cout << "\tcpu_layout: creating deconv_prim_desc\n";
                         deconvolution_forward::primitive_desc deconv_prim_desc(deconv_desc,
                                                                                cpu_engine);
-                        NGRAPH_DEBUG << "GD: After creating deconv_prim_desc";
+                        std::cout << "\tcpu_layout: After creating deconv_prim_desc\n";
+                        std::cout << "cpu_layout for deconv: format for weights = " << deconv_prim_desc.weights_primitive_desc().desc().data.format <<"\n";
+
+                        // TEMP block
+                        deconvolution_forward::desc deconv_desc_temp(prop_kind::forward,
+                                                                algorithm::deconvolution_direct,
+                                                                delta_desc,   //src_desc
+                                                                weights_desc, //weights_desc
+                                                                result_desc,  // dst_desc
+                                                                mkldnn_filter_strides,
+                                                                mkldnn_padding_below,
+                                                                mkldnn_padding_above,
+                                                                padding_kind::zero);
+                        deconvolution_forward::primitive_desc deconv_prim_desc_temp(deconv_desc_temp,
+                                                                               cpu_engine);
+                        std::cout << "cpu_layout for deconv (no bias) TEMP: format for weights = " <<
+                                 deconv_prim_desc_temp.weights_primitive_desc().desc().data.format <<"\n";
+
+                        // TEMP block ends
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
+                        i_mds.push_back(deconv_prim_desc.weights_primitive_desc().desc()); //TODO: Find what format this is?
                         i_mds.push_back(deconv_prim_desc.src_primitive_desc().desc());
-                        i_mds.push_back(deconv_prim_desc.weights_primitive_desc().desc());
                         i_mds.push_back(deconv_prim_desc.bias_primitive_desc().desc());
                         o_mds.push_back(deconv_prim_desc.dst_primitive_desc().desc());
 
-                        NGRAPH_DEBUG << "GD: calling insert_input_conversions";
+                        std::cout << "\tcpu_layout: calling insert_input_conversions\n";
                         node = insert_input_conversions(external_function, node, i_mds);
-                        NGRAPH_DEBUG << "GD: calling set_output_layouts";
+                        std::cout << "\tcpu_layout: calling set_output_layouts\n";
                         set_output_layouts(node, o_mds);
+                        std::cout << "\tcpu_layout: after set_output_layouts. DeconvolutionBias done \n";
                     }
                     else
                     {

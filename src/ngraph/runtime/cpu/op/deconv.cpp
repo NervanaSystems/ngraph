@@ -115,7 +115,7 @@ void op::DeconvolutionBias::validate_and_infer_types()
     const PartialShape& bias_shape = get_input_partial_shape(2);
     element::Type bias_et = get_input_element_type(2);
 
-    std::cout << " filters shape: " << filters_shape << ", delta_shape : " << delta_shape
+    std::cout << " ctor: filters shape: " << filters_shape << ", delta_shape : " << delta_shape
               << "bias_shape: " << bias_shape << "\n";
     element::Type forward_result_et;
     PartialShape forward_result_shape;
@@ -133,10 +133,12 @@ void op::DeconvolutionBias::validate_and_infer_types()
                                   m_window_dilation_strides_forward);
     NGRAPH_DEBUG << "\tpartial filter_shape: " << filters_shape << "delta_shape: " << delta_shape
                  << ", inferred_res_shape: " << forward_result_shape << endl;
+    std::cout << "\tctor : --- partial filter_shape: " << filters_shape << "delta_shape: " << delta_shape
+                 << ", inferred_res_shape: " << forward_result_shape << endl;
 
-    NODE_VALIDATION_ASSERT(this, forward_result_shape.compatible(delta_shape))
+    /*NODE_VALIDATION_ASSERT(this, forward_result_shape.compatible(delta_shape))
         << "Inferred forward output shape (" << forward_result_shape << ") does not match shape of "
-        << "delta (" << delta_shape << ").";
+        << "delta (" << delta_shape << ").";*/
 
     set_output_type(0, forward_result_et, m_data_batch_shape);
 
@@ -180,6 +182,7 @@ void op::DeconvolutionBias::validate_and_infer_types()
                 m_padding_above_forward[i];
         }
     }
+    std::cout << "\tvalidate_and_infer_types() done\n";
 }
 
 void op::DeconvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints,
