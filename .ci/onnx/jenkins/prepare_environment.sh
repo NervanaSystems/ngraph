@@ -83,4 +83,4 @@ mkdir -p /home/onnx_models/.onnx
 ln -s /home/onnx_models/.onnx /root/.onnx
 
 # Copy stored nGraph master and use it to build PR branch
-build_ngraph "/root" "REBUILD"
+build_ngraph "/root" "USE_CACHED" || build_ngraph "/root" "REBUILD"
