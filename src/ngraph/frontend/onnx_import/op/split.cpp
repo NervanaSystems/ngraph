@@ -121,7 +121,7 @@ namespace ngraph
                     {
                         total_parts_length += length;
                     }
-                    ASSERT_VALID_ARGUMENT(node, total_parts_length == input_shape.at(axis))
+                    ASSERT_VALID_ARGUMENT(node, total_parts_length == input_shape.at(axis_to_split))
                         << "Cannot split using values in 'split' attribute";
                     return reshape::split(input, length_parts, axis_to_split);
                 }
