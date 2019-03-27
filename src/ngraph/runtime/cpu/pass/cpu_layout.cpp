@@ -779,22 +779,7 @@ namespace ngraph
                         std::cout << "\tcpu_layout: After creating deconv_prim_desc\n";
                         std::cout << "cpu_layout for deconv: format for weights = " << deconv_prim_desc.weights_primitive_desc().desc().data.format <<"\n";
 
-                        // TEMP block
-                        deconvolution_forward::desc deconv_desc_temp(prop_kind::forward,
-                                                                algorithm::deconvolution_direct,
-                                                                delta_desc,   //src_desc
-                                                                weights_desc, //weights_desc
-                                                                result_desc,  // dst_desc
-                                                                mkldnn_filter_strides,
-                                                                mkldnn_padding_below,
-                                                                mkldnn_padding_above,
-                                                                padding_kind::zero);
-                        deconvolution_forward::primitive_desc deconv_prim_desc_temp(deconv_desc_temp,
-                                                                               cpu_engine);
-                        std::cout << "cpu_layout for deconv (no bias) TEMP: format for weights = " <<
-                                 deconv_prim_desc_temp.weights_primitive_desc().desc().data.format <<"\n";
 
-                        // TEMP block ends
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
                         i_mds.push_back(deconv_prim_desc.weights_primitive_desc().desc()); //TODO: Find what format this is?
