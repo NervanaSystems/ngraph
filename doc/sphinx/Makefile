@@ -1,6 +1,5 @@
-
-
-# Robust Makefil for Sphinx documentation
+#
+# Robust Makefile for Sphinx documentation
 #
 
 # You can set these variables from the command line.
@@ -9,7 +8,6 @@ SPHINXBUILD   = sphinx-build
 SPHINXPROJ    = nGraphCompilerStack
 SOURCEDIR     = source
 BUILDDIR      = build
-
 ALLSPHINXOPTS = ${SOURCEDIR}
 
 # Put it first so that "make" without argument is like "make help".
@@ -130,4 +128,3 @@ coverage:
 
 gen_python_api_doc:
 	@./generate_python_api_doc.sh
-
