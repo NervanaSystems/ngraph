@@ -50,12 +50,15 @@ Memory Assignment Passes
 Codegen Passes
 ==============
 
+.. important:: Codegen is currently experimental only. 
+
+
 .. csv-table::
    :header: "Codegen Passes", "More Detail"
    :widths: 29, 31
    :escape: ~
 
-   ``CommonFunctionCollection``, ""
+   ``CommonFunctionCollection``, "Experimental Only"
 
 
 Debug Passes
