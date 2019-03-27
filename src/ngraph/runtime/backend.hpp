@@ -24,7 +24,6 @@
 #include "ngraph/runtime/performance_counter.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
-#include "ngraph/runtime/backend_manager.hpp"
 
 namespace ngraph
 {
@@ -48,10 +47,6 @@ public:
     /// \returns unique_ptr to a new Backend or nullptr if the named backend
     ///   does not exist.
     static std::unique_ptr<Backend> create(const std::string& type);
-
-    /// \brief Get handle to backend shared library
-    /// \returns backend handle
-    static DL_HANDLE get_handle(const std::string& type);
 
     /// \brief Query the list of registered devices
     /// \returns A vector of all registered devices.
@@ -114,4 +109,8 @@ public:
     virtual bool is_supported_property(const Property prop) const;
 
     virtual void remove_compiled_function(std::shared_ptr<Executable> exec);
+
+    // TODO: add brief
+    virtual std::shared_ptr<ngraph::Node> get_backend_node(const std::string& symbol_name, ...);
+
 };

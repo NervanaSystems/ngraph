@@ -29,9 +29,10 @@ runtime::Backend::~Backend()
 {
 }
 
-DL_HANDLE runtime::Backend::get_handle(const std::string& type)
+std::shared_ptr<ngraph::Node> runtime::Backend::get_backend_node(const std::string& symbol_name, ...)
 {
-    return BackendManager::get_handle(type);
+        std::shared_ptr<ngraph::Node> dummy_node(nullptr);
+        return dummy_node;
 }
 
 unique_ptr<runtime::Backend> runtime::Backend::create(const string& type)
