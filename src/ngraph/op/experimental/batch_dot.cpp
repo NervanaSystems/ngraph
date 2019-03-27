@@ -65,21 +65,19 @@ void op::BatchDot::validate_and_infer_types()
                           b_shape.rank(),
                           ".");
     
-    size_t dot_dimension_a = (m_transpose_a) ? 1 : 2;
-    size_t dot_dimension_b = (m_transpose_b) ? 2 : 1;
-    if (a_shape.rank() == 3 && b_shape.rank() == 3) {
-        if (shape_a.at(dot_dimension_a) != shape_b.at(dot_dimension_b))
-          NODE_VALIDATION_CHECK(this,
-                              dot_dimension_a.compatible(dot_dimension_b),
+    size_t dot_dim_a = (m_transpose_a) ? 1 : 2;
+    size_t dot_dim_b = (m_transpose_b) ? 2 : 1;
+
+    PartialShape output_shape(PartialShape::dynamic(3));
+    if (a_shape.rank().is_static() && b_shape.rank().is_static() &&
+        a_shape.rank().compatible(3) && b_shape.rank().compatible(3)) {
+        NODE_VALIDATION_CHECK(this,
+                              a_shape[dot_dim_a].compatible(b_shape[dot_dim_b]),
                               "Product dimensions are not equal while creating BatchDot.");
-        } 
+        output_shape = PartialShape{a_shape[0], a_shape[3-dot_dim_a], b_shape[3-dot_dim_b]};
     }
 
-    Shape dot_shape{
-        shape_a.at(0), shape_a.at(3 - dot_dimension_a), shape_b.at(3 - dot_dimension_b)};
-    NGRAPH_DEBUG << "dot_shape shape = " << vector_to_string(dot_shape);
-
-    set_output_type(0, get_input_element_type(0), PartialShape::dynamic(output_rank));
+    set_output_type(0, get_input_element_type(0), output_shape);
 }
 
 void op::BatchDot::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)

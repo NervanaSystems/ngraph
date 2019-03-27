@@ -14,10 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "ngraph/op/experimental/batch_dot.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
-#include "ngraph/runtime/cpu/op/batch_dot.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -329,16 +329,16 @@ namespace ngraph
 
                 const auto* cg = static_cast<const ngraph::op::BatchDot*>(node);
 
-                const auto& shape_a = cg->get_a_shape();
-                const auto& shape_b = cg->get_b_shape();
+                const auto& shape_a = cg->get_input_shape(0);
+                const auto& shape_b = cg->get_input_shape(1);
                 const auto& shape_c = out[0].get_shape();
 
                 const size_t group_size = shape_a.at(0);
                 auto func = emitCblasSgemmBatch(shape_a,
                                                 shape_b,
                                                 shape_c,
-                                                cg->get_is_a_transposed(),
-                                                cg->get_is_b_transposed(),
+                                                cg->get_transpose_a(),
+                                                cg->get_transpose_b(),
                                                 mat_a,
                                                 mat_b,
                                                 mat_c,

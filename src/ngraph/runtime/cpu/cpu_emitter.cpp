@@ -50,6 +50,7 @@
 #include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/batch_dot.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_concat.hpp"
@@ -105,7 +106,6 @@
 #include "ngraph/runtime/cpu/cpu_kernel_emitters.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
-#include "ngraph/runtime/cpu/op/batch_dot.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
@@ -336,6 +336,8 @@ namespace ngraph
                                      const Shape& shape_c,
                                      const std::vector<TensorViewWrapper>& args,
                                      const std::vector<TensorViewWrapper>& out,
+                                     const bool transpose_a,
+                                     const bool transpose_b,
                                      CodeWriter& writer)
             {
                 writer.block_begin();
@@ -354,8 +356,8 @@ namespace ngraph
                                     shape_a,
                                     shape_b,
                                     shape_c,
-                                    batch_dot->get_is_a_transposed(),
-                                    batch_dot->get_is_b_transposed(),
+                                    transpose_a,
+                                    transpose_b,
                                     mat_a.get_name(),
                                     mat_b.get_name(),
                                     mat_c.get_name(),
@@ -405,7 +407,8 @@ namespace ngraph
                 const Shape& padded_result_shape = pad_with(node->get_shape(), 1, 3);
                 // Step 1: dot(A,B)
                 emitBatchDot<ngraph::op::MatmulBias>(
-                    node, arg0_shape, arg1_shape, padded_result_shape, args, out, writer);
+                      node, arg0_shape, arg1_shape, padded_result_shape, args, out,
+                      cg->get_is_a_transposed(), cg->get_is_b_transposed(), writer);
 
                 // Step 2: add bias
                 if (args.size() < 3)
@@ -520,11 +523,13 @@ namespace ngraph
             {
                 const auto* cg = static_cast<const ngraph::op::BatchDot*>(node);
                 emitBatchDot<ngraph::op::BatchDot>(node,
-                                                   cg->get_a_shape(),
-                                                   cg->get_b_shape(),
+                                                   cg->get_input_shape(0),
+                                                   cg->get_input_shape(1),
                                                    out[0].get_shape(),
                                                    args,
                                                    out,
+                                                   cg->get_transpose_a(),
+                                                   cg->get_transpose_b(),
                                                    writer);
             }
 
