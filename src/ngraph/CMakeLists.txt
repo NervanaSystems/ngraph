@@ -57,6 +57,8 @@ set (SRC
     dimension.cpp
     dimension.hpp
     except.hpp
+    event_tracing.hpp
+    event_tracing.cpp
     file_util.cpp
     file_util.hpp
     function.cpp
