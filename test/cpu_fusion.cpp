@@ -2009,7 +2009,7 @@ TEST(cpu_fusion, conv_affine_folding)
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
 }
 
-TEST(cpu_fusion, convbias_affine_folding)
+TEST(cpu_fusion, convbias_affine_folding1)
 {
     Shape shape_input{1, 6, 3, 3};
     Shape shape_weights{3, 6, 1, 1};
@@ -2033,6 +2033,60 @@ TEST(cpu_fusion, convbias_affine_folding)
             make_shared<Function>(NodeVector{out}, ParameterVector{input, weights, bias, a, b});
         return f;
     };
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    auto func = make_function();
+    pass_manager.run_passes(func);
+    ASSERT_EQ(count_ops_of_type<op::ConvolutionBiasAdd>(func), 1);
+
+    auto int_f = make_function();
+    auto cpu_f = make_function();
+
+    test::Uniform<float> rng(20.0f, 300.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
+}
+
+TEST(cpu_fusion, convbias_affine_folding2)
+{
+    Shape shape_input{1, 6, 3, 3};
+    Shape shape_weights{3, 6, 1, 1};
+    Shape shape_norm{1};
+
+    auto make_function = [shape_input, shape_weights, shape_norm]() {
+        auto input = std::make_shared<op::Parameter>(element::f32, shape_input);
+        auto weights = std::make_shared<op::Parameter>(element::f32, shape_weights);
+        auto bias = std::make_shared<op::Parameter>(element::f32, Shape{3});
+
+        auto a = std::make_shared<op::Parameter>(element::f32, shape_norm);
+        auto b = std::make_shared<op::Parameter>(element::f32, shape_norm);
+        auto conv = std::make_shared<op::Convolution>(input, weights, Strides{1, 1}, Strides{1, 1});
+        auto convbias =
+            conv + std::make_shared<op::Broadcast>(bias, conv->get_shape(), AxisSet{0, 2, 3});
+        auto out = std::make_shared<op::Add>(
+            std::make_shared<op::Multiply>(
+                convbias, std::make_shared<op::Broadcast>(a, conv->get_shape(), AxisSet{1, 2, 3})),
+            std::make_shared<op::Broadcast>(b, conv->get_shape(), AxisSet{1, 2, 3}));
+        auto f =
+            make_shared<Function>(NodeVector{out}, ParameterVector{input, weights, bias, a, b});
+        return f;
+    };
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    auto func = make_function();
+    pass_manager.run_passes(func);
+    ASSERT_EQ(count_ops_of_type<op::ConvolutionBiasAdd>(func), 1);
 
     auto int_f = make_function();
     auto cpu_f = make_function();

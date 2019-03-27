@@ -19,7 +19,6 @@
 #include "ngraph/frontend/onnx_import/utils/broadcasting.hpp"
 #include "ngraph/frontend/onnx_import/utils/reshape.hpp"
 #include "ngraph/op/add.hpp"
-#include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/multiply.hpp"
@@ -54,8 +53,8 @@ namespace ngraph
                         input_b = reshape::transpose(input_b);
                     }
 
-                    // code from python not implemented in c++ yet.
-                    // reshape_for_matmul(node, input_a, input_b);
+                    input_a = reshape::flatten(input_a, 1);
+                    input_b = reshape::flatten(input_b, 1);
 
                     // A' * B'
                     std::shared_ptr<ngraph::Node> a_dot_b =
@@ -64,18 +63,16 @@ namespace ngraph
                     // alpha
                     std::shared_ptr<ngraph::Node> alpha_node =
                         std::make_shared<ngraph::op::Constant>(a_dot_b->get_element_type(),
-                                                               ngraph::Shape{},
+                                                               a_dot_b->get_shape(),
                                                                std::vector<double>{alpha});
-                    alpha_node = make_broadcast_node(alpha_node, a_dot_b->get_shape());
                     // alpha * A' * B'
                     a_dot_b = std::make_shared<ngraph::op::Multiply>(alpha_node, a_dot_b);
 
                     // beta * C
                     std::shared_ptr<ngraph::Node> beta_node =
                         std::make_shared<ngraph::op::Constant>(input_c->get_element_type(),
-                                                               ngraph::Shape{},
+                                                               input_c->get_shape(),
                                                                std::vector<double>{beta});
-                    beta_node = make_broadcast_node(beta_node, input_c->get_shape());
                     input_c = std::make_shared<ngraph::op::Multiply>(beta_node, input_c);
 
                     // alpha * A' * B' + beta * C
