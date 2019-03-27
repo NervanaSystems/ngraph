@@ -25,15 +25,16 @@ namespace ngraph
         class BatchDot : public Op
         {
         public:
-            BatchDot(std::shared_ptr<Node> a,
-                     std::shared_ptr<Node> b,
-                     bool transpose_a,
-                     bool transpose_b);
-
-            bool get_is_a_transposed() const { return m_transpose_a; }
-            bool get_is_b_transposed() const { return m_transpose_b; }
-            Shape get_a_shape() const { return get_argument(0)->get_shape(); }
-            Shape get_b_shape() const { return get_argument(1)->get_shape(); }
+            BatchDot(const std::shared_ptr<Node>& a,
+                     const std::shared_ptr<Node>& b,
+                     bool transpose_a = false,
+                     bool transpose_b = false);
+            
+            bool get_transpose_a() const { return m_transpose_a; }
+            bool get_transpose_b() const { return m_transpose_b; }
+            
+            virtual void validate_and_infer_types() override;
+            
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
