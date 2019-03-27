@@ -237,4 +237,53 @@ TEST(provenance, provenance)
         EXPECT_EQ(d->get_provenance_tags(), (ProvSet{"tag_a", "tag_b", "tag_c"}));
         EXPECT_EQ(e->get_provenance_tags(), (ProvSet{"tag_a", "tag_b", "tag_c"}));
     }
+
+    //
+    // Before:
+    //
+    //   A{tag_a}  B{tag_b}
+    //         |   |
+    //        C{tag_c}
+    //
+    // Replacement: C is replaced with G, where:
+    //
+    //     D{}  E{}
+    //      \  / \
+    //       G{}  F{}
+    //
+    // After:
+    //
+    //     D{tag_a,tag_b,tag_c}   E{}
+    //      \                    / \
+    //       G{tag_a,tag_b,tag_c}   F{}
+    //
+    // Comment:
+    //   * G is the replacement root, and its insertion kills A, B, and C.
+    //   * D is post-dominated by G, but E and F are not. Therefore D should take on the subsumed
+    //     tags, but E and F should not.
+    //
+    {
+        auto x = make_shared<op::Parameter>(element::i32, PartialShape{2, 3, 4});
+        auto y = make_shared<op::Parameter>(element::i32, PartialShape{2, 3, 4});
+
+        auto a = make_shared<op::Add>(x, y);
+        a->add_provenance_tag("tag_a");
+        auto b = make_shared<op::Multiply>(y, x);
+        b->add_provenance_tag("tag_b");
+        auto c = make_shared<op::Subtract>(a, b);
+        c->add_provenance_tag("tag_c");
+
+        auto func = make_shared<Function>(c, ParameterVector{x, y});
+
+        auto d = make_zero(element::i32, Shape{2, 3, 4});
+        auto e = make_zero(element::i32, Shape{2, 3, 4});
+        auto f = make_shared<op::Negative>(e);
+        auto g = make_shared<op::Add>(d, e);
+        replace_node(c, g);
+
+        EXPECT_EQ(d->get_provenance_tags(), (ProvSet{"tag_a", "tag_b", "tag_c"}));
+        EXPECT_EQ(e->get_provenance_tags(), (ProvSet{}));
+        EXPECT_EQ(f->get_provenance_tags(), (ProvSet{}));
+        EXPECT_EQ(g->get_provenance_tags(), (ProvSet{"tag_a", "tag_b", "tag_c"}));
+    }
 }
