@@ -110,7 +110,9 @@ public:
 
     virtual void remove_compiled_function(std::shared_ptr<Executable> exec);
 
-    // TODO: add brief
-    virtual std::shared_ptr<ngraph::Node> get_backend_node(const std::string& symbol_name, ...);
+    // \brief Return a requested node from the backend if possible
+    // \param node_name is the name of the backend specific node
+    // \returns a shared pointer to the node if found, else nullptr
+    virtual std::shared_ptr<ngraph::Node> get_backend_node(const std::string& node_name, ...);
 
 };
