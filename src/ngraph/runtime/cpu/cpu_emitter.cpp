@@ -267,8 +267,8 @@ namespace ngraph
                 size_t m = shape_a[1];
                 size_t k = shape_a[2];
                 size_t n = shape_b[2];
-                size_t lda = std::max(1UL, k);
-                size_t ldb = std::max(1UL, n);
+                size_t lda = std::max<size_t>(1UL, k);
+                size_t ldb = std::max<size_t>(1UL, n);
                 const char* ctranspose_a = cblas_no_transpose;
                 const char* ctranspose_b = cblas_no_transpose;
                 if (transpose_a)
@@ -276,15 +276,15 @@ namespace ngraph
                     ctranspose_a = cblas_transpose;
                     m = shape_a[2];
                     k = shape_a[1];
-                    lda = std::max(1UL, m);
+                    lda = std::max<size_t>(1UL, m);
                 }
                 if (transpose_b)
                 {
                     ctranspose_b = cblas_transpose;
                     n = shape_b[1];
-                    ldb = std::max(1UL, k);
+                    ldb = std::max<size_t>(1UL, k);
                 }
-                size_t ldc = std::max(1UL, n);
+                size_t ldc = std::max<size_t>(1UL, n);
 
                 const size_t offset_a = (shape_a.at(0) > 1) ? m * k : 0;
                 const size_t offset_b = (shape_b.at(0) > 1) ? k * n : 0;
@@ -958,18 +958,18 @@ namespace ngraph
                     populate_array(mat_a.get_name(), group_size, offset_a);
                     writer << "};\n";
                     writer << "const float** a_array = &a[0];\n";
-                    writer << "int64_t lda_array[] = {" << std::max(1UL, k) << "};\n";
+                    writer << "int64_t lda_array[] = {" << std::max<size_t>(1UL, k) << "};\n";
                     writer << "std::vector<const float*> b{";
                     populate_array(mat_b.get_name(), group_size, offset_b);
                     writer << "};\n";
                     writer << "const float** b_array = &b[0];\n";
-                    writer << "int64_t ldb_array[] = {" << std::max(1UL, n) << "};\n";
+                    writer << "int64_t ldb_array[] = {" << std::max<size_t>(1UL, n) << "};\n";
                     writer << "float beta_array[] = {0.0f};\n";
                     writer << "std::vector<float*> c{";
                     populate_array(mat_c.get_name(), group_size, offset_c);
                     writer << "};\n";
                     writer << "float** c_array = &c[0];\n";
-                    writer << "int64_t ldc_array[] = {" << std::max(1UL, n) << "};\n";
+                    writer << "int64_t ldc_array[] = {" << std::max<size_t>(1UL, n) << "};\n";
                     writer << "int64_t group_size[] = {" << group_size << "};\n";
 
                     writer << "cblas_sgemm_batch(cblas::Layout::RowMajor, ";
