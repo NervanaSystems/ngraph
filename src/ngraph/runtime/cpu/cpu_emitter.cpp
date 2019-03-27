@@ -900,9 +900,9 @@ namespace ngraph
                                << "cblas::Transpose::None, " << arg0_shape[0] << ", "
                                << arg1_shape[1] << ", " << arg0_shape[1] << ",\n"
                                << "        1.0f, " << args[0].get_name() << ", "
-                               << max(1UL, arg0_shape[1]) << ", " << args[1].get_name() << ", "
-                               << max(1UL, arg1_shape[1]) << ", 0.0f,\n"
-                               << "        " << out[0].get_name() << ", " << max(1UL, arg1_shape[1])
+                               << max<size_t>(1UL, arg0_shape[1]) << ", " << args[1].get_name() << ", "
+                               << max<size_t>(1UL, arg1_shape[1]) << ", 0.0f,\n"
+                               << "        " << out[0].get_name() << ", " << max<size_t>(1UL, arg1_shape[1])
                                << ");\n";
                         writer.block_end();
                     }
