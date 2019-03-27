@@ -118,14 +118,6 @@ expand your network's hardware. Each integration is unique to the framework
 and its set of deep learning operators, its view on memory layout, its 
 feature set, etc.
 
-.. _figure-B:
-
-.. figure:: ../graphics/intro_kernel_to_fw_accent.png
-   :width: 555px
-   :alt: 
-
-   Each of these connections represents significant work for what will 
-   ultimately be a brittle setup that is enormously expensive to maintain.
 
 nGraph solves this problem with nGraph bridges. A bridge takes a computational 
 graph and reconstructs it in the nGraph IR with a few primitive nGraph 
@@ -146,11 +138,15 @@ of each parameter for each operation. In the past, the number of required
 kernels was limited, but as the AI research and industry rapidly develops, the 
 final product of required kernels is increasing exponentially. 
 
-.. _figure-C:
+.. _figure-B:
 
 .. figure:: ../graphics/intro_kernel_explosion.png
    :width: 555px
    :alt: 
+
+   Each of these connections represents significant work for what will 
+   ultimately be a brittle setup that is enormously expensive to maintain.
+
 
 
 PlaidML addresses the kernel explosion problem in a manner that lifts a heavy 
