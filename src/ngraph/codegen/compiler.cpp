@@ -57,6 +57,9 @@
 #define IS_RTTI_ENABLED __has_feature(cxx_rtti)
 #elif defined(__GNUC__)
 #define IS_RTTI_ENABLED __GXX_RTTI
+#elif defined(_MSC_VER)
+// FIXME:
+#define IS_RTTI_ENABLED 0
 #else
 // Unknown compiler so assume RTTI is enabled by default
 #define IS_RTTI_ENABLED 1

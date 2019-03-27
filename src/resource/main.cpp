@@ -193,7 +193,7 @@ int main(int argc, char** argv)
                 {
                     std::string line;
 #ifdef _WIN32
-                    const int max_partial_size = 65500;
+                    const int max_partial_size = 16380;
                     out << "{\n";
                     bool first_line = true;
                     int partial_size = 0;

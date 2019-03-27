@@ -179,6 +179,8 @@ set(LLVM_LINK_LIBS
 
 if(LINUX OR APPLE)
     set(LLVM_LINK_LIBS ${LLVM_LINK_LIBS} m)
+elseif(WIN32)
+    set(LLVM_LINK_LIBS ${LLVM_LINK_LIBS} version)
 endif()
 
 add_library(libllvm INTERFACE)
