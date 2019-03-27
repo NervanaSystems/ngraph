@@ -37,7 +37,6 @@ Frameworks using nGraph to execute workloads have shown `up to 45X`_ performance
 boost compared to native implementations. For a high-level overview, see the 
 :doc:`project/introduction` and our latest :doc:`project/release-notes`.
 
-
 .. toctree::
    :maxdepth: 1
    :caption: Connecting Frameworks

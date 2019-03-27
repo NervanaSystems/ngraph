@@ -2742,8 +2742,9 @@ span[id*='MathJax-Span'] {
   margin-bottom: 0;
   display: block;
   font-family: "NeoSansIntel", sans;
+  font-weight: bolder;
   text-transform: uppercase;
-  font-size: 107%;
+  font-size: 103%;
   color: #abb6cd;
   /* background-color: #53607d; */
   white-space: nowrap;
