@@ -75,6 +75,7 @@
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
+#include "ngraph/op/erf.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max.hpp"
@@ -1996,6 +1997,9 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::AllReduce:
         case OP_TYPEID::BroadcastDistributed:
         case OP_TYPEID::BroadcastLike:
+        case OP_TYPEID::DynReshape:
+        case OP_TYPEID::DynSlice:
+        case OP_TYPEID::Erf:
         case OP_TYPEID::QuantizedAvgPool:
         case OP_TYPEID::QuantizedConvolutionBias:
         case OP_TYPEID::QuantizedConvolutionBiasAdd:
@@ -2015,6 +2019,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::EmbeddingLookup:
         case OP_TYPEID::DynBroadcast:
         case OP_TYPEID::Passthrough:
+        case OP_TYPEID::DynPad:
         {
             throw unsupported_op("Unsupported op '" + op->description() +
                                  "' in IntelGPU back end.");
