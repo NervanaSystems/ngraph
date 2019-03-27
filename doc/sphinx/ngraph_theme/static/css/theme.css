@@ -2737,14 +2737,14 @@ span[id*='MathJax-Span'] {
   height: 35.2px;
   display: inline-block;
   line-height: 44.8px;
-  padding: 0.1 0.1 em;
-  margin-left: 0.31em;
+  padding: 0.1 0.1;
+  margin-left: 0.43em;
   margin-bottom: 0;
   display: block;
   font-family: "NeoSansIntel", sans;
   font-weight: bolder;
   text-transform: uppercase;
-  font-size: 107%;
+  font-size: 103%;
   color: #abb6cd;
   /* background-color: #53607d; */
   white-space: nowrap;
