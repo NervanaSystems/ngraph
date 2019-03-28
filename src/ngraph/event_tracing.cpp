@@ -24,51 +24,52 @@ using namespace std;
 
 mutex ngraph::Event::s_file_mutex;
 ofstream ngraph::Event::s_event_log;
+bool ngraph::Event::s_tracing_enabled = false;
 
-namespace ngraph
+void ngraph::Event::write_trace(const ngraph::Event& event)
 {
-    void ngraph::Event::write_trace(const ngraph::Event& event)
+    lock_guard<mutex> lock(s_file_mutex);
+    if (!is_tracing_enabled())
     {
-        lock_guard<mutex> lock(s_file_mutex);
-        if (!is_tracing_enabled())
-            return;
-
-        static bool initialized = false;
-        if (!initialized)
-        {
-            // Open the file
-            s_event_log.open("ngraph_event_trace.json", ios_base::trunc);
-            s_event_log << "[\n";
-            s_event_log << event.to_json() << "\n";
-            initialized = true;
-            return;
-        }
-
-        s_event_log << ",\n";
-        s_event_log << event.to_json() << "\n" << flush;
+        return;
     }
 
-    string ngraph::Event::to_json() const
+    static bool so_initialized = false;
+    if (!so_initialized)
     {
-        ostringstream thread_id;
-        thread_id << this_thread::get_id();
-
-        nlohmann::json json_start = {{"name", m_name},
-                                     {"cat", m_category},
-                                     {"ph", "B"},
-                                     {"pid", m_pid},
-                                     {"tid", thread_id.str()},
-                                     {"ts", m_start.time_since_epoch().count() / 1000},
-                                     {"args", m_args}};
-        nlohmann::json json_end = {{"name", m_name},
-                                   {"cat", m_category},
-                                   {"ph", "E"},
-                                   {"pid", m_pid},
-                                   {"tid", thread_id.str()},
-                                   {"ts", m_stop.time_since_epoch().count() / 1000},
-                                   {"args", m_args}};
-        ostringstream output;
-        output << json_start << ",\n" << json_end;
-        return output.str();
+        // Open the file
+        s_event_log.open("ngraph_event_trace.json", ios_base::trunc);
+        s_event_log << "[\n";
+        s_event_log << event.to_json() << "\n";
+        so_initialized = true;
+        return;
     }
+
+    s_event_log << ",\n";
+    s_event_log << event.to_json() << "\n" << flush;
 }
+
+string ngraph::Event::to_json() const
+{
+    ostringstream thread_id;
+    thread_id << this_thread::get_id();
+
+    nlohmann::json json_start = {{"name", m_name},
+                                 {"cat", m_category},
+                                 {"ph", "B"},
+                                 {"pid", m_pid},
+                                 {"tid", thread_id.str()},
+                                 {"ts", m_start.time_since_epoch().count() / 1000},
+                                 {"args", m_args}};
+    nlohmann::json json_end = {{"name", m_name},
+                               {"cat", m_category},
+                               {"ph", "E"},
+                               {"pid", m_pid},
+                               {"tid", thread_id.str()},
+                               {"ts", m_stop.time_since_epoch().count() / 1000},
+                               {"args", m_args}};
+    ostringstream output;
+    output << json_start << ",\n" << json_end;
+    return output.str();
+}
+

@@ -1,18 +1,19 @@
-/*******************************************************************************
- * Copyright 2019 Intel Corporation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+//*****************************************************************************
+// Copyright 2019 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
+
 #pragma once
 
 #include <chrono>
@@ -74,7 +75,9 @@ namespace ngraph
         void Stop()
         {
             if (m_stopped)
+            {
                 return;
+            }
             m_stopped = true;
             m_stop = std::chrono::high_resolution_clock::now();
         }
@@ -82,10 +85,14 @@ namespace ngraph
         static void write_trace(const Event& event);
         static bool is_tracing_enabled()
         {
-            static bool enabled = (std::getenv("NGRAPH_ENABLE_TRACING") != nullptr);
-            return enabled;
+            if (std::getenv("NGRAPH_ENABLE_TRACING") != nullptr)
+            {
+                return true;
+            }
+            return s_tracing_enabled;
         }
-
+        static void enable_event_tracing() { s_tracing_enabled = true; }
+        static void disable_event_tracing() { s_tracing_enabled = false; }
         std::string to_json() const;
 
         Event(const Event&) = delete;
@@ -99,8 +106,10 @@ namespace ngraph
         std::string m_category;
         std::string m_args;
         int m_pid{0};
+
         static std::mutex s_file_mutex;
         static std::ofstream s_event_log;
+        static bool s_tracing_enabled;
     };
 
 } // namespace ngraph
