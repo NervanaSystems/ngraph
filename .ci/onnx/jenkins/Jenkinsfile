@@ -190,7 +190,7 @@ def main(String label, String projectName, String projectRoot, String dockerCont
                     // Create configuration maps
                     configurationMaps = UTILS.getDockerEnvList(projectName, dockerContainerName, projectRoot)
                     // Execute CI steps
-                    getImage(configurationMaps)
+                    pullImage(configurationMaps)
                     runDockerContainers(configurationMaps)
                     prepareEnvironment(configurationMaps)
                     runToxTests(configurationMaps)
