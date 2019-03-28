@@ -3,7 +3,7 @@ try{ if(LABEL.trim() == "") {throw new Exception();} }catch(Exception e){LABEL="
 try{ if(DOCKER_REGISTRY.trim() == "") {throw new Exception();} }catch(Exception e){DOCKER_REGISTRY="amr-registry.caas.intel.com"}; echo "${DOCKER_REGISTRY}"
 // CI settings and constants
 PROJECT_NAME = "ngraph_cpp"
-CI_ROOT = "ngraph/.ci/onnx/jenkins"
+CI_ROOT = ".ci/onnx/jenkins"
 DOCKER_CONTAINER_NAME = "jenkins_ngraph-onnx_ci"
 NGRAPH_GIT_ADDRESS = "https://github.com/NervanaSystems/ngraph.git"
 JENKINS_GITHUB_CREDENTIAL_ID = "7157091e-bc04-42f0-99fd-dc4da2922a55"
