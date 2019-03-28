@@ -103,7 +103,7 @@ set (SRC
     op/batch_norm.cpp
     op/batch_norm.hpp
     op/broadcast.cpp
-    op/broadcast.hpp
+    op/broadcast_distributed.cpp
     op/ceiling.cpp
     op/ceiling.hpp
     op/concat.cpp
@@ -316,6 +316,8 @@ set (SRC
     pass/reshape_sinking.hpp
     pass/serialize.cpp
     pass/serialize.hpp
+    pass/shape_specialization.cpp
+    pass/shape_specialization.hpp
     pass/validate_graph.cpp
     pass/validate_graph.hpp
     pass/visualize_tree.cpp
