@@ -1,8 +1,8 @@
 .. buildlb.rst:
 
-###########################
-nGraph Library for backends 
-###########################
+###############
+Build and Test 
+###############
 
 This section details how to build the C++ version of the nGraph Library, which 
 is targeted toward developers working on kernel-specific operations, 
