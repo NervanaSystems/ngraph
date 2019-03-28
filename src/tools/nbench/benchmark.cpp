@@ -222,5 +222,6 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
     cout << time / iterations << "ms per iteration" << endl;
 
     vector<runtime::PerformanceCounter> perf_data = compiled_func->get_performance_data();
+    f = compiled_func->get_compiled_function();
     return perf_data;
 }
