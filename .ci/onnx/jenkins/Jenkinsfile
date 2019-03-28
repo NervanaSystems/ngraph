@@ -17,10 +17,11 @@
 
 // Set LABEL variable if empty or not declared
 try{ if(LABEL.trim() == "") {throw new Exception();} }catch(Exception e){LABEL="onnx && ci"}; echo "${LABEL}"
+try{ if(DOCKER_REGISTRY.trim() == "") {throw new Exception();} }catch(Exception e){DOCKER_REGISTRY="amr-registry.caas.intel.com"}; echo "${DOCKER_REGISTRY}"
 // CI settings and constants
-PROJECT_NAME = "ngraph-onnx"
+PROJECT_NAME = "ngraph_cpp"
 CI_ROOT = "ngraph/.ci/onnx/jenkins"
-DOCKER_CONTAINER_NAME = "jenkins_${PROJECT_NAME}_ci"
+DOCKER_CONTAINER_NAME = "jenkins_ngraph-onnx_ci"
 NGRAPH_GIT_ADDRESS = "https://github.com/NervanaSystems/ngraph.git"
 ONNX_GIT_ADDRESS = "https://github.com/NervanaSystems/ngraph-onnx.git"
 JENKINS_GITHUB_CREDENTIAL_ID = "7157091e-bc04-42f0-99fd-dc4da2922a55"
@@ -81,21 +82,21 @@ def cloneRepository(String jenkins_github_credential_id, String ngraph_git_addre
     }
 }
 
-def buildImage(configurationMaps) {
-    Closure buildMethod = { configMap ->
+def pullImage(configurationMaps) {
+    Closure pullMethod = { configMap ->
         sh """
-            ${CI_ROOT}/utils/docker.sh build \
+            ${CI_ROOT}/utils/docker.sh pull \
+                                --docker_registry=${DOCKER_REGISTRY} \
                                 --name=${configMap["projectName"]} \
-                                --version=${configMap["name"]} \
-                                --dockerfile_path=${configMap["dockerfilePath"]}
+                                --version=${configMap["name"]} || return 1
         """
     }
-    UTILS.createStage("Build_image", buildMethod, configurationMaps)
+    UTILS.createStage("Pull_image", pullMethod, configurationMaps)
 }
 
 def runDockerContainers(configurationMaps) {
     Closure runContainerMethod = { configMap ->
-        UTILS.propagateStatus("Build_image", configMap["name"])
+        UTILS.propagateStatus("Pull_image", configMap["name"])
         sh """
             mkdir -p ${HOME}/ONNX_CI
             ${CI_ROOT}/utils/docker.sh start \
@@ -189,7 +190,7 @@ def main(String label, String projectName, String projectRoot, String dockerCont
                     // Create configuration maps
                     configurationMaps = UTILS.getDockerEnvList(projectName, dockerContainerName, projectRoot)
                     // Execute CI steps
-                    buildImage(configurationMaps)
+                    getImage(configurationMaps)
                     runDockerContainers(configurationMaps)
                     prepareEnvironment(configurationMaps)
                     runToxTests(configurationMaps)
