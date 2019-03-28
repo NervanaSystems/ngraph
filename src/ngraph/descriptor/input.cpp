@@ -26,6 +26,8 @@ Input::Input(Node* node, size_t index, Output& output)
     : m_node(node)
     , m_index(index)
     , m_output(&output)
+    , m_is_relevant_to_shape(false)
+    , m_is_relevant_to_value(true)
 {
     m_src_node = std::shared_ptr<Node>(output.get_node());
     output.add_input(this);

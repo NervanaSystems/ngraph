@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2018 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,27 +16,23 @@
 
 #pragma once
 
-#include "ngraph/op/constant.hpp"
+#include <memory>
+
 #include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        /// \brief Operation that returns the shape of its input argument as a tensor.
-        class ShapeOf : public Op
+        class BroadcastDistributed : public Op
         {
         public:
-            /// \brief Constructs a shape-of operation.
-            ShapeOf(const std::shared_ptr<Node>& arg);
+            BroadcastDistributed(const std::shared_ptr<Node>& arg);
+
+            void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
-
-            virtual std::vector<std::shared_ptr<op::Constant>> as_constants() const override;
-
-        protected:
-            void validate_and_infer_types() override;
         };
     }
 }
