@@ -33,7 +33,7 @@ def buildImage(configurationMaps) {
 def pushImage(configurationMaps) {
     Closure pushMethod = { configMap ->
         UTILS.propagateStatus("Build_image", configMap["name"])
-        withCredentials([usernamePassword(credentialsId: 'DOCKER_CREDENTIALS',
+        withCredentials([usernamePassword(credentialsId: "{DOCKER_CREDENTIALS}",
                                           usernameVariable: 'DOCKER_USERNAME',
                                           passwordVariable: 'DOCKER_PASSWORD')]) {
             sh """
