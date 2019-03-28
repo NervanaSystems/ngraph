@@ -235,7 +235,13 @@ void codegen::CompilerCore::initialize()
     LO->CXXExceptions = 1;
     LO->WChar = 1;
     LO->RTTI = 1;
-#ifndef _WIN32
+#if defined(_MSC_VER)
+    LO->MSVCCompat = 1;
+    LO->MicrosoftExt = 1;
+    LO->AsmBlocks = 1;
+    LO->MSBitfields = 1;
+    LO->MSCompatibilityVersion = 192027508;
+#else
     // Enable OpenMP for Eigen
     LO->OpenMP = 1;
     LO->OpenMPUseTLS = 1;
@@ -261,6 +267,9 @@ void codegen::CompilerCore::initialize()
     // Enable various target features
     auto& TO = m_compiler->getInvocation().getTargetOpts();
     TO.CPU = sys::getHostCPUName();
+#if defined(_MSC_VER)
+    TO.Triple = "x86_64-pc-windows-msvc19.20.27508";
+#endif
 
     // Flush out any errors from clang/llvm arg parsing.
     diag_buffer->FlushDiagnostics(m_compiler->getDiagnostics());
@@ -444,6 +453,22 @@ void codegen::CompilerCore::configure_search_path()
     {
         add_header_search_path("/usr/include");
     }
+#elif defined(_MSC_VER)
+/*
+$ "C:\Program Files\LLVM\bin\clang-cl.exe" -E -v shape.hpp
+clang version 8.0.0 (tags/RELEASE_800/final)
+Target: x86_64-pc-windows-msvc
+Thread model: posix
+InstalledDir: C:\Program Files\LLVM\bin
+ "C:\\Program Files\\LLVM\\bin\\clang-cl.exe" -cc1 -triple x86_64-pc-windows-msvc19.20.27508 -E -disable-free -disable-llvm-verifier -discard-value-names -main-file-name shape.hpp -mrelocation-model pic -pic-level 2 -mthread-model posix -relaxed-aliasing -fmath-errno -masm-verbose -mconstructor-aliases -munwind-tables -target-cpu x86-64 -mllvm -x86-asm-syntax=intel -D_MT -flto-visibility-public-std --dependent-lib=libcmt --dependent-lib=oldnames -stack-protector 2 -fms-volatile -fdiagnostics-format msvc -dwarf-column-info -momit-leaf-frame-pointer -v -resource-dir "C:\\Program Files\\LLVM\\lib\\clang\\8.0.0" -internal-isystem "C:\\Program Files\\LLVM\\lib\\clang\\8.0.0\\include" -internal-isystem "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\VC\\Tools\\MSVC\\14.20.27508\\include" -internal-isystem "C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.17763.0\\ucrt" -internal-isystem "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.17763.0\\shared" -internal-isystem "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.17763.0\\um" -internal-isystem "C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.17763.0\\winrt" -fdeprecated-macro -fdebug-compilation-dir "C:\\Users\\silee2\\Projects\\ngraph\\src\\ngraph" -ferror-limit 19 -fmessage-length 208 -fno-use-cxa-atexit -fms-extensions -fms-compatibility -fms-compatibility-version=19.20.27508 -std=c++14 -fdelayed-template-parsing -fobjc-runtime=gcc -fdiagnostics-show-option -fcolor-diagnostics -o - -x c++-header shape.hpp -faddrsig
+clang -cc1 version 8.0.0 based upon LLVM 8.0.0 default target x86_64-pc-windows-msvc
+*/
+    add_header_search_path(CLANG_BUILTIN_HEADERS_PATH);
+    add_header_search_path("C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Tools/MSVC/14.20.27508/include");
+    add_header_search_path("C:/Program Files (x86)/Windows Kits/10/Include/10.0.17763.0/ucrt");
+    add_header_search_path("C:/Program Files (x86)/Windows Kits/10/Include/10.0.17763.0/shared");
+    add_header_search_path("C:/Program Files (x86)/Windows Kits/10/Include/10.0.17763.0/um");
+    add_header_search_path("C:/Program Files (x86)/Windows Kits/10/Include/10.0.17763.0/winrt");
 #else
     // Add base toolchain-supplied header paths
     // Ideally one would use the Linux toolchain definition in clang/lib/Driver/ToolChains.h
