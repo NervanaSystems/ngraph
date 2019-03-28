@@ -176,7 +176,8 @@ int main(int argc, char** argv)
         }
         out << "    };\n";
 #ifdef _WIN32
-        out << "    const std::vector<std::pair<std::string, std::vector<std::string>>> builtin_headers =\n";
+        out << "    const std::vector<std::pair<std::string, std::vector<std::string>>> "
+               "builtin_headers =\n";
 #else
         out << "    const std::vector<std::pair<std::string, std::string>> builtin_headers =\n";
 #endif
@@ -204,7 +205,7 @@ int main(int argc, char** argv)
                         // line = uncomment(line);
                         total_size += line.size();
                         partial_size += line.size();
-                        if(partial_size > max_partial_size)
+                        if (partial_size > max_partial_size)
                         {
                             out << ")" << delim << "\",\n";
                             partial_size = line.size();

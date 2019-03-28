@@ -573,18 +573,18 @@ void codegen::CompilerCore::load_headers_from_resource()
     const std::string builtin_root = "";
     HeaderSearchOptions& hso = m_compiler->getInvocation().getHeaderSearchOpts();
     PreprocessorOptions& preprocessor_options = m_compiler->getInvocation().getPreprocessorOpts();
-    // for (const std::string& search_path : builtin_search_paths)
-    // {
-    //     std::string builtin = builtin_root + search_path;
-    //     hso.AddPath(builtin, clang::frontend::System, false, false);
-    // }
+// for (const std::string& search_path : builtin_search_paths)
+// {
+//     std::string builtin = builtin_root + search_path;
+//     hso.AddPath(builtin, clang::frontend::System, false, false);
+// }
 #ifdef _WIN32
     for (const pair<std::string, vector<std::string>>& header_info : builtin_headers)
     {
         std::string absolute_path = header_info.first;
         std::string builtin = builtin_root + absolute_path;
         std::string header_content;
-        for(const std::string& line : header_info.second)
+        for (const std::string& line : header_info.second)
         {
             header_content += line;
         }
