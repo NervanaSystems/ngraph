@@ -11895,7 +11895,7 @@ TEST(type_prop, shape_of)
     auto a = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
     auto so = make_shared<op::ShapeOf>(a);
 
-    ASSERT_EQ(so->get_output_element_type(0), element::u64);
+    ASSERT_EQ(so->get_output_element_type(0), element::i64);
     ASSERT_EQ(so->get_shape(), Shape{4});
 }
 
@@ -11904,7 +11904,7 @@ TEST(type_prop, shape_of_partial_et_dynamic)
     auto a = make_shared<op::Parameter>(element::dynamic, Shape{1, 2, 3, 4});
     auto so = make_shared<op::ShapeOf>(a);
 
-    ASSERT_EQ(so->get_output_element_type(0), element::u64);
+    ASSERT_EQ(so->get_output_element_type(0), element::i64);
     ASSERT_EQ(so->get_shape(), Shape{4});
 }
 
@@ -11914,7 +11914,7 @@ TEST(type_prop, shape_of_partial_rank_static_dynamic)
         element::f32, PartialShape{1, Dimension::dynamic(), Dimension::dynamic(), 4});
     auto so = make_shared<op::ShapeOf>(a);
 
-    ASSERT_EQ(so->get_output_element_type(0), element::u64);
+    ASSERT_EQ(so->get_output_element_type(0), element::i64);
     ASSERT_EQ(so->get_shape(), Shape{4});
 }
 
@@ -11923,7 +11923,7 @@ TEST(type_prop, shape_of_partial_rank_dynamic)
     auto a = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     auto so = make_shared<op::ShapeOf>(a);
 
-    ASSERT_EQ(so->get_output_element_type(0), element::u64);
+    ASSERT_EQ(so->get_output_element_type(0), element::i64);
     ASSERT_TRUE(so->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(1)));
 }
 
