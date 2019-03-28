@@ -119,6 +119,8 @@ namespace ngraph
                     std::size_t total_parts_length = 0;
                     for (auto length : length_parts)
                     {
+                        ASSERT_VALID_ARGUMENT(node, length > 0)
+                            << "Invalid value in 'split' attribute";
                         total_parts_length += length;
                     }
                     ASSERT_VALID_ARGUMENT(node, total_parts_length == input_shape.at(axis_to_split))
