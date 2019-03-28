@@ -116,5 +116,5 @@ public:
     //     The variadic input is used to pass inputs that the op constructor might take
     // \param op_name is the name of the backend specific op
     // \returns a shared pointer to the op if found, else nullptr
-    virtual std::shared_ptr<ngraph::op::Op> get_backend_op(const std::string& op_name, ...);
+    virtual std::shared_ptr<ngraph::Node> get_backend_op(const std::string& op_name, ...);
 };
