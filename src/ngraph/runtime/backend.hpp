@@ -110,8 +110,8 @@ public:
 
     virtual void remove_compiled_function(std::shared_ptr<Executable> exec);
 
-    // \brief Return a requested node from the backend if possible
-    // \param node_name is the name of the backend specific node
-    // \returns a shared pointer to the node if found, else nullptr
-    virtual std::shared_ptr<ngraph::op::Op> get_backend_op(const std::string& node_name, ...);
+    // \brief Return a requested op from the backend if possible
+    // \param op_name is the name of the backend specific op
+    // \returns a shared pointer to the op if found, else nullptr
+    virtual std::shared_ptr<ngraph::op::Op> get_backend_op(const std::string& op_name, ...);
 };

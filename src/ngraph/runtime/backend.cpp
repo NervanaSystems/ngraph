@@ -29,7 +29,7 @@ runtime::Backend::~Backend()
 {
 }
 
-std::shared_ptr<ngraph::op::Op> runtime::Backend::get_backend_op(const std::string& node_name, ...)
+std::shared_ptr<ngraph::op::Op> runtime::Backend::get_backend_op(const std::string& op_name, ...)
 {
     std::shared_ptr<ngraph::op::Op> dummy_node(nullptr);
     return dummy_node;
