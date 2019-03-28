@@ -69,13 +69,13 @@ public:
     /// \returns an ngraph::ResultVector of all input parameters
     const ngraph::ResultVector& get_results() const;
 
+    /// \brief Query the compiled function
+    /// \returns an nshared_ptr<Function> of compiled function
+    const shared_ptr<Function> get_compiled_function() const;
 protected:
     /// \brief Called at the end of compile to the values to be returned by get_parameters
     ///     and get_results
     /// \param func The function with Results fully resolved.
     void set_parameters_and_results(const Function& func);
-
-private:
-    ngraph::ParameterVector m_parameters;
-    ngraph::ResultVector m_results;
+    std::shared_ptr<Function> m_compiled_function;
 };
