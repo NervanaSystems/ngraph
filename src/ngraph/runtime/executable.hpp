@@ -71,7 +71,8 @@ public:
 
     /// \brief Query the compiled function
     /// \returns an nshared_ptr<Function> of compiled function
-    const shared_ptr<Function> get_compiled_function() const;
+    const std::shared_ptr<Function> get_compiled_function() const;
+
 protected:
     /// \brief Called at the end of compile to the values to be returned by get_parameters
     ///     and get_results

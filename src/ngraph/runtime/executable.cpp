@@ -17,9 +17,9 @@
 #include <sstream>
 
 #include "ngraph/file_util.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/runtime/executable.hpp"
 #include "ngraph/runtime/tensor.hpp"
-#include "ngraph/graph_util.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -107,7 +107,7 @@ const ngraph::ResultVector& runtime::Executable::get_results() const
     return m_compiled_function->get_results();
 }
 
-const shared_ptr<Function> runtime::Executable::get_compiled_function() const
+const std::shared_ptr<Function> runtime::Executable::get_compiled_function() const
 {
     return m_compiled_function;
 }
