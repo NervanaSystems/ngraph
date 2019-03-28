@@ -73,4 +73,3 @@ string ngraph::Event::to_json() const
     output << json_start << ",\n" << json_end;
     return output.str();
 }
-

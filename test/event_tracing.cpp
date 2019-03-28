@@ -62,4 +62,3 @@ TEST(event_tracing, event_file)
     // Validate the JSON objects - there should be 10 of them
     // TODO
 }
-

@@ -113,4 +113,3 @@ namespace ngraph
     };
 
 } // namespace ngraph
-
