@@ -262,8 +262,8 @@ size_t MKLDNNEmitter::build_deconvolutionbias_forward(const mkldnn::memory::desc
 
              conv_attr,
              executor::global_cpu_engine},
-            *m_mkldnn_primitives[weights_index],
             *m_mkldnn_primitives[input_data_index],
+            *m_mkldnn_primitives[weights_index],
             *m_mkldnn_primitives[bias_index],
             *m_mkldnn_primitives[result_index]);
 

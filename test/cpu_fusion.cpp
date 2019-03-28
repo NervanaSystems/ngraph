@@ -1357,8 +1357,8 @@ TEST(cpu_fusion, fuse_deconv)
 
 TEST(cpu_fusion, deconv_vals)
 {
-    auto fuse_func = gen_deconv_temp(false);
-    //auto fuse_func = gen_deconv(false);
+    // auto fuse_func = gen_deconv_temp(false);
+    auto fuse_func = gen_deconv(false);
 
     auto nofuse_func = gen_deconv(true);
 

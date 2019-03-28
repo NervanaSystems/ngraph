@@ -605,8 +605,8 @@ namespace ngraph
                                                    CPUExecutionContext* ectx) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
-                        //cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], arg2_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], arg2_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], out_tensor);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
                     };
                     functors.emplace_back(functor);
