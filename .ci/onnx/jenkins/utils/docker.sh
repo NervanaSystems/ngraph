@@ -18,7 +18,7 @@
 readonly PARAMETERS=( 'name' 'version' 'container_name' 'volumes' 'env' 'ports' 'dockerfile_path' 'directory' 'docker_registry'
                       'options' 'tag' 'engine' 'frontend' 'new_tag' 'image_name' 'repository_type' 'build_cores_number')
 readonly WORKDIR="$(git rev-parse --show-toplevel)"
-docker_registry="amr-registry.caas.intel.com"
+DOCKER_REGISTRY="amr-registry.caas.intel.com"
 
 #Example of usage: login
 docker.login() {
@@ -29,7 +29,7 @@ docker.login() {
     do
         parameters+=" --${i}"
     done
-    docker login ${parameters} ${docker_registry}
+    docker login ${parameters} ${DOCKER_REGISTRY}
 }
 
 #Example of usage: get_image_name ${name} ${version} ${tag} ${engine} ${repository_type} ${frontend}
@@ -56,7 +56,7 @@ docker.get_image_name() {
     fi
 
     # amr-registry.caas.intel.com/aibt/aibt/ngraph_cpp/ubuntu_16_04/base:ci
-    echo "${docker_registry}/aibt/aibt/${name,,}/${repository_type,,}${version,,}${engine,,}${frontend,,}:${tag}"
+    echo "${DOCKER_REGISTRY}/aibt/aibt/${name,,}/${repository_type,,}${version,,}${engine,,}${frontend,,}:${tag}"
 }
 
 docker.get_git_token() {
@@ -101,7 +101,6 @@ docker.build() {
 docker.push() {
     local image_name="${1}"
 
-    docker.login
     docker push "${image_name}"
 }
 
@@ -109,7 +108,6 @@ docker.push() {
 docker.pull() {
     local image_name="${1}"
 
-    docker.login
     docker pull "${image_name}"
 }
 
@@ -270,6 +268,9 @@ main() {
             fi
         done
     done
+    if [ -z ${DOCKER_REGISTRY} ]; then
+        DOCKER_REGISTRY="${DOCKER_REGISTRY}"
+    fi
     if [ -z ${image_name} ]; then
         local image_name="$(docker.get_image_name ${name} ${version} ${tag:-"ci"} ${engine:-"base"} ${repository_type:-"public"} ${frontend})"
     fi

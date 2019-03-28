@@ -33,12 +33,17 @@ def buildImage(configurationMaps) {
 def pushImage(configurationMaps) {
     Closure pushMethod = { configMap ->
         UTILS.propagateStatus("Build_image", configMap["name"])
-        sh """
-            ${CI_ROOT}/utils/docker.sh push \
-                                --docker_registry=${DOCKER_REGISTRY} \
-                                --name=${configMap["projectName"]} \
-                                --version=${configMap["name"]} || return 1
-        """
+        withCredentials([usernamePassword(credentialsId: 'DOCKER_CREDENTIALS',
+                                          usernameVariable: 'DOCKER_USERNAME',
+                                          passwordVariable: 'DOCKER_PASSWORD')]) {
+            sh """
+                docker login ${DOCKER_REGISTRY} --username ${DOCKER_USERNAME} --password-stdin <<< ${DOCKER_PASSWORD}
+                ${CI_ROOT}/utils/docker.sh push \
+                                    --docker_registry=${DOCKER_REGISTRY} \
+                                    --name=${configMap["projectName"]} \
+                                    --version=${configMap["name"]} || return 1
+            """
+        }
     }
     UTILS.createStage("Push_image", pushMethod, configurationMaps)
 }
