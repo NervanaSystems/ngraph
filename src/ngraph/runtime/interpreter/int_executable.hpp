@@ -140,6 +140,7 @@
 
 #ifdef NGRAPH_DISTRIBUTED_ENABLE
 #include "ngraph/runtime/reference/allreduce.hpp"
+#include "ngraph/runtime/reference/broadcast_distributed.hpp"
 #endif
 
 namespace ngraph
@@ -438,6 +439,32 @@ private:
                                     in_shape,
                                     out_shape,
                                     broadcast_axes);
+            break;
+        }
+        case OP_TYPEID::BroadcastDistributed: {
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
+            Distributed dist;
+            int Rank_ID;
+            Rank_ID = dist.get_rank();
+            if (Rank_ID == 0)
+            {
+                reference::broadcastdistributed<T>(
+                    args[0]->get_data_ptr<T>(),
+                    node.get_input_element_type(0),
+                    static_cast<int>(shape_size(node.get_input_shape(0))));
+                auto memSize = static_cast<int>(shape_size(node.get_input_shape(0))) *
+                               sizeof(node.get_input_element_type(0));
+                memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), memSize);
+            }
+            else
+            {
+                reference::broadcastdistributed<T>(
+                    out[0]->get_data_ptr<T>(),
+                    node.get_input_element_type(0),
+                    static_cast<int>(shape_size(node.get_input_shape(0))));
+            }
+            break;
+#endif
             break;
         }
         case OP_TYPEID::BroadcastLike: break;

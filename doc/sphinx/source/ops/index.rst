@@ -26,6 +26,7 @@ Not currently a comprehensive list.
    * :doc:`batch_norm_training`
    * :doc:`batch_norm_training_backprop`
    * :doc:`broadcast`
+   * :doc:`broadcastdistributed`
    * :doc:`ceiling`
    * :doc:`concat`
    * :doc:`constant`
@@ -97,6 +98,7 @@ Not currently a comprehensive list.
    batch_norm_training.rst
    batch_norm_training_backprop.rst
    broadcast.rst
+   broadcast_distributed.rst
    ceiling.rst
    concat.rst
    constant.rst
