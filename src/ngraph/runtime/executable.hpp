@@ -61,6 +61,10 @@ public:
     void validate(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                   const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
 
+    /// \brief Query the compiled function
+    /// \returns an nshared_ptr<Function> of compiled function
+    const std::shared_ptr<Function> get_compiled_function() const;
+
     /// \brief Query the input Parameters
     /// \returns an ngraph::op::ParameterVector of all input parameters
     const ngraph::ParameterVector& get_parameters() const;
@@ -68,10 +72,6 @@ public:
     /// \brief Query the output Results
     /// \returns an ngraph::ResultVector of all input parameters
     const ngraph::ResultVector& get_results() const;
-
-    /// \brief Query the compiled function
-    /// \returns an nshared_ptr<Function> of compiled function
-    const std::shared_ptr<Function> get_compiled_function() const;
 
 protected:
     /// \brief Called at the end of compile to the values to be returned by get_parameters
