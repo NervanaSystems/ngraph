@@ -98,6 +98,8 @@ set (SRC
     op/atan.hpp
     op/avg_pool.cpp
     op/avg_pool.hpp
+    op/barrier.cpp
+    op/barrier.hpp
     op/batch_norm.cpp
     op/batch_norm.hpp
     op/broadcast.cpp
