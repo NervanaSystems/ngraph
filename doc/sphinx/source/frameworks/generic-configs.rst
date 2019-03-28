@@ -8,18 +8,6 @@ This section details some of the *configuration options* and some of the
 your system already has a version of nGraph installed with one of our supported
 backends. 
 
-.. csv-table::
-   :header: "Backend", "Current nGraph support", "Future nGraph support"
-   :widths: 35, 10, 10
-
-   Intel® Architecture Processors (CPUs), Yes, Yes
-   Intel® Nervana™ Neural Network Processor™ (NNPs), Yes, Yes
-   NVIDIA\* CUDA (GPUs), Yes, Some 
-   :abbr:`Field Programmable Gate Arrays (FPGA)` (FPGAs), Coming soon, Yes
-   `Movidius`_, Not yet, Yes
-   Other, Not yet, Ask
-
-
 Regardless of the framework, after the :doc:`../buildlb` step, a good place 
 to start usually involves making the libraries available to the framework. On 
 Linux\* systems built on Intel® Architecture, that command tends to looks 
