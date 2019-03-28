@@ -59,10 +59,13 @@ namespace ngraph
     class Event
     {
     public:
-        explicit Event(const char* name, const char* category, const char* args = nullptr)
+        explicit Event(const std::string& name,
+                       const std::string& category,
+                       const std::string& args)
             : m_start(std::chrono::high_resolution_clock::now())
             , m_name(name)
             , m_category(category)
+            , m_args(args)
         {
             m_stop = m_start;
             m_pid = getpid();
@@ -83,7 +86,6 @@ namespace ngraph
             return enabled;
         }
 
-        friend std::ostream& operator<<(std::ostream& out_stream, const Event& event);
         std::string to_json() const;
 
         Event(const Event&) = delete;

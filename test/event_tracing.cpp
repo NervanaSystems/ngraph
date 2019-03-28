@@ -26,45 +26,6 @@
 
 using namespace std;
 
-TEST(event_tracing, DISABLED_event_record)
-{
-    // Create a json file
-    std::ofstream trace_file("test_events.json");
-
-    trace_file << "[" << std::endl;
-    std::vector<std::thread> threads;
-    std::mutex mtx;
-    for (auto i = 0; i < 10; i++)
-    {
-        int id = i;
-        std::thread next_thread([&] {
-            std::ostringstream oss;
-            oss << "Event: " << id;
-            ngraph::Event event(oss.str().c_str(), "Dummy");
-            std::this_thread::sleep_for(std::chrono::milliseconds(200));
-            event.Stop();
-            std::lock_guard<std::mutex> lock(mtx);
-            trace_file << event.to_json();
-        });
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
-        if (i > 0 && i < 9)
-        {
-            trace_file << "," << std::endl;
-        }
-        threads.push_back(std::move(next_thread));
-    }
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
-
-    for (auto& next : threads)
-    {
-        next.join();
-    }
-
-    trace_file << "]" << std::endl;
-    trace_file.close();
-}
-
 TEST(event_tracing, event_file)
 {
     // Set the environment variable to ensure logging
@@ -77,7 +38,7 @@ TEST(event_tracing, event_file)
         std::thread next_thread([&] {
             std::ostringstream oss;
             oss << "Event: " << id;
-            ngraph::Event event(oss.str().c_str(), "Dummy");
+            ngraph::Event event(oss.str(), "Dummy", "none");
             std::this_thread::sleep_for(std::chrono::milliseconds(200));
             event.Stop();
             ngraph::Event::write_trace(event);
@@ -96,4 +57,7 @@ TEST(event_tracing, event_file)
     // Now read the file
     auto json_string = ngraph::file_util::read_file_to_string("ngraph_event_trace.json");
     nlohmann::json json_from_file(json_string);
+
+    // Validate the JSON objects - there should be 10 of them
+    // TODO
 }
