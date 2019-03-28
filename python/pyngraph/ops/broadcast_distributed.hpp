@@ -16,27 +16,8 @@
 
 #pragma once
 
-#include "ngraph/op/constant.hpp"
-#include "ngraph/op/op.hpp"
+#include <pybind11/pybind11.h>
 
-namespace ngraph
-{
-    namespace op
-    {
-        /// \brief Operation that returns the shape of its input argument as a tensor.
-        class ShapeOf : public Op
-        {
-        public:
-            /// \brief Constructs a shape-of operation.
-            ShapeOf(const std::shared_ptr<Node>& arg);
+namespace py = pybind11;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-
-            virtual std::vector<std::shared_ptr<op::Constant>> as_constants() const override;
-
-        protected:
-            void validate_and_infer_types() override;
-        };
-    }
-}
+void regclass_pyngraph_op_BroadcastDistributed(py::module m);

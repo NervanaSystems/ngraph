@@ -14,29 +14,21 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include "ngraph/op/erf.hpp"
+#include "ngraph/log.hpp"
+#include "ngraph/util.hpp"
 
-#include "ngraph/op/constant.hpp"
-#include "ngraph/op/op.hpp"
+using namespace std;
+using namespace ngraph;
 
-namespace ngraph
+shared_ptr<Node> op::Erf::copy_with_new_args(const NodeVector& new_args) const
 {
-    namespace op
-    {
-        /// \brief Operation that returns the shape of its input argument as a tensor.
-        class ShapeOf : public Op
-        {
-        public:
-            /// \brief Constructs a shape-of operation.
-            ShapeOf(const std::shared_ptr<Node>& arg);
+    check_new_args_count(this, new_args);
+    return make_shared<Erf>(new_args.at(0));
+}
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-
-            virtual std::vector<std::shared_ptr<op::Constant>> as_constants() const override;
-
-        protected:
-            void validate_and_infer_types() override;
-        };
-    }
+op::Erf::Erf(shared_ptr<Node> arg)
+    : UnaryElementwiseArithmetic("Erf", arg)
+{
+    constructor_validate_and_infer_types();
 }

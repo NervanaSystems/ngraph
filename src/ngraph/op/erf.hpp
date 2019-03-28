@@ -16,27 +16,21 @@
 
 #pragma once
 
-#include "ngraph/op/constant.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        /// \brief Operation that returns the shape of its input argument as a tensor.
-        class ShapeOf : public Op
+        class Erf : public util::UnaryElementwiseArithmetic
         {
         public:
-            /// \brief Constructs a shape-of operation.
-            ShapeOf(const std::shared_ptr<Node>& arg);
+            Erf(std::shared_ptr<Node> arg);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
-
-            virtual std::vector<std::shared_ptr<op::Constant>> as_constants() const override;
-
-        protected:
-            void validate_and_infer_types() override;
         };
     }
 }
