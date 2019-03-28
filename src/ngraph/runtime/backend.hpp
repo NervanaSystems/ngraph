@@ -113,5 +113,5 @@ public:
     // \brief Return a requested node from the backend if possible
     // \param node_name is the name of the backend specific node
     // \returns a shared pointer to the node if found, else nullptr
-    virtual std::shared_ptr<ngraph::Node> get_backend_node(const std::string& node_name, ...);
+    virtual std::shared_ptr<ngraph::Node> get_backend_op(const std::string& node_name, ...);
 };
