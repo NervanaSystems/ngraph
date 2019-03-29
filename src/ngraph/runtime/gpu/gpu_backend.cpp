@@ -146,15 +146,16 @@ runtime::gpu::GPU_Executable::GPU_Executable(shared_ptr<Function> func, bool ena
     FunctionInstance& instance = m_function_instance;
     if (instance.m_compiled_function == nullptr)
     {
+        set_parameters_and_results(*func);
         m_context->bind_cuda_context_to_thread();
-        instance.m_compiled_function = runtime::gpu::GPUCompiledFunction::make(func, m_context);
+        instance.m_compiled_function =
+            runtime::gpu::GPUCompiledFunction::make(m_compiled_function, m_context);
         instance.m_compiled_function->m_emit_timing = enable_timing;
         instance.m_compiled_function->compile();
         instance.m_runtime = instance.m_compiled_function->m_runtime;
         instance.m_inputs.resize(func->get_parameters().size());
         instance.m_outputs.resize(func->get_output_size());
     }
-    set_parameters_and_results(*func);
 }
 
 void runtime::gpu::GPU_Executable::initialize_io(void** target,
