@@ -41,6 +41,7 @@ set(SRC
     cpio.cpp
     cse.cpp
     element_type.cpp
+    event_tracing.cpp
     file_util.cpp
     includes.cpp
     input_output_assign.cpp
