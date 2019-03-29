@@ -378,7 +378,9 @@ private:
                                  out[0]->get_data_ptr<T>(),
                                  node.get_input_shape(0),
                                  node.get_input_shape(1),
-                                 node.get_output_shape(0));
+                                 node.get_output_shape(0),
+                                 batch_dot->get_transpose_arg0(),
+                                 batch_dot->get_transpose_arg1());
             break;
         }
 

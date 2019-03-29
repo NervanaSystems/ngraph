@@ -23,11 +23,13 @@
 using namespace std;
 using namespace ngraph;
 
-
-op::BatchDot::BatchDot(const shared_ptr<Node>& a, const shared_ptr<Node>& b, bool transpose_a, bool transpose_b)
-    : Op("BatchDot", check_single_output_args({a, b}))
-    , m_transpose_a(transpose_a)
-    , m_transpose_b(transpose_b)
+op::BatchDot::BatchDot(const shared_ptr<Node>& arg0,
+                       const shared_ptr<Node>& arg1,
+                       bool transpose_arg0,
+                       bool transpose_arg1)
+    : Op("BatchDot", check_single_output_args({arg0, arg1}))
+    , m_transpose_arg0(transpose_arg0)
+    , m_transpose_arg1(transpose_arg1)
 {
     constructor_validate_and_infer_types();
 }
@@ -39,42 +41,44 @@ shared_ptr<Node> op::BatchDot::copy_with_new_args(const NodeVector& new_args) co
         throw ngraph_error("Incorrect number of new arguments");
     }
 
-    return make_shared<BatchDot>(new_args.at(0), new_args.at(1), m_transpose_a, m_transpose_b);
+    return make_shared<BatchDot>(
+        new_args.at(0), new_args.at(1), m_transpose_arg0, m_transpose_arg1);
 }
 
 void op::BatchDot::validate_and_infer_types()
 {
-  
     // check input types
-    auto a_et = get_input_element_type(0);
-    auto b_et = get_input_element_type(1);
+    auto arg0_et = get_input_element_type(0);
+    auto arg1_et = get_input_element_type(1);
     NODE_VALIDATION_CHECK(this,
-                          a_et.compatible(b_et),
-                          "Inputs a and b must have compatible element type.");
-    // check input shapes 
-    const PartialShape& a_shape = get_input_partial_shape(0);
-    const PartialShape& b_shape = get_input_partial_shape(1);
+                          arg0_et.compatible(arg1_et),
+                          "Inputs arg0 and arg1 must have compatible element type.");
+    // check input shapes
+    const PartialShape& arg0_shape = get_input_partial_shape(0);
+    const PartialShape& arg1_shape = get_input_partial_shape(1);
     NODE_VALIDATION_CHECK(this,
-                          a_shape.rank().compatible(3),
-                          "Input a shape must have rank 3, got ",
-                          a_shape.rank(),
+                          arg0_shape.rank().compatible(3),
+                          "Input arg0 shape must have rank 3, got ",
+                          arg0_shape.rank(),
                           ".");
     NODE_VALIDATION_CHECK(this,
-                          b_shape.rank().compatible(3),
-                          "Input b shape must have rank 3, got ",
-                          b_shape.rank(),
+                          arg1_shape.rank().compatible(3),
+                          "Input arg1 shape must have rank 3, got ",
+                          arg1_shape.rank(),
                           ".");
-    
-    size_t dot_dim_a = (m_transpose_a) ? 1 : 2;
-    size_t dot_dim_b = (m_transpose_b) ? 2 : 1;
+
+    size_t dot_dim_arg0 = (m_transpose_arg0) ? 1 : 2;
+    size_t dot_dim_arg1 = (m_transpose_arg1) ? 2 : 1;
 
     PartialShape output_shape(PartialShape::dynamic(3));
-    if (a_shape.rank().is_static() && b_shape.rank().is_static() &&
-        a_shape.rank().compatible(3) && b_shape.rank().compatible(3)) {
+    if (arg0_shape.rank().is_static() && arg1_shape.rank().is_static() &&
+        arg0_shape.rank().compatible(3) && arg1_shape.rank().compatible(3))
+    {
         NODE_VALIDATION_CHECK(this,
-                              a_shape[dot_dim_a].compatible(b_shape[dot_dim_b]),
+                              arg0_shape[dot_dim_arg0].compatible(arg1_shape[dot_dim_arg1]),
                               "Product dimensions are not equal while creating BatchDot.");
-        output_shape = PartialShape{a_shape[0], a_shape[3-dot_dim_a], b_shape[3-dot_dim_b]};
+        output_shape =
+            PartialShape{arg0_shape[0], arg0_shape[3 - dot_dim_arg0], arg1_shape[3 - dot_dim_arg1]};
     }
 
     set_output_type(0, get_input_element_type(0), output_shape);
@@ -82,13 +86,13 @@ void op::BatchDot::validate_and_infer_types()
 
 void op::BatchDot::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
-    if (get_input_partial_shape(0).is_static() 
-        && get_input_partial_shape(1).is_static()) {
+    if (get_input_partial_shape(0).is_static() && get_input_partial_shape(1).is_static())
+    {
         auto delta = deltas.at(0); // NxIxK
-    
-        auto a = get_inputs().at(0).get_output().get_node(); // NxIxJ (maybe transposed)
-        auto b = get_inputs().at(1).get_output().get_node(); // NxJxK (maybe transposed)
-    
+
+        auto arg0 = get_inputs().at(0).get_output().get_node(); // NxIxJ (maybe transposed)
+        auto arg1 = get_inputs().at(1).get_output().get_node(); // NxJxK (maybe transposed)
+
         auto batch_transpose = [](const shared_ptr<Node>& node) {
             const auto& batch_shape = node->get_shape();
             // index 0 is the batch, only transposing the others.
@@ -96,30 +100,34 @@ void op::BatchDot::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVec
             Shape output_shape{batch_shape[0], batch_shape[2], batch_shape[1]};
             return make_shared<op::Reshape>(node, input_order, output_shape);
         };
-    
-        // if b is already transposed, it does not need to be transposed again
-        auto delta_dot_b = make_shared<op::BatchDot>(delta, b, false, !m_transpose_b); // IK.KJ->IJ
-        // if a is transposed, the result need to be transposed to match original a shape.
-        if (m_transpose_a)
+
+        // if arg1 is already transposed, it does not need to be transposed again
+        auto delta_dot_arg1 =
+            make_shared<op::BatchDot>(delta, arg1, false, !m_transpose_arg1); // IK.KJ->IJ
+        // if arg0 is transposed, the result need to be transposed to match original a shape.
+        if (m_transpose_arg0)
         {
-            adjoints.add_delta(a, batch_transpose(delta_dot_b));
+            adjoints.add_delta(arg0, batch_transpose(delta_dot_arg1));
         }
         else
         {
-            adjoints.add_delta(a, delta_dot_b);
+            adjoints.add_delta(arg0, delta_dot_arg1);
         }
-    
-        auto a_dot_delta = make_shared<BatchDot>(a, delta, !m_transpose_a, false); // JI.IK->JK
-        if (m_transpose_b)
+
+        auto arg0_dot_delta =
+            make_shared<BatchDot>(arg0, delta, !m_transpose_arg0, false); // JI.IK->JK
+        if (m_transpose_arg1)
         {
-            adjoints.add_delta(b, batch_transpose(a_dot_delta));
+            adjoints.add_delta(arg1, batch_transpose(arg0_dot_delta));
         }
         else
         {
-            adjoints.add_delta(b, a_dot_delta);
+            adjoints.add_delta(arg1, arg0_dot_delta);
         }
     }
-    else {
-        throw ngraph_error("generate_adjoints not implemented for BatchDot with dynamic input shapes");
+    else
+    {
+        throw ngraph_error(
+            "generate_adjoints not implemented for BatchDot with dynamic input shapes");
     }
 }

@@ -14,8 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/experimental/batch_dot.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
+#include "ngraph/op/experimental/batch_dot.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
 
@@ -337,8 +337,8 @@ namespace ngraph
                 auto func = emitCblasSgemmBatch(shape_a,
                                                 shape_b,
                                                 shape_c,
-                                                cg->get_transpose_a(),
-                                                cg->get_transpose_b(),
+                                                cg->get_transpose_arg0(),
+                                                cg->get_transpose_arg1(),
                                                 mat_a,
                                                 mat_b,
                                                 mat_c,

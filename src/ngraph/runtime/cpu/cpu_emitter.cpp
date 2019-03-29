@@ -406,9 +406,15 @@ namespace ngraph
                 const Shape& arg2_shape = node->get_shape();                 // bias (C)
                 const Shape& padded_result_shape = pad_with(node->get_shape(), 1, 3);
                 // Step 1: dot(A,B)
-                emitBatchDot<ngraph::op::MatmulBias>(
-                      node, arg0_shape, arg1_shape, padded_result_shape, args, out,
-                      cg->get_is_a_transposed(), cg->get_is_b_transposed(), writer);
+                emitBatchDot<ngraph::op::MatmulBias>(node,
+                                                     arg0_shape,
+                                                     arg1_shape,
+                                                     padded_result_shape,
+                                                     args,
+                                                     out,
+                                                     cg->get_is_a_transposed(),
+                                                     cg->get_is_b_transposed(),
+                                                     writer);
 
                 // Step 2: add bias
                 if (args.size() < 3)
@@ -528,8 +534,8 @@ namespace ngraph
                                                    out[0].get_shape(),
                                                    args,
                                                    out,
-                                                   cg->get_transpose_a(),
-                                                   cg->get_transpose_b(),
+                                                   cg->get_transpose_arg0(),
+                                                   cg->get_transpose_arg1(),
                                                    writer);
             }
 

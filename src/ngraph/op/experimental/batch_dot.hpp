@@ -22,19 +22,25 @@ namespace ngraph
 {
     namespace op
     {
+        /// \brief Dot product for a batch of Rank 2 tensors.
         class BatchDot : public Op
         {
         public:
-            BatchDot(const std::shared_ptr<Node>& a,
-                     const std::shared_ptr<Node>& b,
-                     bool transpose_a = false,
-                     bool transpose_b = false);
-            
-            bool get_transpose_a() const { return m_transpose_a; }
-            bool get_transpose_b() const { return m_transpose_b; }
-            
+            /// \brief Constructs a batch dot product operation.
+            ///
+            /// \param arg0 The node producing the first argument.
+            /// \param arg1 The node producing the second argument.
+            /// \param transpose_0 Apply transpose to arg0.
+            /// \param transpose_1 Apply transpose to arg1.
+            BatchDot(const std::shared_ptr<Node>& arg0,
+                     const std::shared_ptr<Node>& arg1,
+                     bool transpose_0 = false,
+                     bool transpose_1 = false);
+
+            bool get_transpose_arg0() const { return m_transpose_arg0; }
+            bool get_transpose_arg1() const { return m_transpose_arg1; }
             virtual void validate_and_infer_types() override;
-            
+
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
@@ -42,8 +48,8 @@ namespace ngraph
                                            const NodeVector& deltas) override;
 
         private:
-            bool m_transpose_a;
-            bool m_transpose_b;
+            bool m_transpose_arg0;
+            bool m_transpose_arg1;
         };
     }
 }
