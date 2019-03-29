@@ -313,7 +313,7 @@ namespace ngraph
                     auto arg0_shape = args[0].get_shape();
                     auto arg1_shape = args[1].get_shape();
                     auto daxes = quantize->get_axes();
-                    op::Quantize::RoundMode round_mode = quantize->get_round_mode();
+                    ngraph::op::Quantize::RoundMode round_mode = quantize->get_round_mode();
 
                     if (args[0].get_element_type() == element::f32)
                     {
