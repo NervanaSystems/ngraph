@@ -95,11 +95,11 @@ optimal:
    :width: 555px
    :alt: 
 
-The following computation is constructed to execute ``(A+B)*C``, but in the 
-context of nGraph, we can further optimize the graph to be represented as ``A*C``. 
-From the first graph shown on the left, the operation on the constant ``B`` can 
-be computed at the compile time (known as constant folding), and the graph can 
-be further simplified to the one on the right because the constant has value of 
+The computation is constructed to execute ``(A+B)*C``, but in the context of 
+nGraph, we can further optimize the graph to be represented as ``A*C``. From the 
+first graph shown on the left, the operation on the constant ``B`` can be 
+computed at the compile time (known as constant folding), and the graph can be 
+further simplified to the one on the right because the constant has value of 
 zero. Without such graph-level optimizations, a deep learning framework with a 
 kernel library will compute all operations, and the resulting execution will be 
 suboptimal. 
@@ -118,14 +118,6 @@ expand your network's hardware. Each integration is unique to the framework
 and its set of deep learning operators, its view on memory layout, its 
 feature set, etc.
 
-.. _figure-B:
-
-.. figure:: ../graphics/intro_kernel_to_fw_accent.png
-   :width: 555px
-   :alt: 
-
-   Each of these connections represents significant work for what will 
-   ultimately be a brittle setup that is enormously expensive to maintain.
 
 nGraph solves this problem with nGraph bridges. A bridge takes a computational 
 graph and reconstructs it in the nGraph IR with a few primitive nGraph 
@@ -146,20 +138,24 @@ of each parameter for each operation. In the past, the number of required
 kernels was limited, but as the AI research and industry rapidly develops, the 
 final product of required kernels is increasing exponentially. 
 
-.. _figure-C:
+.. _figure-B:
 
 .. figure:: ../graphics/intro_kernel_explosion.png
    :width: 555px
    :alt: 
+
+   Each of these connections represents significant work for what will 
+   ultimately be a brittle setup that is enormously expensive to maintain.
+
 
 
 PlaidML addresses the kernel explosion problem in a manner that lifts a heavy 
 burden off kernel developers. It automatically lowers networks from nGraph 
 into Tile, a :abbr:Domain-Specific Language (DSL) designed for deep learning 
 that allows developers to express how an operation should calculate tensors in
-an intuitive, mathematical form. Integration of PlaidML with nGraph means 
-extra flexibility to support newer deep learning models in the absence of 
-by-hand optimized kernels for the new operations.
+an intuitive, mathematical form via `Stripe`_. Integration of PlaidML with 
+nGraph means extra flexibility to support newer deep learning models in the 
+absence of by-hand optimized kernels for the new operations.
 
 
 Solution: nGraph and PlaidML
@@ -168,17 +164,17 @@ Solution: nGraph and PlaidML
 Each of the problems above can be solved with nGraph and PlaidML. We developed 
 nGraph and integrated it with PlaidML so developers wanting to craft solutions 
 with :abbr:`AI (Artificial Intelligence)` won't have to face such a steep 
-learning curve in taking their concepts from design to production to scale. The 
-fundamental efficiencies behind Moore's Law are not dead; rather than fitting 
-`more transistors on denser and denser circuits`_, we're enabling advances 
-in compute with more transformers on denser and more data-heavy 
-:abbr:`Deep Learning Networks (DNNs)`, and making it easier to apply  
+learning curve in taking their concepts from design to production, and to scale. 
+The fundamental efficiencies behind Moore's Law are not dead; rather than fitting 
+`more transistors on denser and denser circuits`_, with nGraph and PlaidML, 
+we're enabling advances in compute with more transformers on denser and more 
+data-heavy :abbr:`Deep Learning Networks (DNNs)`, and making it easier to apply  
 :abbr:`Machine Learning (ML)` to different industries and problems. 
 
 For developers with a neural network already in place, executing workloads using 
 the nGraph Compiler provides further performance benefits and allows for quicker 
-adaptation of models. It also make it much easier to upgrade hardware 
-infrastructure pieces as workloads grow and require more careful balancing.
+adaptation of models. It also makes it much easier to upgrade hardware 
+infrastructure pieces as workloads grow. 
 
 This documentation provides technical details of nGraph's core functionality, 
 framework and backend integrations. Creating a compiler stack like nGraph and 
@@ -193,3 +189,4 @@ will make life easier for many kinds of developers:
 
 
 .. _more transistors on denser and denser circuits: https://www.intel.com/content/www/us/en/silicon-innovations/moores-law-technology.html
+.. _Stripe: https://arxiv.org/abs/1903.06498
