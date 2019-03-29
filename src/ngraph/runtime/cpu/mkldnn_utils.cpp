@@ -33,6 +33,7 @@
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
+#include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/type/element_type.hpp"
 
 #include "mkldnn_utils.hpp"
@@ -754,4 +755,15 @@ bool runtime::cpu::mkldnn_utils::can_use_mkldnn_batchnorm_bprop(const ngraph::No
     {
         return false;
     }
+}
+
+std::shared_ptr<ngraph::runtime::cpu::op::ConvertLayout>
+    runtime::cpu::mkldnn_utils::make_shared_mkldnn_convert_layout(
+        const std::shared_ptr<Node>& arg,
+        size_t output_index,
+        const std::shared_ptr<ngraph::runtime::cpu::LayoutDescriptor>& layout)
+{
+    auto convert = make_shared<ngraph::runtime::cpu::op::ConvertLayout>(arg, output_index, layout);
+    assign_mkldnn_kernel(convert.get());
+    return convert;
 }

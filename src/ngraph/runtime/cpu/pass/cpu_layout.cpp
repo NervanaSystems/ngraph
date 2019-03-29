@@ -122,8 +122,9 @@ static shared_ptr<Node>
         {
             auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
             layout->set_mkldnn_md(required_mds[index]);
-            auto new_node = std::shared_ptr<Node>(
-                new runtime::cpu::op::ConvertLayout(output.get_node(), output.get_index(), layout));
+            auto new_node = runtime::cpu::mkldnn_utils::make_shared_mkldnn_convert_layout(
+                output.get_node(), output.get_index(), layout);
+
             new_args.push_back(new_node);
             replace_node = true;
             NGRAPH_DEBUG << "Inserted conversion node " << new_node->get_name() << " between "
@@ -203,8 +204,8 @@ static void set_native_layouts(runtime::cpu::CPU_ExternalFunction* external_func
             {
                 auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
                 layout->set_mkldnn_md(native_md);
-                auto new_node = std::shared_ptr<Node>(new runtime::cpu::op::ConvertLayout(
-                    output.get_node(), output.get_index(), layout));
+                auto new_node = runtime::cpu::mkldnn_utils::make_shared_mkldnn_convert_layout(
+                    output.get_node(), output.get_index(), layout);
                 new_args.push_back(new_node);
                 if (use_replace)
                 {
