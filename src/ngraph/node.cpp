@@ -20,6 +20,7 @@
 #include <typeinfo>
 
 #include "ngraph/autodiff/adjoints.hpp"
+#include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
@@ -82,6 +83,16 @@ void Node::set_output_size(size_t n)
 
 void Node::validate_and_infer_types()
 {
+}
+
+void Node::set_input_is_relevant_to_shape(size_t i, bool relevant)
+{
+    m_inputs.at(i).m_is_relevant_to_shape = relevant;
+}
+
+void Node::set_input_is_relevant_to_value(size_t i, bool relevant)
+{
+    m_inputs.at(i).m_is_relevant_to_value = relevant;
 }
 
 void Node::set_output_type(size_t i, const element::Type& element_type, const PartialShape& pshape)
