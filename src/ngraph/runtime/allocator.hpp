@@ -36,7 +36,7 @@ class ngraph::runtime::Allocator
 public:
     virtual ~Allocator() = default;
     /// \brief allocates the memory on the device with the given size and alignment requirement
-    /// \param exact size of bytes to allocate
+    /// \param size exact size of bytes to allocate
     /// \param alignment specifies the alignment. Must be a valid alignment supported by the implementation.
     virtual void* Malloc(size_t size, size_t alignment);
 
