@@ -33,6 +33,7 @@ set(SRC
     build_graph.cpp
     builder_autobroadcast.cpp
     constant_folding.cpp
+    concat_fusion.cpp
     control_dependencies.cpp
     coordinate.cpp
     copy.cpp
@@ -52,6 +53,7 @@ set(SRC
     pass_liveness.cpp
     pass_manager.cpp
     pass_memory_layout.cpp
+    pass_shape_specialization.cpp
     pattern.cpp
     reshape_elimination.cpp
     reshape_sinking.cpp

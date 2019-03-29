@@ -306,8 +306,7 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
         const shared_ptr<op::Pad> pad = static_pointer_cast<op::Pad>(node);
 
         writer << print_table_row_dims("pad_above", pad->get_padding_above())
-               << print_table_row_dims("pad_below", pad->get_padding_below())
-               << print_table_row_dims("pad_interior", pad->get_padding_interior());
+               << print_table_row_dims("pad_below", pad->get_padding_below());
         break;
     }
     case OP_TYPEID::Slice:

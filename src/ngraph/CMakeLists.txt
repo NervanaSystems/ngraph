@@ -101,7 +101,7 @@ set (SRC
     op/batch_norm.cpp
     op/batch_norm.hpp
     op/broadcast.cpp
-    op/broadcast.hpp
+    op/broadcast_distributed.cpp
     op/ceiling.cpp
     op/ceiling.hpp
     op/concat.cpp
@@ -126,8 +126,18 @@ set (SRC
     op/embedding_lookup.hpp
     op/equal.cpp
     op/equal.hpp
+    op/erf.cpp
+    op/erf.hpp
     op/exp.cpp
     op/exp.hpp
+    op/experimental/dyn_broadcast.cpp
+    op/experimental/dyn_broadcast.hpp
+    op/experimental/dyn_pad.cpp
+    op/experimental/dyn_pad.hpp
+    op/experimental/dyn_reshape.cpp
+    op/experimental/dyn_reshape.hpp
+    op/experimental/dyn_slice.cpp
+    op/experimental/dyn_slice.hpp
     op/experimental/generate_mask.cpp
     op/experimental/generate_mask.hpp
     op/experimental/quantized_avg_pool.cpp
@@ -304,6 +314,8 @@ set (SRC
     pass/reshape_sinking.hpp
     pass/serialize.cpp
     pass/serialize.hpp
+    pass/shape_specialization.cpp
+    pass/shape_specialization.hpp
     pass/validate_graph.cpp
     pass/validate_graph.hpp
     pass/visualize_tree.cpp
@@ -312,6 +324,8 @@ set (SRC
     pass/zero_dim_tensor_elimination.cpp
     pass/zero_dim_tensor_elimination.hpp
     pass/zero_dim_tensor_elimination.hpp
+    pass/concat_fusion.hpp
+    pass/concat_fusion.cpp
     pattern/matcher.cpp
     pattern/matcher.hpp
     pattern/op/any.hpp
