@@ -57,6 +57,8 @@ set (SRC
     dimension.cpp
     dimension.hpp
     except.hpp
+    event_tracing.hpp
+    event_tracing.cpp
     file_util.cpp
     file_util.hpp
     function.cpp
@@ -101,7 +103,7 @@ set (SRC
     op/batch_norm.cpp
     op/batch_norm.hpp
     op/broadcast.cpp
-    op/broadcast.hpp
+    op/broadcast_distributed.cpp
     op/ceiling.cpp
     op/ceiling.hpp
     op/concat.cpp

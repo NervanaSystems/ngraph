@@ -44,6 +44,7 @@
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/broadcast_distributed.hpp"
 #include "ngraph/op/ceiling.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
@@ -546,6 +547,11 @@ std::string runtime::gpu::GPU_Emitter::emit_Cos(EMIT_ARGS)
 std::string runtime::gpu::GPU_Emitter::emit_Cosh(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Cosh>(compiled_function, function_name, node, args, out);
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_BroadcastDistributed(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_Divide(EMIT_ARGS)
