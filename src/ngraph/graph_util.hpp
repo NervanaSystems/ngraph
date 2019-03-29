@@ -53,6 +53,11 @@ namespace ngraph
                         std::function<void(std::shared_ptr<Node>)> f,
                         bool include_control_deps);
 
+    void traverse_nodes(const NodeVector& subgraph_results,
+                        const NodeVector& subgraph_params,
+                        std::function<void(std::shared_ptr<Node>)> f,
+                        bool include_control_deps);
+
     void traverse_functions(std::shared_ptr<Function> p,
                             std::function<void(std::shared_ptr<Function>)> f);
 
@@ -124,6 +129,7 @@ namespace ngraph
         return result_list;
     }
 
+    // For cases, where `nodes` is a subset of the entire graph
     template <typename T>
     std::list<std::shared_ptr<Node>> subgraph_topological_sort(const T& nodes,
                                                                bool include_control_deps = false)
@@ -204,7 +210,7 @@ namespace ngraph
     template <typename T>
     void validate_nodes_and_infer_types(const T& nodes)
     {
-        for (auto node : topological_sort(nodes))
+        for (auto node : subgraph_topological_sort(nodes))
         {
             node->delayed_validate_and_infer_types();
         }
@@ -294,6 +300,10 @@ namespace ngraph
     NodeVector get_subgraph_outputs(const NodeVector& nodes,
                                     const NodeVector& exclusions,
                                     bool ignore_unused = false);
+
+    // Extract sub-graph computing the `results`. Stops backward traversal at either a Parameter node
+    // or a node that belongs to args
+    NodeVector extract_subgraph(const NodeVector& results, const NodeVector& args);
 
     bool is_one(std::shared_ptr<Node> reduce_constant);
 

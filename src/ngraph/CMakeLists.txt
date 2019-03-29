@@ -252,6 +252,8 @@ set (SRC
     op/tanh.hpp
     op/topk.cpp
     op/topk.hpp
+    op/fused/prelu.cpp
+    op/fused/prelu.hpp
     op/util/arithmetic_reduction.cpp
     op/util/arithmetic_reduction.hpp
     op/util/binary_elementwise_arithmetic.cpp
@@ -260,6 +262,10 @@ set (SRC
     op/util/binary_elementwise_comparison.hpp
     op/util/binary_elementwise_logical.cpp
     op/util/binary_elementwise_logical.hpp
+    op/util/broadcasting.cpp
+    op/util/broadcasting.hpp
+    op/util/fused_op.cpp
+    op/util/fused_op.hpp
     op/util/index_reduction.cpp
     op/util/index_reduction.hpp
     op/util/logical_reduction.cpp

@@ -110,6 +110,50 @@ void ngraph::traverse_nodes(const NodeVector& io_nodes,
     }
 }
 
+void ngraph::traverse_nodes(const NodeVector& subgraph_results,
+                            const NodeVector& subgraph_params,
+                            std::function<void(std::shared_ptr<Node>)> f,
+                            bool include_control_deps)
+{
+    std::unordered_set<std::shared_ptr<Node>> instances_seen{subgraph_params.begin(),
+                                                             subgraph_params.end()};
+    std::deque<std::shared_ptr<Node>> stack;
+
+    for (auto r : subgraph_results)
+    {
+        stack.push_front(r);
+    }
+
+    while (stack.size() > 0)
+    {
+        std::shared_ptr<Node> n = stack.front();
+        if (instances_seen.count(n) == 0)
+        {
+            instances_seen.insert(n);
+            f(n);
+        }
+        stack.pop_front();
+        for (auto arg : n->get_arguments())
+        {
+            if (instances_seen.count(arg) == 0)
+            {
+                stack.push_front(arg);
+            }
+        }
+
+        if (include_control_deps)
+        {
+            for (auto cdep : n->get_control_dependencies())
+            {
+                if (instances_seen.count(cdep) == 0)
+                {
+                    stack.push_front(cdep);
+                }
+            }
+        }
+    }
+}
+
 void ngraph::traverse_functions(std::shared_ptr<ngraph::Function> p,
                                 std::function<void(shared_ptr<Function>)> f)
 {
@@ -468,6 +512,13 @@ NodeVector ngraph::get_subgraph_outputs(const NodeVector& nodes,
         }
     }
     return outputs;
+}
+
+NodeVector ngraph::extract_subgraph(const NodeVector& results, const NodeVector& args)
+{
+    NodeVector subgraph;
+    traverse_nodes(results, args, [&](std::shared_ptr<Node> n) { subgraph.push_back(n); }, true);
+    return subgraph;
 }
 
 bool ngraph::is_used(Node* node)
