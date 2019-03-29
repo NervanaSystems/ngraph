@@ -29,11 +29,18 @@ namespace ngraph
         class Allocator;
     }
 }
-// Abstract class for the allocator, for allocating and deallocating device memory
+
+/// \brief Abstract class for the allocator, for allocating and deallocating device memory
 class ngraph::runtime::Allocator
 {
 public:
     virtual ~Allocator() = default;
-    virtual void* Malloc(void* handle, size_t size, size_t alignment);
-    virtual void Free(void* handle, void* ptr);
+    /// \brief allocates the memory on the device with the given size and alignment requirement
+    /// \param exact size of bytes to allocate
+    /// \param alignment specifies the alignment. Must be a valid alignment supported by the implementation.
+    virtual void* Malloc(size_t size, size_t alignment);
+
+    /// \brief deallocates the memory pointed by ptr
+    /// \param ptr pointer to the aligned memory to be released
+    virtual void Free(void* ptr);
 };

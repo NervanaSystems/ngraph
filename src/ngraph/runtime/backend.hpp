@@ -117,9 +117,18 @@ public:
     virtual void remove_compiled_function(std::shared_ptr<Executable> exec);
 
     virtual std::shared_ptr<ngraph::runtime::Allocator> get_framework_memory_allocator();
+
+    /// \brief method for the framework to pass its memory allocator object to the backend.
     virtual void set_framework_memory_allocator(
         const std::shared_ptr<ngraph::runtime::Allocator>& allocator);
+
+    /// \brief method to return memory de-allocator which de-allocates device pinned memory
     virtual ngraph::runtime::AllocateFunc get_device_memory_alloc();
+
+    /// \brief method to return memory allocator which allocates device pinned memory
     virtual ngraph::runtime::DestroyFunc get_device_memory_dealloc();
-    virtual bool is_device_memory();
+
+    /// \brief method for each supported backend to determine if the passed pointer is in device pinned memory or not
+    /// \param ptr pointer to the memory to determine if its in device memory or not
+    virtual bool is_device_memory(void* ptr);
 };

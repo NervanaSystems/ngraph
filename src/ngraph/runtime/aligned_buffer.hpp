@@ -36,7 +36,8 @@ class ngraph::runtime::AlignedBuffer
 public:
     AlignedBuffer(size_t byte_size,
                   size_t alignment,
-                  std::shared_ptr<ngraph::runtime::Allocator> allocator = nullptr);
+                  std::shared_ptr<ngraph::runtime::Allocator> allocator =
+                      std::make_shared<runtime::Allocator>());
     AlignedBuffer();
     ~AlignedBuffer();
 
