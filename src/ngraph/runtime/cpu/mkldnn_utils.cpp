@@ -705,7 +705,7 @@ bool runtime::cpu::mkldnn_utils::use_mkldnn_kernel(const ngraph::Node* node)
 
 void runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(Node* node)
 {
-    auto ngraph_op = static_cast<op::Op*>(node);
+    auto ngraph_op = static_cast<ngraph::op::Op*>(node);
     auto op_annotations = std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
     op_annotations->set_mkldnn_op(true);
     ngraph_op->set_op_annotations(op_annotations);
