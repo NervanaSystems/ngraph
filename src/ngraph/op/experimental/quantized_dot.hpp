@@ -31,20 +31,27 @@ namespace ngraph
                          const std::shared_ptr<Node>& weights,
                          const std::shared_ptr<Node>& scale,
                          bool requantize = true,
-                         bool with_relu = false);
+                         bool with_relu = false,
+                         bool is_output_i32 = false);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override
             {
                 check_new_args_count(this, new_args);
-                return std::make_shared<QuantizedDot>(
-                    new_args.at(0), new_args.at(1), new_args.at(2), m_requantize, m_with_relu);
+                return std::make_shared<QuantizedDot>(new_args.at(0),
+                                                      new_args.at(1),
+                                                      new_args.at(2),
+                                                      m_requantize,
+                                                      m_with_relu,
+                                                      m_is_output_i32);
             }
             bool with_relu() const { return m_with_relu; }
             bool requantize() const { return m_requantize; }
+            bool is_output_i32() const { return m_is_output_i32; }
         protected:
             bool m_requantize;
             bool m_with_relu;
+            bool m_is_output_i32;
         };
     } // namespace op
 } // namespace ngraph

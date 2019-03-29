@@ -22,6 +22,8 @@
 
 #include "gtest/gtest.h"
 #include "ngraph/builder/quantization.hpp"
+#include "ngraph/builder/quantization/quantized_linear_convolution.hpp"
+#include "ngraph/builder/quantization/quantized_linear_dot.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/pass/constant_folding.hpp"
@@ -1180,6 +1182,31 @@ TEST(builder, scaled_quantize_concat_unsigned_varying)
     handle->call_with_validate({result}, {a, b, c, an, bn, cn, ax, bx, cx});
     EXPECT_EQ((vector<uint8_t>{5, 1, 0, 0, 2, 4, 1, 3, 5, 1, 5, 100, 6, 8, 10, 7, 9, 50}),
               read_vector<uint8_t>(result));
+}
+
+TEST(builder, scaled_QDotInteger)
+{
+    Shape shape_a{3, 3}; // input shape
+    vector<uint8_t> a_data = {1, 2, 2, 3, 4, 5, 1, 0, 1};
+    Shape shape_b{3, 3}; // filter shape
+    vector<int8_t> b_data = {1, 2, 0, 0, -7, 3, 0, -5, 0};
+    auto A = make_shared<op::Parameter>(element::u8, shape_a);
+    auto B = make_shared<op::Parameter>(element::i8, shape_b);
+
+    Shape shape_r{3, 3}; // output shape
+    auto QD = ngraph::builder::quantization::QuantizedDotInteger(A, B);
+    auto f = make_shared<Function>(NodeVector{QD}, ParameterVector{A, B});
+    constant_fold(f);
+    auto backend = runtime::Backend::create("CPU");
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::u8, shape_a);
+    copy_data(a, a_data);
+    auto b = backend->create_tensor(element::i8, shape_b);
+    copy_data(b, b_data);
+    auto result = backend->create_tensor(element::i32, shape_r);
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b});
+    EXPECT_EQ((vector<int32_t>{1, -22, 6, 3, -47, 12, 1, -3, 0}), read_vector<int32_t>(result));
 }
 
 // QuantizedDot
