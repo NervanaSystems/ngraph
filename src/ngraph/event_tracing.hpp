@@ -65,8 +65,8 @@ namespace ngraph
                        const std::string& args)
             : m_pid(getpid())
             , m_start(std::chrono::high_resolution_clock::now())
-            , m_name(name)
             , m_stopped(false)
+            , m_name(name)
             , m_category(category)
             , m_args(args)
         {
