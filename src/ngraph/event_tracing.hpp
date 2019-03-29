@@ -87,7 +87,7 @@ namespace ngraph
         static bool is_tracing_enabled()
         {
             static bool s_check_env = true;
-            if ( s_check_env )
+            if (s_check_env)
             {
                 s_check_env = false;
                 if (std::getenv("NGRAPH_ENABLE_TRACING") != nullptr)
