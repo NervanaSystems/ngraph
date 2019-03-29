@@ -589,12 +589,6 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Broadcast>(args[0], shape, axes);
                 break;
             }
-            case OP_TYPEID::BroadcastLike:
-            {
-                auto initial_axes = node_js.at("initial_axes").get<set<size_t>>();
-                node = make_shared<op::BroadcastLike>(args[0], args[1], initial_axes);
-                break;
-            }
             case OP_TYPEID::Ceiling:
             {
                 node = make_shared<op::Ceiling>(args[0]);
@@ -1446,12 +1440,6 @@ static json write(const Node& n, bool binary_constant_data)
         auto tmp = dynamic_cast<const op::Broadcast*>(&n);
         node["axes"] = tmp->get_broadcast_axes();
         node["shape"] = tmp->get_broadcast_shape();
-        break;
-    }
-    case OP_TYPEID::BroadcastLike:
-    {
-        auto tmp = dynamic_cast<const op::BroadcastLike*>(&n);
-        node["initial_axes"] = tmp->get_initial_broadcast_axes();
         break;
     }
     case OP_TYPEID::Ceiling: { break;

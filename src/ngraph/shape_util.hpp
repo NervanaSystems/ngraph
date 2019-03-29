@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "ngraph/op/constant.hpp"
 #include "ngraph/partial_shape.hpp"
 
 namespace ngraph
@@ -111,4 +112,9 @@ namespace ngraph
                             std::vector<std::pair<size_t, AXIS_VALUE>>{
                                 std::pair<size_t, AXIS_VALUE>(new_axis_pos, new_axis_val)});
     }
+
+    std::shared_ptr<op::Constant> shape_to_i64_constant(const Shape& shape);
+    Shape shape_from_i64_constant(const std::shared_ptr<Node>& node);
+    std::shared_ptr<op::Constant> axis_set_to_i64_constant(const AxisSet& axis_set);
+    AxisSet axis_set_from_i64_constant(const std::shared_ptr<Node>& node);
 }

@@ -103,3 +103,35 @@ PartialShape
         return PartialShape{result_dims};
     }
 }
+
+std::shared_ptr<op::Constant> ngraph::shape_to_i64_constant(const Shape& shape)
+{
+    return op::Constant::create(element::i64, Shape{shape.size()}, shape);
+}
+
+Shape ngraph::shape_from_i64_constant(const std::shared_ptr<Node>& node)
+{
+    auto node_const = std::dynamic_pointer_cast<op::Constant>(node);
+    NGRAPH_ASSERT(node_const);
+    NGRAPH_ASSERT(node_const->get_output_element_type(0) == element::i64);
+    NGRAPH_ASSERT(node_const->get_output_shape(0).size() == 1);
+
+    const auto& vec = node_const->get_vector<int64_t>();
+    return Shape(vec.begin(), vec.end());
+}
+
+std::shared_ptr<op::Constant> ngraph::axis_set_to_i64_constant(const AxisSet& axis_set)
+{
+    return op::Constant::create(element::i64, Shape{axis_set.size()}, Shape(axis_set.begin(), axis_set.end()));
+}
+
+AxisSet ngraph::axis_set_from_i64_constant(const std::shared_ptr<Node>& node)
+{
+    auto node_const = std::dynamic_pointer_cast<op::Constant>(node);
+    NGRAPH_ASSERT(node_const);
+    NGRAPH_ASSERT(node_const->get_output_element_type(0) == element::i64);
+    NGRAPH_ASSERT(node_const->get_output_shape(0).size() == 1);
+
+    const auto& vec = node_const->get_vector<int64_t>();
+    return AxisSet(std::vector<size_t>(vec.begin(), vec.end()));
+}

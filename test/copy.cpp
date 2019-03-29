@@ -94,7 +94,7 @@ TEST(copy, broadcast)
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(new_args == new_node->get_arguments());
+    ASSERT_TRUE(new_args.at(0) == new_node->get_arguments().at(0));
     ASSERT_TRUE(shape == node_cast->get_broadcast_shape());
     ASSERT_TRUE(axes == node_cast->get_broadcast_axes());
 }

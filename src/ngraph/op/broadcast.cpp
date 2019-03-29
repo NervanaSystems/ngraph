@@ -16,17 +16,15 @@
 
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/shape_util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::Broadcast::Broadcast(const std::string& name,
-                         const NodeVector& args,
-                         const Shape& shape,
-                         const AxisSet& broadcast_axes)
-    : Op(name, check_single_output_args(args))
-    , m_shape(shape)
-    , m_broadcast_axes(broadcast_axes)
+op::Broadcast::Broadcast(const shared_ptr<Node>& arg,
+                         const shared_ptr<Node>& broadcast_shape,
+                         const shared_ptr<Node>& broadcast_axes)
+    : Op("Broadcast", check_single_output_args({arg,broadcast_shape,broadcast_axes}))
 {
     constructor_validate_and_infer_types();
 }
@@ -34,57 +32,94 @@ op::Broadcast::Broadcast(const std::string& name,
 op::Broadcast::Broadcast(const shared_ptr<Node>& arg,
                          const Shape& shape,
                          const AxisSet& broadcast_axes)
-    : Broadcast("Broadcast", {arg}, shape, broadcast_axes)
+    : Broadcast(arg, shape_to_i64_constant(shape), axis_set_to_i64_constant(broadcast_axes))
 {
 }
 
 void op::Broadcast::validate_and_infer_types()
 {
-    infer_shape();
+    auto broadcast_shape_et = get_input_element_type(1);
+    NODE_VALIDATION_CHECK(this,
+                          broadcast_shape_et.compatible(element::Type_t::i64),
+                          "Broadcast shape (input 1) must have element type i64");
 
-    for (auto axis : m_broadcast_axes)
+    auto broadcast_shape_rank = get_input_partial_shape(1).rank();
+    NODE_VALIDATION_CHECK(this,
+                          broadcast_shape_rank.compatible(1),
+                          "Broadcast shape (input 1) must be a vector.");
+
+    auto broadcast_axes_et = get_input_element_type(2);
+    NODE_VALIDATION_CHECK(this,
+                          broadcast_axes_et.compatible(element::Type_t::i64),
+                          "Broadcast axes (input 2) must have element type i64.");
+
+    auto broadcast_axes_rank = get_input_partial_shape(2).rank();
+    NODE_VALIDATION_CHECK(this,
+                          broadcast_axes_rank.compatible(1),
+                          "Broadcast axes (input 2) must be a vector.");
+
+    if (broadcast_shape_is_constant() && broadcast_axes_are_constant())
     {
-        NODE_VALIDATION_CHECK(this,
-                              axis < m_shape.size(),
-                              "Broadcast axis index (",
-                              axis,
-                              ") exceeds specified output shape rank ",
-                              "(broadcast axes: ",
-                              m_broadcast_axes,
-                              ", output shape: ",
-                              m_shape,
-                              ").");
+        Shape broadcast_shape = get_broadcast_shape();
+        AxisSet broadcast_axes = get_broadcast_axes();
+
+        for (auto axis : broadcast_axes)
+        {
+            NODE_VALIDATION_CHECK(this,
+                                axis < broadcast_shape.size(),
+                                "Broadcast axis index (",
+                                axis,
+                                ") exceeds specified output shape rank ",
+                                "(broadcast axes: ",
+                                broadcast_axes,
+                                ", output shape: ",
+                                broadcast_shape,
+                                ").");
+        }
+
+        Shape required_input_shape = broadcast_shape;
+        for (auto i = broadcast_axes.rbegin(); i != broadcast_axes.rend(); ++i)
+        {
+            required_input_shape.erase(required_input_shape.begin() + *i);
+        }
+
+        // TODO(amprocte): We can probably have a more helpful error message here.
+        // There are two things that can go wrong, which are being picked up in
+        // one fell swoop by this check: either the number of broadcast axes is not
+        // enough, or there is a mismatch with one of the pre-broadcast axis lengths.
+        //
+        // TODO(amprocte): There is a temporary(?) hack here that allows the case
+        // where input shape is Shape{} and the axis set is empty. I'm putting this
+        // here to make it possible to get rid of BroadcastLike, but don't know if
+        // we want to keep it. (There will be a way to do BroadcastLike without this
+        // once the Range op is in.)
+        NODE_VALIDATION_CHECK(
+            this,
+            (get_input_partial_shape(0).rank().compatible(0) && broadcast_axes.empty()) || get_input_partial_shape(0).compatible(required_input_shape),
+            "Broadcast argument shape, specified output shape, and axes are incompatible ",
+            "(argument shape: ",
+            get_input_partial_shape(0),
+            ", output shape: ",
+            broadcast_shape,
+            ", broadcast axes: ",
+            broadcast_axes,
+            ").");
+
+        set_output_type(0, get_input_element_type(0), broadcast_shape);
+    }
+    else
+    {
+        set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
     }
 
-    Shape required_input_shape = m_shape;
-    for (auto i = m_broadcast_axes.rbegin(); i != m_broadcast_axes.rend(); ++i)
-    {
-        required_input_shape.erase(required_input_shape.begin() + *i);
-    }
-
-    // TODO(amprocte): We can probably have a more helpful error message here.
-    // There are two things that can go wrong, which are being picked up in
-    // one fell swoop by this check: either the number of broadcast axes is not
-    // enough, or there is a mismatch with one of the pre-broadcast axis lengths.
-    NODE_VALIDATION_CHECK(
-        this,
-        get_input_partial_shape(0).compatible(required_input_shape),
-        "Broadcast argument shape, specified output shape, and axes are incompatible ",
-        "(argument shape: ",
-        get_input_partial_shape(0),
-        ", output shape: ",
-        m_shape,
-        ", broadcast axes: ",
-        m_broadcast_axes,
-        ").");
-
-    set_output_type(0, get_input_element_type(0), m_shape);
+    set_input_is_relevant_to_shape(1, true);
+    set_input_is_relevant_to_shape(2, true);
 }
 
 shared_ptr<Node> op::Broadcast::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Broadcast>(new_args.at(0), m_shape, m_broadcast_axes);
+    return make_shared<Broadcast>(new_args.at(0), new_args.at(1), new_args.at(2));
 }
 
 void op::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
@@ -93,47 +128,27 @@ void op::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVe
 
     auto x = get_argument(0);
 
-    adjoints.add_delta(x, make_shared<op::Sum>(delta, m_broadcast_axes));
+    adjoints.add_delta(x, make_shared<op::Sum>(delta, get_broadcast_axes()));
 }
 
-op::BroadcastLike::BroadcastLike(const std::shared_ptr<Node>& arg,
-                                 const std::shared_ptr<Node>& like_arg,
-                                 const AxisSet& initial_broadcast_axes)
-    : Broadcast("BroadcastLike", {arg, like_arg}, {}, {})
-    , m_initial_broadcast_axes(initial_broadcast_axes)
+Shape op::Broadcast::get_broadcast_shape() const
 {
-    constructor_validate_and_infer_types();
+    NGRAPH_ASSERT(broadcast_shape_is_constant());
+    return shape_from_i64_constant(get_argument(1));
 }
 
-shared_ptr<Node> op::BroadcastLike::copy_with_new_args(const NodeVector& new_args) const
+bool op::Broadcast::broadcast_shape_is_constant() const
 {
-    if (new_args.size() != 2)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
-    return make_shared<BroadcastLike>(new_args.at(0), new_args.at(1), m_initial_broadcast_axes);
+    return get_argument(1)->is_constant();
 }
 
-void op::BroadcastLike::infer_shape()
+AxisSet op::Broadcast::get_broadcast_axes() const
 {
-    const Shape& in_shape = get_input_shape(0);
-    m_shape = get_input_shape(1);
-    m_broadcast_axes = m_initial_broadcast_axes;
-    if (m_broadcast_axes.size() == 0)
-    {
-        for (size_t i = 0; i < m_shape.size(); ++i)
-        {
-            if (i < in_shape.size())
-            {
-                if (in_shape.at(i) == 1 && m_shape.at(i) > 1)
-                {
-                    m_broadcast_axes.insert(i);
-                }
-            }
-            else
-            {
-                m_broadcast_axes.insert(i);
-            }
-        }
-    }
+    NGRAPH_ASSERT(broadcast_axes_are_constant());
+    return axis_set_from_i64_constant(get_argument(2));
+}
+
+bool op::Broadcast::broadcast_axes_are_constant() const
+{
+    return get_argument(2)->is_constant();
 }

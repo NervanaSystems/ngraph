@@ -27,14 +27,26 @@ namespace ngraph
         class Broadcast : public Op
         {
         public:
+            /// \brief Constructs a broadcast operation.
+            ///
+            /// \param arg             Node that produces the input tensor to be broadcast.
+            /// \param broadcast_shape Node that produces the shape of the output tensor.
+            /// \param broadcast_axes  Node that produces the axis positions (0-based) in the
+            ///                         broadcast_shape that are being broadcast. The remaining
+            ///                         rest of the dimensions in the broadcast shape must match
+            ///                         the dimensions of arg, in order.
+            Broadcast(const std::shared_ptr<Node>& arg,
+                      const std::shared_ptr<Node>& broadcast_shape,
+                      const std::shared_ptr<Node>& broadcast_axes);
+
             /// \brief Constructs a conversion operation.
             ///
-            /// \param arg            Node that produces the input tensor to be broadcast.
-            /// \param shape          The shape of the output tensor.
-            /// \param broadcast_axes The axis positions (0-based) in the result that are being broadcast. The
-            ///                        remaining axes in shape must be the same as the shape of arg.
+            /// \param arg             Node that produces the input tensor to be broadcast.
+            /// \param broadcast_shape The shape of the output tensor.
+            /// \param broadcast_axes  The axis positions (0-based) in the result that are being broadcast. The
+            ///                         remaining axes in shape must be the same as the shape of arg.
             Broadcast(const std::shared_ptr<Node>& arg,
-                      const Shape& shape,
+                      const Shape& broadcast_shape,
                       const AxisSet& broadcast_axes);
 
             void validate_and_infer_types() override;
@@ -42,47 +54,15 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            /// \return A set containing the indices of the broadcast axes (0-based).
-            const AxisSet& get_broadcast_axes() const { return m_broadcast_axes; }
-            const Shape& get_broadcast_shape() const { return m_shape; }
-        protected:
-            Broadcast(const std::string& node_type,
-                      const NodeVector& args,
-                      const Shape& shape,
-                      const AxisSet& broadcast_axes);
+            Shape get_broadcast_shape() const;
+            bool broadcast_shape_is_constant() const;
 
+            /// \return A set containing the indices of the broadcast axes (0-based).
+            AxisSet get_broadcast_axes() const;
+            bool broadcast_axes_are_constant() const;
+        protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
-
-            virtual void infer_shape() {}
-            Shape m_shape;
-            AxisSet m_broadcast_axes;
-        };
-
-        /// \brief Broadcast arg to the same shape as like_arg.
-        class BroadcastLike : public Broadcast
-        {
-        public:
-            /// \brief Broadcast arg to the same shape as like_arg.
-            ///
-            /// Once the shape of like_arg is known, this op will be replaced with an equivalent
-            /// Broadcast op.
-            ///
-            /// \param arg The argument to be broadcast.
-            /// \param like_arg Provides the shape for the result.
-            /// \param initial_broadcast_axes indicates which axes will be broadcast. If empty,
-            ///        arg must be scalar and all axes are broadcast.
-            BroadcastLike(const std::shared_ptr<Node>& arg,
-                          const std::shared_ptr<Node>& like_arg,
-                          const AxisSet& initial_broadcast_axes);
-
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-
-            void infer_shape() override;
-            const AxisSet& get_initial_broadcast_axes() const { return m_initial_broadcast_axes; }
-        protected:
-            AxisSet m_initial_broadcast_axes;
         };
     }
 }

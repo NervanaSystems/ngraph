@@ -28,6 +28,7 @@
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
+#include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/slice.hpp"
@@ -38,7 +39,7 @@ using namespace ngraph;
 std::shared_ptr<Node> make_zero(const std::shared_ptr<Node>& node)
 {
     std::shared_ptr<Node> zero = std::make_shared<op::ScalarConstantLike>(node, 0.0);
-    std::shared_ptr<Node> bzero = std::make_shared<op::BroadcastLike>(zero, node, AxisSet{});
+    std::shared_ptr<Node> bzero = std::make_shared<op::Broadcast>(zero, std::make_shared<op::ShapeOf>(node), op::Constant::create(element::i64, Shape{0}, std::vector<int64_t>{}));
     return bzero;
 }
 

@@ -20,6 +20,7 @@
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
+#include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/sqrt.hpp"
@@ -51,7 +52,7 @@ void op::Acos::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector&
     auto x = get_inputs().at(0).get_output().get_node();
 
     auto one = make_shared<op::ScalarConstantLike>(x, 1.0);
-    auto ones = make_shared<op::BroadcastLike>(one, x, AxisSet());
+    auto ones = make_shared<op::Broadcast>(one, make_shared<op::ShapeOf>(x), Constant::create(element::i64, Shape{0}, vector<int64_t>{}));
 
     adjoints.add_delta(x, -delta / make_shared<op::Sqrt>(ones - x * x));
 }

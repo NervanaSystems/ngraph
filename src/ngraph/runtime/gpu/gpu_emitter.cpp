@@ -430,11 +430,6 @@ std::string runtime::gpu::GPU_Emitter::emit_Broadcast(EMIT_ARGS)
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_BroadcastLike(EMIT_ARGS)
-{
-    throw unsupported_op("Unsupported op '" + node->description() + "'");
-}
-
 std::string runtime::gpu::GPU_Emitter::emit_Ceiling(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Ceiling>(compiled_function, function_name, node, args, out);

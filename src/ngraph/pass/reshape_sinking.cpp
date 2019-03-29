@@ -235,6 +235,7 @@ static void materialize_shapes(shared_ptr<Node> n,
                                ReshapeMap& reorders,
                                set<shared_ptr<Node>>& reshapes_to_delete)
 {
+    NGRAPH_DEBUG << "in materialize_shapes";
     //skip multiple output nodes and deal with GOEs exclusively
     if (n->get_outputs().size() > 1)
     {
@@ -245,6 +246,10 @@ static void materialize_shapes(shared_ptr<Node> n,
     {
         //materialize all pending reshapes, flush pending reshapes
         auto arg = n->get_argument(i);
+        if (arg->is_constant() && n->get_inputs().at(i).get_is_relevant_to_shape())
+        {
+            continue;
+        }
         if (reorders.count(arg) != 0)
         {
             NGRAPH_DEBUG << "Materializing " << describe_reshape(reorders.at(arg)) << " for "
@@ -427,6 +432,7 @@ static void sink_concat(shared_ptr<op::Concat> n,
         if (iorder != order)
         {
             NGRAPH_DEBUG << " input order at " << i << "-th arg is different from first arg";
+            NGRAPH_DEBUG << "iorder != order so...";
             materialize_shapes(n, reorders, reshapes_to_delete);
             return;
         }
@@ -536,6 +542,7 @@ bool ngraph::pass::ReshapeSinking::run_on_function(shared_ptr<ngraph::Function> 
             }
             else
             {
+                NGRAPH_DEBUG << "slice reshape has multiple users so...";
                 materialize_shapes(n, reorders, reshapes_to_delete);
             }
         }
@@ -549,6 +556,7 @@ bool ngraph::pass::ReshapeSinking::run_on_function(shared_ptr<ngraph::Function> 
         }
         else
         {
+            NGRAPH_DEBUG << "can't sink this so...";
             materialize_shapes(n, reorders, reshapes_to_delete);
         }
     }

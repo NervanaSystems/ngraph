@@ -23,6 +23,7 @@
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
+#include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/stop_gradient.hpp"
@@ -79,19 +80,44 @@ static bool eliminate_slice(const std::shared_ptr<Node>& node)
     return false;
 }
 
+// TODO(amprocte): Figure out why this is duplicated from LikeReplacement.
 static bool replace_broadcast_like(const std::shared_ptr<Node>& node)
 {
-    // Replace a broadcast like with the broadcast to eliminate the pseudo-dependency on the "like" argument
-    auto broadcast_like = std::static_pointer_cast<op::BroadcastLike>(node);
+    // Replace the broadcast-like pattern with a static broadcast to eliminate the pseudo-dependency on the "like" argument
+    auto bc = static_pointer_cast<op::Broadcast>(node);
+    if (!bc->broadcast_axes_are_constant()
+        || !bc->get_broadcast_axes().empty()
+        || !bc->get_argument(0)->get_output_partial_shape(0).same_scheme(PartialShape{}))
+    {
+        return false;
+    }
+
+    auto shape_node = dynamic_pointer_cast<op::ShapeOf>(bc->get_argument(1));
+    if (shape_node == nullptr)
+    {
+        return false;
+    }
+
+    auto shape_node_arg = shape_node->get_argument(0);
+    if (shape_node_arg->get_output_partial_shape(0).is_dynamic())
+    {
+        return false;
+    }
+
     replace_node(node,
-                 std::make_shared<op::Broadcast>(broadcast_like->get_argument(0),
-                                                 broadcast_like->get_broadcast_shape(),
-                                                 broadcast_like->get_broadcast_axes()));
+                 make_shared<op::Broadcast>(bc->get_argument(0),
+                                            shape_node_arg->get_output_shape(0),
+                                            AxisSet{}));
     return true;
 }
 
 static bool eliminate_broadcast(const std::shared_ptr<Node>& node)
 {
+    if (replace_broadcast_like(node))
+    {
+        return true;
+    }
+
     auto broadcast = std::static_pointer_cast<op::Broadcast>(node);
     if (broadcast->get_input_shape(0) == broadcast->get_output_shape(0))
     {
@@ -113,7 +139,6 @@ static const std::unordered_map<std::type_index, std::function<bool(const std::s
                {TI(op::Convert), &eliminate_convert},
                {TI(op::Slice), &eliminate_slice},
                {TI(op::StopGradient), &eliminate_stop_gradient},
-               {TI(op::BroadcastLike), &replace_broadcast_like},
                {TI(op::Broadcast), &eliminate_broadcast}};
 
 bool pass::NopElimination::run_on_function(std::shared_ptr<Function> function)
