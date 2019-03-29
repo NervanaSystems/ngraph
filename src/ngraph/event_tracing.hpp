@@ -63,13 +63,14 @@ namespace ngraph
         explicit Event(const std::string& name,
                        const std::string& category,
                        const std::string& args)
-            : m_start(std::chrono::high_resolution_clock::now())
+            : m_pid(getpid())
+            , m_start(std::chrono::high_resolution_clock::now())
             , m_name(name)
+            , m_stopped(false)
             , m_category(category)
             , m_args(args)
         {
             m_stop = m_start;
-            m_pid = getpid();
         }
 
         void Stop()
@@ -85,9 +86,14 @@ namespace ngraph
         static void write_trace(const Event& event);
         static bool is_tracing_enabled()
         {
-            if (std::getenv("NGRAPH_ENABLE_TRACING") != nullptr)
+            static bool s_check_env = true;
+            if ( s_check_env )
             {
-                return true;
+                s_check_env = false;
+                if (std::getenv("NGRAPH_ENABLE_TRACING") != nullptr)
+                {
+                    s_tracing_enabled = true;
+                }
             }
             return s_tracing_enabled;
         }
@@ -99,13 +105,13 @@ namespace ngraph
         Event& operator=(Event const&) = delete;
 
     private:
+        int m_pid;
         std::chrono::time_point<std::chrono::high_resolution_clock> m_start;
         std::chrono::time_point<std::chrono::high_resolution_clock> m_stop;
-        bool m_stopped{false};
+        bool m_stopped;
         std::string m_name;
         std::string m_category;
         std::string m_args;
-        int m_pid{0};
 
         static std::mutex s_file_mutex;
         static std::ofstream s_event_log;
