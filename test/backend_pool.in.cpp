@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,9 +51,12 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_1d_1channel_1image)
               test::NDArray<float, 3>{{{0, 1, 0, 2, 1, 0, 3, 2, 0, 0, 2, 0, 0, 0}}}.get_vector());
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
-    EXPECT_EQ((test::NDArray<float, 3>({{{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0}}}).get_vector()),
-              read_vector<float>(result));
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(test::all_close_f(
+        (test::NDArray<float, 3>({{{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0}}}).get_vector()),
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, max_pool_1d_1channel_2image)
@@ -74,11 +77,13 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_1d_1channel_2image)
                   .get_vector());
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
-    EXPECT_EQ((test::NDArray<float, 3>(
-                   {{{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0}}, {{2, 2, 1, 1, 0, 2, 2, 2, 1, 1, 1, 2}}})
-                   .get_vector()),
-              read_vector<float>(result));
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(test::all_close_f((test::NDArray<float, 3>({{{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0}},
+                                                            {{2, 2, 1, 1, 0, 2, 2, 2, 1, 1, 1, 2}}})
+                                       .get_vector()),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, max_pool_1d_2channel_2image)
@@ -102,13 +107,16 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_1d_2channel_2image)
                   .get_vector());
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
-    EXPECT_EQ((test::NDArray<float, 3>(
-                   {{{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0}, {0, 2, 2, 2, 2, 3, 3, 3, 2, 2, 2, 1}},
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(test::all_close_f(
+        (test::NDArray<float, 3>(
+             {{{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0}, {0, 2, 2, 2, 2, 3, 3, 3, 2, 2, 2, 1}},
 
-                    {{2, 2, 1, 1, 0, 2, 2, 2, 1, 1, 1, 2}, {2, 1, 1, 1, 2, 2, 2, 0, 1, 1, 2, 2}}})
-                   .get_vector()),
-              read_vector<float>(result));
+              {{2, 2, 1, 1, 0, 2, 2, 2, 1, 1, 1, 2}, {2, 1, 1, 1, 2, 2, 2, 0, 1, 1, 2, 2}}})
+             .get_vector()),
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image)
@@ -150,28 +158,30 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image)
                   .get_vector());
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
-    EXPECT_EQ((test::NDArray<float, 4>({{{{3, 3, 2}, // img 0 chan 0
-                                          {3, 3, 2},
-                                          {2, 1, 2},
-                                          {2, 2, 2}},
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(test::all_close_f((test::NDArray<float, 4>({{{{3, 3, 2}, // img 0 chan 0
+                                                              {3, 3, 2},
+                                                              {2, 1, 2},
+                                                              {2, 2, 2}},
 
-                                         {{3, 3, 3}, // img 0 chan 1
-                                          {3, 3, 3},
-                                          {3, 1, 2},
-                                          {3, 1, 0}}},
+                                                             {{3, 3, 3}, // img 0 chan 1
+                                                              {3, 3, 3},
+                                                              {3, 1, 2},
+                                                              {3, 1, 0}}},
 
-                                        {{{2, 2, 2}, // img 1 chan 0
-                                          {2, 2, 3},
-                                          {2, 3, 3},
-                                          {2, 3, 3}},
+                                                            {{{2, 2, 2}, // img 1 chan 0
+                                                              {2, 2, 3},
+                                                              {2, 3, 3},
+                                                              {2, 3, 3}},
 
-                                         {{2, 2, 1}, // img 1 chan 1
-                                          {2, 2, 2},
-                                          {2, 2, 2},
-                                          {1, 1, 2}}}})
-                   .get_vector()),
-              read_vector<float>(result));
+                                                             {{2, 2, 1}, // img 1 chan 1
+                                                              {2, 2, 2},
+                                                              {2, 2, 2},
+                                                              {1, 1, 2}}}})
+                                       .get_vector()),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 //this test cover the case with multiple image and with asymetric pad
@@ -217,20 +227,22 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image_asym_pad)
                   .get_vector());
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
-    EXPECT_EQ((test::NDArray<float, 4>({{{{3, 2}, // img 0 chan 0
-                                          {2, 1}},
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(test::all_close_f((test::NDArray<float, 4>({{{{3, 2}, // img 0 chan 0
+                                                              {2, 1}},
 
-                                         {{3, 3}, // img 0 chan 1
-                                          {2, 1}}},
+                                                             {{3, 3}, // img 0 chan 1
+                                                              {2, 1}}},
 
-                                        {{{2, 2}, // img 1 chan 0
-                                          {1, 2}},
+                                                            {{{2, 2}, // img 1 chan 0
+                                                              {1, 2}},
 
-                                         {{2, 2}, // img 1 chan 1
-                                          {2, 2}}}})
-                   .get_vector()),
-              read_vector<float>(result));
+                                                             {{2, 2}, // img 1 chan 1
+                                                              {2, 2}}}})
+                                       .get_vector()),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 // MaxPool2D1ChannelTests test fixture for test setup reuse
@@ -269,17 +281,19 @@ NGRAPH_TEST_F(${BACKEND_NAME}, MaxPool2D1ChannelTests, max_pool_2d_1channel_1ima
                   .get_vector());
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
     auto min = std::numeric_limits<float>::lowest();
-    EXPECT_TRUE(test::all_close(test::NDArray<float, 4>({{{{min, min, min, min, min},
-                                                           {1, 2, 2, 2, 1},
-                                                           {3, 3, 2, 2, 1},
-                                                           {3, 3, 2, 1, 1},
-                                                           {2, 1, 2, 2, 2},
-                                                           {2, 2, 2, 2, 2},
-                                                           {2, 2, 1, 0, 0}}}})
-                                    .get_vector(),
-                                read_vector<float>(result)));
+    EXPECT_TRUE(test::all_close_f(test::NDArray<float, 4>({{{{min, min, min, min, min},
+                                                             {1, 2, 2, 2, 1},
+                                                             {3, 3, 2, 2, 1},
+                                                             {3, 3, 2, 1, 1},
+                                                             {2, 1, 2, 2, 2},
+                                                             {2, 2, 2, 2, 2},
+                                                             {2, 2, 1, 0, 0}}}})
+                                      .get_vector(),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST_F(${BACKEND_NAME}, MaxPool2D1ChannelTests, max_pool_2d_1channel_1image_padded)
@@ -306,15 +320,17 @@ NGRAPH_TEST_F(${BACKEND_NAME}, MaxPool2D1ChannelTests, max_pool_2d_1channel_1ima
                   .get_vector());
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
-    EXPECT_EQ((test::NDArray<float, 4>({{{{1, 2, 2, 2, 1},
-                                          {3, 3, 2, 2, 1},
-                                          {3, 3, 2, 1, 1},
-                                          {2, 1, 2, 2, 2},
-                                          {2, 2, 2, 2, 2},
-                                          {2, 2, 1, 0, 0}}}})
-                   .get_vector()),
-              read_vector<float>(result));
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(test::all_close_f((test::NDArray<float, 4>({{{{1, 2, 2, 2, 1},
+                                                              {3, 3, 2, 2, 1},
+                                                              {3, 3, 2, 1, 1},
+                                                              {2, 1, 2, 2, 2},
+                                                              {2, 2, 2, 2, 2},
+                                                              {2, 2, 1, 0, 0}}}})
+                                       .get_vector()),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 // Test to make sure that negative elements and padding are handled properly. Added this because
@@ -347,11 +363,13 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_padded_negative_values)
                   .get_vector());
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
-    EXPECT_EQ(
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(test::all_close_f(
         (test::NDArray<float, 4>({{{{-1, -1, -2, -2, -1, -1, -1, -2, -2, -2, -2, -2, -3, -4, -5}}}})
              .get_vector()),
-        read_vector<float>(result));
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_strided)
@@ -380,9 +398,12 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_strided)
                   .get_vector());
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
-    EXPECT_EQ((test::NDArray<float, 4>({{{{3, 2, 2}, {2, 2, 3}, {2, 2, 2}}}}).get_vector()),
-              read_vector<float>(result));
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(test::all_close_f(
+        (test::NDArray<float, 4>({{{{3, 2, 2}, {2, 2, 3}, {2, 2, 2}}}}).get_vector()),
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, max_pool_3d)
@@ -414,7 +435,8 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_3d)
     auto cpu_results = execute(cpu_f, args, "${BACKEND_NAME}");
     for (size_t i = 0; i < cpu_results.size(); i++)
     {
-        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+        EXPECT_TRUE(
+            test::all_close_f(cpu_results.at(i), int_results.at(i), MIN_FLOAT_TOLERANCE_BITS));
     }
 }
 
@@ -436,7 +458,8 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_1d_1channel_1image)
 
     float denom = 3.0;
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
     EXPECT_TRUE(test::all_close_f(test::NDArray<float, 3>({{{1 / denom,
                                                              3 / denom,
                                                              3 / denom,
@@ -473,7 +496,8 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_1d_1channel_2image)
 
     float denom = 3.0;
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
     EXPECT_TRUE(test::all_close_f(test::NDArray<float, 3>({{{1 / denom,
                                                              3 / denom,
                                                              3 / denom,
@@ -525,7 +549,8 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_1d_2channel_2image)
 
     float denom = 3.0;
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
     EXPECT_TRUE(test::all_close_f(test::NDArray<float, 3>({{{1 / denom,
                                                              3 / denom,
                                                              3 / denom,
@@ -620,7 +645,8 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image)
 
     float denom = 2 * 3;
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
 
     EXPECT_TRUE(test::all_close_f(
         test::NDArray<float, 4>({{{{6 / denom, 8 / denom, 5 / denom}, // img 0 chan 0
@@ -674,7 +700,8 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_strided)
 
     float denom = 2 * 3;
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
     EXPECT_TRUE(test::all_close_f(test::NDArray<float, 4>({{{{6 / denom, 5 / denom, 4 / denom},
                                                              {6 / denom, 5 / denom, 8 / denom},
                                                              {6 / denom, 2 / denom, 4 / denom}}}})
@@ -703,7 +730,8 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_padded_do_not_include_i
     copy_data(a, test::NDArray<float, 4>({{{{0, 1, 0}, {0, 3, 2}, {2, 0, 0}}}}).get_vector());
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
     EXPECT_TRUE(
         test::all_close(test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 2, 0.0f / 1},
                                                    {0.0f / 2, 4.0f / 4, 6.0f / 4, 2.0f / 2},
@@ -734,7 +762,8 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_padded_include_in_compu
     copy_data(a, test::NDArray<float, 4>({{{{0, 1, 0}, {0, 3, 2}, {2, 0, 0}}}}).get_vector());
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
     EXPECT_TRUE(
         test::all_close(test::NDArray<float, 4>({{{{0.0f / 4, 1.0f / 4, 1.0f / 4, 0.0f / 4},
                                                    {0.0f / 4, 4.0f / 4, 6.0f / 4, 2.0f / 4},
@@ -768,7 +797,8 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_do_not_include_i
                   .get_vector());
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
     EXPECT_TRUE(
         test::all_close(test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 2, 0.0f / 1},
                                                    {0.0f / 2, 4.0f / 4, 6.0f / 4, 2.0f / 2},
@@ -806,7 +836,8 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_include_in_compu
                   .get_vector());
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
     EXPECT_TRUE(
         test::all_close(test::NDArray<float, 4>({{{{0.0f / 4, 1.0f / 4, 1.0f / 4, 0.0f / 4},
                                                    {0.0f / 4, 4.0f / 4, 6.0f / 4, 2.0f / 4},
@@ -845,7 +876,8 @@ NGRAPH_TEST(${BACKEND_NAME},
                   .get_vector());
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
     EXPECT_TRUE(test::all_close(test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 2},
                                                            {0.0f / 2, 4.0f / 4, 6.0f / 4},
                                                            {2.0f / 2, 5.0f / 4, 5.0f / 4}},
@@ -880,7 +912,8 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_below_inclu
                   .get_vector());
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
     EXPECT_TRUE(test::all_close(test::NDArray<float, 4>({{{{0.0f / 4, 1.0f / 4, 1.0f / 4},
                                                            {0.0f / 4, 4.0f / 4, 6.0f / 4},
                                                            {2.0f / 4, 5.0f / 4, 5.0f / 4}},
@@ -916,7 +949,8 @@ NGRAPH_TEST(${BACKEND_NAME},
                   .get_vector());
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
     EXPECT_TRUE(test::all_close(test::NDArray<float, 4>({{{{4.0f / 4, 6.0f / 4, 2.0f / 2},
                                                            {5.0f / 4, 5.0f / 4, 2.0f / 2},
                                                            {2.0f / 2, 0.0f / 2, 0.0f / 1}},
@@ -951,7 +985,8 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_above_inclu
                   .get_vector());
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
     EXPECT_TRUE(test::all_close(test::NDArray<float, 4>({{{{4.0f / 4, 6.0f / 4, 2.0f / 4},
                                                            {5.0f / 4, 5.0f / 4, 2.0f / 4},
                                                            {2.0f / 4, 0.0f / 4, 0.0f / 4}},
@@ -986,7 +1021,8 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_3x3_padded_do_not_inclu
                   .get_vector());
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
     EXPECT_TRUE(test::all_close_f(
         test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 3, 1.0f / 2, 0.0f / 1},
                                    {0.0f / 2, 4.0f / 4, 6.0f / 6, 6.0f / 4, 2.0f / 2},
@@ -1026,7 +1062,8 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_3x3_padded_include_in_c
                   .get_vector());
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
     EXPECT_TRUE(test::all_close_f(
         test::NDArray<float, 4>({{{{0.0f / 9, 1.0f / 9, 1.0f / 9, 1.0f / 9, 0.0f / 9},
                                    {0.0f / 9, 4.0f / 9, 6.0f / 9, 6.0f / 9, 2.0f / 9},
@@ -1067,7 +1104,8 @@ NGRAPH_TEST(${BACKEND_NAME},
                   .get_vector());
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
     EXPECT_TRUE(test::all_close_f(test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 3, 0.0f / 1},
                                                              {2.0f / 3, 8.0f / 9, 2.0f / 3},
                                                              {2.0f / 1, 2.0f / 3, 0.0f / 1}},
@@ -1102,7 +1140,8 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_3x3_strided_padded_incl
                   .get_vector());
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
     EXPECT_TRUE(test::all_close_f(test::NDArray<float, 4>({{{{0.0f / 9, 1.0f / 9, 0.0f / 9},
                                                              {2.0f / 9, 8.0f / 9, 2.0f / 9},
                                                              {2.0f / 9, 2.0f / 9, 0.0f / 9}},
@@ -1138,7 +1177,8 @@ NGRAPH_TEST(${BACKEND_NAME},
                   .get_vector());
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
     EXPECT_TRUE(test::all_close_f(
         test::NDArray<float, 4>(
             {{{{0.0f / 1, 1.0f / 2}, {2.0f / 3, 6.0f / 6}, {2.0f / 1, 0.0f / 2}},
@@ -1172,7 +1212,8 @@ NGRAPH_TEST(${BACKEND_NAME},
                   .get_vector());
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
     EXPECT_TRUE(test::all_close_f(
         test::NDArray<float, 4>(
             {{{{0.0f / 9, 1.0f / 9}, {2.0f / 9, 6.0f / 9}, {2.0f / 9, 0.0f / 9}},
@@ -1221,7 +1262,8 @@ NGRAPH_TEST_P(${BACKEND_NAME}, avg_pool_3d_params, avg_pool_3d_uneven_strided_pa
     auto backend_results = execute(cpu_f, args, "${BACKEND_NAME}");
     for (size_t i = 0; i < backend_results.size(); i++)
     {
-        EXPECT_TRUE(test::all_close(backend_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+        EXPECT_TRUE(test::all_close_f(
+            backend_results.at(i), int_results.at(i), DEFAULT_FLOAT_TOLERANCE_BITS + 1));
     }
 }
 

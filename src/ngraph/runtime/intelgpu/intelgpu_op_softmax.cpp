@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 #include <CPP/custom_gpu_primitive.hpp>
 
-#include "ngraph/runtime/intelgpu/code_writer.hpp"
+#include "ngraph/code_writer.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_softmax.hpp"
@@ -61,13 +61,14 @@ void runtime::intelgpu::do_softmax_operation(cldnn::topology& topology,
     const string expression = "output" + access_dims(input_shape, "i", axes) + " = 0.0f;\n";
     const Shape new_shape = shape_dims(output_shape, axes);
     const cldnn::layout layout_middle = IntelGPULayout::create_cldnn_layout(output_type, new_shape);
-    codegen::CodeWriter writer0;
-    codegen::CodeWriter writer1;
+    CodeWriter writer0;
+    CodeWriter writer1;
     vector<size_t> gws;
 
-    writer0 << "__kernel void " << entry_point_middle_name << "(const __global float input"
-            << array_dims(input_shape) << ", __global float output" << array_dims(input_shape, axes)
-            << ")\n";
+    writer0 << "__kernel void " << entry_point_middle_name << "(const __global "
+            << get_opencl_type_name(input_type) << " input" << array_dims(input_shape)
+            << ", __global " << get_opencl_type_name(output_type) << " output"
+            << array_dims(input_shape, axes) << ")\n";
 
     writer0.block_begin();
     {
@@ -90,10 +91,11 @@ void runtime::intelgpu::do_softmax_operation(cldnn::topology& topology,
                                                         gws);
     topology.add(op_softmax_middle);
 
-    writer1 << "__kernel void " << entry_point_name << "(const __global float input0"
-            << array_dims(input_shape) << ", const __global float input1"
-            << array_dims(input_shape, axes) << ", __global float output"
-            << array_dims(output_shape) << ")\n";
+    writer1 << "__kernel void " << entry_point_name << "(const __global "
+            << get_opencl_type_name(input_type) << " input0" << array_dims(input_shape)
+            << ", const __global " << get_opencl_type_name(input_type) << " input1"
+            << array_dims(input_shape, axes) << ", __global " << get_opencl_type_name(output_type)
+            << " output" << array_dims(output_shape) << ")\n";
 
     writer1.block_begin();
     {

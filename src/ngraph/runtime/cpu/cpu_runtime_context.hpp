@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@
 #include <tbb/global_control.h>
 #include <tbb/task_scheduler_init.h>
 
-#ifdef NGRAPH_DISTRIBUTED
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
 #include <mlsl.hpp>
 #endif
 
@@ -69,7 +69,7 @@ namespace ngraph
                 State* const* states;
                 std::set<size_t> breakpoints;
                 size_t pc;
-#ifdef NGRAPH_DISTRIBUTED
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
                 MLSL::Environment* mlsl_env;
                 MLSL::Distribution* mlsl_dist;
 #endif

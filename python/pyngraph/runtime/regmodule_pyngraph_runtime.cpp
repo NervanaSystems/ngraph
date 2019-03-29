@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,4 +25,5 @@ void regmodule_pyngraph_runtime(py::module m)
         m.def_submodule("runtime", "Package ngraph.impl.runtime wraps ngraph::runtime");
     regclass_pyngraph_runtime_Tensor(m_runtime);
     regclass_pyngraph_runtime_Backend(m_runtime);
+    regclass_pyngraph_runtime_Executable(m_runtime);
 }

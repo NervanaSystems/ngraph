@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@
 #include <thread>
 
 #include "cpu_executor.hpp"
+
+#include "ngraph/except.hpp"
 
 static int GetNumCores()
 {
@@ -66,15 +68,33 @@ namespace ngraph
                     for (int i = 0; i < num_thread_pools; i++)
                     {
                         int num_threads_per_pool;
-#if defined(EIGEN_OPENMP)
-                        num_threads_per_pool = 1;
-#else
+
+                        // Eigen threadpool will still be used for reductions
+                        // and other tensor operations that dont use a parallelFor
                         num_threads_per_pool = GetNumCores();
-#endif
+
+                        // User override
+                        char* eigen_tp_count = std::getenv("NGRAPH_CPU_EIGEN_THREAD_COUNT");
+                        if (eigen_tp_count != nullptr)
+                        {
+                            const int tp_count = std::atoi(eigen_tp_count);
+                            if (tp_count < 1 || tp_count > GetNumCores())
+                            {
+                                throw ngraph_error(
+                                    "Unexpected value specified for NGRAPH_CPU_EIGEN_THREAD_COUNT "
+                                    "(" +
+                                    std::string(eigen_tp_count) +
+                                    "). Please specify a value in range [1-" +
+                                    std::to_string(GetNumCores()) + "]");
+                            }
+                            num_threads_per_pool = tp_count;
+                        }
+
                         m_thread_pools.push_back(std::unique_ptr<Eigen::ThreadPool>(
                             new Eigen::ThreadPool(num_threads_per_pool)));
-                        m_thread_pool_devices.push_back(std::unique_ptr<Eigen::ThreadPoolDevice>(
-                            new Eigen::ThreadPoolDevice(m_thread_pools[i].get(), GetNumCores())));
+                        m_thread_pool_devices.push_back(
+                            std::unique_ptr<Eigen::ThreadPoolDevice>(new Eigen::ThreadPoolDevice(
+                                m_thread_pools[i].get(), num_threads_per_pool)));
                         m_tbb_arenas.emplace_back(1);
                     }
                 }

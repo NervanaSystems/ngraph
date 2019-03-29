@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,10 +40,16 @@ void op::util::ArithmeticReduction::validate_and_infer_types()
 
         for (auto axis : m_reduction_axes)
         {
-            NODE_VALIDATION_ASSERT(this, axis < size_t(input_rank))
-                << "Reduction axis (" << axis << ") is out of bounds "
-                << "(argument shape: " << input_shape << ", reduction axes: " << m_reduction_axes
-                << ")";
+            NODE_VALIDATION_CHECK(this,
+                                  axis < size_t(input_rank),
+                                  "Reduction axis (",
+                                  axis,
+                                  ") is out of bounds ",
+                                  "(argument shape: ",
+                                  input_shape,
+                                  ", reduction axes: ",
+                                  m_reduction_axes,
+                                  ")");
         }
 
         for (size_t i = 0; i < size_t(input_rank); i++)

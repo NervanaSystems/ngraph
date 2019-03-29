@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -62,8 +62,9 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
 {
     for (auto n : function->get_ordered_ops())
     {
-        if (auto concat = std::dynamic_pointer_cast<op::Concat>(n))
+        if (n->description() == "Concat")
         {
+            auto concat = std::static_pointer_cast<op::Concat>(n);
             auto shape = concat->get_input_shape(0);
             auto axis = concat->get_concatenation_axis();
             auto product = 1;
@@ -119,8 +120,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
 
                 const auto& output = input.get_output();
                 auto arg = output.get_node();
-                if (std::dynamic_pointer_cast<op::Constant>(arg) ||
-                    std::dynamic_pointer_cast<op::Parameter>(arg))
+                if (arg->is_constant() || arg->is_parameter())
                 {
                     NGRAPH_DEBUG << "cpu_memory_optimization: " << arg->get_name()
                                  << ": constant or parameter, no in place concat";
@@ -130,7 +130,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
 
                 NGRAPH_ASSERT(arg->get_output_size() == 1);
 
-                if (!std::dynamic_pointer_cast<op::Concat>(arg))
+                if (arg->description() != "Concat")
                 {
                     if (arg->is_op())
                     {
@@ -154,7 +154,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                     for (auto output_input : output.get_inputs())
                     {
                         auto user = output_input->get_node();
-                        if (std::dynamic_pointer_cast<op::Concat>(user))
+                        if (user->description() == "Concat")
                         {
                             concat_count++;
                             if (concat_count == 2)
@@ -225,8 +225,9 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
 
     for (auto n : function->get_ordered_ops())
     {
-        if (auto slice = std::dynamic_pointer_cast<op::Slice>(n))
+        if (n->description() == "Slice")
         {
+            auto slice = std::static_pointer_cast<op::Slice>(n);
             auto in_shape = slice->get_input_shape(0);
             auto out_shape = slice->get_output_shape(0);
             auto strides = slice->get_strides();
@@ -235,11 +236,10 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
             auto upper_bounds = slice->get_upper_bounds();
 
             auto arg = slice->get_argument(0);
-            if (std::dynamic_pointer_cast<op::Constant>(arg) ||
-                std::dynamic_pointer_cast<op::Parameter>(arg))
+            if (arg->is_constant())
             {
                 NGRAPH_DEBUG << "cpu_memory_optimization: " << arg->get_name()
-                             << ": constant or parameter, no in place slice";
+                             << ": constant, no in place slice";
                 continue;
             }
 
@@ -279,6 +279,16 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
             {
                 NGRAPH_DEBUG << "cpu_memory_optimization: input format is different from "
                                 "output format, no in place slice";
+                continue;
+            }
+
+            const auto& dtype = slice->get_input_element_type(0);
+            if (runtime::cpu::mkldnn_utils::get_mkldnn_data_type(dtype) ==
+                mkldnn::memory::data_type::data_undef)
+            {
+                NGRAPH_DEBUG << "cpu_memory_optimization: "
+                             << slice->get_input_element_type(0).c_type_string()
+                             << " isn't supported, no in place slice";
                 continue;
             }
 

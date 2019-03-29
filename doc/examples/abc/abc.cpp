@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -55,7 +55,8 @@ int main()
     t_c->write(&v_c, 0, sizeof(v_c));
 
     // Invoke the function
-    backend->call(f, {t_result}, {t_a, t_b, t_c});
+    auto exec = backend->compile(f);
+    exec->call({t_result}, {t_a, t_b, t_c});
 
     // Get the result
     float r[2][3];

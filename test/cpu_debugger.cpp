@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,8 +38,26 @@
 using namespace ngraph;
 using namespace std;
 
+bool static is_codegen_mode()
+{
+    if (std::getenv("NGRAPH_CODEGEN") != nullptr &&
+        std::string(std::getenv("NGRAPH_CODEGEN")) != "0")
+    {
+        return true;
+    }
+    return false;
+}
+
+// These tests are for DEX mode only.
 TEST(debugger, add_breakpoint)
 {
+    if (is_codegen_mode())
+    {
+        //TODO change to skip when there is a new release of gtest
+        NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
+        return;
+    }
+
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
@@ -61,13 +79,14 @@ TEST(debugger, add_breakpoint)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    auto cf =
-        std::dynamic_pointer_cast<ngraph::runtime::cpu::CPU_Backend>(backend)->get_call_frame(f);
+    shared_ptr<runtime::Executable> handle = backend->compile(f);
+    auto cf = dynamic_pointer_cast<runtime::cpu::CPU_Executable>(handle)->get_call_frame();
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
 
     dbg.add_breakpoint(neg);
     dbg.call({result}, {a, b});
+
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn)), 777);
     dbg.step();
@@ -76,6 +95,13 @@ TEST(debugger, add_breakpoint)
 
 TEST(debugger, stepping)
 {
+    if (is_codegen_mode())
+    {
+        //TODO change to skip when there is a new release of gtest
+        NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
+        return;
+    }
+
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
@@ -97,13 +123,14 @@ TEST(debugger, stepping)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    auto cf =
-        std::dynamic_pointer_cast<ngraph::runtime::cpu::CPU_Backend>(backend)->get_call_frame(f);
+    shared_ptr<runtime::Executable> handle = backend->compile(f);
+    auto cf = dynamic_pointer_cast<runtime::cpu::CPU_Executable>(handle)->get_call_frame();
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
 
     dbg.add_breakpoint(add);
     dbg.call({result}, {a, b});
+
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
     dbg.step();
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn)), 777);
@@ -113,6 +140,13 @@ TEST(debugger, stepping)
 
 TEST(debugger, delete_breakpoint)
 {
+    if (is_codegen_mode())
+    {
+        //TODO change to skip when there is new release of gtest
+        NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
+        return;
+    }
+
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
@@ -134,8 +168,8 @@ TEST(debugger, delete_breakpoint)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    auto cf =
-        std::dynamic_pointer_cast<ngraph::runtime::cpu::CPU_Backend>(backend)->get_call_frame(f);
+    shared_ptr<runtime::Executable> handle = backend->compile(f);
+    auto cf = dynamic_pointer_cast<runtime::cpu::CPU_Executable>(handle)->get_call_frame();
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
 
@@ -146,6 +180,7 @@ TEST(debugger, delete_breakpoint)
     dbg.delete_breakpoint(absn);
     dbg.delete_breakpoint(neg);
     dbg.call({result}, {a, b});
+
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn)), 777);
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg)), -777);
@@ -153,6 +188,13 @@ TEST(debugger, delete_breakpoint)
 
 TEST(debugger, while_stepping)
 {
+    if (is_codegen_mode())
+    {
+        //TODO change to skip when there is new release of gtest
+        NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
+        return;
+    }
+
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
@@ -174,8 +216,8 @@ TEST(debugger, while_stepping)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    auto cf =
-        std::dynamic_pointer_cast<ngraph::runtime::cpu::CPU_Backend>(backend)->get_call_frame(f);
+    shared_ptr<runtime::Executable> handle = backend->compile(f);
+    auto cf = dynamic_pointer_cast<runtime::cpu::CPU_Executable>(handle)->get_call_frame();
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
 
@@ -184,6 +226,7 @@ TEST(debugger, while_stepping)
     while (dbg.step())
     {
     };
+
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn)), 777);
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg)), -777);
@@ -191,6 +234,13 @@ TEST(debugger, while_stepping)
 
 TEST(debugger, resume)
 {
+    if (is_codegen_mode())
+    {
+        //TODO change to skip when there is new release of gtest
+        NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
+        return;
+    }
+
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
@@ -212,13 +262,14 @@ TEST(debugger, resume)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    auto cf =
-        std::dynamic_pointer_cast<ngraph::runtime::cpu::CPU_Backend>(backend)->get_call_frame(f);
+    shared_ptr<runtime::Executable> handle = backend->compile(f);
+    auto cf = dynamic_pointer_cast<runtime::cpu::CPU_Executable>(handle)->get_call_frame();
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
 
     dbg.add_breakpoint(absn);
     dbg.call({result}, {a, b});
+
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
     dbg.resume();
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn)), 777);
@@ -248,8 +299,8 @@ TEST(tracer, basic)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    auto cf =
-        std::dynamic_pointer_cast<ngraph::runtime::cpu::CPU_Backend>(backend)->get_call_frame(f);
+    shared_ptr<runtime::Executable> handle = backend->compile(f);
+    auto cf = dynamic_pointer_cast<runtime::cpu::CPU_Executable>(handle)->get_call_frame();
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
 
@@ -281,8 +332,8 @@ TEST(tracer, count_tracepoint)
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shape);
     shared_ptr<runtime::Tensor> result = backend->create_tensor(element::i32, shape);
 
-    auto cf =
-        std::dynamic_pointer_cast<ngraph::runtime::cpu::CPU_Backend>(backend)->get_call_frame(f);
+    shared_ptr<runtime::Executable> handle = backend->compile(f);
+    auto cf = dynamic_pointer_cast<runtime::cpu::CPU_Executable>(handle)->get_call_frame();
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
 
@@ -322,8 +373,8 @@ TEST(tracer, conditional_tracepoint)
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shape);
     shared_ptr<runtime::Tensor> result = backend->create_tensor(element::i32, shape);
 
-    auto cf =
-        std::dynamic_pointer_cast<ngraph::runtime::cpu::CPU_Backend>(backend)->get_call_frame(f);
+    shared_ptr<runtime::Executable> handle = backend->compile(f);
+    auto cf = dynamic_pointer_cast<runtime::cpu::CPU_Executable>(handle)->get_call_frame();
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
 

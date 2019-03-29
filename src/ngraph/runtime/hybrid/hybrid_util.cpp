@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,28 +15,33 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/hybrid/hybrid_util.hpp"
+#include "ngraph/graph_util.hpp"
+#include "ngraph/log.hpp"
+#include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/visualize_tree.hpp"
+#include "ngraph/runtime/hybrid/op/function_call.hpp"
 
 using namespace ngraph;
 using namespace std;
 
-static Node* take_independent_node_with_placement_priority_size(
+static Node* take_independent_node_with_placement_priority(
     map<size_t, deque<Node*>>& independent_nodes_by_placement, size_t placement)
 {
     Node* selected_node = nullptr;
-    if (independent_nodes_by_placement.find(placement) != independent_nodes_by_placement.end() &&
-        independent_nodes_by_placement.at(placement).size() != 0)
+    auto it = independent_nodes_by_placement.find(placement);
+    if (it != independent_nodes_by_placement.end() && it->second.size() != 0)
     {
-        selected_node = independent_nodes_by_placement.at(placement).front();
-        independent_nodes_by_placement.at(placement).pop_front();
+        selected_node = it->second.front();
+        it->second.pop_front();
     }
     else
     {
-        for (auto& it : independent_nodes_by_placement)
+        for (auto& p : independent_nodes_by_placement)
         {
-            if (it.second.size() > 0)
+            if (p.second.size() > 0)
             {
-                selected_node = it.second.front();
-                it.second.pop_front();
+                selected_node = p.second.front();
+                p.second.pop_front();
                 break;
             }
         }
@@ -45,7 +50,7 @@ static Node* take_independent_node_with_placement_priority_size(
 }
 
 static vector<unordered_set<shared_ptr<Node>>>
-    group_function_nodes_to_clusters_size(const shared_ptr<Function>& f)
+    group_function_nodes_to_clusters(const shared_ptr<Function>& f)
 {
     // Topologically sort nodes by picking independent node with the same placement as the
     // previously picked node greedily
@@ -66,13 +71,13 @@ static vector<unordered_set<shared_ptr<Node>>>
 
     list<shared_ptr<Node>> sorted_nodes;
     size_t previous_placement = 0;
-    while (Node* independent_node = take_independent_node_with_placement_priority_size(
+    while (Node* independent_node = ::take_independent_node_with_placement_priority(
                independent_nodes_by_placement, previous_placement))
     {
         previous_placement = independent_node->get_placement_index();
         sorted_nodes.push_back(node_map.at(independent_node));
 
-        for (auto user : independent_node->get_users())
+        for (auto user : independent_node->get_users(true))
         {
             Node* user_node = user.get();
             node_dependency_count.at(user_node) -= 1;
@@ -94,15 +99,24 @@ static vector<unordered_set<shared_ptr<Node>>>
     // Build clusters from the sorted_nodes
     previous_placement = Node::placement_invalid;
     vector<unordered_set<shared_ptr<Node>>> clusters;
+    clusters.push_back(unordered_set<shared_ptr<Node>>());
+
     for (shared_ptr<Node> node : sorted_nodes)
     {
         size_t node_placement = node->get_placement_index();
-        if (node_placement != previous_placement)
+        if (node_placement == 0)
         {
-            unordered_set<shared_ptr<Node>> new_cluster;
-            clusters.push_back(new_cluster);
+            clusters[0].insert(node);
         }
-        clusters.back().insert(node);
+        else
+        {
+            if (node_placement != previous_placement)
+            {
+                unordered_set<shared_ptr<Node>> new_cluster;
+                clusters.push_back(new_cluster);
+            }
+            clusters.back().insert(node);
+        }
         previous_placement = node_placement;
     }
 
@@ -134,138 +148,110 @@ static vector<unordered_set<shared_ptr<Node>>>
     return clusters;
 }
 
-// Insert result and parameter node between src_node and dst_node by splitting the graph
-//
-// Before:                        |  After:
-// (Device:0)         (Device:1)  |  (Device:0)         (Device:0)  (Device:1)         (Device:1)
-// +-----+---+       +---+-----+  |  +-----+---+       +---+-----+  +-----+---+       +---+-----+
-// |     |   |       |   |     |  |  |     |   |       |   |     |  |     |   |       |   |     |
-// |     | o +--[0]--> i |     |  |  |     | o +--[4]--> i |     |  |     | o +--[8]--> i |     |
-// |     |   <--[1]--+   |     |  |  |     |   <--[5]--+   |     |  |     |   <--[9]--+   |     |
-// | src +---+       +---+ dst |  |  | src +---+       +---+ res |  | par +---+       +---+ dst |
-// |     |               |     |  |  |     |               |     |  |     |               |     |
-// |     +------[2]------>     |  |  |     +------[6]------>     |  |     +------[10]----->     |
-// |     <------[3]------+     |  |  |     <------[7]------+     |  |     <------[11]-----+     |
-// +-----+               +-----+  |  +-----+               +-----+  +-----+               +-----+
-
-// Suffix *_size  as a part of function name is temporary, this suffix
-//  will be removed when the backends move to the latest Hybrid backend
-pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
-    insert_result_parameter_split_size(const shared_ptr<Node>& src_node,
-                                       const shared_ptr<Node>& dst_node)
-{
-    if (src_node->get_output_size() != 1)
-    {
-        throw ngraph_error("Multiple output per op not supported in graph partition yet.");
-    }
-
-    // Make parameter node
-    shared_ptr<op::Parameter> par_node = make_shared<op::Parameter>(
-        src_node->get_output_element_type(0), src_node->get_output_shape(0));
-    par_node->set_placement_index(dst_node->get_placement_index());
-
-    // Fix input / output among src, dst and par
-    descriptor::Input* dst_input = dst_node->get_input_from(src_node);
-    descriptor::Output* src_output = src_node->get_output_to(dst_node);
-    src_output->remove_input(dst_input);    // Remove [0]
-    dst_input->replace_output(par_node, 0); // Remove [0] (again), add [8], remove [1], add [9]
-
-    // Add res node
-    shared_ptr<op::Result> res_node = make_shared<op::Result>(src_node); // Add [4], [5], [6], [7]
-    res_node->set_placement_index(src_node->get_placement_index());
-
-    return make_pair(res_node, par_node);
-}
-
-// Suffix *_size  as a part of function name is temporary, this suffix
-//  will be removed when the backends move to the latest Hybrid backend
-pair<vector<shared_ptr<Function>>, unordered_map<shared_ptr<op::Parameter>, shared_ptr<op::Result>>>
-    runtime::hybrid::split_function_by_placement_size(const shared_ptr<Function>& f)
+void runtime::hybrid::rewrite_function(const shared_ptr<Function>& f,
+                                       const vector<shared_ptr<runtime::Backend>>& backend_list)
 {
     // Split functions to clusters of nodes that can be computed together
-    vector<unordered_set<shared_ptr<Node>>> clusters = group_function_nodes_to_clusters_size(f);
+    vector<unordered_set<shared_ptr<Node>>> clusters = ::group_function_nodes_to_clusters(f);
 
-    // Map from (intermediate) parameter to result node, for guiding data copy among devices
-    unordered_map<shared_ptr<op::Parameter>, shared_ptr<op::Result>> map_parameter_to_result;
-
-    // Split neighboring nodes if they belong to different clusters
-    // TODO: optimization to group multiple result node from the same source,
-    //       and to group the parameter node in the same cluster with the same result node source
+    // unordered_map<shared_ptr<op::Parameter>, shared_ptr<op::Result>> map_parameter_to_result;
     unordered_map<shared_ptr<Node>, unordered_set<shared_ptr<Node>>*> map_node_to_cluster;
     for (auto& cluster : clusters)
     {
-        for (auto node : cluster)
+        if (cluster.size() > 0)
         {
-            map_node_to_cluster[node] = &cluster;
-        }
-    }
-    for (auto dst_node : f->get_ordered_ops())
-    {
-        for (auto src_node : dst_node->get_arguments())
-        {
-            auto src_cluster = map_node_to_cluster.at(src_node);
-            auto dst_cluster = map_node_to_cluster.at(dst_node);
-            if (src_cluster != dst_cluster)
+            shared_ptr<Node> tmp_node = *cluster.begin();
+            if (tmp_node == nullptr)
             {
-                // Split src_node and dst_node
-                pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>> res_par_pair =
-                    insert_result_parameter_split_size(src_node, dst_node);
-                shared_ptr<op::Result> res_node = res_par_pair.first;
-                shared_ptr<op::Parameter> par_node = res_par_pair.second;
-                map_parameter_to_result[par_node] = res_node;
+                throw runtime_error("cluster contains nullptr instead of nodes");
+            }
+            auto placement = tmp_node->get_placement_index();
+            if (placement != 0)
+            {
+                // This is a non-native cluster so make it a FunctionCall
+                vector<shared_ptr<Node>> function_call_inputs;
+                vector<shared_ptr<Node>> function_call_outputs;
+                ParameterVector cluster_inputs;
+                NodeVector cluster_outputs;
+                for (auto node : cluster)
+                {
+                    for (auto input : node->get_arguments())
+                    {
+                        if (input->get_placement_index() == 0)
+                        {
+                            // Since this input is from outside the cluster we need to create
+                            // a new Parameter node placed in the cluster instead of this external
+                            // node
+                            descriptor::Output* source_output = input->get_output_to(node);
+                            descriptor::Input* target_input = node->get_input_from(input);
 
-                // Insert newly created nodes into clusters
-                src_cluster->insert(res_node);
-                dst_cluster->insert(par_node);
+                            auto new_parameter = make_shared<ngraph::op::Parameter>(
+                                source_output->get_element_type(), source_output->get_shape());
+                            descriptor::Output& new_output = new_parameter->get_outputs()[0];
+                            new_parameter->set_placement_index(placement);
+                            target_input->replace_output(new_output);
+                            cluster_inputs.push_back(new_parameter);
+                            function_call_inputs.push_back(input);
+                        }
+                    }
+                    for (auto output : node->get_users(true))
+                    {
+                        if (output->get_placement_index() == 0)
+                        {
+                            // Since this output is to outside the cluster we need to create
+                            // a new Result node placed in the cluster instead of this external
+                            // node
+                            function_call_outputs.push_back(output);
+                            cluster_outputs.push_back(node);
+                        }
+                    }
+                }
+
+                // Now make a FunctionCall out of the nodes in cluster, including the new nodes
+                // we just added
+                auto sub_function = make_shared<Function>(cluster_outputs, cluster_inputs);
+                sub_function->set_placement(placement);
+                ngraph::plot_graph(sub_function, "sub_function.png", node_modifiers);
+                auto fc = make_shared<runtime::hybrid::op::FunctionCall>(function_call_outputs,
+                                                                         function_call_inputs,
+                                                                         sub_function,
+                                                                         backend_list[placement]);
+                fc->set_placement_index(0);
+                for (size_t i = 0; i < function_call_outputs.size(); i++)
+                {
+                    // // First add a GetOutputElement to the ith output of the FunctionCall
+                    // auto goe = make_shared<GetOutpu
+
+                    auto old_source = cluster_outputs[i];
+                    auto new_source = fc;
+                    auto target = function_call_outputs[i];
+                    descriptor::Input* target_input = target->get_input_from(old_source);
+                    descriptor::Output& new_output = new_source->get_outputs()[i];
+                    target_input->replace_output(new_output);
+                }
             }
         }
     }
-
-    // Create functions from clusters
-    vector<shared_ptr<Function>> sub_functions;
-    for (auto cluster : clusters)
-    {
-        ParameterVector par_vector;
-        ResultVector res_vector;
-        for (auto node : cluster)
-        {
-            if (auto res_node = dynamic_pointer_cast<op::Result>(node))
-            {
-                res_vector.push_back(res_node);
-            }
-            else if (auto par_node = dynamic_pointer_cast<op::Parameter>(node))
-            {
-                par_vector.push_back(par_node);
-            }
-        }
-        auto sub_function = make_shared<Function>(res_vector, par_vector);
-        sub_functions.push_back(sub_function);
-    }
-
-    return make_pair(sub_functions, map_parameter_to_result);
+    ngraph::plot_graph(f, "f.png", node_modifiers);
 }
 
-// Suffix *_size  as a part of function name is temporary, this suffix
-//  will be removed when the backends move to the latest Hybrid backend
-// Assert that nodes in the function is colocated and return that placement
-size_t runtime::hybrid::get_colocated_function_placement_size(shared_ptr<Function> func)
+void runtime::hybrid::node_modifiers(const Node& node, vector<string>& attributes)
 {
-    auto ops = func->get_ops();
-
-    //it's okay to not do Placement::DEFAULT check; the same node will be checked in the loop below
-    size_t function_placement = ops.front()->get_placement_index();
-    for (auto op : ops)
+    vector<string> colors = {"\"#A0FFA0\"", "\"#FFF790\""};
+    auto fc = dynamic_cast<const hybrid::op::FunctionCall*>(&node);
+    if (fc != nullptr)
     {
-        size_t node_placement = op->get_placement_index();
-        if (node_placement == Node::placement_invalid)
-        {
-            throw ngraph_error("Node should have a device placement");
-        }
-        if (function_placement != node_placement)
-        {
-            throw ngraph_error("Function contains nodes of two different placements");
-        }
+        string fill_color = colors[fc->get_function()->get_placement()];
+        string outline_color = colors[node.get_placement_index()];
+        attributes.push_back("style=filled");
+        attributes.push_back("fillcolor=" + fill_color);
+        attributes.push_back("color=" + outline_color);
+        attributes.push_back("penwidth=3");
     }
-
-    return function_placement;
+    else if (node.get_placement_index() < colors.size())
+    {
+        string color = colors[node.get_placement_index()];
+        attributes.push_back("style=filled");
+        attributes.push_back("fillcolor=" + color);
+    }
 }

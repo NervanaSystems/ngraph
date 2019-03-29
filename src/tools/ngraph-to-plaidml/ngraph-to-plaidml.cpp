@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -142,7 +142,9 @@ OPTIONS
         return EXIT_FAILURE;
     }
 
-    backend->save(f, output, format);
+    auto exec = backend->compile(f);
+    static_cast<ngraph::runtime::plaidml::PlaidML_Executable*>(exec.get())->save(output, format);
     std::cerr << "Wrote output to " << output << "\n";
+
     return EXIT_SUCCESS;
 }

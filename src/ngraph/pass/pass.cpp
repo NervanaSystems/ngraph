@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,12 +17,15 @@
 #include "ngraph/pass/pass.hpp"
 #include "ngraph/pass/manager.hpp"
 
-ngraph::pass::ManagerState& ngraph::pass::PassBase::get_state()
+using namespace std;
+using namespace ngraph;
+
+pass::ManagerState& pass::PassBase::get_state()
 {
     return *m_state;
 }
 
-void ngraph::pass::PassBase::set_state(ManagerState& state)
+void pass::PassBase::set_state(ManagerState& state)
 {
     m_state = &state;
 }

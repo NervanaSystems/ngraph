@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -54,8 +54,6 @@ namespace ngraph
         ///      21~~~\text{(both dimensions (rows and columns) are eliminated)}
         /// \f]
         ///
-        /// This is equivalent to Reduce where `arg_init` = 0 and `reduction_function` is \f$f(x,y) = x+y\f$.
-        ///
         /// ## Parameters
         ///
         /// |                      | Description                              |
@@ -78,7 +76,7 @@ namespace ngraph
         public:
             /// \brief Constructs a summation operation.
             ///
-            /// \param arg The tensor view to be summed.
+            /// \param arg The tensor to be summed.
             /// \param reduction_axes The axis positions (0-based) to be eliminated.
             Sum(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes);
 

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -68,6 +68,7 @@ int main(int argc, char** argv)
 {
     time_t main_timestamp = get_timestamp(argv[0]);
     static vector<string> valid_ext = {".h", ".hpp", ".tcc", ""};
+    static vector<string> invalid_file = {"README"};
     string output_path;
     string base_name;
 
@@ -86,9 +87,10 @@ int main(int argc, char** argv)
 
     vector<ResourceInfo> include_paths;
 
-#ifdef __APPLE__
+    include_paths.push_back({CLANG_BUILTIN_HEADERS_PATH, {}, true});
+
 #ifdef EIGEN_HEADERS_PATH
-    include_paths.push_back({EIGEN_HEADERS_PATH, {}, true});
+    include_paths.push_back({EIGEN_HEADERS_PATH, {"Eigen"}, true});
 #endif
 #ifdef MKLDNN_HEADERS_PATH
     include_paths.push_back({MKLDNN_HEADERS_PATH, {}, true});
@@ -96,21 +98,7 @@ int main(int argc, char** argv)
 #ifdef TBB_HEADERS_PATH
     include_paths.push_back({TBB_HEADERS_PATH, {}, true});
 #endif
-    include_paths.push_back({NGRAPH_HEADERS_PATH, {}, true});
-    include_paths.push_back({CLANG_BUILTIN_HEADERS_PATH, {}, true});
-#else // __APPLE__
-    include_paths.push_back({CLANG_BUILTIN_HEADERS_PATH, {}, true});
-#ifdef EIGEN_HEADERS_PATH
-    include_paths.push_back({EIGEN_HEADERS_PATH, {}, true});
-#endif
-#ifdef MKLDNN_HEADERS_PATH
-    include_paths.push_back({MKLDNN_HEADERS_PATH, {}, true});
-#endif
-    include_paths.push_back({NGRAPH_HEADERS_PATH, {}, true});
-#ifdef TBB_HEADERS_PATH
-    include_paths.push_back({TBB_HEADERS_PATH, {}, true});
-#endif
-#endif
+    include_paths.push_back({NGRAPH_HEADERS_PATH, {"ngraph"}, true});
 
     if (output_path.empty())
     {
@@ -122,9 +110,11 @@ int main(int argc, char** argv)
 
     for (ResourceInfo& path : include_paths)
     {
-        // cout << "path " << path.source_path << " -> " << path.target_path << endl;
         vector<string> path_list;
-        path_list.push_back(path.search_path);
+        if (path.subdirs.empty())
+        {
+            path_list.push_back(path.search_path);
+        }
         for (const string& p : path.subdirs)
         {
             path_list.push_back(path_join(path.search_path, p));
@@ -135,11 +125,14 @@ int main(int argc, char** argv)
                           [&](const string& file, bool is_dir) {
                               if (!is_dir)
                               {
-                                  string ext = get_file_ext(file);
-                                  if (contains(valid_ext, ext))
+                                  if (!contains(invalid_file, file))
                                   {
-                                      //   cout << "add " << path.search_path << ", " << file << endl;
-                                      path.files.push_back(file);
+                                      string ext = get_file_ext(file);
+                                      if (contains(valid_ext, ext))
+                                      {
+                                          // std::cout << "add " << file << std::endl;
+                                          path.files.push_back(file);
+                                      }
                                   }
                               }
                           },
@@ -169,7 +162,7 @@ int main(int argc, char** argv)
     {
         size_t total_size = 0;
         size_t total_count = 0;
-        const string prefix = "pReFiX";
+        const string delim = "pReFiX";
         ofstream out(output_path);
         out << "#pragma clang diagnostic ignored \"-Weverything\"\n";
         out << "#include <vector>\n";
@@ -182,23 +175,61 @@ int main(int argc, char** argv)
             out << "        \"" << path.search_path << "\",\n";
         }
         out << "    };\n";
-
+#ifdef _WIN32
+        out << "    const std::vector<std::pair<std::string, std::vector<std::string>>> "
+               "builtin_headers =\n";
+#else
         out << "    const std::vector<std::pair<std::string, std::string>> builtin_headers =\n";
+#endif
         out << "    {\n";
         for (const ResourceInfo& path : include_paths)
         {
             for (const string& header_path : path.files)
             {
-                string header_data = read_file_to_string(header_path);
-                string relative_path = header_path.substr(path.search_path.size() + 1);
-                header_data = rewrite_header(header_data, relative_path);
-                // header_data = uncomment(header_data);
-                total_size += header_data.size();
-                total_count++;
-
                 out << "        {";
-                out << "\"" << header_path << "\",\nR\"" << prefix << "(" << header_data << ")"
-                    << prefix << "\"},\n";
+                out << "\"" << header_path << "\",\n";
+                string relative_path = header_path.substr(path.search_path.size() + 1);
+                std::ifstream file(header_path);
+                if (file.is_open())
+                {
+                    std::string line;
+#ifdef _WIN32
+                    const int max_partial_size = 65500;
+                    out << "{\n";
+                    bool first_line = true;
+                    int partial_size = 0;
+                    out << "R\"" << delim << "(";
+                    while (getline(file, line))
+                    {
+                        line = rewrite_header(line, relative_path);
+                        // line = uncomment(line);
+                        total_size += line.size();
+                        partial_size += line.size();
+                        if (partial_size > max_partial_size)
+                        {
+                            out << ")" << delim << "\",\n";
+                            partial_size = line.size();
+                            out << "R\"" << delim << "(";
+                        }
+                        out << line;
+                    }
+                    out << ")" << delim << "\"";
+                    out << "}";
+#else
+                    out << "R\"" << delim << "(";
+                    while (getline(file, line))
+                    {
+                        line = rewrite_header(line, relative_path);
+                        // line = uncomment(line);
+                        total_size += line.size();
+                        out << line;
+                    }
+                    out << ")" << delim << "\"";
+#endif
+                    file.close();
+                }
+                out << "},\n";
+                total_count++;
             }
         }
         out << "    };\n";

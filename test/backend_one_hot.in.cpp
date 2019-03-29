@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,7 +49,8 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_scalar_2_in_3)
     copy_data(a, vector<int32_t>{2});
     auto result = backend->create_tensor(element::i32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<int32_t>{0, 0, 1}), read_vector<int32_t>(result));
 }
 
@@ -68,7 +69,8 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_scalar_1_in_3)
     copy_data(a, vector<int32_t>{1});
     auto result = backend->create_tensor(element::i32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<int32_t>{0, 1, 0}), read_vector<int32_t>(result));
 }
 
@@ -87,7 +89,8 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_scalar_0_in_3)
     copy_data(a, vector<int32_t>{0});
     auto result = backend->create_tensor(element::i32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<int32_t>{1, 0, 0}), read_vector<int32_t>(result));
 }
 
@@ -108,7 +111,8 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_scalar_fp_nonint_in_3)
 
     try
     {
-        backend->call_with_validate(backend->compile(f), {result}, {a});
+        auto handle = backend->compile(f);
+        handle->call_with_validate({result}, {a});
     }
     catch (const std::exception& e)
     {
@@ -132,21 +136,13 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_scalar_oob_in_3)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::i32, shape_a);
-    copy_data(a, vector<int32_t>{3000000});
-    auto result = backend->create_tensor(element::i32, shape_r);
+    copy_data(a, vector<int32_t>{3});
+    vector<int32_t> r_data(4);
+    auto result = backend->create_tensor(element::i32, shape_r, r_data.data());
 
-    try
-    {
-        backend->call_with_validate(backend->compile(f), {result}, {a});
-    }
-    catch (const std::exception& e)
-    {
-        EXPECT_EQ(e.what(), std::string("One-hot: value is out of category range"));
-    }
-    catch (...)
-    {
-        FAIL() << "Expected a std::out_of_range exception";
-    }
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_EQ(r_data[3], 0);
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_0)
@@ -164,7 +160,8 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_0)
     copy_data(a, vector<int32_t>{2, 1, 0, 0, 2, 2, 1, 0});
     auto result = backend->create_tensor(element::i32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ(
         (vector<int32_t>{0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0}),
         read_vector<int32_t>(result));
@@ -185,7 +182,8 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_1)
     copy_data(a, vector<int32_t>{2, 1, 0, 0, 2, 2, 1, 0});
     auto result = backend->create_tensor(element::i32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ(
         (vector<int32_t>{0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0}),
         read_vector<int32_t>(result));
@@ -206,47 +204,42 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_1_barely_oob)
     copy_data(a, vector<int32_t>{2, 1, 0, 0, 3, 2, 1, 0});
     auto result = backend->create_tensor(element::i32, shape_r);
 
-    try
-    {
-        backend->call_with_validate(backend->compile(f), {result}, {a});
-    }
-    catch (const std::exception& e)
-    {
-        EXPECT_EQ(e.what(), std::string("One-hot: value is out of category range"));
-    }
-    catch (...)
-    {
-        FAIL() << "Expected a std::out_of_range exception";
-    }
-}
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    vector<int32_t> rv = read_vector<int32_t>(result);
 
-NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_1_far_oob)
-{
-    Shape shape_a{8};
-    auto A = make_shared<op::Parameter>(element::i32, shape_a);
-    Shape shape_r{8, 3};
-    auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
-    auto f = make_shared<Function>(r, ParameterVector{A});
+    EXPECT_EQ(rv[0], 0);
+    EXPECT_EQ(rv[1], 0);
+    EXPECT_EQ(rv[2], 1);
 
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    EXPECT_EQ(rv[3], 0);
+    EXPECT_EQ(rv[4], 1);
+    EXPECT_EQ(rv[5], 0);
 
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::i32, shape_a);
-    copy_data(a, vector<int32_t>{2, 1, 0, 0, 3000000, 2, 1, 0});
-    auto result = backend->create_tensor(element::i32, shape_r);
+    EXPECT_EQ(rv[6], 1);
+    EXPECT_EQ(rv[7], 0);
+    EXPECT_EQ(rv[8], 0);
 
-    try
-    {
-        backend->call_with_validate(backend->compile(f), {result}, {a});
-    }
-    catch (const std::exception& e)
-    {
-        EXPECT_EQ(e.what(), std::string("One-hot: value is out of category range"));
-    }
-    catch (...)
-    {
-        FAIL() << "Expected a std::out_of_range exception";
-    }
+    EXPECT_EQ(rv[9], 1);
+    EXPECT_EQ(rv[10], 0);
+    EXPECT_EQ(rv[11], 0);
+
+    // These are undefined since value is out of bounds
+    // EXPECT_EQ(rv[12], 0);
+    // EXPECT_EQ(rv[13], 0);
+    // EXPECT_EQ(rv[14], 0);
+
+    EXPECT_EQ(rv[15], 0);
+    EXPECT_EQ(rv[16], 0);
+    EXPECT_EQ(rv[17], 1);
+
+    EXPECT_EQ(rv[18], 0);
+    EXPECT_EQ(rv[19], 1);
+    EXPECT_EQ(rv[20], 0);
+
+    EXPECT_EQ(rv[21], 1);
+    EXPECT_EQ(rv[22], 0);
+    EXPECT_EQ(rv[23], 0);
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, one_hot_matrix_0)
@@ -267,7 +260,8 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_matrix_0)
               });
     auto result = backend->create_tensor(element::i32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<int32_t>{1, 0, 0, 0, 0, 1, 1, 0, 0,
 
                                0, 1, 1, 0, 1, 0, 0, 0, 1,
@@ -291,7 +285,8 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_1_fp)
     copy_data(a, vector<float>{2, 1, 0, 0, 2, 2, 1, 0});
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ(
         (vector<float>{0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0}),
         read_vector<float>(result));
@@ -314,7 +309,8 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_1_fp_nonint)
 
     try
     {
-        backend->call_with_validate(backend->compile(f), {result}, {a});
+        auto handle = backend->compile(f);
+        handle->call_with_validate({result}, {a});
     }
     catch (const std::exception& e)
     {

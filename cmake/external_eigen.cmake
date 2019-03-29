@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,52 +17,25 @@
 # Enable ExternalProject CMake module
 include(ExternalProject)
 
-set(EIGEN_GIT_TAG patched)
-set(EIGEN_GIT_URL https://github.com/NervanaSystems/eigen)
+set(EIGEN_GIT_TAG ded1e7b4960f0074fa147a8ed1c9926174958092)
+set(EIGEN_GIT_URL https://github.com/eigenteam/eigen-git-mirror)
 
 #------------------------------------------------------------------------------
 # Download Eigen
 #------------------------------------------------------------------------------
 
-# The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
-if (${CMAKE_VERSION} VERSION_LESS 3.2)
-    ExternalProject_Add(
-        ext_eigen
-        PREFIX eigen
-        GIT_REPOSITORY ${EIGEN_GIT_URL}
-        GIT_TAG ${EIGEN_GIT_TAG}
-        UPDATE_COMMAND ""
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND ""
-        INSTALL_COMMAND ""
-        TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/eigen/tmp"
-        STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/eigen/stamp"
-        DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/eigen/download"
-        SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/eigen/src"
-        BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/eigen/build"
-        INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/eigen"
-        EXCLUDE_FROM_ALL TRUE
-        )
-else()
-    ExternalProject_Add(
-        ext_eigen
-        PREFIX eigen
-        GIT_REPOSITORY ${EIGEN_GIT_URL}
-        GIT_TAG ${EIGEN_GIT_TAG}
-        UPDATE_COMMAND ""
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND ""
-        INSTALL_COMMAND ""
-        TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/eigen/tmp"
-        STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/eigen/stamp"
-        DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/eigen/download"
-        SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/eigen/src"
-        BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/eigen/build"
-        INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/eigen"
-        BUILD_BYPRODUCTS "${EXTERNAL_PROJECTS_ROOT}/eigen/src/Eigen/Core"
-        EXCLUDE_FROM_ALL TRUE
-        )
-endif()
+ExternalProject_Add(
+    ext_eigen
+    PREFIX eigen
+    GIT_REPOSITORY ${EIGEN_GIT_URL}
+    GIT_TAG ${EIGEN_GIT_TAG}
+    UPDATE_COMMAND ""
+    PATCH_COMMAND git apply --ignore-space-change --ignore-whitespace ${CMAKE_SOURCE_DIR}/cmake/eigen.patch
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+    EXCLUDE_FROM_ALL TRUE
+    )
 
 #------------------------------------------------------------------------------
 

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -168,13 +168,13 @@ namespace ngraph
                 }
 
                 template <typename ElementType>
-                void dot(void* arg0,
-                         void* arg1,
-                         void* out,
-                         const Shape& arg0_shape,
-                         const Shape& arg1_shape,
-                         const Shape& out_shape,
-                         size_t reduction_axes_count)
+                void dot_ref(void* arg0,
+                             void* arg1,
+                             void* out,
+                             const Shape& arg0_shape,
+                             const Shape& arg1_shape,
+                             const Shape& out_shape,
+                             size_t reduction_axes_count)
                 {
                     reference::dot(static_cast<const ElementType*>(arg0),
                                    static_cast<const ElementType*>(arg1),

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -113,9 +113,10 @@ namespace ngraph
                 }
                 else
                 {
-                    std::function<decltype(runtime::cpu::kernel::reshape<float>)> ref_kernel;
+                    std::function<decltype(runtime::cpu::kernel::reshape_ref<float>)> ref_kernel;
 
-                    SELECT_KERNEL(ref_kernel, result_element_type, runtime::cpu::kernel::reshape);
+                    SELECT_KERNEL(
+                        ref_kernel, result_element_type, runtime::cpu::kernel::reshape_ref);
 
                     auto functor = [&, ref_kernel, arg_shape, input_order, result_shape](
                         CPURuntimeContext* ctx, CPUExecutionContext* ectx) {

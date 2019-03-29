@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@
 using namespace std;
 using namespace ngraph;
 
-bool pass::Liveness::run_on_function(shared_ptr<ngraph::Function> function)
+bool pass::Liveness::run_on_function(shared_ptr<Function> function)
 {
     list<shared_ptr<Node>> ops = function->get_ordered_ops();
 

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -138,7 +138,7 @@ namespace ngraph
 
                         // Expand sub_dot result with single empty outermost axis, in order to
                         // later concatenate sub_dots at this axis.
-                        small_dots.at(g) = reshape::add_empty_axes(sub_dot);
+                        small_dots.at(g) = reshape::expand_dims(sub_dot);
                     }
 
                     // Concatenate sub_dots on groups axis.

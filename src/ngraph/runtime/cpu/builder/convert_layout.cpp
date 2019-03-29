@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,6 +49,12 @@ namespace ngraph
                     //becomes a copy
                     input_desc = result_desc;
                 }
+                else if ((input_desc.data.format == mkldnn_nchw ||
+                          input_desc.data.format == mkldnn_nhwc) &&
+                         result_desc.data.format == mkldnn_OIhw4i16o4i_s8s8)
+                {
+                    input_desc.data.format = mkldnn_oihw;
+                }
                 else if (input_desc.data.format == mkldnn_nchw && input_desc.data.ndims == 4 &&
                          result_desc.data.ndims == 5 && node->get_users().size() == 1)
                 {
@@ -75,17 +81,22 @@ namespace ngraph
                         mkldnn::memory::format::goihw);
                 }
 
-                size_t reorder_index = mkldnn_emitter->build_reorder(input_desc, result_desc);
-
+                // ConvertLayout needs 3 primitives: input, result, and reorder.
+                size_t reorder_index = mkldnn_emitter->reserve_primitive_space(3);
                 auto& deps = mkldnn_emitter->get_primitive_deps(reorder_index);
-                auto functor = [&, reorder_index](CPURuntimeContext* ctx,
-                                                  CPUExecutionContext* ectx) {
+                auto functor = [&, input_desc, result_desc, reorder_index](
+                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    if (ctx->first_iteration)
+                    {
+                        mkldnn_emitter->build_reorder(input_desc, result_desc, reorder_index);
+                    }
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
                     cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, reorder_index);
                 };
                 functors.emplace_back(functor);
             }
+            REGISTER_CPU_OP_BUILDER(ConvertLayout);
         }
     }
 }

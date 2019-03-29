@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -38,6 +38,7 @@ set(SRC
     builder/argmax.cpp
     builder/batch_norm.cpp
     builder/broadcast.cpp
+    builder/broadcast_distributed.cpp
     builder/bounded_relu.cpp
     builder/concat.cpp
     builder/convert.cpp
@@ -45,7 +46,6 @@ set(SRC
     builder/convolution.cpp
     builder/dot.cpp
     builder/embedding_lookup.cpp
-    builder/function_call.cpp
     builder/leaky_relu.cpp
     builder/lstm.cpp
     builder/lrn.cpp
@@ -58,18 +58,18 @@ set(SRC
     builder/pad.cpp
     builder/product.cpp
     builder/reduce_function.cpp
-    builder/reduce_function_window.cpp
     builder/replace_slice.cpp
     builder/quantization.cpp
     builder/quantized_avg_pool.cpp
     builder/quantized_conv.cpp
+    builder/quantized_concat.cpp
+    builder/quantized_dot.cpp
     builder/quantized_max_pool.cpp
     builder/reshape.cpp
     builder/reverse.cpp
     builder/reverse_sequence.cpp
     builder/rnn.cpp
     builder/select.cpp
-    builder/select_and_scatter.cpp
     builder/sigmoid.cpp
     builder/slice.cpp
     builder/state.cpp
@@ -111,6 +111,7 @@ set(SRC
     pass/cpu_layout.cpp
     pass/cpu_loop_kernel_fusion.cpp
     pass/cpu_mat_fusion.cpp
+    pass/cpu_memory_assignment.cpp
     pass/cpu_memory_optimization.cpp
     pass/cpu_post_layout_optimizations.cpp
     pass/cpu_rnn_fusion.cpp
@@ -137,31 +138,6 @@ if (NGRAPH_HALIDE)
         )
 endif()
 
-if (NGRAPH_TBB_ENABLE)
-    include(${TBB_ROOT}/cmake/TBBBuild.cmake)
-    tbb_build(TBB_ROOT ${TBB_ROOT} MAKE_ARGS tbb_build_dir=${CMAKE_CURRENT_BINARY_DIR}/tbb_build
-                tbb_build_prefix=tbb CONFIG_DIR TBB_DIR)
-    find_package(TBB REQUIRED tbb)
-    if (NOT TBB_FOUND)
-        message(FATAL_ERROR "TBB is needed by the CPU backend and was not found")
-    else()
-        message(STATUS "Found TBB and imported target ${TBB_IMPORTED_TARGETS}")
-    endif()
-
-    set_source_files_properties(cpu_external_function.cpp
-        PROPERTIES COMPILE_DEFINITIONS "NGRAPH_TBB_ENABLE")
-
-    install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/
-        DESTINATION ${NGRAPH_INSTALL_LIB}
-        FILES_MATCHING REGEX "/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
-    )
-    add_library(libtbb INTERFACE)
-    target_link_libraries(libtbb INTERFACE
-        ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX}
-    )
-    target_include_directories(libtbb SYSTEM INTERFACE ${TBB_ROOT}/include)
-endif()
-
 if (NGRAPH_CPU_ENABLE)
     set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
 
@@ -174,6 +150,10 @@ if (NGRAPH_CPU_ENABLE)
     if (NGRAPH_DEX_ONLY)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_DEX_ONLY")
     endif()
+    if(NGRAPH_TBB_ENABLE)
+        set_source_files_properties(cpu_external_function.cpp
+            PROPERTIES COMPILE_DEFINITIONS "NGRAPH_TBB_ENABLE")
+    endif()
     if (NGRAPH_HALIDE)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_HALIDE")
         ExternalProject_Get_Property(ext_halide BINARY_DIR)
@@ -184,25 +164,42 @@ if (NGRAPH_CPU_ENABLE)
 
     if(OPENMP_FOUND)
         target_compile_options(cpu_backend PRIVATE "${OpenMP_CXX_FLAGS}")
-        target_compile_definitions(cpu_backend PRIVATE EIGEN_OPENMP)
+        if (NOT WIN32)
+            target_compile_definitions(cpu_backend PRIVATE EIGEN_OPENMP)
+        endif()
     else()
          message(WARNING "The build toolset doesn't support OpenMP. This will impact performance and lead to slowdowns.")
     endif()
 
+    if (MSVS)
+        target_compile_definitions(cpu_backend PRIVATE EIGEN_HAS_CONSTEXPR)
+        # under debug mode, more files besides builder/dot.cpp rises the error
+        target_compile_options(cpu_backend PRIVATE "/bigobj" )
+    endif()
+    target_compile_definitions(cpu_backend PRIVATE CPU_BACKEND_DLL_EXPORTS)
+
     if(NGRAPH_DISTRIBUTED_ENABLE)
-        target_compile_definitions(cpu_backend PRIVATE NGRAPH_DISTRIBUTED)
-        target_include_directories(cpu_backend SYSTEM PRIVATE libmlsl)
-        target_link_libraries(cpu_backend PRIVATE libmlsl)
+        if(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
+            target_include_directories(cpu_backend SYSTEM PRIVATE libmlsl)
+            target_link_libraries(cpu_backend PRIVATE libmlsl)
+        elseif(NGRAPH_DISTRIBUTED_OMPI_ENABLE)
+            find_package(MPI REQUIRED)
+            target_include_directories(cpu_backend
+                SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+            target_link_libraries(cpu_backend
+                PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+        else()
+            message(FATAL_ERROR "Distributed Library not supported/mentioned")
+        endif()
     endif()
 
-    add_dependencies(cpu_backend ext_mkldnn ext_eigen)
-    target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libeigen libjson libtbb)
+    add_dependencies(cpu_backend libmkldnn ext_eigen)
+    target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libmkl libeigen libjson libtbb)
     if (NOT NGRAPH_DEX_ONLY)
         target_link_libraries(cpu_backend PUBLIC codegen)
     endif()
     target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)
-    set_target_properties(cpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
-    if (NOT APPLE)
+    if (NOT APPLE AND NOT MSVS)
         # CPU backend uses third-party libraries like Eigen that might be linked in and
         # exported by other DSOs as well. In the absence of versioning, this could lead to the
         # CPU backend picking up the wrong version or even multiple versions of the
@@ -211,5 +208,5 @@ if (NGRAPH_CPU_ENABLE)
         set_property(TARGET cpu_backend APPEND PROPERTY LINK_FLAGS "-Wl,-Bsymbolic-functions -Wl,--exclude-libs=ALL")
     endif()
 
-    install(TARGETS cpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
+    install(TARGETS cpu_backend DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()

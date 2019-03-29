@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 set(SRC
     intelgpu_backend.cpp
+    intelgpu_executable.cpp
     intelgpu_tensor_view.cpp
     intelgpu_layout.cpp
     intelgpu_op_batchnorm.cpp
@@ -24,18 +25,19 @@ set(SRC
     intelgpu_op_convolution.cpp
     intelgpu_op_softmax.cpp
     intelgpu_op_custom_func_call.cpp
-    code_writer.cpp
     visualize_tree.cpp
 )
 
 if (NGRAPH_INTELGPU_ENABLE)
     add_library(intelgpu_backend SHARED ${SRC})
     target_link_libraries(intelgpu_backend PUBLIC ngraph libcldnn)
-    set_target_properties(intelgpu_backend
-        PROPERTIES
-            VERSION ${NGRAPH_VERSION}
-            SOVERSION ${NGRAPH_API_VERSION}
-            LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+
+    if (NGRAPH_LIB_VERSIONING_ENABLE)
+        set_target_properties(intelgpu_backend
+            PROPERTIES
+                VERSION ${NGRAPH_VERSION}
+                SOVERSION ${NGRAPH_API_VERSION})
+    endif()
 
     install(TARGETS intelgpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()

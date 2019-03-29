@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ namespace ngraph
                                            const NodeVector& deltas) override;
 
         public:
-            /// \brief Constructions a tensor view-typed parameter node.
+            /// \brief Constructions a tensor-typed parameter node.
             ///
             /// \param element_type The element type of the parameter.
             /// \param pshape The partial shape of the parameter.

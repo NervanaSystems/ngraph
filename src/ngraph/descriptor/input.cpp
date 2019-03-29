@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,8 @@ Input::Input(Node* node, size_t index, Output& output)
     : m_node(node)
     , m_index(index)
     , m_output(&output)
+    , m_is_relevant_to_shape(false)
+    , m_is_relevant_to_value(true)
 {
     m_src_node = std::shared_ptr<Node>(output.get_node());
     output.add_input(this);

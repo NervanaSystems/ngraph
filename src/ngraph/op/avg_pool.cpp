@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -132,9 +132,15 @@ void op::AvgPoolBackprop::validate_and_infer_types()
 
     const PartialShape& delta_shape = get_input_partial_shape(0);
 
-    NODE_VALIDATION_ASSERT(this, forward_result_shape.compatible(delta_shape))
-        << "Inferred forward output shape does not match delta shape (inferred forward output "
-        << "shape: " << forward_result_shape << ", delta shape: " << delta_shape << ").";
+    NODE_VALIDATION_CHECK(
+        this,
+        forward_result_shape.compatible(delta_shape),
+        "Inferred forward output shape does not match delta shape (inferred forward output ",
+        "shape: ",
+        forward_result_shape,
+        ", delta shape: ",
+        delta_shape,
+        ").");
 
     // TODO(amprocte): Once m_forward_arg_shape is allowed to be dynamic, we may technically be
     // able to infer some extra information from forward_result_shape that was not present in the

@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -42,3 +42,7 @@ add_custom_command(
 )
 
 add_custom_target(python_wheel DEPENDS ngraph ${CMAKE_BINARY_DIR}/python/dist/)
+if (NGRAPH_CPU_ENABLE)
+    add_dependencies(python_wheel libmkldnn)
+endif()
+

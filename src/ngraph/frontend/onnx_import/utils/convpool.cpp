@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -93,6 +93,10 @@ namespace ngraph
                                              const Strides& strides,
                                              const std::string& auto_pad)
                 {
+                    if (auto_pad == "VALID")
+                    {
+                        return CoordinateDiff(input_shape.size());
+                    }
                     CoordinateDiff pads_begin;
                     CoordinateDiff pads_end;
                     // Omit {N,C} axes

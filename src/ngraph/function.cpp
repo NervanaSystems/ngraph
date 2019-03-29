@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -118,7 +118,7 @@ const std::string& Function::get_name() const
     return m_unique_name;
 }
 
-void Function::set_name(const string& name)
+void Function::set_friendly_name(const string& name)
 {
     if (m_name.empty())
     {
@@ -190,4 +190,37 @@ std::list<shared_ptr<Node>> Function::get_ops(bool include_control_deps) const
 void Function::replace_node(std::shared_ptr<Node> old, std::shared_ptr<Node> repl)
 {
     ngraph::replace_node(old, repl);
+}
+
+size_t Function::get_graph_size() const
+{
+    size_t total_size = 0;
+    for (auto node : get_ops())
+    {
+        total_size += sizeof(*node);
+        if (node->description() == "Constant")
+        {
+            const Shape& shape = node->get_outputs()[0].get_shape();
+            size_t const_size = node->get_outputs()[0].get_element_type().size();
+            if (shape.size() == 0)
+            {
+                total_size += const_size;
+            }
+            else
+            {
+                total_size += (const_size * shape_size(node->get_outputs()[0].get_shape()));
+            }
+        }
+    }
+    return total_size;
+}
+
+size_t Function::get_placement() const
+{
+    return m_placement;
+}
+
+void Function::set_placement(size_t placement)
+{
+    m_placement = placement;
 }

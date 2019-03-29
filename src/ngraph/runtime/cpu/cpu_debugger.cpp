@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -129,8 +129,16 @@ bool runtime::cpu::CPU_Debugger::delete_breakpoint(std::shared_ptr<Node> op)
 
 void* runtime::cpu::CPU_Debugger::inspect(std::shared_ptr<Node> op, size_t output_index)
 {
-    return m_callframe.m_external_function->tensor_data.at(op->get_name() + "_" +
-                                                           to_string(output_index));
+    if (m_callframe.m_external_function->is_direct_execution())
+    {
+        return m_callframe.m_external_function->get_tensor_data(op->get_name() + "_" +
+                                                                to_string(output_index));
+    }
+    else
+    {
+        return m_callframe.m_external_function->tensor_data.at(op->get_name() + "_" +
+                                                               to_string(output_index));
+    }
 }
 
 bool runtime::cpu::CPU_Debugger::add_tracepoint(

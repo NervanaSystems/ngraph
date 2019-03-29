@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,13 +17,14 @@
 #include <fstream>
 #include <sstream>
 
-#include <mlsl.hpp>
-
 #include "gtest/gtest.h"
 
+#include "distributed_setup.hpp"
+#include "ngraph/distributed.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/serializer.hpp"
+#include "util/all_close_f.hpp"
 #include "util/random.hpp"
 
 using namespace std;
@@ -31,22 +32,51 @@ using namespace ngraph;
 
 TEST(distributed_${BACKEND_NAME}, allreduce)
 {
+    DistributedSetup distsetup;
+    auto comm_size = distsetup.get_comm_size();
+    if (comm_size > 1)
+    {
+        auto shape = Shape{2, 2};
+        auto A = make_shared<op::Parameter>(element::f32, shape);
+        auto f = make_shared<Function>(make_shared<op::AllReduce>(A), ParameterVector{A});
+
+        auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+        auto v = vector<float>{1, 2, 3, 4};
+        auto a = backend->create_tensor(element::f32, shape);
+        copy_data(a, vector<float>{1, 2, 3, 4});
+
+        auto result = backend->create_tensor(element::f32, shape);
+
+        std::transform(
+            v.begin(), v.end(), v.begin(), std::bind1st(std::multiplies<float>(), comm_size));
+
+        auto handle = backend->compile(f);
+        handle->call_with_validate({result}, {a});
+        EXPECT_TRUE(test::all_close_f(v, read_vector<float>(result)));
+    }
+}
+
+TEST(distributed_${BACKEND_NAME}, broadcastdistributed)
+{
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::AllReduce>(A), ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::BroadcastDistributed>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
-    auto comm_size = MLSL::Environment::GetEnv().GetProcessCount();
 
     auto v = vector<float>{1, 2, 3, 4};
-    auto a = backend->create_tensor(element::f32, shape);
-    copy_data(a, vector<float>{1, 2, 3, 4});
-
     auto result = backend->create_tensor(element::f32, shape);
+    copy_data(result, vector<float>(4, 0));
 
-    std::transform(
-        v.begin(), v.end(), v.begin(), std::bind1st(std::multiplies<float>(), comm_size));
+    DistributedSetup distsetup;
+    auto processIdx = distsetup.get_comm_rank();
+    if (processIdx == 0)
+    {
+        copy_data(result, v);
+    }
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {result});
     EXPECT_EQ(v, read_vector<float>(result));
 }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -57,8 +57,7 @@ namespace ngraph
                     }
                     else if (data_shape != slope_shape)
                     {
-                        auto params = numpy_style_broadcast_for_binary_operation(slope, data);
-                        slope = params.at(0);
+                        slope = numpy_style_broadcast({slope, data})[0];
                     }
 
                     // x <  0 => f(x) = x * slope

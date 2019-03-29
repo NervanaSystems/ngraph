@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@
 #include <typeinfo>
 
 #include "ngraph/autodiff/adjoints.hpp"
+#include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
@@ -84,6 +85,16 @@ void Node::validate_and_infer_types()
 {
 }
 
+void Node::set_input_is_relevant_to_shape(size_t i, bool relevant)
+{
+    m_inputs.at(i).m_is_relevant_to_shape = relevant;
+}
+
+void Node::set_input_is_relevant_to_value(size_t i, bool relevant)
+{
+    m_inputs.at(i).m_is_relevant_to_value = relevant;
+}
+
 void Node::set_output_type(size_t i, const element::Type& element_type, const PartialShape& pshape)
 {
     m_outputs.at(i).get_tensor_ptr()->set_tensor_type(element_type, pshape);
@@ -114,13 +125,18 @@ bool Node::is_constant() const
     return false;
 }
 
+const std::string& Node::description() const
+{
+    return m_node_type;
+}
+
 const std::string& Node::get_friendly_name() const
 {
-    if (m_name.empty())
+    if (m_friendly_name.empty())
     {
         return m_unique_name;
     }
-    return m_name;
+    return m_friendly_name;
 }
 
 const std::string& Node::get_name() const
@@ -128,16 +144,9 @@ const std::string& Node::get_name() const
     return m_unique_name;
 }
 
-void Node::set_name(const string& name)
+void Node::set_friendly_name(const string& name)
 {
-    if (m_name.empty())
-    {
-        m_name = name;
-    }
-    else
-    {
-        throw ngraph_error("Node name may be set exactly once");
-    }
+    m_friendly_name = name;
 }
 
 Placement Node::get_placement() const
@@ -158,6 +167,29 @@ size_t Node::get_placement_index() const
 void Node::set_placement_index(size_t placement)
 {
     m_placement_index = placement;
+}
+
+const std::unordered_set<std::string>& Node::get_provenance_tags() const
+{
+    return m_provenance_tags;
+}
+
+void Node::add_provenance_tag(const std::string& tag)
+{
+    m_provenance_tags.insert(tag);
+}
+
+void Node::remove_provenance_tag(const std::string& tag)
+{
+    m_provenance_tags.erase(tag);
+}
+
+void Node::merge_provenance_tags_from(const std::shared_ptr<const Node>& source)
+{
+    for (auto& tag : source->get_provenance_tags())
+    {
+        add_provenance_tag(tag);
+    }
 }
 
 std::shared_ptr<Node> Node::get_argument(size_t index) const
@@ -238,7 +270,14 @@ std::ostream& Node::write_long_description(std::ostream& out) const
     {
         out << sep << NodeDescription(*arg, true) << ": "
             << pretty_element_type(arg->get_output_element_type(0))
-            << arg->get_output_partial_shape(0) << "";
+            << arg->get_output_partial_shape(0);
+        sep = ", ";
+    }
+    out << ") -> (";
+    sep = "";
+    for (const auto& o : get_outputs())
+    {
+        out << sep << pretty_element_type(o.get_element_type()) << o.get_partial_shape();
         sep = ", ";
     }
     out << ")";
@@ -410,15 +449,20 @@ NodeVector Node::get_users(bool check_is_used) const
 std::string ngraph::node_validation_assertion_string(const Node* node)
 {
     std::stringstream ss;
-    ss << "While validating node '" << *node << "' of type '" << node->description() << "'";
+    ss << "While validating node '" << *node << "'";
     return ss.str();
 }
 
 void ngraph::check_new_args_count(const Node* node, const NodeVector& new_args)
 {
-    NODE_VALIDATION_ASSERT(node, new_args.size() == node->get_arguments().size())
-        << "copy_with_new_args() expected " << node->get_arguments().size() << " argument"
-        << (node->get_arguments().size() == 1 ? "" : "s") << " but got " << new_args.size();
+    NODE_VALIDATION_CHECK(node,
+                          new_args.size() == node->get_arguments().size(),
+                          "copy_with_new_args() expected ",
+                          node->get_arguments().size(),
+                          " argument",
+                          (node->get_arguments().size() == 1 ? "" : "s"),
+                          " but got ",
+                          new_args.size());
 }
 
 const std::shared_ptr<Node>& ngraph::check_single_output_arg(const std::shared_ptr<Node>& node,
@@ -447,13 +491,14 @@ std::tuple<element::Type, PartialShape> Node::validate_and_infer_elementwise_arg
     {
         for (size_t i = 1; i < get_input_size(); ++i)
         {
-            NODE_VALIDATION_ASSERT(
-                this, element::Type::merge(element_type, element_type, get_input_element_type(i)))
-                << "Argument element types are inconsistent.";
+            NODE_VALIDATION_CHECK(
+                this,
+                element::Type::merge(element_type, element_type, get_input_element_type(i)),
+                "Argument element types are inconsistent.");
 
-            NODE_VALIDATION_ASSERT(this,
-                                   PartialShape::merge_into(pshape, get_input_partial_shape(i)))
-                << "Argument shapes are inconsistent.";
+            NODE_VALIDATION_CHECK(this,
+                                  PartialShape::merge_into(pshape, get_input_partial_shape(i)),
+                                  "Argument shapes are inconsistent.");
         }
     }
 
@@ -466,8 +511,11 @@ void Node::validate_and_infer_elementwise_arithmetic()
     element::Type& args_et = std::get<0>(args_et_pshape);
     PartialShape& args_pshape = std::get<1>(args_et_pshape);
 
-    NODE_VALIDATION_ASSERT(this, args_et.is_dynamic() || args_et != element::boolean)
-        << "Arguments cannot have boolean element type (argument element type: " << args_et << ").";
+    NODE_VALIDATION_CHECK(this,
+                          args_et.is_dynamic() || args_et != element::boolean,
+                          "Arguments cannot have boolean element type (argument element type: ",
+                          args_et,
+                          ").");
 
     set_output_type(0, args_et, args_pshape);
 }
@@ -478,33 +526,12 @@ void Node::validate_and_infer_elementwise_logical()
     element::Type& args_et = std::get<0>(args_et_pshape);
     PartialShape& args_pshape = std::get<1>(args_et_pshape);
 
-    NODE_VALIDATION_ASSERT(this, args_et.is_dynamic() || args_et == element::boolean)
-        << "Operands for logical operators must have boolean element type but have element type "
-        << args_et << ".";
+    NODE_VALIDATION_CHECK(
+        this,
+        args_et.is_dynamic() || args_et == element::boolean,
+        "Operands for logical operators must have boolean element type but have element type ",
+        args_et,
+        ".");
 
     set_output_type(0, element::boolean, args_pshape);
-}
-
-bool Node::validate_punt_if_dynamic()
-{
-    bool any_dynamic = false;
-
-    for (auto& input : m_inputs)
-    {
-        any_dynamic |= input.get_partial_shape().is_dynamic();
-        any_dynamic |= input.get_element_type().is_dynamic();
-    }
-
-    if (any_dynamic)
-    {
-        for (size_t i = 0; i < get_output_size(); i++)
-        {
-            set_output_type(i, element::dynamic, PartialShape::dynamic());
-        }
-        return true;
-    }
-    else
-    {
-        return false;
-    }
 }

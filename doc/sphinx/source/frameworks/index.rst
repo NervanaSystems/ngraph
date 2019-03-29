@@ -1,96 +1,52 @@
-.. framework/index: 
+.. frameworks/index.rst: 
 
-Integrate Other Frameworks   
-###########################
-
-In this section, written for framework architects or engineers who want 
-to optimize brand new, generic, or less widely-supported frameworks, we provide 
-some of our learnings from our "framework Direct Optimization (framework DO)" 
-work and custom bridge code, such as that for our `ngraph tensorflow bridge`_.
-
-
-
-.. important:: This section contains articles for framework owners or developers
-   who want to incorporate the nGraph library directly into their framework and 
-   optimize for some specific compute-time characteristic. 
-
+Current framework integrations  
+==============================
 
 .. toctree::
-   :maxdepth: 1 
-
-   generic.rst
-   validation-testing.rst
-
-
-
-When using a framework to run a model or deploy an algorithm on nGraph 
-devices, there are some additional configuration options that can be 
-incorporated -- manually on the command line or via scripting -- to improve 
-performance. Fine-tuning an nGraph-enabled device is as much of an art as it 
-is a science; there are virtually limitless ways to do so. 
-
-Since a framework is typically designed around some feature, such as fast 
-training using image data, inference on a mobile device, or support for voice 
-and speech pattern recognition, a framework cannot optimize for all 
-possibilities at the same time.   
-
-In general, the larger and more complex a framework is, the harder it becomes 
-to navigate and extract the best performance; configuration options that are 
-enabled by "default" from the framework side can sometimes slow down compilation 
-without the developer being any the wiser. Sometimes only `a few small`_ 
-adjustments can increase performance. Likewise, a minimalistic framework that 
-is designed around one specific kind of model can sometimes offer significant 
-performance-improvement opportunities by lowering overhead. 
-
-Right now the preferred way for a data scientist to get better performance is 
-to shop around and select the framework that is "already" designed or optimized 
-for some characteristic or trait of the model they want to build, test, tweak, 
-or run. One challenge of the framework developer, then, is to differentiate from 
-the pack by providing a means for the data scientist to obtain reproducible 
-results. The other challenge is to provide sufficient documentation, or to 
-provide sufficient hints for how to do any "fine-tuning" for specific use cases. 
-
-How this has worked in creating the 
-:doc:`the direct optimizations <../framework-integration-guides>` we've shared 
-with the developer community, our engineering teams carefully 
-`tune the workload to extract best performance`_ 
-from a specific :abbr:`DL (Deep Learning)` model embedded in a specific framework 
-that is training a specific dataset. Our forks of the frameworks adjust the code 
-and/or explain how to set the parameters that achieve reproducible results. 
-
-Some of the ways we attempt to improve performance include: 
-
-* Testing and recording the results of various system-level configuration options
-  or enabled or disabled flags,
-* Compiling with a mix of custom environment variables, 
-* Finding semi-related comparisons for benchmarking [#1]_, and 
-* Tuning lower levels of the system so that the machine-learning algorithm can 
-  learn faster or more accurately that it did on previous runs, 
-* Incorporating various :doc:`../ops/index` to build graphs more efficiently. 
-
-This approach, however, is obviously not a scalable solution for developers on  
-the framework side who are trying to support multiple use cases. Nor is it ideal 
-for teams looking to pivot or innovate multi-layer solutions based on something 
-**other than training speed**, things like accuracy or precision. Chasing 
-performance improvements does eventually yield a diminishing 
-:abbr:`Return on Investment (ROI)`, though it is up to the framework 
-developer to decide when that is for each of their customers.    
-
-For these reasons, we're providing some of the more commonly-used options for 
-fine-tuning various code deployments to the nGraph-enabled devices we 
-currently support. Watch this section as we enable new devices and post new 
-updates. 
-
-.. rubric:: Footnotes
-
-.. [#1] Benchmarking performance of DL systems is a young discipline; it is a
-   good idea to be vigilant for results based on atypical distortions in the 
-   configuration parameters. Every topology is different, and performance 
-   changes can be attributed to multiple causes. Also watch out for the word "theoretical" in comparisons; actual performance should not be 
-   compared to theoretical performance.     
+   :maxdepth: 1
+   
+   tensorflow_integ.rst
+   mxnet_integ.rst
+   onnx_integ.rst
+   paddle_integ.rst
+   validated/testing-latency.rst
 
 
-.. _ngraph tensorflow bridge: http://ngraph.nervanasys.com/docs/latest/framework-integration-guides.html#tensorflow
+A framework is "supported" when there is a framework :term:`bridge` that can be 
+cloned from one of our GitHub repos and built to connect to nGraph device 
+backends while maintaining the framework's programmatic or user interface. Bridges 
+currently exist for the TensorFlow\* and MXNet\* frameworks. 
+
+.. figure:: ../graphics/whole-stack.png
+    :width: 733px
+    :alt: JiT compiling of a computation
+
+    :abbr:`Just-in-Time (JiT)` Compiling for computation. nGraph `Core` components 
+    are colored in blue. 
+
+Once connected via the bridge, the framework can then run and train a deep 
+learning model with various workloads on various backends using nGraph Compiler 
+as an optimizing compiler available through the framework.  
+
+While a :abbr:`Deep Learning (DL)` :term:`framework` is ultimately meant for 
+end use by data scientists, or for deployment in cloud container environments, 
+nGraph Core ops and the nGraph C++ Library are designed for framework builders 
+themselves. We invite anyone working on new and novel frameworks or neural 
+network designs to explore our highly-modularized stack of components that can 
+be implemented or integrated in countless ways.
+
+Please read this section if you are considering incorporating components from 
+the nGraph Compiler stack in your framework or neural network design. Contents 
+here are also useful if you are working on something built-from-scratch, or on 
+an existing framework that is less widely-supported than the popular frameworks 
+like TensorFlow and PyTorch. 
+
+.. figure:: ../graphics/translation-flow-to-ng-fofx.png
+   :width: 725px
+   :alt: Translation flow to nGraph function graph
+
+
+
 .. _tune the workload to extract best performance: https://ai.intel.com/accelerating-deep-learning-training-inference-system-level-optimizations
 .. _a few small: https://software.intel.com/en-us/articles/boosting-deep-learning-training-inference-performance-on-xeon-and-xeon-phi
-.. _Movidius: https://www.movidius.com/

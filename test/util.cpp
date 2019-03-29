@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,8 @@
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/serializer.hpp"
 #include "util/all_close.hpp"
 #include "util/autodiff/backprop_function.hpp"
@@ -172,27 +174,9 @@ TEST(util, traverse_functions)
     auto C = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C}, "f");
 
-    // Now make "g(X,Y,Z) = f(X,Y,Z) + f(X,Y,Z)"
-    auto X = make_shared<op::Parameter>(element::f32, shape);
-    auto Y = make_shared<op::Parameter>(element::f32, shape);
-    auto Z = make_shared<op::Parameter>(element::f32, shape);
-    auto g = make_shared<Function>(make_shared<op::FunctionCall>(f, NodeVector{X, Y, Z}) +
-                                       make_shared<op::FunctionCall>(f, NodeVector{X, Y, Z}),
-                                   ParameterVector{X, Y, Z},
-                                   "g");
-
-    // Now make "h(X,Y,Z) = g(X,Y,Z) + g(X,Y,Z)"
-    auto X1 = make_shared<op::Parameter>(element::f32, shape);
-    auto Y1 = make_shared<op::Parameter>(element::f32, shape);
-    auto Z1 = make_shared<op::Parameter>(element::f32, shape);
-    auto h = make_shared<Function>(make_shared<op::FunctionCall>(g, NodeVector{X1, Y1, Z1}) +
-                                       make_shared<op::FunctionCall>(g, NodeVector{X1, Y1, Z1}),
-                                   ParameterVector{X1, Y1, Z1},
-                                   "h");
-
     vector<Function*> functions;
-    traverse_functions(h, [&](shared_ptr<Function> fp) { functions.push_back(fp.get()); });
-    ASSERT_EQ(3, functions.size());
+    traverse_functions(f, [&](shared_ptr<Function> fp) { functions.push_back(fp.get()); });
+    ASSERT_EQ(1, functions.size());
 }
 
 class CloneTest : public ::testing::Test
@@ -408,4 +392,17 @@ TEST(graph_util, test_subgraph_topological_sort_control_dependencies)
     auto sorted = ngraph::subgraph_topological_sort(NodeVector{mul, add, A, D}, true);
     std::list<std::shared_ptr<Node>> expected{A, D, add, mul};
     ASSERT_EQ(expected, sorted);
+}
+
+TEST(pass, visualize_tree)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C});
+
+    ngraph::pass::Manager pm;
+    pm.register_pass<pass::VisualizeTree>("test_viz.png");
+    pm.run_passes(f);
 }

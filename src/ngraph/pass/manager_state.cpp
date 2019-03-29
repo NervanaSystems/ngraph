@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@
 using namespace std;
 using namespace ngraph;
 
-const vector<shared_ptr<Function>>& ngraph::pass::ManagerState::get_functions()
+const vector<shared_ptr<Function>>& pass::ManagerState::get_functions()
 {
     return m_function_list;
 }

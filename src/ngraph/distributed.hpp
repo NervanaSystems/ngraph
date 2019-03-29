@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,11 @@ namespace ngraph
     public:
         Distributed();
         ~Distributed();
-        size_t get_size() const;
-        size_t get_rank() const;
+        int get_size() const;
+        int get_rank() const;
+
+    private:
+        bool m_init_comm = false;
+        void finalize();
     };
 }

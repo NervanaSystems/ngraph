@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <cstddef>
 #include <string>
 
 #include "ngraph/except.hpp"
@@ -75,6 +76,7 @@ namespace ngraph
 
             const std::vector<std::reference_wrapper<const std::string>>& get_output_names() const;
             const std::string& output(int index) const;
+            std::size_t get_outputs_size() const;
 
             template <typename T>
             T get_attribute_value(const std::string& name, T default_value) const;

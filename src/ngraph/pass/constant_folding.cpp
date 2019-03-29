@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
@@ -48,6 +49,7 @@
 #include "ngraph/runtime/reference/quantize.hpp"
 #include "ngraph/runtime/reference/relu.hpp"
 #include "ngraph/runtime/reference/reshape.hpp"
+#include "ngraph/runtime/reference/sqrt.hpp"
 #include "ngraph/runtime/reference/subtract.hpp"
 
 using namespace std;
@@ -84,24 +86,24 @@ shared_ptr<op::Constant> make_constant_pad(shared_ptr<op::Constant> constant,
                                out_shape,
                                pad->get_padding_below(),
                                pad->get_padding_above(),
-                               pad->get_padding_interior());
+                               pad->get_pad_mode());
 
     return make_shared<op::Constant>(constant->get_element_type(), out_shape, out_vec);
 }
 
-void ngraph::pass::ConstantFolding::construct_constant_pad()
+void pass::ConstantFolding::construct_constant_pad()
 {
     auto is_constant = pattern::has_class<op::Constant>();
     auto constant_label = make_shared<pattern::op::Label>(element::f32, Shape{6}, is_constant);
 
     auto pad_value_label = make_shared<pattern::op::Label>(element::f32, Shape{}, is_constant);
 
-    Shape padding_below{0};
-    Shape padding_above{0};
-    Shape padding_interior{0};
+    CoordinateDiff padding_below{0};
+    CoordinateDiff padding_above{0};
+    op::PadMode pad_mode{op::PadMode::CONSTANT};
 
     auto pad = make_shared<op::Pad>(
-        constant_label, pad_value_label, padding_below, padding_above, padding_interior);
+        constant_label, pad_value_label, padding_below, padding_above, pad_mode);
 
     auto constant_pad_callback = [constant_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_pad_callback against node = "
@@ -142,7 +144,7 @@ void ngraph::pass::ConstantFolding::construct_constant_pad()
     this->add_matcher(pad_matcher);
 }
 
-void ngraph::pass::ConstantFolding::construct_constant_reshape()
+void pass::ConstantFolding::construct_constant_reshape()
 {
     auto constant_label = make_shared<pattern::op::Label>(
         element::f32, Shape{2, 4}, pattern::has_class<op::Constant>());
@@ -207,7 +209,7 @@ shared_ptr<op::Constant> make_constant_broadcast(shared_ptr<op::Constant> consta
     return make_shared<op::Constant>(constant->get_element_type(), out_shape, out_vec);
 }
 
-void ngraph::pass::ConstantFolding::construct_constant_broadcast()
+void pass::ConstantFolding::construct_constant_broadcast()
 {
     auto constant_label =
         make_shared<pattern::op::Label>(element::f32, Shape{2}, pattern::has_class<op::Constant>());
@@ -324,7 +326,7 @@ bool is_supported_binary_op(std::shared_ptr<Node> n)
             std::dynamic_pointer_cast<op::Minimum>(n));
 }
 
-void ngraph::pass::ConstantFolding::construct_constant_binary()
+void pass::ConstantFolding::construct_constant_binary()
 {
     auto a = make_shared<pattern::op::Label>(
         element::f32, Shape{2, 4}, pattern::has_class<op::Constant>());
@@ -385,7 +387,7 @@ void ngraph::pass::ConstantFolding::construct_constant_binary()
 bool is_supported_unary_op(std::shared_ptr<Node> n)
 {
     return std::dynamic_pointer_cast<op::Abs>(n) || std::dynamic_pointer_cast<op::Negative>(n) ||
-           std::dynamic_pointer_cast<op::Relu>(n);
+           std::dynamic_pointer_cast<op::Relu>(n) || std::dynamic_pointer_cast<op::Sqrt>(n);
 }
 
 template <class T>
@@ -410,6 +412,16 @@ shared_ptr<op::Constant> make_constant_unary(shared_ptr<op::Constant> constant,
         runtime::reference::relu<T>(
             constant->get_vector<T>().data(), out_vec.data(), shape_size(out_shape));
     }
+    else if (std::dynamic_pointer_cast<op::Sqrt>(unary))
+    {
+        std::vector<T> values{constant->get_vector<T>()};
+        if (std::any_of(values.begin(), values.end(), [](T i) { return i < 0; }))
+        {
+            throw ngraph_error("Square root of negative value");
+        }
+        runtime::reference::sqrt<T>(
+            constant->get_vector<T>().data(), out_vec.data(), shape_size(out_shape));
+    }
     else
     {
         NGRAPH_ASSERT(false) << "must be consistent with is_supported_unary_op";
@@ -418,7 +430,7 @@ shared_ptr<op::Constant> make_constant_unary(shared_ptr<op::Constant> constant,
     return make_shared<op::Constant>(constant->get_element_type(), out_shape, out_vec);
 }
 
-void ngraph::pass::ConstantFolding::construct_constant_unary()
+void pass::ConstantFolding::construct_constant_unary()
 {
     auto constant_label = make_shared<pattern::op::Label>(
         element::f32, Shape{2, 4}, pattern::has_class<op::Constant>());
@@ -493,7 +505,7 @@ shared_ptr<op::Constant> make_constant_dequantize(shared_ptr<op::Constant> const
     return make_shared<op::Constant>(dequant->get_element_type(), out_shape, out_vec);
 }
 
-void ngraph::pass::ConstantFolding::construct_constant_dequantize()
+void pass::ConstantFolding::construct_constant_dequantize()
 {
     auto constant_label =
         make_shared<pattern::op::Label>(element::u8, Shape{2}, pattern::has_class<op::Constant>());
@@ -567,7 +579,7 @@ shared_ptr<op::Constant> make_constant_quantize(shared_ptr<op::Constant> constan
     return make_shared<op::Constant>(quant->get_element_type(), out_shape, out_vec);
 }
 
-void ngraph::pass::ConstantFolding::construct_constant_quantize()
+void pass::ConstantFolding::construct_constant_quantize()
 {
     auto constant_label =
         make_shared<pattern::op::Label>(element::f32, Shape{2}, pattern::has_class<op::Constant>());

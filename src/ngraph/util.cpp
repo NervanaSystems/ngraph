@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@
 #include <numeric>
 #include <unordered_set>
 
+#include "ngraph/coordinate_diff.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
@@ -178,6 +179,25 @@ void ngraph::aligned_free(void* p)
 #else
     free(p);
 #endif
+}
+
+void* ngraph::ngraph_malloc(size_t size)
+{
+    auto ptr = malloc(size);
+    if (size != 0 && !ptr)
+    {
+        NGRAPH_ERR << "malloc failed to allocate memory of size " << size;
+        throw std::bad_alloc();
+    }
+    return ptr;
+}
+
+void ngraph::ngraph_free(void* ptr)
+{
+    if (ptr)
+    {
+        free(ptr);
+    }
 }
 
 size_t ngraph::round_up(size_t size, size_t alignment)
@@ -440,7 +460,7 @@ void ngraph::check_fp_values_isnan(const char* name, const float* array, size_t 
 {
     for (size_t i = 0; i < n; i++)
     {
-        if (std::isinf(array[i]))
+        if (std::isnan(array[i]))
         {
             throw std::runtime_error("Discovered NaN in '" + string(name) + "'");
         }
@@ -451,7 +471,7 @@ void ngraph::check_fp_values_isnan(const char* name, const double* array, size_t
 {
     for (size_t i = 0; i < n; i++)
     {
-        if (std::isinf(array[i]))
+        if (std::isnan(array[i]))
         {
             throw std::runtime_error("Discovered NaN in '" + string(name) + "'");
         }
@@ -478,6 +498,13 @@ T ngraph::apply_permutation(T input, AxisVector order)
 
 template AxisVector ngraph::apply_permutation<AxisVector>(AxisVector input, AxisVector order);
 template Shape ngraph::apply_permutation<Shape>(Shape input, AxisVector order);
+template ngraph::Coordinate ngraph::apply_permutation<ngraph::Coordinate>(ngraph::Coordinate input,
+                                                                          ngraph::AxisVector order);
+template ngraph::CoordinateDiff
+    ngraph::apply_permutation<ngraph::CoordinateDiff>(ngraph::CoordinateDiff input,
+                                                      ngraph::AxisVector order);
+template ngraph::Strides ngraph::apply_permutation<ngraph::Strides>(ngraph::Strides input,
+                                                                    ngraph::AxisVector order);
 
 AxisVector ngraph::get_default_order(const Shape& shape)
 {

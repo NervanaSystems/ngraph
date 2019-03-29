@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,8 @@
 #include "ngraph/runtime/intelgpu/visualize_tree.hpp"
 
 #include "ngraph/node.hpp"
+#include "ngraph/op/all.hpp"
+#include "ngraph/op/any.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/avg_pool.hpp"
@@ -29,6 +31,7 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
@@ -38,8 +41,7 @@
 #include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
-#include "ngraph/op/reduce.hpp"
-#include "ngraph/op/reduce_window.hpp"
+#include "ngraph/op/quantize.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/sum.hpp"
@@ -210,6 +212,15 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
         writer << print_table_row_dims("reduction_axis", arith_op->get_reduction_axes());
         break;
     }
+    case OP_TYPEID::All:
+    case OP_TYPEID::Any:
+    {
+        const shared_ptr<op::util::LogicalReduction> logical_op =
+            static_pointer_cast<op::util::LogicalReduction>(node);
+
+        writer << print_table_row_dims("reduction_axis", logical_op->get_reduction_axes());
+        break;
+    }
     case OP_TYPEID::ArgMin:
     case OP_TYPEID::ArgMax:
     {
@@ -268,6 +279,21 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
                << print_table_row_value("transpose", op_reshape->get_is_transpose());
         break;
     }
+    case OP_TYPEID::Quantize:
+    {
+        const shared_ptr<op::Quantize> quant_op = static_pointer_cast<op::Quantize>(node);
+
+        writer << print_table_row_dims("axes", quant_op->get_axes())
+               << print_table_row_value("rounding mode", (int)quant_op->get_round_mode());
+        break;
+    }
+    case OP_TYPEID::Dequantize:
+    {
+        const shared_ptr<op::Dequantize> quant_op = static_pointer_cast<op::Dequantize>(node);
+
+        writer << print_table_row_dims("axes", quant_op->get_axes());
+        break;
+    }
     case OP_TYPEID::Concat:
     {
         const shared_ptr<op::Concat> concat_op = static_pointer_cast<op::Concat>(node);
@@ -275,31 +301,12 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
         writer << print_table_row_value("concat_axis", concat_op->get_concatenation_axis());
         break;
     }
-    case OP_TYPEID::Reduce:
-    {
-        const shared_ptr<op::Reduce> red_op = static_pointer_cast<op::Reduce>(node);
-        const AxisSet& axis = red_op->get_reduction_axes();
-
-        writer << print_table_row_dims("reduction_axis", red_op->get_reduction_axes())
-               << print_table_row_value("Function:TBD", 0);
-        break;
-    }
-    case OP_TYPEID::ReduceWindow:
-    {
-        const shared_ptr<op::ReduceWindow> red_win_op = static_pointer_cast<op::ReduceWindow>(node);
-
-        writer << print_table_row_dims("window_shape", red_win_op->get_window_shape())
-               << print_table_row_dims("window_stride", red_win_op->get_window_movement_strides())
-               << print_table_row_value("Function:TBD", 0);
-        break;
-    }
     case OP_TYPEID::Pad:
     {
         const shared_ptr<op::Pad> pad = static_pointer_cast<op::Pad>(node);
 
         writer << print_table_row_dims("pad_above", pad->get_padding_above())
-               << print_table_row_dims("pad_below", pad->get_padding_below())
-               << print_table_row_dims("pad_interior", pad->get_padding_interior());
+               << print_table_row_dims("pad_below", pad->get_padding_below());
         break;
     }
     case OP_TYPEID::Slice:
@@ -338,17 +345,7 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
                << print_table_row_dims("pad_above_forward",
                                        conv_op_filt->get_padding_above_forward())
                << print_table_row_dims("pad_below_forward",
-                                       conv_op_filt->get_padding_below_forward())
-               << print_table_row_dims("window_movement_strides_backward",
-                                       conv_op_filt->get_window_movement_strides_backward())
-               << print_table_row_dims("window_dilation_strides_backward",
-                                       conv_op_filt->get_window_dilation_strides_backward())
-               << print_table_row_dims("data_dilation_strides_backward",
-                                       conv_op_filt->get_data_dilation_strides_backward())
-               << print_table_row_dims("padding_above_backward",
-                                       conv_op_filt->get_padding_above_backward())
-               << print_table_row_dims("padding_below_backward",
-                                       conv_op_filt->get_padding_below_backward());
+                                       conv_op_filt->get_padding_below_forward());
         break;
     }
     case OP_TYPEID::ConvolutionBackpropData:
@@ -366,17 +363,7 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
                << print_table_row_dims("pad_above_forward",
                                        conv_op_data->get_padding_above_forward())
                << print_table_row_dims("pad_below_forward",
-                                       conv_op_data->get_padding_below_forward())
-               << print_table_row_dims("window_movement_strides_backward",
-                                       conv_op_data->get_window_movement_strides_backward())
-               << print_table_row_dims("window_dilation_strides_backward",
-                                       conv_op_data->get_window_dilation_strides_backward())
-               << print_table_row_dims("data_dilation_strides_backward",
-                                       conv_op_data->get_data_dilation_strides_backward())
-               << print_table_row_dims("padding_above_backward",
-                                       conv_op_data->get_padding_above_backward())
-               << print_table_row_dims("padding_below_backward",
-                                       conv_op_data->get_padding_below_backward());
+                                       conv_op_data->get_padding_below_forward());
         break;
     }
     case OP_TYPEID::UNDEFINED_OP:
@@ -412,9 +399,14 @@ void print_node(ostringstream& writer, const shared_ptr<Node>& node)
         size_t arg_idx = 0;
         for (const descriptor::Input& op_input : node->get_inputs())
         {
-            writer << table_row_begin() << font_small_begin
-                   << op_input.get_element_type().c_type_string() << " input" << arg_idx
-                   << vector_to_string(op_input.get_shape()) << font_end << table_row_end;
+            writer << print_table_row_dims(op_input.get_element_type().c_type_string() + " input" +
+                                               to_string(arg_idx),
+                                           op_input.get_shape());
+            if (arg_idx >= 9)
+            {
+                writer << print_table_row_value("... total inputs", node->get_inputs().size());
+                break;
+            }
             ++arg_idx;
         }
     }
@@ -424,9 +416,9 @@ void print_node(ostringstream& writer, const shared_ptr<Node>& node)
         size_t arg_idx = 0;
         for (const descriptor::Output& op_output : node->get_outputs())
         {
-            writer << table_row_begin() << font_small_begin
-                   << op_output.get_element_type().c_type_string() << " output" << arg_idx
-                   << vector_to_string(op_output.get_shape()) << font_end << table_row_end;
+            writer << print_table_row_dims(op_output.get_element_type().c_type_string() +
+                                               " output" + to_string(arg_idx),
+                                           op_output.get_shape());
             ++arg_idx;
         }
     }

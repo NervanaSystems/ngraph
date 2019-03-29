@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -60,6 +60,17 @@ void runtime::gpu::free_gpu_buffer(void* buffer)
     {
         CUDA_RT_SAFE_CALL(cudaFree(buffer));
     }
+}
+
+bool runtime::gpu::is_device_pointer(const void* ptr)
+{
+    cudaPointerAttributes attributes;
+    CUDA_RT_SAFE_CALL_NO_THROW(cudaPointerGetAttributes(&attributes, ptr));
+    if (attributes.devicePointer != nullptr)
+    {
+        return true;
+    }
+    return false;
 }
 
 void runtime::gpu::cuda_memcpyDtD(void* dst, const void* src, size_t buffer_size)

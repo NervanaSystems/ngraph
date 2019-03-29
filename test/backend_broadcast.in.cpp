@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,8 +49,10 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_scalar_vector)
     copy_data(a, vector<float>{6});
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
-    EXPECT_EQ((vector<float>{6, 6, 6, 6}), read_vector<float>(result));
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{6, 6, 6, 6}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, broadcast_scalar_matrix)
@@ -68,8 +70,10 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_scalar_matrix)
     copy_data(a, vector<float>{6});
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
-    EXPECT_EQ((vector<float>{6, 6, 6, 6}), read_vector<float>(result));
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{6, 6, 6, 6}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, broadcast_scalar_tensor)
@@ -87,8 +91,11 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_scalar_tensor)
     copy_data(a, vector<float>{6});
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
-    EXPECT_EQ((vector<float>{6, 6, 6, 6, 6, 6, 6, 6}), read_vector<float>(result));
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(test::all_close_f((vector<float>{6, 6, 6, 6, 6, 6, 6, 6}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, broadcast_trivial)
@@ -105,8 +112,11 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_trivial)
     copy_data(a, vector<float>{2, 4, 6, 8, 16, 32, 64, 128});
     auto result = backend->create_tensor(element::f32, shape);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
-    EXPECT_EQ((vector<float>{2, 4, 6, 8, 16, 32, 64, 128}), read_vector<float>(result));
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(test::all_close_f((vector<float>{2, 4, 6, 8, 16, 32, 64, 128}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, broadcast_vector_colwise)
@@ -124,8 +134,11 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_vector_colwise)
     copy_data(a, vector<float>{1, 2, 3});
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
-    EXPECT_EQ((vector<float>{1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3}), read_vector<float>(result));
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(test::all_close_f((vector<float>{1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, broadcast_vector_rowwise)
@@ -143,8 +156,11 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_vector_rowwise)
     copy_data(a, vector<float>{1, 2, 3, 4});
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
-    EXPECT_EQ((vector<float>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}), read_vector<float>(result));
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(test::all_close_f((vector<float>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 // Test hybrid mechanism after broadcast
@@ -164,8 +180,11 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_vector_rowwise_reversed)
     copy_data(a, vector<float>{1, 2, 3, 4});
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
-    EXPECT_EQ((vector<float>{4, 3, 2, 1, 4, 3, 2, 1, 4, 3, 2, 1}), read_vector<float>(result));
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(test::all_close_f((vector<float>{4, 3, 2, 1, 4, 3, 2, 1, 4, 3, 2, 1}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, broadcast_vector_rowwise_int64)
@@ -183,7 +202,8 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_vector_rowwise_int64)
     copy_data(a, vector<int64_t>{1, 2, 3, 4});
     auto result = backend->create_tensor(element::i64, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<int64_t>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}), read_vector<int64_t>(result));
 }
 
@@ -202,7 +222,8 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_scalar_to_matrix_int64)
     copy_data(a, vector<int64_t>{4});
     auto result = backend->create_tensor(element::i64, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<int64_t>{4, 4, 4}), read_vector<int64_t>(result));
 }
 
@@ -221,7 +242,8 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_scalar_to_matrix_int32)
     copy_data(a, vector<int32_t>{4});
     auto result = backend->create_tensor(element::i32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<int32_t>{4, 4, 4}), read_vector<int32_t>(result));
 }
 
@@ -247,9 +269,12 @@ static void broadcast_test_helper(const Shape& shape_a, const Shape& shape_r, co
     auto wrk_result = wrk_backend->create_tensor(element::f32, shape_r);
     auto ref_result = ref_backend->create_tensor(element::f32, shape_r);
 
-    wrk_backend->call_with_validate(wrk_backend->compile(f), {wrk_result}, {wrk_a});
-    ref_backend->call_with_validate(ref_backend->compile(f), {ref_result}, {ref_a});
-    EXPECT_EQ(read_vector<float>(ref_result), read_vector<float>(wrk_result));
+    auto wrk_handle = wrk_backend->compile(f);
+    auto ref_handle = ref_backend->compile(f);
+    wrk_handle->call_with_validate({wrk_result}, {wrk_a});
+    ref_handle->call_with_validate({ref_result}, {ref_a});
+    EXPECT_TRUE(test::all_close_f(
+        read_vector<float>(ref_result), read_vector<float>(wrk_result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, broadcast_algo_vector_middle)
@@ -386,8 +411,11 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_matrix_0)
     copy_data(a, vector<float>{1, 2, 3, 4});
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
-    EXPECT_EQ((vector<float>{1, 2, 3, 4, 1, 2, 3, 4}), read_vector<float>(result));
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(test::all_close_f((vector<float>{1, 2, 3, 4, 1, 2, 3, 4}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, broadcast_matrix_1)
@@ -405,8 +433,11 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_matrix_1)
     copy_data(a, vector<float>{1, 2, 3, 4});
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
-    EXPECT_EQ((vector<float>{1, 2, 1, 2, 3, 4, 3, 4}), read_vector<float>(result));
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(test::all_close_f((vector<float>{1, 2, 1, 2, 3, 4, 3, 4}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, broadcast_matrix_2)
@@ -424,8 +455,11 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_matrix_2)
     copy_data(a, vector<float>{1, 2, 3, 4});
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
-    EXPECT_EQ((vector<float>{1, 1, 2, 2, 3, 3, 4, 4}), read_vector<float>(result));
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(test::all_close_f((vector<float>{1, 1, 2, 2, 3, 3, 4, 4}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, constant_broadcast)

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/broadcast_distributed.hpp"
 #include "ngraph/op/ceiling.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
@@ -46,11 +47,23 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/equal.hpp"
+#include "ngraph/op/erf.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/dyn_broadcast.hpp"
+#include "ngraph/op/experimental/dyn_pad.hpp"
+#include "ngraph/op/experimental/dyn_reshape.hpp"
+#include "ngraph/op/experimental/dyn_slice.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
+#include "ngraph/op/experimental/quantized_avg_pool.hpp"
+#include "ngraph/op/experimental/quantized_conv.hpp"
+#include "ngraph/op/experimental/quantized_conv_bias.hpp"
+#include "ngraph/op/experimental/quantized_conv_relu.hpp"
+#include "ngraph/op/experimental/quantized_dot.hpp"
+#include "ngraph/op/experimental/quantized_dot_bias.hpp"
+#include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
+#include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/floor.hpp"
-#include "ngraph/op/function_call.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
@@ -71,11 +84,10 @@
 #include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/parameter.hpp"
+#include "ngraph/op/passthrough.hpp"
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
-#include "ngraph/op/reduce.hpp"
-#include "ngraph/op/reduce_window.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -83,7 +95,6 @@
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/select.hpp"
-#include "ngraph/op/select_and_scatter.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/sign.hpp"
 #include "ngraph/op/sin.hpp"
@@ -337,10 +348,10 @@ shared_ptr<ngraph::Function> ngraph::deserialize(istream& in)
                         {
                             if (info.get_name() == const_name)
                             {
-                                void* const_data = malloc(info.get_size());
+                                void* const_data = ngraph_malloc(info.get_size());
                                 reader.read(const_name, const_data, info.get_size());
                                 const_node = make_shared<op::Constant>(et, shape, const_data);
-                                free(const_data);
+                                ngraph_free(const_data);
                                 break;
                             }
                         }
@@ -428,6 +439,12 @@ static shared_ptr<ngraph::Function>
         try
         {
             string node_name = node_js.at("name").get<string>();
+            string friendly_name;
+            auto it = node_js.find("friendly_name");
+            if (it != node_js.end())
+            {
+                friendly_name = it->get<string>();
+            }
             string node_op = node_js.at("op").get<string>();
             vector<string> node_inputs = node_js.at("inputs").get<vector<string>>();
             vector<string> control_deps_inputs =
@@ -573,6 +590,11 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Broadcast>(args[0], shape, axes);
                 break;
             }
+            case OP_TYPEID::BroadcastDistributed:
+            {
+                node = make_shared<op::BroadcastDistributed>(args[0]);
+                break;
+            }
             case OP_TYPEID::BroadcastLike:
             {
                 auto initial_axes = node_js.at("initial_axes").get<set<size_t>>();
@@ -596,12 +618,13 @@ static shared_ptr<ngraph::Function>
                     node_js.count("element_type") == 0 ? node_js.at("value_type") : node_js;
                 auto element_type = read_element_type(type_node_js.at("element_type"));
                 auto shape = type_node_js.at("shape");
-                try
+                auto value_it = node_js.find("value");
+                if (value_it != node_js.end())
                 {
-                    auto value = node_js.at("value").get<vector<string>>();
+                    auto value = value_it->get<vector<string>>();
                     node = make_shared<op::Constant>(element_type, shape, value);
                 }
-                catch (...)
+                else
                 {
                     node = const_data_callback(node_name, element_type, shape);
                 }
@@ -735,6 +758,26 @@ static shared_ptr<ngraph::Function>
                 }
                 break;
             }
+            case OP_TYPEID::DynBroadcast:
+            {
+                node = make_shared<op::DynBroadcast>(args[0], args[1], args[2]);
+                break;
+            }
+            case OP_TYPEID::DynPad:
+            {
+                node = make_shared<op::DynPad>(args[0], args[1], args[2], args[3]);
+                break;
+            }
+            case OP_TYPEID::DynReshape:
+            {
+                node = make_shared<op::DynReshape>(args[0], args[1]);
+                break;
+            }
+            case OP_TYPEID::DynSlice:
+            {
+                node = make_shared<op::DynSlice>(args[0], args[1], args[2], args[3]);
+                break;
+            }
             case OP_TYPEID::EmbeddingLookup:
             {
                 node = make_shared<op::EmbeddingLookup>(args[0], args[1]);
@@ -745,6 +788,11 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Equal>(args[0], args[1]);
                 break;
             }
+            case OP_TYPEID::Erf:
+            {
+                node = make_shared<op::Erf>(args[0]);
+                break;
+            }
             case OP_TYPEID::Exp:
             {
                 node = make_shared<op::Exp>(args[0]);
@@ -753,13 +801,6 @@ static shared_ptr<ngraph::Function>
             case OP_TYPEID::Floor:
             {
                 node = make_shared<op::Floor>(args[0]);
-                break;
-            }
-            case OP_TYPEID::FunctionCall:
-            {
-                string function_name = node_js.at("function").get<string>();
-                shared_ptr<Function> f_ptr = function_map.at(function_name);
-                node = make_shared<op::FunctionCall>(f_ptr, args);
                 break;
             }
             case OP_TYPEID::GenerateMask:
@@ -931,11 +972,24 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::Pad:
             {
-                auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
-                auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
+                auto padding_below = node_js.at("padding_below").get<vector<ptrdiff_t>>();
+                auto padding_above = node_js.at("padding_above").get<vector<ptrdiff_t>>();
+
+                // This is a legacy field whose functionality is no longer supported. The new
+                // behavior is equivalent to interior padding of 0, so we will accept it under
+                // those conditions.
                 auto padding_interior = node_js.at("padding_interior").get<vector<size_t>>();
-                node = make_shared<op::Pad>(
-                    args[0], args[1], padding_below, padding_above, padding_interior);
+                NGRAPH_ASSERT(std::all_of(padding_interior.begin(),
+                                          padding_interior.end(),
+                                          [](size_t s) { return s == 0; }))
+                    << "Legacy padding_interior field must be zero everywhere.";
+
+                auto pad_mode = node_js.count("pad_mode") == 0
+                                    ? op::PadMode::CONSTANT
+                                    : static_cast<op::PadMode>(node_js.at("pad_mode"));
+
+                node =
+                    make_shared<op::Pad>(args[0], args[1], padding_below, padding_above, pad_mode);
                 break;
             }
             case OP_TYPEID::Parameter:
@@ -947,6 +1001,22 @@ static shared_ptr<ngraph::Function>
                 auto cacheable = get_or_default<bool>(node_js, "cacheable", false);
                 node =
                     make_shared<op::Parameter>(element_type, read_partial_shape(shape), cacheable);
+                break;
+            }
+            case OP_TYPEID::Passthrough:
+            {
+                std::vector<json> outputs_js = node_js.at("output_shapes");
+                std::vector<std::tuple<element::Type, PartialShape>> outputs;
+                for (auto output_js : outputs_js)
+                {
+                    outputs.emplace_back(read_element_type(output_js.at("element_type")),
+                                         read_partial_shape(output_js.at("shape")));
+                }
+                node = make_shared<op::Passthrough>(node_js.at("logical_type"),
+                                                    node_js.at("language"),
+                                                    node_js.at("function"),
+                                                    args,
+                                                    std::move(outputs));
                 break;
             }
             case OP_TYPEID::Power:
@@ -968,23 +1038,68 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Quantize>(args[0], args[1], args[2], type, axes, round_mode);
                 break;
             }
-            case OP_TYPEID::Reduce:
-            {
-                auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
-                string function_name = node_js.at("function").get<string>();
-                shared_ptr<Function> f_ptr = function_map.at(function_name);
-                node = make_shared<op::Reduce>(args[0], args[1], f_ptr, reduction_axes);
-                break;
-            }
-            case OP_TYPEID::ReduceWindow:
+            case OP_TYPEID::QuantizedAvgPool:
             {
                 auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
                 auto window_movement_strides =
                     node_js.at("window_movement_strides").get<vector<size_t>>();
-                string function_name = node_js.at("function").get<string>();
-                shared_ptr<Function> f_ptr = function_map.at(function_name);
-                node = make_shared<op::ReduceWindow>(
-                    args[0], args[1], f_ptr, window_shape, window_movement_strides);
+                auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
+                auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
+                auto include_padding_in_avg_computation =
+                    node_js.at("include_padding_in_avg_computation").get<bool>();
+                node = make_shared<op::QuantizedAvgPool>(args[0],
+                                                         window_shape,
+                                                         window_movement_strides,
+                                                         padding_below,
+                                                         padding_above,
+                                                         include_padding_in_avg_computation);
+                break;
+            }
+            case OP_TYPEID::QuantizedConvolutionBias: { break;
+            }
+            case OP_TYPEID::QuantizedConvolutionBiasAdd: { break;
+            }
+            case OP_TYPEID::QuantizedConvolutionBiasSignedAdd: { break;
+            }
+            case OP_TYPEID::QuantizedConvolutionRelu: { break;
+            }
+            case OP_TYPEID::QuantizedConvolution:
+            {
+                auto window_movement_strides =
+                    node_js.at("window_movement_strides").get<vector<size_t>>();
+                auto window_dilation_strides =
+                    node_js.at("window_dilation_strides").get<vector<size_t>>();
+                auto padding_below = node_js.at("padding_below").get<vector<std::ptrdiff_t>>();
+                auto padding_above = node_js.at("padding_above").get<vector<std::ptrdiff_t>>();
+                auto data_dilation_strides = node_js["data_dilation_strides"];
+                node =
+                    make_shared<op::Convolution>(args[0],
+                                                 args[1],
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides.get<std::vector<size_t>>());
+                break;
+            }
+            case OP_TYPEID::QuantizedDotBias: { break;
+            }
+            case OP_TYPEID::QuantizedDot: { break;
+            }
+            case OP_TYPEID::QuantizedMaxPool:
+            {
+                auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
+                auto window_movement_strides =
+                    node_js.at("window_movement_strides").get<vector<size_t>>();
+                // For backwards compatibility, both (but not just one) of the padding_ fields may be
+                // omitted.
+                auto padding_below_maybe = node_js["padding_below"];
+                auto padding_above_maybe = node_js["padding_above"];
+                auto padding_below = padding_below_maybe.get<vector<size_t>>();
+                auto padding_above = padding_above_maybe.get<vector<size_t>>();
+                node = make_shared<op::QuantizedMaxPool>(
+                    args[0], window_shape, window_movement_strides, padding_below, padding_above);
+
                 break;
             }
             case OP_TYPEID::Relu:
@@ -1041,26 +1156,6 @@ static shared_ptr<ngraph::Function>
             case OP_TYPEID::Select:
             {
                 node = make_shared<op::Select>(args[0], args[1], args[2]);
-                break;
-            }
-            case OP_TYPEID::SelectAndScatter:
-            {
-                string selection_function_name = node_js.at("selection_function").get<string>();
-                shared_ptr<Function> selection_f_ptr = function_map.at(selection_function_name);
-                string scatter_function_name = node_js.at("scatter_function").get<string>();
-                shared_ptr<Function> scatter_f_ptr = function_map.at(scatter_function_name);
-
-                auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
-                auto window_movement_strides =
-                    node_js.at("window_movement_strides").get<vector<size_t>>();
-
-                node = make_shared<op::SelectAndScatter>(args[0],
-                                                         args[1],
-                                                         args[2],
-                                                         selection_f_ptr,
-                                                         scatter_f_ptr,
-                                                         window_shape,
-                                                         window_movement_strides);
                 break;
             }
             case OP_TYPEID::ShapeOf:
@@ -1142,6 +1237,11 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::TopK>(args[0], top_k_axis, target_type, k, compute_max);
                 break;
             }
+            case OP_TYPEID::Transpose:
+            {
+                node = make_shared<op::Transpose>(args[0], args[1]);
+                break;
+            }
             case OP_TYPEID::StopGradient:
             {
                 node = make_shared<op::StopGradient>(args[0]);
@@ -1161,21 +1261,21 @@ static shared_ptr<ngraph::Function>
                 node->add_control_dependency(node_map.at(name));
             }
 
+            if (!friendly_name.empty())
+            {
+                node->set_friendly_name(friendly_name);
+            }
             node_map[node_name] = node;
-
-            // Typically, it could be unsafe to change the name of a node since it may break nameing
-            // uniqueness. However, it could sometimes be helpful to use the original name from
-            // the serialization for debugging.
-            // node->set_name(node_name);
         }
         catch (...)
         {
             string node_name;
-            try
+            auto it = node_js.find("name");
+            if (it != node_js.end())
             {
-                node_name = node_js.at("name").get<string>();
+                node_name = it->get<string>();
             }
-            catch (...)
+            else
             {
                 node_name = "UNKNOWN";
             }
@@ -1224,6 +1324,10 @@ static json write(const Node& n, bool binary_constant_data)
 {
     json node;
     node["name"] = n.get_name();
+    if (n.get_name() != n.get_friendly_name())
+    {
+        node["friendly_name"] = n.get_friendly_name();
+    }
     node["op"] = n.description();
     // TODO Multiple outputs
     json inputs = json::array();
@@ -1350,6 +1454,8 @@ static json write(const Node& n, bool binary_constant_data)
         node["shape"] = tmp->get_broadcast_shape();
         break;
     }
+    case OP_TYPEID::BroadcastDistributed: { break;
+    }
     case OP_TYPEID::BroadcastLike:
     {
         auto tmp = dynamic_cast<const op::BroadcastLike*>(&n);
@@ -1432,18 +1538,23 @@ static json write(const Node& n, bool binary_constant_data)
         node["reduction_axes_count"] = tmp->get_reduction_axes_count();
         break;
     }
+    case OP_TYPEID::DynBroadcast: { break;
+    }
+    case OP_TYPEID::DynPad: { break;
+    }
+    case OP_TYPEID::DynReshape: { break;
+    }
+    case OP_TYPEID::DynSlice: { break;
+    }
     case OP_TYPEID::EmbeddingLookup: { break;
     }
     case OP_TYPEID::Equal: { break;
     }
+    case OP_TYPEID::Erf: { break;
+    }
     case OP_TYPEID::Exp: { break;
     }
     case OP_TYPEID::Floor: { break;
-    }
-    case OP_TYPEID::FunctionCall:
-    {
-        node["function"] = n.get_functions()[0]->get_name();
-        break;
     }
     case OP_TYPEID::GetOutputElement:
     {
@@ -1535,7 +1646,7 @@ static json write(const Node& n, bool binary_constant_data)
         auto tmp = dynamic_cast<const op::Pad*>(&n);
         node["padding_below"] = tmp->get_padding_below();
         node["padding_above"] = tmp->get_padding_above();
-        node["padding_interior"] = tmp->get_padding_interior();
+        node["pad_mode"] = tmp->get_pad_mode();
         break;
     }
     case OP_TYPEID::Parameter:
@@ -1544,6 +1655,23 @@ static json write(const Node& n, bool binary_constant_data)
         node["shape"] = write_partial_shape(tmp->get_output_partial_shape(0));
         node["cacheable"] = tmp->get_cacheable();
         node["element_type"] = write_element_type(tmp->get_element_type());
+        break;
+    }
+    case OP_TYPEID::Passthrough:
+    {
+        auto tmp = dynamic_cast<const op::Passthrough*>(&n);
+        node["logical_type"] = tmp->logical_type();
+        node["language"] = tmp->language();
+        node["function"] = tmp->function();
+        std::vector<json> outputs_js;
+        for (const auto& output_shape : tmp->output_shapes())
+        {
+            json output_js;
+            output_js["element_type"] = write_element_type(std::get<0>(output_shape));
+            output_js["shape"] = write_partial_shape(std::get<1>(output_shape));
+            outputs_js.emplace_back(std::move(output_js));
+        }
+        node["output_shapes"] = std::move(outputs_js);
         break;
     }
     case OP_TYPEID::Product:
@@ -1562,19 +1690,45 @@ static json write(const Node& n, bool binary_constant_data)
         node["round_mode"] = tmp->get_round_mode();
         break;
     }
-    case OP_TYPEID::Reduce:
+    case OP_TYPEID::QuantizedAvgPool:
     {
-        auto tmp = dynamic_cast<const op::Reduce*>(&n);
-        node["function"] = tmp->get_functions()[0]->get_name();
-        node["reduction_axes"] = tmp->get_reduction_axes();
-        break;
-    }
-    case OP_TYPEID::ReduceWindow:
-    {
-        auto tmp = dynamic_cast<const op::ReduceWindow*>(&n);
-        node["function"] = tmp->get_functions()[0]->get_name();
+        auto tmp = dynamic_cast<const op::QuantizedAvgPool*>(&n);
         node["window_shape"] = tmp->get_window_shape();
         node["window_movement_strides"] = tmp->get_window_movement_strides();
+        node["padding_below"] = tmp->get_padding_below();
+        node["padding_above"] = tmp->get_padding_above();
+        node["include_padding_in_avg_computation"] = tmp->get_include_padding_in_avg_computation();
+        break;
+    }
+    case OP_TYPEID::QuantizedConvolutionBias: { break;
+    }
+    case OP_TYPEID::QuantizedConvolutionBiasAdd: { break;
+    }
+    case OP_TYPEID::QuantizedConvolutionBiasSignedAdd: { break;
+    }
+    case OP_TYPEID::QuantizedConvolutionRelu: { break;
+    }
+    case OP_TYPEID::QuantizedConvolution:
+    {
+        auto tmp = dynamic_cast<const op::QuantizedConvolution*>(&n);
+        node["window_movement_strides"] = tmp->get_window_movement_strides();
+        node["window_dilation_strides"] = tmp->get_window_dilation_strides();
+        node["padding_below"] = tmp->get_padding_below();
+        node["padding_above"] = tmp->get_padding_above();
+        node["data_dilation_strides"] = tmp->get_data_dilation_strides();
+        break;
+    }
+    case OP_TYPEID::QuantizedDotBias: { break;
+    }
+    case OP_TYPEID::QuantizedDot: { break;
+    }
+    case OP_TYPEID::QuantizedMaxPool:
+    {
+        auto tmp = dynamic_cast<const op::QuantizedMaxPool*>(&n);
+        node["window_shape"] = tmp->get_window_shape();
+        node["window_movement_strides"] = tmp->get_window_movement_strides();
+        node["padding_below"] = tmp->get_padding_below();
+        node["padding_above"] = tmp->get_padding_above();
         break;
     }
     case OP_TYPEID::Relu: { break;
@@ -1620,15 +1774,6 @@ static json write(const Node& n, bool binary_constant_data)
         break;
     }
     case OP_TYPEID::Select: { break;
-    }
-    case OP_TYPEID::SelectAndScatter:
-    {
-        auto tmp = dynamic_cast<const op::SelectAndScatter*>(&n);
-        node["selection_function"] = tmp->get_functions()[0]->get_name();
-        node["scatter_function"] = tmp->get_functions()[1]->get_name();
-        node["window_shape"] = tmp->get_window_shape();
-        node["window_movement_strides"] = tmp->get_window_movement_strides();
-        break;
     }
     case OP_TYPEID::ShapeOf: { break;
     }
@@ -1680,6 +1825,8 @@ static json write(const Node& n, bool binary_constant_data)
         node["k"] = tmp->get_k();
         node["compute_max"] = tmp->get_compute_max();
         break;
+    }
+    case OP_TYPEID::Transpose: { break;
     }
     case OP_TYPEID::UnknownOp: { break;
     }

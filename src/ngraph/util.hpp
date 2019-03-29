@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 
 #include <chrono>
 #include <cmath>
+#include <cstdlib> // llvm 8.1 gets confused about `malloc` otherwise
 #include <functional>
 #include <iostream>
 #include <map>
@@ -182,6 +183,10 @@ namespace ngraph
 
     void* aligned_alloc(size_t alignment, size_t size);
     void aligned_free(void*);
+
+    void* ngraph_malloc(size_t size);
+    void ngraph_free(void*);
+
     size_t round_up(size_t size, size_t alignment);
     template <typename T>
     T apply_permutation(T input, ngraph::AxisVector order);
@@ -214,6 +219,14 @@ namespace ngraph
     * bprop function will have these nodes as the first N input parameters
     **/
     FpropCache cache_fprop(std::shared_ptr<Function> fprop, std::shared_ptr<Function> bprop);
+
+    enum class CPUTensorRole
+    {
+        INPUT,
+        CONSTANT,
+        OUTPUT,
+        INTERMEDIATE
+    };
 } // end namespace ngraph
 
 std::ostream& operator<<(std::ostream& os, const ngraph::NodeVector& nv);

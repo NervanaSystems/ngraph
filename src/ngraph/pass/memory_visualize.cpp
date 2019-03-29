@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ pass::MemoryVisualize::MemoryVisualize(const string& filename)
 {
 }
 
-bool pass::MemoryVisualize::run_on_module(vector<shared_ptr<ngraph::Function>>& functions)
+bool pass::MemoryVisualize::run_on_module(vector<shared_ptr<Function>>& functions)
 {
     ofstream file(m_filename);
     {

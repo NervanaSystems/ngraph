@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 
-#ifdef NGRAPH_DISTRIBUTED
+#if defined NGRAPH_DISTRIBUTED_ENABLE
 #include "ngraph/distributed.hpp"
 #endif
 
@@ -298,8 +298,12 @@ OPTIONS
         return 1;
     }
 
-#ifdef NGRAPH_DISTRIBUTED
-    ngraph::Distributed dist;
+#if defined NGRAPH_DISTRIBUTED_ENABLE
+    unique_ptr<ngraph::Distributed> dist(new ngraph::Distributed());
+    if (dist->get_size() == 1)
+    {
+        dist.reset();
+    }
 #endif
 
     vector<string> models;
@@ -322,6 +326,7 @@ OPTIONS
     }
 
     vector<PerfShape> aggregate_perf_data;
+    int rc = 0;
     for (const string& model : models)
     {
         cout << "\n";
@@ -405,10 +410,12 @@ OPTIONS
         catch (ngraph::unsupported_op& ue)
         {
             cout << "Unsupported op '" << ue.what() << "' in model " << model << endl;
+            rc += 1;
         }
         catch (exception& e)
         {
             cout << "Exception caught on '" << model << "'\n" << e.what() << endl;
+            rc += 1;
         }
     }
 
@@ -421,5 +428,12 @@ OPTIONS
         print_results(aggregate_perf_data, timing_detail);
     }
 
-    return 0;
+#if defined NGRAPH_DISTRIBUTED_ENABLE
+    if (dist)
+    {
+        dist.reset();
+    }
+#endif
+
+    return rc;
 }

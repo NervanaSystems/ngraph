@@ -3,8 +3,16 @@
 Release Notes
 #############
 
-|release|
+This is |release|.
 
+
+
+
+
+CHANGELOG
+=========
+
+(Last updated September 2018)
 
 This release focuses on accelerating deep learning inference workloads on 
 Intel® Xeon® (CPU processor) and has the following key features: 
@@ -29,11 +37,5 @@ the following categories:
 
 In our tests, the optimized workloads can perform up to 45X faster than native 
 frameworks, and we expect performance gains for other workloads due to our 
-powerful :doc:`../fusion/index` feature.
+powerful :doc:`../core/fusion/index` feature.
 
-
-See also our recent `API changes`_
-
-
-
-.. _API changes: https://github.com/NervanaSystems/ngraph/blob/master/changes.md

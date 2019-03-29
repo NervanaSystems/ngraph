@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ runtime::interpreter::NodeWrapper::NodeWrapper(const shared_ptr<const Node>& nod
 #define NGRAPH_OP(a, b) {#a, runtime::interpreter::OP_TYPEID::a},
     static unordered_map<string, runtime::interpreter::OP_TYPEID> typeid_map{
 #include "ngraph/op/op_tbl.hpp"
+#include "ngraph/runtime/hybrid/op/op_tbl.hpp"
     };
 #undef NGRAPH_OP
 

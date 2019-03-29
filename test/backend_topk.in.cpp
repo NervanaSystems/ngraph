@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,10 +52,13 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_1d_max_all)
     auto result0 = backend->create_tensor(element::i32, rshape);
     auto result1 = backend->create_tensor(element::f32, rshape);
 
-    backend->call_with_validate(backend->compile(f0), {result0}, {a});
+    auto h0 = backend->compile(f0);
+    h0->call_with_validate({result0}, {a});
     EXPECT_EQ((vector<int32_t>{5, 4, 3, 2, 1, 0}), read_vector<int32_t>(result0));
-    backend->call_with_validate(backend->compile(f1), {result1}, {a});
-    EXPECT_EQ((vector<float>{6, 5, 4, 3, 2, 1}), read_vector<float>(result1));
+    auto h1 = backend->compile(f1);
+    h1->call_with_validate({result1}, {a});
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{6, 5, 4, 3, 2, 1}), read_vector<float>(result1), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_1d_max_partial)
@@ -75,10 +78,13 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_1d_max_partial)
     auto result0 = backend->create_tensor(element::i32, rshape);
     auto result1 = backend->create_tensor(element::f32, rshape);
 
-    backend->call_with_validate(backend->compile(f0), {result0}, {a});
+    auto h0 = backend->compile(f0);
+    h0->call_with_validate({result0}, {a});
     EXPECT_EQ((vector<int32_t>{5, 4, 3}), read_vector<int32_t>(result0));
-    backend->call_with_validate(backend->compile(f1), {result1}, {a});
-    EXPECT_EQ((vector<float>{6, 5, 4}), read_vector<float>(result1));
+    auto h1 = backend->compile(f1);
+    h1->call_with_validate({result1}, {a});
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{6, 5, 4}), read_vector<float>(result1), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_1d_max_one)
@@ -98,10 +104,13 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_1d_max_one)
     auto result0 = backend->create_tensor(element::i32, rshape);
     auto result1 = backend->create_tensor(element::f32, rshape);
 
-    backend->call_with_validate(backend->compile(f0), {result0}, {a});
+    auto h0 = backend->compile(f0);
+    h0->call_with_validate({result0}, {a});
     EXPECT_EQ((vector<int32_t>{5}), read_vector<int32_t>(result0));
-    backend->call_with_validate(backend->compile(f1), {result1}, {a});
-    EXPECT_EQ((vector<float>{6}), read_vector<float>(result1));
+    auto h1 = backend->compile(f1);
+    h1->call_with_validate({result1}, {a});
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{6}), read_vector<float>(result1), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_1d_min_all)
@@ -121,10 +130,13 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_1d_min_all)
     auto result0 = backend->create_tensor(element::i32, rshape);
     auto result1 = backend->create_tensor(element::f32, rshape);
 
-    backend->call_with_validate(backend->compile(f0), {result0}, {a});
+    auto h0 = backend->compile(f0);
+    h0->call_with_validate({result0}, {a});
     EXPECT_EQ((vector<int32_t>{5, 4, 3, 2, 1, 0}), read_vector<int32_t>(result0));
-    backend->call_with_validate(backend->compile(f1), {result1}, {a});
-    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(result1));
+    auto h1 = backend->compile(f1);
+    h1->call_with_validate({result1}, {a});
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(result1), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_1d_min_partial)
@@ -144,10 +156,13 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_1d_min_partial)
     auto result0 = backend->create_tensor(element::i32, rshape);
     auto result1 = backend->create_tensor(element::f32, rshape);
 
-    backend->call_with_validate(backend->compile(f0), {result0}, {a});
+    auto h0 = backend->compile(f0);
+    h0->call_with_validate({result0}, {a});
     EXPECT_EQ((vector<int32_t>{5, 4, 3}), read_vector<int32_t>(result0));
-    backend->call_with_validate(backend->compile(f1), {result1}, {a});
-    EXPECT_EQ((vector<float>{1, 2, 3}), read_vector<float>(result1));
+    auto h1 = backend->compile(f1);
+    h1->call_with_validate({result1}, {a});
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{1, 2, 3}), read_vector<float>(result1), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_1d_min_one)
@@ -167,10 +182,13 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_1d_min_one)
     auto result0 = backend->create_tensor(element::i32, rshape);
     auto result1 = backend->create_tensor(element::f32, rshape);
 
-    backend->call_with_validate(backend->compile(f0), {result0}, {a});
+    auto h0 = backend->compile(f0);
+    h0->call_with_validate({result0}, {a});
     EXPECT_EQ((vector<int32_t>{5}), read_vector<int32_t>(result0));
-    backend->call_with_validate(backend->compile(f1), {result1}, {a});
-    EXPECT_EQ((vector<float>{1}), read_vector<float>(result1));
+    auto h1 = backend->compile(f1);
+    h1->call_with_validate({result1}, {a});
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{1}), read_vector<float>(result1), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_3d_max_all)
@@ -190,10 +208,14 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_3d_max_all)
     auto result0 = backend->create_tensor(element::i32, rshape);
     auto result1 = backend->create_tensor(element::f32, rshape);
 
-    backend->call_with_validate(backend->compile(f0), {result0}, {a});
+    auto h0 = backend->compile(f0);
+    h0->call_with_validate({result0}, {a});
     EXPECT_EQ((vector<int32_t>{1, 1, 0, 2, 2, 0, 2, 2, 0, 1, 1, 0}), read_vector<int32_t>(result0));
-    backend->call_with_validate(backend->compile(f1), {result1}, {a});
-    EXPECT_EQ((vector<float>{10, 12, 9, 4, 8, 2, 11, 7, 6, 3, 5, 1}), read_vector<float>(result1));
+    auto h1 = backend->compile(f1);
+    h1->call_with_validate({result1}, {a});
+    EXPECT_TRUE(test::all_close_f((vector<float>{10, 12, 9, 4, 8, 2, 11, 7, 6, 3, 5, 1}),
+                                  read_vector<float>(result1),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_int64)
@@ -213,10 +235,14 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_int64)
     auto result0 = backend->create_tensor(element::i64, rshape);
     auto result1 = backend->create_tensor(element::f32, rshape);
 
-    backend->call_with_validate(backend->compile(f0), {result0}, {a});
+    auto h0 = backend->compile(f0);
+    h0->call_with_validate({result0}, {a});
     EXPECT_EQ((vector<int64_t>{1, 1, 0, 2, 2, 0, 2, 2, 0, 1, 1, 0}), read_vector<int64_t>(result0));
-    backend->call_with_validate(backend->compile(f1), {result1}, {a});
-    EXPECT_EQ((vector<float>{10, 12, 9, 4, 8, 2, 11, 7, 6, 3, 5, 1}), read_vector<float>(result1));
+    auto h1 = backend->compile(f1);
+    h1->call_with_validate({result1}, {a});
+    EXPECT_TRUE(test::all_close_f((vector<float>{10, 12, 9, 4, 8, 2, 11, 7, 6, 3, 5, 1}),
+                                  read_vector<float>(result1),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_5d_max_partial)
@@ -260,7 +286,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_5d_max_partial)
     auto result0 = backend->create_tensor(element::i32, rshape);
     auto result1 = backend->create_tensor(element::f32, rshape);
 
-    backend->call_with_validate(backend->compile(f0), {result0}, {a});
+    auto h0 = backend->compile(f0);
+    h0->call_with_validate({result0}, {a});
     EXPECT_EQ(
         (vector<int32_t>{5, 5, 5, 5, 5, 1, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 3, 5, 5, 5, 5,
                          3, 3, 3, 3, 3, 4, 3, 3, 3, 3, 3, 1, 3, 3, 3, 3, 1, 1, 1, 1, 3, 3, 3, 3,
@@ -268,15 +295,18 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_5d_max_partial)
                          3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 1, 4, 1, 1, 1, 1, 1, 1, 5, 1, 3, 3}),
         read_vector<int32_t>(result0));
 
-    backend->call_with_validate(backend->compile(f1), {result1}, {a});
-    EXPECT_EQ((vector<float>{169, 241, 177, 249, 185, 233, 170, 242, 178, 250, 186, 258, 171, 243,
-                             179, 251, 187, 259, 172, 224, 180, 252, 188, 260, 149, 221, 157, 229,
-                             165, 113, 150, 222, 158, 230, 166, 234, 151, 223, 159, 231, 163, 235,
-                             148, 220, 160, 232, 168, 240, 197, 269, 205, 277, 213, 285, 198, 270,
-                             206, 278, 214, 286, 199, 271, 207, 279, 215, 287, 200, 272, 241, 280,
-                             216, 288, 193, 265, 201, 273, 209, 281, 194, 266, 202, 274, 210, 262,
-                             175, 127, 183, 255, 191, 263, 176, 248, 208, 256, 212, 284}),
-              read_vector<float>(result1));
+    auto h1 = backend->compile(f1);
+    h1->call_with_validate({result1}, {a});
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{169, 241, 177, 249, 185, 233, 170, 242, 178, 250, 186, 258, 171, 243,
+                       179, 251, 187, 259, 172, 224, 180, 252, 188, 260, 149, 221, 157, 229,
+                       165, 113, 150, 222, 158, 230, 166, 234, 151, 223, 159, 231, 163, 235,
+                       148, 220, 160, 232, 168, 240, 197, 269, 205, 277, 213, 285, 198, 270,
+                       206, 278, 214, 286, 199, 271, 207, 279, 215, 287, 200, 272, 241, 280,
+                       216, 288, 193, 265, 201, 273, 209, 281, 194, 266, 202, 274, 210, 262,
+                       175, 127, 183, 255, 191, 263, 176, 248, 208, 256, 212, 284}),
+        read_vector<float>(result1),
+        MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_3d_max_partial)
@@ -296,10 +326,14 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_3d_max_partial)
     auto result0 = backend->create_tensor(element::i32, rshape);
     auto result1 = backend->create_tensor(element::f32, rshape);
 
-    backend->call_with_validate(backend->compile(f0), {result0}, {a});
+    auto h0 = backend->compile(f0);
+    h0->call_with_validate({result0}, {a});
     EXPECT_EQ((vector<int32_t>{1, 1, 0, 2, 2, 2, 0, 1}), read_vector<int32_t>(result0));
-    backend->call_with_validate(backend->compile(f1), {result1}, {a});
-    EXPECT_EQ((vector<float>{10, 12, 9, 4, 11, 7, 6, 3}), read_vector<float>(result1));
+    auto h1 = backend->compile(f1);
+    h1->call_with_validate({result1}, {a});
+    EXPECT_TRUE(test::all_close_f((vector<float>{10, 12, 9, 4, 11, 7, 6, 3}),
+                                  read_vector<float>(result1),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_3d_max_one)
@@ -319,10 +353,13 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_3d_max_one)
     auto result0 = backend->create_tensor(element::i32, rshape);
     auto result1 = backend->create_tensor(element::f32, rshape);
 
-    backend->call_with_validate(backend->compile(f0), {result0}, {a});
+    auto h0 = backend->compile(f0);
+    h0->call_with_validate({result0}, {a});
     EXPECT_EQ((vector<int32_t>{1, 1, 2, 2}), read_vector<int32_t>(result0));
-    backend->call_with_validate(backend->compile(f1), {result1}, {a});
-    EXPECT_EQ((vector<float>{10, 12, 11, 7}), read_vector<float>(result1));
+    auto h1 = backend->compile(f1);
+    h1->call_with_validate({result1}, {a});
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{10, 12, 11, 7}), read_vector<float>(result1), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_3d_min_all)
@@ -342,10 +379,14 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_3d_min_all)
     auto result0 = backend->create_tensor(element::i32, rshape);
     auto result1 = backend->create_tensor(element::f32, rshape);
 
-    backend->call_with_validate(backend->compile(f0), {result0}, {a});
+    auto h0 = backend->compile(f0);
+    h0->call_with_validate({result0}, {a});
     EXPECT_EQ((vector<int32_t>{2, 0, 1, 2, 0, 1, 1, 0, 0, 1, 2, 2}), read_vector<int32_t>(result0));
-    backend->call_with_validate(backend->compile(f1), {result1}, {a});
-    EXPECT_EQ((vector<float>{8, 2, 10, 4, 12, 9, 5, 1, 6, 3, 11, 7}), read_vector<float>(result1));
+    auto h1 = backend->compile(f1);
+    h1->call_with_validate({result1}, {a});
+    EXPECT_TRUE(test::all_close_f((vector<float>{8, 2, 10, 4, 12, 9, 5, 1, 6, 3, 11, 7}),
+                                  read_vector<float>(result1),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_3d_min_partial)
@@ -365,10 +406,14 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_3d_min_partial)
     auto result0 = backend->create_tensor(element::i32, rshape);
     auto result1 = backend->create_tensor(element::f32, rshape);
 
-    backend->call_with_validate(backend->compile(f0), {result0}, {a});
+    auto h0 = backend->compile(f0);
+    h0->call_with_validate({result0}, {a});
     EXPECT_EQ((vector<int32_t>{2, 0, 1, 2, 1, 0, 0, 1}), read_vector<int32_t>(result0));
-    backend->call_with_validate(backend->compile(f1), {result1}, {a});
-    EXPECT_EQ((vector<float>{8, 2, 10, 4, 5, 1, 6, 3}), read_vector<float>(result1));
+    auto h1 = backend->compile(f1);
+    h1->call_with_validate({result1}, {a});
+    EXPECT_TRUE(test::all_close_f((vector<float>{8, 2, 10, 4, 5, 1, 6, 3}),
+                                  read_vector<float>(result1),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_3d_min_one)
@@ -388,10 +433,13 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_3d_min_one)
     auto result0 = backend->create_tensor(element::i32, rshape);
     auto result1 = backend->create_tensor(element::f32, rshape);
 
-    backend->call_with_validate(backend->compile(f0), {result0}, {a});
+    auto h0 = backend->compile(f0);
+    h0->call_with_validate({result0}, {a});
     EXPECT_EQ((vector<int32_t>{2, 0, 1, 0}), read_vector<int32_t>(result0));
-    backend->call_with_validate(backend->compile(f1), {result1}, {a});
-    EXPECT_EQ((vector<float>{8, 2, 5, 1}), read_vector<float>(result1));
+    auto h1 = backend->compile(f1);
+    h1->call_with_validate({result1}, {a});
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{8, 2, 5, 1}), read_vector<float>(result1), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_2d_max_all)
@@ -411,10 +459,14 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_2d_max_all)
     auto result0 = backend->create_tensor(element::i32, rshape);
     auto result1 = backend->create_tensor(element::f32, rshape);
 
-    backend->call_with_validate(backend->compile(f0), {result0}, {a});
+    auto h0 = backend->compile(f0);
+    h0->call_with_validate({result0}, {a});
     EXPECT_EQ((vector<int32_t>{1, 3, 0, 0, 1, 3, 2, 0, 2, 3, 2, 1}), read_vector<int32_t>(result0));
-    backend->call_with_validate(backend->compile(f1), {result1}, {a});
-    EXPECT_EQ((vector<float>{12, 11, 10, 9, 8, 7, 6, 2, 5, 3, 1, 4}), read_vector<float>(result1));
+    auto h1 = backend->compile(f1);
+    h1->call_with_validate({result1}, {a});
+    EXPECT_TRUE(test::all_close_f((vector<float>{12, 11, 10, 9, 8, 7, 6, 2, 5, 3, 1, 4}),
+                                  read_vector<float>(result1),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_2d_max_partial)
@@ -434,10 +486,14 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_2d_max_partial)
     auto result0 = backend->create_tensor(element::i32, rshape);
     auto result1 = backend->create_tensor(element::f32, rshape);
 
-    backend->call_with_validate(backend->compile(f0), {result0}, {a});
+    auto h0 = backend->compile(f0);
+    h0->call_with_validate({result0}, {a});
     EXPECT_EQ((vector<int32_t>{1, 3, 0, 0, 1, 3}), read_vector<int32_t>(result0));
-    backend->call_with_validate(backend->compile(f1), {result1}, {a});
-    EXPECT_EQ((vector<float>{12, 11, 10, 9, 8, 7}), read_vector<float>(result1));
+    auto h1 = backend->compile(f1);
+    h1->call_with_validate({result1}, {a});
+    EXPECT_TRUE(test::all_close_f((vector<float>{12, 11, 10, 9, 8, 7}),
+                                  read_vector<float>(result1),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_2d_max_one)
@@ -457,10 +513,13 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_2d_max_one)
     auto result0 = backend->create_tensor(element::i32, rshape);
     auto result1 = backend->create_tensor(element::f32, rshape);
 
-    backend->call_with_validate(backend->compile(f0), {result0}, {a});
+    auto h0 = backend->compile(f0);
+    h0->call_with_validate({result0}, {a});
     EXPECT_EQ((vector<int32_t>{1, 3, 0}), read_vector<int32_t>(result0));
-    backend->call_with_validate(backend->compile(f1), {result1}, {a});
-    EXPECT_EQ((vector<float>{12, 11, 10}), read_vector<float>(result1));
+    auto h1 = backend->compile(f1);
+    h1->call_with_validate({result1}, {a});
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{12, 11, 10}), read_vector<float>(result1), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_2d_min_all)
@@ -480,10 +539,14 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_2d_min_all)
     auto result0 = backend->create_tensor(element::i32, rshape);
     auto result1 = backend->create_tensor(element::f32, rshape);
 
-    backend->call_with_validate(backend->compile(f0), {result0}, {a});
+    auto h0 = backend->compile(f0);
+    h0->call_with_validate({result0}, {a});
     EXPECT_EQ((vector<int32_t>{3, 2, 1, 2, 0, 2, 1, 1, 3, 0, 3, 0}), read_vector<int32_t>(result0));
-    backend->call_with_validate(backend->compile(f1), {result1}, {a});
-    EXPECT_EQ((vector<float>{3, 1, 4, 6, 2, 5, 9, 8, 7, 12, 11, 10}), read_vector<float>(result1));
+    auto h1 = backend->compile(f1);
+    h1->call_with_validate({result1}, {a});
+    EXPECT_TRUE(test::all_close_f((vector<float>{3, 1, 4, 6, 2, 5, 9, 8, 7, 12, 11, 10}),
+                                  read_vector<float>(result1),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_2d_min_partial)
@@ -503,10 +566,13 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_2d_min_partial)
     auto result0 = backend->create_tensor(element::i32, rshape);
     auto result1 = backend->create_tensor(element::f32, rshape);
 
-    backend->call_with_validate(backend->compile(f0), {result0}, {a});
+    auto h0 = backend->compile(f0);
+    h0->call_with_validate({result0}, {a});
     EXPECT_EQ((vector<int32_t>{3, 2, 1, 2, 0, 2}), read_vector<int32_t>(result0));
-    backend->call_with_validate(backend->compile(f1), {result1}, {a});
-    EXPECT_EQ((vector<float>{3, 1, 4, 6, 2, 5}), read_vector<float>(result1));
+    auto h1 = backend->compile(f1);
+    h1->call_with_validate({result1}, {a});
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{3, 1, 4, 6, 2, 5}), read_vector<float>(result1), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_2d_min_one)
@@ -526,10 +592,13 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_2d_min_one)
     auto result0 = backend->create_tensor(element::i32, rshape);
     auto result1 = backend->create_tensor(element::f32, rshape);
 
-    backend->call_with_validate(backend->compile(f0), {result0}, {a});
+    auto h0 = backend->compile(f0);
+    h0->call_with_validate({result0}, {a});
     EXPECT_EQ((vector<int32_t>{3, 2, 1}), read_vector<int32_t>(result0));
-    backend->call_with_validate(backend->compile(f1), {result1}, {a});
-    EXPECT_EQ((vector<float>{3, 1, 4}), read_vector<float>(result1));
+    auto h1 = backend->compile(f1);
+    h1->call_with_validate({result1}, {a});
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{3, 1, 4}), read_vector<float>(result1), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_3d_large_input_max)
@@ -566,7 +635,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_3d_large_input_max)
 
     for (size_t i = 0; i < gpu_results_1.size(); i++)
     {
-        EXPECT_TRUE(test::all_close_f(gpu_results_1.at(i), interp_results_1.at(i), 24, 0));
+        EXPECT_TRUE(test::all_close_f(
+            gpu_results_1.at(i), interp_results_1.at(i), MIN_FLOAT_TOLERANCE_BITS));
     }
 }
 
@@ -604,7 +674,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_3d_large_input_min)
 
     for (size_t i = 0; i < gpu_results_1.size(); i++)
     {
-        EXPECT_TRUE(test::all_close_f(gpu_results_1.at(i), interp_results_1.at(i), 24, 0));
+        EXPECT_TRUE(test::all_close_f(
+            gpu_results_1.at(i), interp_results_1.at(i), MIN_FLOAT_TOLERANCE_BITS));
     }
 }
 
@@ -623,6 +694,7 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_3d_single_output)
     copy_data(a, vector<float>{12, 2, 10, 9, 8, 4, 6, 1, 5, 3, 11, 7});
     auto result0 = backend->create_tensor(element::i32, rshape);
 
-    backend->call_with_validate(backend->compile(f0), {result0}, {a});
+    auto h0 = backend->compile(f0);
+    h0->call_with_validate({result0}, {a});
     EXPECT_EQ((vector<int32_t>{2, 0, 1, 2, 1, 0, 0, 1}), read_vector<int32_t>(result0));
 }
