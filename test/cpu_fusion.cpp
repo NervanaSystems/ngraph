@@ -30,6 +30,7 @@
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/dequantize.hpp"
+#include "ngraph/op/experimental/batch_dot.hpp"
 #include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
@@ -54,7 +55,6 @@
 #include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
-#include "ngraph/op/experimental/batch_dot.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
@@ -3069,6 +3069,7 @@ TEST(cpu_fusion, fuse_batch_dot_forward)
     auto cpu_f = make_function_from_file(file_name);
     auto int_f = make_function_from_file(file_name);
     pass_manager.run_passes(cpu_f);
+    pass_manager.run_passes(int_f);
     test::Uniform<float> rng(0.0f, 1.0f);
     vector<vector<float>> args;
 

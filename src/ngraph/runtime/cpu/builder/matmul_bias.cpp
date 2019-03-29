@@ -14,8 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/op/experimental/batch_dot.hpp"
+#include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
 
