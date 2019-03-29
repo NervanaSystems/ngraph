@@ -46,7 +46,7 @@ namespace ngraph
                 Shape input1_shape = arg1_shape;
                 std::vector<T> input0_transposed;
                 std::vector<T> input1_transposed;
-                
+
                 // Check for transpose
                 if (transpose0)
                 {

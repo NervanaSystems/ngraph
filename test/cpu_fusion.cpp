@@ -3096,6 +3096,7 @@ TEST(cpu_fusion, fuse_batch_dot_backward)
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
     pass_manager.run_passes(cpu_f);
+    pass_manager.run_passes(int_f);
 
     auto int_df = autodiff::backprop_function(int_f);
     auto cpu_df = autodiff::backprop_function(cpu_f);
