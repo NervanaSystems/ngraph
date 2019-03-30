@@ -225,10 +225,9 @@ void runtime::hybrid::rewrite_function(const shared_ptr<Function>& f,
                     goe->set_placement_index(0);
 
                     auto old_source = cluster_outputs[i];
-                    auto new_source = goe;
                     auto target = function_call_outputs[i];
                     descriptor::Input* target_input = target->get_input_from(old_source);
-                    descriptor::Output& new_output = new_source->get_outputs()[0];
+                    descriptor::Output& new_output = goe->get_outputs()[0];
                     target_input->replace_output(new_output);
                 }
             }
