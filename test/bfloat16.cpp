@@ -17,11 +17,43 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/type/bfloat16.hpp"
+#include "util/float_util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 TEST(bfloat16, from_float)
+{
+    // // 1.f, the ground-truth value
+    // float expected = bits_to_float("0  01111111  000 0000 0000 0000 0000 0000");
+    // float computed;
+
+    // // 1.03125f, the exact upper bound
+    // computed = bits_to_float("0  01111111  000 0100 0000 0000 0000 0000");
+    // EXPECT_TRUE(test::close_f(expected, computed, tolerance_bits));
+    // EXPECT_TRUE(
+    //     test::all_close_f(vector<float>({expected}), vector<float>({computed}), tolerance_bits));
+
+    // // 1.031250119f, the next representable number bigger than upper bound
+    // computed = bits_to_float("0  01111111  000 0100 0000 0000 0000 0001");
+    // EXPECT_FALSE(test::close_f(expected, computed, tolerance_bits));
+    // EXPECT_FALSE(
+    //     test::all_close_f(vector<float>({expected}), vector<float>({computed}), tolerance_bits));
+
+    // // 0.984375f, the exact lower bound
+    // computed = bits_to_float("0  01111110  111 1100 0000 0000 0000 0000");
+    // EXPECT_TRUE(test::close_f(expected, computed, tolerance_bits));
+    // EXPECT_TRUE(
+    //     test::all_close_f(vector<float>({expected}), vector<float>({computed}), tolerance_bits));
+
+    // // 0.9843749404f, the next representable number smaller than lower bound
+    // computed = bits_to_float("0  01111110  111 1011 1111 1111 1111 1111");
+    // EXPECT_FALSE(test::close_f(expected, computed, tolerance_bits));
+    // EXPECT_FALSE(
+    //     test::all_close_f(vector<float>({expected}), vector<float>({computed}), tolerance_bits));
+}
+
+TEST(bfloat16, from_float_rounding)
 {
 }
 
