@@ -39,9 +39,6 @@
 using namespace std;
 using namespace ngraph;
 
-// A value represents NaN in bfloat16
-static const uint16_t BF16_NAN_VALUE = 0x7FC0;
-
 bool float_isnan(const float& x)
 {
     return std::isnan(x);
@@ -65,27 +62,26 @@ std::vector<bfloat16> bfloat16::from_float_vector(const std::vector<float>& v_f3
 
 bfloat16::bfloat16(float value, RoundingMode mode)
 {
-    if (float_isnan(value))
+    // Rounding with round-nearest-to-even to create bfloat16
+    // from float. Refer to TF implementation explanation:
+    // https://github.com/tensorflow/tensorflow/blob/d354efc/tensorflow/core/lib/bfloat16/bfloat16.h#L199
+    if (std::isnan(value))
     {
         m_value = BF16_NAN_VALUE;
     }
     else if (mode == RoundingMode::TRUNCATE)
     {
         // Truncate off 16 LSB, no rounding
-        uint32_t* p = reinterpret_cast<uint32_t*>(&value);
-        m_value = static_cast<uint16_t>((*p) >> 16);
+        m_value = static_cast<uint16_t>((F32(value).i) >> 16);
     }
     else
     {
         // Rounding with round-nearest-to-even to create bfloat16
         // from float. Refer to TF implementation explanation:
         // https://github.com/tensorflow/tensorflow/blob/d354efc/tensorflow/core/lib/bfloat16/bfloat16.h#L199
-        uint32_t* u32_ptr = reinterpret_cast<uint32_t*>(&value);
-        uint32_t u32_value = *u32_ptr;
-        uint32_t lsb = (u32_value >> 15) & 1;
+        uint32_t lsb = (F32(value).i >> 15) & 1;
         uint32_t rounding_bias = 0x7fff + lsb;
-        u32_value += rounding_bias;
-        m_value = static_cast<uint16_t>(u32_value >> 16);
+        m_value = static_cast<uint16_t>((F32(value).i + rounding_bias) >> 16);
     }
 }
 

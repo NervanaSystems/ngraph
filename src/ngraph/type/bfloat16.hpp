@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <cmath>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -37,6 +38,7 @@ namespace ngraph
         };
         bfloat16() {}
         bfloat16(float value, RoundingMode mode = RoundingMode::ROUND);
+
         bfloat16(const bfloat16&) = default;
         bfloat16& operator=(const bfloat16&) = default;
         virtual ~bfloat16() {}
@@ -63,6 +65,25 @@ namespace ngraph
         }
 
     private:
+        union F32 {
+            constexpr F32()
+                : i{0}
+            {
+            }
+            constexpr F32(float val)
+                : f{val}
+            {
+            }
+            constexpr F32(uint32_t val)
+                : i{val}
+            {
+            }
+            float f;
+            uint32_t i;
+        };
+
         uint16_t m_value{0};
+
+        static constexpr uint16_t BF16_NAN_VALUE = 0x7FC0;
     };
 }
