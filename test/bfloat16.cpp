@@ -27,7 +27,7 @@ using namespace ngraph;
 //***********************
 // This test uses exact comparisons of floating point values. It is testing for bit-exact
 // creation and truncation/rounding of bfloat16 values.
-TEST(bfloat16, utils)
+TEST(bfloat16, conversions)
 {
     bfloat16 bf;
     string source_string;
@@ -72,41 +72,20 @@ TEST(bfloat16, utils)
     EXPECT_EQ(bf_round, bfloat16(1.9921875));
 }
 
-TEST(bfloat16, from_float)
-{
-    // // 1.f, the ground-truth value
-    // float expected = bits_to_float("0  01111111  000 0000 0000 0000 0000 0000");
-    // float computed;
-
-    // // 1.03125f, the exact upper bound
-    // computed = bits_to_float("0  01111111  000 0100 0000 0000 0000 0000");
-    // EXPECT_TRUE(test::close_f(expected, computed, tolerance_bits));
-    // EXPECT_TRUE(
-    //     test::all_close_f(vector<float>({expected}), vector<float>({computed}), tolerance_bits));
-
-    // // 1.031250119f, the next representable number bigger than upper bound
-    // computed = bits_to_float("0  01111111  000 0100 0000 0000 0000 0001");
-    // EXPECT_FALSE(test::close_f(expected, computed, tolerance_bits));
-    // EXPECT_FALSE(
-    //     test::all_close_f(vector<float>({expected}), vector<float>({computed}), tolerance_bits));
-
-    // // 0.984375f, the exact lower bound
-    // computed = bits_to_float("0  01111110  111 1100 0000 0000 0000 0000");
-    // EXPECT_TRUE(test::close_f(expected, computed, tolerance_bits));
-    // EXPECT_TRUE(
-    //     test::all_close_f(vector<float>({expected}), vector<float>({computed}), tolerance_bits));
-
-    // // 0.9843749404f, the next representable number smaller than lower bound
-    // computed = bits_to_float("0  01111110  111 1011 1111 1111 1111 1111");
-    // EXPECT_FALSE(test::close_f(expected, computed, tolerance_bits));
-    // EXPECT_FALSE(
-    //     test::all_close_f(vector<float>({expected}), vector<float>({computed}), tolerance_bits));
-}
-
-TEST(bfloat16, from_float_rounding)
-{
-}
-
 TEST(bfloat16, to_float)
 {
+    bfloat16 bf;
+    string source_string;
+
+    // 1.f, the ground-truth value
+    source_string = "0  01111111  000 0000";
+    bf = test::bits_to_bfloat16(source_string);
+    float f = static_cast<float>(bf);
+    EXPECT_EQ(f, 1.0f);
+
+    // 1.03125f, the exact upper bound
+    source_string = "0  01111111  000 0100";
+    bf = test::bits_to_bfloat16(source_string);
+    f = static_cast<float>(bf);
+    EXPECT_EQ(f, 1.03125f);
 }
