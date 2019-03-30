@@ -38,6 +38,7 @@ set(SRC
     builder/argmax.cpp
     builder/batch_norm.cpp
     builder/broadcast.cpp
+    builder/broadcast_distributed.cpp
     builder/bounded_relu.cpp
     builder/concat.cpp
     builder/convert.cpp
@@ -45,6 +46,7 @@ set(SRC
     builder/convolution.cpp
     builder/dot.cpp
     builder/embedding_lookup.cpp
+    builder/erf.cpp
     builder/leaky_relu.cpp
     builder/lstm.cpp
     builder/lrn.cpp

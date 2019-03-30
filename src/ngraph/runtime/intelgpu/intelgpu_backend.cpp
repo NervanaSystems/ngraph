@@ -1996,6 +1996,7 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::AllReduce:
         case OP_TYPEID::BatchDot:
+        case OP_TYPEID::BroadcastDistributed:
         case OP_TYPEID::BroadcastLike:
         case OP_TYPEID::DynReshape:
         case OP_TYPEID::DynSlice:

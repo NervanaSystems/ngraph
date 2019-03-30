@@ -7183,12 +7183,12 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_scalar)
 
     auto a = backend->create_tensor(element::f32, input_shape);
     copy_data(a, vector<float>{0});
-    auto result = backend->create_tensor(element::u64, output_shape);
+    auto result = backend->create_tensor(element::i64, output_shape);
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    vector<uint64_t> expected{};
-    EXPECT_EQ(expected, read_vector<uint64_t>(result));
+    vector<int64_t> expected{};
+    EXPECT_EQ(expected, read_vector<int64_t>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, shape_of_vector)
@@ -7203,12 +7203,12 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_vector)
 
     auto a = backend->create_tensor(element::f32, input_shape);
     copy_data(a, vector<float>(2, 0));
-    auto result = backend->create_tensor(element::u64, output_shape);
+    auto result = backend->create_tensor(element::i64, output_shape);
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    vector<uint64_t> expected{2};
-    EXPECT_EQ(expected, read_vector<uint64_t>(result));
+    vector<int64_t> expected{2};
+    EXPECT_EQ(expected, read_vector<int64_t>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, shape_of_matrix)
@@ -7223,12 +7223,12 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_matrix)
 
     auto a = backend->create_tensor(element::f32, input_shape);
     copy_data(a, vector<float>(2 * 4, 0));
-    auto result = backend->create_tensor(element::u64, output_shape);
+    auto result = backend->create_tensor(element::i64, output_shape);
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    vector<uint64_t> expected{2, 4};
-    EXPECT_EQ(expected, read_vector<uint64_t>(result));
+    vector<int64_t> expected{2, 4};
+    EXPECT_EQ(expected, read_vector<int64_t>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, shape_of_5d)
@@ -7243,12 +7243,12 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_5d)
 
     auto a = backend->create_tensor(element::f32, input_shape);
     copy_data(a, vector<float>(2 * 4 * 8 * 16 * 32, 0));
-    auto result = backend->create_tensor(element::u64, output_shape);
+    auto result = backend->create_tensor(element::i64, output_shape);
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    vector<uint64_t> expected{2, 4, 8, 16, 32};
-    EXPECT_EQ(expected, read_vector<uint64_t>(result));
+    vector<int64_t> expected{2, 4, 8, 16, 32};
+    EXPECT_EQ(expected, read_vector<int64_t>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, dequantize_dynamic_offset)
@@ -7325,31 +7325,4 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_dynamic_offset)
     handle->call_with_validate({y}, {x, Scale, Offset});
     EXPECT_EQ((vector<output_c_type>{1, 1, 2, 3, 3, 3, 4, 5, 5, 5, 6, 7}),
               read_vector<output_c_type>(y));
-}
-
-NGRAPH_TEST(${BACKEND_NAME}, get_parameters_and_results)
-{
-    Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C});
-
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
-    // Create some tensors for input/output
-    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shape);
-    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::f32, shape);
-    shared_ptr<runtime::Tensor> c = backend->create_tensor(element::f32, shape);
-    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::f32, shape);
-
-    copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
-    copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
-    copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
-
-    auto handle = backend->compile(f);
-    auto parameters = handle->get_parameters();
-    auto results = handle->get_results();
-    EXPECT_EQ(parameters.size(), 3);
-    EXPECT_EQ(results.size(), 1);
 }
