@@ -30,8 +30,13 @@ namespace ngraph
     class bfloat16
     {
     public:
+        enum class RoundingMode
+        {
+            TRUNCATE,
+            ROUND
+        };
         bfloat16() {}
-        bfloat16(float value, bool rounding = false);
+        bfloat16(float value, RoundingMode mode = RoundingMode::ROUND);
         bfloat16(const bfloat16&) = default;
         bfloat16& operator=(const bfloat16&) = default;
         virtual ~bfloat16() {}
@@ -45,11 +50,17 @@ namespace ngraph
         bool operator>=(const bfloat16& other) const;
         operator float() const;
         operator double() const;
+        operator uint16_t() const;
 
         static std::vector<float> to_float_vector(const std::vector<bfloat16>&);
         static std::vector<bfloat16> from_float_vector(const std::vector<float>&);
+        static bfloat16 from_bits(uint16_t bits);
 
-        friend std::ostream& operator<<(std::ostream&, const bfloat16&);
+        friend std::ostream& operator<<(std::ostream& out, const bfloat16& obj)
+        {
+            out << static_cast<float>(obj);
+            return out;
+        }
 
     private:
         uint16_t m_value{0};

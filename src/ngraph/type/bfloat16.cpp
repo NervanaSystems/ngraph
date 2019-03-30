@@ -34,6 +34,7 @@
 #include <cmath>
 #include <iostream>
 
+#include "ngraph/log.hpp"
 #include "ngraph/type/bfloat16.hpp"
 
 using namespace std;
@@ -63,13 +64,13 @@ std::vector<bfloat16> bfloat16::from_float_vector(const std::vector<float>& v_f3
     return v_bf16;
 }
 
-bfloat16::bfloat16(float value, bool rounding)
+bfloat16::bfloat16(float value, RoundingMode mode)
 {
     if (float_isnan(value))
     {
         m_value = BF16_NAN_VALUE;
     }
-    else if (!rounding)
+    else if (mode == RoundingMode::TRUNCATE)
     {
         // Truncate off 16 LSB, no rounding
         // Treat system as little endian (Intel x86 family)
@@ -83,11 +84,18 @@ bfloat16::bfloat16(float value, bool rounding)
         // https://github.com/tensorflow/tensorflow/blob/d354efc/tensorflow/core/lib/bfloat16/bfloat16.h#L199
         uint32_t* u32_ptr = reinterpret_cast<uint32_t*>(&value);
         uint32_t u32_value = *u32_ptr;
-        uint32_t lsb = (u32_value >> 16) & 1;
+        uint32_t lsb = (u32_value >> 15) & 1;
         uint32_t rounding_bias = 0x7fff + lsb;
         u32_value += rounding_bias;
         m_value = static_cast<uint16_t>(u32_value >> 16);
     }
+}
+
+ngraph::bfloat16 bfloat16::from_bits(uint16_t bits)
+{
+    bfloat16 rc;
+    rc.m_value = bits;
+    return rc;
 }
 
 std::string bfloat16::to_string() const
@@ -130,12 +138,9 @@ bool bfloat16::operator>=(const bfloat16& other) const
 
 bfloat16::operator float() const
 {
-    // float result = 0;
-    // uint16_t* u16_ptr = reinterpret_cast<uint16_t*>(&result);
-
-    // // Treat the system as little endian (Intel x86 family)
-    // u16_ptr[1] = m_value;
-    return static_cast<float>(static_cast<uint32_t>(m_value) << 16);
+    uint32_t tmp = (static_cast<uint32_t>(m_value) << 16);
+    const float* f = reinterpret_cast<const float*>(&tmp);
+    return *f;
 }
 
 bfloat16::operator double() const
@@ -143,7 +148,7 @@ bfloat16::operator double() const
     return static_cast<float>(m_value);
 }
 
-std::ostream& operator<<(std::ostream& out, const bfloat16& obj)
+bfloat16::operator uint16_t() const
 {
-    return (out << static_cast<float>(obj));
+    return m_value;
 }

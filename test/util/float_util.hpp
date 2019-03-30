@@ -42,11 +42,13 @@ namespace ngraph
             uint64_t i;
         };
 
+        std::string bfloat16_to_bits(bfloat16 f);
+
         std::string float_to_bits(float f);
 
         std::string double_to_bits(double d);
 
-        float bits_to_bfloat16(const std::string& s);
+        bfloat16 bits_to_bfloat16(const std::string& s);
 
         float bits_to_float(const std::string& s);
 
