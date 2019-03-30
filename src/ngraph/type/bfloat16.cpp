@@ -65,24 +65,19 @@ bfloat16::bfloat16(float value, RoundingMode mode)
     // Rounding with round-nearest-to-even to create bfloat16
     // from float. Refer to TF implementation explanation:
     // https://github.com/tensorflow/tensorflow/blob/d354efc/tensorflow/core/lib/bfloat16/bfloat16.h#L199
-    if (std::isnan(value))
-    {
-        m_value = BF16_NAN_VALUE;
-    }
-    else if (mode == RoundingMode::TRUNCATE)
-    {
-        // Truncate off 16 LSB, no rounding
-        m_value = static_cast<uint16_t>((F32(value).i) >> 16);
-    }
-    else
-    {
-        // Rounding with round-nearest-to-even to create bfloat16
-        // from float. Refer to TF implementation explanation:
-        // https://github.com/tensorflow/tensorflow/blob/d354efc/tensorflow/core/lib/bfloat16/bfloat16.h#L199
-        uint32_t lsb = (F32(value).i >> 15) & 1;
-        uint32_t rounding_bias = 0x7fff + lsb;
-        m_value = static_cast<uint16_t>((F32(value).i + rounding_bias) >> 16);
-    }
+    m_value =
+        (std::isnan(value)
+             ? BF16_NAN_VALUE
+             : (mode == RoundingMode::TRUNCATE
+                    ?
+                    // Truncate off 16 LSB, no rounding
+                    static_cast<uint16_t>((F32(value).i) >> 16)
+                    :
+                    // Rounding with round-nearest-to-even to create bfloat16
+                    // from float. Refer to TF implementation explanation:
+                    // https://github.com/tensorflow/tensorflow/blob/d354efc/tensorflow/core/lib/bfloat16/bfloat16.h#L199
+                    static_cast<uint16_t>((F32(value).i + (0x7fff + ((F32(value).i >> 15) & 1))) >>
+                                          16)));
 }
 
 ngraph::bfloat16 bfloat16::from_bits(uint16_t bits)
