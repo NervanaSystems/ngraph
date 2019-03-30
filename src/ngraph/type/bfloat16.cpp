@@ -34,7 +34,6 @@
 #include <cmath>
 #include <iostream>
 
-#include "ngraph/log.hpp"
 #include "ngraph/type/bfloat16.hpp"
 
 using namespace std;
