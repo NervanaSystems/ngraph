@@ -60,26 +60,6 @@ std::vector<bfloat16> bfloat16::from_float_vector(const std::vector<float>& v_f3
     return v_bf16;
 }
 
-bfloat16::bfloat16(float value, RoundingMode mode)
-{
-    // Rounding with round-nearest-to-even to create bfloat16
-    // from float. Refer to TF implementation explanation:
-    // https://github.com/tensorflow/tensorflow/blob/d354efc/tensorflow/core/lib/bfloat16/bfloat16.h#L199
-    m_value =
-        (std::isnan(value)
-             ? BF16_NAN_VALUE
-             : (mode == RoundingMode::TRUNCATE
-                    ?
-                    // Truncate off 16 LSB, no rounding
-                    static_cast<uint16_t>((F32(value).i) >> 16)
-                    :
-                    // Rounding with round-nearest-to-even to create bfloat16
-                    // from float. Refer to TF implementation explanation:
-                    // https://github.com/tensorflow/tensorflow/blob/d354efc/tensorflow/core/lib/bfloat16/bfloat16.h#L199
-                    static_cast<uint16_t>((F32(value).i + (0x7fff + ((F32(value).i >> 15) & 1))) >>
-                                          16)));
-}
-
 ngraph::bfloat16 bfloat16::from_bits(uint16_t bits)
 {
     bfloat16 rc;
