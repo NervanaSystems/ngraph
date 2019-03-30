@@ -72,9 +72,8 @@ bfloat16::bfloat16(float value, RoundingMode mode)
     else if (mode == RoundingMode::TRUNCATE)
     {
         // Truncate off 16 LSB, no rounding
-        // Treat system as little endian (Intel x86 family)
-        uint16_t* u16_ptr = reinterpret_cast<uint16_t*>(&value);
-        m_value = u16_ptr[1];
+        uint32_t* p = reinterpret_cast<uint32_t*>(&value);
+        m_value = static_cast<uint16_t>((*p) >> 16);
     }
     else
     {
