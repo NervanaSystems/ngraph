@@ -620,13 +620,21 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto conv_index =
-                        mkldnn_emitter->build_deconvolution<ngraph::op::DeconvolutionBias>(
-                            node, args, out);
+                    auto deconvbias_desc = mkldnn_emitter->get_deconvolutionbias_forward_data<
+                        ngraph::op::DeconvolutionBias>(node);
+
+                    // DeconvolutionBias needs 5 primitives: weights, delta, bias, result,
+                    // and deconvolutionbias.
+                    auto conv_index = mkldnn_emitter->reserve_primitive_space(5);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                    auto functor = [&, conv_index](CPURuntimeContext* ctx,
+                    auto functor = [&, deconvbias_desc, conv_index](CPURuntimeContext* ctx,
                                                    CPUExecutionContext* ectx) {
+                        if (ctx->first_iteration)
+                        {
+                            mkldnn_emitter->build_deconvolutionbias_forward
+                                (deconvbias_desc, conv_index);
+                        }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], arg2_tensor);

@@ -84,6 +84,9 @@ namespace ngraph
                 */
                 mkldnn::algorithm get_conv_algo();
 
+                // Placeholder "auto" support is added for deconv
+                mkldnn::algorithm get_deconv_algo();
+
                 bool use_mkldnn_kernel(const ngraph::Node* node);
                 void assign_mkldnn_kernel(Node* node);
 

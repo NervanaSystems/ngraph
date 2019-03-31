@@ -726,6 +726,13 @@ bool runtime::cpu::mkldnn_utils::can_use_mkldnn_batchnorm_fprop(const ngraph::No
     }
 }
 
+mkldnn::algorithm runtime::cpu::mkldnn_utils::get_deconv_algo()
+{
+    // Note: there is no deconvolution_auto, so for now will return direct
+    // TODO:
+    return mkldnn::algorithm::deconvolution_direct;
+}
+
 mkldnn::algorithm runtime::cpu::mkldnn_utils::get_conv_algo()
 {
 #if defined(MKLDNN_VERSION_MAJOR) && defined(MKLDNN_VERSION_MINOR) && defined(MKLDNN_VERSION_PATCH)
