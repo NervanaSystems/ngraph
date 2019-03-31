@@ -855,9 +855,6 @@ namespace ngraph
                         auto padding_below = convolution->get_padding_below_forward();
                         auto padding_above = convolution->get_padding_above_forward();
 
-                        //std::cout << "cpu_layout: data_batch_shape: " << data_batch_shape << "weights_shape: " << weights_shape <<
-                        //             ", delta_shape: " << delta_shape << "bias_shape: " << bias_shape << ", out: "<<result_shape <<"\n";
-
                         Strides window_dilation_strides_adjusted;
 
                         for (size_t s : convolution->get_window_dilation_strides_forward())
@@ -888,8 +885,6 @@ namespace ngraph
                          const memory::desc bias_desc(mkldnn_arg2_shape, et, memory::format::any);
                          const memory::desc result_desc(mkldnn_result_shape, et, memory::format::any);
 
-                        //std::cout << "\tcpu_layout: creating deconv_desc\n";
-
                         deconvolution_forward::desc deconv_desc(prop_kind::forward,
                                                                 algorithm::deconvolution_direct,
                                                                 delta_desc,   //src_desc
@@ -900,14 +895,9 @@ namespace ngraph
                                                                 mkldnn_padding_below,
                                                                 mkldnn_padding_above,
                                                                 padding_kind::zero);
-                        
 
-                        //std::cout << "\tcpu_layout: creating deconv_prim_desc\n";
                         deconvolution_forward::primitive_desc deconv_prim_desc(deconv_desc,
                                                                                cpu_engine);
-                        //std::cout << "\tcpu_layout: After creating deconv_prim_desc\n";
-                        //std::cout << "cpu_layout for deconv: format for weights = " << deconv_prim_desc.weights_primitive_desc().desc().data.format <<"\n";
-
 
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
@@ -916,11 +906,8 @@ namespace ngraph
                         i_mds.push_back(deconv_prim_desc.bias_primitive_desc().desc());
                         o_mds.push_back(deconv_prim_desc.dst_primitive_desc().desc());
 
-                        //std::cout << "\tcpu_layout: calling insert_input_conversions\n";
                         node = insert_input_conversions(external_function, node, i_mds);
-                        //std::cout << "\tcpu_layout: calling set_output_layouts\n";
                         set_output_layouts(node, o_mds);
-                        //std::cout << "\tcpu_layout: after set_output_layouts. DeconvolutionBias done \n";
                     }
                     else
                     {

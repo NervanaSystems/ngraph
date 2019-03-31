@@ -1856,17 +1856,12 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_deconvolution_affine_foldi
             auto new_biases = std::make_shared<op::Subtract>(pattern_map[beta], mean_gamma);
             
             // Weights are in i,o,h,w relative to deconvolution. Flip them to o,i,h,w
-            //auto order = ngraph::get_default_order(bias_shape);
             auto new_weights_reshape = std::make_shared<op::Reshape>(new_weights, AxisVector{1, 0, 2, 3}, 
                                         Shape{new_weights->get_shape().at(1), new_weights->get_shape().at(0), 
                                               new_weights->get_shape().at(2), new_weights->get_shape().at(3)});
 
-            //auto conv_bias = std::shared_ptr<Node>(new op::ConvolutionBias(conv, bias_reshape));
-            //ngraph::replace_node(m.get_match_root(), conv_bias);
-
             auto g_conv_bprop_data_bias = std::make_shared<op::DeconvolutionBias>(
                 conv_m->get_data_batch_shape(),
-                // new_weights, 
                 new_weights_reshape,
                 pattern_map[out_delta],
                 new_biases,

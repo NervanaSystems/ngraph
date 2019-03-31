@@ -26,30 +26,6 @@
 using namespace std;
 using namespace ngraph;
 
-/*void op::util::validate_deconvbias_shapes(const Shape& data_shape,
-                                        const Shape& filters_shape,
-                                        const Shape& bias_shape)
-{
-    if (bias_shape.size() != 1)
-    {
-        throw ngraph_error("Deconvolution+bias bias is expected to be 1D, but has shape: " +
-                           vector_to_string(bias_shape));
-    }
-    if (bias_shape[0] != filters_shape[0])
-    {
-        throw ngraph_error(
-            "Deconvolution+bias bias element size does not match number of filters. bias_size = " +
-            std::to_string(bias_shape[0]) + ", num_filters = " + std::to_string(filters_shape[0]));
-    }
-    if (data_shape[1] != filters_shape[1])
-    {
-        throw ngraph_error(
-            "Deconvolution+bias data and filter have different number of channels: data_channel=" +
-            std::to_string(data_shape[1]) + ", filter_channel= " +
-            std::to_string(filters_shape[1]));
-    }
-}*/
-
 op::DeconvolutionBias::DeconvolutionBias(const Shape& data_batch_shape,
                                          const shared_ptr<Node>& filters,
                                          const shared_ptr<Node>& output_delta,
@@ -115,8 +91,6 @@ void op::DeconvolutionBias::validate_and_infer_types()
     const PartialShape& bias_shape = get_input_partial_shape(2);
     element::Type bias_et = get_input_element_type(2);
 
-    std::cout << " ctor: filters shape: " << filters_shape << ", delta_shape : " << delta_shape
-              << "bias_shape: " << bias_shape << "\n";
     element::Type forward_result_et;
     PartialShape forward_result_shape;
 
@@ -134,14 +108,10 @@ void op::DeconvolutionBias::validate_and_infer_types()
                                   m_window_dilation_strides_forward);
     NGRAPH_DEBUG << "\tpartial filter_shape: " << filters_shape << "delta_shape: " << delta_shape
                  << ", inferred_res_shape: " << forward_result_shape << endl;
-    std::cout << "\tctor : --- partial filter_shape: " << filters_shape << "delta_shape: " << delta_shape
-                 << ", inferred_res_shape: " << forward_result_shape << ", m_data_batch_shape: " <<m_data_batch_shape << endl;
 
     NODE_VALIDATION_CHECK(this, forward_result_shape.compatible(delta_shape),
         "Inferred forward output shape (", forward_result_shape, ") does not match shape of ",
         "data_batch (", m_data_batch_shape, ").");
-
-    set_output_type(0, forward_result_et, m_data_batch_shape);
 
     NODE_VALIDATION_CHECK(this, filters_et.compatible(bias_et),
         "Filter element type (", filters_et, ") does not match bias element type (",
@@ -156,41 +126,8 @@ void op::DeconvolutionBias::validate_and_infer_types()
         "Filter input channel count (", filters_shape, ") does not compatible with ",
         "bias shape channel count (", bias_shape, ").");
 
-    //TODO: GD move this appropriately
-    //
-    // Compute parameters needed for backprop-as-convolution.
-    //
-    // TODO(amprocte): Remove these fields, compute where needed.
-    //
-    if (delta_shape.is_static() && filters_shape.is_static())
-    {
-        size_t spatial_dim_count = static_cast<size_t>(delta_shape.rank()) - 2;
+    set_output_type(0, forward_result_et, m_data_batch_shape);
 
-        m_window_movement_strides_backward = m_data_dilation_strides_forward;
-        m_window_dilation_strides_backward = m_window_dilation_strides_forward;
-        m_data_dilation_strides_backward = m_window_movement_strides_forward;
-
-        m_padding_below_backward.resize(spatial_dim_count);
-        m_padding_above_backward.resize(spatial_dim_count);
-
-        for (size_t i = 0; i < spatial_dim_count; i++)
-        {
-            m_padding_below_backward[i] = (static_cast<ptrdiff_t>(filters_shape[i + 2]) - 1) *
-                                              m_window_dilation_strides_forward[i] -
-                                          m_padding_below_forward[i];
-            m_padding_above_backward[i] =
-                (static_cast<ptrdiff_t>(filters_shape[i + 2]) - 1) *
-                    m_window_dilation_strides_forward[i] +
-                ((m_padding_below_forward[i] +
-                  (m_data_batch_shape[i + 2] - 1) * m_data_dilation_strides_forward[i] +
-                  m_padding_above_forward[i] -
-                  (static_cast<ptrdiff_t>(filters_shape[i + 2]) - 1) *
-                      m_window_dilation_strides_forward[i]) %
-                 m_window_movement_strides_forward[i]) -
-                m_padding_above_forward[i];
-        }
-    }
-    std::cout << "\tvalidate_and_infer_types() done\n";
 }
 
 void op::DeconvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints,
@@ -212,5 +149,5 @@ shared_ptr<Node> op::DeconvolutionBias::copy_with_new_args(const NodeVector& new
                                           m_padding_below_forward,
                                           m_padding_above_forward,
                                           m_data_dilation_strides_forward,
-                                          false); //TODO: check
+                                          false);
 }

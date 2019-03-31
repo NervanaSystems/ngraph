@@ -329,7 +329,6 @@ size_t MKLDNNEmitter::build_deconvolutionbias_forward(const mkldnn::memory::desc
 
         conv_index = insert_primitive(conv_prim);
 
-        //m_primitive_deps[conv_index] = {input_data_index, weights_index, bias_index, result_index};
         m_primitive_deps[conv_index] = {weights_index, input_data_index, bias_index, result_index};
     }
     catch (const mkldnn::error& e)

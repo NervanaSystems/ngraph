@@ -253,7 +253,6 @@ namespace ngraph
                     if (std::is_same<OP, ngraph::op::DeconvolutionBias>())
                     {
                         auto bias_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
-                        //bias_desc.data.format = mkldnn_format_undef; // This gives seg fault, though as per documentation it should just work.
                         return build_deconvolutionbias_forward(
                             data_desc,
                             weights_desc,

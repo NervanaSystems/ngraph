@@ -23,7 +23,7 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Data batch backprop with Bias for batched convolution operation.
+        /// \brief Deconvolution + Bias 
         class DeconvolutionBias : public Op
         {
         public:
@@ -32,11 +32,13 @@ namespace ngraph
             /// \param data_batch_shape The shape of the data batch from forward-prop.
             /// \param filters The node producing the filters from forward-prop.
             /// \param output_delta The node producing output delta.
+            /// \param bias The node producing bias
             /// \param window_movement_strides_forward The window movement strides from forward-prop.
             /// \param window_dilation_strides_forward The window dilation strides from forward-prop.
             /// \param padding_below_forward The padding-below sizes from forward-prop.
             /// \param padding_above_forward The padding-above sizes from forward-prop.
             /// \param data_dilation_strides_forward The data dilation strides from forward-prop.
+            /// \param with_relu Flag indicating to add relu or not
             DeconvolutionBias(const Shape& data_batch_shape,
                               const std::shared_ptr<Node>& filters,
                               const std::shared_ptr<Node>& output_delta,
@@ -123,12 +125,5 @@ namespace ngraph
             Strides m_data_dilation_strides_backward;
             bool m_with_relu;
         };
-
-        namespace util
-        {
-            void validate_deconvbias_shapes(const Shape& data_shape,
-                                            const Shape& filters_shape,
-                                            const Shape& bias_shape);
-        }
     }
 }
