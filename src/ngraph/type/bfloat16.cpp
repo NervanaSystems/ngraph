@@ -33,6 +33,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <limits>
 
 #include "ngraph/type/bfloat16.hpp"
 
@@ -58,13 +59,6 @@ std::vector<bfloat16> bfloat16::from_float_vector(const std::vector<float>& v_f3
         v_bf16.push_back(static_cast<bfloat16>(a));
     }
     return v_bf16;
-}
-
-ngraph::bfloat16 bfloat16::from_bits(uint16_t bits)
-{
-    bfloat16 rc;
-    rc.m_value = bits;
-    return rc;
 }
 
 std::string bfloat16::to_string() const

@@ -46,7 +46,10 @@ TEST(bfloat16, conversions)
     EXPECT_EQ(bf, bfloat16(1.03125));
     bf_string = test::bfloat16_to_bits(bf);
     EXPECT_STREQ(source_string.c_str(), bf_string.c_str());
+}
 
+TEST(bfloat16, round_to_nearest)
+{
     // 1.03515625f, the next representable number which should round up
     string fstring = "0  01111111  000 0100 1000 0000 0000 0000";
     float fvalue = test::bits_to_float(fstring);
@@ -70,6 +73,39 @@ TEST(bfloat16, conversions)
     bf_round = bfloat16(fvalue, bfloat16::RoundingMode::ROUND);
     EXPECT_EQ(bf_trunc, bfloat16(1.9921875));
     EXPECT_EQ(bf_round, bfloat16(1.9921875));
+}
+
+TEST(bfloat16, round_to_nearest_even)
+{
+    string fstring = "0  01111111  000 0100 1000 0000 0000 0000";
+    string expected = "0  01111111  000 0100";
+    float fvalue = test::bits_to_float(fstring);
+    bfloat16 bf_round = bfloat16(fvalue, bfloat16::RoundingMode::ROUND_TO_NEAREST_EVEN);
+    EXPECT_EQ(bf_round, test::bits_to_bfloat16(expected));
+
+    fstring = "0  01111111  000 0101 1000 0000 0000 0000";
+    expected = "0  01111111  000 0110";
+    fvalue = test::bits_to_float(fstring);
+    bf_round = bfloat16(fvalue, bfloat16::RoundingMode::ROUND_TO_NEAREST_EVEN);
+    EXPECT_EQ(bf_round, test::bits_to_bfloat16(expected));
+
+    fstring = "0  01111111  000 0101 0000 0000 0000 0000";
+    expected = "0  01111111  000 0101";
+    fvalue = test::bits_to_float(fstring);
+    bf_round = bfloat16(fvalue, bfloat16::RoundingMode::ROUND_TO_NEAREST_EVEN);
+    EXPECT_EQ(bf_round, test::bits_to_bfloat16(expected));
+
+    fstring = "0  01111111  111 1111 1000 0000 0000 0000";
+    expected = "0  10000000  000 0000";
+    fvalue = test::bits_to_float(fstring);
+    bf_round = bfloat16(fvalue, bfloat16::RoundingMode::ROUND_TO_NEAREST_EVEN);
+    EXPECT_EQ(bf_round, test::bits_to_bfloat16(expected));
+
+    fstring = "0  01111111  111 1111 0000 0000 0000 0000";
+    expected = "0  01111111  111 1111";
+    fvalue = test::bits_to_float(fstring);
+    bf_round = bfloat16(fvalue, bfloat16::RoundingMode::ROUND_TO_NEAREST_EVEN);
+    EXPECT_EQ(bf_round, test::bits_to_bfloat16(expected));
 }
 
 TEST(bfloat16, to_float)
