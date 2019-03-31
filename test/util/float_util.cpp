@@ -35,7 +35,7 @@ union DoubleUnion {
 std::string ngraph::test::bfloat16_to_bits(bfloat16 f)
 {
     std::stringstream ss;
-    ss << std::bitset<16>(static_cast<uint16_t>(f));
+    ss << std::bitset<16>(f.get_bits());
     std::string unformatted = ss.str();
     std::string formatted;
     formatted.reserve(41);

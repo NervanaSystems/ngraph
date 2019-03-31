@@ -87,7 +87,7 @@ namespace ngraph
         bool operator>=(const bfloat16& other) const;
         operator float() const;
         operator double() const;
-        operator uint16_t() const;
+        uint16_t get_bits() const;
 
         static std::vector<float> to_float_vector(const std::vector<bfloat16>&);
         static std::vector<bfloat16> from_float_vector(const std::vector<float>&);

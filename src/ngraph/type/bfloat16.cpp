@@ -111,7 +111,7 @@ bfloat16::operator double() const
     return static_cast<float>(m_value);
 }
 
-bfloat16::operator uint16_t() const
+uint16_t bfloat16::get_bits() const
 {
     return m_value;
 }
