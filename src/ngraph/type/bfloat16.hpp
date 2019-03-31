@@ -43,12 +43,12 @@ namespace ngraph
         {
         }
         constexpr bfloat16(float value, RoundingMode mode = RoundingMode::ROUND)
-            : m_value{(std::isnan(value) ? BF16_NAN_VALUE
-                                         : (mode == RoundingMode::ROUND
-                                                ? round_to_nearest(value)
-                                                : (mode == RoundingMode::ROUND_TO_NEAREST_EVEN
-                                                       ? round_to_nearest_even(value)
-                                                       : truncate(value))))}
+            : m_value{(isnan_c(value) ? BF16_NAN_VALUE
+                                      : (mode == RoundingMode::ROUND
+                                             ? round_to_nearest(value)
+                                             : (mode == RoundingMode::ROUND_TO_NEAREST_EVEN
+                                                    ? round_to_nearest_even(value)
+                                                    : truncate(value))))}
         {
             // The initialization of m_value above is ugly so I have included the original source
             // that was used to create that monstrosity.
@@ -135,6 +135,11 @@ namespace ngraph
         {
             return static_cast<uint16_t>((F32(x).i) >> 16);
         }
+        static constexpr bool isnan_c(float x)
+        {
+            return (((F32(x).i & 0x7F800000) == 0x7F800000) && ((F32(x).i & 0x007FFFFF) != 0));
+        }
+        static constexpr bool isinf_c(float x) { return ((F32(x).i & 0x7FFFFFFF) == 0x7F800000); }
         uint16_t m_value;
 
         static constexpr uint16_t BF16_NAN_VALUE = 0x7FC0;
