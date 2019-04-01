@@ -14,8 +14,8 @@ See also: https://github.com/NervanaSystems/ngraph/releases for previous version
 CHANGELOG |release|
 -------------------
 
-Release Candidate 0 of v0.17
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+nGraph v0.17.0-rc.0
+~~~~~~~~~~~~~~~~~~~
 
 + Allow negative padding in more places
 + Add code generation for some quantized ops
@@ -24,8 +24,8 @@ Release Candidate 0 of v0.17
 
 
 
-Release Candidate 3 of v0.16
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+nGraph v0.16.0-rc.3
+~~~~~~~~~~~~~~~~~~~~
 
 + NodeInput and NodeOutput classes prepare for simplifications of Node
 + Test improvements
@@ -36,8 +36,8 @@ Release Candidate 3 of v0.16
 + Doc updates
 
 
-Release Candidate 2 of v0.16
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+nGraph v0.16.0-rc.2
+~~~~~~~~~~~~~~~~~~~
 
 NodeInput and NodeOutput classes prepare for simplifications of Node
 Test improvements
@@ -47,8 +47,8 @@ Fix memory leak
 Concat optimization
 
 
-Release Candidate 1  of v0.16
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+nGraph v0.16.0-rc.1
+~~~~~~~~~~~~~~~~~~~
 
 NodeInput and NodeOutput classes prepare for simplifications of Node
 Test improvements
