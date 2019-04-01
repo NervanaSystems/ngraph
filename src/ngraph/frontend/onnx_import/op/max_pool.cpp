@@ -14,8 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "core/null_node.hpp"
 #include "ngraph/op/max_pool.hpp"
+#include "core/null_node.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/node_vector.hpp"
 #include "utils/convpool.hpp"
