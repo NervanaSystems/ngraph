@@ -28,6 +28,7 @@
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/erf.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -988,4 +989,53 @@ TEST(cpu_test, conv_test_winograd)
         args.push_back(tensor_val);
     }
     auto cpu_results = execute(cpu_f, args, "CPU");
+}
+
+TEST(cpu_test, conv_negative_padding)
+{
+    auto make_f = [&]() {
+        Shape shape_a{1, 16, 2, 2};
+        auto A = make_shared<op::Parameter>(element::f32, shape_a);
+        Shape shape_b{32, 16, 1, 1};
+        auto B = make_shared<op::Parameter>(element::f32, shape_b);
+        auto conv1 = make_shared<op::Convolution>(A,
+                                                  B,
+                                                  Strides{1, 1},
+                                                  Strides{1, 1},
+                                                  CoordinateDiff{-1, -1},
+                                                  CoordinateDiff{0, 0},
+                                                  Strides{1, 1});
+        return make_shared<Function>(conv1, ParameterVector{A, B});
+
+    };
+    compare_backends(make_f(), make_f(), "CPU", "INTERPRETER");
+}
+
+TEST(cpu_test, guass_error_function_erf)
+{
+    auto make_function = []() -> std::shared_ptr<Function> {
+        auto A = make_shared<op::Parameter>(element::f32, Shape{1, 4, 10, 6, 10});
+        auto erf = make_shared<op::Erf>(A);
+        return make_shared<Function>(erf, ParameterVector{A});
+    };
+
+    auto backend = runtime::Backend::create("CPU");
+    auto cpu_f = make_function();
+    auto int_f = make_function();
+
+    test::Uniform<float> rng(-100.0f, 100.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
+    }
 }

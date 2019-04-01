@@ -44,6 +44,7 @@
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/broadcast_distributed.hpp"
 #include "ngraph/op/ceiling.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
@@ -56,8 +57,12 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/equal.hpp"
+#include "ngraph/op/erf.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/experimental/dyn_broadcast.hpp"
+#include "ngraph/op/experimental/dyn_pad.hpp"
+#include "ngraph/op/experimental/dyn_reshape.hpp"
+#include "ngraph/op/experimental/dyn_slice.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
@@ -544,6 +549,11 @@ std::string runtime::gpu::GPU_Emitter::emit_Cosh(EMIT_ARGS)
     return emit_elementwise<ngraph::op::Cosh>(compiled_function, function_name, node, args, out);
 }
 
+std::string runtime::gpu::GPU_Emitter::emit_BroadcastDistributed(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
 std::string runtime::gpu::GPU_Emitter::emit_Divide(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Divide>(compiled_function, function_name, node, args, out);
@@ -588,6 +598,16 @@ std::string runtime::gpu::GPU_Emitter::emit_Dot(EMIT_ARGS)
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
+std::string runtime::gpu::GPU_Emitter::emit_DynReshape(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_DynSlice(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
 std::string runtime::gpu::GPU_Emitter::emit_EmbeddingLookup(EMIT_ARGS)
 {
     throw ngraph_error("EmbeddingLookup is not yet implemented for NVIDIA GPU");
@@ -596,6 +616,11 @@ std::string runtime::gpu::GPU_Emitter::emit_EmbeddingLookup(EMIT_ARGS)
 std::string runtime::gpu::GPU_Emitter::emit_Equal(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Equal>(compiled_function, function_name, node, args, out);
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_Erf(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_Exp(EMIT_ARGS)
@@ -1384,6 +1409,11 @@ std::string runtime::gpu::GPU_Emitter::emit_TopK(EMIT_ARGS)
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_DynBroadcast(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_DynPad(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
