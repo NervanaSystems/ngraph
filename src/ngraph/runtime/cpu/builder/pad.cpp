@@ -111,7 +111,7 @@ namespace ngraph
 
                 if (pad_mode == ngraph::op::PadMode::CONSTANT)
                 {
-                    std::function<decltype(runtime::cpu::kernel::pad<float, 1>)> kernel;
+                    std::function<decltype(runtime::cpu::kernel::pad_and_slice<float, 1>)> kernel;
 
                     SELECT_KERNEL_BY_RANK(kernel,
                                           pad->get_input_element_type(0),
