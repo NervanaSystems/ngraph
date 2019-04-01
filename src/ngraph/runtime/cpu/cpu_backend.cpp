@@ -98,7 +98,6 @@ shared_ptr<runtime::Executable>
 runtime::cpu::CPU_Executable::CPU_Executable(shared_ptr<Function> func,
                                              ngraph::pass::PassConfig& pass_config,
                                              bool performance_counters_enabled)
-    : runtime::Executable(func)
 {
     FunctionInstance& instance = m_function_instance;
     if (instance.m_external_function == nullptr)
@@ -108,6 +107,7 @@ runtime::cpu::CPU_Executable::CPU_Executable(shared_ptr<Function> func,
         auto cf = instance.m_external_function->make_call_frame(pass_config);
         instance.m_call_frame = dynamic_pointer_cast<CPU_CallFrame>(cf);
     }
+    set_parameters_and_results(*func);
 }
 
 std::shared_ptr<ngraph::runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_Executable::get_call_frame()

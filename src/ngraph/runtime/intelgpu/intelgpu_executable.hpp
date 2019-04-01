@@ -48,6 +48,7 @@ public:
     std::vector<PerformanceCounter> get_performance_data() const override;
 
 private:
+    std::shared_ptr<Function> m_function;
     std::shared_ptr<cldnn::network> m_cldnn_network = nullptr;
     bool m_performance_counters_enabled = false;
     bool m_profile_enable = false;
