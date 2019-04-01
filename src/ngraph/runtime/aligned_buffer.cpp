@@ -35,6 +35,7 @@ runtime::AlignedBuffer::AlignedBuffer(size_t byte_size,
                                       std::shared_ptr<ngraph::runtime::Allocator> allocator)
 {
     m_byte_size = byte_size;
+    m_allocator = allocator;
     if (m_byte_size > 0)
     {
         size_t allocation_size = m_byte_size + alignment;
