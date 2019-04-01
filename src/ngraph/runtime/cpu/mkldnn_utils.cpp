@@ -758,7 +758,7 @@ bool runtime::cpu::mkldnn_utils::can_use_mkldnn_batchnorm_bprop(const ngraph::No
 }
 
 std::shared_ptr<ngraph::runtime::cpu::op::ConvertLayout>
-    runtime::cpu::mkldnn_utils::make_shared_mkldnn_convert_layout(
+    runtime::cpu::mkldnn_utils::create_convert_layout(
         const std::shared_ptr<Node>& arg,
         size_t output_index,
         const std::shared_ptr<ngraph::runtime::cpu::LayoutDescriptor>& layout)

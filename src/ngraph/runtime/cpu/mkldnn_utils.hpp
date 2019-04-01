@@ -154,7 +154,7 @@ namespace ngraph
                 }
 
                 /// Create a shared ConvertLayout operation and assign it mkldnn.
-                std::shared_ptr<op::ConvertLayout> make_shared_mkldnn_convert_layout(
+                std::shared_ptr<op::ConvertLayout> create_convert_layout(
                     const std::shared_ptr<Node>& arg,
                     size_t output_index,
                     const std::shared_ptr<ngraph::runtime::cpu::LayoutDescriptor>& layout);

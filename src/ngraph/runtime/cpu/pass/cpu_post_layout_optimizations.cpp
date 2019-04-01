@@ -49,8 +49,8 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_weight_fu
     auto data_conv = std::make_shared<pattern::op::Label>(element::f32, Shape{16, 4, 7, 7});
     auto tvt = reshape_conv->get_outputs().at(0).get_tensor_ptr().get();
     auto lt_desc = std::make_shared<runtime::cpu::LayoutDescriptor>(*tvt);
-    auto cvt_lt_conv = ngraph::runtime::cpu::mkldnn_utils::make_shared_mkldnn_convert_layout(
-        reshape_conv, 0, lt_desc);
+    auto cvt_lt_conv =
+        ngraph::runtime::cpu::mkldnn_utils::create_convert_layout(reshape_conv, 0, lt_desc);
     auto conv = std::make_shared<ngraph::op::Convolution>(
         data_conv, cvt_lt_conv, Strides{1, 1}, Strides{1, 1});
 
@@ -129,8 +129,7 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_slice_con
         param, Coordinate{0, 0, 0, 0}, Coordinate{1, 192, 17, 17});
     auto tvt = slice->get_outputs().at(0).get_tensor_ptr().get();
     auto lt_desc = std::make_shared<runtime::cpu::LayoutDescriptor>(*tvt);
-    auto cvt_lt =
-        ngraph::runtime::cpu::mkldnn_utils::make_shared_mkldnn_convert_layout(slice, 0, lt_desc);
+    auto cvt_lt = ngraph::runtime::cpu::mkldnn_utils::create_convert_layout(slice, 0, lt_desc);
 
     pattern::graph_rewrite_callback callback = [param](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_slice_converLayout against "
@@ -193,8 +192,7 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
         std::make_shared<ngraph::op::Reshape>(input, AxisVector{0, 1, 2, 3}, Shape{1, 1, 1, 1});
     auto lt_desc =
         std::make_shared<runtime::cpu::LayoutDescriptor>(*reshape->get_output_tensor_ptr());
-    auto cvt_lt =
-        ngraph::runtime::cpu::mkldnn_utils::make_shared_mkldnn_convert_layout(reshape, 0, lt_desc);
+    auto cvt_lt = ngraph::runtime::cpu::mkldnn_utils::create_convert_layout(reshape, 0, lt_desc);
 
     pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_reshape_converLayout against "
@@ -247,7 +245,7 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
             *reshape_m->get_argument(0)->get_output_tensor_ptr());
         rotated_lt_desc->set_mkldnn_md(rotated_md);
 
-        auto cvt_lt_n = ngraph::runtime::cpu::mkldnn_utils::make_shared_mkldnn_convert_layout(
+        auto cvt_lt_n = ngraph::runtime::cpu::mkldnn_utils::create_convert_layout(
             reshape_m->get_argument(0), 0, rotated_lt_desc);
         //cvt_lt_n->set_op_annotations(cvt_lt_m->get_op_annotations());
 

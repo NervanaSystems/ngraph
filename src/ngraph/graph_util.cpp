@@ -243,6 +243,15 @@ std::list<std::shared_ptr<ngraph::Node>>
             }
             auto cloned_node = node->copy_with_new_args(cloned_args);
 
+            // Copy op annotations.
+            if (auto cloned_op = dynamic_pointer_cast<ngraph::op::Op>(cloned_node))
+            {
+                if (auto op_annotations = cloned_op->get_op_annotations())
+                {
+                    cloned_op->set_op_annotations(op_annotations->clone());
+                }
+            }
+
             //copy control dependencies
             for (auto cdep : node->get_control_dependencies())
             {

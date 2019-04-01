@@ -37,13 +37,7 @@ shared_ptr<Node>
         throw ngraph_error("Incorrect number of new arguments");
     }
 
-    auto copy = make_shared<ConvertLayout>(new_args.at(0), output_layout);
-
-    if (m_op_annotations)
-      // Copy annotations
-      copy->set_op_annotations(m_op_annotations->clone());
-
-    return copy;
+    return make_shared<ConvertLayout>(new_args.at(0), output_layout);
 }
 
 runtime::cpu::op::ConvertLayout::ConvertLayout(
