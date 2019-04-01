@@ -8,6 +8,8 @@ The latest |version| download below.
 * `Format .zip`_ 
 * `Format tar.gz`_ 
 
+See also: https://github.com/NervanaSystems/ngraph/releases for previous versions. 
+
 
 CHANGELOG |release|
 -------------------
@@ -55,9 +57,5 @@ Build improvements
 Performance Improvements
 Fix memory leak
 
-
-
-
-
-.. _Format .zip: https://github.com/NervanaSystems/ngraph/archive/latest.zip
-.. _Format tar.gz: https://github.com/NervanaSystems/ngraph/archive/latest.tar.gz
+.. _Format .zip: https://github.com/NervanaSystems/ngraph/archive/v0.17.0-rc.0.zip
+.. _Format tar.gz: https://github.com/NervanaSystems/ngraph/archive/v0.17.0-rc.0.tar.gz
