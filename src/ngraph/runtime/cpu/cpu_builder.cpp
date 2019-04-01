@@ -420,7 +420,13 @@ namespace ngraph
             template <>
             NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Relu)
             {
-                BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::abs);
+                BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::relu);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Sqrt)
+            {
+                BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::sqrt);
             }
 
 #define TI(x) type_index(typeid(x))
@@ -488,6 +494,7 @@ namespace ngraph
             REGISTER_CF_BUILDER(Abs);
             REGISTER_CF_BUILDER(Negative);
             REGISTER_CF_BUILDER(Relu);
+            REGISTER_CF_BUILDER(Sqrt);
         }
     }
 }
