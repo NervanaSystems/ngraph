@@ -63,7 +63,7 @@ public:
                   const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
 
     /// \brief Query the compiled function
-    /// \returns an nshared_ptr<Function> of compiled function
+    /// \returns an shared_ptr<Function> of compiled function
     const std::shared_ptr<Function> get_compiled_function() const;
 
     /// \brief Query the input Parameters
