@@ -14,10 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-//================================================================================================
-// bfloat16 type
-//================================================================================================
-
 #pragma once
 
 #include <cmath>
@@ -26,55 +22,32 @@
 #include <string>
 #include <vector>
 
+#define ROUND_MODE_TO_NEAREST_EVEN
+
 namespace ngraph
 {
     class bfloat16
     {
     public:
-        enum class RoundingMode
-        {
-            TRUNCATE,
-            ROUND,
-            ROUND_TO_NEAREST,
-            ROUND_TO_NEAREST_EVEN
-        };
         constexpr bfloat16()
             : m_value{0}
         {
         }
-        constexpr bfloat16(float value, RoundingMode mode = RoundingMode::ROUND)
-            : m_value{(isnan_c(value) ? BF16_NAN_VALUE
-                                      : (mode == RoundingMode::ROUND
-                                             ? round_to_nearest(value)
-                                             : (mode == RoundingMode::ROUND_TO_NEAREST_EVEN
-                                                    ? round_to_nearest_even(value)
-                                                    : truncate(value))))}
+        constexpr bfloat16(float value)
+            : m_value
         {
-            // The initialization of m_value above is ugly so I have included the original source
-            // that was used to create that monstrosity.
-            // This was done to add a c++11 constexpr ctor
-            // if (std::isnan(value))
-            // {
-            //     m_value = BF16_NAN_VALUE;
-            // }
-            // else if (mode == RoundingMode::TRUNCATE)
-            // {
-            //     // Truncate off 16 LSB, no rounding
-            //     uint32_t* p = reinterpret_cast<uint32_t*>(&value);
-            //     m_value = static_cast<uint16_t>((*p) >> 16);
-            // }
-            // else
-            // {
-            //     // Rounding with round-nearest-to-even to create bfloat16
-            //     // from float. Refer to TF implementation explanation:
-            //     // https://github.com/tensorflow/tensorflow/blob/d354efc/tensorflow/core/lib/bfloat16/bfloat16.h#L199
-            //     uint32_t* u32_ptr = reinterpret_cast<uint32_t*>(&value);
-            //     uint32_t u32_value = *u32_ptr;
-            //     uint32_t lsb = (u32_value >> 15) & 1;
-            //     uint32_t rounding_bias = 0x7fff + lsb;
-            //     u32_value += rounding_bias;
-            //     m_value = static_cast<uint16_t>(u32_value >> 16);
-            // }
+#if defined ROUND_MODE_TO_NEAREST
+            round_to_nearest(value)
+#elif defined ROUND_MODE_TO_NEAREST_EVEN
+            round_to_nearest_even(value)
+#elif defined ROUND_MODE_TRUNCATE
+            truncate(value)
+#else
+#error                                                                                             \
+    "ROUNDING_MODE must be one of ROUND_MODE_TO_NEAREST, ROUND_MODE_TO_NEAREST_EVEN, or ROUND_MODE_TRUNCATE"
+#endif
+        }
+        {
         }
 
         std::string to_string() const;
@@ -87,15 +60,30 @@ namespace ngraph
         bool operator>=(const bfloat16& other) const;
         operator float() const;
         operator double() const;
-        uint16_t get_bits() const;
 
         static std::vector<float> to_float_vector(const std::vector<bfloat16>&);
         static std::vector<bfloat16> from_float_vector(const std::vector<float>&);
         static constexpr bfloat16 from_bits(uint16_t bits) { return bfloat16(bits, false); }
+        uint16_t to_bits() const;
         friend std::ostream& operator<<(std::ostream& out, const bfloat16& obj)
         {
             out << static_cast<float>(obj);
             return out;
+        }
+
+        static constexpr uint16_t round_to_nearest_even(float x)
+        {
+            return static_cast<uint16_t>((F32(x).i + ((F32(x).i & 0x00010000) >> 1)) >> 16);
+        }
+
+        static constexpr uint16_t round_to_nearest(float x)
+        {
+            return static_cast<uint16_t>((F32(x).i + 0x8000) >> 16);
+        }
+
+        static constexpr uint16_t truncate(float x)
+        {
+            return static_cast<uint16_t>((F32(x).i) >> 16);
         }
 
     private:
@@ -118,27 +106,11 @@ namespace ngraph
             uint32_t i;
         };
 
-        static constexpr uint16_t round_to_nearest_even(float x)
-        {
-            // Rounding with round-nearest-to-even to create bfloat16
-            // from float. Refer to TF implementation explanation:
-            // https://github.com/tensorflow/tensorflow/blob/d354efc/tensorflow/core/lib/bfloat16/bfloat16.h#L199
-            return static_cast<uint16_t>((F32(x).i + (0x7fff + ((F32(x).i >> 16) & 1))) >> 16);
-        }
-
-        static constexpr uint16_t round_to_nearest(float x)
-        {
-            return static_cast<uint16_t>((F32(x).i + 0x8000) >> 16);
-        }
-
-        static constexpr uint16_t truncate(float x)
-        {
-            return static_cast<uint16_t>((F32(x).i) >> 16);
-        }
         static constexpr bool isnan_c(float x)
         {
             return (((F32(x).i & 0x7F800000) == 0x7F800000) && ((F32(x).i & 0x007FFFFF) != 0));
         }
+
         static constexpr bool isinf_c(float x) { return ((F32(x).i & 0x7FFFFFFF) == 0x7F800000); }
         uint16_t m_value;
 

@@ -14,6 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <random>
+
 #include "gtest/gtest.h"
 
 #include "ngraph/type/bfloat16.hpp"
@@ -53,26 +55,26 @@ TEST(bfloat16, round_to_nearest)
     // 1.03515625f, the next representable number which should round up
     string fstring = "0  01111111  000 0100 1000 0000 0000 0000";
     float fvalue = test::bits_to_float(fstring);
-    bfloat16 bf_trunc = bfloat16(fvalue, bfloat16::RoundingMode::TRUNCATE);
-    bfloat16 bf_round = bfloat16(fvalue, bfloat16::RoundingMode::ROUND);
-    EXPECT_EQ(bf_trunc, bfloat16(1.03125));
-    EXPECT_EQ(bf_round, bfloat16(1.0390625));
+    uint16_t bf_trunc = bfloat16::truncate(fvalue);
+    uint16_t bf_round = bfloat16::round_to_nearest(fvalue);
+    EXPECT_EQ(bf_trunc, bfloat16(1.03125).to_bits());
+    EXPECT_EQ(bf_round, bfloat16(1.0390625).to_bits());
 
     // 1.99609375f, the next representable number which should round up
     fstring = "0  01111111  111 1111 1000 0000 0000 0000";
     fvalue = test::bits_to_float(fstring);
-    bf_trunc = bfloat16(fvalue, bfloat16::RoundingMode::TRUNCATE);
-    bf_round = bfloat16(fvalue, bfloat16::RoundingMode::ROUND);
-    EXPECT_EQ(bf_trunc, bfloat16(1.9921875));
-    EXPECT_EQ(bf_round, bfloat16(2.0));
+    bf_trunc = bfloat16::truncate(fvalue);
+    bf_round = bfloat16::round_to_nearest(fvalue);
+    EXPECT_EQ(bf_trunc, bfloat16(1.9921875).to_bits());
+    EXPECT_EQ(bf_round, bfloat16(2.0).to_bits());
 
     // 1.9921875f, the next representable number which should not round up
     fstring = "0  01111111  111 1111 0000 0000 0000 0000";
     fvalue = test::bits_to_float(fstring);
-    bf_trunc = bfloat16(fvalue, bfloat16::RoundingMode::TRUNCATE);
-    bf_round = bfloat16(fvalue, bfloat16::RoundingMode::ROUND);
-    EXPECT_EQ(bf_trunc, bfloat16(1.9921875));
-    EXPECT_EQ(bf_round, bfloat16(1.9921875));
+    bf_trunc = bfloat16::truncate(fvalue);
+    bf_round = bfloat16::round_to_nearest(fvalue);
+    EXPECT_EQ(bf_trunc, bfloat16(1.9921875).to_bits());
+    EXPECT_EQ(bf_round, bfloat16(1.9921875).to_bits());
 }
 
 TEST(bfloat16, round_to_nearest_even)
@@ -80,32 +82,32 @@ TEST(bfloat16, round_to_nearest_even)
     string fstring = "0  01111111  000 0100 1000 0000 0000 0000";
     string expected = "0  01111111  000 0100";
     float fvalue = test::bits_to_float(fstring);
-    bfloat16 bf_round = bfloat16(fvalue, bfloat16::RoundingMode::ROUND_TO_NEAREST_EVEN);
-    EXPECT_EQ(bf_round, test::bits_to_bfloat16(expected));
+    uint16_t bf_round = bfloat16::round_to_nearest_even(fvalue);
+    EXPECT_EQ(bf_round, test::bits_to_bfloat16(expected).to_bits());
 
     fstring = "0  01111111  000 0101 1000 0000 0000 0000";
     expected = "0  01111111  000 0110";
     fvalue = test::bits_to_float(fstring);
-    bf_round = bfloat16(fvalue, bfloat16::RoundingMode::ROUND_TO_NEAREST_EVEN);
-    EXPECT_EQ(bf_round, test::bits_to_bfloat16(expected));
+    bf_round = bfloat16::round_to_nearest_even(fvalue);
+    EXPECT_EQ(bf_round, test::bits_to_bfloat16(expected).to_bits());
 
     fstring = "0  01111111  000 0101 0000 0000 0000 0000";
     expected = "0  01111111  000 0101";
     fvalue = test::bits_to_float(fstring);
-    bf_round = bfloat16(fvalue, bfloat16::RoundingMode::ROUND_TO_NEAREST_EVEN);
-    EXPECT_EQ(bf_round, test::bits_to_bfloat16(expected));
+    bf_round = bfloat16::round_to_nearest_even(fvalue);
+    EXPECT_EQ(bf_round, test::bits_to_bfloat16(expected).to_bits());
 
     fstring = "0  01111111  111 1111 1000 0000 0000 0000";
     expected = "0  10000000  000 0000";
     fvalue = test::bits_to_float(fstring);
-    bf_round = bfloat16(fvalue, bfloat16::RoundingMode::ROUND_TO_NEAREST_EVEN);
-    EXPECT_EQ(bf_round, test::bits_to_bfloat16(expected));
+    bf_round = bfloat16::round_to_nearest_even(fvalue);
+    EXPECT_EQ(bf_round, test::bits_to_bfloat16(expected).to_bits());
 
     fstring = "0  01111111  111 1111 0000 0000 0000 0000";
     expected = "0  01111111  111 1111";
     fvalue = test::bits_to_float(fstring);
-    bf_round = bfloat16(fvalue, bfloat16::RoundingMode::ROUND_TO_NEAREST_EVEN);
-    EXPECT_EQ(bf_round, test::bits_to_bfloat16(expected));
+    bf_round = bfloat16::round_to_nearest_even(fvalue);
+    EXPECT_EQ(bf_round, test::bits_to_bfloat16(expected).to_bits());
 }
 
 TEST(bfloat16, to_float)
@@ -124,4 +126,71 @@ TEST(bfloat16, to_float)
     bf = test::bits_to_bfloat16(source_string);
     f = static_cast<float>(bf);
     EXPECT_EQ(f, 1.03125f);
+}
+
+TEST(benchmark, bfloat16)
+{
+    vector<float> data(128 * 3 * 224 * 224);
+    mt19937 rng(2112);
+    uniform_real_distribution<float> distribution(-300, 300);
+    for (float& f : data)
+    {
+        f = distribution(rng);
+    }
+    NGRAPH_INFO << test::float_to_bits(data[0]);
+    NGRAPH_INFO << "buffer size " << data.size() << " floats or " << data.size() * sizeof(float)
+                << " bytes";
+
+    {
+        vector<bfloat16> bf_data;
+        bf_data.reserve(data.size());
+        stopwatch timer;
+        timer.start();
+        for (const float& f : data)
+        {
+            bf_data.emplace_back(f);
+        }
+        timer.stop();
+        NGRAPH_INFO << "float to bfloat16 truncate " << timer.get_milliseconds() << "ms";
+    }
+
+    {
+        vector<uint16_t> bf_data;
+        bf_data.reserve(data.size());
+        stopwatch timer;
+        timer.start();
+        for (const float& f : data)
+        {
+            bf_data.emplace_back(bfloat16::truncate(f));
+        }
+        timer.stop();
+        NGRAPH_INFO << "float to bfloat16 truncate " << timer.get_milliseconds() << "ms";
+    }
+
+    {
+        vector<uint16_t> bf_data;
+        bf_data.reserve(data.size());
+        stopwatch timer;
+        timer.start();
+        for (const float& f : data)
+        {
+            bf_data.emplace_back(bfloat16::round_to_nearest(f));
+        }
+        timer.stop();
+        NGRAPH_INFO << "float to bfloat16 round to nearest " << timer.get_milliseconds() << "ms";
+    }
+
+    {
+        vector<uint16_t> bf_data;
+        bf_data.reserve(data.size());
+        stopwatch timer;
+        timer.start();
+        for (const float& f : data)
+        {
+            bf_data.emplace_back(bfloat16::round_to_nearest_even(f));
+        }
+        timer.stop();
+        NGRAPH_INFO << "float to bfloat16 truncate round to nearest even "
+                    << timer.get_milliseconds() << "ms";
+    }
 }
