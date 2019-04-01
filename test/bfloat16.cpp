@@ -18,6 +18,7 @@
 
 #include "gtest/gtest.h"
 
+#include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/type/bfloat16.hpp"
 #include "util/float_util.hpp"
 
@@ -130,67 +131,72 @@ TEST(bfloat16, to_float)
 
 TEST(benchmark, bfloat16)
 {
-    vector<float> data(128 * 3 * 224 * 224);
+    size_t buffer_size = 128 * 3 * 224 * 224;
+    ngraph::runtime::AlignedBuffer data(buffer_size * sizeof(float), 4096);
+    float* f = static_cast<float*>(data.get_ptr());
+    // vector<float> data(buffer_size);
     mt19937 rng(2112);
     uniform_real_distribution<float> distribution(-300, 300);
-    for (float& f : data)
+    for (size_t i = 0; i < buffer_size; ++i)
     {
-        f = distribution(rng);
+        f[i] = distribution(rng);
     }
-    NGRAPH_INFO << test::float_to_bits(data[0]);
     NGRAPH_INFO << "buffer size " << data.size() << " floats or " << data.size() * sizeof(float)
                 << " bytes";
 
     {
-        vector<bfloat16> bf_data;
-        bf_data.reserve(data.size());
+        ngraph::runtime::AlignedBuffer bf_data(buffer_size * sizeof(bfloat16), 4096);
+        bfloat16* p = static_cast<bfloat16*>(bf_data.get_ptr());
         stopwatch timer;
         timer.start();
-        for (const float& f : data)
+        for (size_t i = 0; i < buffer_size; ++i)
         {
-            bf_data.emplace_back(f);
+            p[i] = bfloat16(f[i]);
         }
         timer.stop();
-        NGRAPH_INFO << "float to bfloat16 truncate " << timer.get_milliseconds() << "ms";
+        NGRAPH_INFO << "float to bfloat16 ctor                  " << timer.get_milliseconds()
+                    << "ms";
     }
 
     {
-        vector<uint16_t> bf_data;
-        bf_data.reserve(data.size());
+        ngraph::runtime::AlignedBuffer bf_data(buffer_size * sizeof(bfloat16), 4096);
+        bfloat16* p = static_cast<bfloat16*>(bf_data.get_ptr());
         stopwatch timer;
         timer.start();
-        for (const float& f : data)
+        for (size_t i = 0; i < buffer_size; ++i)
         {
-            bf_data.emplace_back(bfloat16::truncate(f));
+            p[i] = bfloat16::truncate(f[i]);
         }
         timer.stop();
-        NGRAPH_INFO << "float to bfloat16 truncate " << timer.get_milliseconds() << "ms";
+        NGRAPH_INFO << "float to bfloat16 truncate              " << timer.get_milliseconds()
+                    << "ms";
     }
 
     {
-        vector<uint16_t> bf_data;
-        bf_data.reserve(data.size());
+        ngraph::runtime::AlignedBuffer bf_data(buffer_size * sizeof(bfloat16), 4096);
+        bfloat16* p = static_cast<bfloat16*>(bf_data.get_ptr());
         stopwatch timer;
         timer.start();
-        for (const float& f : data)
+        for (size_t i = 0; i < buffer_size; ++i)
         {
-            bf_data.emplace_back(bfloat16::round_to_nearest(f));
+            p[i] = bfloat16::round_to_nearest(f[i]);
         }
         timer.stop();
-        NGRAPH_INFO << "float to bfloat16 round to nearest " << timer.get_milliseconds() << "ms";
+        NGRAPH_INFO << "float to bfloat16 round to nearest      " << timer.get_milliseconds()
+                    << "ms";
     }
 
     {
-        vector<uint16_t> bf_data;
-        bf_data.reserve(data.size());
+        ngraph::runtime::AlignedBuffer bf_data(buffer_size * sizeof(bfloat16), 4096);
+        bfloat16* p = static_cast<bfloat16*>(bf_data.get_ptr());
         stopwatch timer;
         timer.start();
-        for (const float& f : data)
+        for (size_t i = 0; i < buffer_size; ++i)
         {
-            bf_data.emplace_back(bfloat16::round_to_nearest_even(f));
+            p[i] = bfloat16::round_to_nearest_even(f[i]);
         }
         timer.stop();
-        NGRAPH_INFO << "float to bfloat16 truncate round to nearest even "
-                    << timer.get_milliseconds() << "ms";
+        NGRAPH_INFO << "float to bfloat16 round to nearest even " << timer.get_milliseconds()
+                    << "ms";
     }
 }
