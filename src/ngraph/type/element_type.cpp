@@ -69,7 +69,7 @@ static const map<element::Type_t, const TypeInfo>& get_type_info_map()
         {element::Type_t::undefined,
          TypeInfo(std::numeric_limits<size_t>::max(), false, false, false, false, "undefined")},
         {element::Type_t::dynamic, TypeInfo(0, false, false, false, false, "dynamic")},
-        {element::Type_t::boolean, TypeInfo(8, false, true, true, false, "char")},
+        {element::Type_t::boolean, TypeInfo(8, false, false, true, false, "char")},
         {element::Type_t::bf16, TypeInfo(16, true, false, true, false, "bfloat16")},
         {element::Type_t::f32, TypeInfo(32, true, false, true, false, "float")},
         {element::Type_t::f64, TypeInfo(64, true, false, true, false, "double")},
