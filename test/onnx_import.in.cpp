@@ -2325,7 +2325,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_lstm_fwd_mixed_seq)
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_quantize_linear)
 {
     auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/quantize_linear.prototxt");
+        file_util::path_join(SERIALIZED_ZOO, "onnx/quantize_linear.prototxt"));
 
     Inputs inputs;
     inputs.emplace_back(std::vector<float>{32.25f, 48.34f, 50.f, 83.f});
@@ -2345,9 +2345,9 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_quantize_linear_zero_point)
         file_util::path_join(SERIALIZED_ZOO, "onnx/quantize_linear_zero_point.prototxt"));
 
     Inputs inputs;
-    inputs.emplace_back(std::vector<float>{0f, 2f, 3f, 1000f, -254f, -1000f};  // x
-    inputs.emplace_back(std::vector<float>{2.0f};  // y_scale
-    inputs.emplace_back(std::vector<float>{128f}; // y_zero_point
+    inputs.emplace_back(std::vector<float>{0.f, 2.f, 3.f, 1000.f, -254.f, -1000.f}); // x
+    inputs.emplace_back(std::vector<float>{2.0f});                                   // y_scale
+    inputs.emplace_back(std::vector<float>{128.f});                                  // y_zero_point
 
     std::vector<std::vector<std::uint8_t>> expected_output{
         std::vector<std::uint8_t>{128, 129, 130, 255, 1, 0}};
@@ -2363,16 +2363,13 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, quantize_linear_axis_zero)
         file_util::path_join(SERIALIZED_ZOO, "onnx/quantize_linear_axis_zero.prototxt"));
 
     Inputs inputs;
-    inputs.emplace_back(std::vector<float>{0f, 2f, 3f, 1000f,
-                                           0f, 2f, 3f, 1000f,
-                                           0f, 2f, 3f, 1000f};  // x
-    inputs.emplace_back(std::vector<float>{1f, 2f, 4f};  // y_scale
-    inputs.emplace_back(std::vector<float>{0f, 0f, 0f}; // y_zero_point
+    inputs.emplace_back(std::vector<float>{
+        0.f, 2.f, 3.f, 1000.f, 0.f, 2.f, 3.f, 1000.f, 0.f, 2.f, 3.f, 1000.f}); // x
+    inputs.emplace_back(std::vector<float>{1.f, 2.f, 4.f});                    // y_scale
+    inputs.emplace_back(std::vector<float>{0.f, 0.f, 0.f});                    // y_zero_point
 
     std::vector<std::vector<std::uint8_t>> expected_output{
-        std::vector<std::uint8_t>{0, 2, 3, 255,
-                                  0, 1, 2, 255,
-                                  0, 1, 1, 250}};
+        std::vector<std::uint8_t>{0, 2, 3, 255, 0, 1, 2, 255, 0, 1, 1, 250}};
 
     std::vector<std::vector<std::uint8_t>> outputs{
         execute<float, std::uint8_t>(function, inputs, "${BACKEND_NAME}")};
@@ -2385,16 +2382,13 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_quantize_linear_axis_negative)
         file_util::path_join(SERIALIZED_ZOO, "onnx/quantize_linear_axis_negative.prototxt"));
 
     Inputs inputs;
-    inputs.emplace_back(std::vector<float>{0f, 2f, 3f, 1000f,
-        0f, 2f, 3f, 1000f,
-        0f, 2f, 3f, 1000f};  // x
-    inputs.emplace_back(std::vector<float>{1f, 2f, 4f};  // y_scale
-    inputs.emplace_back(std::vector<float>{0f, 0f, 0f}; // y_zero_point
+    inputs.emplace_back(std::vector<float>{
+        0.f, 2.f, 3.f, 1000.f, 0.f, 2.f, 3.f, 1000.f, 0.f, 2.f, 3.f, 1000.f}); // x
+    inputs.emplace_back(std::vector<float>{1.f, 2.f, 4.f});                    // y_scale
+    inputs.emplace_back(std::vector<float>{0.f, 0.f, 0.f});                    // y_zero_point
 
     std::vector<std::vector<std::uint8_t>> expected_output{
-        std::vector<std::uint8_t>{0, 2, 3, 255,
-                                  0, 1, 2, 255,
-                                  0, 1, 1, 250}};
+        std::vector<std::uint8_t>{0, 2, 3, 255, 0, 1, 2, 255, 0, 1, 1, 250}};
 
     std::vector<std::vector<std::uint8_t>> outputs{
         execute<float, std::uint8_t>(function, inputs, "${BACKEND_NAME}")};
