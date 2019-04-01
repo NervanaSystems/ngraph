@@ -141,8 +141,7 @@ TEST(benchmark, bfloat16)
     {
         f[i] = distribution(rng);
     }
-    NGRAPH_INFO << "buffer size " << data.size() << " floats or " << data.size() * sizeof(float)
-                << " bytes";
+    NGRAPH_INFO << "buffer size " << buffer_size << " floats or " << data.size() << " bytes";
 
     {
         ngraph::runtime::AlignedBuffer bf_data(buffer_size * sizeof(bfloat16), 4096);
