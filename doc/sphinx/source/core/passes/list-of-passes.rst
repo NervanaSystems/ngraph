@@ -1,45 +1,93 @@
 .. core/passes/list-of-passes:
 
 List of passes
-==============
+##############
+
+The kinds of compiler passes available can be broken down into different buckets:
+
+Graph Optimization Passes
+=========================
 
 .. csv-table::
-   :header: "Pass Name", "More Detail"
+   :header: "Graph Optimization Passes", "More Detail"
    :widths: 29, 31
    :escape: ~
 
    ``AlgebraicSimplification``, :ref:`algebraic_simpl`
-   ``AssignLayout``, Coming Soon
-   ``CallGraphPass``, Coming Soon
-   ``CommonFunctionCollection``, Coming Soon
    ``CommonSubexpressionElimination``, :ref:`common_subex_elim`
    ``ConstantFolding``, :ref:`constant_fold`
-   ``CoreFusion``, Coming Soon
-   ``DumpSorted``, Coming Soon
-   ``FunctionPass``, Coming Soon
-   ``GetOutputElementElimination``, Coming Soon
-   ``GraphRewrite``, Coming Soon
-   ``LikeReplacement``, Coming Soon
-   ``Liveness``, Coming Soon
-   ``Manager``, Coming Soon
-   ``ManagerState``, Coming Soon
-   ``MemoryLayout``, Coming Soon
-   ``MemoryManager``, Coming Soon
-   ``MemoryVisualize``, Coming Soon
-   ``ModulePass``, Coming Soon
-   ``NodePass``, Coming Soon
-   ``NopElimination``, Coming Soon
-   ``PassBase``, Coming Soon
-   ``PassConfig``, Coming Soon
-   ``PrefixReshapeElimination``, Coming Soon
-   ``PropagateCacheability``, Coming Soon
-   ``RecurrentGraphRewrite``, Coming Soon
+   ``CoreFusion``, :ref:`core_fusion`
    ``ReshapeElimination``, :ref:`reshape_transpose_elim`
    ``ReshapeSinking``, :ref:`reshape_transpose_sink`
-   ``Serialization``, Coming Soon
-   ``ValidateGraph``, Coming Soon
-   ``VisualizeTree``, Coming Soon
-   ``ZeroDimTensorElimination``, Coming soon 
+
+
+Node Optimization Passes
+========================
+
+.. csv-table::
+   :header: "Node Optimization Passes", "More Detail"
+   :widths: 29, 31
+   :escape: ~
+
+   ``NopElimination``, ""
+   ``ZeroDimTensorElimination``, ""
+
+
+Memory Assignment Passes
+========================
+
+.. csv-table::
+   :header: "Memory Assignment Passes", "More Detail"
+   :widths: 29, 31
+   :escape: ~
+
+   ``AssignLayout``, ""
+   ``Liveness``, ""
+   ``MemoryLayout``, ""
+   ``PropagateCacheability``, ""
+
+
+Codegen Passes
+==============
+
+.. important:: Codegen is currently experimental only. 
+
+
+.. csv-table::
+   :header: "Codegen Passes", "More Detail"
+   :widths: 29, 31
+   :escape: ~
+
+   ``CommonFunctionCollection``, "Experimental Only"
+
+
+Debug Passes
+============
+
+.. csv-table::
+   :header: "Debug Passes", "More Detail"
+   :widths: 29, 31
+   :escape: ~
+
+   ``DumpSorted``, ""
+   ``MemoryVisualize``, ""
+   ``Serialization``, ""
+   ``VisualizeTree``, ""
+
+
+Maintenance Passes
+==================
+
+.. csv-table::
+   :header: "Maintenance Passes", "More Detail"
+   :widths: 29, 31
+   :escape: ~
+
+   ``GetOutputElementElimination``, ""
+   ``LikeReplacement``, ""
+   ``ValidateGraph``, ""
+
+
 
 
 .. important:: All of the above passes are currently implementable; more 

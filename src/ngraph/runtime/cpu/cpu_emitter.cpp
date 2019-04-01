@@ -37,6 +37,7 @@
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/broadcast_distributed.hpp"
 #include "ngraph/op/ceiling.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
@@ -49,6 +50,7 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/equal.hpp"
+#include "ngraph/op/erf.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
@@ -241,6 +243,49 @@ namespace ngraph
                 writer << "MPI_Allreduce(" << args[0].get_name() << ", " << out[0].get_name()
                        << ", " << out[0].get_size() << ", " << data_type
                        << ", MPI_SUM, MPI_COMM_WORLD);\n";
+                writer.block_end();
+#else
+                throw ngraph_error("Distributed Library not supported/mentioned");
+#endif
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::BroadcastDistributed)
+            {
+                const element::Type& element_type = args[0].get_element_type();
+#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
+                auto data_type = "MLSL::DT_FLOAT";
+
+                if (element_type == element::f32)
+                {
+                    data_type = "MLSL::DT_FLOAT";
+                }
+                else if (element_type == element::f64)
+                {
+                    data_type = "MLSL::DT_DOUBLE";
+                }
+
+                writer.block_begin();
+                writer << "MLSL::CommReq* req = ctx->mlsl_dist->Bcast(" << args[0].get_name()
+                       << ", " << args[0].get_size() << ", " << data_type
+                       << ", 0, MLSL::GT_DATA);\n";
+                writer << "ctx->mlsl_env->Wait(req);\n";
+                writer.block_end();
+#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
+                auto data_type = "MPI_FLOAT";
+
+                if (element_type == element::f32)
+                {
+                    data_type = "MPI_FLOAT";
+                }
+                else if (element_type == element::f64)
+                {
+                    data_type = "MPI_DOUBLE";
+                }
+
+                writer.block_begin();
+                writer << "MPI_Bcast(" << args[0].get_name() << ", " << args[0].get_size() << ", "
+                       << data_type << ", 0, MPI_COMM_WORLD);\n";
                 writer.block_end();
 #else
                 throw ngraph_error("Distributed Library not supported/mentioned");
@@ -1949,14 +1994,10 @@ namespace ngraph
                     writer.block_end();
 
                     writer << "size_t pos = pos_raw;\n"
-                           << "if (pos >= " << bounds << ")\n";
-
+                           << "if (pos < " << bounds << ")\n";
                     writer.block_begin();
-                    writer << "throw(std::range_error(\"One-hot: value is out of category "
-                              "range\"));\n";
-                    writer.block_end();
-
                     writer << "out_vector(pos, 0) = 1;\n";
+                    writer.block_end();
 
                     writer.block_end();
                 }
@@ -1983,14 +2024,11 @@ namespace ngraph
                     writer << "size_t pos = pos_raw;\n";
                     writer << "bool found = false;\n";
 
-                    writer << "if (pos >= " << bounds << ")\n";
+                    writer << "if (pos < " << bounds << ")\n";
                     writer.block_begin();
-                    writer << "throw(std::range_error(\"One-hot: value is out of category "
-                              "range\"));\n";
-                    writer.block_end();
-
                     writer << "out_vector"
                            << (oh->get_one_hot_axis() == 0 ? "(pos, i)" : "(i, pos)") << " = 1;\n";
+                    writer.block_end();
 
                     writer.block_end();
 
@@ -2324,12 +2362,10 @@ namespace ngraph
                 }
                 else
                 {
-                    writer << "reference::convolution_backprop_filters<" << out[0].get_type()
-                           << ">(" << args[0].get_name() << ",\n";
+                    writer << "reference::convolution_backprop_filter<" << out[0].get_type() << ">("
+                           << args[0].get_name() << ",\n";
                     writer << "                         " << args[1].get_name() << ",\n";
                     writer << "                         " << out[0].get_name() << ",\n";
-                    writer << "                         {" << join(convolution->get_filters_shape())
-                           << "},\n";
                     writer << "                         {" << join(arg0_shape) << "},\n";
                     writer << "                         {" << join(arg1_shape) << "},\n";
                     writer << "                         {" << join(result_shape) << "},\n";
@@ -2340,7 +2376,7 @@ namespace ngraph
                     writer << "                         {"
                            << join(convolution->get_padding_below_forward()) << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_padding_above_forward()) << "},\n";
+                           << join(convolution->compute_backward_in_pad_above()) << "},\n";
                     writer << "                         {"
                            << join(convolution->get_data_dilation_strides_forward()) << "});\n";
                 }
@@ -2377,12 +2413,10 @@ namespace ngraph
                 else
                 {
                     // Note that args[1] and args[0] are switched here from the usual order.
-                    writer << "reference::convolution_backprop_data<" << out[0].get_type() << ">("
+                    writer << "reference::convolution_backprop_in<" << out[0].get_type() << ">("
                            << args[1].get_name() << ",\n";
                     writer << "                         " << args[0].get_name() << ",\n";
                     writer << "                         " << out[0].get_name() << ",\n";
-                    writer << "                         {"
-                           << join(convolution->get_data_batch_shape()) << "},\n";
                     writer << "                         {" << join(arg1_shape) << "},\n";
                     writer << "                         {" << join(arg0_shape) << "},\n";
                     writer << "                         {" << join(result_shape) << "},\n";
@@ -2391,9 +2425,9 @@ namespace ngraph
                     writer << "                         {"
                            << join(convolution->get_window_dilation_strides_forward()) << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_padding_below_forward()) << "},\n";
+                           << join(convolution->compute_backward_delta_out_pad_below()) << "},\n";
                     writer << "                         {"
-                           << join(convolution->get_padding_above_forward()) << "},\n";
+                           << join(convolution->compute_backward_delta_out_pad_above()) << "},\n";
                     writer << "                         {"
                            << join(convolution->get_window_movement_strides_forward()) << "});\n";
                 }
@@ -2966,7 +3000,7 @@ namespace ngraph
                 auto result_shape = out[0].get_shape();
 
                 if (arg0_shape.size() == 4 && args[0].get_element_type() == element::f32 &&
-                    pad->get_padding_interior() == Shape(arg0_shape.size()))
+                    pad->get_pad_mode() == ngraph::op::PadMode::CONSTANT)
                 {
                     writer << "cpu::kernel::pad_4d_float32(" << args[0].get_name() << ",\n"
                            << "                            " << out[0].get_name() << ",\n"
@@ -2980,6 +3014,19 @@ namespace ngraph
                 }
                 else
                 {
+                    std::string pad_mode_string;
+                    switch (pad->get_pad_mode())
+                    {
+                    case ngraph::op::PadMode::CONSTANT:
+                        pad_mode_string = "ngraph::op::PadMode::CONSTANT";
+                        break;
+                    case ngraph::op::PadMode::EDGE:
+                        pad_mode_string = "ngraph::op::PadMode::EDGE";
+                        break;
+                    case ngraph::op::PadMode::REFLECT:
+                        pad_mode_string = "ngraph::op::PadMode::REFLECT";
+                        break;
+                    }
                     writer << "reference::pad<" << out[0].get_type() << ">(" << args[0].get_name()
                            << ",\n";
                     writer << "            " << args[1].get_name() << ",\n";
@@ -2988,7 +3035,7 @@ namespace ngraph
                     writer << "            {" << join(result_shape) << "},\n";
                     writer << "            {" << join(pad->get_padding_below()) << "},\n";
                     writer << "            {" << join(pad->get_padding_above()) << "},\n";
-                    writer << "            {" << join(pad->get_padding_interior()) << "});\n";
+                    writer << "            " << pad_mode_string << ");\n";
                 }
             }
 
@@ -3187,6 +3234,28 @@ namespace ngraph
                     writer << "                         {" << join(out[0].get_shape()) << "},\n";
                     writer << "                         {" << join(max->get_reduction_axes())
                            << "});\n";
+                }
+                writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Erf)
+            {
+                writer.block_begin();
+                auto element_count = out[0].get_size();
+                if (args[0].get_element_type() == element::f32 ||
+                    args[0].get_element_type() == element::f64)
+                {
+                    writer << "cpu::kernel::erf<" << args[0].get_element_type().c_type_string()
+                           << ">(" << args[0].get_name() << ", " << out[0].get_name() << ", "
+                           << element_count << ", 0);\n";
+                }
+                else
+                {
+                    writer << "cpu::kernel::reference_erf<"
+                           << args[0].get_element_type().c_type_string() << ">("
+                           << args[0].get_name() << ", " << out[0].get_name() << ", "
+                           << ", " << element_count << ");\n";
                 }
                 writer.block_end();
             }
@@ -4137,9 +4206,9 @@ namespace ngraph
             }
 
 #undef TI
-        }
-    }
-}
+        } // namespace cpu
+    }     // namespace runtime
+} // namespace ngraph
 
 //------------------------------------------------------------------------------------------------
 // Utility methods

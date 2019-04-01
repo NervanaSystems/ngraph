@@ -53,7 +53,7 @@
 /src/ngraph/type/                   @diyessi
 /src/ngraph/serializer.*pp          @rkimballn1
 
-/test/distributed.in.cpp            @wenzhe-nrv @diyessi @avijit-nervana
+/test/distributed.in.cpp            @wenzhe-nrv @diyessi @avijit-nervana @jianyinglang
 
 # Putting this last so it's not overridden by directory rules
 CMakeLists.txt                      @rkimballn1 @silee2

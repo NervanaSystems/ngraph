@@ -6,9 +6,9 @@ backwards_dot_tensor_vector
 backwards_replace_slice
 backwards_slice
 batch_norm_bprop_n4c3h2w2
-divide_by_zero_int32
 embedding_lookup_10x1_arbitrary
 embedding_lookup_10x1_arbitrary_index_type_int
+embedding_lookup_10x1_arbitrary_index_type_int64
 embedding_lookup_4x5_reverse
 generate_mask
 replace_slice_3d
@@ -46,3 +46,24 @@ topk_3d_single_output
 topk_5d_max_partial
 topk_int64
 floor_int32
+
+# Unsupported extra padding modes
+pad_edge_1d
+pad_edge_1d_top_neg
+pad_edge_1d_top_neg_bigger_than_tensor
+pad_edge_1d_bottom_neg
+pad_edge_1d_bottom_neg_bigger_than_tensor
+pad_edge_2d
+pad_edge_2d_with_neg
+pad_reflect_1d
+pad_reflect_1d_top_neg
+pad_reflect_1d_top_neg_bigger_than_tensor
+pad_reflect_1d_bottom_neg
+pad_reflect_1d_bottom_neg_bigger_than_tensor
+pad_reflect_1d_multi_reflect
+pad_reflect_2d
+pad_reflect_2d_with_neg
+
+# Not implemented
+erf
+zero_sized_erf
