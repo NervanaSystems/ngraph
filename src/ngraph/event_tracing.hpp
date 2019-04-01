@@ -22,7 +22,12 @@
 #include <mutex>
 #include <string>
 #include <thread>
+#ifdef _WIN32
+#include <processthreadsapi.h>
+#define getpid() GetCurrentProcessId()
+#else
 #include <unistd.h>
+#endif
 
 namespace ngraph
 {
