@@ -158,7 +158,7 @@ namespace ngraph
 class ngraph::runtime::interpreter::INTExecutable : public runtime::Executable
 {
 public:
-    INTExecutable(const std::shared_ptr<Function>& function,
+    INTExecutable(const std::shared_ptr<Function> function,
                   bool enable_performance_collection = false);
 
     bool call(const std::vector<std::shared_ptr<Tensor>>& outputs,

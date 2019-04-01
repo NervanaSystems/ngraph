@@ -75,7 +75,7 @@ runtime::intelgpu::IntelGPUExecutable::IntelGPUExecutable(shared_ptr<Function> f
                                                           double compilation_time,
                                                           double consumed_memory,
                                                           size_t profile_lines_limit_count)
-                                                        : runtime::Executable(func)
+    : runtime::Executable(func)
 {
     m_cldnn_network = network;
     m_performance_counters_enabled = enable_timing;

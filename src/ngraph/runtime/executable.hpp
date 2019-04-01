@@ -36,7 +36,7 @@ class ngraph::runtime::Executable
 {
 public:
     Executable();
-    Executable(shared_ptr<Function> func);
+    Executable(std::shared_ptr<Function> func);
     virtual ~Executable();
 
     /// \param outputs vector of runtime::Tensor used as outputs

@@ -26,7 +26,7 @@ namespace vp = vertexai::plaidml;
 
 ngraph::runtime::plaidml::PlaidML_Executable::PlaidML_Executable(Build build,
                                                                  std::shared_ptr<Function> func)
-                                                                 : Executable(func)
+    : Executable(func)
     : m_config{build.config}
     , m_src_func{std::move(func)}
     , m_input_names{std::move(build.input_names)}

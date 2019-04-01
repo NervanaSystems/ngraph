@@ -33,7 +33,7 @@ using namespace std;
 
 runtime::hybrid::HybridExecutable::HybridExecutable(
     const std::vector<std::shared_ptr<runtime::Backend>>& backend_list,
-    const shared_ptr<Function> func,
+    const std::shared_ptr<Function> func,
     bool enable_performance_collection,
     bool debug_enabled)
     : runtime::Executable(func)

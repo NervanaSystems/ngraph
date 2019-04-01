@@ -30,7 +30,7 @@ runtime::Executable::Executable()
 }
 
 runtime::Executable::Executable(shared_ptr<Function> func)
-:m_function{clone_function(*func)}
+    : m_function{clone_function(*func)}
 {
 }
 

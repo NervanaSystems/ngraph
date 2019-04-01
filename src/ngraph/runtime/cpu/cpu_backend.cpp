@@ -98,7 +98,7 @@ shared_ptr<runtime::Executable>
 runtime::cpu::CPU_Executable::CPU_Executable(shared_ptr<Function> func,
                                              ngraph::pass::PassConfig& pass_config,
                                              bool performance_counters_enabled)
-                                             : runtime::Executable(func)
+    : runtime::Executable(func)
 {
     FunctionInstance& instance = m_function_instance;
     if (instance.m_external_function == nullptr)

@@ -147,7 +147,6 @@ runtime::gpu::GPU_Executable::GPU_Executable(shared_ptr<Function> func, bool ena
     FunctionInstance& instance = m_function_instance;
     if (instance.m_compiled_function == nullptr)
     {
-        set_parameters_and_results(*func);
         m_context->bind_cuda_context_to_thread();
         instance.m_compiled_function =
             runtime::gpu::GPUCompiledFunction::make(m_function, m_context);
