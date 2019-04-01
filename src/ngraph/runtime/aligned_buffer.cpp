@@ -23,9 +23,9 @@
 using namespace ngraph;
 
 runtime::AlignedBuffer::AlignedBuffer()
-    : m_allocated_buffer(nullptr)
+    : m_allocator(nullptr)
+    , m_allocated_buffer(nullptr)
     , m_aligned_buffer(nullptr)
-    , m_allocator(nullptr)
     , m_byte_size(0)
 {
 }
