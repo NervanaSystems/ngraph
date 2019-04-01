@@ -34,8 +34,18 @@ namespace ngraph
                 CPUOpAnnotations() {}
                 bool is_mkldnn_op() { return m_mkldnn_op; }
                 void set_mkldnn_op(bool val) { m_mkldnn_op = val; }
+                /// \returns a deep copy of this CPUOpAnnotations object.
+                virtual std::shared_ptr<OpAnnotations> clone() override
+                {
+                    auto* clone = new CPUOpAnnotations(*this);
+                    return std::shared_ptr<CPUOpAnnotations>(clone);
+                }
+
             private:
                 bool m_mkldnn_op = false;
+
+                CPUOpAnnotations(const CPUOpAnnotations&) = default;
+                CPUOpAnnotations& operator=(const CPUOpAnnotations&) = default;
             };
 
             std::function<std::shared_ptr<ngraph::op::util::OpAnnotations>(void)>

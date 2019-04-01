@@ -35,6 +35,7 @@ namespace ngraph
             class OpAnnotations
             {
             public:
+                OpAnnotations() = default;
                 virtual ~OpAnnotations() = default;
 
                 void add_in_place_oi_pair(const struct oi_pair& oi)
@@ -56,6 +57,17 @@ namespace ngraph
 
                 bool is_cacheable() const { return m_cacheable; }
                 void set_cacheable(bool val) { m_cacheable = val; }
+                /// \returns a deep copy of this OpAnnotations object.
+                virtual std::shared_ptr<OpAnnotations> clone()
+                {
+                    auto* clone = new OpAnnotations(*this);
+                    return std::shared_ptr<OpAnnotations>(clone);
+                }
+
+            protected:
+                OpAnnotations(const OpAnnotations&) = default;
+                OpAnnotations& operator=(const OpAnnotations&) = default;
+
             private:
                 // map of output-input pairs for which in-place computation is valid
                 std::vector<struct oi_pair> m_in_place_oi_pairs;

@@ -15,10 +15,13 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
+
+#include "ngraph/op/util/op_annotations.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 
 using namespace std;
 using namespace ngraph;
+using namespace ngraph::op::util;
 
 runtime::cpu::op::ConvertLayout::ConvertLayout(
     const shared_ptr<Node>& arg, const shared_ptr<runtime::cpu::LayoutDescriptor>& layout)
@@ -33,7 +36,14 @@ shared_ptr<Node>
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return make_shared<ConvertLayout>(new_args.at(0), output_layout);
+
+    auto copy = make_shared<ConvertLayout>(new_args.at(0), output_layout);
+
+    if (m_op_annotations)
+      // Copy annotations
+      copy->set_op_annotations(m_op_annotations->clone());
+
+    return copy;
 }
 
 runtime::cpu::op::ConvertLayout::ConvertLayout(
