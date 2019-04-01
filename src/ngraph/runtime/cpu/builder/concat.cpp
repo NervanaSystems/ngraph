@@ -92,7 +92,8 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto concat_pd = mkldnn_emitter->get_concat_desc(node, nargs);
+                    auto concat_pd =
+                        mkldnn_emitter->get_concat_desc<ngraph::op::Concat>(node, nargs);
                     std::vector<mkldnn::memory::desc> inputs_data_desc;
                     for (size_t i = 0; i < nargs; i++)
                     {
@@ -107,8 +108,11 @@ namespace ngraph
                             CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                             if (ctx->first_iteration)
                             {
-                                mkldnn_emitter->build_concat(
-                                    concat_pd, inputs_data_desc, concat_index);
+                                mkldnn_emitter->build_concat(ctx->mkldnn_primitives,
+                                                             concat_pd,
+                                                             inputs_data_desc,
+                                                             deps,
+                                                             concat_index);
                             }
                             for (size_t i = 0; i < nargs; i++)
                             {

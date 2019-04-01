@@ -72,8 +72,12 @@ namespace ngraph
                                 vector<float> dyn_scales;
                                 dyn_scales.assign(static_cast<float*>(arg1_tensor),
                                                   static_cast<float*>(arg1_tensor) + scales_size);
-                                mkldnn_emitter->build_quantize_reorder(
-                                    input_desc, result_desc, dyn_scales, dequantize_index);
+                                mkldnn_emitter->build_quantize_reorder(ctx->mkldnn_primitives,
+                                                                       input_desc,
+                                                                       result_desc,
+                                                                       dyn_scales,
+                                                                       deps,
+                                                                       dequantize_index);
                             }
                             cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                             cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
@@ -93,8 +97,12 @@ namespace ngraph
                             CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                             if (ctx->first_iteration)
                             {
-                                mkldnn_emitter->build_quantize_reorder(
-                                    input_desc, result_desc, scales, dequantize_index);
+                                mkldnn_emitter->build_quantize_reorder(ctx->mkldnn_primitives,
+                                                                       input_desc,
+                                                                       result_desc,
+                                                                       scales,
+                                                                       deps,
+                                                                       dequantize_index);
                             }
                             cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                             cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
@@ -266,8 +274,13 @@ namespace ngraph
                                 }
                                 // quantize across first dim (mask=2^0) if dyn_scales is a vector
                                 const int mask = scales_size == 1 ? 0 : 1;
-                                mkldnn_emitter->build_quantize_reorder(
-                                    input_desc, result_desc, dyn_scales, quantize_index, mask);
+                                mkldnn_emitter->build_quantize_reorder(ctx->mkldnn_primitives,
+                                                                       input_desc,
+                                                                       result_desc,
+                                                                       dyn_scales,
+                                                                       deps,
+                                                                       quantize_index,
+                                                                       mask);
                             }
                             cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                             cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
@@ -287,8 +300,12 @@ namespace ngraph
                             CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                             if (ctx->first_iteration)
                             {
-                                mkldnn_emitter->build_quantize_reorder(
-                                    input_desc, result_desc, scales, quantize_index);
+                                mkldnn_emitter->build_quantize_reorder(ctx->mkldnn_primitives,
+                                                                       input_desc,
+                                                                       result_desc,
+                                                                       scales,
+                                                                       deps,
+                                                                       quantize_index);
                             }
                             cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                             cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);

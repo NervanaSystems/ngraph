@@ -52,7 +52,9 @@ namespace ngraph
                         CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_bounded_relu(bounded_relu_desc,
+                            mkldnn_emitter->build_bounded_relu(ctx->mkldnn_primitives,
+                                                               bounded_relu_desc,
+                                                               deps,
                                                                bounded_relu_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], input_tensor);

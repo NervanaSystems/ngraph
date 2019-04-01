@@ -16,8 +16,10 @@
 
 #pragma once
 
+#include <condition_variable>
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -79,11 +81,17 @@ namespace ngraph
                 CPU_CallFrame& operator=(const CPU_CallFrame&) = delete;
 
                 void inner_call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                                const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
+                                const std::vector<std::shared_ptr<runtime::Tensor>>& inputs,
+                                const size_t index);
 
                 std::shared_ptr<CPU_ExternalFunction> m_external_function;
 
-                CPURuntimeContext* ctx = nullptr;
+                std::mutex m_mutex;
+                std::condition_variable m_cv;
+                size_t num_ctx_available = 0;
+                std::unordered_map<size_t, bool> index_pool;
+                std::vector<CPURuntimeContext*> ctx_vec;
+                size_t m_concurrency = 1;
 
                 /* Codegen specific */
 

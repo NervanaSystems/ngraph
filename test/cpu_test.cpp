@@ -19,6 +19,7 @@
 #include <iostream>
 #include <list>
 #include <memory>
+#include <thread>
 
 #include "gtest/gtest.h"
 #include "misc.hpp"
@@ -38,6 +39,7 @@
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
 #include "util/all_close.hpp"
+#include "util/all_close_f.hpp"
 #include "util/autodiff/backprop_function.hpp"
 #include "util/autodiff/numeric_compare.hpp"
 #include "util/ndarray.hpp"
@@ -918,4 +920,78 @@ TEST(cpu_test, rotated_pooling)
     compare_backends(make_f(false, true), make_f(false, true), "INTERPRETER", "CPU"); // 5D AvgPool
     compare_backends(
         make_f(false, false), make_f(false, false), "INTERPRETER", "CPU"); // 5D MaxPool
+}
+
+// for float this will be 18 bits matching
+// for bfloat this will be 6 bits matching
+constexpr int three_quarters_of_available_bits = (MAX_FLOAT_BITS * 3) / 4;
+constexpr int tolerance = FLOAT_MANTISSA_BITS - three_quarters_of_available_bits;
+
+TEST(cpu_test, thread_safe_calls_convolution_2d_2items)
+{
+    Shape shape_a{2, 1, 3, 5};
+    Shape shape_b{2, 1, 2, 2};
+    Shape shape_r{2, 2, 2, 4};
+    auto make_graph = [shape_a, shape_b] {
+        auto A = make_shared<op::Parameter>(element::f32, shape_a);
+        auto B = make_shared<op::Parameter>(element::f32, shape_b);
+        return make_shared<Function>(
+            make_shared<op::Convolution>(A,
+                                         B,
+                                         Strides{1, 1},        // move_strides
+                                         Strides{1, 1},        // filter_dilation
+                                         CoordinateDiff{0, 0}, // below_pads
+                                         CoordinateDiff{0, 0}, // above_pads
+                                         Strides{1, 1}),       // data_dilation
+            ParameterVector{A, B});
+    };
+
+    auto backend = runtime::Backend::create("CPU");
+    auto function = make_graph();
+
+    vector<float> expected_result{
+        0.63940430f,  0.04736328f,  -1.37304688f, -0.56201172f, -0.46606445f, 0.48364258f,
+        1.40625000f,  0.15795898f,  -0.55004883f, 0.73339844f,  0.10668945f,  -0.95751953f,
+        -0.96679688f, -0.21215820f, 1.21826172f,  -0.91894531f, 0.12402344f,  0.76953125f,
+        1.20581055f,  0.65917969f,  0.62841797f,  -0.46386719f, -0.68554688f, -0.82348633f,
+        0.22509766f,  -0.60864258f, -0.45166016f, -0.05249023f, 0.99462891f,  -1.09497070f,
+        -0.75244141f, 0.56250000f};
+
+    auto handle = backend->compile(function);
+
+    auto make_call = [shape_a, shape_b, shape_r, expected_result, &backend](
+        std::shared_ptr<ngraph::runtime::Executable> handle) {
+        // Create some tensors for input/output
+        auto a = backend->create_tensor(element::f32, shape_a);
+        copy_data(
+            a, vector<float>{0.67187500f,  0.54687500f,  -0.56250000f, -0.35937500f, -0.09375000f,
+                             0.54687500f,  -0.54687500f, 0.89062500f,  0.82812500f,  -0.54687500f,
+                             1.00000000f,  -0.07812500f, -0.89062500f, 0.40625000f,  -0.35937500f,
+                             0.54687500f,  0.60937500f,  0.59375000f,  0.09375000f,  -0.21875000f,
+                             0.76562500f,  0.40625000f,  -0.73437500f, -0.95312500f, -0.50000000f,
+                             -0.29687500f, 0.76562500f,  -0.26562500f, -0.50000000f, 0.53125000f});
+        auto b = backend->create_tensor(element::f32, shape_b);
+        copy_data(b,
+                  vector<float>{0.67187500f,
+                                0.54687500f,
+                                -0.56250000f,
+                                -0.35937500f,
+                                -0.09375000f,
+                                0.54687500f,
+                                -0.54687500f,
+                                0.89062500f});
+        auto result = backend->create_tensor(element::f32, shape_r);
+
+        handle->call_with_validate({result}, {a, b});
+
+        EXPECT_TRUE(test::all_close_f(
+            vector<float>{expected_result}, read_vector<float>(result), tolerance));
+    };
+
+    std::thread call1(make_call, handle);
+    std::thread call2(make_call, handle);
+    std::thread call3(make_call, handle);
+    call1.join();
+    call2.join();
+    call3.join();
 }

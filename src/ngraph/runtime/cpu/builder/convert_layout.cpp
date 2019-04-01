@@ -88,7 +88,8 @@ namespace ngraph
                     CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                     if (ctx->first_iteration)
                     {
-                        mkldnn_emitter->build_reorder(input_desc, result_desc, reorder_index);
+                        mkldnn_emitter->build_reorder(
+                            ctx->mkldnn_primitives, input_desc, result_desc, deps, reorder_index);
                     }
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);

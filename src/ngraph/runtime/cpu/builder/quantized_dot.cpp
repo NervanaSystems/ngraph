@@ -64,7 +64,12 @@ namespace ngraph
                                               static_cast<float*>(arg3_tensor) + scales_size);
                             ip_attr.set_output_scales(0, dyn_scales);
                             mkldnn_emitter->build_inner_product_forward<true>(
-                                ip_desc, ip_attr, executor::global_cpu_engine, ip_index);
+                                ctx->mkldnn_primitives,
+                                ip_desc,
+                                ip_attr,
+                                executor::global_cpu_engine,
+                                deps,
+                                ip_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
@@ -112,7 +117,12 @@ namespace ngraph
                                               static_cast<float*>(arg2_tensor) + scales_size);
                             ip_attr.set_output_scales(0, dyn_scales);
                             mkldnn_emitter->build_inner_product_forward<false>(
-                                ip_desc, ip_attr, executor::global_cpu_engine, ip_index);
+                                ctx->mkldnn_primitives,
+                                ip_desc,
+                                ip_attr,
+                                executor::global_cpu_engine,
+                                deps,
+                                ip_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);

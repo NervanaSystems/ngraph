@@ -67,8 +67,11 @@ namespace ngraph
                                                           CPUExecutionContext* ectx) {
                     if (ctx->first_iteration)
                     {
-                        mkldnn_emitter->build_rnn_forward(lstm_desc, lstm_index);
-                        ctx->mkldnn_workspaces = mkldnn_emitter->get_mkldnn_workspaces().data();
+                        mkldnn_emitter->build_rnn_forward(ctx->mkldnn_primitives,
+                                                          ctx->mkldnn_workspaces,
+                                                          lstm_desc,
+                                                          deps,
+                                                          lstm_index);
                     }
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], src_layer_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], src_iter_tensor);

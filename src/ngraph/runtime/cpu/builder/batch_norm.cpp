@@ -101,8 +101,13 @@ namespace ngraph
                                                   CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_batchnorm_forward(
-                                batchnorm_desc, weights_desc, training, batchnorm_index, ops);
+                            mkldnn_emitter->build_batchnorm_forward(ctx->mkldnn_primitives,
+                                                                    batchnorm_desc,
+                                                                    weights_desc,
+                                                                    training,
+                                                                    deps,
+                                                                    batchnorm_index,
+                                                                    ops);
                         }
                         memcpy(stacked_weights.get(), arg0_tensor, weight_sizes[0]);
                         memcpy(
@@ -147,8 +152,13 @@ namespace ngraph
                                                   CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_batchnorm_forward(
-                                batchnorm_desc, weights_desc, training, batchnorm_index, ops);
+                            mkldnn_emitter->build_batchnorm_forward(ctx->mkldnn_primitives,
+                                                                    batchnorm_desc,
+                                                                    weights_desc,
+                                                                    training,
+                                                                    deps,
+                                                                    batchnorm_index,
+                                                                    ops);
                         }
                         memcpy(stacked_weights.get(), arg0_tensor, weight_sizes[0]);
                         memcpy(
@@ -350,8 +360,12 @@ namespace ngraph
                                 weight_sizes](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                     if (ctx->first_iteration)
                     {
-                        mkldnn_emitter->build_batchnorm_backward(
-                            batchnorm_desc, weights_desc, dweights_desc, batchnorm_index);
+                        mkldnn_emitter->build_batchnorm_backward(ctx->mkldnn_primitives,
+                                                                 batchnorm_desc,
+                                                                 weights_desc,
+                                                                 dweights_desc,
+                                                                 deps,
+                                                                 batchnorm_index);
                     }
                     memcpy(stacked_weights.get(), arg0_tensor, weight_sizes[0]);
                     memcpy(stacked_weights.get() + weight_sizes[0], arg1_tensor, weight_sizes[1]);

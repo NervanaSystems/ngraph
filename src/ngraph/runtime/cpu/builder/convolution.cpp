@@ -63,7 +63,12 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<false>(
-                                conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
+                                ctx->mkldnn_primitives,
+                                conv_desc,
+                                conv_attr,
+                                executor::global_cpu_engine,
+                                deps,
+                                conv_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
@@ -138,7 +143,12 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<false>(
-                                conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
+                                ctx->mkldnn_primitives,
+                                conv_desc,
+                                conv_attr,
+                                executor::global_cpu_engine,
+                                deps,
+                                conv_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
@@ -180,7 +190,12 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<true>(
-                                conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
+                                ctx->mkldnn_primitives,
+                                conv_desc,
+                                conv_attr,
+                                executor::global_cpu_engine,
+                                deps,
+                                conv_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
@@ -225,7 +240,12 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<true>(
-                                conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
+                                ctx->mkldnn_primitives,
+                                conv_desc,
+                                conv_attr,
+                                executor::global_cpu_engine,
+                                deps,
+                                conv_index);
                         }
                         if (out_tensor != arg3_tensor)
                         {
@@ -275,7 +295,12 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<false>(
-                                conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
+                                ctx->mkldnn_primitives,
+                                conv_desc,
+                                conv_attr,
+                                executor::global_cpu_engine,
+                                deps,
+                                conv_index);
                         }
                         if (out_tensor != arg2_tensor)
                         {
@@ -327,7 +352,7 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_backward_data(
-                                bwd_desc, fwd_desc, conv_index);
+                                ctx->mkldnn_primitives, bwd_desc, fwd_desc, deps, conv_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
@@ -415,7 +440,7 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_backward_weights(
-                                bwd_desc, fwd_desc, conv_index);
+                                ctx->mkldnn_primitives, bwd_desc, fwd_desc, deps, conv_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
@@ -499,7 +524,7 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_backward_weights_bias(
-                                bwd_desc, fwd_desc, conv_index);
+                                ctx->mkldnn_primitives, bwd_desc, fwd_desc, deps, conv_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
@@ -542,7 +567,12 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<false>(
-                                conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
+                                ctx->mkldnn_primitives,
+                                conv_desc,
+                                conv_attr,
+                                executor::global_cpu_engine,
+                                deps,
+                                conv_index);
                         }
 
                         // group convolution
@@ -586,7 +616,12 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<true>(
-                                conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
+                                ctx->mkldnn_primitives,
+                                conv_desc,
+                                conv_attr,
+                                executor::global_cpu_engine,
+                                deps,
+                                conv_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);

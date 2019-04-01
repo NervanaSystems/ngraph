@@ -63,7 +63,8 @@ namespace ngraph
                                                                       CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_pooling_forward(avg_pool_desc, avg_pool_index);
+                            mkldnn_emitter->build_pooling_forward(
+                                ctx->mkldnn_primitives, avg_pool_desc, deps, avg_pool_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
@@ -139,8 +140,11 @@ namespace ngraph
                         CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_pooling_backward(
-                                avg_pool_desc, avg_pool_fwd_desc, avg_pool_index);
+                            mkldnn_emitter->build_pooling_backward(ctx->mkldnn_primitives,
+                                                                   avg_pool_desc,
+                                                                   avg_pool_fwd_desc,
+                                                                   deps,
+                                                                   avg_pool_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], delta_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);

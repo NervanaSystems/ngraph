@@ -56,7 +56,8 @@ namespace ngraph
                                                                     CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_softmax_forward(softmax_desc, softmax_index);
+                            mkldnn_emitter->build_softmax_forward(
+                                ctx->mkldnn_primitives, softmax_desc, deps, softmax_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);

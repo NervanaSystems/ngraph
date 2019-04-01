@@ -51,7 +51,8 @@ namespace ngraph
                                                                 CPUExecutionContext* ectx) {
                     if (ctx->first_iteration)
                     {
-                        mkldnn_emitter->build_sigmoid_forward(sigmoid_desc, sigmoid_index);
+                        mkldnn_emitter->build_sigmoid_forward(
+                            ctx->mkldnn_primitives, sigmoid_desc, deps, sigmoid_index);
                     }
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
@@ -84,7 +85,8 @@ namespace ngraph
                                                                       CPUExecutionContext* ectx) {
                     if (ctx->first_iteration)
                     {
-                        mkldnn_emitter->build_sigmoid_backward(bwd_desc, fwd_desc, sigmoid_index);
+                        mkldnn_emitter->build_sigmoid_backward(
+                            ctx->mkldnn_primitives, bwd_desc, fwd_desc, deps, sigmoid_index);
                     }
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);

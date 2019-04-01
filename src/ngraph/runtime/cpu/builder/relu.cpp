@@ -49,7 +49,8 @@ namespace ngraph
                                                               CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_relu_forward(relu_desc, relu_index);
+                            mkldnn_emitter->build_relu_forward(
+                                ctx->mkldnn_primitives, relu_desc, deps, relu_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
@@ -86,7 +87,8 @@ namespace ngraph
                                                                        CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_relu_backward(bwd_desc, fwd_desc, relu_index);
+                            mkldnn_emitter->build_relu_backward(
+                                ctx->mkldnn_primitives, bwd_desc, fwd_desc, deps, relu_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg_fwd_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], delta_tensor);

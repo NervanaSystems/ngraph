@@ -52,7 +52,8 @@ namespace ngraph
                         CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_leaky_relu(leaky_relu_desc, leaky_relu_index);
+                            mkldnn_emitter->build_leaky_relu(
+                                ctx->mkldnn_primitives, leaky_relu_desc, deps, leaky_relu_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], input_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);

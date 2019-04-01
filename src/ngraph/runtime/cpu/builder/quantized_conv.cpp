@@ -68,7 +68,12 @@ namespace ngraph
                             const int mask = scales_size == 1 ? 0 : 2;
                             conv_attr.set_output_scales(mask, dyn_scales);
                             mkldnn_emitter->build_convolution_forward<false>(
-                                conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
+                                ctx->mkldnn_primitives,
+                                conv_desc,
+                                conv_attr,
+                                executor::global_cpu_engine,
+                                deps,
+                                conv_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
@@ -119,7 +124,12 @@ namespace ngraph
                             const int mask = scales_size == 1 ? 0 : 2;
                             conv_attr.set_output_scales(mask, dyn_scales);
                             mkldnn_emitter->build_convolution_forward<false>(
-                                conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
+                                ctx->mkldnn_primitives,
+                                conv_desc,
+                                conv_attr,
+                                executor::global_cpu_engine,
+                                deps,
+                                conv_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
@@ -172,7 +182,12 @@ namespace ngraph
                             const int mask = scales_size == 1 ? 0 : 2;
                             conv_attr.set_output_scales(mask, dyn_scales);
                             mkldnn_emitter->build_convolution_forward<true>(
-                                conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
+                                ctx->mkldnn_primitives,
+                                conv_desc,
+                                conv_attr,
+                                executor::global_cpu_engine,
+                                deps,
+                                conv_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
@@ -259,7 +274,12 @@ namespace ngraph
                             conv_attr.set_output_scales(mask, dyn_scales);
                             conv_attr.set_post_ops(new_pops);
                             mkldnn_emitter->build_convolution_forward<true>(
-                                conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
+                                ctx->mkldnn_primitives,
+                                conv_desc,
+                                conv_attr,
+                                executor::global_cpu_engine,
+                                deps,
+                                conv_index);
                         }
 
                         if (out0_tensor != arg3_tensor)
@@ -349,7 +369,12 @@ namespace ngraph
                             const int mask = scales_size == 1 ? 0 : 2;
                             conv_attr.set_output_scales(mask, dyn_scales);
                             mkldnn_emitter->build_convolution_forward<true>(
-                                conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
+                                ctx->mkldnn_primitives,
+                                conv_desc,
+                                conv_attr,
+                                executor::global_cpu_engine,
+                                deps,
+                                conv_index);
                         }
 
                         if (out0_tensor != arg3_tensor)
