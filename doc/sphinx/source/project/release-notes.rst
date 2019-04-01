@@ -1,41 +1,63 @@
-.. release-notes:
+.. ngraph/release-notes:
 
 Release Notes
 #############
 
-This is |release|.
+The latest |version| download below.
+
+* `Format .zip`_ 
+* `Format tar.gz`_ 
+
+
+CHANGELOG |release|
+-------------------
+
+Release Candidate 0 of v0.17
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
++ Allow negative padding in more places
++ Add code generation for some quantized ops
++ Preliminary dynamic shape support
++ initial distributed ops
+
+
+
+Release Candidate 3 of v0.16
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
++ NodeInput and NodeOutput classes prepare for simplifications of Node
++ Test improvements
++ Additional quantization ops
++ Performance improvements
++ Fix memory leak
++ Concat optimization
++ Doc updates
+
+
+Release Candidate 2 of v0.16
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+NodeInput and NodeOutput classes prepare for simplifications of Node
+Test improvements
+Additional quantization ops
+Performance improvements
+Fix memory leak
+Concat optimization
+
+
+Release Candidate 1  of v0.16
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+NodeInput and NodeOutput classes prepare for simplifications of Node
+Test improvements
+Additional quantization ops
+Build improvements
+Performance Improvements
+Fix memory leak
 
 
 
 
 
-CHANGELOG
-=========
-
-(Last updated September 2018)
-
-This release focuses on accelerating deep learning inference workloads on 
-Intel® Xeon® (CPU processor) and has the following key features: 
-
-* Out-of-box installation experience for TensorFlow*, MXNet*, and ONNX.
-* Validated optimizations for 17 workloads each on both TensorFlow and MXNet, 
-  as well as 14 for ONNX.
-* Support for Ubuntu 16.04 (TensorFlow, MXNet and ONNX).
-* Support for OSX 10.13.x (buildable for TensorFlow and MXNet).
-
-This |version| release includes optimizations built for popular workloads 
-already widely deployed in production environments. These workloads cover 
-the following categories:
-
-* ``image recognition & segmentation`` 
-* ``object detection`` 
-* ``language translation`` 
-* ``speech generation & recognition``
-* ``recommender systems`` 
-* ``Generative Adversarial Networks (GAN)``
-* ``reinforcement learning`` 
-
-In our tests, the optimized workloads can perform up to 45X faster than native 
-frameworks, and we expect performance gains for other workloads due to our 
-powerful :doc:`../core/fusion/index` feature.
-
+.. _Format .zip: https://github.com/NervanaSystems/ngraph/archive/latest.zip
+.. _Format tar.gz: https://github.com/NervanaSystems/ngraph/archive/latest.tar.gz

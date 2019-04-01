@@ -163,7 +163,7 @@ dependency computation graph.
 bridges and that can be compiled by all transformers. A framework bridge may 
 define framework-specific ops to simplify graph construction, provided that the 
 bridge can enable every transformer to replace all such ops with equivalent 
-clusters or subgraphs composed of core ops. Similary, transformers may define 
+clusters or subgraphs composed of core ops. Similarily, transformers may define 
 transformer-specific ops to represent kernels or other intermediate operations. 
 
 If a framework supports extending the set of ops it offers, a bridge may even 
