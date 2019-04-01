@@ -217,8 +217,13 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
     auto rehape_label = make_shared<pattern::op::Label>(reshape, no_fan_out, NodeVector{reshape});
 
     auto callback = [op, rehape_label](pattern::RecurrentMatcher& m) {
-        const auto sequence_len = m.get_number_of_recurrent_matches();
+        const auto num_bounded_nodes = m.get_number_of_recurrent_matches();
         auto reshape_node_vector = m.get_bound_nodes_for_pattern(rehape_label);
+
+        if (reshape_node_vector.size() == 1)
+        {
+            return false;
+        }
 
         // The bounded node vector is in reverse order. It is convinient to have the
         // bounded node vector in the correct order
@@ -236,7 +241,7 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
             reshape_node_vector.push_back(user_of_last_bounded_reshape_op);
             last_bounded_reshape_op = reshape_node_vector.back();
         }
-        std::cout << "Num bounded nodes: " << sequence_len << std::endl;
+        std::cout << "Num bounded nodes: " << num_bounded_nodes << std::endl;
         std::cout << "Bounded node vector: ";
         for (auto it : reshape_node_vector)
         {
@@ -248,13 +253,58 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
                   << driver_op->get_name() << std::endl;
         std::cout << "Last bounded op: " << last_bounded_reshape_op->get_name() << std::endl;
 
-        if (first_bounded_reshape_op->get_input_shape(0) == last_bounded_reshape_op->get_shape())
+        std::vector<NodeVector> sub_patterns{NodeVector{first_bounded_reshape_op}};
+        for (auto it = std::next(reshape_node_vector.begin()); it != reshape_node_vector.end();
+             it++)
         {
-            replace_node(last_bounded_reshape_op, driver_op);
-            return true;
+            auto r = std::dynamic_pointer_cast<op::Reshape>(*it);
+
+            // TODO: Check that the input to r is the last reshape stored in the
+            // subpattern vector
+            auto default_order_r = get_default_order(r->get_input_shape(0));
+            if (r->get_input_order() == default_order_r)
+            {
+                sub_patterns.back().push_back(r);
+            }
+            else
+            {
+                sub_patterns.push_back(NodeVector{r});
+            }
         }
 
-        return false;
+        // Remove the subpatterns with just one reshape in them
+        auto iter = sub_patterns.begin();
+        while (iter != sub_patterns.end())
+        {
+            if (iter->size() == 1)
+            {
+                iter = sub_patterns.erase(iter);
+            }
+            else
+            {
+                iter++;
+            }
+        }
+
+        bool modify_graph = false;
+
+        for (auto sub_pattern : sub_patterns)
+        {
+            auto first_reshape = std::dynamic_pointer_cast<op::Reshape>(sub_pattern.front());
+            auto input_to_first_reshape = first_reshape->get_argument(0);
+            auto last_reshape = std::dynamic_pointer_cast<op::Reshape>(sub_pattern.back());
+
+            auto new_input_order = first_reshape->get_input_order();
+            auto new_out_shape = last_reshape->get_shape();
+
+            auto new_reshape = std::make_shared<op::Reshape>(
+                input_to_first_reshape, new_input_order, new_out_shape);
+
+            replace_node(last_reshape, new_reshape);
+            modify_graph = true;
+        }
+
+        return modify_graph;
     };
     std::set<std::shared_ptr<pattern::op::Label>> empty_correlated_matches;
     auto m = std::make_shared<pattern::RecurrentMatcher>(
