@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-// This collection contains one entry for each fused op. 
+// This collection contains one entry for each fused op.
 //
 
 #ifndef NGRAPH_OP

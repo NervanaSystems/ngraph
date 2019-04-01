@@ -24,17 +24,20 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Elementwise Maximum(arg, arg * alpha) operation
-        ///        alpha > 0
+        /// \brief Parametrized Relu
+        /// x <  0 => f(x) = x * slope
+        /// x >= 0 => f(x) = x
         ///
         class PRelu : public ngraph::op::util::FusedOp
         {
         public:
             /// \brief Constructs a PRelu operation.
             ///
-            /// \param arg Node input to the Relu.
+            /// \param data Input tensor
+            /// \param slope Multipliers for negative values
             PRelu(const std::shared_ptr<ngraph::Node>& data,
                   const std::shared_ptr<ngraph::Node>& slope);
+
             virtual NodeVector decompose_op() const override;
 
             virtual std::shared_ptr<Node>

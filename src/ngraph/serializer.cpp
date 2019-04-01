@@ -125,8 +125,8 @@ using const_data_callback_t = shared_ptr<Node>(const string&, const element::Typ
 #define NGRAPH_OP(a, b) a,
 enum class OP_TYPEID
 {
-#include "ngraph/op/op_tbl.hpp"
 #include "ngraph/op/fused_op_tbl.hpp"
+#include "ngraph/op/op_tbl.hpp"
     UnknownOp
 };
 #undef NGRAPH_OP
@@ -139,8 +139,8 @@ static OP_TYPEID get_typeid(const string& s)
 // ...
 #define NGRAPH_OP(a, b) {#a, OP_TYPEID::a},
     static const unordered_map<string, OP_TYPEID> typeid_map{
-#include "ngraph/op/op_tbl.hpp"
 #include "ngraph/op/fused_op_tbl.hpp"
+#include "ngraph/op/op_tbl.hpp"
     };
 #undef NGRAPH_OP
     OP_TYPEID rc = OP_TYPEID::UnknownOp;
