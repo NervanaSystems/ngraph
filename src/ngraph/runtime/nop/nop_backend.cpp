@@ -63,12 +63,11 @@ shared_ptr<runtime::Executable>
 
 runtime::nop::NOPExecutable::NOPExecutable(shared_ptr<Function> function,
                                            bool enable_performance_collection)
+                                           : Executable(function)
 {
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
-    pass_manager.run_passes(function);
-
-    set_parameters_and_results(*function);
+    pass_manager.run_passes(m_function);
 }
 
 bool runtime::nop::NOPExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,

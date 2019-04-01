@@ -33,21 +33,21 @@ using namespace ngraph;
 
 using descriptor::layout::DenseTensorLayout;
 
-runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& function,
+runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function> function,
                                                    bool enable_performance_collection)
+                                                   : runtime::Executable(function)
 {
     m_is_compiled = true;
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::LikeReplacement>();
     pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
     pass_manager.register_pass<pass::Liveness>();
-    pass_manager.run_passes(function);
+    pass_manager.run_passes(m_function);
 
-    for (const shared_ptr<Node>& node : function->get_ordered_ops())
+    for (const shared_ptr<Node>& node : m_function->get_ordered_ops())
     {
         m_wrapped_nodes.emplace_back(node);
     }
-    set_parameters_and_results(*function);
 }
 
 bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,

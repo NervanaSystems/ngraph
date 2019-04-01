@@ -140,7 +140,8 @@ shared_ptr<runtime::Executable> runtime::gpu::GPU_Backend::compile(shared_ptr<Fu
 }
 
 runtime::gpu::GPU_Executable::GPU_Executable(shared_ptr<Function> func, bool enable_timing)
-    : m_context(new GPU_Backend::BackendContext())
+    : runtime::Executable(func)
+    , m_context(new GPU_Backend::BackendContext())
 
 {
     FunctionInstance& instance = m_function_instance;
@@ -149,7 +150,7 @@ runtime::gpu::GPU_Executable::GPU_Executable(shared_ptr<Function> func, bool ena
         set_parameters_and_results(*func);
         m_context->bind_cuda_context_to_thread();
         instance.m_compiled_function =
-            runtime::gpu::GPUCompiledFunction::make(m_compiled_function, m_context);
+            runtime::gpu::GPUCompiledFunction::make(m_function, m_context);
         instance.m_compiled_function->m_emit_timing = enable_timing;
         instance.m_compiled_function->compile();
         instance.m_runtime = instance.m_compiled_function->m_runtime;

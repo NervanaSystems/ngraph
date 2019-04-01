@@ -36,6 +36,7 @@ class ngraph::runtime::Executable
 {
 public:
     Executable();
+    Executable(shared_ptr<Function> func);
     virtual ~Executable();
 
     /// \param outputs vector of runtime::Tensor used as outputs
@@ -77,6 +78,6 @@ protected:
     /// \brief Called at the end of compile to the values to be returned by get_parameters
     ///     and get_results
     /// \param func The function with Results fully resolved.
-    void set_parameters_and_results(const Function& func);
-    std::shared_ptr<Function> m_compiled_function;
+    // void set_parameters_and_results(const Function& func);
+    std::shared_ptr<Function> m_function;
 };

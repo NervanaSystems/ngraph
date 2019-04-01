@@ -38,7 +38,7 @@ class ngraph::runtime::hybrid::HybridExecutable : public runtime::Executable
 {
 public:
     HybridExecutable(const std::vector<std::shared_ptr<runtime::Backend>>& backend_list,
-                     const std::shared_ptr<Function>& func,
+                     const std::shared_ptr<Function> func,
                      bool enable_performance_collection = false,
                      bool debug_enabled = false);
 
@@ -52,7 +52,6 @@ public:
     }
 
 private:
-    std::shared_ptr<ngraph::Function> m_function;
     std::shared_ptr<Executable> m_executable;
     std::unordered_map<std::shared_ptr<ngraph::op::Parameter>, std::shared_ptr<ngraph::op::Result>>
         m_map_parameter_to_result;

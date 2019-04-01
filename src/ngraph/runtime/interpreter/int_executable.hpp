@@ -155,7 +155,7 @@ namespace ngraph
     }     // namespace runtime
 } // namespace ngraph
 
-class ngraph::runtime::interpreter::INTExecutable : public Executable
+class ngraph::runtime::interpreter::INTExecutable : public runtime::Executable
 {
 public:
     INTExecutable(const std::shared_ptr<Function>& function,
