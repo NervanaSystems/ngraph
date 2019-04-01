@@ -64,6 +64,7 @@
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/floor.hpp"
+#include "ngraph/op/fused/prelu.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
@@ -125,6 +126,7 @@ using const_data_callback_t = shared_ptr<Node>(const string&, const element::Typ
 enum class OP_TYPEID
 {
 #include "ngraph/op/op_tbl.hpp"
+#include "ngraph/op/fused_op_tbl.hpp"
     UnknownOp
 };
 #undef NGRAPH_OP
@@ -138,6 +140,7 @@ static OP_TYPEID get_typeid(const string& s)
 #define NGRAPH_OP(a, b) {#a, OP_TYPEID::a},
     static const unordered_map<string, OP_TYPEID> typeid_map{
 #include "ngraph/op/op_tbl.hpp"
+#include "ngraph/op/fused_op_tbl.hpp"
     };
 #undef NGRAPH_OP
     OP_TYPEID rc = OP_TYPEID::UnknownOp;
@@ -1024,6 +1027,11 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Power>(args[0], args[1]);
                 break;
             }
+            case OP_TYPEID::PRelu:
+            {
+                node = make_shared<op::PRelu>(args[0], args[1]);
+                break;
+            }
             case OP_TYPEID::Product:
             {
                 auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
@@ -1673,6 +1681,8 @@ static json write(const Node& n, bool binary_constant_data)
         }
         node["output_shapes"] = std::move(outputs_js);
         break;
+    }
+    case OP_TYPEID::PRelu: { break;
     }
     case OP_TYPEID::Product:
     {
