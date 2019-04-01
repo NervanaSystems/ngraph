@@ -4363,7 +4363,7 @@ TEST(type_prop, one_hot_deduce_floating_point)
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Argument does not have integer element type."));
+                             std::string("Argument does not have integral element type."));
     }
     catch (...)
     {
@@ -9751,9 +9751,9 @@ TEST(type_prop, topk_invalid_index_type)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            "Argument element type must be i64 or i32 (got element::Type{32, 1, 1, 0, \"float\"})");
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Argument element type must be i64 or i32 (got element::Type{32, 1, "
+                             "0, 1, 0, \"float\"})");
     }
     catch (...)
     {
@@ -9844,9 +9844,9 @@ TEST(type_prop, topk_rank_dynamic_result_et_invalid)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            "Argument element type must be i64 or i32 (got element::Type{32, 1, 1, 0, \"float\"})");
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Argument element type must be i64 or i32 (got element::Type{32, 1, "
+                             "0, 1, 0, \"float\"})");
     }
     catch (...)
     {
@@ -9914,9 +9914,9 @@ TEST(type_prop, topk_rank_static_dynamic_axis_oob)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            "Argument element type must be i64 or i32 (got element::Type{32, 1, 1, 0, \"float\"})");
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Argument element type must be i64 or i32 (got element::Type{32, 1, "
+                             "0, 1, 0, \"float\"})");
     }
     catch (...)
     {
@@ -9942,9 +9942,9 @@ TEST(type_prop, topk_rank_static_dynamic_k_unknown_axis_oob)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            "Argument element type must be i64 or i32 (got element::Type{32, 1, 1, 0, \"float\"})");
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Argument element type must be i64 or i32 (got element::Type{32, 1, "
+                             "0, 1, 0, \"float\"})");
     }
     catch (...)
     {
@@ -9970,9 +9970,9 @@ TEST(type_prop, topk_rank_static_dynamic_k_known_too_big)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            "Argument element type must be i64 or i32 (got element::Type{32, 1, 1, 0, \"float\"})");
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Argument element type must be i64 or i32 (got element::Type{32, 1, "
+                             "0, 1, 0, \"float\"})");
     }
     catch (...)
     {
@@ -10649,7 +10649,7 @@ TEST(type_prop, quantize_i8_to_u8_fails)
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale/input element type (element::Type{8, 0, 1, 1, \"int8_t\"}) "
+                             "Scale/input element type (element::Type{8, 0, 1, 1, 1, \"int8_t\"}) "
                              "must be a floating point number");
     }
     catch (...)
@@ -10683,9 +10683,9 @@ TEST(type_prop, quantize_f32_to_f32_fails)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            "Output element type (element::Type{32, 1, 1, 0, \"float\"}) must be a quantized type");
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Output element type (element::Type{32, 1, 0, 1, 0, \"float\"}) must "
+                             "be a quantized type");
     }
     catch (...)
     {
@@ -10719,8 +10719,8 @@ TEST(type_prop, quantize_batch_scale_type_mismatch_fails)
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale element type (element::Type{64, 1, 1, 0, \"double\"}) must "
-                             "match input element type (element::Type{32, 1, 1, 0, \"float\"})");
+                             "Scale element type (element::Type{64, 1, 0, 1, 0, \"double\"}) must "
+                             "match input element type (element::Type{32, 1, 0, 1, 0, \"float\"})");
     }
     catch (...)
     {
@@ -10753,9 +10753,10 @@ TEST(type_prop, quantize_offset_type_mismatch_fails)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             "Offset element type (element::Type{8, 0, 0, 1, \"uint8_t\"}) must "
-                             "match output element type (element::Type{8, 0, 1, 1, \"int8_t\"})");
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "Offset element type (element::Type{8, 0, 1, 0, 1, \"uint8_t\"}) must "
+            "match output element type (element::Type{8, 0, 1, 1, 1, \"int8_t\"})");
     }
     catch (...)
     {
@@ -11378,9 +11379,10 @@ TEST(type_prop, dequantize_i8_from_u8_fails)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             "Output element type (element::Type{8, 0, 1, 1, \"int8_t\"}) must be "
-                             "a floating point type");
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "Output element type (element::Type{8, 0, 1, 1, 1, \"int8_t\"}) must be "
+            "a floating point type");
     }
     catch (...)
     {
@@ -11412,7 +11414,7 @@ TEST(type_prop, dequantize_f32_from_f32_fails)
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Offset/input element type (element::Type{32, 1, 1, 0, \"float\"}) "
+                             "Offset/input element type (element::Type{32, 1, 0, 1, 0, \"float\"}) "
                              "must be a quantized type");
     }
     catch (...)
@@ -11445,8 +11447,8 @@ TEST(type_prop, dequantize_batch_offset_type_mismatch_fails)
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Offset element type (element::Type{8, 0, 0, 1, \"uint8_t\"}) must "
-                             "match input element type (element::Type{8, 0, 1, 1, \"int8_t\"})");
+                             "Offset element type (element::Type{8, 0, 1, 0, 1, \"uint8_t\"}) must "
+                             "match input element type (element::Type{8, 0, 1, 1, 1, \"int8_t\"})");
     }
     catch (...)
     {
@@ -11477,11 +11479,10 @@ TEST(type_prop, dequantize_scale_type_mismatch_fails)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale element type (element::Type{64, 1, 1, 0, \"double\"}) must "
-                             "match output element type (element::Type{32, 1, 1, 0, \"float\"})"
-
-                             );
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "Scale element type (element::Type{64, 1, 0, 1, 0, \"double\"}) must "
+            "match output element type (element::Type{32, 1, 0, 1, 0, \"float\"})");
     }
     catch (...)
     {

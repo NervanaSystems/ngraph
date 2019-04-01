@@ -78,6 +78,7 @@ namespace ngraph
             bool is_static() const;
             bool is_dynamic() const { return !is_static(); }
             bool is_real() const;
+            bool is_integral() const;
             bool is_signed() const;
             bool is_quantized() const;
             size_t bitwidth() const;
