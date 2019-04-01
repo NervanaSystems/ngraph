@@ -103,7 +103,7 @@ runtime::cpu::CPU_Executable::CPU_Executable(shared_ptr<Function> func,
     FunctionInstance& instance = m_function_instance;
     if (instance.m_external_function == nullptr)
     {
-        instance.m_external_function = make_shared<CPU_ExternalFunction>(m_function);
+        instance.m_external_function = make_shared<CPU_ExternalFunction>(func);
         instance.m_external_function->m_emit_timing = performance_counters_enabled;
         auto cf = instance.m_external_function->make_call_frame(pass_config);
         instance.m_call_frame = dynamic_pointer_cast<CPU_CallFrame>(cf);

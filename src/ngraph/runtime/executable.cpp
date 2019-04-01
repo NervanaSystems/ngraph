@@ -109,22 +109,21 @@ const std::shared_ptr<Function> runtime::Executable::get_compiled_function() con
 
 const ngraph::ParameterVector& runtime::Executable::get_parameters() const
 {
-    return m_function->get_parameters();
-    //return m_parameters;
+    //return m_function->get_parameters();
+    return m_parameters;
 }
 
 const ngraph::ResultVector& runtime::Executable::get_results() const
 {
-    return m_function->get_results();
-    //return m_results;
+    //return m_function->get_results();
+    return m_results;
 }
 
-// void runtime::Executable::set_parameters_and_results(const Function& func)
-// {
-//     m_function = clone_function(func);
-//     //m_parameters = func.get_parameters();
-//     //m_results = func.get_results();
-// }
+void runtime::Executable::set_parameters_and_results(const Function& func)
+{
+    m_parameters = func.get_parameters();
+    m_results = func.get_results();
+}
 
 vector<runtime::PerformanceCounter> runtime::Executable::get_performance_data() const
 {

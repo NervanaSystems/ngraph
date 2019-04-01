@@ -78,6 +78,9 @@ protected:
     /// \brief Called at the end of compile to the values to be returned by get_parameters
     ///     and get_results
     /// \param func The function with Results fully resolved.
-    // void set_parameters_and_results(const Function& func);
+    void set_parameters_and_results(const Function& func);
+
     std::shared_ptr<Function> m_function;
+    ngraph::ParameterVector m_parameters;
+    ngraph::ResultVector m_results;
 };
