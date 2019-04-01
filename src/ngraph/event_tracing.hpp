@@ -23,6 +23,8 @@
 #include <string>
 #include <thread>
 #ifdef _WIN32
+#include <windows.h>
+// windows.h must be before processthreadsapi.h so we need this comment
 #include <processthreadsapi.h>
 #define getpid() GetCurrentProcessId()
 #else
