@@ -188,8 +188,9 @@ TEST(reshape_elimination, recurrent_reshapes_elimination)
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::VisualizeTree>("before_recurrent_reshapes_elimination.pdf");
     pass_manager.register_pass<pass::RecurrentReshapeElimination>();
+    pass_manager.register_pass<pass::VisualizeTree>("after_1_recurrent_reshapes_elimination.pdf");
     pass_manager.register_pass<pass::ReshapeElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after_recurrent_reshapes_elimination.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("after_2_recurrent_reshapes_elimination.pdf");
     pass_manager.run_passes(optimized_f);
 
     test::Uniform<float> rng(0.0f, 100.0f);
@@ -352,6 +353,55 @@ TEST(reshape_elimination, nonrecurrent_reshapes)
     pass_manager.register_pass<pass::RecurrentReshapeElimination>();
     //pass_manager.register_pass<pass::ReshapeElimination>();
     pass_manager.register_pass<pass::VisualizeTree>("after_nonrecurrent_reshapes.pdf");
+    pass_manager.run_passes(optimized_f);
+
+    test::Uniform<float> rng(0.0f, 100.0f);
+    vector<vector<float>> args;
+    vector<float> tensor_val(shape_size(baseline_input_shape));
+    rng.initialize(tensor_val);
+    args.push_back(tensor_val);
+
+    auto baseline_results = execute(baseline_f, args, "INTERPRETER");
+    auto optimized_results = execute(optimized_f, args, "INTERPRETER");
+
+    EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
+}
+
+TEST(reshape_elimination, recurrent_reshapes_multiple_branches)
+{
+    Shape shape_a{2, 2, 3, 3, 2, 4};
+    auto generate_func = [shape_a]() {
+        auto A = make_shared<op::Parameter>(element::f32, shape_a);
+        Shape shape_r_1{3, 2, 2, 4, 6};
+        Shape shape_r_2{6, 8, 3, 2};
+        Shape shape_r_3{6, 8, 6};
+        Shape shape_r_4{6, 2, 2, 2, 6};
+        Shape shape_r_5{2, 3, 2, 2, 2, 3, 2};
+        Shape shape_r_6{48, 6};
+
+        auto r_1 = make_shared<op::Reshape>(A, AxisVector{2, 4, 0, 5, 3, 1}, shape_r_1);
+        auto r_2 = make_shared<op::Reshape>(r_1, AxisVector{0, 1, 2, 3, 4}, shape_r_2);
+        auto r_3 = make_shared<op::Reshape>(r_2, AxisVector{0, 1, 2, 3}, shape_r_3);
+        auto r_4 = make_shared<op::Reshape>(r_3, AxisVector{0, 1, 2}, shape_r_4);
+        auto r_5 = make_shared<op::Reshape>(r_4, AxisVector{0, 1, 2, 3, 4}, shape_r_5);
+        auto r_6 = make_shared<op::Reshape>(r_5, AxisVector{0, 1, 2, 3, 4, 5, 6}, shape_r_6);
+
+        auto r_7 = make_shared<op::Reshape>(A, AxisVector{2, 4, 0, 5, 3, 1}, shape_r_2);
+        auto r_8 = make_shared<op::Reshape>(r_7, AxisVector{0, 1, 2, 3}, shape_r_3);
+
+        auto f = make_shared<Function>(NodeVector{r_6, r_8}, ParameterVector{A});
+        return f;
+    };
+
+    auto baseline_f = generate_func();
+    auto optimized_f = generate_func();
+    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::VisualizeTree>("before_recurrent_reshapes_multiple_branches.pdf");
+    pass_manager.register_pass<pass::RecurrentReshapeElimination>();
+    pass_manager.register_pass<pass::ReshapeElimination>();
+    pass_manager.register_pass<pass::VisualizeTree>("after_recurrent_reshapes_multiple_branches.pdf");
     pass_manager.run_passes(optimized_f);
 
     test::Uniform<float> rng(0.0f, 100.0f);
