@@ -234,7 +234,6 @@ static element::Type read_element_type(const json& j)
 {
     size_t bitwidth = 0;
     bool is_real = false;
-    bool is_integral = false;
     bool is_signed = false;
     bool is_quantized = false;
     string c_type_string = "";
@@ -242,7 +241,6 @@ static element::Type read_element_type(const json& j)
     {
         bitwidth = j.at("bitwidth").get<size_t>();
         is_real = j.at("is_real").get<bool>();
-        is_integral = j.count("is_integral") == 0 ? !is_real : j.at("is_integral").get<bool>();
         is_signed = j.at("is_signed").get<bool>();
         is_quantized = j.at("is_quantized").get<bool>();
         c_type_string = j.at("c_type_string").get<string>();
@@ -256,7 +254,6 @@ static element::Type read_element_type(const json& j)
             {
                 bitwidth = t->bitwidth();
                 is_real = t->is_real();
-                is_integral = t->is_integral();
                 is_signed = t->is_signed();
                 is_quantized = t->is_quantized();
                 c_type_string = t->c_type_string();
