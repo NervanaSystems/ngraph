@@ -16,8 +16,6 @@
 
 #include <sstream>
 
-#include "ngraph/node_input.hpp"
-#include "ngraph/node_output.hpp"
 #include "ngraph/op/get_output_element.hpp"
 
 using namespace std;

@@ -26,8 +26,6 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/node_input.hpp"
-#include "ngraph/node_output.hpp"
 #include "ngraph/node_vector.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
@@ -152,7 +150,7 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
     }
 
     // Fix input/output descriptors
-    assert(target->get_outputs().size() == replacement->get_outputs().size());
+    assert(target->get_output_size() == replacement->get_output_size());
 
     // For each of target's output O with replacement output O_rep:
     //     For each O's connected downstream input I:

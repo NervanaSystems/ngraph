@@ -19,8 +19,6 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/node_input.hpp"
-#include "ngraph/node_output.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/concat.hpp"

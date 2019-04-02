@@ -359,6 +359,179 @@ namespace ngraph
         size_t m_placement_index = placement_invalid;
     };
 
+    /// \brief A handle for one of a node's inputs.
+    class Input
+    {
+    public:
+        /// \brief Constructs a Input.
+        /// \param node Pointer to the node for the input handle.
+        /// \param index The index of the input.
+        Input(Node* node, size_t index)
+            : m_node(node)
+            , m_index(index)
+        {
+        }
+
+        /// \return A pointer to the node referenced by this input handle.
+        Node* get_node() const { return m_node; }
+        /// \return The index of the input referred to by this input handle.
+        size_t get_index() const { return m_index; }
+        /// \return The element type of the input referred to by this input handle.
+        const element::Type& get_element_type() const
+        {
+            return m_node->get_input_element_type(m_index);
+        }
+        /// \return The shape of the input referred to by this input handle.
+        const Shape& get_shape() const { return m_node->get_input_shape(m_index); }
+        /// \return The partial shape of the input referred to by this input handle.
+        const PartialShape& get_partial_shape() const
+        {
+            return m_node->get_input_partial_shape(m_index);
+        }
+        /// \return A handle to the output that is connected to this input.
+        Output get_source_output() const;
+        /// \return true if this input is relevant to its node's output shapes; else false.
+        bool get_is_relevant_to_shape() const
+        {
+            return m_node->get_input_is_relevant_to_shape(m_index);
+        }
+        /// \return true if this input is relevant to its node's output values; else false.
+        bool get_is_relevant_to_value() const
+        {
+            return m_node->get_input_is_relevant_to_value(m_index);
+        }
+
+        /// \brief Replaces the source output of this input.
+        /// \param new_source_output A handle for the output that will replace this input's source.
+        void replace_source_output(const Output& new_source_output) const;
+
+        /// \brief Replaces the source output of this input.
+        /// \param new_source_node The node for the output that will replace this input's source.
+        /// \param output_index The index of the output that will replace this input's source.
+        void replace_source_output(const std::shared_ptr<Node>& new_source_node,
+                                   size_t output_index) const;
+
+        bool operator==(const Input& other) const
+        {
+            return m_node == other.m_node && m_index == other.m_index;
+        }
+        bool operator!=(const Input& other) const
+        {
+            return m_node != other.m_node || m_index != other.m_index;
+        }
+        bool operator<(const Input& other) const
+        {
+            return m_node < other.m_node || (m_node == other.m_node && m_index < other.m_index);
+        }
+        bool operator>(const Input& other) const
+        {
+            return m_node > other.m_node || (m_node == other.m_node && m_index > other.m_index);
+        }
+        bool operator<=(const Input& other) const
+        {
+            return m_node <= other.m_node || (m_node == other.m_node && m_index <= other.m_index);
+        }
+        bool operator>=(const Input& other) const
+        {
+            return m_node >= other.m_node || (m_node == other.m_node && m_index >= other.m_index);
+        }
+
+    private:
+        Node* const m_node;
+        const size_t m_index;
+    };
+
+    /// \brief A handle for one of a node's outputs.
+    class Output
+    {
+    public:
+        /// \brief Constructs a Output.
+        /// \param node A pointer to the node for the output handle.
+        /// \param index The index of the output.
+        Output(Node* node, size_t index)
+            : m_node(node)
+            , m_index(index)
+        {
+        }
+
+        /// \brief Constructs a Output.
+        /// \param node A `shared_ptr` to the node for the output handle.
+        /// \param index The index of the output.
+        ///
+        /// TODO: Make a plan to deprecate this.
+        Output(const std::shared_ptr<Node>& node, size_t index)
+            : m_node(node.get())
+            , m_index(index)
+        {
+        }
+
+        /// \brief Constructs a Output, referencing the zeroth output of the node.
+        /// \param node A `shared_ptr` to the node for the output handle.
+        template <typename T>
+        Output(const std::shared_ptr<T>& node)
+            : Output(node, 0)
+        {
+        }
+
+        /// \return A pointer to the node referred to by this output handle.
+        Node* get_node() const { return m_node; }
+        /// \return A `shared_ptr` to the node referred to by this output handle.
+        ///
+        /// TODO: Make a plan to deprecate this.
+        std::shared_ptr<Node> get_node_shared_ptr() const { return m_node->shared_from_this(); }
+        /// \return The index of the output referred to by this output handle.
+        size_t get_index() const { return m_index; }
+        /// \return The element type of the output referred to by this output handle.
+        const element::Type& get_element_type() const
+        {
+            return m_node->get_output_element_type(m_index);
+        }
+        /// \return The shape of the output referred to by this output handle.
+        const Shape& get_shape() const { return m_node->get_output_shape(m_index); }
+        /// \return The partial shape of the output referred to by this output handle.
+        const PartialShape& get_partial_shape() const
+        {
+            return m_node->get_output_partial_shape(m_index);
+        }
+
+        /// \return A set containing handles for all inputs targeted by the output referenced by
+        ///        this output handle.
+        std::set<Input> get_target_inputs() const;
+
+        /// \brief Removes a target input from the output referenced by this output handle.
+        /// \param target_input The target input to remove.
+        void remove_target_input(const Input& target_input) const;
+
+        bool operator==(const Output& other) const
+        {
+            return m_node == other.m_node && m_index == other.m_index;
+        }
+        bool operator!=(const Output& other) const
+        {
+            return m_node != other.m_node || m_index != other.m_index;
+        }
+        bool operator<(const Output& other) const
+        {
+            return m_node < other.m_node || (m_node == other.m_node && m_index < other.m_index);
+        }
+        bool operator>(const Output& other) const
+        {
+            return m_node > other.m_node || (m_node == other.m_node && m_index > other.m_index);
+        }
+        bool operator<=(const Output& other) const
+        {
+            return m_node <= other.m_node || (m_node == other.m_node && m_index <= other.m_index);
+        }
+        bool operator>=(const Output& other) const
+        {
+            return m_node >= other.m_node || (m_node == other.m_node && m_index >= other.m_index);
+        }
+
+    private:
+        Node* const m_node;
+        const size_t m_index;
+    };
+
     class NodeValidationFailure : public CheckFailure
     {
     public:

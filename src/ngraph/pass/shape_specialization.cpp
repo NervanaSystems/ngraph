@@ -16,8 +16,6 @@
 
 #include "ngraph/pass/shape_specialization.hpp"
 #include "ngraph/graph_util.hpp"
-#include "ngraph/node_input.hpp"
-#include "ngraph/node_output.hpp"
 #include "ngraph/op/constant.hpp"
 
 using namespace ngraph;

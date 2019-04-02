@@ -17,8 +17,6 @@
 #include "ngraph/runtime/hybrid/hybrid_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/node_input.hpp"
-#include "ngraph/node_output.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/hybrid/op/function_call.hpp"

@@ -24,8 +24,6 @@
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/node_input.hpp"
-#include "ngraph/node_output.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/placement.hpp"
@@ -573,4 +571,32 @@ std::vector<Output> Node::get_node_outputs()
     }
 
     return result;
+}
+
+Output Input::get_source_output() const
+{
+    auto& output_descriptor = m_node->m_inputs.at(m_index).get_output();
+    return Output(output_descriptor.get_node(), output_descriptor.get_index());
+}
+
+void Input::replace_source_output(const Output& new_source_output) const
+{
+    m_node->replace_input_source_output(
+        m_index, new_source_output.get_node_shared_ptr(), new_source_output.get_index());
+}
+
+void Input::replace_source_output(const std::shared_ptr<Node>& new_source_node,
+                                  size_t output_index) const
+{
+    m_node->replace_input_source_output(m_index, new_source_node, output_index);
+}
+
+std::set<Input> Output::get_target_inputs() const
+{
+    return m_node->get_output_target_inputs(m_index);
+}
+
+void Output::remove_target_input(const Input& target_input) const
+{
+    m_node->remove_output_target_input(m_index, target_input);
 }
