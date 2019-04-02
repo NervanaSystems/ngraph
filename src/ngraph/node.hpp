@@ -330,6 +330,14 @@ namespace ngraph
         void remove_output_target_input(size_t output_index, const NodeInput& target_input);
         std::vector<NodeInput> get_node_inputs();
         std::vector<NodeOutput> get_node_outputs();
+        bool get_input_is_relevant_to_shape(size_t input_index) const
+        {
+            return m_inputs[input_index].get_is_relevant_to_shape();
+        }
+        bool get_input_is_relevant_to_value(size_t input_index) const
+        {
+            return m_inputs[input_index].get_is_relevant_to_value();
+        }
 
     protected:
         void set_output_size(size_t n);

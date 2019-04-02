@@ -16,6 +16,8 @@
 
 #include "ngraph/pass/shape_specialization.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/node_input.hpp"
+#include "ngraph/node_output.hpp"
 #include "ngraph/op/constant.hpp"
 
 using namespace ngraph;
@@ -72,11 +74,11 @@ bool pass::ShapeSpecialization::run_on_function(std::shared_ptr<Function> f)
     // input).
     for (auto& n : f->get_ops())
     {
-        for (auto& output : n->get_outputs())
+        for (size_t i = 0; i < n->get_output_size(); i++)
         {
-            for (auto& input : output.get_inputs())
+            for (auto& input : n->get_output_target_inputs(i))
             {
-                if (input->get_is_relevant_to_shape())
+                if (input.get_is_relevant_to_shape())
                 {
                     shape_determinants.insert(n.get());
                     break;
@@ -105,13 +107,13 @@ bool pass::ShapeSpecialization::run_on_function(std::shared_ptr<Function> f)
             shape_determinants.insert(node);
             already_visited.insert(node);
 
-            for (auto& input : node->get_inputs())
+            for (size_t i = 0; i < node->get_input_size(); i++)
             {
-                if (!input.get_is_relevant_to_value())
+                if (node->get_input_is_relevant_to_value(i))
                 {
                     continue;
                 }
-                auto source_node = input.get_output().get_node().get();
+                auto source_node = node->get_input_source_output(i).get_node().get();
                 if (already_visited.count(source_node) == 0)
                 {
                     to_visit.push_front(source_node);
@@ -141,12 +143,11 @@ bool pass::ShapeSpecialization::run_on_function(std::shared_ptr<Function> f)
                                   n->get_output_element_type(i) ==
                                       replacement_constants[i]->get_output_element_type(0));
 
-                    auto& replacement_output = replacement_constants.at(i)->get_outputs().at(0);
-                    auto& output = n->get_outputs().at(i);
-                    auto inputs_copy = output.get_inputs();
-                    for (auto& input : inputs_copy)
+                    auto replacement_output = NodeOutput(replacement_constants.at(i), 0);
+                    auto output = NodeOutput(n, i);
+                    for (auto& input : output.get_target_inputs())
                     {
-                        input->replace_output(replacement_output);
+                        input.replace_source_output(replacement_output);
                         changes_made = true;
                     }
                 }

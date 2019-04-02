@@ -54,6 +54,10 @@ namespace ngraph
         }
         /// \return A handle to the output that is connected to this input.
         NodeOutput get_source_output() const;
+        /// \return true if this input is relevant to its node's output shapes; else false.
+        bool get_is_relevant_to_shape() const;
+        /// \return true if this input is relevant to its node's output values; else false.
+        bool get_is_relevant_to_value() const;
 
         /// \brief Replaces the source output of this input.
         /// \param new_source_output A handle for the output that will replace this input's source.
