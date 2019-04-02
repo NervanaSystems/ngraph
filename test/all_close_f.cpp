@@ -192,8 +192,8 @@ protected:
     float lower_bound;
     float past_upper_bound;
     float past_lower_bound;
-    float min_signal_too_low;
-    float min_signal_enables_passing;
+    float min_signal_too_low{0};
+    float min_signal_enables_passing{0};
 };
 
 TEST_P(all_close_f_param_test, test_boundaries)
@@ -349,8 +349,8 @@ protected:
     double lower_bound;
     double past_upper_bound;
     double past_lower_bound;
-    double min_signal_too_low;
-    double min_signal_enables_passing;
+    double min_signal_too_low{0};
+    double min_signal_enables_passing{0};
 };
 
 TEST_P(all_close_f_double_param_test, test_boundaries)

@@ -46,6 +46,7 @@ set(SRC
     builder/convolution.cpp
     builder/dot.cpp
     builder/embedding_lookup.cpp
+    builder/erf.cpp
     builder/leaky_relu.cpp
     builder/lstm.cpp
     builder/lrn.cpp
