@@ -26,7 +26,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        static size_t alignment = 64;
+        static __attribute__((unused)) size_t alignment = 64;
 
         class HostTensor;
     }
