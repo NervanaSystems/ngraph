@@ -398,10 +398,12 @@ TEST(reshape_elimination, recurrent_reshapes_multiple_branches)
     auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before_recurrent_reshapes_multiple_branches.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>(
+        "before_recurrent_reshapes_multiple_branches.pdf");
     pass_manager.register_pass<pass::RecurrentReshapeElimination>();
     pass_manager.register_pass<pass::ReshapeElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after_recurrent_reshapes_multiple_branches.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>(
+        "after_recurrent_reshapes_multiple_branches.pdf");
     pass_manager.run_passes(optimized_f);
 
     test::Uniform<float> rng(0.0f, 100.0f);
