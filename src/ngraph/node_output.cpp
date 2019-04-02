@@ -19,12 +19,12 @@
 
 using namespace ngraph;
 
-std::set<NodeInput> NodeOutput::get_target_inputs() const
+std::set<Input> Output::get_target_inputs() const
 {
     return m_node->get_output_target_inputs(m_index);
 }
 
-void NodeOutput::remove_target_input(const NodeInput& target_input) const
+void Output::remove_target_input(const Input& target_input) const
 {
     m_node->remove_output_target_input(m_index, target_input);
 }

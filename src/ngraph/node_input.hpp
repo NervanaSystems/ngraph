@@ -21,16 +21,16 @@
 
 namespace ngraph
 {
-    class NodeOutput;
+    class Output;
 
     /// \brief A handle for one of a node's inputs.
-    class NodeInput
+    class Input
     {
     public:
-        /// \brief Constructs a NodeInput.
+        /// \brief Constructs a Input.
         /// \param node Pointer to the node for the input handle.
         /// \param index The index of the input.
-        NodeInput(Node* node, size_t index)
+        Input(Node* node, size_t index)
             : m_node(node)
             , m_index(index)
         {
@@ -53,15 +53,21 @@ namespace ngraph
             return m_node->get_input_partial_shape(m_index);
         }
         /// \return A handle to the output that is connected to this input.
-        NodeOutput get_source_output() const;
+        Output get_source_output() const;
         /// \return true if this input is relevant to its node's output shapes; else false.
-        bool get_is_relevant_to_shape() const { return m_node->get_input_is_relevant_to_shape(m_index); }
+        bool get_is_relevant_to_shape() const
+        {
+            return m_node->get_input_is_relevant_to_shape(m_index);
+        }
         /// \return true if this input is relevant to its node's output values; else false.
-        bool get_is_relevant_to_value() const { return m_node->get_input_is_relevant_to_value(m_index); }
+        bool get_is_relevant_to_value() const
+        {
+            return m_node->get_input_is_relevant_to_value(m_index);
+        }
 
         /// \brief Replaces the source output of this input.
         /// \param new_source_output A handle for the output that will replace this input's source.
-        void replace_source_output(const NodeOutput& new_source_output) const;
+        void replace_source_output(const Output& new_source_output) const;
 
         /// \brief Replaces the source output of this input.
         /// \param new_source_node The node for the output that will replace this input's source.
@@ -69,27 +75,27 @@ namespace ngraph
         void replace_source_output(const std::shared_ptr<Node>& new_source_node,
                                    size_t output_index) const;
 
-        bool operator==(const NodeInput& other) const
+        bool operator==(const Input& other) const
         {
             return m_node == other.m_node && m_index == other.m_index;
         }
-        bool operator!=(const NodeInput& other) const
+        bool operator!=(const Input& other) const
         {
             return m_node != other.m_node || m_index != other.m_index;
         }
-        bool operator<(const NodeInput& other) const
+        bool operator<(const Input& other) const
         {
             return m_node < other.m_node || (m_node == other.m_node && m_index < other.m_index);
         }
-        bool operator>(const NodeInput& other) const
+        bool operator>(const Input& other) const
         {
             return m_node > other.m_node || (m_node == other.m_node && m_index > other.m_index);
         }
-        bool operator<=(const NodeInput& other) const
+        bool operator<=(const Input& other) const
         {
             return m_node <= other.m_node || (m_node == other.m_node && m_index <= other.m_index);
         }
-        bool operator>=(const NodeInput& other) const
+        bool operator>=(const Input& other) const
         {
             return m_node >= other.m_node || (m_node == other.m_node && m_index >= other.m_index);
         }

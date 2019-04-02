@@ -102,12 +102,12 @@ void Node::set_output_type(size_t i, const element::Type& element_type, const Pa
     m_outputs.at(i).get_tensor_ptr()->set_tensor_type(element_type, pshape);
 }
 
-std::deque<descriptor::Output>& Node::get_outputs()
+std::deque<descriptor::Output>& Node::get_output_descriptors()
 {
     return m_outputs;
 }
 
-const std::deque<descriptor::Output>& Node::get_outputs() const
+const std::deque<descriptor::Output>& Node::get_output_descriptors() const
 {
     return m_outputs;
 }
@@ -344,7 +344,7 @@ shared_ptr<descriptor::Tensor> Node::get_output_tensor_ptr() const
     return get_output_tensor_ptr(0);
 }
 
-const std::set<descriptor::Input*>& Node::get_output_inputs(size_t i) const
+const std::set<descriptor::Input*>& Node::get_output_input_descriptors(size_t i) const
 {
     return m_outputs.at(i).get_inputs();
 }
@@ -522,10 +522,10 @@ void Node::replace_input_source_output(size_t input_index,
     m_inputs.at(input_index).replace_output(src_node, output_index);
 }
 
-NodeOutput Node::get_input_source_output(size_t input_index) const
+Output Node::get_input_source_output(size_t input_index) const
 {
     auto& output_descriptor = m_inputs.at(input_index).get_output();
-    return NodeOutput(output_descriptor.get_node(), output_descriptor.get_index());
+    return Output(output_descriptor.get_node(), output_descriptor.get_index());
 }
 
 descriptor::Tensor& Node::get_input_tensor(size_t i) const
@@ -533,9 +533,9 @@ descriptor::Tensor& Node::get_input_tensor(size_t i) const
     return m_inputs.at(i).get_output().get_tensor();
 }
 
-std::set<NodeInput> Node::get_output_target_inputs(size_t output_index) const
+std::set<Input> Node::get_output_target_inputs(size_t output_index) const
 {
-    std::set<NodeInput> result;
+    std::set<Input> result;
 
     for (auto& input : m_outputs[output_index].get_inputs())
     {
@@ -545,15 +545,15 @@ std::set<NodeInput> Node::get_output_target_inputs(size_t output_index) const
     return result;
 }
 
-void Node::remove_output_target_input(size_t output_index, const NodeInput& target_input)
+void Node::remove_output_target_input(size_t output_index, const Input& target_input)
 {
     m_outputs.at(output_index)
         .remove_input(&(target_input.get_node()->m_inputs.at(target_input.get_index())));
 }
 
-std::vector<NodeInput> Node::get_node_inputs()
+std::vector<Input> Node::get_node_inputs()
 {
-    std::vector<NodeInput> result;
+    std::vector<Input> result;
 
     for (size_t i = 0; i < get_input_size(); i++)
     {
@@ -563,9 +563,9 @@ std::vector<NodeInput> Node::get_node_inputs()
     return result;
 }
 
-std::vector<NodeOutput> Node::get_node_outputs()
+std::vector<Output> Node::get_node_outputs()
 {
-    std::vector<NodeOutput> result;
+    std::vector<Output> result;
 
     for (size_t i = 0; i < get_output_size(); i++)
     {

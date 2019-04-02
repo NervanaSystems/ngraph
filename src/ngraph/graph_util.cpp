@@ -344,12 +344,12 @@ pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
     par_node->set_placement(dst_node->get_placement());
 
     // Fix input / output among src, dst and par
-    std::vector<NodeInput> dst_inputs = get_node_inputs_from(*src_node, *dst_node);
+    std::vector<Input> dst_inputs = get_node_inputs_from(*src_node, *dst_node);
     NGRAPH_ASSERT(dst_inputs.size() == 1) << "insert_result_parameter_split encountered more than "
                                              "one input between the source and destination nodes";
     auto& dst_input = dst_inputs[0];
 
-    std::vector<NodeOutput> src_outputs = get_node_outputs_to(*src_node, *dst_node);
+    std::vector<Output> src_outputs = get_node_outputs_to(*src_node, *dst_node);
     NGRAPH_ASSERT(src_outputs.size() == 1) << "insert_result_parameter_split encountered more than "
                                               "one output between the source and destination nodes";
     auto& src_output = src_outputs[0];
@@ -410,12 +410,12 @@ void ngraph::insert_new_node_between(const shared_ptr<Node>& src_node,
                                      const shared_ptr<Node>& new_node)
 {
     // Fix input / output
-    std::vector<NodeInput> dst_inputs = get_node_inputs_from(*src_node, *dst_node);
+    std::vector<Input> dst_inputs = get_node_inputs_from(*src_node, *dst_node);
     NGRAPH_ASSERT(dst_inputs.size() == 1) << "insert_new_node_between encountered more than one "
                                              "input between the source and destination nodes";
     auto& dst_input = dst_inputs[0];
 
-    std::vector<NodeOutput> src_outputs = get_node_outputs_to(*src_node, *dst_node);
+    std::vector<Output> src_outputs = get_node_outputs_to(*src_node, *dst_node);
     NGRAPH_ASSERT(src_outputs.size() == 1) << "insert_new_node_between encountered more than one "
                                               "output between the source and destination nodes";
     auto& src_output = src_outputs[0];
@@ -595,10 +595,10 @@ void ngraph::plot_graph(
     pass_manager.run_passes(f);
 }
 
-std::vector<NodeInput> ngraph::get_node_inputs_from(Node& src, Node& dst)
+std::vector<Input> ngraph::get_node_inputs_from(Node& src, Node& dst)
 {
-    std::vector<NodeInput> result;
-    std::vector<NodeInput> all_inputs = dst.get_node_inputs();
+    std::vector<Input> result;
+    std::vector<Input> all_inputs = dst.get_node_inputs();
 
     for (auto& input : all_inputs)
     {
@@ -611,10 +611,10 @@ std::vector<NodeInput> ngraph::get_node_inputs_from(Node& src, Node& dst)
     return result;
 }
 
-std::vector<NodeOutput> ngraph::get_node_outputs_to(Node& src, Node& dst)
+std::vector<Output> ngraph::get_node_outputs_to(Node& src, Node& dst)
 {
-    std::vector<NodeOutput> result;
-    std::vector<NodeOutput> all_outputs = src.get_node_outputs();
+    std::vector<Output> result;
+    std::vector<Output> all_outputs = src.get_node_outputs();
 
     for (auto& output : all_outputs)
     {

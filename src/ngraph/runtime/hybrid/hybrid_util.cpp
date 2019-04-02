@@ -184,15 +184,13 @@ void runtime::hybrid::rewrite_function(const shared_ptr<Function>& f,
                             // Since this input is from outside the cluster we need to create
                             // a new Parameter node placed in the cluster instead of this external
                             // node
-                            std::vector<NodeOutput> source_outputs =
-                                get_node_outputs_to(*input, *node);
+                            std::vector<Output> source_outputs = get_node_outputs_to(*input, *node);
                             NGRAPH_ASSERT(source_outputs.size() == 1)
                                 << "rewrite_function encountered more than "
                                    "one output between a cluster node and one of its arguments";
                             auto& source_output = source_outputs[0];
 
-                            std::vector<NodeInput> target_inputs =
-                                get_node_inputs_from(*input, *node);
+                            std::vector<Input> target_inputs = get_node_inputs_from(*input, *node);
                             NGRAPH_ASSERT(target_inputs.size() == 1)
                                 << "rewrite_function encountered more than "
                                    "one input between a cluster node and one of its arguments";
@@ -201,7 +199,7 @@ void runtime::hybrid::rewrite_function(const shared_ptr<Function>& f,
                             auto new_parameter = make_shared<ngraph::op::Parameter>(
                                 source_output.get_element_type(), source_output.get_shape());
                             new_parameter->set_placement_index(placement);
-                            target_input.replace_source_output(NodeOutput(new_parameter, 0));
+                            target_input.replace_source_output(Output(new_parameter, 0));
                             cluster_inputs.push_back(new_parameter);
                             function_call_inputs.push_back(input);
                         }
@@ -235,14 +233,13 @@ void runtime::hybrid::rewrite_function(const shared_ptr<Function>& f,
                     auto new_source = fc;
                     auto target = function_call_outputs[i];
 
-                    std::vector<NodeInput> target_inputs =
-                        get_node_inputs_from(*old_source, *target);
+                    std::vector<Input> target_inputs = get_node_inputs_from(*old_source, *target);
                     NGRAPH_ASSERT(target_inputs.size() == 1)
                         << "rewrite_function encountered more than "
                            "one input between the old source node and the target node";
                     auto& target_input = target_inputs[0];
 
-                    target_input.replace_source_output(NodeOutput(new_source, i));
+                    target_input.replace_source_output(Output(new_source, i));
                 }
             }
         }

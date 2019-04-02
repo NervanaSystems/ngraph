@@ -22,23 +22,23 @@
 namespace ngraph
 {
     /// \brief A handle for one of a node's outputs.
-    class NodeOutput
+    class Output
     {
     public:
-        /// \brief Constructs a NodeOutput.
+        /// \brief Constructs a Output.
         /// \param node A `shared_ptr` to the node for the output handle.
         /// \param index The index of the output.
-        NodeOutput(const std::shared_ptr<Node>& node, size_t index)
+        Output(const std::shared_ptr<Node>& node, size_t index)
             : m_node(node)
             , m_index(index)
         {
         }
 
-        /// \brief Constructs a NodeOutput, referencing the zeroth output of the node.
+        /// \brief Constructs a Output, referencing the zeroth output of the node.
         /// \param node A `shared_ptr` to the node for the output handle.
         template <typename T>
-        NodeOutput(const std::shared_ptr<T>& node)
-            : NodeOutput(node, 0)
+        Output(const std::shared_ptr<T>& node)
+            : Output(node, 0)
         {
         }
 
@@ -61,33 +61,33 @@ namespace ngraph
 
         /// \return A set containing handles for all inputs targeted by the output referenced by
         ///        this output handle.
-        std::set<NodeInput> get_target_inputs() const;
+        std::set<Input> get_target_inputs() const;
 
         /// \brief Removes a target input from the output referenced by this output handle.
         /// \param target_input The target input to remove.
-        void remove_target_input(const NodeInput& target_input) const;
+        void remove_target_input(const Input& target_input) const;
 
-        bool operator==(const NodeOutput& other) const
+        bool operator==(const Output& other) const
         {
             return m_node == other.m_node && m_index == other.m_index;
         }
-        bool operator!=(const NodeOutput& other) const
+        bool operator!=(const Output& other) const
         {
             return m_node != other.m_node || m_index != other.m_index;
         }
-        bool operator<(const NodeOutput& other) const
+        bool operator<(const Output& other) const
         {
             return m_node < other.m_node || (m_node == other.m_node && m_index < other.m_index);
         }
-        bool operator>(const NodeOutput& other) const
+        bool operator>(const Output& other) const
         {
             return m_node > other.m_node || (m_node == other.m_node && m_index > other.m_index);
         }
-        bool operator<=(const NodeOutput& other) const
+        bool operator<=(const Output& other) const
         {
             return m_node <= other.m_node || (m_node == other.m_node && m_index <= other.m_index);
         }
-        bool operator>=(const NodeOutput& other) const
+        bool operator>=(const Output& other) const
         {
             return m_node >= other.m_node || (m_node == other.m_node && m_index >= other.m_index);
         }

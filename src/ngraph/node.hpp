@@ -51,8 +51,8 @@
 
 namespace ngraph
 {
-    class NodeInput;
-    class NodeOutput;
+    class Input;
+    class Output;
 
     namespace pass
     {
@@ -94,7 +94,7 @@ namespace ngraph
         // So Adjoints can call generate_adjoints
         friend class autodiff::Adjoints;
         friend class descriptor::Input;
-        friend class NodeInput;                         // Temporary for access to m_inputs
+        friend class Input;                             // Temporary for access to m_inputs
         friend class pass::GetOutputElementElimination; // Temporary for access to m_inputs
         friend void replace_node_users_arguments(std::shared_ptr<Node> target,
                                                  std::shared_ptr<Node> replacement);
@@ -211,17 +211,18 @@ namespace ngraph
         virtual std::ostream& write_short_description(std::ostream&) const;
         virtual std::ostream& write_long_description(std::ostream&) const;
 
-        std::deque<descriptor::Input>& get_inputs() INPUT_OUTPUT_DESCRIPTOR_DEPRECATED
+        std::deque<descriptor::Input>& get_input_descriptors() INPUT_OUTPUT_DESCRIPTOR_DEPRECATED
         {
             return m_inputs;
         }
-        const std::deque<descriptor::Input>& get_inputs() const INPUT_OUTPUT_DESCRIPTOR_DEPRECATED
+        const std::deque<descriptor::Input>&
+            get_input_descriptors() const INPUT_OUTPUT_DESCRIPTOR_DEPRECATED
         {
             return m_inputs;
         }
-        std::deque<descriptor::Output>& get_outputs() INPUT_OUTPUT_DESCRIPTOR_DEPRECATED;
+        std::deque<descriptor::Output>& get_output_descriptors() INPUT_OUTPUT_DESCRIPTOR_DEPRECATED;
         const std::deque<descriptor::Output>&
-            get_outputs() const INPUT_OUTPUT_DESCRIPTOR_DEPRECATED;
+            get_output_descriptors() const INPUT_OUTPUT_DESCRIPTOR_DEPRECATED;
 
         /// Get control dependencies registered on the node
         const std::set<std::shared_ptr<Node>>& get_control_dependencies() const;
@@ -265,7 +266,7 @@ namespace ngraph
 
         /// Returns the set of inputs using output i
         const std::set<descriptor::Input*>&
-            get_output_inputs(size_t i) const INPUT_OUTPUT_DESCRIPTOR_DEPRECATED;
+            get_output_input_descriptors(size_t i) const INPUT_OUTPUT_DESCRIPTOR_DEPRECATED;
 
         /// Returns the number of inputs for the op
         size_t get_input_size() const;
@@ -320,16 +321,16 @@ namespace ngraph
         bool operator<(const Node& other) const { return m_instance_id < other.m_instance_id; }
         static const size_t placement_invalid = -1;
 
-        NodeOutput get_input_source_output(size_t input_index) const;
+        Output get_input_source_output(size_t input_index) const;
         descriptor::Tensor& get_input_tensor(size_t input_index) const;
-        void replace_input_source_output(size_t input_index, const NodeOutput& src_output);
+        void replace_input_source_output(size_t input_index, const Output& src_output);
         void replace_input_source_output(size_t input_index,
                                          const std::shared_ptr<Node>& source_node,
                                          size_t output_index);
-        std::set<NodeInput> get_output_target_inputs(size_t output_index) const;
-        void remove_output_target_input(size_t output_index, const NodeInput& target_input);
-        std::vector<NodeInput> get_node_inputs();
-        std::vector<NodeOutput> get_node_outputs();
+        std::set<Input> get_output_target_inputs(size_t output_index) const;
+        void remove_output_target_input(size_t output_index, const Input& target_input);
+        std::vector<Input> get_node_inputs();
+        std::vector<Output> get_node_outputs();
         bool get_input_is_relevant_to_shape(size_t input_index) const
         {
             return m_inputs[input_index].get_is_relevant_to_shape();

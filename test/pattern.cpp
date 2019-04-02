@@ -226,11 +226,11 @@ TEST(pattern, graph_rewrite)
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(1), a);
         ASSERT_EQ(graph->get_input_source_output(1),
-                  NodeOutput(a, 0)); // graph's input points to a's output
+                  Output(a, 0)); // graph's input points to a's output
         ASSERT_TRUE(sum->get_output_target_inputs(0)
                         .empty()); // graph's input is removed from sum's target inptus
         ASSERT_TRUE(a->get_output_target_inputs(0).count(
-            NodeInput(graph.get(), 1))); // a's output feeds into graph's input
+            Input(graph.get(), 1))); // a's output feeds into graph's input
     }
 
     {
@@ -242,11 +242,11 @@ TEST(pattern, graph_rewrite)
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(1), a);
         ASSERT_EQ(graph->get_input_source_output(1),
-                  NodeOutput(a, 0)); // graph's input points to a's output
+                  Output(a, 0)); // graph's input points to a's output
         ASSERT_TRUE(mul->get_output_target_inputs(0)
                         .empty()); // graph's input is removed from sum's target inputs
         ASSERT_TRUE(a->get_output_target_inputs(0).count(
-            NodeInput(graph.get(), 1))); // a's output feeds into graph's input
+            Input(graph.get(), 1))); // a's output feeds into graph's input
     }
 
     {
@@ -257,9 +257,9 @@ TEST(pattern, graph_rewrite)
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(0), a);
         ASSERT_EQ(graph->get_input_source_output(0),
-                  NodeOutput(a, 0)); // graph's input points to a's output
+                  Output(a, 0)); // graph's input points to a's output
         ASSERT_TRUE(a->get_output_target_inputs(0).count(
-            NodeInput(graph.get(), 0))); // a's output feeds into graph's input
+            Input(graph.get(), 0))); // a's output feeds into graph's input
     }
 
     {
@@ -271,9 +271,9 @@ TEST(pattern, graph_rewrite)
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(1), a);
         ASSERT_EQ(graph->get_input_source_output(1),
-                  NodeOutput(a, 0)); // graph's input points to a's output
+                  Output(a, 0)); // graph's input points to a's output
         ASSERT_TRUE(a->get_output_target_inputs(0).count(
-            NodeInput(graph.get(), 1))); // a's output feeds into graph's input
+            Input(graph.get(), 1))); // a's output feeds into graph's input
     }
 
     {
@@ -284,9 +284,9 @@ TEST(pattern, graph_rewrite)
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(1), a);
         ASSERT_EQ(graph->get_input_source_output(1),
-                  NodeOutput(a, 0)); // graph's input points to a's output
+                  Output(a, 0)); // graph's input points to a's output
         ASSERT_TRUE(a->get_output_target_inputs(0).count(
-            NodeInput(graph.get(), 1))); // a's output feeds into graph's input
+            Input(graph.get(), 1))); // a's output feeds into graph's input
     }
 }
 

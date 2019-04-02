@@ -113,7 +113,7 @@ static AxisSet get_quantization_axes_in_default_order(shared_ptr<op::Reshape> ar
 
 struct Swimmer
 {
-    NodeInput input;
+    Input input;
     shared_ptr<op::Reshape> reshape;
 };
 
@@ -123,7 +123,7 @@ struct Swimmer
 //we prefer nchw since a lot of ngraph ops require this format,
 //so keeping things in nchw allows us to eliminate as many reshapes
 //as possible
-void swim(NodeInput input, shared_ptr<op::Reshape> reshape)
+void swim(Input input, shared_ptr<op::Reshape> reshape)
 {
     Swimmer sw{input, reshape};
     list<Swimmer> work_queue;
@@ -139,7 +139,7 @@ void swim(NodeInput input, shared_ptr<op::Reshape> reshape)
         NGRAPH_DEBUG << "Processing (swimming) " << n->get_name();
         if (auto unary = dynamic_pointer_cast<op::util::UnaryElementwiseArithmetic>(n))
         {
-            Swimmer nsw{NodeInput(unary.get(), 0), csw.reshape};
+            Swimmer nsw{Input(unary.get(), 0), csw.reshape};
             work_queue.push_back(nsw);
             NGRAPH_DEBUG << "Propagating reshape " << describe_reshape(csw.reshape) << " for "
                          << n->get_name() << " to " << unary->get_argument(0);
@@ -213,7 +213,7 @@ void swim(NodeInput input, shared_ptr<op::Reshape> reshape)
 //as far as we can
 static void convert_binary_to_default_order(
     shared_ptr<Node> binary,
-    const NodeInput& input,
+    const Input& input,
     shared_ptr<Node> right,
     unordered_map<shared_ptr<Node>, shared_ptr<op::Reshape>>& reorders,
     set<shared_ptr<Node>>& reshapes_to_delete)
@@ -316,12 +316,12 @@ static void sink_binary(shared_ptr<op::util::BinaryElementwiseArithmetic> binary
     else if (reorders.at(left)->get_input_order() == ngraph::get_default_order(left->get_shape()))
     {
         convert_binary_to_default_order(
-            binary, NodeInput(binary.get(), 0), right, reorders, reshapes_to_delete);
+            binary, Input(binary.get(), 0), right, reorders, reshapes_to_delete);
     }
     else if (reorders.at(right)->get_input_order() == ngraph::get_default_order(right->get_shape()))
     {
         convert_binary_to_default_order(
-            binary, NodeInput(binary.get(), 1), left, reorders, reshapes_to_delete);
+            binary, Input(binary.get(), 1), left, reorders, reshapes_to_delete);
     }
     else
     {
