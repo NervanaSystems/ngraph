@@ -41,6 +41,7 @@ set(SRC
     cpio.cpp
     cse.cpp
     element_type.cpp
+    event_tracing.cpp
     file_util.cpp
     includes.cpp
     input_output_assign.cpp
@@ -53,6 +54,7 @@ set(SRC
     pass_liveness.cpp
     pass_manager.cpp
     pass_memory_layout.cpp
+    pass_shape_specialization.cpp
     pattern.cpp
     reshape_elimination.cpp
     reshape_sinking.cpp
