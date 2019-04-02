@@ -141,8 +141,8 @@ bool pass::ShapeSpecialization::run_on_function(std::shared_ptr<Function> f)
                                   n->get_output_element_type(i) ==
                                       replacement_constants[i]->get_output_element_type(0));
 
-                    auto replacement_output = Output(replacement_constants.at(i), 0);
-                    auto output = Output(n, i);
+                    auto replacement_output = Output<Node>(replacement_constants.at(i), 0);
+                    auto output = Output<Node>(n, i);
                     for (auto& input : output.get_target_inputs())
                     {
                         input.replace_source_output(replacement_output);

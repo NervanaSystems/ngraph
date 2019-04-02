@@ -42,8 +42,6 @@ namespace ngraph
         class Parameter;
     }
 
-    class Input;
-
     void traverse_nodes(const std::shared_ptr<const Function> p,
                         std::function<void(std::shared_ptr<Node>)> f,
                         bool include_control_deps = false);
@@ -321,6 +319,6 @@ namespace ngraph
         const std::string& filename,
         std::function<void(const Node& node, std::vector<std::string>& attributes)> = nullptr);
 
-    std::vector<Input> get_node_inputs_from(Node& src, Node& dst);
-    std::vector<Output> get_node_outputs_to(Node& src, Node& dst);
+    std::vector<Input<Node>> get_node_inputs_from(Node& src, Node& dst);
+    std::vector<Output<Node>> get_node_outputs_to(Node& src, Node& dst);
 }
