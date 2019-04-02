@@ -35,8 +35,8 @@ void op::OneHot::validate_and_infer_types()
     Rank arg_rank = arg_shape.rank();
 
     NODE_VALIDATION_CHECK(this,
-                          arg_et.is_dynamic() || !arg_et.is_real(),
-                          "Argument does not have integer element type.");
+                          arg_et.is_dynamic() || arg_et.is_integral(),
+                          "Argument does not have integral element type.");
 
     NODE_VALIDATION_CHECK(
         this, m_shape.rank().is_static(), "Requested result shape has dynamic rank.");

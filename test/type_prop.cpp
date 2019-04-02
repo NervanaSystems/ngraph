@@ -4363,7 +4363,7 @@ TEST(type_prop, one_hot_deduce_floating_point)
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Argument does not have integer element type."));
+                             std::string("Argument does not have integral element type."));
     }
     catch (...)
     {
