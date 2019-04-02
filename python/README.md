@@ -3,7 +3,7 @@
 [nGraph][ngraph_github] is an open-source graph compiler for Artificial 
 Neural Networks (ANNs). The nGraph Compiler stack provides an inherently 
 efficient graph-based compilation infrastructure designed to be compatible 
-with the many upcoming processors, like the Intel Nervana(TM) Neural Network 
+with the many upcoming processors, like the Intel Nervana&trade; Neural Network 
 Processor (Intel&reg; Nervana&trade; NNP), while also unlocking a massive performance 
 boost on any existing hardware targets in your neural network: both GPUs 
 and CPUs. Using its flexible infrastructure, you will find it becomes 

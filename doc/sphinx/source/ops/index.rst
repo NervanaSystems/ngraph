@@ -134,7 +134,7 @@ Not currently a comprehensive list.
    parameter.rst
    power.rst
    product.rst
-   quantize.rst   
+   quantize.rst
    relu.rst
    result.rst
    shape_of.rst
