@@ -602,7 +602,7 @@ std::vector<Input> ngraph::get_node_inputs_from(Node& src, Node& dst)
 
     for (auto& input : all_inputs)
     {
-        if (input.get_source_output().get_node().get() == &src)
+        if (input.get_source_output().get_node() == &src)
         {
             result.push_back(input);
         }

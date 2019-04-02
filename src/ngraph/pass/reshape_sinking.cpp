@@ -135,7 +135,7 @@ void swim(Input input, shared_ptr<op::Reshape> reshape)
     {
         auto csw = work_queue.front();
         work_queue.pop_front();
-        auto n = csw.input.get_source_output().get_node();
+        auto n = csw.input.get_source_output().get_node_shared_ptr();
         NGRAPH_DEBUG << "Processing (swimming) " << n->get_name();
         if (auto unary = dynamic_pointer_cast<op::util::UnaryElementwiseArithmetic>(n))
         {
@@ -218,7 +218,7 @@ static void convert_binary_to_default_order(
     unordered_map<shared_ptr<Node>, shared_ptr<op::Reshape>>& reorders,
     set<shared_ptr<Node>>& reshapes_to_delete)
 {
-    auto left = input.get_source_output().get_node();
+    auto left = input.get_source_output().get_node_shared_ptr();
     auto perm_to_def =
         ngraph::get_permutation_to_default_order(reorders.at(right)->get_input_order());
     auto new_shape = apply_permutation(left->get_shape(), perm_to_def);

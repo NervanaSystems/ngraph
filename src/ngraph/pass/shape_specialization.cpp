@@ -113,7 +113,7 @@ bool pass::ShapeSpecialization::run_on_function(std::shared_ptr<Function> f)
                 {
                     continue;
                 }
-                auto source_node = node->get_input_source_output(i).get_node().get();
+                auto source_node = node->get_input_source_output(i).get_node();
                 if (already_visited.count(source_node) == 0)
                 {
                     to_visit.push_front(source_node);

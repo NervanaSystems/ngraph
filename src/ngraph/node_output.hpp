@@ -16,6 +16,8 @@
 
 #pragma once
 
+// TODO: rename to output.hpp
+
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/node.hpp"
 
@@ -26,10 +28,21 @@ namespace ngraph
     {
     public:
         /// \brief Constructs a Output.
+        /// \param node A pointer to the node for the output handle.
+        /// \param index The index of the output.
+        Output(Node* node, size_t index)
+            : m_node(node)
+            , m_index(index)
+        {
+        }
+
+        /// \brief Constructs a Output.
         /// \param node A `shared_ptr` to the node for the output handle.
         /// \param index The index of the output.
+        ///
+        /// TODO: Make a plan to deprecate this.
         Output(const std::shared_ptr<Node>& node, size_t index)
-            : m_node(node)
+            : m_node(node.get())
             , m_index(index)
         {
         }
@@ -42,8 +55,12 @@ namespace ngraph
         {
         }
 
+        /// \return A pointer to the node referred to by this output handle.
+        Node* get_node() const { return m_node; }
         /// \return A `shared_ptr` to the node referred to by this output handle.
-        const std::shared_ptr<Node>& get_node() const { return m_node; }
+        ///
+        /// TODO: Make a plan to deprecate this.
+        std::shared_ptr<Node> get_node_shared_ptr() const { return m_node->shared_from_this(); }
         /// \return The index of the output referred to by this output handle.
         size_t get_index() const { return m_index; }
         /// \return The element type of the output referred to by this output handle.
@@ -93,7 +110,7 @@ namespace ngraph
         }
 
     private:
-        const std::shared_ptr<Node> m_node;
+        Node* const m_node;
         const size_t m_index;
     };
 } // namespace ngraph

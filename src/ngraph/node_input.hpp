@@ -16,6 +16,8 @@
 
 #pragma once
 
+// TODO: rename to input.hpp
+
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/node.hpp"
 

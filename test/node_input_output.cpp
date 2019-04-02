@@ -67,13 +67,13 @@ TEST(node_input_output, output_create)
     auto add_out_0 = Output(add, 0);
     auto add_out_1 = Output(add, 1);
 
-    EXPECT_EQ(add_out_0.get_node(), add);
+    EXPECT_EQ(add_out_0.get_node(), add.get());
     EXPECT_EQ(add_out_0.get_index(), 0);
     EXPECT_EQ(add_out_0.get_element_type(), element::f32);
     EXPECT_EQ(add_out_0.get_shape(), (Shape{1, 2, 3, 4}));
     EXPECT_TRUE(add_out_0.get_partial_shape().same_scheme(PartialShape{1, 2, 3, 4}));
 
-    EXPECT_EQ(add_out_1.get_node(), add);
+    EXPECT_EQ(add_out_1.get_node(), add.get());
     EXPECT_EQ(add_out_1.get_index(), 1);
     EXPECT_THROW(add_out_1.get_element_type(), std::out_of_range);
     EXPECT_THROW(add_out_1.get_shape(), std::out_of_range);

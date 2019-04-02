@@ -28,7 +28,7 @@ Output Input::get_source_output() const
 void Input::replace_source_output(const Output& new_source_output) const
 {
     m_node->replace_input_source_output(
-        m_index, new_source_output.get_node(), new_source_output.get_index());
+        m_index, new_source_output.get_node_shared_ptr(), new_source_output.get_index());
 }
 
 void Input::replace_source_output(const std::shared_ptr<Node>& new_source_node,
