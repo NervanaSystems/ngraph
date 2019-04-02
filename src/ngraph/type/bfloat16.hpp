@@ -73,17 +73,18 @@ namespace ngraph
 
         static constexpr uint16_t round_to_nearest_even(float x)
         {
-            return static_cast<uint16_t>((F32(x).i + ((F32(x).i & 0x00010000) >> 1)) >> 16);
+            return static_cast<uint16_t>(
+                (static_cast<uint32_t>(x) + ((static_cast<uint32_t>(x) & 0x00010000) >> 1)) >> 16);
         }
 
         static constexpr uint16_t round_to_nearest(float x)
         {
-            return static_cast<uint16_t>((F32(x).i + 0x8000) >> 16);
+            return static_cast<uint16_t>((static_cast<uint32_t>(x) + 0x8000) >> 16);
         }
 
         static constexpr uint16_t truncate(float x)
         {
-            return static_cast<uint16_t>((F32(x).i) >> 16);
+            return static_cast<uint16_t>((static_cast<uint32_t>(x)) >> 16);
         }
 
     private:
@@ -93,25 +94,17 @@ namespace ngraph
             : m_value{value}
         {
         }
-        union F32 {
-            constexpr F32(float val)
-                : f{val}
-            {
-            }
-            constexpr F32(uint32_t val)
-                : i{val}
-            {
-            }
-            float f;
-            uint32_t i;
-        };
 
         static constexpr bool isnan_c(float x)
         {
-            return (((F32(x).i & 0x7F800000) == 0x7F800000) && ((F32(x).i & 0x007FFFFF) != 0));
+            return (((static_cast<uint32_t>(x) & 0x7F800000) == 0x7F800000) &&
+                    ((static_cast<uint32_t>(x) & 0x007FFFFF) != 0));
         }
 
-        static constexpr bool isinf_c(float x) { return ((F32(x).i & 0x7FFFFFFF) == 0x7F800000); }
+        static constexpr bool isinf_c(float x)
+        {
+            return ((static_cast<uint32_t>(x) & 0x7FFFFFFF) == 0x7F800000);
+        }
         uint16_t m_value;
 
         static constexpr uint16_t BF16_NAN_VALUE = 0x7FC0;
