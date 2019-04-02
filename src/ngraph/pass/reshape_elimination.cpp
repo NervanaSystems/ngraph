@@ -217,13 +217,8 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
     auto rehape_label = make_shared<pattern::op::Label>(reshape, no_fan_out, NodeVector{reshape});
 
     auto callback = [op, rehape_label](pattern::RecurrentMatcher& m) {
-        const auto num_bounded_nodes = m.get_number_of_recurrent_matches();
-        auto reshape_node_vector = m.get_bound_nodes_for_pattern(rehape_label);
 
-        if (reshape_node_vector.size() == 1)
-        {
-            return false;
-        }
+        auto reshape_node_vector = m.get_bound_nodes_for_pattern(rehape_label);
 
         // The bounded node vector is in reverse order. It is convinient to have the
         // bounded node vector in the correct order
@@ -241,7 +236,12 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
             reshape_node_vector.push_back(user_of_last_bounded_reshape_op);
             last_bounded_reshape_op = reshape_node_vector.back();
         }
-        std::cout << "Num bounded nodes: " << num_bounded_nodes << std::endl;
+
+        if (reshape_node_vector.size() == 1)
+        {
+            return false;
+        }
+        std::cout << "Num bounded nodes: " << reshape_node_vector.size() << std::endl;
         std::cout << "Bounded node vector: ";
         for (auto it : reshape_node_vector)
         {
@@ -259,8 +259,15 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
         {
             auto r = std::dynamic_pointer_cast<op::Reshape>(*it);
 
-            // TODO: Check that the input to r is the last reshape stored in the
+            // Check that the input to r is the last reshape stored in the
             // subpattern vector
+            if (!r)
+            {
+                NGRAPH_DEBUG
+                    << "Incorrect match. Something went wrong. Non-reshape op has been matched";
+                return false;
+            }
+
             auto default_order_r = get_default_order(r->get_input_shape(0));
             if (r->get_input_order() == default_order_r)
             {
@@ -288,6 +295,7 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
 
         bool modify_graph = false;
 
+        // Replace the patterns
         for (auto sub_pattern : sub_patterns)
         {
             auto first_reshape = std::dynamic_pointer_cast<op::Reshape>(sub_pattern.front());
