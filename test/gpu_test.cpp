@@ -216,7 +216,7 @@ TEST(gpu_test, topk_fanout_graph_transform)
         vector<float>{4, 4, 3, 3, 3, 4, 2, 3}, read_vector<float>(r2), MIN_FLOAT_TOLERANCE_BITS));
     EXPECT_TRUE(test::all_close_f(
         vector<float>{4, 4, 3, 3, 3, 4, 2, 3}, read_vector<float>(r3), MIN_FLOAT_TOLERANCE_BITS));
-    auto reshape_count = count_ops_of_type<ngraph::op::Reshape>(gpu_f);
+    auto reshape_count = count_ops_of_type<ngraph::op::Reshape>(handle->get_compiled_function());
     EXPECT_EQ(reshape_count, 10);
 }
 
