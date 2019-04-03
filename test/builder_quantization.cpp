@@ -1219,14 +1219,14 @@ TEST(builder, scaled_quantize_concat_unsigned_varying)
 
 TEST(builder, scaled_QDotInteger)
 {
-    Shape shape_a{3, 3}; // input shape
-    vector<uint8_t> a_data = {1, 2, 2, 3, 4, 5, 1, 0, 1};
-    Shape shape_b{3, 3}; // filter shape
-    vector<int8_t> b_data = {1, 2, 0, 0, -7, 3, 0, -5, 0};
+    Shape shape_a{1, 2}; // input shape
+    vector<uint8_t> a_data = {2, 3};
+    Shape shape_b{3, 2}; // filter shape
+    vector<int8_t> b_data = {0, 1, 2, 3, 4, 5};
     auto A = make_shared<op::Parameter>(element::u8, shape_a);
     auto B = make_shared<op::Parameter>(element::i8, shape_b);
 
-    Shape shape_r{3, 3}; // output shape
+    Shape shape_r{1, 3}; // output shape
     auto QD = ngraph::builder::quantization::QuantizedDotInteger(A, B);
     auto f = make_shared<Function>(NodeVector{QD}, ParameterVector{A, B});
     constant_fold(f);
@@ -1239,7 +1239,7 @@ TEST(builder, scaled_QDotInteger)
     auto result = backend->create_tensor(element::i32, shape_r);
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ((vector<int32_t>{1, -22, 6, 3, -47, 12, 1, -3, 0}), read_vector<int32_t>(result));
+    EXPECT_EQ((vector<int32_t>{3, 13, 23}), read_vector<int32_t>(result));
 }
 
 // QuantizedDot

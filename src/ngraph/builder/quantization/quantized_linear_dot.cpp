@@ -18,7 +18,6 @@
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/builder/quantization.hpp"
 #include "ngraph/op/experimental/quantized_dot.hpp"
-#include "ngraph/op/reshape.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -32,10 +31,8 @@ namespace ngraph
             shared_ptr<Node> QuantizedDotInteger(shared_ptr<Node> input, shared_ptr<Node> filter)
             {
                 auto output_scale = make_constant(element::f32, Shape{}, 1);
-                auto reshape_filter =
-                    make_shared<op::Reshape>(filter, AxisVector{1, 0}, filter->get_shape());
                 return make_shared<op::QuantizedDot>(
-                    input, reshape_filter, output_scale, false, false, true);
+                    input, filter, output_scale, false, false, true);
             }
         }
     }
