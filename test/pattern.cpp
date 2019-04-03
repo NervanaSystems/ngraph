@@ -225,7 +225,7 @@ TEST(pattern, graph_rewrite)
         auto graph = b + sum;
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(1), a);
-        ASSERT_EQ(graph->get_input_source_output(1),
+        ASSERT_EQ(graph->input(1).get_source_output(),
                   Output<Node>(a, 0)); // graph's input points to a's output
         ASSERT_TRUE(sum->get_output_target_inputs(0)
                         .empty()); // graph's input is removed from sum's target inptus
@@ -241,7 +241,7 @@ TEST(pattern, graph_rewrite)
         auto graph = b + mul;
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(1), a);
-        ASSERT_EQ(graph->get_input_source_output(1),
+        ASSERT_EQ(graph->input(1).get_source_output(),
                   Output<Node>(a, 0)); // graph's input points to a's output
         ASSERT_TRUE(mul->get_output_target_inputs(0)
                         .empty()); // graph's input is removed from sum's target inputs
@@ -256,7 +256,7 @@ TEST(pattern, graph_rewrite)
         auto graph = ((((a * iconst1) * iconst1) * iconst1) * iconst1) + b;
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(0), a);
-        ASSERT_EQ(graph->get_input_source_output(0),
+        ASSERT_EQ(graph->input(0).get_source_output(),
                   Output<Node>(a, 0)); // graph's input points to a's output
         ASSERT_TRUE(a->get_output_target_inputs(0).count(
             Input<Node>(graph.get(), 0))); // a's output feeds into graph's input
@@ -270,7 +270,7 @@ TEST(pattern, graph_rewrite)
         auto graph = b + (iconst0 + ((a + iconst0) * iconst1));
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(1), a);
-        ASSERT_EQ(graph->get_input_source_output(1),
+        ASSERT_EQ(graph->input(1).get_source_output(),
                   Output<Node>(a, 0)); // graph's input points to a's output
         ASSERT_TRUE(a->get_output_target_inputs(0).count(
             Input<Node>(graph.get(), 1))); // a's output feeds into graph's input
@@ -283,7 +283,7 @@ TEST(pattern, graph_rewrite)
         auto graph = b + (iconst1 * (iconst1 * (iconst1 * (iconst1 * a))));
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(1), a);
-        ASSERT_EQ(graph->get_input_source_output(1),
+        ASSERT_EQ(graph->input(1).get_source_output(),
                   Output<Node>(a, 0)); // graph's input points to a's output
         ASSERT_TRUE(a->get_output_target_inputs(0).count(
             Input<Node>(graph.get(), 1))); // a's output feeds into graph's input

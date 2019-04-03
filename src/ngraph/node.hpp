@@ -98,8 +98,9 @@ namespace ngraph
         friend class autodiff::Adjoints;
         friend class descriptor::Input;
         template <typename NodeType>
-        friend class Input;                             // Temporary for access to m_inputs
-        friend class pass::GetOutputElementElimination; // Temporary for access to m_inputs
+        friend class Input; // Temporary for access to m_inputs and m_outputs
+        friend class pass::
+            GetOutputElementElimination; // Temporary for access to m_inputs and m_outputs
         friend void replace_node_users_arguments(std::shared_ptr<Node> target,
                                                  std::shared_ptr<Node> replacement);
         friend std::pair<std::shared_ptr<op::Result>, std::shared_ptr<op::Parameter>>
@@ -186,6 +187,7 @@ namespace ngraph
         /// DynReshape must be evaluated statically in order for the output shape to be
         /// determined.) By default, all inputs are marked as shape-irrelevant. Overrides of
         /// validate_and_infer_types should call this function to mark shape-relevant inputs.
+        // TODO(amprocte): should be protected
         void set_input_is_relevant_to_shape(size_t i, bool relevant = true);
 
         /// \brief Marks an input as being relevant or irrelevant to the output values of this
@@ -198,6 +200,7 @@ namespace ngraph
         /// of this writing, the only example of this is ShapeOf.) By default, all inputs are
         /// marked as value-relevant. Overrides of validate_and_infer_types should call this
         /// function to mark value-irrelevant inputs.
+        // TODO(amprocte): should be protected
         void set_input_is_relevant_to_value(size_t i, bool relevant = true);
 
         void set_output_type(size_t i,
@@ -325,24 +328,23 @@ namespace ngraph
         bool operator<(const Node& other) const { return m_instance_id < other.m_instance_id; }
         static const size_t placement_invalid = -1;
 
-        Output<Node> get_input_source_output(size_t input_index) const;
-        descriptor::Tensor& get_input_tensor(size_t input_index) const;
         void replace_input_source_output(size_t input_index, const Output<Node>& src_output);
         void replace_input_source_output(size_t input_index,
                                          const std::shared_ptr<Node>& source_node,
                                          size_t output_index);
         std::set<Input<Node>> get_output_target_inputs(size_t output_index) const;
         void remove_output_target_input(size_t output_index, const Input<Node>& target_input);
+
+        // TODO: Rename to get_inputs()
         std::vector<Input<Node>> get_node_inputs();
+
+        // TODO: Rename to get_outputs()
         std::vector<Output<Node>> get_node_outputs();
-        bool get_input_is_relevant_to_shape(size_t input_index) const
-        {
-            return m_inputs[input_index].get_is_relevant_to_shape();
-        }
-        bool get_input_is_relevant_to_value(size_t input_index) const
-        {
-            return m_inputs[input_index].get_is_relevant_to_value();
-        }
+
+        Input<Node> input(size_t input_index);
+        Input<const Node> input(size_t input_index) const;
+        Output<Node> output(size_t output_index);
+        Output<const Node> output(size_t output_index) const;
 
     protected:
         void set_output_size(size_t n);
@@ -395,15 +397,20 @@ namespace ngraph
         }
         /// \return A handle to the output that is connected to this input.
         Output<Node> get_source_output() const;
-        /// \return true if this input is relevant to its node's output shapes; else false.
-        bool get_is_relevant_to_shape() const
+        /// \return A reference to the tensor descriptor for this input.
+        descriptor::Tensor& get_tensor() const
         {
-            return m_node->get_input_is_relevant_to_shape(m_index);
+            return m_node->m_inputs.at(m_index).get_output().get_tensor();
+        }
+        /// \return true if this input is relevant to its node's output shapes; else false.
+        bool get_is_relevant_to_shapes() const
+        {
+            return m_node->m_inputs[m_index].get_is_relevant_to_shape();
         }
         /// \return true if this input is relevant to its node's output values; else false.
-        bool get_is_relevant_to_value() const
+        bool get_is_relevant_to_values() const
         {
-            return m_node->get_input_is_relevant_to_value(m_index);
+            return m_node->m_inputs[m_index].get_is_relevant_to_value();
         }
 
         /// \brief Replaces the source output of this input.
@@ -487,6 +494,11 @@ namespace ngraph
         std::shared_ptr<NodeType> get_node_shared_ptr() const { return m_node->shared_from_this(); }
         /// \return The index of the output referred to by this output handle.
         size_t get_index() const { return m_index; }
+        /// \return A reference to the tensor descriptor for this output.
+        descriptor::Tensor& get_tensor() const
+        {
+            return m_node->m_outputs.at(m_index).get_tensor();
+        }
         /// \return The element type of the output referred to by this output handle.
         const element::Type& get_element_type() const
         {
@@ -537,6 +549,46 @@ namespace ngraph
         NodeType* const m_node;
         const size_t m_index;
     };
+
+    inline Input<Node> Node::input(size_t input_index)
+    {
+        if (input_index >= m_inputs.size())
+        {
+            throw std::out_of_range("node input index is out of range");
+        }
+
+        return Input<Node>(this, input_index);
+    }
+
+    inline Input<const Node> Node::input(size_t input_index) const
+    {
+        if (input_index >= m_inputs.size())
+        {
+            throw std::out_of_range("node input index is out of range");
+        }
+
+        return Input<const Node>(this, input_index);
+    }
+
+    inline Output<Node> Node::output(size_t output_index)
+    {
+        if (output_index >= m_outputs.size())
+        {
+            throw std::out_of_range("node output index is out of range");
+        }
+
+        return Output<Node>(this, output_index);
+    }
+
+    inline Output<const Node> Node::output(size_t output_index) const
+    {
+        if (output_index >= m_outputs.size())
+        {
+            throw std::out_of_range("node output index is out of range");
+        }
+
+        return Output<const Node>(this, output_index);
+    }
 
     template <typename NodeType>
     Output<Node> Input<NodeType>::get_source_output() const

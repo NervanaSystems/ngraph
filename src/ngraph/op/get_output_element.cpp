@@ -49,14 +49,14 @@ shared_ptr<Node> op::GetOutputElement::copy_with_new_args(const NodeVector& new_
 
 NodeVector op::GetOutputElement::get_arguments() const
 {
-    return NodeVector{get_input_source_output(0).get_node_shared_ptr()};
+    return NodeVector{input(0).get_source_output().get_node_shared_ptr()};
 }
 
 void op::GetOutputElement::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
     auto delta = deltas.at(0);
 
-    adjoints.add_delta(get_input_source_output(0).get_node_shared_ptr(), delta, get_n());
+    adjoints.add_delta(input(0).get_source_output().get_node_shared_ptr(), delta, get_n());
 }
 
 NodeVector op::get_output_elements(const shared_ptr<Node>& mon)

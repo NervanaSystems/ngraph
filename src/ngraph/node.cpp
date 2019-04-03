@@ -520,17 +520,6 @@ void Node::replace_input_source_output(size_t input_index,
     m_inputs.at(input_index).replace_output(src_node, output_index);
 }
 
-Output<Node> Node::get_input_source_output(size_t input_index) const
-{
-    auto& output_descriptor = m_inputs.at(input_index).get_output();
-    return Output<Node>(output_descriptor.get_node(), output_descriptor.get_index());
-}
-
-descriptor::Tensor& Node::get_input_tensor(size_t i) const
-{
-    return m_inputs.at(i).get_output().get_tensor();
-}
-
 std::set<Input<Node>> Node::get_output_target_inputs(size_t output_index) const
 {
     std::set<Input<Node>> result;

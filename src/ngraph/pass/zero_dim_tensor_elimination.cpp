@@ -132,7 +132,7 @@ bool pass::ZeroDimTensorElimination::run_on_function(shared_ptr<Function> f)
             }
         }
 
-        auto source_output = n->get_input_source_output(0);
+        auto source_output = n->input(0).get_source_output();
 
         if (source_output.get_node()->get_output_size() != 1 || !has_zero_dim(source_output))
         {

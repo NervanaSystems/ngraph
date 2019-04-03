@@ -76,7 +76,7 @@ bool pass::ShapeSpecialization::run_on_function(std::shared_ptr<Function> f)
         {
             for (auto& input : n->get_output_target_inputs(i))
             {
-                if (input.get_is_relevant_to_shape())
+                if (input.get_is_relevant_to_shapes())
                 {
                     shape_determinants.insert(n.get());
                     break;
@@ -107,11 +107,11 @@ bool pass::ShapeSpecialization::run_on_function(std::shared_ptr<Function> f)
 
             for (size_t i = 0; i < node->get_input_size(); i++)
             {
-                if (node->get_input_is_relevant_to_value(i))
+                if (node->input(i).get_is_relevant_to_values())
                 {
                     continue;
                 }
-                auto source_node = node->get_input_source_output(i).get_node();
+                auto source_node = node->input(i).get_source_output().get_node();
                 if (already_visited.count(source_node) == 0)
                 {
                     to_visit.push_front(source_node);

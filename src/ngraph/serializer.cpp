@@ -1336,7 +1336,7 @@ static json write(const Node& n, bool binary_constant_data)
 
     for (size_t i = 0; i < n.get_input_size(); i++)
     {
-        inputs.push_back(n.get_input_source_output(i).get_node()->get_name());
+        inputs.push_back(n.input(i).get_source_output().get_node()->get_name());
     }
     for (auto cdep : n.get_control_dependencies())
     {

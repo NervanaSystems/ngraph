@@ -77,7 +77,7 @@ bool pass::Liveness::run_on_function(shared_ptr<Function> function)
         unordered_set<descriptor::Tensor*> input_tensor_decls;
         for (size_t i = 0; i < node->get_input_size(); i++)
         {
-            descriptor::Tensor& tensor = node->get_input_tensor(i);
+            descriptor::Tensor& tensor = node->input(i).get_tensor();
             if (persistent_tensors.find(&tensor) == persistent_tensors.end())
             {
                 input_tensor_decls.insert(&tensor);

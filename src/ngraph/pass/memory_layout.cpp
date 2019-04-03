@@ -60,8 +60,8 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<Function> function)
                     for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
                     {
                         auto output = &node->get_output_tensor(oi_pair.output);
-                        auto input = &node->get_input_tensor(oi_pair.input);
-                        auto input_node = node->get_input_source_output(oi_pair.input).get_node();
+                        auto input = &node->input(oi_pair.input).get_tensor();
+                        auto input_node = node->input(oi_pair.input).get_source_output().get_node();
 
                         // For destructive kernel, this should be the last use
                         // Non-destructive kernels can pass through if memory sharing is disabled
