@@ -69,20 +69,6 @@ void runtime::Backend::remove_compiled_function(std::shared_ptr<Executable> exec
 {
 }
 
-runtime::AllocateFunc runtime::Backend::get_device_memory_alloc()
-{
-    // override this method from all supported backends to return memory allocator
-    // which allocates device pinned memory
-    return nullptr;
-}
-
-runtime::DestroyFunc runtime::Backend::get_device_memory_dealloc()
-{
-    // override this method from all supported backends to return memory de-allocator
-    // which de-allocates device pinned memory
-    return nullptr;
-}
-
 bool runtime::Backend::is_device_memory(void* ptr)
 {
     // override this method for each supported backend to determine if the passed pointer is in

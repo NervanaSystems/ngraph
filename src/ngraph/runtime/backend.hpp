@@ -31,10 +31,6 @@ namespace ngraph
 {
     namespace runtime
     {
-        // aliases for framework provided function pointers as defined in onnx runtime
-        using AllocateFunc = void* (*)(void*, size_t, size_t);
-        using DestroyFunc = void (*)(void*, void*);
-
         class Tensor;
         class Backend;
     }
@@ -124,7 +120,7 @@ public:
     // \returns a shared pointer to the op if found, else nullptr
     virtual std::shared_ptr<ngraph::Node> get_backend_op(const std::string& op_name, ...);
 
-    /// \brief method which returns the memory allocator used backend for host memory allocation
+    /// \brief Returns memory allocator used by backend for host allocations
     virtual Allocator* get_host_memory_allocator()
     {
         return ngraph::runtime::get_ngraph_allocator();
@@ -134,11 +130,11 @@ public:
     /// \param pointer to host memory allocator object
     virtual void set_host_memory_allocator(Allocator* allocator){};
 
-    /// \brief method to return memory de-allocator which de-allocates device pinned memory
-    virtual ngraph::runtime::AllocateFunc get_device_memory_alloc();
-
-    /// \brief method to return memory allocator which allocates device pinned memory
-    virtual ngraph::runtime::DestroyFunc get_device_memory_dealloc();
+    /// \brief Returns memory allocator used by backend for device allocations
+    virtual Allocator* get_device_memory_allocator()
+    {
+        return ngraph::runtime::get_ngraph_allocator();
+    };
 
     /// \brief method for each supported backend to determine if the passed pointer is in device pinned memory or not
     /// \param ptr pointer to the memory to determine if its in device memory or not

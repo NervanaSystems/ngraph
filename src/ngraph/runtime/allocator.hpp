@@ -27,6 +27,8 @@ namespace ngraph
     namespace runtime
     {
         class Allocator;
+        /// \brief Returns a statically allocated default ngraph allocator
+        //         that calls into system allocation libraries
         Allocator* get_ngraph_allocator();
     }
 }
@@ -35,7 +37,6 @@ namespace ngraph
 class ngraph::runtime::Allocator
 {
 public:
-    virtual ~Allocator() = default;
     /// \brief allocates memory with the given size and alignment requirement
     /// \param size exact size of bytes to allocate
     /// \param alignment specifies the alignment. Must be a valid alignment supported by the implementation.
