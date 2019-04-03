@@ -65,9 +65,10 @@ void ngraph::traverse_nodes(const Function* p,
     traverse_nodes(nodes, f, include_control_deps);
 }
 
-// This version traverses backwards from subgraph_results toward parameters/subgraph_params
-// Most useful for finding parameters of a graph directly from the result nodes, not from
-// function parameters or extracting a subgr
+// This version traverses backwards from `subgraph_results` toward parameters
+// Traversal stops if it hits a node in `subgraph_params`
+// Most useful for finding parameters of a graph directly from the result nodes,
+// not from function parameters or extracting a subgraph
 void ngraph::traverse_nodes(const NodeVector& subgraph_results,
                             std::function<void(std::shared_ptr<Node>)> f,
                             bool include_control_deps,
