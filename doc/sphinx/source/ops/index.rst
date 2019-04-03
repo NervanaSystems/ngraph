@@ -26,7 +26,7 @@ Not currently a comprehensive list.
    * :doc:`batch_norm_training`
    * :doc:`batch_norm_training_backprop`
    * :doc:`broadcast`
-   * :doc:`broadcastdistributed`
+   * :doc:`broadcast_distributed`
    * :doc:`ceiling`
    * :doc:`concat`
    * :doc:`constant`
