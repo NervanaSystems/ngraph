@@ -82,8 +82,7 @@ TEST(partial_shape, dim_conversion_dynamic)
 {
     EXPECT_ANY_THROW({
         size_t s{Dimension::dynamic()};
-
-        s = 0; // Silence compiler warning about unused s
+        (void)s; // Silence compiler warning about unused s
     });
 }
 
