@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/pass/fusedop_decomposition.hpp"
+#include "ngraph/pass/fused_op_decomposition.hpp"
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/util/fused_op.hpp"

@@ -43,7 +43,7 @@
 
 #include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/cse.hpp"
-#include "ngraph/pass/fusedop_decomposition.hpp"
+#include "ngraph/pass/fused_op_decomposition.hpp"
 #include "ngraph/pass/get_output_element_elimination.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
