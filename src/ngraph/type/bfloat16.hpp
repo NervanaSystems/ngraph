@@ -29,11 +29,11 @@ namespace ngraph
     class bfloat16
     {
     public:
-        constexpr bfloat16()
+        bfloat16()
             : m_value{0}
         {
         }
-        constexpr bfloat16(float value)
+        bfloat16(float value)
             : m_value
         {
 #if defined ROUND_MODE_TO_NEAREST
@@ -63,7 +63,7 @@ namespace ngraph
 
         static std::vector<float> to_float_vector(const std::vector<bfloat16>&);
         static std::vector<bfloat16> from_float_vector(const std::vector<float>&);
-        static constexpr bfloat16 from_bits(uint16_t bits) { return bfloat16(bits, false); }
+        static bfloat16 from_bits(uint16_t bits) { return bfloat16(bits, false); }
         uint16_t to_bits() const;
         friend std::ostream& operator<<(std::ostream& out, const bfloat16& obj)
         {
@@ -71,42 +71,41 @@ namespace ngraph
             return out;
         }
 
-        static constexpr uint16_t round_to_nearest_even(float x)
+#define cu32(x) (F32(x).i)
+
+        static uint16_t round_to_nearest_even(float x)
         {
-            return static_cast<uint16_t>(
-                (static_cast<uint32_t>(x) + ((static_cast<uint32_t>(x) & 0x00010000) >> 1)) >> 16);
+            return static_cast<uint16_t>((cu32(x) + ((cu32(x) & 0x00010000) >> 1)) >> 16);
         }
 
-        static constexpr uint16_t round_to_nearest(float x)
+        static uint16_t round_to_nearest(float x)
         {
-            return static_cast<uint16_t>((static_cast<uint32_t>(x) + 0x8000) >> 16);
+            return static_cast<uint16_t>((cu32(x) + 0x8000) >> 16);
         }
 
-        static constexpr uint16_t truncate(float x)
-        {
-            return static_cast<uint16_t>((static_cast<uint32_t>(x)) >> 16);
-        }
-
+        static uint16_t truncate(float x) { return static_cast<uint16_t>((cu32(x)) >> 16); }
     private:
+        union F32 {
+            F32(float val)
+                : f{val}
+            {
+            }
+            F32(uint32_t val)
+                : i{val}
+            {
+            }
+            float f;
+            uint32_t i;
+        };
         // This should be private since it is ugly. Need the bool so the signature can't match
         // the float version of the ctor.
-        constexpr bfloat16(uint16_t value, bool)
+        bfloat16(uint16_t value, bool)
             : m_value{value}
         {
         }
 
-        static constexpr bool isnan_c(float x)
-        {
-            return (((static_cast<uint32_t>(x) & 0x7F800000) == 0x7F800000) &&
-                    ((static_cast<uint32_t>(x) & 0x007FFFFF) != 0));
-        }
-
-        static constexpr bool isinf_c(float x)
-        {
-            return ((static_cast<uint32_t>(x) & 0x7FFFFFFF) == 0x7F800000);
-        }
         uint16_t m_value;
 
-        static constexpr uint16_t BF16_NAN_VALUE = 0x7FC0;
+        static uint16_t BF16_NAN_VALUE;
     };
 }

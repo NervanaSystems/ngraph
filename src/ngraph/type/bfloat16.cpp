@@ -42,6 +42,8 @@ using namespace ngraph;
 
 static_assert(sizeof(bfloat16) == 2, "class bfloat16 must be exactly 2 bytes");
 
+uint16_t bfloat16::BF16_NAN_VALUE = 0x7FC0;
+
 bool float_isnan(const float& x)
 {
     return std::isnan(x);

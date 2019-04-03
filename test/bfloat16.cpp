@@ -25,6 +25,14 @@
 using namespace std;
 using namespace ngraph;
 
+template <typename T>
+string to_hex(T value)
+{
+    stringstream ss;
+    ss << "0x" << hex << setw(sizeof(T) * 2) << setfill('0') << value;
+    return ss.str();
+}
+
 //***********************
 // NOTE
 //***********************
@@ -53,62 +61,83 @@ TEST(bfloat16, conversions)
 
 TEST(bfloat16, round_to_nearest)
 {
-    // 1.03515625f, the next representable number which should round up
-    string fstring = "0  01111111  000 0100 1000 0000 0000 0000";
-    float fvalue = test::bits_to_float(fstring);
-    uint16_t bf_trunc = bfloat16::truncate(fvalue);
-    uint16_t bf_round = bfloat16::round_to_nearest(fvalue);
-    EXPECT_EQ(bf_trunc, bfloat16(1.03125).to_bits());
-    EXPECT_EQ(bf_round, bfloat16(1.0390625).to_bits());
+    string fstring;
+    string expected;
+    float fvalue;
+    uint16_t bf_round;
 
-    // 1.99609375f, the next representable number which should round up
+    fstring = "0  01111111  000 0100 1000 0000 0000 0000";
+    fvalue = test::bits_to_float(fstring);
+    bf_round = bfloat16::round_to_nearest(fvalue);
+    EXPECT_EQ(bf_round, 0x3F85);
+
+    fstring = "0  01111111  000 0100 0000 0000 0000 0000";
+    fvalue = test::bits_to_float(fstring);
+    bf_round = bfloat16::round_to_nearest(fvalue);
+    EXPECT_EQ(bf_round, 0x3F84);
+
     fstring = "0  01111111  111 1111 1000 0000 0000 0000";
     fvalue = test::bits_to_float(fstring);
-    bf_trunc = bfloat16::truncate(fvalue);
     bf_round = bfloat16::round_to_nearest(fvalue);
-    EXPECT_EQ(bf_trunc, bfloat16(1.9921875).to_bits());
-    EXPECT_EQ(bf_round, bfloat16(2.0).to_bits());
+    EXPECT_EQ(bf_round, 0x4000);
 
     // 1.9921875f, the next representable number which should not round up
     fstring = "0  01111111  111 1111 0000 0000 0000 0000";
     fvalue = test::bits_to_float(fstring);
-    bf_trunc = bfloat16::truncate(fvalue);
     bf_round = bfloat16::round_to_nearest(fvalue);
-    EXPECT_EQ(bf_trunc, bfloat16(1.9921875).to_bits());
-    EXPECT_EQ(bf_round, bfloat16(1.9921875).to_bits());
+    EXPECT_EQ(bf_round, 0x3FFF);
 }
 
 TEST(bfloat16, round_to_nearest_even)
 {
-    string fstring = "0  01111111  000 0100 1000 0000 0000 0000";
-    string expected = "0  01111111  000 0100";
-    float fvalue = test::bits_to_float(fstring);
-    uint16_t bf_round = bfloat16::round_to_nearest_even(fvalue);
-    EXPECT_EQ(bf_round, test::bits_to_bfloat16(expected).to_bits());
+    string fstring;
+    string expected;
+    float fvalue;
+    uint16_t bf_round;
+
+    fstring = "0  01111111  000 0100 1000 0000 0000 0000";
+    expected = "0  01111111  000 0100";
+    NGRAPH_INFO << to_hex(test::bits_to_bfloat16(expected).to_bits());
+    fvalue = test::bits_to_float(fstring);
+    bf_round = bfloat16::round_to_nearest_even(fvalue);
+    NGRAPH_INFO << to_hex(bf_round);
+    EXPECT_EQ(bf_round, 0x3F84);
+    NGRAPH_INFO;
 
     fstring = "0  01111111  000 0101 1000 0000 0000 0000";
     expected = "0  01111111  000 0110";
+    NGRAPH_INFO << to_hex(test::bits_to_bfloat16(expected).to_bits());
     fvalue = test::bits_to_float(fstring);
     bf_round = bfloat16::round_to_nearest_even(fvalue);
-    EXPECT_EQ(bf_round, test::bits_to_bfloat16(expected).to_bits());
+    NGRAPH_INFO << to_hex(bf_round);
+    EXPECT_EQ(bf_round, 0x3F86);
+    NGRAPH_INFO;
 
     fstring = "0  01111111  000 0101 0000 0000 0000 0000";
     expected = "0  01111111  000 0101";
+    NGRAPH_INFO << to_hex(test::bits_to_bfloat16(expected).to_bits());
     fvalue = test::bits_to_float(fstring);
     bf_round = bfloat16::round_to_nearest_even(fvalue);
-    EXPECT_EQ(bf_round, test::bits_to_bfloat16(expected).to_bits());
+    NGRAPH_INFO << to_hex(bf_round);
+    EXPECT_EQ(bf_round, 0x3F85);
+    NGRAPH_INFO;
 
     fstring = "0  01111111  111 1111 1000 0000 0000 0000";
     expected = "0  10000000  000 0000";
+    NGRAPH_INFO << to_hex(test::bits_to_bfloat16(expected).to_bits());
     fvalue = test::bits_to_float(fstring);
     bf_round = bfloat16::round_to_nearest_even(fvalue);
-    EXPECT_EQ(bf_round, test::bits_to_bfloat16(expected).to_bits());
+    NGRAPH_INFO << to_hex(bf_round);
+    EXPECT_EQ(bf_round, 0x4000);
+    NGRAPH_INFO;
 
     fstring = "0  01111111  111 1111 0000 0000 0000 0000";
     expected = "0  01111111  111 1111";
+    NGRAPH_INFO << to_hex(test::bits_to_bfloat16(expected).to_bits());
     fvalue = test::bits_to_float(fstring);
     bf_round = bfloat16::round_to_nearest_even(fvalue);
-    EXPECT_EQ(bf_round, test::bits_to_bfloat16(expected).to_bits());
+    NGRAPH_INFO << to_hex(bf_round);
+    EXPECT_EQ(bf_round, 0x3FFF);
 }
 
 TEST(bfloat16, to_float)
