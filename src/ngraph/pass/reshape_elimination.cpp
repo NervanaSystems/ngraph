@@ -217,7 +217,8 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
     auto rehape_label = make_shared<pattern::op::Label>(reshape, no_fan_out, NodeVector{reshape});
 
     auto callback = [op, rehape_label](pattern::RecurrentMatcher& m) {
-
+        NGRAPH_DEBUG << "In callback for construct_recurrent_reshape against node = "
+                     << rehape_label->get_argument(0)->get_name();
         auto reshape_node_vector = m.get_bound_nodes_for_pattern(rehape_label);
 
         // The bounded node vector is in reverse order. It is convinient to have the
@@ -237,22 +238,15 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
             last_bounded_reshape_op = reshape_node_vector.back();
         }
 
+        // Return if the recurrent matcher matches only one reshape
         if (reshape_node_vector.size() == 1)
         {
             return false;
         }
-        std::cout << "Num bounded nodes: " << reshape_node_vector.size() << std::endl;
-        std::cout << "Bounded node vector: ";
-        for (auto it : reshape_node_vector)
-        {
-            std::cout << it->get_name() << " ";
-        }
-        std::cout << std::endl;
 
-        std::cout << "Driver op of " << reshape_node_vector.front()->get_name() << " : "
-                  << driver_op->get_name() << std::endl;
-        std::cout << "Last bounded op: " << last_bounded_reshape_op->get_name() << std::endl;
-
+        // The complete reshape node vector may not contain contigous reshapes that can be
+        // fused. Only the subset of reshapes with a reshape(any axis order) followed by reshapes
+        // with default axis order can be fused. Creating such subpatterns here:
         std::vector<NodeVector> sub_patterns{NodeVector{first_bounded_reshape_op}};
         for (auto it = std::next(reshape_node_vector.begin()); it != reshape_node_vector.end();
              it++)
@@ -275,6 +269,8 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
             }
             else
             {
+                NGRAPH_DEBUG << r->get_name() << "does not have default axis order. "
+                             << "It might be part of a different subpattern";
                 sub_patterns.push_back(NodeVector{r});
             }
         }
