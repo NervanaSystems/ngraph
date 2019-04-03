@@ -17,9 +17,4 @@
 // This collection contains one entry for each fused op.
 //
 
-#ifndef NGRAPH_OP
-#error "NGRAPH_OP not defined"
-#define NGRAPH_OP(x, y)
-#endif
-
 NGRAPH_OP(PRelu, ngraph::op)

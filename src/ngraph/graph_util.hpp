@@ -50,6 +50,20 @@ namespace ngraph
                         std::function<void(std::shared_ptr<Node>)> f,
                         bool include_control_deps);
 
+    /// \brief Visit each node in a sub-graph of the entire graph
+    /// \param subgraph_results The output nodes of the sub-graph
+    /// \param f Function to execute at each node in the traversal
+    /// \param include_control_deps Whether to include control deps
+    ///        while traversing the sub-graph
+    /// \param subgraph_params Input nodes of the sub-graph (optional)
+    ///
+    /// Traverses a sub-graph starting from subgraph_results moving up
+    /// towards parameter nodes. Traversal stops if it hits a node in
+    /// subgraph_params.
+    ///
+    /// Most useful for finding parameters of a graph directly from the
+    /// result nodes and not from function parameters or extracting a
+    /// subgraph relevant to the computation of certain outputs
     void traverse_nodes(const NodeVector& subgraph_results,
                         std::function<void(std::shared_ptr<Node>)> f,
                         bool include_control_deps,
