@@ -48,6 +48,14 @@ namespace ngraph
                                                std::shared_ptr<Node> input_scale,
                                                std::shared_ptr<Node> filter_scale,
                                                std::shared_ptr<Node> output_scale);
+
+            std::shared_ptr<Node> QuantizedConvInteger(std::shared_ptr<Node> input,
+                                                       std::shared_ptr<Node> filter,
+                                                       const Strides& window_movement_strides,
+                                                       const Strides& window_dilation_strides,
+                                                       const CoordinateDiff& padding_below,
+                                                       const CoordinateDiff& padding_above,
+                                                       const Strides& data_dilation_strides);
         }
     }
 }
