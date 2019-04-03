@@ -36,12 +36,10 @@ namespace ngraph
             class CPU_BACKEND_API CPU_Backend : public runtime::Backend
             {
             public:
-                CPU_Backend();
-                ~CPU_Backend();
                 std::shared_ptr<CPU_CallFrame>
                     make_call_frame(const std::shared_ptr<CPU_ExternalFunction>& external_function,
                                     ngraph::pass::PassConfig& pass_config,
-                                    std::shared_ptr<ngraph::runtime::Allocator> allocator);
+                                    Allocator* allocator);
 
                 std::shared_ptr<ngraph::runtime::Tensor>
                     create_tensor(const ngraph::element::Type& element_type,
@@ -63,17 +61,16 @@ namespace ngraph
 
                 void remove_compiled_function(std::shared_ptr<Executable> exec) override;
 
-                std::shared_ptr<ngraph::runtime::Allocator>
-                    get_framework_memory_allocator() override;
-                void set_framework_memory_allocator(
-                    const std::shared_ptr<ngraph::runtime::Allocator>& allocator) override;
+                Allocator* get_host_memory_allocator() override;
+                void set_host_memory_allocator(Allocator* allocator) override;
+
                 bool is_supported(const Node& node) const override;
                 bool is_supported_property(const Property prop) const override;
 
             private:
                 std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<Executable>>
                     m_exec_map;
-                std::shared_ptr<ngraph::runtime::Allocator> m_allocator = nullptr;
+                Allocator* m_allocator;
             };
 
             class CPU_BACKEND_API CPU_Executable : public runtime::Executable
@@ -81,7 +78,7 @@ namespace ngraph
             public:
                 CPU_Executable(std::shared_ptr<Function> func,
                                ngraph::pass::PassConfig& pass_config,
-                               std::shared_ptr<ngraph::runtime::Allocator> allocator,
+                               Allocator* allocator,
                                bool performance_counters_enabled);
                 bool call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                           const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;

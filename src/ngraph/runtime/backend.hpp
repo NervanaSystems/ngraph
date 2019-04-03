@@ -124,13 +124,15 @@ public:
     // \returns a shared pointer to the op if found, else nullptr
     virtual std::shared_ptr<ngraph::Node> get_backend_op(const std::string& op_name, ...);
 
-    /// \brief method which returns the framework passed memory allocator
-    virtual std::shared_ptr<ngraph::runtime::Allocator> get_framework_memory_allocator();
+    /// \brief method which returns the memory allocator used backend for host memory allocation
+    virtual Allocator* get_host_memory_allocator()
+    {
+        return ngraph::runtime::get_ngraph_allocator();
+    };
 
-    /// \brief method for the framework to set its memory allocator object in the backend.
-    /// \param allocator reference to framework memory allocator object
-    virtual void set_framework_memory_allocator(
-        const std::shared_ptr<ngraph::runtime::Allocator>& allocator);
+    /// \brief Set the host memory allocator to be used by the backend
+    /// \param pointer to host memory allocator object
+    virtual void set_host_memory_allocator(Allocator* allocator){};
 
     /// \brief method to return memory de-allocator which de-allocates device pinned memory
     virtual ngraph::runtime::AllocateFunc get_device_memory_alloc();

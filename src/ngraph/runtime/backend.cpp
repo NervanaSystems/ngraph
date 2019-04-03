@@ -69,26 +69,14 @@ void runtime::Backend::remove_compiled_function(std::shared_ptr<Executable> exec
 {
 }
 
-std::shared_ptr<ngraph::runtime::Allocator> runtime::Backend::get_framework_memory_allocator()
-{
-    return nullptr;
-}
-
-void runtime::Backend::set_framework_memory_allocator(
-    const std::shared_ptr<ngraph::runtime::Allocator>& allocator)
-{
-    // override this method from all supported backends to set its memory allocator to
-    // framework passed memory allocator
-}
-
-ngraph::runtime::AllocateFunc runtime::Backend::get_device_memory_alloc()
+runtime::AllocateFunc runtime::Backend::get_device_memory_alloc()
 {
     // override this method from all supported backends to return memory allocator
     // which allocates device pinned memory
     return nullptr;
 }
 
-ngraph::runtime::DestroyFunc runtime::Backend::get_device_memory_dealloc()
+runtime::DestroyFunc runtime::Backend::get_device_memory_dealloc()
 {
     // override this method from all supported backends to return memory de-allocator
     // which de-allocates device pinned memory

@@ -16,22 +16,33 @@
 
 #include "ngraph/runtime/allocator.hpp"
 
-void* ngraph::runtime::Allocator::Malloc(size_t size, size_t alignment)
+class DefaultNgraphAllocator : public ngraph::runtime::Allocator
 {
-    void* ptr = ngraph::aligned_alloc(alignment, size);
-
-    // check for exception
-    if (!ptr)
+public:
+    void* Malloc(size_t size, size_t alignment)
     {
-        throw ngraph_error("malloc failed to allocate memory of size " + std::to_string(size));
-    }
-    return ptr;
-}
+        void* ptr = ngraph::aligned_alloc(alignment, size);
 
-void ngraph::runtime::Allocator::Free(void* ptr)
+        // check for exception
+        if (!ptr)
+        {
+            throw ngraph::ngraph_error("malloc failed to allocate memory of size " +
+                                       std::to_string(size));
+        }
+        return ptr;
+    }
+
+    void Free(void* ptr)
+    {
+        if (ptr)
+        {
+            ngraph::aligned_free(ptr);
+        }
+    }
+};
+
+ngraph::runtime::Allocator* ngraph::runtime::get_ngraph_allocator()
 {
-    if (ptr)
-    {
-        ngraph::aligned_free(ptr);
-    }
+    static DefaultNgraphAllocator* allocator = new DefaultNgraphAllocator();
+    return allocator;
 }
