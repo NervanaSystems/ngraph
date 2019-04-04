@@ -18,6 +18,9 @@ cloned from one of our GitHub repos and built to connect to nGraph device
 backends while maintaining the framework's programmatic or user interface. Bridges 
 currently exist for the TensorFlow\* and MXNet\* frameworks. 
 
+ONNX is not a framework; however, it can be used with nGraph's :doc:../python_api/index` 
+to import and execute ONNX models.   
+
 .. figure:: ../graphics/whole-stack.png
     :width: 733px
     :alt: JiT compiling of a computation

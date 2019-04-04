@@ -155,7 +155,6 @@ runtime::gpu::GPU_Executable::GPU_Executable(shared_ptr<Function> func, bool ena
         instance.m_runtime = instance.m_compiled_function->m_runtime;
         instance.m_inputs.resize(func->get_parameters().size());
         instance.m_outputs.resize(func->get_output_size());
-        set_parameters_and_results(*m_function);
     }
 }
 
