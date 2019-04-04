@@ -197,24 +197,10 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
     Shape shape_op{3};
     Shape shape_r{1, 3};
 
-    auto no_fan_out = [](std::shared_ptr<Node> n) {
-        auto users = n->get_users(true);
-        std::set<std::shared_ptr<Node>> user_set(users.begin(), users.end());
-        size_t num_unique_users = user_set.size();
-        if (num_unique_users == 1)
-        {
-            return true;
-        }
-        else
-        {
-            NGRAPH_DEBUG << "recurrent_reshape_elimination: " << n->get_name() << " has fan out\n";
-            return false;
-        }
-    };
-
     auto op = make_shared<pattern::op::Label>(element::f32, shape_op);
     auto reshape = make_shared<op::Reshape>(op, AxisVector{0}, shape_r);
-    auto rehape_label = make_shared<pattern::op::Label>(reshape, no_fan_out, NodeVector{reshape});
+    auto rehape_label =
+        make_shared<pattern::op::Label>(reshape, get_no_fan_out_function(), NodeVector{reshape});
 
     auto callback = [op, rehape_label](pattern::RecurrentMatcher& m) {
         NGRAPH_DEBUG << "In callback for construct_recurrent_reshape against node = "
