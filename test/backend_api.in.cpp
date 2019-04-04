@@ -54,6 +54,7 @@ NGRAPH_TEST(${BACKEND_NAME}, create_tensor_1)
 }
 
 // This tests a backend's implementation of the three parameter version of create_tensor
+// Testing using this tensor as a Function input
 NGRAPH_TEST(${BACKEND_NAME}, create_tensor_2_input)
 {
     Shape shape{2, 2};
@@ -77,6 +78,7 @@ NGRAPH_TEST(${BACKEND_NAME}, create_tensor_2_input)
 }
 
 // This tests a backend's implementation of the three parameter version of create_tensor
+// Testing using this tensor as a Function output
 NGRAPH_TEST(${BACKEND_NAME}, create_tensor_2_output)
 {
     Shape shape{2, 2};
