@@ -14,6 +14,10 @@
 # limitations under the License.
 # ******************************************************************************
 
+if(LINUX)
+    set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+endif()
+
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "4.0.0")
         # gtest has issues with this with v1.8.x
@@ -26,9 +30,11 @@ set(SRC
     algebraic_simplification.cpp
     all_close_f.cpp
     assertion.cpp
+    bfloat16.cpp
     build_graph.cpp
     builder_autobroadcast.cpp
     constant_folding.cpp
+    concat_fusion.cpp
     control_dependencies.cpp
     coordinate.cpp
     copy.cpp
@@ -36,22 +42,26 @@ set(SRC
     cpio.cpp
     cse.cpp
     element_type.cpp
+    event_tracing.cpp
     file_util.cpp
     includes.cpp
     input_output_assign.cpp
     main.cpp
     misc.cpp
+    node_input_output.cpp
     nop_elimination.cpp
     op.cpp
     partial_shape.cpp
     pass_liveness.cpp
     pass_manager.cpp
     pass_memory_layout.cpp
+    pass_shape_specialization.cpp
     pattern.cpp
     reshape_elimination.cpp
     reshape_sinking.cpp
     serialize.cpp
     shape.cpp
+    specialize_shapes.cpp
     tensor.cpp
     type_prop.cpp
     util.cpp
@@ -127,6 +137,7 @@ set(MULTI_TEST_SRC
     autodiff.in.cpp
     backend_all.in.cpp
     backend_any.in.cpp
+    backend_api.in.cpp
     backend_binary_elementwise.in.cpp
     backend_broadcast.in.cpp
     backend_comparison.in.cpp

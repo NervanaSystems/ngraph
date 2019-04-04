@@ -204,6 +204,104 @@ TEST(type_prop, broadcast_partial_rank_static_dynamic_shape_mismatch_wrong_size)
     }
 }
 
+TEST(type_prop, dyn_broadcast_shape_wrong_rank)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto bc_shape = make_shared<op::Parameter>(element::i64, Shape{1, 1});
+    auto bc_axes = make_shared<op::Parameter>(element::i64, Shape{1});
+
+    try
+    {
+        auto bc = make_shared<op::DynBroadcast>(arg, bc_shape, bc_axes);
+        FAIL() << "DynBroadcast: wrong shape rank not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "DynBroadcast shape rank must be 1");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, dyn_broadcast_axes_wrong_rank)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto bc_shape = make_shared<op::Parameter>(element::i64, Shape{1});
+    auto bc_axes = make_shared<op::Parameter>(element::i64, Shape{2, 2});
+
+    try
+    {
+        auto bc = make_shared<op::DynBroadcast>(arg, bc_shape, bc_axes);
+        FAIL() << "DynBroadcast: axes shape rank not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "DynBroadcast axes rank must be 1");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, dyn_broadcast_output_partial_shape_dynamic)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto bc_shape = make_shared<op::Parameter>(element::i64, Shape{1});
+    auto bc_axes = make_shared<op::Parameter>(element::i64, Shape{2});
+
+    auto bc = make_shared<op::DynBroadcast>(arg, bc_shape, bc_axes);
+    ASSERT_TRUE(bc->get_output_partial_shape(0).is_dynamic());
+}
+
+TEST(type_prop, dyn_broadcast_broadcast_shape_et_wrong)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    // wrong element type
+    auto bc_shape = make_shared<op::Parameter>(element::boolean, Shape{1});
+    auto bc_axes = make_shared<op::Parameter>(element::i64, Shape{2});
+
+    try
+    {
+        auto bc = make_shared<op::DynBroadcast>(arg, bc_shape, bc_axes);
+        FAIL() << "DynBroadcast: did not detect shape element type not i64";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("DynBroadcast shape must have element type i64"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, dyn_broadcast_axes_et_wrong)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto bc_shape = make_shared<op::Parameter>(element::i64, Shape{1});
+    // wrong element type
+    auto bc_axes = make_shared<op::Parameter>(element::f32, Shape{2});
+
+    try
+    {
+        auto bc = make_shared<op::DynBroadcast>(arg, bc_shape, bc_axes);
+        FAIL() << "DynBroadcast: did not detect axes element type not i64";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("DynBroadcast axes must have element type i64"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
 TEST(type_prop, batchnorm_training_rank_less_than_2)
 {
     auto dummy = make_shared<op::Parameter>(element::f32, Shape{1});
@@ -8947,89 +9045,64 @@ TEST(type_prop, avg_pool_partial_rank_static_dynamic_window_in_padding)
     }
 }
 
-TEST(type_prop, pad_deduce_1d_exterior)
+TEST(type_prop, pad_deduce_1d)
 {
     // Deduce type
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{50});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
-    Shape padding_below{2};
-    Shape padding_above{3};
-    Shape padding_interior{0};
-    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+    CoordinateDiff padding_below{2};
+    CoordinateDiff padding_above{3};
+    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
     EXPECT_EQ(pad->get_element_type(), element::f32);
     EXPECT_EQ(pad->get_shape(), (Shape{55}));
 
-    EXPECT_EQ(pad->get_padding_below(), (Shape{2}));
-    EXPECT_EQ(pad->get_padding_above(), (Shape{3}));
-    EXPECT_EQ(pad->get_padding_interior(), (Shape{0}));
+    EXPECT_EQ(pad->get_padding_below(), (CoordinateDiff{2}));
+    EXPECT_EQ(pad->get_padding_above(), (CoordinateDiff{3}));
 }
 
-TEST(type_prop, pad_deduce_1d_interior)
-{
-    // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{50});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
-    Shape padding_below{0};
-    Shape padding_above{0};
-    Shape padding_interior{2};
-    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
-    EXPECT_EQ(pad->get_element_type(), element::f32);
-    EXPECT_EQ(pad->get_shape(), (Shape{148}));
-
-    EXPECT_EQ(pad->get_padding_below(), (Shape{0}));
-    EXPECT_EQ(pad->get_padding_above(), (Shape{0}));
-    EXPECT_EQ(pad->get_padding_interior(), (Shape{2}));
-}
-
-TEST(type_prop, pad_deduce_1d_interior_exterior)
-{
-    // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{50});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
-    Shape padding_below{5};
-    Shape padding_above{6};
-    Shape padding_interior{2};
-    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
-    EXPECT_EQ(pad->get_element_type(), element::f32);
-    EXPECT_EQ(pad->get_shape(), (Shape{159}));
-
-    EXPECT_EQ(pad->get_padding_below(), (Shape{5}));
-    EXPECT_EQ(pad->get_padding_above(), (Shape{6}));
-    EXPECT_EQ(pad->get_padding_interior(), (Shape{2}));
-}
-
-TEST(type_prop, pad_deduce_2d_interior_exterior)
+TEST(type_prop, pad_deduce_2d)
 {
     // Deduce type
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{50, 40});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
-    Shape padding_below{5, 3};
-    Shape padding_above{6, 9};
-    Shape padding_interior{2, 3};
-    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+    CoordinateDiff padding_below{5, 3};
+    CoordinateDiff padding_above{6, 9};
+    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
     EXPECT_EQ(pad->get_element_type(), element::f32);
-    EXPECT_EQ(pad->get_shape(), (Shape{159, 169}));
+    EXPECT_EQ(pad->get_shape(), (Shape{61, 52}));
 
-    EXPECT_EQ(pad->get_padding_below(), (Shape{5, 3}));
-    EXPECT_EQ(pad->get_padding_above(), (Shape{6, 9}));
-    EXPECT_EQ(pad->get_padding_interior(), (Shape{2, 3}));
+    EXPECT_EQ(pad->get_padding_below(), (CoordinateDiff{5, 3}));
+    EXPECT_EQ(pad->get_padding_above(), (CoordinateDiff{6, 9}));
 }
 
-TEST(type_prop, pad_deduce_3d_interior_exterior)
+TEST(type_prop, pad_deduce_3d)
 {
     // Deduce type
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{50, 40, 20});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
-    Shape padding_below{5, 3, 0};
-    Shape padding_above{6, 9, 4};
-    Shape padding_interior{2, 3, 0};
-    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+    CoordinateDiff padding_below{5, 3, 0};
+    CoordinateDiff padding_above{6, 9, 4};
+    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
     EXPECT_EQ(pad->get_element_type(), element::f32);
-    EXPECT_EQ(pad->get_shape(), (Shape{159, 169, 24}));
+    EXPECT_EQ(pad->get_shape(), (Shape{61, 52, 24}));
 
-    EXPECT_EQ(pad->get_padding_below(), (Shape{5, 3, 0}));
-    EXPECT_EQ(pad->get_padding_above(), (Shape{6, 9, 4}));
-    EXPECT_EQ(pad->get_padding_interior(), (Shape{2, 3, 0}));
+    EXPECT_EQ(pad->get_padding_below(), (CoordinateDiff{5, 3, 0}));
+    EXPECT_EQ(pad->get_padding_above(), (CoordinateDiff{6, 9, 4}));
+}
+
+TEST(type_prop, pad_deduce_3d_neg)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{50, 40, 20});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
+    CoordinateDiff padding_below{-5, 3, -2};
+    CoordinateDiff padding_above{-6, -9, 4};
+    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
+    EXPECT_EQ(pad->get_element_type(), element::f32);
+    EXPECT_EQ(pad->get_shape(), (Shape{39, 34, 22}));
+
+    EXPECT_EQ(pad->get_padding_below(), (CoordinateDiff{-5, 3, -2}));
+    EXPECT_EQ(pad->get_padding_above(), (CoordinateDiff{-6, -9, 4}));
 }
 
 TEST(type_prop, pad_deduce_element_type_mismatch)
@@ -9037,13 +9110,11 @@ TEST(type_prop, pad_deduce_element_type_mismatch)
     // Deduce type
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{50, 40, 20});
     auto param1 = make_shared<op::Parameter>(element::i32, Shape{});
-    Shape padding_below{5, 3, 0};
-    Shape padding_above{6, 9, 4};
-    Shape padding_interior{2, 3, 0};
+    CoordinateDiff padding_below{5, 3, 0};
+    CoordinateDiff padding_above{6, 9, 4};
     try
     {
-        auto pad =
-            make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+        auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Element tpye mismatch not detected";
@@ -9063,13 +9134,11 @@ TEST(type_prop, pad_deduce_nonscalar_pad_value)
     // Deduce type
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{50, 40, 20});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{6});
-    Shape padding_below{5, 3, 0};
-    Shape padding_above{6, 9, 4};
-    Shape padding_interior{2, 3, 0};
+    CoordinateDiff padding_below{5, 3, 0};
+    CoordinateDiff padding_above{6, 9, 4};
     try
     {
-        auto pad =
-            make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+        auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Non-scalar pad value not detected";
@@ -9090,23 +9159,21 @@ TEST(type_prop, pad_deduce_below_padding_wrong_rank)
     // Deduce type
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{50, 40, 20});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
-    Shape padding_below{5, 3, 0, 6};
-    Shape padding_above{6, 9, 4};
-    Shape padding_interior{2, 3, 0};
+    CoordinateDiff padding_below{5, 3, 0, 6};
+    CoordinateDiff padding_above{6, 9, 4};
     try
     {
-        auto pad =
-            make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+        auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Wrong below-padding rank not detected";
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("Ranks for padding below (Shape{5, 3, 0, 6}), padding above (Shape{6, 9, "
-                        "4}) and interior padding (Shape{2, 3, 0}) do not match"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Ranks for padding below (CoordinateDiff{5, 3, 0, 6}) and "
+                                         "padding above (CoordinateDiff{6, 9, "
+                                         "4}) do not match"));
     }
     catch (...)
     {
@@ -9119,13 +9186,11 @@ TEST(type_prop, pad_deduce_above_padding_wrong_rank)
     // Deduce type
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{50, 40, 20});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
-    Shape padding_below{5, 3, 0};
-    Shape padding_above{6, 9};
-    Shape padding_interior{2, 3, 0};
+    CoordinateDiff padding_below{5, 3, 0};
+    CoordinateDiff padding_above{6, 9};
     try
     {
-        auto pad =
-            make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+        auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Wrong above-padding rank not detected";
@@ -9133,9 +9198,8 @@ TEST(type_prop, pad_deduce_above_padding_wrong_rank)
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Ranks for padding below (Shape{5, 3, 0}), "
-                                         "padding above (Shape{6, 9}) and interior "
-                                         "padding (Shape{2, 3, 0}) do not match"));
+                             std::string("Ranks for padding below (CoordinateDiff{5, 3, 0}) and "
+                                         "padding above (CoordinateDiff{6, 9}) do not match"));
     }
     catch (...)
     {
@@ -9143,28 +9207,79 @@ TEST(type_prop, pad_deduce_above_padding_wrong_rank)
     }
 }
 
-TEST(type_prop, pad_deduce_interior_padding_wrong_rank)
+TEST(type_prop, pad_deduce_too_small_for_edge)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{50, 40, 20});
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{1, 5, 0, 2});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
-    Shape padding_below{5, 3, 0};
-    Shape padding_above{6, 9, 4};
-    Shape padding_interior{2, 3, 0, 9, 3};
+    CoordinateDiff padding_below{0, 1, 2, 3};
+    CoordinateDiff padding_above{0, 1, 2, 3};
     try
     {
         auto pad =
-            make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+            make_shared<op::Pad>(param0, param1, padding_below, padding_above, op::PadMode::EDGE);
 
         // Should have thrown, so fail if it didn't
-        FAIL() << "Wrong interior padding rank not detected";
+        FAIL() << "Input too small for edge padding not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("EDGE padding mode requires an input of dimension of at "
+                                         "least 1 at each spatial axis"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, pad_deduce_too_small_for_reflect)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{1, 5, 1, 2});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
+    CoordinateDiff padding_below{0, 1, 2, 3};
+    CoordinateDiff padding_above{0, 1, 2, 3};
+    try
+    {
+        auto pad = make_shared<op::Pad>(
+            param0, param1, padding_below, padding_above, op::PadMode::REFLECT);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Input too small for reflect padding not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("REFLECT padding mode requires an input of dimension of "
+                                         "at least 2 at each spatial axis"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, pad_deduce_too_much_negative_padding)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{5, 4, 2});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
+    CoordinateDiff padding_below{5, 3, 0};
+    CoordinateDiff padding_above{6, 9, -3};
+    try
+    {
+        auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Too much negative padding not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Ranks for padding below (Shape{5, 3, 0}), padding above (Shape{6, 9, 4}) "
-                        "and interior padding (Shape{2, 3, 0, 9, 3}) do not match"));
+            std::string("Inferred result dimension at axis 2 is negative after padding"));
     }
     catch (...)
     {
@@ -9177,11 +9292,10 @@ TEST(type_prop, pad_partial_data_rank_dynamic_padding_rank_dynamic_ok)
     auto param0 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
 
-    Shape padding_below{2, 4, 6};
-    Shape padding_above{8, 2, 3};
-    Shape padding_interior{1, 0, 1};
+    CoordinateDiff padding_below{2, 4, 6};
+    CoordinateDiff padding_above{8, 2, 3};
 
-    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
 
     ASSERT_EQ(pad->get_output_element_type(0), element::f32);
     ASSERT_TRUE(pad->get_output_partial_shape(0).same_scheme(
@@ -9193,22 +9307,20 @@ TEST(type_prop, pad_partial_data_rank_dynamic_padding_rank_dynamic_attribs_rank_
     auto param0 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
 
-    Shape padding_below{2, 4, 6};
-    Shape padding_above{8, 2, 3, 0};
-    Shape padding_interior{1, 0, 1};
+    CoordinateDiff padding_below{2, 4, 6};
+    CoordinateDiff padding_above{8, 2, 3, 0};
 
     try
     {
-        auto pad =
-            make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+        auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
         FAIL() << "Inconsistent attribute ranks not detected (rank-dynamic/rank-dynamic arguments)";
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("Ranks for padding below (Shape{2, 4, 6}), padding above (Shape{8, 2, 3, "
-                        "0}) and interior padding (Shape{1, 0, 1}) do not match"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Ranks for padding below (CoordinateDiff{2, 4, 6}) and "
+                                         "padding above (CoordinateDiff{8, 2, 3, "
+                                         "0}) do not match"));
     }
     catch (...)
     {
@@ -9223,11 +9335,10 @@ TEST(type_prop, pad_partial_data_rank_static_dynamic_padding_rank_dynamic_ok)
         PartialShape{Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()});
     auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
 
-    Shape padding_below{2, 4, 6};
-    Shape padding_above{8, 2, 3};
-    Shape padding_interior{1, 0, 1};
+    CoordinateDiff padding_below{2, 4, 6};
+    CoordinateDiff padding_above{8, 2, 3};
 
-    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
 
     ASSERT_EQ(pad->get_output_element_type(0), element::f32);
     ASSERT_TRUE(pad->get_output_partial_shape(0).same_scheme(
@@ -9240,15 +9351,14 @@ TEST(type_prop, pad_partial_data_rank_static_dynamic_some_dims_known_padding_ran
         make_shared<op::Parameter>(element::f32, PartialShape{3, 5, Dimension::dynamic()});
     auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
 
-    Shape padding_below{2, 4, 6};
-    Shape padding_above{8, 2, 3};
-    Shape padding_interior{1, 0, 1};
+    CoordinateDiff padding_below{2, 4, 6};
+    CoordinateDiff padding_above{8, 2, 3};
 
-    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
 
     ASSERT_EQ(pad->get_output_element_type(0), element::f32);
     ASSERT_TRUE(
-        pad->get_output_partial_shape(0).same_scheme(PartialShape{15, 11, Dimension::dynamic()}));
+        pad->get_output_partial_shape(0).same_scheme(PartialShape{13, 11, Dimension::dynamic()}));
 }
 
 TEST(type_prop, pad_partial_data_rank_dynamic_padding_static_ok)
@@ -9256,11 +9366,10 @@ TEST(type_prop, pad_partial_data_rank_dynamic_padding_static_ok)
     auto param0 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    Shape padding_below{2, 4, 6};
-    Shape padding_above{8, 2, 3};
-    Shape padding_interior{1, 0, 1};
+    CoordinateDiff padding_below{2, 4, 6};
+    CoordinateDiff padding_above{8, 2, 3};
 
-    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
 
     ASSERT_EQ(pad->get_output_element_type(0), element::f32);
     ASSERT_TRUE(pad->get_output_partial_shape(0).same_scheme(
@@ -9272,14 +9381,12 @@ TEST(type_prop, pad_partial_data_rank_dynamic_padding_static_wrong_padding_rank)
     auto param0 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 8});
 
-    Shape padding_below{2, 4, 6};
-    Shape padding_above{8, 2, 3};
-    Shape padding_interior{1, 0, 1};
+    CoordinateDiff padding_below{2, 4, 6};
+    CoordinateDiff padding_above{8, 2, 3};
 
     try
     {
-        auto pad =
-            make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+        auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
         FAIL() << "Wrong padding rank not detected (rank-dynamic/static arguments)";
     }
     catch (const NodeValidationFailure& error)
@@ -9299,22 +9406,20 @@ TEST(type_prop, pad_partial_data_rank_dynamic_padding_static_attribs_rank_incons
     auto param0 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    Shape padding_below{2, 4, 6};
-    Shape padding_above{8, 2, 3, 4};
-    Shape padding_interior{1, 0, 1};
+    CoordinateDiff padding_below{2, 4, 6};
+    CoordinateDiff padding_above{8, 2, 3, 4};
 
     try
     {
-        auto pad =
-            make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+        auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
         FAIL() << "Wrong padding rank not detected (rank-dynamic/static arguments)";
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("Ranks for padding below (Shape{2, 4, 6}), padding above (Shape{8, 2, 3, "
-                        "4}) and interior padding (Shape{1, 0, 1}) do not match"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Ranks for padding below (CoordinateDiff{2, 4, 6}) and "
+                                         "padding above (CoordinateDiff{8, 2, 3, "
+                                         "4}) do not match"));
     }
     catch (...)
     {
@@ -11790,7 +11895,7 @@ TEST(type_prop, shape_of)
     auto a = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
     auto so = make_shared<op::ShapeOf>(a);
 
-    ASSERT_EQ(so->get_output_element_type(0), element::u64);
+    ASSERT_EQ(so->get_output_element_type(0), element::i64);
     ASSERT_EQ(so->get_shape(), Shape{4});
 }
 
@@ -11799,7 +11904,7 @@ TEST(type_prop, shape_of_partial_et_dynamic)
     auto a = make_shared<op::Parameter>(element::dynamic, Shape{1, 2, 3, 4});
     auto so = make_shared<op::ShapeOf>(a);
 
-    ASSERT_EQ(so->get_output_element_type(0), element::u64);
+    ASSERT_EQ(so->get_output_element_type(0), element::i64);
     ASSERT_EQ(so->get_shape(), Shape{4});
 }
 
@@ -11809,7 +11914,7 @@ TEST(type_prop, shape_of_partial_rank_static_dynamic)
         element::f32, PartialShape{1, Dimension::dynamic(), Dimension::dynamic(), 4});
     auto so = make_shared<op::ShapeOf>(a);
 
-    ASSERT_EQ(so->get_output_element_type(0), element::u64);
+    ASSERT_EQ(so->get_output_element_type(0), element::i64);
     ASSERT_EQ(so->get_shape(), Shape{4});
 }
 
@@ -11818,7 +11923,7 @@ TEST(type_prop, shape_of_partial_rank_dynamic)
     auto a = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     auto so = make_shared<op::ShapeOf>(a);
 
-    ASSERT_EQ(so->get_output_element_type(0), element::u64);
+    ASSERT_EQ(so->get_output_element_type(0), element::i64);
     ASSERT_TRUE(so->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(1)));
 }
 
@@ -12147,4 +12252,805 @@ TEST(type_prop, DISABLED_benchmark_type_prop_convolution)
     std::cout.imbue(std::locale(""));
     std::cout << "Constructed " << std::fixed << num_iterations << " Convolution ops in "
               << std::fixed << total_nanosec << " ns" << std::endl;
+}
+
+TEST(type_prop, transpose_arg_static_input_order_static_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto input_order = make_shared<op::Parameter>(element::i64, Shape{4});
+
+    auto r = make_shared<op::Transpose>(arg, input_order);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+}
+
+TEST(type_prop, transpose_arg_rank_static_dynamic_input_order_static_ok)
+{
+    auto arg = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+    auto input_order = make_shared<op::Parameter>(element::i64, Shape{4});
+
+    auto r = make_shared<op::Transpose>(arg, input_order);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+}
+
+TEST(type_prop, transpose_arg_static_input_order_rank_static_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto input_order = make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+
+    auto r = make_shared<op::Transpose>(arg, input_order);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+}
+
+TEST(type_prop, transpose_arg_rank_static_dynamic_input_order_rank_static_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+    auto input_order = make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+
+    auto r = make_shared<op::Transpose>(arg, input_order);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+}
+
+TEST(type_prop, transpose_arg_rank_dynamic_input_order_rank_static_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto input_order = make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+
+    auto r = make_shared<op::Transpose>(arg, input_order);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
+}
+
+TEST(type_prop, transpose_arg_rank_dynamic_input_order_rank_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto input_order = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+
+    auto r = make_shared<op::Transpose>(arg, input_order);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
+}
+
+TEST(type_prop, transpose_arg_rank_static_dynamic_input_order_rank_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+    auto input_order = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+
+    auto r = make_shared<op::Transpose>(arg, input_order);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+}
+
+TEST(type_prop, transpose_arg_static_input_order_static_input_order_not_vector)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape{2, 4, 6, 8});
+    auto input_order = make_shared<op::Parameter>(element::i64, PartialShape{2, 2});
+
+    try
+    {
+        auto r = make_shared<op::Transpose>(arg, input_order);
+        FAIL() << "Did not detect input order not vector";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input order must be a vector."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, transpose_arg_static_input_order_rank_static_dynamic_input_order_not_vector)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape{2, 4, 6, 8});
+    auto input_order =
+        make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+
+    try
+    {
+        auto r = make_shared<op::Transpose>(arg, input_order);
+        FAIL() << "Did not detect input order not vector";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input order must be a vector."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, transpose_arg_static_input_order_static_input_order_wrong_size)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape{2, 4, 6, 8});
+    auto input_order = make_shared<op::Parameter>(element::i64, PartialShape{5});
+
+    try
+    {
+        auto r = make_shared<op::Transpose>(arg, input_order);
+        FAIL() << "Did not detect input order wrong size";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Input order must have shape [n], where n is the rank of arg."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, transpose_arg_rank_static_dynamic_input_order_static_input_order_not_vector)
+{
+    auto arg = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+    auto input_order = make_shared<op::Parameter>(element::i64, PartialShape{2, 2});
+
+    try
+    {
+        auto r = make_shared<op::Transpose>(arg, input_order);
+        FAIL() << "Did not detect input order not vector";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input order must be a vector."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop,
+     transpose_arg_rank_static_dynamic_input_order_rank_static_dynamic_input_order_not_vector)
+{
+    auto arg = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+    auto input_order =
+        make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+
+    try
+    {
+        auto r = make_shared<op::Transpose>(arg, input_order);
+        FAIL() << "Did not detect input order not vector";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input order must be a vector."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, transpose_arg_rank_dynamic_input_order_rank_static_dynamic_input_order_not_vector)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto input_order =
+        make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+
+    try
+    {
+        auto r = make_shared<op::Transpose>(arg, input_order);
+        FAIL() << "Did not detect input order not vector";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input order must be a vector."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, transpose_input_order_et_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto input_order = make_shared<op::Parameter>(element::dynamic, Shape{4});
+
+    auto r = make_shared<op::Transpose>(arg, input_order);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+}
+
+TEST(type_prop, transpose_input_order_et_wrong)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto input_order = make_shared<op::Parameter>(element::boolean, Shape{4});
+
+    try
+    {
+        auto r = make_shared<op::Transpose>(arg, input_order);
+        FAIL() << "Did not detect input element type not i64";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input order must have element type i64."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, dyn_pad_pad_value_test)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
+    auto pad_b = make_shared<op::Parameter>(element::i64, Shape{3});
+    auto pad_a = make_shared<op::Parameter>(element::i64, Shape{3});
+
+    // padding value matches tensor data-type
+    try
+    {
+        auto pad_v = make_shared<op::Parameter>(element::i32, Shape{});
+        auto dyn_pad = make_shared<op::DynPad>(arg, pad_b, pad_a, pad_v);
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Padding value and arg type mismatch");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+
+    // padding value is scalar
+    try
+    {
+        auto pad_v = make_shared<op::Parameter>(element::f32, Shape{3});
+        auto dyn_pad = make_shared<op::DynPad>(arg, pad_b, pad_a, pad_v);
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "DynPad arg is not scalar");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, dyn_pad_wrong_ranks)
+{
+    auto pad_v = make_shared<op::Parameter>(element::f32, Shape{});
+
+    try
+    {
+        auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5});
+        auto pad_b = make_shared<op::Parameter>(element::i64, Shape{3, 4});
+        auto pad_a = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+        auto dyn_pad = make_shared<op::DynPad>(arg, pad_b, pad_a, pad_v);
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Shape of padding below must be of rank 1");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+
+    try
+    {
+        auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5});
+        auto pad_b = make_shared<op::Parameter>(element::i64, Shape{3});
+        auto pad_a = make_shared<op::Parameter>(
+            element::i64, PartialShape{Dimension::dynamic(), Dimension::dynamic()});
+        auto dyn_pad = make_shared<op::DynPad>(arg, pad_b, pad_a, pad_v);
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Shape of padding above must be of rank 1");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+
+    try
+    {
+        auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5});
+        auto pad_b = make_shared<op::Parameter>(element::i64, Shape{3});
+        auto pad_a = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+        auto dyn_pad = make_shared<op::DynPad>(arg, pad_b, pad_a, pad_v);
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Arg and padding below ranks mismatch");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+
+    try
+    {
+        auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5});
+        auto pad_b = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+        auto pad_a = make_shared<op::Parameter>(element::i64, Shape{3});
+        auto dyn_pad = make_shared<op::DynPad>(arg, pad_b, pad_a, pad_v);
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Arg and padding above ranks mismatch");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+
+    try
+    {
+        auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+        auto pad_b = make_shared<op::Parameter>(element::i64, Shape{4});
+        auto pad_a = make_shared<op::Parameter>(element::i64, Shape{3});
+        auto dyn_pad = make_shared<op::DynPad>(arg, pad_b, pad_a, pad_v);
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Padding below and above ranks mismatch");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, dyn_pad_output_ranks_arg_static_ok)
+{
+    auto pad_v = make_shared<op::Parameter>(element::f32, Shape{});
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5});
+    auto pad_b = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+    auto pad_a = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+    auto dyn_pad = make_shared<op::DynPad>(arg, pad_b, pad_a, pad_v);
+
+    EXPECT_EQ(dyn_pad->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(dyn_pad->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+}
+
+TEST(type_prop, dyn_pad_output_ranks_arg_dynamic_ok)
+{
+    auto pad_v = make_shared<op::Parameter>(element::f32, Shape{});
+    auto arg = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), 4, Dimension::dynamic()});
+    auto pad_b = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+    auto pad_a = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+    auto dyn_pad = make_shared<op::DynPad>(arg, pad_b, pad_a, pad_v);
+
+    EXPECT_EQ(dyn_pad->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(dyn_pad->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+}
+
+TEST(type_prop, dyn_pad_output_ranks_pad_static_ok)
+{
+    auto pad_v = make_shared<op::Parameter>(element::f32, Shape{});
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto pad_b = make_shared<op::Parameter>(element::i64, Shape{3});
+    auto pad_a = make_shared<op::Parameter>(element::i64, Shape{3});
+    auto dyn_pad = make_shared<op::DynPad>(arg, pad_b, pad_a, pad_v);
+
+    EXPECT_EQ(dyn_pad->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(dyn_pad->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(3)));
+}
+
+TEST(type_prop, dynreshape_arg_static_pattern_static_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto pattern = make_shared<op::Parameter>(element::i64, Shape{4});
+
+    auto r = make_shared<op::DynReshape>(arg, pattern);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+}
+
+TEST(type_prop, dynreshape_arg_rank_static_dynamic_pattern_static_ok)
+{
+    auto arg = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+    auto pattern = make_shared<op::Parameter>(element::i64, Shape{4});
+
+    auto r = make_shared<op::DynReshape>(arg, pattern);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+}
+
+TEST(type_prop, dynreshape_arg_static_pattern_rank_static_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto pattern = make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+
+    auto r = make_shared<op::DynReshape>(arg, pattern);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
+}
+
+TEST(type_prop, dynreshape_arg_rank_static_dynamic_pattern_rank_static_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+    auto pattern = make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+
+    auto r = make_shared<op::DynReshape>(arg, pattern);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
+}
+
+TEST(type_prop, dynreshape_arg_rank_dynamic_pattern_rank_static_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto pattern = make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+
+    auto r = make_shared<op::DynReshape>(arg, pattern);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
+}
+
+TEST(type_prop, dynreshape_arg_rank_dynamic_pattern_rank_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto pattern = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+
+    auto r = make_shared<op::Transpose>(arg, pattern);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
+}
+
+TEST(type_prop, dynreshape_arg_rank_static_dynamic_pattern_rank_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+    auto pattern = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+
+    auto r = make_shared<op::DynReshape>(arg, pattern);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
+}
+
+void DynReshape_Test_Shape_Except(const shared_ptr<Node>& param_0, const shared_ptr<Node>& param_1)
+{
+    try
+    {
+        auto r = make_shared<op::DynReshape>(param_0, param_1);
+        FAIL() << "Did not detect parameter shape not rank 1";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("shape must have rank 1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, dynreshape_arg_static_pattern_static_not_vector)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape{2, 4, 6, 8});
+    auto pattern = make_shared<op::Parameter>(element::i64, PartialShape{2, 2});
+
+    DynReshape_Test_Shape_Except(arg, pattern);
+}
+
+TEST(type_prop, dynreshape_arg_static_pattern_rank_static_dynamic_not_vector)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape{2, 4, 6, 8});
+    auto pattern = make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+
+    DynReshape_Test_Shape_Except(arg, pattern);
+}
+
+TEST(type_prop, dynreshape_arg_rank_static_dynamic_pattern_static_not_vector)
+{
+    auto arg = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+    auto pattern = make_shared<op::Parameter>(element::i64, PartialShape{2, 2});
+
+    DynReshape_Test_Shape_Except(arg, pattern);
+}
+
+TEST(type_prop, dynreshape_arg_rank_static_dynamic_pattern_rank_static_dynamic_not_vector)
+{
+    auto arg = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+    auto pattern = make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+
+    DynReshape_Test_Shape_Except(arg, pattern);
+}
+
+TEST(type_prop, dynreshape_arg_rank_dynamic_pattern_rank_static_dynamic_not_vector)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto pattern = make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+
+    DynReshape_Test_Shape_Except(arg, pattern);
+}
+
+TEST(type_prop, dynreshape_pattern_et_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto pattern = make_shared<op::Parameter>(element::dynamic, Shape{4});
+
+    auto r = make_shared<op::DynReshape>(arg, pattern);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+}
+
+TEST(type_prop, dynreshape_pattern_et_wrong)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto pattern = make_shared<op::Parameter>(element::boolean, Shape{4});
+
+    try
+    {
+        auto r = make_shared<op::DynReshape>(arg, pattern);
+        FAIL() << "Did not detect pattern elment type not i64";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Pattern must have element type i64."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, dynslice_arg_static_params_static_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto lower_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto upper_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto strides = make_shared<op::Parameter>(element::i64, Shape{4});
+
+    auto r = make_shared<op::DynSlice>(arg, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+}
+
+TEST(type_prop, dynslice_arg_rank_static_dynamic_params_static_ok)
+{
+    auto arg = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+    auto lower_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto upper_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto strides = make_shared<op::Parameter>(element::i64, Shape{4});
+
+    auto r = make_shared<op::DynSlice>(arg, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+}
+
+TEST(type_prop, dynslice_arg_static_params_rank_static_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto lower_bounds =
+        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+    auto upper_bounds =
+        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+    auto strides = make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+
+    auto r = make_shared<op::DynSlice>(arg, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+}
+
+TEST(type_prop, dynslice_arg_rank_static_dynamic_params_rank_static_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+    auto lower_bounds =
+        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+    auto upper_bounds =
+        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+    auto strides = make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+
+    auto r = make_shared<op::DynSlice>(arg, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+}
+
+TEST(type_prop, dynslice_arg_rank_dynamic_params_rank_static_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto lower_bounds =
+        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+    auto upper_bounds =
+        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+    auto strides = make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+
+    auto r = make_shared<op::DynSlice>(arg, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
+}
+
+TEST(type_prop, dynslice_arg_rank_dynamic_params_rank_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto lower_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+    auto upper_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+    auto strides = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+
+    auto r = make_shared<op::DynSlice>(arg, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
+}
+
+TEST(type_prop, dynslice_arg_rank_static_dynamic_params_rank_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+    auto lower_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+    auto upper_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+    auto strides = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+
+    auto r = make_shared<op::DynSlice>(arg, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+}
+
+void DynSlice_Test_Shape_Except(const shared_ptr<Node>& param_0,
+                                const shared_ptr<Node>& param_1,
+                                const shared_ptr<Node>& param_2,
+                                const shared_ptr<Node>& param_3)
+{
+    try
+    {
+        auto r = make_shared<op::DynSlice>(param_0, param_1, param_2, param_3);
+        FAIL() << "Did not detect input order not vector";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("shape must have rank 1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, dynslice_arg_static_params_rank_static_dynamic_not_vector)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape{2, 4, 6, 8});
+    auto lower_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+    auto upper_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+    auto strides = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+
+    {
+        lower_bounds =
+            make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+        DynSlice_Test_Shape_Except(arg, lower_bounds, upper_bounds, strides);
+    }
+    {
+        lower_bounds = make_shared<op::Parameter>(element::i64, PartialShape{2, 2});
+        DynSlice_Test_Shape_Except(arg, lower_bounds, upper_bounds, strides);
+    }
+    {
+        arg = make_shared<op::Parameter>(
+            element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+        lower_bounds =
+            make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+        DynSlice_Test_Shape_Except(arg, lower_bounds, upper_bounds, strides);
+    }
+
+    {
+        upper_bounds =
+            make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+        DynSlice_Test_Shape_Except(arg, lower_bounds, upper_bounds, strides);
+    }
+    {
+        upper_bounds = make_shared<op::Parameter>(element::i64, PartialShape{2, 2});
+        DynSlice_Test_Shape_Except(arg, lower_bounds, upper_bounds, strides);
+    }
+    {
+        arg = make_shared<op::Parameter>(
+            element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+        upper_bounds =
+            make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+        DynSlice_Test_Shape_Except(arg, lower_bounds, upper_bounds, strides);
+    }
+
+    {
+        strides = make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+        DynSlice_Test_Shape_Except(arg, lower_bounds, upper_bounds, strides);
+    }
+    {
+        strides = make_shared<op::Parameter>(element::i64, PartialShape{2, 2});
+        DynSlice_Test_Shape_Except(arg, lower_bounds, upper_bounds, strides);
+    }
+    {
+        arg = make_shared<op::Parameter>(
+            element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+        strides = make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+        DynSlice_Test_Shape_Except(arg, lower_bounds, upper_bounds, strides);
+    }
+}
+
+TEST(type_prop, dynslice_params_et_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto lower_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto upper_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto strides = make_shared<op::Parameter>(element::i64, Shape{4});
+
+    auto r = make_shared<op::DynSlice>(arg, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+}
+
+void DynSlice_Test_Type_Except(const shared_ptr<Node>& param_0,
+                               const shared_ptr<Node>& param_1,
+                               const shared_ptr<Node>& param_2,
+                               const shared_ptr<Node>& param_3)
+{
+    try
+    {
+        auto r = make_shared<op::DynSlice>(param_0, param_1, param_2, param_3);
+        FAIL() << "Did not detect parameter element type not i64";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("must have element type i64."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, dynslice_params_et_wrong)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+
+    auto lower_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto upper_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto strides = make_shared<op::Parameter>(element::i64, Shape{4});
+
+    {
+        lower_bounds = make_shared<op::Parameter>(element::boolean, Shape{4});
+        DynSlice_Test_Type_Except(arg, lower_bounds, upper_bounds, strides);
+    }
+    {
+        upper_bounds = make_shared<op::Parameter>(element::boolean, Shape{4});
+        DynSlice_Test_Type_Except(arg, lower_bounds, upper_bounds, strides);
+    }
+    {
+        strides = make_shared<op::Parameter>(element::boolean, Shape{4});
+        DynSlice_Test_Type_Except(arg, lower_bounds, upper_bounds, strides);
+    }
 }

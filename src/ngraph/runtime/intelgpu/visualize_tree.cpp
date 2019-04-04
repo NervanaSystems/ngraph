@@ -306,8 +306,7 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
         const shared_ptr<op::Pad> pad = static_pointer_cast<op::Pad>(node);
 
         writer << print_table_row_dims("pad_above", pad->get_padding_above())
-               << print_table_row_dims("pad_below", pad->get_padding_below())
-               << print_table_row_dims("pad_interior", pad->get_padding_interior());
+               << print_table_row_dims("pad_below", pad->get_padding_below());
         break;
     }
     case OP_TYPEID::Slice:
@@ -346,17 +345,7 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
                << print_table_row_dims("pad_above_forward",
                                        conv_op_filt->get_padding_above_forward())
                << print_table_row_dims("pad_below_forward",
-                                       conv_op_filt->get_padding_below_forward())
-               << print_table_row_dims("window_movement_strides_backward",
-                                       conv_op_filt->get_window_movement_strides_backward())
-               << print_table_row_dims("window_dilation_strides_backward",
-                                       conv_op_filt->get_window_dilation_strides_backward())
-               << print_table_row_dims("data_dilation_strides_backward",
-                                       conv_op_filt->get_data_dilation_strides_backward())
-               << print_table_row_dims("padding_above_backward",
-                                       conv_op_filt->get_padding_above_backward())
-               << print_table_row_dims("padding_below_backward",
-                                       conv_op_filt->get_padding_below_backward());
+                                       conv_op_filt->get_padding_below_forward());
         break;
     }
     case OP_TYPEID::ConvolutionBackpropData:
@@ -374,17 +363,7 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
                << print_table_row_dims("pad_above_forward",
                                        conv_op_data->get_padding_above_forward())
                << print_table_row_dims("pad_below_forward",
-                                       conv_op_data->get_padding_below_forward())
-               << print_table_row_dims("window_movement_strides_backward",
-                                       conv_op_data->get_window_movement_strides_backward())
-               << print_table_row_dims("window_dilation_strides_backward",
-                                       conv_op_data->get_window_dilation_strides_backward())
-               << print_table_row_dims("data_dilation_strides_backward",
-                                       conv_op_data->get_data_dilation_strides_backward())
-               << print_table_row_dims("padding_above_backward",
-                                       conv_op_data->get_padding_above_backward())
-               << print_table_row_dims("padding_below_backward",
-                                       conv_op_data->get_padding_below_backward());
+                                       conv_op_data->get_padding_below_forward());
         break;
     }
     case OP_TYPEID::UNDEFINED_OP:

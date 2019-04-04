@@ -57,6 +57,8 @@ set (SRC
     dimension.cpp
     dimension.hpp
     except.hpp
+    event_tracing.hpp
+    event_tracing.cpp
     file_util.cpp
     file_util.hpp
     function.cpp
@@ -69,6 +71,10 @@ set (SRC
     ngraph_visibility.hpp
     node.cpp
     node.hpp
+    node_input.cpp
+    node_input.hpp
+    node_output.cpp
+    node_output.hpp
     node_vector.hpp
     op/abs.cpp
     op/abs.hpp
@@ -97,7 +103,7 @@ set (SRC
     op/batch_norm.cpp
     op/batch_norm.hpp
     op/broadcast.cpp
-    op/broadcast.hpp
+    op/broadcast_distributed.cpp
     op/ceiling.cpp
     op/ceiling.hpp
     op/concat.cpp
@@ -122,8 +128,18 @@ set (SRC
     op/embedding_lookup.hpp
     op/equal.cpp
     op/equal.hpp
+    op/erf.cpp
+    op/erf.hpp
     op/exp.cpp
     op/exp.hpp
+    op/experimental/dyn_broadcast.cpp
+    op/experimental/dyn_broadcast.hpp
+    op/experimental/dyn_pad.cpp
+    op/experimental/dyn_pad.hpp
+    op/experimental/dyn_reshape.cpp
+    op/experimental/dyn_reshape.hpp
+    op/experimental/dyn_slice.cpp
+    op/experimental/dyn_slice.hpp
     op/experimental/generate_mask.cpp
     op/experimental/generate_mask.hpp
     op/experimental/quantized_avg_pool.cpp
@@ -140,6 +156,12 @@ set (SRC
     op/experimental/quantized_max_pool.hpp
     op/experimental/shape_of.cpp
     op/experimental/shape_of.hpp
+    op/experimental/quantized_dot.cpp
+    op/experimental/quantized_dot.hpp
+    op/experimental/quantized_dot_bias.cpp
+    op/experimental/quantized_dot_bias.hpp
+    op/experimental/transpose.cpp
+    op/experimental/transpose.hpp
     op/floor.cpp
     op/floor.hpp
     op/get_output_element.cpp
@@ -294,6 +316,8 @@ set (SRC
     pass/reshape_sinking.hpp
     pass/serialize.cpp
     pass/serialize.hpp
+    pass/shape_specialization.cpp
+    pass/shape_specialization.hpp
     pass/validate_graph.cpp
     pass/validate_graph.hpp
     pass/visualize_tree.cpp
@@ -302,6 +326,8 @@ set (SRC
     pass/zero_dim_tensor_elimination.cpp
     pass/zero_dim_tensor_elimination.hpp
     pass/zero_dim_tensor_elimination.hpp
+    pass/concat_fusion.hpp
+    pass/concat_fusion.cpp
     pattern/matcher.cpp
     pattern/matcher.hpp
     pattern/op/any.hpp
@@ -332,6 +358,8 @@ set (SRC
     shape.hpp
     shape_util.cpp
     shape_util.hpp
+    specialize_shapes.cpp
+    specialize_shapes.hpp
     state/rng_state.cpp
     strides.cpp
     strides.hpp
@@ -417,8 +445,6 @@ target_link_libraries(ngraph PRIVATE libjson)
 target_compile_definitions(ngraph PUBLIC NGRAPH_VERSION="${NGRAPH_VERSION}")
 
 if (LINUX)
-    set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--rpath,$ORIGIN")
-
     # nGraph links against one or more libraries (ex. LLVM) but we don't want to
     # export these symbols as part of the DSO. This is a GNU ld (and derivatives) specific
     # option so making this portable is still an open issue. As a note for the future,

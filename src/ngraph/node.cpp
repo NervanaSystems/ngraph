@@ -20,6 +20,7 @@
 #include <typeinfo>
 
 #include "ngraph/autodiff/adjoints.hpp"
+#include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
@@ -84,6 +85,16 @@ void Node::validate_and_infer_types()
 {
 }
 
+void Node::set_input_is_relevant_to_shape(size_t i, bool relevant)
+{
+    m_inputs.at(i).m_is_relevant_to_shape = relevant;
+}
+
+void Node::set_input_is_relevant_to_value(size_t i, bool relevant)
+{
+    m_inputs.at(i).m_is_relevant_to_value = relevant;
+}
+
 void Node::set_output_type(size_t i, const element::Type& element_type, const PartialShape& pshape)
 {
     m_outputs.at(i).get_tensor_ptr()->set_tensor_type(element_type, pshape);
@@ -135,14 +146,7 @@ const std::string& Node::get_name() const
 
 void Node::set_friendly_name(const string& name)
 {
-    if (m_friendly_name.empty())
-    {
-        m_friendly_name = name;
-    }
-    else
-    {
-        throw ngraph_error("Node name may be set exactly once");
-    }
+    m_friendly_name = name;
 }
 
 Placement Node::get_placement() const
@@ -163,6 +167,29 @@ size_t Node::get_placement_index() const
 void Node::set_placement_index(size_t placement)
 {
     m_placement_index = placement;
+}
+
+const std::unordered_set<std::string>& Node::get_provenance_tags() const
+{
+    return m_provenance_tags;
+}
+
+void Node::add_provenance_tag(const std::string& tag)
+{
+    m_provenance_tags.insert(tag);
+}
+
+void Node::remove_provenance_tag(const std::string& tag)
+{
+    m_provenance_tags.erase(tag);
+}
+
+void Node::merge_provenance_tags_from(const std::shared_ptr<const Node>& source)
+{
+    for (auto& tag : source->get_provenance_tags())
+    {
+        add_provenance_tag(tag);
+    }
 }
 
 std::shared_ptr<Node> Node::get_argument(size_t index) const

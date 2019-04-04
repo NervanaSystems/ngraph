@@ -32,6 +32,7 @@
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
@@ -48,6 +49,7 @@
 #include "ngraph/runtime/reference/quantize.hpp"
 #include "ngraph/runtime/reference/relu.hpp"
 #include "ngraph/runtime/reference/reshape.hpp"
+#include "ngraph/runtime/reference/sqrt.hpp"
 #include "ngraph/runtime/reference/subtract.hpp"
 
 using namespace std;
@@ -84,7 +86,7 @@ shared_ptr<op::Constant> make_constant_pad(shared_ptr<op::Constant> constant,
                                out_shape,
                                pad->get_padding_below(),
                                pad->get_padding_above(),
-                               pad->get_padding_interior());
+                               pad->get_pad_mode());
 
     return make_shared<op::Constant>(constant->get_element_type(), out_shape, out_vec);
 }
@@ -96,12 +98,12 @@ void pass::ConstantFolding::construct_constant_pad()
 
     auto pad_value_label = make_shared<pattern::op::Label>(element::f32, Shape{}, is_constant);
 
-    Shape padding_below{0};
-    Shape padding_above{0};
-    Shape padding_interior{0};
+    CoordinateDiff padding_below{0};
+    CoordinateDiff padding_above{0};
+    op::PadMode pad_mode{op::PadMode::CONSTANT};
 
     auto pad = make_shared<op::Pad>(
-        constant_label, pad_value_label, padding_below, padding_above, padding_interior);
+        constant_label, pad_value_label, padding_below, padding_above, pad_mode);
 
     auto constant_pad_callback = [constant_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_pad_callback against node = "
@@ -385,7 +387,7 @@ void pass::ConstantFolding::construct_constant_binary()
 bool is_supported_unary_op(std::shared_ptr<Node> n)
 {
     return std::dynamic_pointer_cast<op::Abs>(n) || std::dynamic_pointer_cast<op::Negative>(n) ||
-           std::dynamic_pointer_cast<op::Relu>(n);
+           std::dynamic_pointer_cast<op::Relu>(n) || std::dynamic_pointer_cast<op::Sqrt>(n);
 }
 
 template <class T>
@@ -408,6 +410,16 @@ shared_ptr<op::Constant> make_constant_unary(shared_ptr<op::Constant> constant,
     else if (std::dynamic_pointer_cast<op::Relu>(unary))
     {
         runtime::reference::relu<T>(
+            constant->get_vector<T>().data(), out_vec.data(), shape_size(out_shape));
+    }
+    else if (std::dynamic_pointer_cast<op::Sqrt>(unary))
+    {
+        std::vector<T> values{constant->get_vector<T>()};
+        if (std::any_of(values.begin(), values.end(), [](T i) { return i < 0; }))
+        {
+            throw ngraph_error("Square root of negative value");
+        }
+        runtime::reference::sqrt<T>(
             constant->get_vector<T>().data(), out_vec.data(), shape_size(out_shape));
     }
     else

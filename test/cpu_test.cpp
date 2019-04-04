@@ -28,16 +28,20 @@
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/batch_norm.hpp"
+#include "ngraph/op/erf.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
+#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
 #include "util/all_close.hpp"
+#include "util/all_close_f.hpp"
 #include "util/autodiff/backprop_function.hpp"
 #include "util/autodiff/numeric_compare.hpp"
 #include "util/ndarray.hpp"
@@ -149,16 +153,16 @@ TEST(cpu_test, abc_tbb)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b, c});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
+                                  (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector()));
 
     handle->call_with_validate({result}, {b, a, c});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
+                                  (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector()));
 
     handle->call_with_validate({result}, {a, c, b});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
+                                  (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector()));
 
     if (!use_tbb)
     {
@@ -219,7 +223,7 @@ TEST(cpu_test, mkldnn_layouts)
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
 
-    EXPECT_EQ(vector<float>{expected_result}, rv);
+    EXPECT_TRUE(test::all_close_f(vector<float>{expected_result}, rv));
 }
 
 TEST(cpu_test, reshape_layout_optimizations1)
@@ -776,7 +780,7 @@ TEST(cpu_test, memory_reuse_destructive_oi_relu)
     shared_ptr<runtime::Executable> handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b, c});
     ASSERT_NE(handle, nullptr);
-    EXPECT_EQ(read_vector<float>(result), expected);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected));
 }
 
 TEST(cpu_test, memory_reuse_cacheable_no_destructive_oi_relu)
@@ -805,12 +809,12 @@ TEST(cpu_test, memory_reuse_cacheable_no_destructive_oi_relu)
     shared_ptr<runtime::Executable> handle = backend->compile(f);
     ASSERT_NE(handle, nullptr);
     handle->call_with_validate({result}, {a, b, c});
-    EXPECT_EQ(read_vector<float>(result), expected);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected));
 
     a->set_stale(false);
     b->set_stale(false);
     handle->call_with_validate({result}, {a, b, c});
-    EXPECT_EQ(read_vector<float>(result), expected);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected));
 }
 
 TEST(cpu_test, memory_reuse_in_place_concat_after_in_place_slice)
@@ -833,8 +837,9 @@ TEST(cpu_test, memory_reuse_in_place_concat_after_in_place_slice)
     shared_ptr<runtime::Executable> handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
 
-    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 5, 6, 7, 8, 9, 10, 11, 12}),
-              read_vector<float>(result));
+    EXPECT_TRUE(
+        test::all_close_f((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 5, 6, 7, 8, 9, 10, 11, 12}),
+                          read_vector<float>(result)));
 }
 
 TEST(cpu_test, memory_reuse_in_place_slice_after_in_place_concat)
@@ -868,7 +873,31 @@ TEST(cpu_test, memory_reuse_in_place_slice_after_in_place_concat)
     shared_ptr<runtime::Executable> handle = backend->compile(f);
     ASSERT_NE(handle, nullptr);
     handle->call_with_validate({result}, {a, b, c, d});
-    EXPECT_EQ((vector<float>{3, 7}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{3, 7}), read_vector<float>(result)));
+}
+
+TEST(cpu_test, memory_reuse_in_place_slice_after_in_place_reshape_from_constant)
+{
+    Shape shape_a{2, 1, 2, 2};
+    Shape shape_r{2, 1, 2, 2};
+    vector<float> a_data(shape_size(shape_a));
+    iota(a_data.begin(), a_data.end(), 1);
+
+    auto A = op::Constant::create(element::f32, shape_a, a_data);
+    auto reshape = make_shared<op::Reshape>(A, AxisVector{0, 1, 2, 3}, shape_r);
+    Shape shape{1, 1, 2, 2};
+    auto slice = make_shared<op::Slice>(reshape, Coordinate{1, 0, 0, 0}, Coordinate{2, 1, 2, 2});
+    auto neg = make_shared<op::Negative>(slice);
+    auto f = make_shared<Function>(neg, ParameterVector{});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    auto result = backend->create_tensor(element::f32, shape);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {});
+    EXPECT_TRUE(test::all_close_f(
+        vector<float>{-5., -6., -7., -8.}, read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 TEST(cpu_test, convert_inplace)
@@ -918,4 +947,95 @@ TEST(cpu_test, rotated_pooling)
     compare_backends(make_f(false, true), make_f(false, true), "INTERPRETER", "CPU"); // 5D AvgPool
     compare_backends(
         make_f(false, false), make_f(false, false), "INTERPRETER", "CPU"); // 5D MaxPool
+}
+
+TEST(cpu_test, conv_test_winograd)
+{
+    /*  This test checks for the cpu specific graph pass handling for conv_winograd implementation. 
+        On SKX with MKLDNN version >= v0.18.0, mkldnn_verbose should match the following
+
+        mkldnn_verbose,info,Intel(R) MKL-DNN v0.18.0 (Git Hash 863ff6e7042cec7d2e29897fe9f0872e0888b0fc),Intel(R) Advanced Vector Extensions 512 (Intel(R) AVX-512) with AVX512BW, AVX512VL, and AVX512DQ extensions
+        mkldnn_verbose,create,reorder,simple:any,undef,in:f32_nchw out:f32_OIhw16i16o,num:1,64x3x3x3,0.0129395
+        mkldnn_verbose,exec,reorder,simple:any,undef,in:f32_nchw out:f32_OIhw16i16o,num:1,64x3x3x3,0.414062
+        mkldnn_verbose,create,reorder,simple:any,undef,in:f32_nchw out:f32_nChw16c,num:1,64x3x224x224,0.0119629
+        mkldnn_verbose,exec,reorder,simple:any,undef,in:f32_nchw out:f32_nChw16c,num:1,64x3x224x224,19.302
+        mkldnn_verbose,create,convolution,jit_wino_4x3:avx512_core,forward_training,fsrc:nChw16c fwei:OIhw16i16o fbia:undef fdst:nChw16c,alg:convolution_winograd,mb64_ic3oc64_ih224oh224kh3sh1dh0ph1_iw224ow224kw3sw1dw0pw1,1.84106
+        mkldnn_verbose,exec,convolution,jit_wino_4x3:avx512_core,forward_training,fsrc:nChw16c fwei:OIhw16i16o fbia:undef fdst:nChw16c,alg:convolution_winograd,mb64_ic3oc64_ih224oh224kh3sh1dh0ph1_iw224ow224kw3sw1dw0pw1,46.6631
+        mkldnn_verbose,create,reorder,jit:uni,undef,in:f32_nChw16c out:f32_nchw,num:1,64x64x224x224,0.279053
+        mkldnn_verbose,exec,reorder,jit:uni,undef,in:f32_nChw16c out:f32_nchw,num:1,64x64x224x224,100.219
+    */
+    auto make_function = []() -> std::shared_ptr<Function> {
+        auto input = make_shared<op::Parameter>(element::f32, Shape{64, 3, 224, 224});
+        auto filter = make_shared<op::Parameter>(element::f32, Shape{64, 3, 3, 3});
+        auto conv = make_shared<op::Convolution>(input,
+                                                 filter,
+                                                 Strides{1, 1},
+                                                 Strides{1, 1},
+                                                 CoordinateDiff{1, 1},
+                                                 CoordinateDiff{1, 1},
+                                                 Strides{1, 1});
+        return make_shared<Function>(conv, ParameterVector{input, filter});
+
+    };
+    auto backend = runtime::Backend::create("CPU");
+    auto cpu_f = make_function();
+
+    test::Uniform<float> rng(-100.0f, 100.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto cpu_results = execute(cpu_f, args, "CPU");
+}
+
+TEST(cpu_test, conv_negative_padding)
+{
+    auto make_f = [&]() {
+        Shape shape_a{1, 16, 2, 2};
+        auto A = make_shared<op::Parameter>(element::f32, shape_a);
+        Shape shape_b{32, 16, 1, 1};
+        auto B = make_shared<op::Parameter>(element::f32, shape_b);
+        auto conv1 = make_shared<op::Convolution>(A,
+                                                  B,
+                                                  Strides{1, 1},
+                                                  Strides{1, 1},
+                                                  CoordinateDiff{-1, -1},
+                                                  CoordinateDiff{0, 0},
+                                                  Strides{1, 1});
+        return make_shared<Function>(conv1, ParameterVector{A, B});
+
+    };
+    compare_backends(make_f(), make_f(), "CPU", "INTERPRETER");
+}
+
+TEST(cpu_test, guass_error_function_erf)
+{
+    auto make_function = []() -> std::shared_ptr<Function> {
+        auto A = make_shared<op::Parameter>(element::f32, Shape{1, 4, 10, 6, 10});
+        auto erf = make_shared<op::Erf>(A);
+        return make_shared<Function>(erf, ParameterVector{A});
+    };
+
+    auto backend = runtime::Backend::create("CPU");
+    auto cpu_f = make_function();
+    auto int_f = make_function();
+
+    test::Uniform<float> rng(-100.0f, 100.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
+    }
 }
