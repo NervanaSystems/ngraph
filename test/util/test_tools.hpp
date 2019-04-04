@@ -145,7 +145,8 @@ std::vector<std::shared_ptr<ngraph::runtime::Tensor>>
         throw ngraph::ngraph_error("number of parameters and arguments don't match");
     }
 
-    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> arg_tensors(t1args.size() + t2args.size());
+    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> arg_tensors(t1args.size() +
+                                                                      t2args.size());
 
     size_t total_arg_count = 0;
     for (size_t i = 0; i < t1args.size(); i++)
@@ -194,9 +195,9 @@ std::vector<std::shared_ptr<ngraph::runtime::Tensor>>
 
 template <typename TIN1, typename TIN2, typename TOUT>
 std::vector<std::vector<TOUT>> execute(const std::shared_ptr<ngraph::Function>& function,
-                                     std::vector<std::vector<TIN1>> t1args,
-                                     std::vector<std::vector<TIN2>> t2args,
-                                     const std::string& backend_id)
+                                       std::vector<std::vector<TIN1>> t1args,
+                                       std::vector<std::vector<TIN2>> t2args,
+                                       const std::string& backend_id)
 {
     std::vector<std::shared_ptr<ngraph::runtime::Tensor>> result_tensors =
         prepare_and_run(function, t1args, t2args, backend_id);
@@ -211,8 +212,8 @@ std::vector<std::vector<TOUT>> execute(const std::shared_ptr<ngraph::Function>& 
 
 template <typename TIN, typename TOUT = TIN>
 std::vector<std::vector<TOUT>> execute(const std::shared_ptr<ngraph::Function>& function,
-                                     std::vector<std::vector<TIN>> args,
-                                     const std::string& backend_id)
+                                       std::vector<std::vector<TIN>> args,
+                                       const std::string& backend_id)
 {
     std::vector<std::vector<TIN>> emptyargs;
     return execute<TIN, TIN, TOUT>(function, args, emptyargs, backend_id);
