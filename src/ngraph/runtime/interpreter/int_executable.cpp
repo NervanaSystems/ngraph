@@ -48,7 +48,6 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
     {
         m_wrapped_nodes.emplace_back(node);
     }
-    //    set_parameters_and_results(*function);
 }
 
 bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
