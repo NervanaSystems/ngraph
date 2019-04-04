@@ -30,6 +30,7 @@ set(SRC
     algebraic_simplification.cpp
     all_close_f.cpp
     assertion.cpp
+    bfloat16.cpp
     build_graph.cpp
     builder_autobroadcast.cpp
     constant_folding.cpp

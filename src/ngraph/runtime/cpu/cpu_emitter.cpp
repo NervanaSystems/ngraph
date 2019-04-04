@@ -3273,12 +3273,13 @@ namespace ngraph
                         func_block += "d_" + out_denom + " = 1;\n";
                     }
                     break;
-                }
-                if (func_block.empty())
-                {
+                default:
                     throw ngraph_error(
                         "generate_sigmoid_mul_func input function type not supported");
                 }
+
+                NGRAPH_ASSERT(!func_block.empty()) << "'func_block' must not be empty";
+
                 return func_block;
             }
             template <>
