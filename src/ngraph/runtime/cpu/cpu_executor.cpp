@@ -20,6 +20,8 @@
 
 #include "ngraph/except.hpp"
 
+#define MAX_PARALLELISM_THRESHOLD 2
+
 static int GetNumCores()
 {
     const auto omp_num_threads = std::getenv("OMP_NUM_THREADS");
@@ -38,6 +40,17 @@ static int GetNumCores()
     {
         count = std::thread::hardware_concurrency() / 2;
     }
+
+    int max_parallelism_allowed = MAX_PARALLELISM_THRESHOLD * std::thread::hardware_concurrency();
+    if (count > max_parallelism_allowed)
+    {
+        throw ngraph::ngraph_error(
+            "OMP_NUM_THREADS and/or NGRAPH_INTRA_OP_PARALLELISM is too high: "
+            "(" +
+            std::to_string(count) + "). Please specify a value in range [1-" +
+            std::to_string(max_parallelism_allowed) + "]");
+    }
+
     return count < 1 ? 1 : count;
 }
 
@@ -68,13 +81,11 @@ namespace ngraph
                     for (int i = 0; i < num_thread_pools; i++)
                     {
                         int num_threads_per_pool;
-#if defined(EIGEN_OPENMP)
+
                         // Eigen threadpool will still be used for reductions
                         // and other tensor operations that dont use a parallelFor
-                        num_threads_per_pool = 1;
-#else
                         num_threads_per_pool = GetNumCores();
-#endif
+
                         // User override
                         char* eigen_tp_count = std::getenv("NGRAPH_CPU_EIGEN_THREAD_COUNT");
                         if (eigen_tp_count != nullptr)

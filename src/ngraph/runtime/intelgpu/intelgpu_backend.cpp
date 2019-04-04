@@ -75,6 +75,7 @@
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
+#include "ngraph/op/erf.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max.hpp"
@@ -97,8 +98,6 @@ using namespace std;
 using namespace ngraph;
 
 using intelgpu_space = runtime::intelgpu::IntelGPULayout;
-
-#define USE_INTELGPU_CUSTOM_KERNELS 0
 
 // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
 // Abs,
@@ -520,25 +519,27 @@ shared_ptr<runtime::Executable>
         {
             arguments_check(op, 3, 1);
 
-// Leave it here for some time
-#if USE_INTELGPU_CUSTOM_KERNELS
-            do_select_operation(topology,
-                                get_input_name(op, 0),
-                                get_input_shape(op, 0),
-                                get_input_name(op, 1),
-                                get_input_shape(op, 1),
-                                get_input_name(op, 2),
-                                get_input_shape(op, 2),
-                                get_output_name(op),
-                                get_output_shape(op),
-                                get_output_type(op));
-#else
-            const cldnn::select cldnn_select(get_output_name(op),
-                                             get_input_name(op, 1),
-                                             get_input_name(op, 2),
-                                             get_input_name(op));
-            topology.add(cldnn_select);
-#endif
+            if (get_output_type(op) != element::f32)
+            {
+                do_select_operation(topology,
+                                    get_input_name(op, 0),
+                                    get_input_shape(op, 0),
+                                    get_input_name(op, 1),
+                                    get_input_shape(op, 1),
+                                    get_input_name(op, 2),
+                                    get_input_shape(op, 2),
+                                    get_output_name(op),
+                                    get_output_shape(op),
+                                    get_output_type(op));
+            }
+            else
+            {
+                const cldnn::select cldnn_select(get_output_name(op),
+                                                 get_input_name(op, 1),
+                                                 get_input_name(op, 2),
+                                                 get_input_name(op));
+                topology.add(cldnn_select);
+            }
             break;
         }
         case OP_TYPEID::Reverse:
@@ -1615,8 +1616,8 @@ shared_ptr<runtime::Executable>
                 if ((pad_below.at(0) != pad_above.at(0)) || (pad_below.at(1) != pad_above.at(1)))
                 {
                     // Different input padding for operation workarounded by adding aux layer
-                    const cldnn::tensor border_pad_above(0, 0, pad_below.at(1), pad_below.at(0));
-                    const cldnn::tensor border_pad_below(0, 0, pad_above.at(1), pad_above.at(0));
+                    const cldnn::tensor border_pad_above(0, 0, pad_below.at(1), pad_below.at(0), 0);
+                    const cldnn::tensor border_pad_below(0, 0, pad_above.at(1), pad_above.at(0), 0);
                     input_offset_x = 0;
                     input_offset_y = 0;
                     op_input_name = op_input_name + "_" + get_output_name(op) + "_bordered";
@@ -1629,7 +1630,7 @@ shared_ptr<runtime::Executable>
                     topology.add(cldnn_border);
                 }
 
-                const cldnn::tensor input_offset(0, 0, input_offset_x, input_offset_y);
+                const cldnn::tensor input_offset(0, 0, input_offset_x, input_offset_y, 0);
                 const cldnn::tensor strides(1, 1, win_stride.at(1), win_stride.at(0));
                 const cldnn::tensor dilation(1, 1, win_dilation.at(1), win_dilation.at(0));
 
@@ -1715,8 +1716,8 @@ shared_ptr<runtime::Executable>
                 if ((pad_below_x != pad_above_x) && (pad_below_y != pad_above_y))
                 {
                     // Different input padding for operation workarounded by adding aux layer
-                    const cldnn::tensor border_pad_above(0, 0, pad_above_x, pad_above_y);
-                    const cldnn::tensor border_pad_below(0, 0, pad_below_x, pad_below_y);
+                    const cldnn::tensor border_pad_above(0, 0, pad_above_x, pad_above_y, 0);
+                    const cldnn::tensor border_pad_below(0, 0, pad_below_x, pad_below_y, 0);
                     input_offset_x = 0;
                     input_offset_y = 0;
                     op_input_name = op_input_name + "_" + get_output_name(op) + "_bordered";
@@ -1728,7 +1729,7 @@ shared_ptr<runtime::Executable>
                     topology.add(cldnn_border);
                 }
 
-                const cldnn::tensor input_offset(0, 0, input_offset_x, input_offset_y);
+                const cldnn::tensor input_offset(0, 0, input_offset_x, input_offset_y, 0);
                 const cldnn::tensor strides(1, 1, win_dilation.at(1), win_dilation.at(0));
 
                 const cldnn::convolution_grad_weights conv_back_flt(get_output_name(op),
@@ -1796,8 +1797,8 @@ shared_ptr<runtime::Executable>
                 else
                 {
                     // Different input padding for operation workarounded by adding aux layer
-                    const cldnn::tensor crop_pad_below(0, 0, -pad_below.at(1), -pad_below.at(0));
-                    const cldnn::tensor crop_pad_above(0, 0, -pad_above.at(1), -pad_above.at(0));
+                    const cldnn::tensor crop_pad_below(0, 0, -pad_below.at(1), -pad_below.at(0), 0);
+                    const cldnn::tensor crop_pad_above(0, 0, -pad_above.at(1), -pad_above.at(0), 0);
                     op_input_name = op_input_name + "_" + get_output_name(op) + "_cropped";
 
                     const cldnn::crop cldnn_crop(op_input_name,
@@ -1808,7 +1809,7 @@ shared_ptr<runtime::Executable>
                     topology.add(cldnn_crop);
                 }
 
-                const cldnn::tensor input_offset(0, 0, input_offset_xy, input_offset_xy);
+                const cldnn::tensor input_offset(0, 0, input_offset_xy, input_offset_xy, 0);
                 const cldnn::tensor strides(1, 1, win_stride.at(1), win_stride.at(0));
 
                 const cldnn::convolution_grad_input cldnn_conv_back_data(get_output_name(op),
@@ -1994,7 +1995,11 @@ shared_ptr<runtime::Executable>
             break;
         }
         case OP_TYPEID::AllReduce:
+        case OP_TYPEID::BroadcastDistributed:
         case OP_TYPEID::BroadcastLike:
+        case OP_TYPEID::DynReshape:
+        case OP_TYPEID::DynSlice:
+        case OP_TYPEID::Erf:
         case OP_TYPEID::QuantizedAvgPool:
         case OP_TYPEID::QuantizedConvolutionBias:
         case OP_TYPEID::QuantizedConvolutionBiasAdd:
@@ -2014,6 +2019,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::EmbeddingLookup:
         case OP_TYPEID::DynBroadcast:
         case OP_TYPEID::Passthrough:
+        case OP_TYPEID::DynPad:
         {
             throw unsupported_op("Unsupported op '" + op->description() +
                                  "' in IntelGPU back end.");

@@ -34,6 +34,7 @@
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/broadcast_distributed.hpp"
 #include "ngraph/op/ceiling.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
@@ -46,8 +47,12 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/equal.hpp"
+#include "ngraph/op/erf.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/experimental/dyn_broadcast.hpp"
+#include "ngraph/op/experimental/dyn_pad.hpp"
+#include "ngraph/op/experimental/dyn_reshape.hpp"
+#include "ngraph/op/experimental/dyn_slice.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
@@ -585,6 +590,11 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Broadcast>(args[0], shape, axes);
                 break;
             }
+            case OP_TYPEID::BroadcastDistributed:
+            {
+                node = make_shared<op::BroadcastDistributed>(args[0]);
+                break;
+            }
             case OP_TYPEID::BroadcastLike:
             {
                 auto initial_axes = node_js.at("initial_axes").get<set<size_t>>();
@@ -753,6 +763,21 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::DynBroadcast>(args[0], args[1], args[2]);
                 break;
             }
+            case OP_TYPEID::DynPad:
+            {
+                node = make_shared<op::DynPad>(args[0], args[1], args[2], args[3]);
+                break;
+            }
+            case OP_TYPEID::DynReshape:
+            {
+                node = make_shared<op::DynReshape>(args[0], args[1]);
+                break;
+            }
+            case OP_TYPEID::DynSlice:
+            {
+                node = make_shared<op::DynSlice>(args[0], args[1], args[2], args[3]);
+                break;
+            }
             case OP_TYPEID::EmbeddingLookup:
             {
                 node = make_shared<op::EmbeddingLookup>(args[0], args[1]);
@@ -761,6 +786,11 @@ static shared_ptr<ngraph::Function>
             case OP_TYPEID::Equal:
             {
                 node = make_shared<op::Equal>(args[0], args[1]);
+                break;
+            }
+            case OP_TYPEID::Erf:
+            {
+                node = make_shared<op::Erf>(args[0]);
                 break;
             }
             case OP_TYPEID::Exp:
@@ -1424,6 +1454,8 @@ static json write(const Node& n, bool binary_constant_data)
         node["shape"] = tmp->get_broadcast_shape();
         break;
     }
+    case OP_TYPEID::BroadcastDistributed: { break;
+    }
     case OP_TYPEID::BroadcastLike:
     {
         auto tmp = dynamic_cast<const op::BroadcastLike*>(&n);
@@ -1508,9 +1540,17 @@ static json write(const Node& n, bool binary_constant_data)
     }
     case OP_TYPEID::DynBroadcast: { break;
     }
+    case OP_TYPEID::DynPad: { break;
+    }
+    case OP_TYPEID::DynReshape: { break;
+    }
+    case OP_TYPEID::DynSlice: { break;
+    }
     case OP_TYPEID::EmbeddingLookup: { break;
     }
     case OP_TYPEID::Equal: { break;
+    }
+    case OP_TYPEID::Erf: { break;
     }
     case OP_TYPEID::Exp: { break;
     }
