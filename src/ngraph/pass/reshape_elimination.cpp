@@ -199,29 +199,29 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
 
     auto op = make_shared<pattern::op::Label>(element::f32, shape_op);
     auto reshape = make_shared<op::Reshape>(op, AxisVector{0}, shape_r);
-    auto rehape_label =
+    auto reshape_label =
         make_shared<pattern::op::Label>(reshape, get_no_fan_out_function(), NodeVector{reshape});
 
-    auto callback = [op, rehape_label](pattern::RecurrentMatcher& m) {
+    auto callback = [op, reshape_label](pattern::RecurrentMatcher& m) {
         NGRAPH_DEBUG << "In callback for construct_recurrent_reshape against node = "
-                     << rehape_label->get_argument(0)->get_name();
-        auto reshape_node_vector = m.get_bound_nodes_for_pattern(rehape_label);
+                     << reshape_label->get_argument(0)->get_name();
+        auto reshape_node_vector = m.get_bound_nodes_for_pattern(reshape_label);
 
-        // The bounded node vector is in reverse order. It is convinient to have the
-        // bounded node vector in the correct order
+        // The bound node vector is in reverse order. It is convenient to have the
+        // bound node vector in the correct order
         std::reverse(std::begin(reshape_node_vector), std::end(reshape_node_vector));
 
-        auto first_bounded_reshape_op = reshape_node_vector.front();
-        auto driver_op = first_bounded_reshape_op->get_argument(0);
-        auto last_bounded_reshape_op = reshape_node_vector.back();
+        auto first_bound_reshape_op = reshape_node_vector.front();
+        auto driver_op = first_bound_reshape_op->get_argument(0);
+        auto last_bound_reshape_op = reshape_node_vector.back();
 
-        // Need to check if the next to last bounded op is a reshape since the last reshape is allowed
+        // Need to check if the user of the last bound op is a reshape since the last reshape is allowed
         // to have fan-out but the matcher will discard any reshape if it has fan-out
-        auto user_of_last_bounded_reshape_op = last_bounded_reshape_op->get_users(true)[0];
-        if (std::dynamic_pointer_cast<op::Reshape>(user_of_last_bounded_reshape_op))
+        auto user_of_last_bound_reshape_op = last_bound_reshape_op->get_users(true)[0];
+        if (std::dynamic_pointer_cast<op::Reshape>(user_of_last_bound_reshape_op))
         {
-            reshape_node_vector.push_back(user_of_last_bounded_reshape_op);
-            last_bounded_reshape_op = reshape_node_vector.back();
+            reshape_node_vector.push_back(user_of_last_bound_reshape_op);
+            last_bound_reshape_op = reshape_node_vector.back();
         }
 
         // Return if the recurrent matcher matches only one reshape
@@ -230,10 +230,10 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
             return false;
         }
 
-        // The complete reshape node vector may not contain contigous reshapes that can be
+        // The complete reshape node vector may not contain contiguous reshapes that can be
         // fused. Only the subset of reshapes with a reshape(any axis order) followed by reshapes
         // with default axis order can be fused. Creating such subpatterns here:
-        std::vector<NodeVector> sub_patterns{NodeVector{first_bounded_reshape_op}};
+        std::vector<NodeVector> sub_patterns{NodeVector{first_bound_reshape_op}};
         for (auto it = std::next(reshape_node_vector.begin()); it != reshape_node_vector.end();
              it++)
         {
@@ -261,25 +261,17 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
             }
         }
 
-        // Remove the subpatterns with just one reshape in them
-        auto iter = sub_patterns.begin();
-        while (iter != sub_patterns.end())
-        {
-            if (iter->size() == 1)
-            {
-                iter = sub_patterns.erase(iter);
-            }
-            else
-            {
-                iter++;
-            }
-        }
-
         bool modify_graph = false;
 
         // Replace the patterns
         for (auto sub_pattern : sub_patterns)
         {
+            // Do not consider subpatterns with just one reshape in them
+            if (sub_pattern.size() == 1)
+            {
+                continue;
+            }
+
             auto first_reshape = std::dynamic_pointer_cast<op::Reshape>(sub_pattern.front());
             auto input_to_first_reshape = first_reshape->get_argument(0);
             auto last_reshape = std::dynamic_pointer_cast<op::Reshape>(sub_pattern.back());
@@ -298,6 +290,6 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
     };
     std::set<std::shared_ptr<pattern::op::Label>> empty_correlated_matches;
     auto m = std::make_shared<pattern::RecurrentMatcher>(
-        rehape_label, op, empty_correlated_matches, callback);
+        reshape_label, op, empty_correlated_matches, callback);
     this->add_matcher(m);
 }
