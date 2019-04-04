@@ -33,6 +33,11 @@ namespace ngraph
             template <typename T, typename U>
             static bool compare_max(const std::tuple<T, U>& a, const std::tuple<T, U>& b)
             {
+                if (std::get<0>(a) == std::get<0>(b))
+                {
+                    return std::get<1>(a) < std::get<1>(b);
+                }
+
                 return a > b;
             }
             template <typename T, typename U>
