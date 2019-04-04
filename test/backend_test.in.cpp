@@ -7396,3 +7396,9 @@ TEST(${BACKEND_NAME}, batch_dot_forward)
 }
 
 #endif
+
+// clang-format off
+#ifdef BACKEND_TEST_${BACKEND_NAME}
+#undef BACKEND_TEST_${BACKEND_NAME}
+#endif
+// clang-format on
