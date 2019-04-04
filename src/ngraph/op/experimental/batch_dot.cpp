@@ -37,11 +37,7 @@ op::BatchDot::BatchDot(const shared_ptr<Node>& arg0,
 
 shared_ptr<Node> op::BatchDot::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 2)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
-
+    check_new_args_count(this, new_args);
     return make_shared<BatchDot>(
         new_args.at(0), new_args.at(1), m_transpose_arg0, m_transpose_arg1);
 }
@@ -49,8 +45,8 @@ shared_ptr<Node> op::BatchDot::copy_with_new_args(const NodeVector& new_args) co
 void op::BatchDot::validate_and_infer_types()
 {
     // Check input types
-    auto arg0_et = get_input_element_type(0);
-    auto arg1_et = get_input_element_type(1);
+    const auto& arg0_et = get_input_element_type(0);
+    const auto& arg1_et = get_input_element_type(1);
     NODE_VALIDATION_CHECK(this,
                           arg0_et.compatible(arg1_et),
                           "Inputs arg0 and arg1 must have compatible element type.");
@@ -70,22 +66,24 @@ void op::BatchDot::validate_and_infer_types()
 
     size_t dot_dim_arg0 = (m_transpose_arg0) ? 1 : 2;
     size_t dot_dim_arg1 = (m_transpose_arg1) ? 2 : 1;
-
     // We expect output shape always have rank 3
     PartialShape output_shape(PartialShape::dynamic(3));
 
     // Construct output shape with more information if avalible.
-    if (arg0_shape.rank().is_static() && arg1_shape.rank().is_static() &&
-        arg0_shape.rank().compatible(3) && arg1_shape.rank().compatible(3))
+    if (arg0_shape.rank().same_scheme(3) && arg1_shape.rank().same_scheme(3))
     {
+        NODE_VALIDATION_CHECK(this,
+                              arg0_shape[0].compatible(arg1_shape[0]),
+                              "Batch size dimensions are not equal while creating BatchDot.");
         NODE_VALIDATION_CHECK(this,
                               arg0_shape[dot_dim_arg0].compatible(arg1_shape[dot_dim_arg1]),
                               "Product dimensions are not equal while creating BatchDot.");
+        auto batch_size = arg0_shape[0].is_static() ? arg0_shape[0] : arg1_shape[0];
         output_shape =
-            PartialShape{arg0_shape[0], arg0_shape[3 - dot_dim_arg0], arg1_shape[3 - dot_dim_arg1]};
+            PartialShape{batch_size, arg0_shape[3 - dot_dim_arg0], arg1_shape[3 - dot_dim_arg1]};
     }
-
-    set_output_type(0, get_input_element_type(0), output_shape);
+    auto output_et = arg0_et.is_dynamic() ? arg1_et : arg0_et;
+    set_output_type(0, output_et, output_shape);
 }
 
 void op::BatchDot::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)

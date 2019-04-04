@@ -23,6 +23,12 @@ namespace ngraph
     namespace op
     {
         /// \brief Dot product for a batch of Rank 2 tensors.
+        /// The inputs are expected to be Rank 3, where the first dim is the
+        /// batch size and must be the same for both inputs. The last two dims
+        /// are the shape of matrices, i.e. `(batch_size, :, :)`.
+        /// For example, for `a` with shape `(batch_size, n, k)`, and `b` with
+        /// shape `(batch_size, k, m)`, the result of BatchDot will have shape
+        /// `(batch_size, n, m)`, and `BatchDot(a, b)[i] = Dot(a[i], b[i])`.
         class BatchDot : public Op
         {
         public:

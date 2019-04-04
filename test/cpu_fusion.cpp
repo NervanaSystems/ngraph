@@ -3069,7 +3069,6 @@ TEST(cpu_fusion, fuse_batch_dot_forward)
     auto cpu_f = make_function_from_file(file_name);
     auto int_f = make_function_from_file(file_name);
     pass_manager.run_passes(cpu_f);
-    pass_manager.run_passes(int_f);
     test::Uniform<float> rng(0.0f, 1.0f);
     vector<vector<float>> args;
 
@@ -3096,7 +3095,6 @@ TEST(cpu_fusion, fuse_batch_dot_backward)
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
     pass_manager.run_passes(cpu_f);
-    pass_manager.run_passes(int_f);
 
     auto int_df = autodiff::backprop_function(int_f);
     auto cpu_df = autodiff::backprop_function(cpu_f);

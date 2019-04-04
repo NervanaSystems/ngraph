@@ -387,8 +387,6 @@ namespace ngraph
             {
                 writer.block_begin();
 
-                const T* batch_dot = static_cast<const T*>(node);
-
                 auto mat_a = args[0];
                 auto mat_b = args[1];
                 auto mat_c = out[0];
