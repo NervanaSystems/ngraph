@@ -94,6 +94,26 @@ namespace ngraph
                                                                  requantization_scale,
                                                                  false);
             }
+
+            shared_ptr<Node> QuantizedConvInteger(shared_ptr<Node> input,
+                                                  shared_ptr<Node> filter,
+                                                  const Strides& window_movement_strides,
+                                                  const Strides& window_dilation_strides,
+                                                  const CoordinateDiff& padding_below,
+                                                  const CoordinateDiff& padding_above,
+                                                  const Strides& data_dilation_strides)
+            {
+                auto output_scale = make_constant(element::f32, Shape{}, 1);
+                return make_shared<op::QuantizedConvolution>(input,
+                                                             filter,
+                                                             window_movement_strides,
+                                                             window_dilation_strides,
+                                                             padding_below,
+                                                             padding_above,
+                                                             data_dilation_strides,
+                                                             output_scale,
+                                                             false);
+            }
         }
     }
 }
