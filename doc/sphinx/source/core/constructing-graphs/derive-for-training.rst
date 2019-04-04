@@ -27,7 +27,7 @@ Automating graph construction
 ==============================
 
 In a :abbr:`Machine Learning (ML)` ecosystem, it makes sense to use automation 
-and abstraction whereever possible. nGraph was designed to automatically use 
+and abstraction where possible. nGraph was designed to automatically use 
 the "ops" of tensors provided by a framework when constructing graphs. However, 
 nGraph's graph-construction API operates at a fundamentally lower level than a 
 typical framework's API, and writing a model directly in nGraph would be somewhat 
