@@ -766,11 +766,10 @@ namespace ngraph
                                            size_t add_index);
                 template <typename OpTy>
                 void build_batch_norm_primitive(const Node* node,
-                                                std::vector<TensorViewWrapper>& args,
-                                                std::vector<TensorViewWrapper>& out,
                                                 const bool append_relu,
                                                 const bool training)
                 {
+                    const auto& args = node->get_inputs();
                     mkldnn::post_ops ops;
                     if (append_relu)
                     {
@@ -782,7 +781,8 @@ namespace ngraph
                             ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, ops_beta);
                     }
 
-                    auto weights_shape = Shape{2, args[0].get_size()};
+                    auto weights_shape =
+                        Shape{2, args[0].get_tensor().get_tensor_layout()->get_size()};
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
                     auto weights_desc = build_memory_descriptor(
                         weights_shape, args[0].get_element_type(), mkldnn::memory::format::nc);
@@ -882,10 +882,10 @@ namespace ngraph
                     size_t batchnorm_index);
 
                 template <typename OP>
-                void build_rnn(const ngraph::Node* node,
-                               const std::vector<TensorViewWrapper>& args,
-                               const std::vector<TensorViewWrapper>& out)
+                void build_rnn(const ngraph::Node* node)
                 {
+                    const auto& out = node->get_outputs();
+                    const auto& args = node->get_inputs();
                     auto rnn_node = static_cast<const OP*>(node);
                     auto src_sequence_length_max =
                         static_cast<unsigned long>(rnn_node->get_src_sequence_length());

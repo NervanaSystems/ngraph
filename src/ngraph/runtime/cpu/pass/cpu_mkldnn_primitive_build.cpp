@@ -57,46 +57,6 @@ using namespace ngraph;
 using namespace ngraph::op;
 using namespace ngraph::runtime::cpu;
 
-// Translate inputs of \p node to TensorViewWrappers.
-static void translate_node_inputs(const Node* node, std::vector<TensorViewWrapper>& args)
-{
-    NGRAPH_ASSERT(args.empty()) << "Expected output vector";
-
-    for (const descriptor::Input& input : node->get_inputs())
-    {
-        const descriptor::Output& output = input.get_output();
-        std::shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-        // TODO: We should use m_variable_name_map[tv->get_name()] but this map hasn't been
-        // populated when MKLDNN primitives are built. Neither it was when intrinsics where built
-        // for CommonFunctionCollection.
-        args.emplace_back(TensorViewWrapper(tv, /*m_variable_name_map[*/ tv->get_name() /*]*/));
-    }
-}
-
-// Translate outputs of \p node to TensorViewWrappers.
-static void translate_node_outputs(const Node* node, std::vector<TensorViewWrapper>& out)
-{
-    NGRAPH_ASSERT(out.empty()) << "Expected output vector";
-
-    for (const descriptor::Output& output : node->get_outputs())
-    {
-        std::shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-        // TODO: We should use m_variable_name_map[tv->get_name()] but this map hasn't been
-        // populated when MKLDNN primitives are built. Neither it was when intrinsics where built
-        // for CommonFunctionCollection.
-        out.push_back(TensorViewWrapper(tv, /*m_variable_name_map[*/ tv->get_name() /*]*/));
-    }
-}
-
-// Translate inputs and outputs of \p node to TensorViewWrappers.
-static void translate_node_inputs_outputs(const Node* node,
-                                          std::vector<TensorViewWrapper>& args,
-                                          std::vector<TensorViewWrapper>& out)
-{
-    translate_node_inputs(node, args);
-    translate_node_outputs(node, out);
-}
-
 namespace ngraph
 {
     namespace runtime
@@ -132,75 +92,49 @@ namespace ngraph
                 template <>
                 void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Lstm)
                 {
-                    std::vector<TensorViewWrapper> args;
-                    std::vector<TensorViewWrapper> out;
-                    translate_node_inputs_outputs(node, args, out);
-
-                    mkldnn_emitter.build_rnn<Lstm>(node, args, out);
+                    mkldnn_emitter.build_rnn<Lstm>(node);
                 }
 
                 template <>
                 void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Rnn)
                 {
-                    std::vector<TensorViewWrapper> args;
-                    std::vector<TensorViewWrapper> out;
-                    translate_node_inputs_outputs(node, args, out);
-
-                    mkldnn_emitter.build_rnn<Rnn>(node, args, out);
+                    mkldnn_emitter.build_rnn<Rnn>(node);
                 }
 
                 template <>
                 void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(BatchNormTraining)
                 {
-                    std::vector<TensorViewWrapper> args;
-                    std::vector<TensorViewWrapper> out;
-                    translate_node_inputs_outputs(node, args, out);
-
                     mkldnn_emitter.build_batch_norm_primitive<BatchNormInference>(
-                        node, args, out, false /*Append relu*/, true /*Training*/);
+                        node, false /*Append relu*/, true /*Training*/);
                 }
 
                 template <>
                 void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(BatchNormInference)
                 {
-                    std::vector<TensorViewWrapper> args;
-                    std::vector<TensorViewWrapper> out;
-                    translate_node_inputs_outputs(node, args, out);
-
                     mkldnn_emitter.build_batch_norm_primitive<BatchNormInference>(
-                        node, args, out, false /*Append relu*/, false /*Training*/);
+                        node, false /*Append relu*/, false /*Training*/);
                 }
 
                 template <>
                 void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(BatchNormTrainingRelu)
                 {
-                    std::vector<TensorViewWrapper> args;
-                    std::vector<TensorViewWrapper> out;
-                    translate_node_inputs_outputs(node, args, out);
-
                     mkldnn_emitter.build_batch_norm_primitive<BatchNormTrainingRelu>(
-                        node, args, out, true /*Append relu*/, true /*Training*/);
+                        node, true /*Append relu*/, true /*Training*/);
                 }
 
                 template <>
                 void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(BatchNormInferenceRelu)
                 {
-                    std::vector<TensorViewWrapper> args;
-                    std::vector<TensorViewWrapper> out;
-                    translate_node_inputs_outputs(node, args, out);
-
                     mkldnn_emitter.build_batch_norm_primitive<BatchNormInferenceRelu>(
-                        node, args, out, true /*Append relu*/, false /*Training*/);
+                        node, true /*Append relu*/, false /*Training*/);
                 }
 
                 template <>
                 void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(BatchNormTrainingBackprop)
                 {
-                    std::vector<TensorViewWrapper> args;
-                    std::vector<TensorViewWrapper> out;
-                    translate_node_inputs_outputs(node, args, out);
-
-                    auto weights_shape = Shape{2, args[0].get_size()};
+                    const auto& args = node->get_inputs();
+                    auto weights_shape =
+                        Shape{2, args[0].get_tensor().get_tensor_layout()->get_size()};
                     auto weights_desc = mkldnn_emitter.build_memory_descriptor(
                         weights_shape, args[0].get_element_type(), mkldnn::memory::format::nc);
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
@@ -259,10 +193,7 @@ namespace ngraph
                 template <>
                 void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Slice)
                 {
-                    std::vector<TensorViewWrapper> args;
-                    std::vector<TensorViewWrapper> out;
-                    translate_node_inputs_outputs(node, args, out);
-
+                    const auto& out = node->get_outputs();
                     const Slice* slice = static_cast<const Slice*>(node);
                     auto out_shape = out[0].get_shape();
                     auto lower_bounds = slice->get_lower_bounds();
@@ -622,9 +553,7 @@ namespace ngraph
                 void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(
                     ngraph::runtime::cpu::op::ConvertLayout)
                 {
-                    std::vector<TensorViewWrapper> args;
-                    translate_node_inputs(node, args);
-
+                    const auto& args = node->get_inputs();
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
