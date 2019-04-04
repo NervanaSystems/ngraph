@@ -14,10 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-// For direct execution, we reserve space for primitives then create those primitives the first
-// time functor is called. This could be extended to create primitives when shapes are changed.
-// Different ops need different numbers of primitives.
-
 #pragma once
 
 #include "ngraph/pass/pass.hpp"
