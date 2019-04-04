@@ -38,7 +38,7 @@ class ngraph::runtime::hybrid::HybridExecutable : public runtime::Executable
 {
 public:
     HybridExecutable(const std::vector<std::shared_ptr<runtime::Backend>>& backend_list,
-                     const std::shared_ptr<Function>& func,
+                     const std::shared_ptr<Function> func,
                      bool enable_performance_collection = false,
                      bool debug_enabled = false);
 
