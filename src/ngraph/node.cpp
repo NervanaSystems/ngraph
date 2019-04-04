@@ -100,12 +100,12 @@ void Node::set_output_type(size_t i, const element::Type& element_type, const Pa
     m_outputs.at(i).get_tensor_ptr()->set_tensor_type(element_type, pshape);
 }
 
-std::deque<descriptor::Output>& Node::get_output_descriptors()
+std::deque<descriptor::Output>& Node::get_outputs()
 {
     return m_outputs;
 }
 
-const std::deque<descriptor::Output>& Node::get_output_descriptors() const
+const std::deque<descriptor::Output>& Node::get_outputs() const
 {
     return m_outputs;
 }
