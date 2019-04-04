@@ -40,12 +40,15 @@ using namespace std;
 
 bool static is_codegen_mode()
 {
-    if (std::getenv("NGRAPH_CODEGEN") != nullptr &&
-        std::string(std::getenv("NGRAPH_CODEGEN")) != "0")
+    static bool codegen_set = false;
+    static bool codegen_mode = false;
+    if (!codegen_set)
     {
-        return true;
+        const char* ngraph_codegen = std::getenv("NGRAPH_CODEGEN");
+        codegen_mode = (ngraph_codegen != nullptr) && std::string(ngraph_codegen) != "0";
+        codegen_set = true;
     }
-    return false;
+    return codegen_mode;
 }
 
 // These tests are for DEX mode only.
