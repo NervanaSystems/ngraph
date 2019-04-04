@@ -132,7 +132,7 @@ and nGraph bridges are provided below:
    operator transformation. The relevant interfaces are:
 
    - GetInputNode: obtains input node for the conversion operator. The nodes
-     are manged through a map.
+     are managed through a map.
    - SetOutputNode: sets the constructed node to the map.
    - Related code :
      + ``Paddle/fluid/operators/ngraph/ngraph_bridge.h`` `link to ngraph_bridge header code`_
