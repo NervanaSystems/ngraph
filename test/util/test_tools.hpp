@@ -163,6 +163,60 @@ std::vector<std::shared_ptr<ngraph::runtime::Tensor>>
 
     auto handle = backend->compile(function);
     handle->call_with_validate(result_tensors, arg_tensors);
+
+    return result_tensors;
+}
+
+template <typename T, typename TT>
+std::vector<std::shared_ptr<ngraph::runtime::Tensor>>
+    prepare_and_run(const std::shared_ptr<ngraph::Function>& function,
+                    std::vector<std::vector<T>> args,
+                    std::vector<std::vector<TT>> intargs,
+                    const std::string& backend_id)
+{
+    auto backend = ngraph::runtime::Backend::create(backend_id);
+
+    auto parms = function->get_parameters();
+
+    if (parms.size() != args.size() + intargs.size())
+    {
+        throw ngraph::ngraph_error("number of parameters and arguments don't match");
+    }
+
+    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> arg_tensors(args.size() + intargs.size());
+
+    size_t total_arg_count = 0;
+    for (size_t i = 0; i < args.size(); i++)
+    {
+        auto t = backend->create_tensor(parms.at(total_arg_count)->get_element_type(),
+                                        parms.at(total_arg_count)->get_shape());
+        auto x = args.at(i);
+        copy_data(t, x);
+        arg_tensors.at(total_arg_count) = t;
+        total_arg_count++;
+    }
+
+    for (size_t i = 0; i < intargs.size(); i++)
+    {
+        auto t = backend->create_tensor(parms.at(total_arg_count)->get_element_type(),
+                                        parms.at(total_arg_count)->get_shape());
+        copy_data(t, intargs.at(i));
+        arg_tensors.at(total_arg_count) = t;
+        total_arg_count++;
+    }
+
+    auto results = function->get_results();
+    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> result_tensors(results.size());
+
+    for (size_t i = 0; i < results.size(); i++)
+    {
+        result_tensors.at(i) =
+            backend->create_tensor(results.at(i)->get_element_type(), results.at(i)->get_shape());
+    }
+
+    auto handle = backend->compile(function);
+    handle->call_with_validate(result_tensors, arg_tensors);
+
     return result_tensors;
 }
 
@@ -173,6 +227,23 @@ std::vector<std::vector<T1>> execute(const std::shared_ptr<ngraph::Function>& fu
 {
     std::vector<std::shared_ptr<ngraph::runtime::Tensor>> result_tensors =
         prepare_and_run(function, args, backend_id);
+
+    std::vector<std::vector<T1>> result_vectors;
+    for (auto rt : result_tensors)
+    {
+        result_vectors.push_back(read_vector<T1>(rt));
+    }
+    return result_vectors;
+}
+
+template <typename T, typename TT, typename T1 = T>
+std::vector<std::vector<T1>> execute(const std::shared_ptr<ngraph::Function>& function,
+                                     std::vector<std::vector<T>> args,
+                                     std::vector<std::vector<TT>> intargs,
+                                     const std::string& backend_id)
+{
+    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> result_tensors =
+        prepare_and_run(function, args, intargs, backend_id);
 
     std::vector<std::vector<T1>> result_vectors;
     for (auto rt : result_tensors)
