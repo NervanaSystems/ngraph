@@ -409,12 +409,12 @@ TEST(cpu_fusion, zero_padded_reshaped_conv)
 
     auto func = make_shared<Function>(conv, ParameterVector{X, F});
 
-    ASSERT_EQ(count_ops_of_type<op::Pad>(func), 1);
+    ASSERT_EQ(count_ops_of_type<op::Pad>(func->get_compiled_function()), 1);
 
     auto backend = runtime::Backend::create("CPU");
     backend->compile(func);
 
-    ASSERT_EQ(count_ops_of_type<op::Pad>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Pad>(func->get_compiled_function()), 0);
 }
 
 TEST(cpu_fusion, zero_padded_conv)
@@ -437,12 +437,12 @@ TEST(cpu_fusion, zero_padded_conv)
 
     auto func = make_shared<Function>(conv, ParameterVector{X, F});
 
-    ASSERT_EQ(count_ops_of_type<op::Pad>(func), 1);
+    ASSERT_EQ(count_ops_of_type<op::Pad>(func->get_compiled_function()), 1);
 
     auto backend = runtime::Backend::create("CPU");
     backend->compile(func);
 
-    ASSERT_EQ(count_ops_of_type<op::Pad>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Pad>(func->get_compiled_function()), 0);
 }
 
 TEST(cpu_fusion, non_zero_padded_conv)
@@ -465,12 +465,12 @@ TEST(cpu_fusion, non_zero_padded_conv)
 
     auto func = make_shared<Function>(conv, ParameterVector{X, F});
 
-    ASSERT_EQ(count_ops_of_type<op::Pad>(func), 1);
+    ASSERT_EQ(count_ops_of_type<op::Pad>(func->get_compiled_function()), 1);
 
     auto backend = runtime::Backend::create("CPU");
     backend->compile(func);
 
-    ASSERT_EQ(count_ops_of_type<op::Pad>(func), 1);
+    ASSERT_EQ(count_ops_of_type<op::Pad>(func->get_compiled_function()), 1);
 }
 
 TEST(cpu_fusion, zero_padded_conv_backprop_filters)
@@ -494,12 +494,12 @@ TEST(cpu_fusion, zero_padded_conv_backprop_filters)
 
     auto func = make_shared<Function>(conv, ParameterVector{X, F});
 
-    ASSERT_EQ(count_ops_of_type<op::Pad>(func), 1);
+    ASSERT_EQ(count_ops_of_type<op::Pad>(func->get_compiled_function()), 1);
 
     auto backend = runtime::Backend::create("CPU");
     backend->compile(func);
 
-    ASSERT_EQ(count_ops_of_type<op::Pad>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Pad>(func->get_compiled_function()), 0);
 }
 
 TEST(cpu_fusion, fuse_conv_bias)
@@ -996,7 +996,7 @@ TEST(cpu_fusion, conv_horizontal_fusion)
     auto cpu_results = execute(cpu_f, args, "CPU");
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
 
-    size_t cpu_cb = count_ops_of_type<op::ConvolutionBias>(cpu_f);
+    size_t cpu_cb = count_ops_of_type<op::ConvolutionBias>(cpu_f->get_compiled_function());
     ASSERT_EQ(cpu_cb, 1);
 }
 
@@ -3134,7 +3134,7 @@ TEST(cpu_fusion, fuse_rnn_across_layer_2layer_3timestep)
     auto int_results = execute(int_f, args, "INTERPRETER");
     auto cpu_results = execute(cpu_f, args, "CPU");
 
-    EXPECT_EQ(1, count_ops_of_type<op::Rnn>(cpu_f));
+    EXPECT_EQ(1, count_ops_of_type<op::Rnn>(cpu_f->get_compiled_function()));
     for (size_t i = 0; i < cpu_results.size(); i++)
     {
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
@@ -3167,7 +3167,7 @@ static void check_bounded_relu(Shape param_shape, float constant_val)
     auto int_results = execute(int_f, args, "INTERPRETER");
     auto cpu_results = execute(cpu_f, args, "CPU");
 
-    EXPECT_EQ(1, count_ops_of_type<op::BoundedRelu>(cpu_f));
+    EXPECT_EQ(1, count_ops_of_type<op::BoundedRelu>(cpu_f->get_compiled_function()));
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0), 1.0e-4f, 1.0e-4f));
 }
 
@@ -3784,7 +3784,7 @@ TEST(cpu_quant_fusion, qconcat)
     set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:1", 1);
     auto cpu2_results = execute(cpu_f2, args, "CPU");
     // Expect Concat2 -- Concat6 to be fused and not Concat7
-    ASSERT_EQ(count_ops_of_type<op::QuantizedConcat>(cpu_f2), 5);
+    ASSERT_EQ(count_ops_of_type<op::QuantizedConcat>(cpu_f2->get_compiled_function()), 5);
     EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
 }
 

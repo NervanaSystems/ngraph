@@ -116,7 +116,7 @@ TEST(cpu_test, trivial_in_place_relu_fail)
     auto add2 = relu + add;
     auto f = make_shared<Function>(add2, ParameterVector{A, B});
     auto backend = runtime::Backend::create("CPU");
-    (backend->compile(f));
+    func = backend->compile(f);
     ASSERT_NE(relu->get_outputs().at(0).get_tensor().get_pool_offset(),
               add->get_outputs().at(0).get_tensor().get_pool_offset());
 }
