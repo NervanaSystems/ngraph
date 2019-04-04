@@ -87,10 +87,11 @@ namespace ngraph
                 }
                 else
                 {
+                    // Needs generalizing
                     std::function<decltype(
-                        runtime::cpu::kernel::quant_convolution<uint8_t, uint8_t, int8_t>)>
+                        runtime::cpu::kernel::quant_convolution<uint8_t, uint8_t, uint8_t>)>
                         kernel;
-                    kernel = runtime::cpu::kernel::quant_convolution<uint8_t, uint8_t, int8_t>;
+                    kernel = runtime::cpu::kernel::quant_convolution<uint8_t, uint8_t, uint8_t>;
 
                     auto scale_const_op =
                         std::dynamic_pointer_cast<ngraph::op::Constant>(node->get_arguments()[2]);
