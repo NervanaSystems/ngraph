@@ -121,7 +121,6 @@ static shared_ptr<Node>
 
         if (!mkldnn_utils::compare_mkldnn_mds(tvl->get_mkldnn_md(), required_mds[index]))
         {
-            //std::cout << "\nindex = " << (int)index << ", required_mds[index] data format = " << required_mds[index].data.format << "\n";
             auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
             layout->set_mkldnn_md(required_mds[index]);
             auto new_node = std::shared_ptr<Node>(
@@ -133,11 +132,6 @@ static shared_ptr<Node>
                          << "(layout: " << tvl->get_mkldnn_md().data.format << ") and "
                          << node->get_name() << "(layout: " << required_mds[index].data.format
                          << ")";
-            /*std::cout << "Inserted conversion node " << new_node->get_name() << " between "
-                         << output.get_node()->get_name()
-                         << "(layout: " << tvl->get_mkldnn_md().data.format << ") and "
-                         << node->get_name() << "(layout: " << required_mds[index].data.format
-                         << ")\n";*/
         }
         else
         {
@@ -885,19 +879,33 @@ namespace ngraph
                          const memory::desc bias_desc(mkldnn_arg2_shape, et, memory::format::any);
                          const memory::desc result_desc(mkldnn_result_shape, et, memory::format::any);
 
-                        deconvolution_forward::desc deconv_desc(prop_kind::forward,
+                        std::cout << " et = " << et << "\n";
+                        deconvolution_forward::desc deconv_desc(prop_kind::forward_inference,
                                                                 algorithm::deconvolution_direct,
                                                                 delta_desc,   //src_desc
                                                                 weights_desc, //weights_desc
                                                                 bias_desc,    //bias_desc
                                                                 result_desc,  // dst_desc
                                                                 mkldnn_filter_strides,
+                                                                mkldnn_dilated_strides,
                                                                 mkldnn_padding_below,
                                                                 mkldnn_padding_above,
                                                                 padding_kind::zero);
 
                         deconvolution_forward::primitive_desc deconv_prim_desc(deconv_desc,
                                                                                cpu_engine);
+                        std::cout << "Implementation name: " << deconv_prim_desc.impl_info_str() << std::endl;
+                        std::cout << "cpu_layout for deconv:\n\t format for weights = " <<
+                                weights_shape <<
+                                "\n\t format for input = " << delta_shape <<
+                                "\n\t format for bias  = " << bias_shape <<
+                                "\n\t format for result  = " << result_shape << "\n";
+
+                        std::cout << "Formats for deconv:\n\t  weights = " <<
+                                deconv_prim_desc.weights_primitive_desc().desc().data.format <<
+                                "\n\t  input = " << deconv_prim_desc.src_primitive_desc().desc().data.format <<
+                                "\n\t  bias  = " << deconv_prim_desc.bias_primitive_desc().desc().data.format <<
+                                "\n\t  result  = " << deconv_prim_desc.dst_primitive_desc().desc().data.format << "\n";
 
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
@@ -920,6 +928,7 @@ namespace ngraph
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
+                        std::cout << "-- cpu_layout : ConvolutionBackpropData begin\n";
                         auto convolution =
                             static_cast<const ngraph::op::ConvolutionBackpropData*>(node.get());
 
@@ -983,6 +992,7 @@ namespace ngraph
 
                         convolution_backward_data::primitive_desc prim_desc(
                             bwd_desc, cpu_engine, fwd_prim_desc);
+                        std::cout <<" \tcreated desc and prim_desc in cpu_layout for convbpdata\n";
 
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
@@ -992,6 +1002,7 @@ namespace ngraph
 
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
+                        std::cout << "-- cpu_layout : ConvolutionBackpropData end\n";
                     }
                     else
                     {

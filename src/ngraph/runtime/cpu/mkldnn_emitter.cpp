@@ -265,16 +265,22 @@ mkldnn::memory::format MKLDNNEmitter::query_convolution_forward_weight_format(
 
 void MKLDNNEmitter::build_deconvolutionbias_forward(
     const mkldnn::deconvolution_forward::desc& deconv_desc,
-    size_t deconv_index)
+    size_t deconv_index,
+    const mkldnn::memory::desc& weights_desc)
 {
+    std::cout << "mkldnn_emitter.cpp : build_deconvolutionbias_forward -- begin \n";
     size_t weights_index = m_primitive_deps[deconv_index][0];
-    build_memory_primitive(deconv_desc.data.weights_desc, weights_index);
+    build_memory_primitive(weights_desc, weights_index);
     size_t delta_index = m_primitive_deps[deconv_index][1];
-    build_memory_primitive(deconv_desc.data.diff_dst_desc, delta_index);
+    build_memory_primitive(deconv_desc.data.src_desc, delta_index);
     size_t bias_index = m_primitive_deps[deconv_index][2];
-    build_memory_primitive(deconv_desc.data.diff_src_desc, bias_index);
+    build_memory_primitive(deconv_desc.data.bias_desc, bias_index);
     size_t result_index = m_primitive_deps[deconv_index][3];
-    build_memory_primitive(deconv_desc.data.diff_src_desc, result_index);
+    build_memory_primitive(deconv_desc.data.dst_desc, result_index);
+    std::cout << "mkldnn_emitter.cpp : \n\tweights format = " << deconv_desc.data.weights_desc.format <<
+                "\n\tdelta format = " << deconv_desc.data.src_desc.format <<
+                "\n\tdelta format = " << deconv_desc.data.bias_desc.format <<
+                "\n\tdelta format = " << deconv_desc.data.dst_desc.format << "\n";
 
     m_mkldnn_primitives[deconv_index] = new mkldnn::deconvolution_forward(
         {deconv_desc,
@@ -283,6 +289,7 @@ void MKLDNNEmitter::build_deconvolutionbias_forward(
         *m_mkldnn_primitives[weights_index],
         *m_mkldnn_primitives[bias_index],
         *m_mkldnn_primitives[result_index]);
+    std::cout << " build_deconvolutionbias_forward -- ends \n";
 }
 
 size_t MKLDNNEmitter::build_deconvolutionbias_forward(const mkldnn::memory::desc& input_data_desc,
@@ -686,6 +693,7 @@ size_t MKLDNNEmitter::build_convolution_backward_data(const mkldnn::memory::desc
                                                       const ngraph::CoordinateDiff& padding_below,
                                                       const ngraph::CoordinateDiff& padding_above)
 {
+    std::cout << " mkldnn_emitter.cpp : build_convolution_backward_data: build (old style) prim_desc\n";
     size_t weights_index = build_memory_primitive(weights_desc);
     size_t delta_index = build_memory_primitive(delta_desc);
     size_t result_index = build_memory_primitive(result_desc);
@@ -727,6 +735,7 @@ void MKLDNNEmitter::build_convolution_backward_data(
     const mkldnn::convolution_forward::desc& fwd_desc,
     size_t conv_index)
 {
+    std::cout << " mkldnn_emitter.cpp : build_convolution_backward_data: build (new style) prim_desc\n";
     size_t weights_index = m_primitive_deps[conv_index][0];
     build_memory_primitive(bwd_desc.data.weights_desc, weights_index);
     size_t delta_index = m_primitive_deps[conv_index][1];

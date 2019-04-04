@@ -622,24 +622,28 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto deconvbias_desc = mkldnn_emitter->get_deconvolutionbias_forward_data<
                         ngraph::op::DeconvolutionBias>(node);
+                    auto weights_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
 
                     // DeconvolutionBias needs 5 primitives: weights, delta, bias, result,
                     // and deconvolutionbias.
                     auto conv_index = mkldnn_emitter->reserve_primitive_space(5);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                    auto functor = [&, deconvbias_desc, conv_index](CPURuntimeContext* ctx,
+                    auto functor = [&, deconvbias_desc, conv_index, weights_desc](CPURuntimeContext* ctx,
                                                    CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_deconvolutionbias_forward
-                                (deconvbias_desc, conv_index);
+                                (deconvbias_desc, conv_index, weights_desc);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], arg2_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], out_tensor);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+                        //std::cout << "------ Running deconv 2nd time: begin ----------- \n";
+                        //cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+                        //std::cout << "------ Running deconv 2nd time: done ----------- \n";
                     };
                     functors.emplace_back(functor);
                 }

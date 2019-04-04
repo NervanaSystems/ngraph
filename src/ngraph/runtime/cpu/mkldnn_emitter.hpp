@@ -190,7 +190,8 @@ namespace ngraph
 
                 void build_deconvolutionbias_forward(
                     const mkldnn::deconvolution_forward::desc& fwd_desc,
-                    size_t conv_index);
+                    size_t conv_index,
+                    const mkldnn::memory::desc& weights_desc);
 
                 size_t
                     build_deconvolutionbias_forward(const mkldnn::memory::desc& input_data_desc,
@@ -208,6 +209,7 @@ namespace ngraph
                                            const std::vector<TensorViewWrapper>& args,
                                            const std::vector<TensorViewWrapper>& out)
                 {
+                    std::cout << " build_deconvolution() begin \n";
                     auto convolution = static_cast<const OP*>(node);
 
                     // For dilation, MKLDNN wants to know how many elements to insert between, not how far
@@ -227,7 +229,8 @@ namespace ngraph
                         weights_desc.data.format = mkldnn_oihw;
                     if (weights_desc.data.format == mkldnn_ncdhw)
                         weights_desc.data.format = mkldnn_oidhw;
-
+                    std::cout << " \t weights format = " << weights_desc.data.format << " \n";
+                    
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
                     mkldnn::post_ops ops;
@@ -1572,6 +1575,7 @@ namespace ngraph
                 mkldnn::deconvolution_forward::desc
                     get_deconvolutionbias_forward_data(const ngraph::Node* node)
                 {
+                    std::cout << " get_deconvolutionbias_forward_data() -- begin \n";
                     auto convolution = static_cast<const OP*>(node);
                     // For dilation, MKLDNN wants to know how many elements to insert between, not how far
                     // apart to space the elements like nGraph. So we have to subtract 1 from each pos.
@@ -1592,11 +1596,15 @@ namespace ngraph
                     {
                         weights_desc.data.format = mkldnn_oidhw;
                     }
+                    weights_desc.data.format = mkldnn_any;
+
+                    std::cout << "weights_desc format = " << weights_desc.data.format << " \n";
                     auto delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
                     auto bias_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
                     mkldnn::algorithm deconvolution_algo = mkldnn_utils::get_deconv_algo();
 
+                    std::cout << "creating desc and then returning \n";
                     mkldnn::post_ops ops;
                     return mkldnn::deconvolution_forward::desc(
                         mkldnn::prop_kind::forward,
@@ -1641,6 +1649,7 @@ namespace ngraph
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
                     mkldnn::algorithm convolution_algo = mkldnn_utils::get_conv_algo();
 
+                    std::cout << " mkldnn_emitter.hpp: creating desc for conv backward data\n";
                     return mkldnn::convolution_backward_data::desc(
                         convolution_algo,
                         result_desc,
