@@ -3,8 +3,8 @@
 [nGraph][ngraph_github] is an open-source graph compiler for Artificial 
 Neural Networks (ANNs). The nGraph Compiler stack provides an inherently 
 efficient graph-based compilation infrastructure designed to be compatible 
-with the many upcoming processors, like the Intel(R) Nervana(TM) Neural Network 
-Processor (Intel(R) Nervana(TM) NNP), while also unlocking a massive performance 
+with the many upcoming processors, like the Intel Nervana&trade; Neural Network 
+Processor (Intel&reg; Nervana&trade; NNP), while also unlocking a massive performance 
 boost on any existing hardware targets in your neural network: both GPUs 
 and CPUs. Using its flexible infrastructure, you will find it becomes 
 much easier to create Deep Learning (DL) models that can adhere to the 
@@ -39,6 +39,7 @@ Using nGraph's Python API to construct a computation graph and execute a
 computation is simple. The following example shows how to create a minimal 
 `(A + B) * C` computation graph and calculate a result using 3 numpy arrays 
 as input.
+
 
 ```python
 import numpy as np
@@ -84,3 +85,5 @@ print('Result = ', result)
 [api_cpp]: https://ngraph.nervanasys.com/docs/latest/backend-support/cpp-api.html
 [core documentation]: https://ngraph.nervanasys.com/docs/latest/core/overview.html
 [nGraph Ops]: http://ngraph.nervanasys.com/docs/latest/ops/index.html
+
+
