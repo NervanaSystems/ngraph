@@ -50,18 +50,10 @@ namespace
     } s_cpu_static_init;
 }
 
-runtime::cpu::CPU_Backend::CPU_Backend()
-{
-    m_allocator = make_shared<ngraph::runtime::Allocator>();
-}
-
-runtime::cpu::CPU_Backend::~CPU_Backend()
-{
-}
 shared_ptr<runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_Backend::make_call_frame(
     const shared_ptr<runtime::cpu::CPU_ExternalFunction>& external_function,
     ngraph::pass::PassConfig& pass_config,
-    std::shared_ptr<ngraph::runtime::Allocator> allocator)
+    Allocator* allocator)
 {
     return external_function->make_call_frame(pass_config, allocator);
 }
@@ -70,17 +62,6 @@ shared_ptr<runtime::Tensor>
     runtime::cpu::CPU_Backend::create_tensor(const element::Type& element_type, const Shape& shape)
 {
     return make_shared<runtime::cpu::CPUTensorView>(element_type, shape, this);
-}
-
-shared_ptr<ngraph::runtime::Allocator> runtime::cpu::CPU_Backend::get_framework_memory_allocator()
-{
-    return m_allocator;
-}
-
-void runtime::cpu::CPU_Backend::set_framework_memory_allocator(
-    const std::shared_ptr<ngraph::runtime::Allocator>& allocator)
-{
-    m_allocator = allocator;
 }
 
 shared_ptr<runtime::Tensor> runtime::cpu::CPU_Backend::create_tensor(
@@ -110,7 +91,7 @@ shared_ptr<runtime::Executable>
     else
     {
         rc = make_shared<CPU_Executable>(
-            func, pass_config, m_allocator, performance_counters_enabled);
+            func, pass_config, get_host_memory_allocator(), performance_counters_enabled);
         m_exec_map.insert({func, rc});
     }
     return rc;
@@ -118,7 +99,7 @@ shared_ptr<runtime::Executable>
 
 runtime::cpu::CPU_Executable::CPU_Executable(shared_ptr<Function> func,
                                              ngraph::pass::PassConfig& pass_config,
-                                             std::shared_ptr<ngraph::runtime::Allocator> allocator,
+                                             Allocator* allocator,
                                              bool performance_counters_enabled)
 {
     FunctionInstance& instance = m_function_instance;
@@ -165,6 +146,23 @@ void runtime::cpu::CPU_Backend::remove_compiled_function(shared_ptr<Executable> 
             break;
         }
     }
+}
+
+runtime::Allocator* runtime::cpu::CPU_Backend::get_host_memory_allocator()
+{
+    if (m_allocator)
+    {
+        return m_allocator;
+    }
+    else
+    {
+        runtime::get_ngraph_allocator();
+    }
+}
+
+void runtime::cpu::CPU_Backend::set_host_memory_allocator(runtime::Allocator* allocator)
+{
+    m_allocator = allocator;
 }
 
 vector<runtime::PerformanceCounter> runtime::cpu::CPU_Executable::get_performance_data() const

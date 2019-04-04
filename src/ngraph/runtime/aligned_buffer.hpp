@@ -19,12 +19,13 @@
 #include <cstddef>
 #include <memory>
 
+#include "ngraph/runtime/allocator.hpp"
+
 namespace ngraph
 {
     namespace runtime
     {
         class AlignedBuffer;
-        class Allocator;
     }
 }
 
@@ -36,8 +37,7 @@ class ngraph::runtime::AlignedBuffer
 public:
     AlignedBuffer(size_t byte_size,
                   size_t alignment,
-                  std::shared_ptr<ngraph::runtime::Allocator> allocator =
-                      std::make_shared<runtime::Allocator>());
+                  Allocator* allocator = get_ngraph_allocator());
     AlignedBuffer();
     ~AlignedBuffer();
 
@@ -49,7 +49,7 @@ private:
     AlignedBuffer(AlignedBuffer&&) = delete;
     AlignedBuffer& operator=(const AlignedBuffer&) = delete;
 
-    std::shared_ptr<ngraph::runtime::Allocator> m_allocator;
+    Allocator* m_allocator;
     char* m_allocated_buffer;
     char* m_aligned_buffer;
     size_t m_byte_size;

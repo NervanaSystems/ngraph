@@ -1716,8 +1716,9 @@ void*& runtime::cpu::CPU_ExternalFunction::get_tensor_data(const std::string& na
     }
 }
 
-shared_ptr<ngraph::runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_ExternalFunction::make_call_frame(
-    ngraph::pass::PassConfig& pass_config, std::shared_ptr<ngraph::runtime::Allocator> allocator)
+shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
+    runtime::cpu::CPU_ExternalFunction::make_call_frame(ngraph::pass::PassConfig& pass_config,
+                                                        Allocator* allocator)
 {
 #if defined(NGRAPH_DEX_ONLY)
     if (pass_config.get_compilation_mode() == ngraph::pass::CompilationMode::CODEGEN)

@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <iostream>
 #include <memory>
 
 #include "ngraph/runtime/aligned_buffer.hpp"
@@ -21,6 +22,7 @@
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
+using namespace std;
 
 runtime::AlignedBuffer::AlignedBuffer()
     : m_allocator(nullptr)
@@ -30,22 +32,22 @@ runtime::AlignedBuffer::AlignedBuffer()
 {
 }
 
-runtime::AlignedBuffer::AlignedBuffer(size_t byte_size,
-                                      size_t alignment,
-                                      std::shared_ptr<ngraph::runtime::Allocator> allocator)
+runtime::AlignedBuffer::AlignedBuffer(size_t byte_size, size_t alignment, Allocator* allocator)
 {
     m_byte_size = byte_size;
     m_allocator = allocator;
     if (m_byte_size > 0)
     {
-        size_t allocation_size = m_byte_size + alignment;
-        m_allocated_buffer = static_cast<char*>(m_allocator->Malloc(allocation_size, alignment));
+        m_allocated_buffer = static_cast<char*>(m_allocator->Malloc(m_byte_size, alignment));
         m_aligned_buffer = m_allocated_buffer;
         size_t mod = size_t(m_aligned_buffer) % alignment;
 
         if (mod != 0)
         {
-            m_aligned_buffer += (alignment - mod);
+            ostringstream os;
+            os << m_aligned_buffer;
+            throw ngraph_error("Incorrect alignment on newly allocated buffer at address: 0x" +
+                               os.str() + ". Expected alignment: " + to_string(alignment));
         }
     }
     else

@@ -33,7 +33,7 @@ runtime::cpu::CPU_CallFrame::CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction>
                                            InitContextFuncCG compiled_init_ctx_func,
                                            DestroyContextFuncCG compiled_destroy_ctx_func,
                                            EntryPoint compiled_function,
-                                           std::shared_ptr<ngraph::runtime::Allocator> allocator)
+                                           runtime::Allocator* allocator)
     : m_external_function(external_function)
     , m_compiled_init_ctx_func(compiled_init_ctx_func)
     , m_compiled_destroy_ctx_func(compiled_destroy_ctx_func)
@@ -126,8 +126,7 @@ void runtime::cpu::CPU_CallFrame::propagate_layouts(
     }
 }
 
-void runtime::cpu::CPU_CallFrame::setup_runtime_context(
-    std::shared_ptr<ngraph::runtime::Allocator> allocator)
+void runtime::cpu::CPU_CallFrame::setup_runtime_context(Allocator* allocator)
 {
     ctx = new CPURuntimeContext;
     ctx->pc = 0;

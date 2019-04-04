@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "ngraph/function.hpp"
+#include "ngraph/runtime/allocator.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
 #include "ngraph/runtime/tensor.hpp"
@@ -58,7 +59,7 @@ namespace ngraph
                               InitContextFuncCG compiled_init_ctx_func,
                               DestroyContextFuncCG compiled_destroy_ctx_func,
                               EntryPoint compiled_function,
-                              std::shared_ptr<ngraph::runtime::Allocator> allocator);
+                              runtime::Allocator* allocator);
                 ~CPU_CallFrame();
 
                 /// \brief Invoke the function with values matching the signature of the function.
@@ -70,7 +71,7 @@ namespace ngraph
                 void propagate_layouts(const std::vector<std::shared_ptr<runtime::Tensor>>& tvs,
                                        const LayoutDescriptorPtrs& layouts) const;
 
-                void setup_runtime_context(std::shared_ptr<ngraph::runtime::Allocator> allocator);
+                void setup_runtime_context(runtime::Allocator* allocator);
                 void setup_cg_runtime_context();
                 void cleanup_runtime_context();
 
