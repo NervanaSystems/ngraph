@@ -141,7 +141,6 @@ TEST(reshape_elimination, recurrent_reshapes)
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::VisualizeTree>("before_recurrent_reshapes.pdf");
     pass_manager.register_pass<pass::RecurrentReshapeElimination>();
-    pass_manager.register_pass<pass::ReshapeElimination>();
     pass_manager.register_pass<pass::VisualizeTree>("after_recurrent_reshapes.pdf");
     pass_manager.run_passes(optimized_f);
 
@@ -155,6 +154,9 @@ TEST(reshape_elimination, recurrent_reshapes)
     auto optimized_results = execute(optimized_f, args, "INTERPRETER");
 
     EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
+
+    size_t num_reshapes_optimized = count_ops_of_type<op::Reshape>(optimized_f);
+    ASSERT_EQ(num_reshapes_optimized, 1);
 }
 
 TEST(reshape_elimination, recurrent_reshapes_elimination)
@@ -203,6 +205,9 @@ TEST(reshape_elimination, recurrent_reshapes_elimination)
     auto optimized_results = execute(optimized_f, args, "INTERPRETER");
 
     EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
+
+    size_t num_reshapes_optimized = count_ops_of_type<op::Reshape>(optimized_f);
+    ASSERT_EQ(num_reshapes_optimized, 0);
 }
 
 TEST(reshape_elimination, recurrent_reshapes_fan_out)
@@ -226,7 +231,6 @@ TEST(reshape_elimination, recurrent_reshapes_fan_out)
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::VisualizeTree>("before_recurrent_reshapes_fan_out.pdf");
     pass_manager.register_pass<pass::RecurrentReshapeElimination>();
-    //pass_manager.register_pass<pass::ReshapeElimination>();
     pass_manager.register_pass<pass::VisualizeTree>("after_recurrent_reshapes_fan_out.pdf");
     pass_manager.run_passes(optimized_f);
 
@@ -240,6 +244,9 @@ TEST(reshape_elimination, recurrent_reshapes_fan_out)
     auto optimized_results = execute(optimized_f, args, "INTERPRETER");
 
     EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
+
+    size_t num_reshapes_optimized = count_ops_of_type<op::Reshape>(optimized_f);
+    ASSERT_EQ(num_reshapes_optimized, 2);
 }
 
 TEST(reshape_elimination, recurrent_reshapes_fan_out_at_end)
@@ -264,7 +271,6 @@ TEST(reshape_elimination, recurrent_reshapes_fan_out_at_end)
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::VisualizeTree>("before_recurrent_reshapes_fan_out_at_end.pdf");
     pass_manager.register_pass<pass::RecurrentReshapeElimination>();
-    //pass_manager.register_pass<pass::ReshapeElimination>();
     pass_manager.register_pass<pass::VisualizeTree>("after_recurrent_reshapes_fan_out_at_end.pdf");
     pass_manager.run_passes(optimized_f);
 
@@ -278,6 +284,9 @@ TEST(reshape_elimination, recurrent_reshapes_fan_out_at_end)
     auto optimized_results = execute(optimized_f, args, "INTERPRETER");
 
     EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
+
+    size_t num_reshapes_optimized = count_ops_of_type<op::Reshape>(optimized_f);
+    ASSERT_EQ(num_reshapes_optimized, 1);
 }
 
 TEST(reshape_elimination, recurrent_reshapes_multiple_fusions)
@@ -311,7 +320,6 @@ TEST(reshape_elimination, recurrent_reshapes_multiple_fusions)
     pass_manager.register_pass<pass::VisualizeTree>(
         "before_recurrent_reshapes_multiple_fusions.pdf");
     pass_manager.register_pass<pass::RecurrentReshapeElimination>();
-    pass_manager.register_pass<pass::ReshapeElimination>();
     pass_manager.register_pass<pass::VisualizeTree>(
         "after_recurrent_reshapes_multiple_fusions.pdf");
     pass_manager.run_passes(optimized_f);
@@ -326,6 +334,9 @@ TEST(reshape_elimination, recurrent_reshapes_multiple_fusions)
     auto optimized_results = execute(optimized_f, args, "INTERPRETER");
 
     EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
+
+    size_t num_reshapes_optimized = count_ops_of_type<op::Reshape>(optimized_f);
+    ASSERT_EQ(num_reshapes_optimized, 2);
 }
 
 TEST(reshape_elimination, nonrecurrent_reshapes)
@@ -351,7 +362,6 @@ TEST(reshape_elimination, nonrecurrent_reshapes)
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::VisualizeTree>("before_nonrecurrent_reshapes.pdf");
     pass_manager.register_pass<pass::RecurrentReshapeElimination>();
-    //pass_manager.register_pass<pass::ReshapeElimination>();
     pass_manager.register_pass<pass::VisualizeTree>("after_nonrecurrent_reshapes.pdf");
     pass_manager.run_passes(optimized_f);
 
@@ -365,6 +375,9 @@ TEST(reshape_elimination, nonrecurrent_reshapes)
     auto optimized_results = execute(optimized_f, args, "INTERPRETER");
 
     EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
+
+    size_t num_reshapes_optimized = count_ops_of_type<op::Reshape>(optimized_f);
+    ASSERT_EQ(num_reshapes_optimized, 3);
 }
 
 TEST(reshape_elimination, recurrent_reshapes_multiple_branches)
@@ -401,7 +414,6 @@ TEST(reshape_elimination, recurrent_reshapes_multiple_branches)
     pass_manager.register_pass<pass::VisualizeTree>(
         "before_recurrent_reshapes_multiple_branches.pdf");
     pass_manager.register_pass<pass::RecurrentReshapeElimination>();
-    pass_manager.register_pass<pass::ReshapeElimination>();
     pass_manager.register_pass<pass::VisualizeTree>(
         "after_recurrent_reshapes_multiple_branches.pdf");
     pass_manager.run_passes(optimized_f);
@@ -416,4 +428,7 @@ TEST(reshape_elimination, recurrent_reshapes_multiple_branches)
     auto optimized_results = execute(optimized_f, args, "INTERPRETER");
 
     EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
+
+    size_t num_reshapes_optimized = count_ops_of_type<op::Reshape>(optimized_f);
+    ASSERT_EQ(num_reshapes_optimized, 2);
 }
