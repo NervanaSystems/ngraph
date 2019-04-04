@@ -75,8 +75,36 @@ static void compare_backends(const std::shared_ptr<Function>& f1,
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
+
     auto f1_results = execute(f1, args, backend1);
     auto f2_results = execute(f2, args, backend2);
+
+    for (size_t i = 0; i < f1_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(f1_results.at(i), f2_results.at(i), rtol, atol));
+    }
+}
+
+static void compare_backends(const std::shared_ptr<Function>& f1,
+                             const std::shared_ptr<Function>& f2,
+                             std::shared_ptr<Function>& compiled_f1,
+                             std::shared_ptr<Function>& compiled_f2,
+                             const string backend1,
+                             const string backend2,
+                             float rtol = 1e-5,
+                             float atol = 1e-8)
+{
+    test::Uniform<float> rng(-1.0f, 1.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : f1->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    auto f1_results = execute(f1, compiled_f1, args, backend1);
+    auto f2_results = execute(f2, compiled_f2, args, backend2);
 
     for (size_t i = 0; i < f1_results.size(); i++)
     {
@@ -116,7 +144,7 @@ TEST(cpu_test, trivial_in_place_relu_fail)
     auto add2 = relu + add;
     auto f = make_shared<Function>(add2, ParameterVector{A, B});
     auto backend = runtime::Backend::create("CPU");
-    func = backend->compile(f);
+    auto compiled_exe = backend->compile(f);
     ASSERT_NE(relu->get_outputs().at(0).get_tensor().get_pool_offset(),
               add->get_outputs().at(0).get_tensor().get_pool_offset());
 }
@@ -256,9 +284,10 @@ TEST(cpu_test, reshape_layout_optimizations1)
         args.push_back(tensor_val);
     }
     auto int_results = execute(int_f, args, "INTERPRETER");
-    auto cpu_results = execute(cpu_f, args, "CPU");
+    std::shared_ptr<Function> compiled_cpu_f;
+    auto cpu_results = execute(cpu_f, compiled_cpu_f, args, "CPU");
     // Two convert layouts for inputs and weights of convolution.
-    EXPECT_EQ(count_ops_of_type<runtime::cpu::op::ConvertLayout>(cpu_f), 2);
+    EXPECT_EQ(count_ops_of_type<runtime::cpu::op::ConvertLayout>(compiled_cpu_f), 2);
     for (size_t i = 0; i < cpu_results.size(); i++)
     {
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
@@ -296,8 +325,9 @@ TEST(cpu_test, reshape_layout_optimizations2)
         args.push_back(tensor_val);
     }
     auto int_results = execute(int_f, args, "INTERPRETER");
-    auto cpu_results = execute(cpu_f, args, "CPU");
-    EXPECT_EQ(count_ops_of_type<runtime::cpu::op::ConvertLayout>(cpu_f), 2);
+    std::shared_ptr<Function> compiled_cpu_f;
+    auto cpu_results = execute(cpu_f, compiled_cpu_f, args, "CPU");
+    EXPECT_EQ(count_ops_of_type<runtime::cpu::op::ConvertLayout>(compiled_cpu_f), 2);
     for (size_t i = 0; i < cpu_results.size(); i++)
     {
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
@@ -334,10 +364,11 @@ TEST(cpu_test, reshape_layout_optimizations3)
         args.push_back(tensor_val);
     }
     auto int_results = execute(int_f, args, "INTERPRETER");
-    auto cpu_results = execute(cpu_f, args, "CPU");
+    std::shared_ptr<Function> compiled_cpu_f;
+    auto cpu_results = execute(cpu_f, compiled_cpu_f, args, "CPU");
     // Two convert layouts for inputs and weights of convolution.
     // One convert layout after convolution
-    EXPECT_EQ(count_ops_of_type<runtime::cpu::op::ConvertLayout>(cpu_f), 3);
+    EXPECT_EQ(count_ops_of_type<runtime::cpu::op::ConvertLayout>(compiled_cpu_f), 3);
     for (size_t i = 0; i < cpu_results.size(); i++)
     {
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
@@ -601,9 +632,10 @@ TEST(cpu_test, convert_layout)
         args.push_back(tensor_val);
     }
     auto int_results = execute(int_f, args, "INTERPRETER");
-    auto cpu_results = execute(cpu_f, args, "CPU");
+    std::shared_ptr<Function> compiled_cpu_f;
+    auto cpu_results = execute(cpu_f, compiled_cpu_f, args, "CPU");
 
-    size_t count = count_ops_of_type<runtime::cpu::op::ConvertLayout>(cpu_f);
+    size_t count = count_ops_of_type<runtime::cpu::op::ConvertLayout>(compiled_cpu_f);
     ASSERT_EQ(count, 1);
     for (size_t i = 0; i < cpu_results.size(); i++)
     {

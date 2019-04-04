@@ -27,13 +27,12 @@ namespace vp = vertexai::plaidml;
 ngraph::runtime::plaidml::PlaidML_Executable::PlaidML_Executable(Build build,
                                                                  std::shared_ptr<Function> func)
     : m_config{build.config}
-    , m_func{std::move(build.func)}
+    , m_function{std::move(build.func)}
     , m_src_func{std::move(func)}
     , m_input_names{std::move(build.input_names)}
     , m_output_names{std::move(build.output_names)}
     , m_invoker{build.config->ctx, std::move(build.composer)}
 {
-    set_parameters_and_results(*m_func);
     NGRAPH_DEBUG << "Compiled PlaidML function " << this;
 }
 
@@ -49,7 +48,7 @@ bool ngraph::runtime::plaidml::PlaidML_Executable::call(
     m_bound_outputs.resize(outputs.size());
 
     std::size_t input_count = 0;
-    for (const auto& param : m_func->get_parameters())
+    for (const auto& param : m_function->get_parameters())
     {
         for (std::size_t idx = 0; idx < param->get_output_size(); ++idx)
         {
@@ -76,7 +75,7 @@ bool ngraph::runtime::plaidml::PlaidML_Executable::call(
     }
 
     std::size_t output_count = 0;
-    for (const auto& result : m_func->get_results())
+    for (const auto& result : m_function->get_results())
     {
         for (std::size_t idx = 0; idx < result->get_output_size(); ++idx)
         {
@@ -107,7 +106,7 @@ bool ngraph::runtime::plaidml::PlaidML_Executable::call(
     m_bound = true;
 
     output_count = 0;
-    for (const auto& result : m_func->get_results())
+    for (const auto& result : m_function->get_results())
     {
         for (std::size_t idx = 0; idx < result->get_output_size(); ++idx)
         {
@@ -136,7 +135,7 @@ void ngraph::runtime::plaidml::PlaidML_Executable::save(const std::string& filen
 
     if (!m_bound)
     {
-        for (const auto& param : m_func->get_parameters())
+        for (const auto& param : m_function->get_parameters())
         {
             for (std::size_t idx = 0; idx < param->get_output_size(); ++idx)
             {
@@ -146,7 +145,7 @@ void ngraph::runtime::plaidml::PlaidML_Executable::save(const std::string& filen
                 m_invoker.set_input(m_input_names.at(tv), tensor);
             }
         }
-        for (const auto& result : m_func->get_results())
+        for (const auto& result : m_function->get_results())
         {
             for (std::size_t idx = 0; idx < result->get_output_size(); ++idx)
             {
