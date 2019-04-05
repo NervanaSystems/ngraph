@@ -522,6 +522,32 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_2d_max_one)
         (vector<float>{12, 11, 10}), read_vector<float>(result1), MIN_FLOAT_TOLERANCE_BITS));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, topk_2d_max_one_with_equal_values)
+{
+    Shape shape{2, 4};
+    Shape rshape{2, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::TopK>(A, 1, element::i32, 1, true);
+    auto f0 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 0), ParameterVector{A});
+    auto f1 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 1), ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a, vector<float>{1, 3, 2, 4, 1, 3, 3, 2});
+    auto result0 = backend->create_tensor(element::i32, rshape);
+    auto result1 = backend->create_tensor(element::f32, rshape);
+
+    auto h0 = backend->compile(f0);
+    h0->call_with_validate({result0}, {a});
+    EXPECT_EQ((vector<int32_t>{3, 1}), read_vector<int32_t>(result0));
+    auto h1 = backend->compile(f1);
+    h1->call_with_validate({result1}, {a});
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{4, 3}), read_vector<float>(result1), MIN_FLOAT_TOLERANCE_BITS));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, topk_2d_min_all)
 {
     Shape shape{4, 3};
