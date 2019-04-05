@@ -117,6 +117,8 @@ pad_reflect_2d_with_neg
 model_dequantize_linear
 model_quantize_linear
 model_quant_conv_linear
+model_quant_conv_linear_2d
+model_quant_conv_linear_3d
 
 # This should be implemented
 create_tensor_2_input
