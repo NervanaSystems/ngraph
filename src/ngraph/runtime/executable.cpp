@@ -30,7 +30,7 @@ runtime::Executable::Executable()
 }
 
 runtime::Executable::Executable(shared_ptr<Function> func)
-    : m_function{clone_function(*func)}
+    : m_function{clone_function(*func, m_node_map)}
 {
 }
 
@@ -105,6 +105,12 @@ void runtime::Executable::validate(const vector<std::shared_ptr<runtime::Tensor>
 const std::shared_ptr<Function> runtime::Executable::get_compiled_function() const
 {
     return m_function;
+}
+
+const std::shared_ptr<ngraph::Node>
+    runtime::Executable::get_compiled_node_from_orig(const std::shared_ptr<ngraph::Node> orig) const
+{
+    return m_node_map.get(orig);
 }
 
 const ngraph::ParameterVector& runtime::Executable::get_parameters() const

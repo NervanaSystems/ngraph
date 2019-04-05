@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "ngraph/function.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/runtime/performance_counter.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -66,6 +67,11 @@ public:
     /// \returns an shared_ptr<Function> of compiled function
     const std::shared_ptr<Function> get_compiled_function() const;
 
+    /// \brief Query the compiled node from original node, may or may not exist in compiled function
+    /// \returns an shared_ptr<ngraph::Node> of compiled node
+    const std::shared_ptr<ngraph::Node>
+        get_compiled_node_from_orig(const std::shared_ptr<ngraph::Node> orig) const;
+
     /// \brief Query the input Parameters
     /// \returns an ngraph::op::ParameterVector of all input parameters
     const ngraph::ParameterVector& get_parameters() const;
@@ -79,7 +85,7 @@ protected:
     ///     and get_results
     /// \param func The function with Results fully resolved.
     void set_parameters_and_results(const Function& func);
-
+    NodeMap m_node_map;
     std::shared_ptr<Function> m_function;
     ngraph::ParameterVector m_parameters;
     ngraph::ResultVector m_results;

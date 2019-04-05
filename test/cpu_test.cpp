@@ -129,9 +129,17 @@ TEST(cpu_test, trivial_in_place_relu)
     auto relu = make_shared<op::Relu>(add);
     auto f = make_shared<Function>(relu, ParameterVector{A, B});
     auto backend = runtime::Backend::create("CPU");
-    (backend->compile(f));
-    ASSERT_EQ(relu->get_outputs().at(0).get_tensor().get_pool_offset(),
-              add->get_outputs().at(0).get_tensor().get_pool_offset());
+    auto compiled_exe = backend->compile(f);
+    ASSERT_EQ(compiled_exe->get_compiled_node_from_orig(relu)
+                  ->get_outputs()
+                  .at(0)
+                  .get_tensor()
+                  .get_pool_offset(),
+              compiled_exe->get_compiled_node_from_orig(add)
+                  ->get_outputs()
+                  .at(0)
+                  .get_tensor()
+                  .get_pool_offset());
 }
 
 #ifndef NGRAPH_HALIDE
@@ -145,8 +153,16 @@ TEST(cpu_test, trivial_in_place_relu_fail)
     auto f = make_shared<Function>(add2, ParameterVector{A, B});
     auto backend = runtime::Backend::create("CPU");
     auto compiled_exe = backend->compile(f);
-    ASSERT_NE(relu->get_outputs().at(0).get_tensor().get_pool_offset(),
-              add->get_outputs().at(0).get_tensor().get_pool_offset());
+    ASSERT_NE(compiled_exe->get_compiled_node_from_orig(relu)
+                  ->get_outputs()
+                  .at(0)
+                  .get_tensor()
+                  .get_pool_offset(),
+              compiled_exe->get_compiled_node_from_orig(add)
+                  ->get_outputs()
+                  .at(0)
+                  .get_tensor()
+                  .get_pool_offset());
 }
 #endif
 

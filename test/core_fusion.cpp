@@ -129,8 +129,8 @@ TEST(core_fusion, sigmoid_bprop_fusion)
     shared_ptr<Function> func = ngraph::deserialize(ss);
     auto df = autodiff::backprop_function(func);
     auto backend = runtime::Backend::create("CPU");
-    backend->compile(df);
-    size_t ccg = count_ops_of_type<op::SigmoidBackprop>(df);
+    auto df_exe = backend->compile(df);
+    size_t ccg = count_ops_of_type<op::SigmoidBackprop>(df_exe->get_compiled_function());
     ASSERT_EQ(ccg, 1);
 }
 

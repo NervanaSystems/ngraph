@@ -86,14 +86,17 @@ TEST(debugger, add_breakpoint)
     auto cf = dynamic_pointer_cast<runtime::cpu::CPU_Executable>(handle)->get_call_frame();
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
+    auto add_compiled = handle->get_compiled_node_from_orig(add);
+    auto absn_compiled = handle->get_compiled_node_from_orig(absn);
+    auto neg_compiled = handle->get_compiled_node_from_orig(neg);
 
-    dbg.add_breakpoint(neg);
+    dbg.add_breakpoint(neg_compiled);
     dbg.call({result}, {a, b});
 
-    ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
-    ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn)), 777);
+    ASSERT_EQ(*static_cast<int*>(dbg.inspect(add_compiled)), -777);
+    ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn_compiled)), 777);
     dbg.step();
-    ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg)), -777);
+    ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg_compiled)), -777);
 }
 
 TEST(debugger, stepping)
@@ -130,15 +133,18 @@ TEST(debugger, stepping)
     auto cf = dynamic_pointer_cast<runtime::cpu::CPU_Executable>(handle)->get_call_frame();
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
+    auto add_compiled = handle->get_compiled_node_from_orig(add);
+    auto absn_compiled = handle->get_compiled_node_from_orig(absn);
+    auto neg_compiled = handle->get_compiled_node_from_orig(neg);
 
-    dbg.add_breakpoint(add);
+    dbg.add_breakpoint(add_compiled);
     dbg.call({result}, {a, b});
 
-    ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
+    ASSERT_EQ(*static_cast<int*>(dbg.inspect(add_compiled)), -777);
     dbg.step();
-    ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn)), 777);
+    ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn_compiled)), 777);
     dbg.step();
-    ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg)), -777);
+    ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg_compiled)), -777);
 }
 
 TEST(debugger, delete_breakpoint)
@@ -175,18 +181,21 @@ TEST(debugger, delete_breakpoint)
     auto cf = dynamic_pointer_cast<runtime::cpu::CPU_Executable>(handle)->get_call_frame();
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
+    auto add_compiled = handle->get_compiled_node_from_orig(add);
+    auto absn_compiled = handle->get_compiled_node_from_orig(absn);
+    auto neg_compiled = handle->get_compiled_node_from_orig(neg);
 
-    dbg.add_breakpoint(add);
-    dbg.add_breakpoint(absn);
-    dbg.add_breakpoint(neg);
-    dbg.delete_breakpoint(add);
-    dbg.delete_breakpoint(absn);
-    dbg.delete_breakpoint(neg);
+    dbg.add_breakpoint(add_compiled);
+    dbg.add_breakpoint(absn_compiled);
+    dbg.add_breakpoint(neg_compiled);
+    dbg.delete_breakpoint(add_compiled);
+    dbg.delete_breakpoint(absn_compiled);
+    dbg.delete_breakpoint(neg_compiled);
     dbg.call({result}, {a, b});
 
-    ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
-    ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn)), 777);
-    ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg)), -777);
+    ASSERT_EQ(*static_cast<int*>(dbg.inspect(add_compiled)), -777);
+    ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn_compiled)), 777);
+    ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg_compiled)), -777);
 }
 
 TEST(debugger, while_stepping)
@@ -223,16 +232,19 @@ TEST(debugger, while_stepping)
     auto cf = dynamic_pointer_cast<runtime::cpu::CPU_Executable>(handle)->get_call_frame();
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
+    auto add_compiled = handle->get_compiled_node_from_orig(add);
+    auto absn_compiled = handle->get_compiled_node_from_orig(absn);
+    auto neg_compiled = handle->get_compiled_node_from_orig(neg);
 
     dbg.call({result}, {a, b});
-    dbg.add_breakpoint(add);
+    dbg.add_breakpoint(add_compiled);
     while (dbg.step())
     {
     };
 
-    ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
-    ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn)), 777);
-    ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg)), -777);
+    ASSERT_EQ(*static_cast<int*>(dbg.inspect(add_compiled)), -777);
+    ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn_compiled)), 777);
+    ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg_compiled)), -777);
 }
 
 TEST(debugger, resume)
@@ -269,14 +281,17 @@ TEST(debugger, resume)
     auto cf = dynamic_pointer_cast<runtime::cpu::CPU_Executable>(handle)->get_call_frame();
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
+    auto add_compiled = handle->get_compiled_node_from_orig(add);
+    auto absn_compiled = handle->get_compiled_node_from_orig(absn);
+    auto neg_compiled = handle->get_compiled_node_from_orig(neg);
 
-    dbg.add_breakpoint(absn);
+    dbg.add_breakpoint(absn_compiled);
     dbg.call({result}, {a, b});
 
-    ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
+    ASSERT_EQ(*static_cast<int*>(dbg.inspect(add_compiled)), -777);
     dbg.resume();
-    ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn)), 777);
-    ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg)), -777);
+    ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn_compiled)), 777);
+    ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg_compiled)), -777);
 }
 
 TEST(tracer, basic)
@@ -306,15 +321,16 @@ TEST(tracer, basic)
     auto cf = dynamic_pointer_cast<runtime::cpu::CPU_Executable>(handle)->get_call_frame();
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
+    auto add_compiled = handle->get_compiled_node_from_orig(add);
 
     int good_or_bad_value = -777;
     auto add_tracer = [&good_or_bad_value](void** values, const std::string& name) {
         ASSERT_EQ(static_cast<int*>(values[0])[0], good_or_bad_value);
     };
 
-    dbg.add_tracepoint(add, add_tracer);
+    dbg.add_tracepoint(add_compiled, add_tracer);
     dbg.call({result}, {a, b});
-    dbg.delete_tracepoint(add);
+    dbg.delete_tracepoint(add_compiled);
     good_or_bad_value = 777;
     dbg.call({result}, {a, b});
 }
@@ -339,6 +355,7 @@ TEST(tracer, count_tracepoint)
     auto cf = dynamic_pointer_cast<runtime::cpu::CPU_Executable>(handle)->get_call_frame();
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
+    auto add_compiled = handle->get_compiled_node_from_orig(add);
 
     const size_t num_iterations = 10;
     const size_t offset = 5;
@@ -351,7 +368,7 @@ TEST(tracer, count_tracepoint)
     ngraph::runtime::cpu::CPU_CountTracepoint count_tracepoint(callback, 10);
     for (size_t i = 0; i < num_iterations; i++)
     {
-        dbg.add_tracepoint(add, count_tracepoint);
+        dbg.add_tracepoint(add_compiled, count_tracepoint);
         vector<int> dataA{static_cast<int>(offset)};
         vector<int> dataB{static_cast<int>(i)};
         copy_data(a, dataA);
@@ -380,6 +397,7 @@ TEST(tracer, conditional_tracepoint)
     auto cf = dynamic_pointer_cast<runtime::cpu::CPU_Executable>(handle)->get_call_frame();
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
+    auto add_compiled = handle->get_compiled_node_from_orig(add);
 
     const size_t num_iterations = 10;
     const size_t offset = 5;
@@ -394,7 +412,7 @@ TEST(tracer, conditional_tracepoint)
 
     for (size_t i = 0; i < num_iterations; i++)
     {
-        dbg.add_tracepoint(add, add_tracer);
+        dbg.add_tracepoint(add_compiled, add_tracer);
         vector<int> dataA{static_cast<int>(offset)};
         vector<int> dataB{static_cast<int>(i)};
         copy_data(a, dataA);
