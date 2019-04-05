@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include "ngraph/axis_set.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/op/op.hpp"
 
 namespace ngraph
@@ -25,8 +27,8 @@ namespace ngraph
         class Gather : public Op
         {
         public:
-            Gather(const std::shared_ptr<Node>& params, const std::shared_ptr<Node>& indices)
-                : Op("Gather", check_single_output_args({params, indices}))
+            Gather(const std::shared_ptr<Node>& params, const std::shared_ptr<Node>& indices, size_t axis=0)
+                : Op("Gather", check_single_output_args({params, indices}), m_axis(axis))
             {
                 constructor_validate_and_infer_types();
             }
@@ -40,6 +42,8 @@ namespace ngraph
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+        protected:
+            size_t m_axis;
         };
     }
 }
