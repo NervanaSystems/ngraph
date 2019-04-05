@@ -14,21 +14,48 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/erf.hpp"
+#include "ngraph/op/gather_nd.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-shared_ptr<Node> op::Erf::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::GatherND::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Erf>(new_args.at(0));
+    return make_shared<GatherND>(new_args.at(0), new_args.at(1));
 }
 
-op::Erf::Erf(shared_ptr<Node> arg)
-    : UnaryElementwiseArithmetic("Erf", arg)
+void op::GatherND::validate_and_infer_types()
 {
-    constructor_validate_and_infer_types();
+    element::Type result_et = get_input_element_type(1);
+
+    const PartialShape& arg0_shape = get_input_partial_shape(0);
+    const PartialShape& arg1_shape = get_input_partial_shape(1);
+
+    NODE_VALIDATION_CHECK(this,
+                          arg1_shape.rank().is_dynamic() ||
+                              static_cast<size_t>(arg1_shape.rank()) == 2,
+                          "weights are expected to be a matrix");
+
+    PartialShape result_shape;
+    if (arg0_shape.rank().is_static())
+    {
+        std::vector<Dimension> result_dims(static_cast<size_t>(arg0_shape.rank()) + 1);
+        for (size_t i = 0; i < static_cast<size_t>(arg0_shape.rank()); i++)
+        {
+            result_dims[i] = arg0_shape[i];
+        }
+
+        result_dims[result_dims.size() - 1] =
+            arg1_shape.rank().is_static() ? arg1_shape[1] : Dimension::dynamic();
+        result_shape = PartialShape(result_dims);
+    }
+    else
+    {
+        result_shape = PartialShape::dynamic();
+    }
+
+    set_output_type(0, result_et, result_shape);
 }

@@ -16,16 +16,27 @@
 
 #pragma once
 
-#include "ngraph/op/gather.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        class Gather : public Op
+        class GatherND : public Op
         {
         public:
-            Erf(std::shared_ptr<Node> arg);
+            GatherND(const std::shared_ptr<Node>& params, const std::shared_ptr<Node>& indices)
+                : Op("GatherND", check_single_output_args({params, indices}))
+            {
+                constructor_validate_and_infer_types();
+            }
+
+            void validate_and_infer_types() override;
+
+            void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override
+            {
+                throw ngraph_error("Not yet implemented");
+            }
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
