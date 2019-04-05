@@ -17,6 +17,7 @@
 #include "ngraph/runtime/hybrid/hybrid_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/hybrid/op/function_call.hpp"
@@ -219,14 +220,14 @@ void runtime::hybrid::rewrite_function(const shared_ptr<Function>& f,
                 fc->set_placement_index(0);
                 for (size_t i = 0; i < function_call_outputs.size(); i++)
                 {
-                    // // First add a GetOutputElement to the ith output of the FunctionCall
-                    // auto goe = make_shared<GetOutpu
+                    // First add a GetOutputElement to the ith output of the FunctionCall
+                    auto goe = make_shared<ngraph::op::GetOutputElement>(fc, i);
+                    goe->set_placement_index(0);
 
                     auto old_source = cluster_outputs[i];
-                    auto new_source = fc;
                     auto target = function_call_outputs[i];
                     descriptor::Input* target_input = target->get_input_from(old_source);
-                    descriptor::Output& new_output = new_source->get_outputs()[i];
+                    descriptor::Output& new_output = goe->get_outputs()[0];
                     target_input->replace_output(new_output);
                 }
             }

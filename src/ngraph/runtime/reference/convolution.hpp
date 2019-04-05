@@ -164,7 +164,7 @@ namespace ngraph
                     //
                     //   out[O] += in[I] * filter[F].
 
-                    float result = 0;
+                    T result = 0;
 
                     CoordinateTransform::Iterator in_it = in_transform.begin();
                     CoordinateTransform::Iterator filter_it = filter_transform.begin();
