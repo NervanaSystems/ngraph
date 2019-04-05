@@ -113,24 +113,21 @@ namespace ngraph
                                     scales_size](CPURuntimeContext* ctx,
                                                  CPUExecutionContext* ectx) {
 
-                        if (ctx->first_iteration)
-                        {
-                            vector<float> dyn_scales;
-                            dyn_scales.assign(static_cast<float*>(arg2_tensor),
-                                              static_cast<float*>(arg2_tensor) + scales_size);
-                            kernel(arg0_tensor,
-                                   arg1_tensor,
-                                   out0_tensor,
-                                   arg0_shape,
-                                   arg1_shape,
-                                   result_shape,
-                                   window_movement_strides,
-                                   window_dilation_strides,
-                                   padding_below,
-                                   padding_above,
-                                   data_dilation_strides,
-                                   dyn_scales[0]);
-                        }
+                        vector<float> dyn_scales;
+                        dyn_scales.assign(static_cast<float*>(arg2_tensor),
+                                          static_cast<float*>(arg2_tensor) + scales_size);
+                        kernel(arg0_tensor,
+                               arg1_tensor,
+                               out0_tensor,
+                               arg0_shape,
+                               arg1_shape,
+                               result_shape,
+                               window_movement_strides,
+                               window_dilation_strides,
+                               padding_below,
+                               padding_above,
+                               data_dilation_strides,
+                               dyn_scales[0]);
                     };
                     functors.emplace_back(functor);
                 }
