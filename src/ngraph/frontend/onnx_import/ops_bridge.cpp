@@ -80,6 +80,7 @@
 #include "op/pad.hpp"
 #include "op/pow.hpp"
 #include "op/prelu.hpp"
+#include "op/qmatmul.hpp"
 #include "op/quant_conv.hpp"
 #include "op/quantize_linear.hpp"
 #include "op/reciprocal.hpp"
@@ -283,6 +284,7 @@ namespace ngraph
             REGISTER_OPERATOR("Pow", 1, pow);
             REGISTER_OPERATOR("PRelu", 1, prelu);
             REGISTER_OPERATOR("QLinearConv", 1, quant_conv);
+            REGISTER_OPERATOR("QLinearMatMul", 1, qmatmul);
             REGISTER_OPERATOR("QuantizeLinear", 1, quantize_linear);
             REGISTER_OPERATOR("Reciprocal", 1, reciprocal);
             REGISTER_OPERATOR("ReduceLogSum", 1, reduce_log_sum);
