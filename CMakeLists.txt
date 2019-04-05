@@ -72,7 +72,6 @@ endif()
 
 if ("${CMAKE_GENERATOR}" MATCHES "^Visual Studio.*$")
     set(MSVS TRUE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
 endif()
 
 if (APPLE AND (NOT CMAKE_OSX_SYSROOT))
@@ -268,7 +267,7 @@ endif()
 
 if (WIN32)
     set (CMAKE_CXX_STANDARD 11)
-    set(CMAKE_CXX_FLAGS "/W0 /EHsc")
+    set(CMAKE_CXX_FLAGS "/W0 /EHsc /MP")
 else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g")
