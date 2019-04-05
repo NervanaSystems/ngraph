@@ -2360,7 +2360,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_dequantize_linear_scalar_zero_scale_uint
 
     auto x = std::vector<uint8_t>{0, 3, 128, 255};
     auto scale = std::vector<float>{2.0f};
-    auto zero_point = std::vector<uint8_t>{{128}};
+    auto zero_point = std::vector<uint8_t>{128};
 
     auto backend = ngraph::runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2399,7 +2399,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_dequantize_linear_scalar_zero_scale_int8
 
     auto x = std::vector<int8_t>{-30, -3, 100, 127};
     auto scale = std::vector<float>{2.0f};
-    auto zero_point = std::vector<int8_t>{{-10}};
+    auto zero_point = std::vector<int8_t>{-10};
 
     auto backend = ngraph::runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2438,7 +2438,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_dequantize_linear_1d_zero_scale_uint8)
 
     auto x = std::vector<uint8_t>{0, 1, 2, 3, 0, 1, 2, 3, 0, 10, 20, 30};
     auto scale = std::vector<float>{1.0f, 2.0f, 4.0f};
-    auto zero_point = std::vector<uint8_t>{{0, 0, 0}};
+    auto zero_point = std::vector<uint8_t>{0, 0, 0};
 
     auto backend = ngraph::runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2478,7 +2478,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_dequantize_linear_1d_zero_scale_int8)
 
     auto x = std::vector<int8_t>{0, 1, 2, 3, 0, 2, 4, 6, 0, 10, 20, 30};
     auto scale = std::vector<float>{1.0f, 2.0f, 4.0f, 8.0f};
-    auto zero_point = std::vector<int8_t>{{0, -10, -20, -30}};
+    auto zero_point = std::vector<int8_t>{0, -10, -20, -30};
 
     auto backend = ngraph::runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2521,7 +2521,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_dequantize_linear_1d_zero_scale_int8_4d)
                                  8, 7, 4,  8,  10, 1, 5, 5, 7, 7, 0, 2, 4,  4, 0, 5};
 
     auto scale = std::vector<float>{1.0f, 10.0f, 7.0f};
-    auto zero_point = std::vector<int8_t>{{10, 2, 1}};
+    auto zero_point = std::vector<int8_t>{10, 2, 1};
 
     auto backend = ngraph::runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2565,7 +2565,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_dequantize_linear_1d_zero_scale_uint8_ne
 
     auto x = std::vector<uint8_t>{0, 1, 2, 3, 0, 1, 2, 3, 0, 10, 20, 30};
     auto scale = std::vector<float>{1.0f, 2.0f, 4.0f};
-    auto zero_point = std::vector<uint8_t>{{0, 0, 0}};
+    auto zero_point = std::vector<uint8_t>{0, 0, 0};
 
     auto backend = ngraph::runtime::Backend::create("${BACKEND_NAME}");
 
