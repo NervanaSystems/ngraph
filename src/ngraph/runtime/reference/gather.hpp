@@ -16,11 +16,8 @@
 
 #pragma once
 
-#include <algorithm>
-#include <cmath>
-#include <numeric>
-
 #include "ngraph/coordinate_transform.hpp"
+#include "ngraph/runtime/reference/gather_nd.hpp"
 
 namespace ngraph
 {
@@ -28,91 +25,44 @@ namespace ngraph
     {
         namespace reference
         {
-            // Had to split out these two functions. They used to be lambda expressions but
-            // MSVC had difficulty compiling. This way is more explicit.
+            // foreach index in params.shape[:axis]
+            //    # For each slice to work on
+            //    params' = param[axis:] # rank(params') == rank(params) - axis
+            //    # Append dim 1 rank to indices
+            //    indices' = indices.reshape(indices.shape + [1]) # indices'.shape[-1] == 1
+            //    gather_nd(params', indices')
             template <typename T, typename U>
-            static bool compare_max(const std::tuple<T, U>& a, const std::tuple<T, U>& b)
-            {
-// this is intentional to be able to compare floats directly
-// without using relative or absolute tolerance
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wfloat-equal"
-                if (std::get<0>(a) == std::get<0>(b))
-                {
-                    return std::get<1>(a) < std::get<1>(b);
-                }
-#pragma clang diagnostic pop
-
-                return a > b;
-            }
-            template <typename T, typename U>
-            static bool compare_min(const std::tuple<T, U>& a, const std::tuple<T, U>& b)
-            {
-                return a < b;
-            }
-
-            template <typename T, typename U>
-            void topk(const T* arg,
-                      U* out_indices,
-                      T* out_values,
-                      const Shape& in_shape,
-                      const Shape& out_shape,
-                      size_t axis,
-                      size_t k,
-                      bool compute_max)
+            void gather(const T* params,
+                        const U* indices,
+                        T* out,
+                        const Shape& params_shape,
+                        const Shape& indices_shape,
+                        const Shape& out_shape
+                        size_t axis)
             {
                 using namespace std;
-                // reorder source axis visit order and make "axis" inner most
-                size_t ndim = static_cast<size_t>(in_shape.size());
-                Coordinate start_corner(ndim, 0);
-                Coordinate end_corner(in_shape);
-                end_corner[axis] = 1;
-                Strides strides(ndim, 1);
-                AxisVector axis_order(ndim);
-                iota(axis_order.begin(), axis_order.end(), 0);
-                axis_order.erase(axis_order.begin() + axis);
-                axis_order.push_back(axis);
-                // Create CoordinateTransforms that visits only the first element along "axis"
-                CoordinateTransform input_transform(
-                    in_shape, start_corner, end_corner, strides, axis_order);
-                CoordinateTransform output_transform(
-                    out_shape, start_corner, end_corner, strides, axis_order);
-                // Create temp vector for sorting.
-                vector<tuple<T, U>> workspace(in_shape[axis]);
-                vector<size_t> in_strides = ngraph::row_major_strides(in_shape);
-                vector<size_t> out_strides = ngraph::row_major_strides(out_shape);
-                auto in_axis_stride = in_strides[axis];
-                auto out_axis_stride = out_strides[axis];
-                for (const Coordinate& coord : input_transform)
+                // Create a CoordinateTransform for "indices" that visits only the first element along inner most axis
+                size_t indices_ndim = static_cast<size_t>(indices_shape.size());
+                Coordinate indices_start_corner(indices_ndim, 0);
+                Coordinate indices_inner_end_corner(indices_shape);
+                size_t slice_rank = indices_shape[indices_ndim - 1];
+                for(size_t i = axis; i < indices_ndim; i++)
                 {
-                    auto arg_index = input_transform.index(coord);
-                    auto out_index = output_transform.index(coord);
-                    // Fill the temp vector
-                    U i = 0;
-                    for (tuple<T, U>& entry : workspace)
-                    {
-                        get<0>(entry) = arg[arg_index];
-                        get<1>(entry) = i;
-                        arg_index += in_axis_stride;
-                        i++;
-                    }
-                    // Sort the temp vector
-                    if (compute_max)
-                    {
-                        sort(workspace.begin(), workspace.end(), compare_max<T, U>);
-                    }
-                    else
-                    {
-                        sort(workspace.begin(), workspace.end(), compare_min<T, U>);
-                    }
-                    // Write temp vector to output
-                    for (size_t j = 0; j < k; j++)
-                    {
-                        tuple<T, U> entry = workspace[j];
-                        out_values[out_index] = get<0>(entry);
-                        out_indices[out_index] = get<1>(entry);
-                        out_index += out_axis_stride;
-                    }
+                    indices_inner_end_corner[i] = 1;
+                }
+                Strides indices_strides(indices_ndim, 1);
+                AxisVector indices_axis_order(indices_ndim);
+                iota(indices_axis_order.begin(), indices_axis_order.end(), 0);
+                CoordinateTransform indices_outer_transform(
+                    indices_shape, indices_start_corner, indices_inner_end_corner, indices_strides, indices_axis_order);
+                Shape params_prime_shape(params_shape);
+                params_prime_shape.erase(params_prime_shape.begin(), params_prime_shape.begin() + axis);
+                Shape indices_prime_shape(indices_shape);
+                indices_prime_shape.emplace_back(1);
+                Shape out_prime_shape;
+                for (const Coordinate& indices_outer_coord : indices_outer_transform)
+                {
+                    gather_nd(params_prime, indices_prime, out_prime, params_prime_shape, indices_prime_shape, out_prime_shape);
                 }
             }
         }

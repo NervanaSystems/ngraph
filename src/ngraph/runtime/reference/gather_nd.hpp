@@ -27,6 +27,9 @@ namespace ngraph
     {
         namespace reference
         {
+            // foreach leaf_vector_index in indices.shape[:-1]
+            //     vector = indices[leaf_vector_index]
+            //     out[leaf_vector_index:] = params[vector]
             template <typename T, typename U>
             void gather_nd(const T* params,
                            const U* indices,
@@ -47,6 +50,7 @@ namespace ngraph
                 iota(indices_axis_order.begin(), indices_axis_order.end(), 0);
                 CoordinateTransform indices_outer_transform(
                     indices_shape, indices_start_corner, indices_inner_end_corner, indices_strides, indices_axis_order);
+
                 // Create a matching CoordinateTransform for "out" that visits the same outer coordinates
                 size_t out_ndim = static_cast<size_t>(out_shape.size());
                 Coordinate out_start_corner(out_ndim, 0);
@@ -65,6 +69,7 @@ namespace ngraph
                 AxisVector params_axis_order(params_ndim);
                 iota(params_axis_order.begin(), params_axis_order.end(), 0);
 
+                // Gather slices from "params" and copy to "out"
                 auto out_coord_iter = out_transform.begin();
                 for (const Coordinate& indices_coord : indices_transform)
                 {
