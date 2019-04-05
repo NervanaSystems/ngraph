@@ -87,33 +87,6 @@ static void compare_backends(const std::shared_ptr<Function>& f1,
     }
 }
 
-static void compare_backends(const std::shared_ptr<Function>& f1,
-                             const std::shared_ptr<Function>& f2,
-                             std::shared_ptr<Function>& compiled_f1,
-                             std::shared_ptr<Function>& compiled_f2,
-                             const string backend1,
-                             const string backend2,
-                             float rtol = 1e-5,
-                             float atol = 1e-8)
-{
-    test::Uniform<float> rng(-1.0f, 1.0f);
-    vector<vector<float>> args;
-    for (shared_ptr<op::Parameter> param : f1->get_parameters())
-    {
-        vector<float> tensor_val(shape_size(param->get_shape()));
-        rng.initialize(tensor_val);
-        args.push_back(tensor_val);
-    }
-
-    auto f1_results = execute(f1, compiled_f1, args, backend1);
-    auto f2_results = execute(f2, compiled_f2, args, backend2);
-
-    for (size_t i = 0; i < f1_results.size(); i++)
-    {
-        EXPECT_TRUE(test::all_close(f1_results.at(i), f2_results.at(i), rtol, atol));
-    }
-}
-
 TEST(cpu_test, unhandled_op)
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{});
