@@ -43,6 +43,7 @@
 
 #include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/cse.hpp"
+#include "ngraph/pass/fused_op_decomposition.hpp"
 #include "ngraph/pass/get_output_element_elimination.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
@@ -429,6 +430,7 @@ shared_ptr<runtime::Executable>
     {
         ngraph::pass::Manager pass_manager;
 
+        pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>();
         pass_manager.register_pass<ngraph::pass::NopElimination>();
         pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
         pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
