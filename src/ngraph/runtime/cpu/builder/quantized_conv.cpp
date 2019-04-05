@@ -20,6 +20,7 @@
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
+#include "ngraph/runtime/cpu/kernel/quantized_convolution.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
@@ -35,14 +36,21 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::QuantizedConvolution)
             {
+                auto qconvolution = static_cast<const ngraph::op::QuantizedConvolution*>(node);
+
+                auto& functors = external_function->get_functors();
+
+                auto arg0_shape = args[0].get_shape();
+                auto arg1_shape = args[1].get_shape();
+                auto result_shape = out[0].get_shape();
+
+                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
+                auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
+
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto& functors = external_function->get_functors();
-                    auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                    auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                    auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
-                    auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
-
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto scales_size = shape_size(args[2].get_shape());
 
@@ -79,7 +87,46 @@ namespace ngraph
                 }
                 else
                 {
-                    throw ngraph_error("unsupported parameters for QuantizedConvolution via DEX");
+                    // Needs generalizing
+                    std::function<decltype(
+                        runtime::cpu::kernel::quant_convolution<uint8_t, uint8_t, uint8_t>)>
+                        kernel;
+                    kernel = runtime::cpu::kernel::quant_convolution<uint8_t, uint8_t, uint8_t>;
+
+                    auto scale_const_op =
+                        std::dynamic_pointer_cast<ngraph::op::Constant>(node->get_arguments()[2]);
+                    auto scale_val = scale_const_op->get_vector<float>();
+                    auto window_movement_strides = qconvolution->get_window_movement_strides();
+                    auto window_dilation_strides = qconvolution->get_window_dilation_strides();
+                    auto padding_below = qconvolution->get_padding_below();
+                    auto padding_above = qconvolution->get_padding_above();
+                    auto data_dilation_strides = qconvolution->get_data_dilation_strides();
+
+                    auto functor = [&,
+                                    kernel,
+                                    arg0_shape,
+                                    arg1_shape,
+                                    result_shape,
+                                    window_movement_strides,
+                                    window_dilation_strides,
+                                    padding_below,
+                                    padding_above,
+                                    data_dilation_strides,
+                                    scale_val](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        kernel(arg0_tensor,
+                               arg1_tensor,
+                               out0_tensor,
+                               arg0_shape,
+                               arg1_shape,
+                               result_shape,
+                               window_movement_strides,
+                               window_dilation_strides,
+                               padding_below,
+                               padding_above,
+                               data_dilation_strides,
+                               scale_val[0]);
+                    };
+                    functors.emplace_back(functor);
                 }
             }
 
