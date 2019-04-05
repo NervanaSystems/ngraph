@@ -56,3 +56,27 @@ TEST(distributed_${BACKEND_NAME}, allreduce)
         EXPECT_TRUE(test::all_close_f(v, read_vector<float>(result)));
     }
 }
+
+TEST(distributed_${BACKEND_NAME}, broadcastdistributed)
+{
+    auto shape = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::BroadcastDistributed>(A), ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    auto v = vector<float>{1, 2, 3, 4};
+    auto result = backend->create_tensor(element::f32, shape);
+    copy_data(result, vector<float>(4, 0));
+
+    DistributedSetup distsetup;
+    auto processIdx = distsetup.get_comm_rank();
+    if (processIdx == 0)
+    {
+        copy_data(result, v);
+    }
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {result});
+    EXPECT_EQ(v, read_vector<float>(result));
+}
