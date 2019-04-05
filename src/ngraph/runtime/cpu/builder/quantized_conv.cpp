@@ -93,14 +93,12 @@ namespace ngraph
                         kernel;
                     kernel = runtime::cpu::kernel::quant_convolution<uint8_t, uint8_t, uint8_t>;
 
-                    auto scale_const_op =
-                        std::dynamic_pointer_cast<ngraph::op::Constant>(node->get_arguments()[2]);
-                    auto scale_val = scale_const_op->get_vector<float>();
                     auto window_movement_strides = qconvolution->get_window_movement_strides();
                     auto window_dilation_strides = qconvolution->get_window_dilation_strides();
                     auto padding_below = qconvolution->get_padding_below();
                     auto padding_above = qconvolution->get_padding_above();
                     auto data_dilation_strides = qconvolution->get_data_dilation_strides();
+                    auto scales_size = shape_size(args[2].get_shape());
 
                     auto functor = [&,
                                     kernel,
@@ -112,19 +110,27 @@ namespace ngraph
                                     padding_below,
                                     padding_above,
                                     data_dilation_strides,
-                                    scale_val](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        kernel(arg0_tensor,
-                               arg1_tensor,
-                               out0_tensor,
-                               arg0_shape,
-                               arg1_shape,
-                               result_shape,
-                               window_movement_strides,
-                               window_dilation_strides,
-                               padding_below,
-                               padding_above,
-                               data_dilation_strides,
-                               scale_val[0]);
+                                    scales_size](CPURuntimeContext* ctx,
+                                                 CPUExecutionContext* ectx) {
+
+                        if (ctx->first_iteration)
+                        {
+                            vector<float> dyn_scales;
+                            dyn_scales.assign(static_cast<float*>(arg2_tensor),
+                                              static_cast<float*>(arg2_tensor) + scales_size);
+                            kernel(arg0_tensor,
+                                   arg1_tensor,
+                                   out0_tensor,
+                                   arg0_shape,
+                                   arg1_shape,
+                                   result_shape,
+                                   window_movement_strides,
+                                   window_dilation_strides,
+                                   padding_below,
+                                   padding_above,
+                                   data_dilation_strides,
+                                   dyn_scales[0]);
+                        }
                     };
                     functors.emplace_back(functor);
                 }
