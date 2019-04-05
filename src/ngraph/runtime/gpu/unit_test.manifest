@@ -119,7 +119,8 @@ model_quantize_linear
 model_quant_conv_linear
 
 # This should be implemented
-create_tensor_2
+create_tensor_2_input
+create_tensor_2_output
 
 # Not implemented
 erf
