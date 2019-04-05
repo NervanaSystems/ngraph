@@ -30,6 +30,7 @@ topk_1d_min_one
 topk_1d_min_partial
 topk_2d_max_all
 topk_2d_max_one
+topk_2d_max_one_with_equal_values
 topk_2d_max_partial
 topk_2d_min_all
 topk_2d_min_one
