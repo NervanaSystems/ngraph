@@ -29,22 +29,18 @@ namespace ngraph
     {
         namespace cpu
         {
-            template <>
-            void Builder::BUILDER_DECL(ngraph::op::Broadcast)
+            static void get_broadcast_kernel(
+                const ngraph::Node* node,
+                std::function<decltype(runtime::cpu::kernel::broadcast<float, 2>)>& kernel,
+                Shape& expanded_input_shape,
+                Shape& out_shape,
+                size_t& size)
             {
-                auto& functors = external_function->get_functors();
-
                 auto broadcast = static_cast<const ngraph::op::Broadcast*>(node);
                 auto broadcast_axes = broadcast->get_broadcast_axes();
 
-                auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
-
-                auto arg_shape = args[0].get_shape();
-                auto out_shape = out[0].get_shape();
-
-                // TODO(jmenon): Shape transformations, rank reduction etc. needs to be general
-                // and not in any one builder. Move this to the Halide analysis phase.
+                auto arg_shape = broadcast->get_argument(0)->get_shape();
+                out_shape = broadcast->get_shape();
 
                 // Transform output shape - ex. [4, 1, 2, 2] -> [4, 1, 4]
                 // if we're not broadcasting along axes 2 and 3
@@ -96,9 +92,7 @@ namespace ngraph
                     else
                     {
                         broadcast_axes.erase(i);
-                        // TODO(jmenon): This needs to be rewritten
-                        // when it gets moved to the analysis pass
-                        // that doesn't use AxisSet
+
                         auto new_bcast_axes = AxisSet{};
                         for (auto axis : broadcast_axes)
                         {
@@ -128,11 +122,7 @@ namespace ngraph
 
                 if (broadcast_axes.empty())
                 {
-                    size_t size = out[0].get_size() * out[0].get_element_type().size();
-                    auto functor = [&, size](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        memcpy(out_tensor, arg_tensor, size);
-                    };
-                    functors.emplace_back(functor);
+                    size = shape_size(out_shape) * broadcast->get_element_type().size();
                     return;
                 }
 
@@ -146,7 +136,7 @@ namespace ngraph
                 // so expand as needed
                 // Ex. [2] -> [2, 1] for output shape [2, 4]
 
-                auto expanded_input_shape = Shape(out_rank, 1);
+                expanded_input_shape = Shape(out_rank, 1);
                 size_t i = 0;
                 for (size_t j = 0; j < out_rank; j++)
                 {
@@ -160,16 +150,69 @@ namespace ngraph
                     }
                 }
 
+                SELECT_KERNEL_BY_RANK(kernel,
+                                      broadcast->get_input_element_type(0),
+                                      out_rank,
+                                      runtime::cpu::kernel::broadcast);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Broadcast)
+            {
                 std::function<decltype(runtime::cpu::kernel::broadcast<float, 2>)> kernel;
+                Shape expanded_input_shape, out_shape;
+                size_t size;
 
-                SELECT_KERNEL_BY_RANK(
-                    kernel, args[0].get_element_type(), out_rank, runtime::cpu::kernel::broadcast);
+                get_broadcast_kernel(node, kernel, expanded_input_shape, out_shape, size);
+                NodeExecutorTy functor;
+                if (kernel)
+                {
+                    functor = [kernel, expanded_input_shape, out_shape](
+                        const std::vector<void*> inputs, std::vector<void*> outputs) {
+                        kernel(inputs[0], outputs[0], expanded_input_shape, out_shape, 0);
+                    };
+                }
+                else
+                {
+                    functor = [size](const std::vector<void*>& inputs,
+                                     std::vector<void*>& outputs) {
+                        memcpy(outputs[0], inputs[0], size);
+                    };
+                }
+                return functor;
+            }
+            REGISTER_CF_BUILDER(Broadcast);
 
-                auto functor = [&, kernel, expanded_input_shape, out_shape](
-                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                    kernel(arg_tensor, out_tensor, expanded_input_shape, out_shape, ectx->arena);
-                };
-                functors.emplace_back(functor);
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::Broadcast)
+            {
+                auto& functors = external_function->get_functors();
+
+                auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+
+                std::function<decltype(runtime::cpu::kernel::broadcast<float, 2>)> kernel;
+                Shape expanded_input_shape, out_shape;
+                size_t size;
+
+                get_broadcast_kernel(node, kernel, expanded_input_shape, out_shape, size);
+                CPUKernelFunctor functor;
+                if (kernel)
+                {
+                    functor = [&, kernel, expanded_input_shape, out_shape](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        kernel(
+                            arg_tensor, out_tensor, expanded_input_shape, out_shape, ectx->arena);
+                    };
+                    functors.emplace_back(functor);
+                }
+                else
+                {
+                    functor = [&, size](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        memcpy(out_tensor, arg_tensor, size);
+                    };
+                    functors.emplace_back(functor);
+                }
             }
 
             REGISTER_OP_BUILDER(Broadcast);

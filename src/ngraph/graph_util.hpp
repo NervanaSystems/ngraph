@@ -67,7 +67,7 @@ namespace ngraph
     void traverse_nodes(const NodeVector& subgraph_results,
                         std::function<void(std::shared_ptr<Node>)> f,
                         bool include_control_deps,
-                        const NodeVector& subgraph_params = NodeVector{});
+                        const NodeVector& subgraph_params = {});
 
     void traverse_functions(std::shared_ptr<Function> p,
                             std::function<void(std::shared_ptr<Function>)> f);

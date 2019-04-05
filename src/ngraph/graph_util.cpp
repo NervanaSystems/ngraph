@@ -151,6 +151,20 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
     // Fix input/output descriptors
     assert(target->get_outputs().size() == replacement->get_outputs().size());
 
+    auto set_replacement_prov = [replacement](std::shared_ptr<Node> node) {
+        replacement->merge_provenance_tags_from(node);
+    };
+    traverse_nodes({target}, set_replacement_prov, false, replacement->get_arguments());
+
+    auto propagate_replacement_prov = [replacement](std::shared_ptr<Node> node) {
+        if (is_post_dominated(node.get(), replacement.get()))
+        {
+            node->merge_provenance_tags_from(replacement);
+        }
+    };
+
+    traverse_nodes({replacement}, propagate_replacement_prov, false);
+
     // For each of target's output O with replacement output O_rep:
     //     For each O's connected downstream input I:
     //         Change I's connected upstream output to O_rep
@@ -164,7 +178,6 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
             input->replace_output(replacement->get_outputs().at(i));
         }
     }
-    replacement->merge_provenance_tags_from(target);
 }
 
 // Check if all paths from X to a result go through Y

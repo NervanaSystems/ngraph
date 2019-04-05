@@ -4343,12 +4343,32 @@ TEST(type_prop, one_hot_deduce_matrix_2)
     ASSERT_EQ(oh->get_shape(), (Shape{12, 24, 2}));
 }
 
+TEST(type_prop, one_hot_deduce_et_dynamic)
+{
+    auto param = make_shared<op::Parameter>(element::dynamic, Shape{12, 24});
+    auto oh = make_shared<op::OneHot>(param, Shape{12, 24, 2}, 2);
+    ASSERT_EQ(oh->get_element_type(), element::dynamic);
+    ASSERT_EQ(oh->get_shape(), (Shape{12, 24, 2}));
+}
+
 TEST(type_prop, one_hot_deduce_floating_point)
 {
     auto param = make_shared<op::Parameter>(element::f32, Shape{12, 24});
-    auto oh = make_shared<op::OneHot>(param, Shape{12, 24, 8}, 2);
-    ASSERT_EQ(oh->get_element_type(), element::f32);
-    ASSERT_EQ(oh->get_shape(), (Shape{12, 24, 8}));
+    try
+    {
+        auto oh = make_shared<op::OneHot>(param, Shape{12, 24, 8}, 3);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid floating-point element type not detected.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Argument does not have integral element type."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
 }
 
 TEST(type_prop, one_hot_deduce_axis_oob)
@@ -4396,7 +4416,7 @@ TEST(type_prop, one_hot_partial_rank_dynamic_rank_dynamic)
     PartialShape requested_shape{PartialShape::dynamic()};
     size_t one_hot_axis{3000};
 
-    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param = make_shared<op::Parameter>(element::i32, input_shape);
     try
     {
         auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
@@ -4419,10 +4439,10 @@ TEST(type_prop, one_hot_partial_rank_dynamic_rank_static_dynamic_ok)
     PartialShape requested_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic()};
     size_t one_hot_axis{2};
 
-    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param = make_shared<op::Parameter>(element::i32, input_shape);
     auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
 
-    ASSERT_EQ(oh->get_output_element_type(0), element::f32);
+    ASSERT_EQ(oh->get_output_element_type(0), element::i32);
     ASSERT_TRUE(oh->get_output_partial_shape(0).same_scheme(
         PartialShape{Dimension::dynamic(), 2, 3, Dimension::dynamic()}));
 }
@@ -4433,7 +4453,7 @@ TEST(type_prop, one_hot_partial_rank_dynamic_rank_static_dynamic_one_hot_dim_dyn
     PartialShape requested_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic()};
     size_t one_hot_axis{3};
 
-    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param = make_shared<op::Parameter>(element::i32, input_shape);
     try
     {
         auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
@@ -4458,7 +4478,7 @@ TEST(type_prop, one_hot_partial_rank_dynamic_rank_static_dynamic_one_hot_axis_oo
     PartialShape requested_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic()};
     size_t one_hot_axis{4};
 
-    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param = make_shared<op::Parameter>(element::i32, input_shape);
     try
     {
         auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
@@ -4484,10 +4504,10 @@ TEST(type_prop, one_hot_partial_rank_static_dynamic_rank_static_dynamic_ok)
     PartialShape requested_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic(), 4};
     size_t one_hot_axis{2};
 
-    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param = make_shared<op::Parameter>(element::i32, input_shape);
     auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
 
-    ASSERT_EQ(oh->get_output_element_type(0), element::f32);
+    ASSERT_EQ(oh->get_output_element_type(0), element::i32);
     ASSERT_TRUE(oh->get_output_partial_shape(0).same_scheme(
         PartialShape{3, 2, 3, Dimension::dynamic(), 4}));
 }
@@ -4499,7 +4519,7 @@ TEST(type_prop,
     PartialShape requested_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic(), 4};
     size_t one_hot_axis{2};
 
-    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param = make_shared<op::Parameter>(element::i32, input_shape);
     try
     {
         auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
@@ -4526,7 +4546,7 @@ TEST(type_prop,
     PartialShape requested_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic(), 4};
     size_t one_hot_axis{2};
 
-    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param = make_shared<op::Parameter>(element::i32, input_shape);
     try
     {
         auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
@@ -4553,7 +4573,7 @@ TEST(type_prop, one_hot_partial_rank_static_dynamic_rank_static_dynamic_incompat
     PartialShape requested_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic(), 4};
     size_t one_hot_axis{2};
 
-    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param = make_shared<op::Parameter>(element::i32, input_shape);
     try
     {
         auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
@@ -4580,7 +4600,7 @@ TEST(type_prop, one_hot_partial_rank_static_dynamic_rank_static_dynamic_one_hot_
         Dimension::dynamic(), 2, Dimension::dynamic(), Dimension::dynamic(), 4};
     size_t one_hot_axis{2};
 
-    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param = make_shared<op::Parameter>(element::i32, input_shape);
     try
     {
         auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
@@ -4607,7 +4627,7 @@ TEST(type_prop, one_hot_partial_rank_static_dynamic_rank_static_dynamic_one_hot_
         Dimension::dynamic(), 2, Dimension::dynamic(), Dimension::dynamic(), 4};
     size_t one_hot_axis{2};
 
-    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param = make_shared<op::Parameter>(element::i32, input_shape);
     try
     {
         auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);

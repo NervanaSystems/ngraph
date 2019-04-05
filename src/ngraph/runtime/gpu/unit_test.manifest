@@ -116,10 +116,14 @@ pad_reflect_2d_with_neg
 # Quantized operators are not supported on gpu backend
 model_dequantize_linear
 model_quantize_linear
+model_quantize_linear_zero_point
+quantize_linear_axis_zero
+model_quantize_linear_axis_negative
 model_quant_conv_linear
 
 # This should be implemented
-create_tensor_2
+create_tensor_2_input
+create_tensor_2_output
 
 # Not implemented
 erf

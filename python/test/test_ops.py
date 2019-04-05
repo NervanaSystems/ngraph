@@ -659,7 +659,7 @@ def test_constant():
 
 def test_onehot():
 
-    element_type = Type.f32
+    element_type = Type.i32
     A = Parameter(element_type, Shape([3]))
     parameter_list = [A]
     function = Function(NodeVector([OneHot(A, Shape([3, 3]), 0)]), parameter_list, 'test')
@@ -668,9 +668,9 @@ def test_onehot():
     a = backend.create_tensor(element_type, Shape([3]))
     result = backend.create_tensor(element_type, Shape([3, 3]))
 
-    a.write(util.numpy_to_c(np.array([1, 0, 2], dtype=np.float32)), 0, 12)
+    a.write(util.numpy_to_c(np.array([1, 0, 2], dtype=np.int32)), 0, 12)
 
-    result_arr = np.zeros((3, 3), dtype=np.float32)
+    result_arr = np.zeros((3, 3), dtype=np.int32)
     result.write(util.numpy_to_c(result_arr), 0, 36)
     handle = backend.compile(function)
     handle.call([result], [a])
