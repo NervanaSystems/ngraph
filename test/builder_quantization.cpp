@@ -1429,7 +1429,7 @@ TEST(builder, scaled_QC_u8u8)
     vector<uint8_t> b_data = {1, 2, 3, 4, 5, 0, 0, 1, 2};          //{0, -1, 0, -2, -3, 5, 0, 2, 1};
     auto A = make_shared<op::Parameter>(element::u8, shape_a);
     auto B = make_shared<op::Parameter>(element::u8, shape_b);
-    auto scale = op::Constant::create(element::f32, Shape{}, {2});
+    auto scale = op::Constant::create(element::f32, Shape{1}, {2});
     auto CV = make_shared<ngraph::op::QuantizedConvolution>(A,
                                                             B,
                                                             Strides{1, 1},        // move_strides
@@ -1451,17 +1451,17 @@ TEST(builder, scaled_QC_u8u8)
     auto result = backend->create_tensor(element::u8, shape_r);
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ((vector<uint8_t>{22 * 2,
-                               34 * 2,
-                               30 * 2,
-                               32 * 2,
-                               38 * 2,
-                               72 * 2,
-                               90 * 2,
-                               43 * 2,
-                               33 * 2,
-                               52 * 2,
-                               43 * 2,
-                               39 * 2} /*{1, 28, -3, 16, -7, -14, 3, -7, -3}*/),
+    EXPECT_EQ((vector<uint8_t>{22*2,
+                               34*2,
+                               30*2,
+                               32*2,
+                               38*2,
+                               72*2,
+                               90*2,
+                               43*2,
+                               33*2,
+                               52*2,
+                               43*2,
+                               39*2} /*{1, 28, -3, 16, -7, -14, 3, -7, -3}*/),
               read_vector<uint8_t>(result));
 }
