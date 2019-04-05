@@ -59,7 +59,7 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<Function> function)
                 {
                     for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
                     {
-                        auto output = &node->get_output_tensor(oi_pair.output);
+                        auto output = &node->output(oi_pair.output).get_tensor();
                         auto input = &node->input(oi_pair.input).get_tensor();
                         auto input_node = node->input(oi_pair.input).get_source_output().get_node();
 

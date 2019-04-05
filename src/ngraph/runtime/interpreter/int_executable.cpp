@@ -109,9 +109,9 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
 
         // get op inputs from map
         vector<shared_ptr<HostTensor>> op_inputs;
-        for (size_t i = 0; i < op->get_input_size(); i++)
+        for (auto input : op->inputs())
         {
-            descriptor::Tensor* tensor = &op->input(i).get_tensor();
+            descriptor::Tensor* tensor = &input.get_tensor();
             op_inputs.push_back(tensor_map.at(tensor));
         }
 

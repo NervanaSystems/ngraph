@@ -43,9 +43,9 @@ bool runtime::hybrid::pass::Dump::run_on_module(vector<shared_ptr<Function>>& fu
             {
                 out << node->get_name() << "(";
                 vector<string> inputs;
-                for (size_t i = 0; i < node->get_input_size(); i++)
+                for (const Input<Node>& input : node->inputs())
                 {
-                    inputs.push_back(node->input(i).get_tensor().get_name());
+                    inputs.push_back(input.get_tensor().get_name());
                 }
                 out << join(inputs);
                 out << ") -> ";
