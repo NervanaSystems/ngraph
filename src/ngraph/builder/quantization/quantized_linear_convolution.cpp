@@ -80,8 +80,11 @@ namespace ngraph
                 auto dq_input = make_shared<op::Dequantize>(
                     input, input_scale, input_zero_point, input_scale->get_element_type(), axes);
 
-                auto dq_filter = make_shared<op::Dequantize>(
-                    filter, filter_scale, filter_zero_point, filter_scale->get_element_type(), axes);
+                auto dq_filter = make_shared<op::Dequantize>(filter,
+                                                             filter_scale,
+                                                             filter_zero_point,
+                                                             filter_scale->get_element_type(),
+                                                             axes);
 
                 auto convolution = make_shared<op::Convolution>(dq_input,
                                                                 dq_filter,
