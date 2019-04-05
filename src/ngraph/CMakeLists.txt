@@ -338,6 +338,8 @@ set (SRC
     pass/zero_dim_tensor_elimination.hpp
     pass/concat_fusion.hpp
     pass/concat_fusion.cpp
+    pass/pass_util.hpp
+    pass/pass_util.cpp
     pattern/matcher.cpp
     pattern/matcher.hpp
     pattern/op/any.hpp
