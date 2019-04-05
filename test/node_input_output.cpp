@@ -32,9 +32,8 @@ TEST(node_input_output, input_create)
     auto y = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
     auto add = make_shared<op::Add>(x, y);
 
-    auto add_in_0 = Input<Node>(add.get(), 0);
-    auto add_in_1 = Input<Node>(add.get(), 1);
-    auto add_in_2 = Input<Node>(add.get(), 2);
+    auto add_in_0 = add->input(0);
+    auto add_in_1 = add->input(1);
 
     EXPECT_EQ(add_in_0.get_node(), add.get());
     EXPECT_EQ(add_in_0.get_index(), 0);
@@ -50,55 +49,17 @@ TEST(node_input_output, input_create)
     EXPECT_TRUE(add_in_1.get_partial_shape().same_scheme(PartialShape{1, 2, 3, 4}));
     EXPECT_EQ(add_in_1.get_source_output(), Output<Node>(y, 0));
 
-    EXPECT_EQ(add_in_2.get_node(), add.get());
-    EXPECT_EQ(add_in_2.get_index(), 2);
-    EXPECT_THROW(add_in_2.get_element_type(), std::out_of_range);
-    EXPECT_THROW(add_in_2.get_shape(), std::out_of_range);
-    EXPECT_THROW(add_in_2.get_partial_shape(), std::out_of_range);
-    EXPECT_THROW(add_in_2.get_source_output(), std::out_of_range);
+    EXPECT_THROW(add->input(2), std::out_of_range);
 }
 
-TEST(node_input_output, const_input_create_from_nonconst)
-{
-    auto x = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
-    auto y = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
-    auto add = make_shared<op::Add>(x, y);
-
-    auto add_in_0 = Input<const Node>(add.get(), 0);
-    auto add_in_1 = Input<const Node>(add.get(), 1);
-    auto add_in_2 = Input<const Node>(add.get(), 2);
-
-    EXPECT_EQ(add_in_0.get_node(), add.get());
-    EXPECT_EQ(add_in_0.get_index(), 0);
-    EXPECT_EQ(add_in_0.get_element_type(), element::f32);
-    EXPECT_EQ(add_in_0.get_shape(), (Shape{1, 2, 3, 4}));
-    EXPECT_TRUE(add_in_0.get_partial_shape().same_scheme(PartialShape{1, 2, 3, 4}));
-    EXPECT_EQ(add_in_0.get_source_output(), Output<Node>(x, 0));
-
-    EXPECT_EQ(add_in_1.get_node(), add.get());
-    EXPECT_EQ(add_in_1.get_index(), 1);
-    EXPECT_EQ(add_in_1.get_element_type(), element::f32);
-    EXPECT_EQ(add_in_1.get_shape(), (Shape{1, 2, 3, 4}));
-    EXPECT_TRUE(add_in_1.get_partial_shape().same_scheme(PartialShape{1, 2, 3, 4}));
-    EXPECT_EQ(add_in_1.get_source_output(), Output<Node>(y, 0));
-
-    EXPECT_EQ(add_in_2.get_node(), add.get());
-    EXPECT_EQ(add_in_2.get_index(), 2);
-    EXPECT_THROW(add_in_2.get_element_type(), std::out_of_range);
-    EXPECT_THROW(add_in_2.get_shape(), std::out_of_range);
-    EXPECT_THROW(add_in_2.get_partial_shape(), std::out_of_range);
-    EXPECT_THROW(add_in_2.get_source_output(), std::out_of_range);
-}
-
-TEST(node_input_output, const_input_create_from_const)
+TEST(node_input_output, input_create_const)
 {
     auto x = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
     auto y = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
     auto add = make_shared<const op::Add>(x, y);
 
-    auto add_in_0 = Input<const Node>(add.get(), 0);
-    auto add_in_1 = Input<const Node>(add.get(), 1);
-    auto add_in_2 = Input<const Node>(add.get(), 2);
+    auto add_in_0 = add->input(0);
+    auto add_in_1 = add->input(1);
 
     EXPECT_EQ(add_in_0.get_node(), add.get());
     EXPECT_EQ(add_in_0.get_index(), 0);
@@ -114,44 +75,7 @@ TEST(node_input_output, const_input_create_from_const)
     EXPECT_TRUE(add_in_1.get_partial_shape().same_scheme(PartialShape{1, 2, 3, 4}));
     EXPECT_EQ(add_in_1.get_source_output(), Output<Node>(y, 0));
 
-    EXPECT_EQ(add_in_2.get_node(), add.get());
-    EXPECT_EQ(add_in_2.get_index(), 2);
-    EXPECT_THROW(add_in_2.get_element_type(), std::out_of_range);
-    EXPECT_THROW(add_in_2.get_shape(), std::out_of_range);
-    EXPECT_THROW(add_in_2.get_partial_shape(), std::out_of_range);
-    EXPECT_THROW(add_in_2.get_source_output(), std::out_of_range);
-}
-
-TEST(node_input_output, add_input_create)
-{
-    auto x = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
-    auto y = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
-    auto add = make_shared<op::Add>(x, y);
-
-    auto add_in_0 = Input<op::Add>(add.get(), 0);
-    auto add_in_1 = Input<op::Add>(add.get(), 1);
-    auto add_in_2 = Input<op::Add>(add.get(), 2);
-
-    EXPECT_EQ(add_in_0.get_node(), add.get());
-    EXPECT_EQ(add_in_0.get_index(), 0);
-    EXPECT_EQ(add_in_0.get_element_type(), element::f32);
-    EXPECT_EQ(add_in_0.get_shape(), (Shape{1, 2, 3, 4}));
-    EXPECT_TRUE(add_in_0.get_partial_shape().same_scheme(PartialShape{1, 2, 3, 4}));
-    EXPECT_EQ(add_in_0.get_source_output(), Output<Node>(x, 0));
-
-    EXPECT_EQ(add_in_1.get_node(), add.get());
-    EXPECT_EQ(add_in_1.get_index(), 1);
-    EXPECT_EQ(add_in_1.get_element_type(), element::f32);
-    EXPECT_EQ(add_in_1.get_shape(), (Shape{1, 2, 3, 4}));
-    EXPECT_TRUE(add_in_1.get_partial_shape().same_scheme(PartialShape{1, 2, 3, 4}));
-    EXPECT_EQ(add_in_1.get_source_output(), Output<Node>(y, 0));
-
-    EXPECT_EQ(add_in_2.get_node(), add.get());
-    EXPECT_EQ(add_in_2.get_index(), 2);
-    EXPECT_THROW(add_in_2.get_element_type(), std::out_of_range);
-    EXPECT_THROW(add_in_2.get_shape(), std::out_of_range);
-    EXPECT_THROW(add_in_2.get_partial_shape(), std::out_of_range);
-    EXPECT_THROW(add_in_2.get_source_output(), std::out_of_range);
+    EXPECT_THROW(add->input(2), std::out_of_range);
 }
 
 TEST(node_input_output, output_create)
@@ -160,8 +84,7 @@ TEST(node_input_output, output_create)
     auto y = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
     auto add = make_shared<op::Add>(x, y);
 
-    auto add_out_0 = Output<Node>(add, 0);
-    auto add_out_1 = Output<Node>(add, 1);
+    auto add_out_0 = add->output(0);
 
     EXPECT_EQ(add_out_0.get_node(), add.get());
     EXPECT_EQ(add_out_0.get_index(), 0);
@@ -169,43 +92,16 @@ TEST(node_input_output, output_create)
     EXPECT_EQ(add_out_0.get_shape(), (Shape{1, 2, 3, 4}));
     EXPECT_TRUE(add_out_0.get_partial_shape().same_scheme(PartialShape{1, 2, 3, 4}));
 
-    EXPECT_EQ(add_out_1.get_node(), add.get());
-    EXPECT_EQ(add_out_1.get_index(), 1);
-    EXPECT_THROW(add_out_1.get_element_type(), std::out_of_range);
-    EXPECT_THROW(add_out_1.get_shape(), std::out_of_range);
-    EXPECT_THROW(add_out_1.get_partial_shape(), std::out_of_range);
+    EXPECT_THROW(add->output(1), std::out_of_range);
 }
 
-TEST(node_input_output, const_output_create_from_nonconst)
-{
-    auto x = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
-    auto y = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
-    auto add = make_shared<op::Add>(x, y);
-
-    auto add_out_0 = Output<const Node>(add, 0);
-    auto add_out_1 = Output<const Node>(add, 1);
-
-    EXPECT_EQ(add_out_0.get_node(), add.get());
-    EXPECT_EQ(add_out_0.get_index(), 0);
-    EXPECT_EQ(add_out_0.get_element_type(), element::f32);
-    EXPECT_EQ(add_out_0.get_shape(), (Shape{1, 2, 3, 4}));
-    EXPECT_TRUE(add_out_0.get_partial_shape().same_scheme(PartialShape{1, 2, 3, 4}));
-
-    EXPECT_EQ(add_out_1.get_node(), add.get());
-    EXPECT_EQ(add_out_1.get_index(), 1);
-    EXPECT_THROW(add_out_1.get_element_type(), std::out_of_range);
-    EXPECT_THROW(add_out_1.get_shape(), std::out_of_range);
-    EXPECT_THROW(add_out_1.get_partial_shape(), std::out_of_range);
-}
-
-TEST(node_input_output, const_output_create_from_const)
+TEST(node_input_output, output_create_const)
 {
     auto x = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
     auto y = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
     auto add = make_shared<const op::Add>(x, y);
 
-    auto add_out_0 = Output<const Node>(add, 0);
-    auto add_out_1 = Output<const Node>(add, 1);
+    auto add_out_0 = add->output(0);
 
     EXPECT_EQ(add_out_0.get_node(), add.get());
     EXPECT_EQ(add_out_0.get_index(), 0);
@@ -213,31 +109,5 @@ TEST(node_input_output, const_output_create_from_const)
     EXPECT_EQ(add_out_0.get_shape(), (Shape{1, 2, 3, 4}));
     EXPECT_TRUE(add_out_0.get_partial_shape().same_scheme(PartialShape{1, 2, 3, 4}));
 
-    EXPECT_EQ(add_out_1.get_node(), add.get());
-    EXPECT_EQ(add_out_1.get_index(), 1);
-    EXPECT_THROW(add_out_1.get_element_type(), std::out_of_range);
-    EXPECT_THROW(add_out_1.get_shape(), std::out_of_range);
-    EXPECT_THROW(add_out_1.get_partial_shape(), std::out_of_range);
-}
-
-TEST(node_input_output, add_output_create)
-{
-    auto x = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
-    auto y = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
-    auto add = make_shared<op::Add>(x, y);
-
-    auto add_out_0 = Output<op::Add>(add, 0);
-    auto add_out_1 = Output<op::Add>(add, 1);
-
-    EXPECT_EQ(add_out_0.get_node(), add.get());
-    EXPECT_EQ(add_out_0.get_index(), 0);
-    EXPECT_EQ(add_out_0.get_element_type(), element::f32);
-    EXPECT_EQ(add_out_0.get_shape(), (Shape{1, 2, 3, 4}));
-    EXPECT_TRUE(add_out_0.get_partial_shape().same_scheme(PartialShape{1, 2, 3, 4}));
-
-    EXPECT_EQ(add_out_1.get_node(), add.get());
-    EXPECT_EQ(add_out_1.get_index(), 1);
-    EXPECT_THROW(add_out_1.get_element_type(), std::out_of_range);
-    EXPECT_THROW(add_out_1.get_shape(), std::out_of_range);
-    EXPECT_THROW(add_out_1.get_partial_shape(), std::out_of_range);
+    EXPECT_THROW(add->output(1), std::out_of_range);
 }
