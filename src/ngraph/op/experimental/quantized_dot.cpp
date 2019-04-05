@@ -28,12 +28,10 @@ op::QuantizedDot::QuantizedDot(const shared_ptr<Node>& data,
                                const shared_ptr<Node>& weights,
                                const shared_ptr<Node>& scale,
                                bool requantize,
-                               bool with_relu,
-                               bool is_output_i32)
+                               bool with_relu)
     : Op("QuantizedDot", check_single_output_args({data, weights, scale}))
     , m_requantize(requantize)
     , m_with_relu(with_relu)
-    , m_is_output_i32(is_output_i32)
 {
     constructor_validate_and_infer_types();
 
@@ -48,10 +46,6 @@ op::QuantizedDot::QuantizedDot(const shared_ptr<Node>& data,
                           " weights shape ",
                           weights_shape);
 
-    auto output_et = requantize ? (with_relu ? element::u8 : element::i8) : element::f32;
-    if (is_output_i32)
-    {
-        output_et = element::i32;
-    }
+    auto output_et = requantize ? (with_relu ? element::u8 : element::i8) : element::i32;
     set_output_type(0, output_et, Shape{data_shape[0], weights_shape[0]});
 }

@@ -31,8 +31,7 @@ namespace ngraph
             shared_ptr<Node> QuantizedDotInteger(shared_ptr<Node> input, shared_ptr<Node> filter)
             {
                 auto output_scale = make_constant(element::f32, Shape{}, 1);
-                return make_shared<op::QuantizedDot>(
-                    input, filter, output_scale, false, false, true);
+                return make_shared<op::QuantizedDot>(input, filter, output_scale, false, false);
             }
         }
     }
