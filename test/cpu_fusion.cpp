@@ -29,7 +29,6 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/concat.hpp"
-#include "ngraph/runtime/cpu/op/deconv.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
@@ -62,6 +61,7 @@
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
+#include "ngraph/runtime/cpu/op/deconv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
@@ -1109,8 +1109,6 @@ TEST(cpu_fusion, conv_add)
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
 }
 
-
-
 shared_ptr<Function> gen_deconv(const bool add_goe)
 {
     Shape conv_out_shape{100, 64, 1, 1};
@@ -1119,7 +1117,6 @@ shared_ptr<Function> gen_deconv(const bool add_goe)
     Shape filters_shape{64, 512, 4, 4};
     Shape bias_shape{512};
     Shape data_batch_shape{100, 512, 4, 4};
-
 
     auto data_label = std::make_shared<pattern::op::Label>(element::f32, data_batch_shape);
     auto filters = std::make_shared<op::Parameter>(element::f32, filters_shape);
@@ -1139,19 +1136,20 @@ shared_ptr<Function> gen_deconv(const bool add_goe)
     auto gamma = std::make_shared<op::Parameter>(element::f32, bias_shape);
     auto beta = std::make_shared<op::Parameter>(element::f32, bias_shape);
     double eps = 0.001;
-    
+
     auto goe_bn = std::make_shared<op::GetOutputElement>(conv, 0);
 
     // Adding a goe will stop fusion since the patterns wont expect to see this op
-    auto bn =
-        add_goe ? std::make_shared<op::BatchNormInference>(goe_bn, gamma, beta, mean, var, eps)
-                : std::make_shared<op::BatchNormInference>(conv, gamma, beta, mean, var, eps);
+    auto bn = add_goe
+                  ? std::make_shared<op::BatchNormInference>(goe_bn, gamma, beta, mean, var, eps)
+                  : std::make_shared<op::BatchNormInference>(conv, gamma, beta, mean, var, eps);
 
     return make_shared<Function>(NodeVector{bn},
-            ParameterVector{filters, out_delta, gamma, beta, mean, var});
+                                 ParameterVector{filters, out_delta, gamma, beta, mean, var});
 }
 
-TEST(cpu_fusion, fuse_deconv)
+// Note: enable deconv tests, when the deconv perf is better than convbackpropdata
+TEST(cpu_fusion, DISABLED_fuse_deconv)
 {
     auto func_fuse1 = gen_deconv(false);
     auto func_fuse2 = gen_deconv(true);
@@ -1172,7 +1170,7 @@ TEST(cpu_fusion, fuse_deconv)
     }
 }
 
-TEST(cpu_fusion, deconv_vals)
+TEST(cpu_fusion, DISABLED_deconv_vals)
 {
     auto fuse_func = gen_deconv(false);
 
@@ -1189,7 +1187,7 @@ TEST(cpu_fusion, deconv_vals)
     }
     auto nofuse_results = execute(nofuse_func, args, "CPU");
     auto fuse_results = execute(fuse_func, args, "CPU");
- 
+
     EXPECT_TRUE(test::all_close(fuse_results.at(0), nofuse_results.at(0)));
 }
 

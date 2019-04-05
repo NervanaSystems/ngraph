@@ -23,7 +23,7 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Deconvolution + Bias 
+        /// \brief Deconvolution + Bias
         class DeconvolutionBias : public Op
         {
         public:

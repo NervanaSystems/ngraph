@@ -1854,11 +1854,15 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_deconvolution_affine_foldi
                 std::make_shared<op::Multiply>(pattern_map[filters], weight_scaling_bcast);
             auto mean_gamma = std::make_shared<op::Multiply>(pattern_map[mean], weight_scaling);
             auto new_biases = std::make_shared<op::Subtract>(pattern_map[beta], mean_gamma);
-            
+
             // Weights are in i,o,h,w relative to deconvolution. Flip them to o,i,h,w
-            auto new_weights_reshape = std::make_shared<op::Reshape>(new_weights, AxisVector{1, 0, 2, 3}, 
-                                        Shape{new_weights->get_shape().at(1), new_weights->get_shape().at(0), 
-                                              new_weights->get_shape().at(2), new_weights->get_shape().at(3)});
+            auto new_weights_reshape =
+                std::make_shared<op::Reshape>(new_weights,
+                                              AxisVector{1, 0, 2, 3},
+                                              Shape{new_weights->get_shape().at(1),
+                                                    new_weights->get_shape().at(0),
+                                                    new_weights->get_shape().at(2),
+                                                    new_weights->get_shape().at(3)});
 
             auto g_conv_bprop_data_bias = std::make_shared<op::DeconvolutionBias>(
                 conv_m->get_data_batch_shape(),
@@ -1872,7 +1876,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_deconvolution_affine_foldi
                 conv_m->get_data_dilation_strides_forward(),
                 false);
             ngraph::replace_node(m.get_match_root(), g_conv_bprop_data_bias);
-            std::cout << "-- Doing the deconv fusion -- \n";
             return true;
         };
 
@@ -1883,31 +1886,30 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_deconvolution_affine_foldi
 void ngraph::runtime::cpu::pass::CPUFusion::construct_deconvolution_affine_folding_relu()
 {
     Shape data_batch_shape{100, 512, 4, 4};
-    Shape filters_shape{512,64,4,4}; //{64, 512, 4, 4};
+    Shape filters_shape{512, 64, 4, 4}; //Note: the weights are in o,i,h,w
     auto data_label = std::make_shared<pattern::op::Label>(element::f32, data_batch_shape);
     auto filters = std::make_shared<pattern::op::Label>(element::f32, filters_shape);
     Shape conv_out_shape{100, 64, 1, 1};
     auto out_delta = std::make_shared<pattern::op::Label>(element::f32, conv_out_shape);
 
-    auto bias = std::make_shared<pattern::op::Label> (element::f32, Shape{512});
+    auto bias = std::make_shared<pattern::op::Label>(element::f32, Shape{512});
 
-    auto deconvb = std::make_shared<op::DeconvolutionBias>(
-                data_label->get_shape(),
-                filters,
-                out_delta,
-                bias,
-                Strides{1, 1},
-                Strides{1, 1},
-                CoordinateDiff{0, 0},
-                CoordinateDiff{0, 0},
-                Strides{1, 1},
-                false);
-    auto deconvb_label = std::make_shared<pattern::op::Label>(deconvb, nullptr, NodeVector{deconvb});
+    auto deconvb = std::make_shared<op::DeconvolutionBias>(data_label->get_shape(),
+                                                           filters,
+                                                           out_delta,
+                                                           bias,
+                                                           Strides{1, 1},
+                                                           Strides{1, 1},
+                                                           CoordinateDiff{0, 0},
+                                                           CoordinateDiff{0, 0},
+                                                           Strides{1, 1},
+                                                           false);
+    auto deconvb_label =
+        std::make_shared<pattern::op::Label>(deconvb, nullptr, NodeVector{deconvb});
     auto prelu = std::make_shared<op::Relu>(deconvb_label);
 
     ngraph::pattern::graph_rewrite_callback callback =
-        [data_label, filters, out_delta, deconvb_label](
-            pattern::Matcher& m) {
+        [data_label, filters, out_delta, deconvb_label](pattern::Matcher& m) {
             NGRAPH_DEBUG << "In callback for deconvbias+relu against node = "
                          << m.get_match_root()->get_name();
             auto pattern_map = m.get_pattern_map();
@@ -1921,18 +1923,17 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_deconvolution_affine_foldi
             }
 
             auto g_deconvbias_relu = std::make_shared<op::DeconvolutionBias>(
-                                        deconvb_m->get_data_batch_shape(),
-                                        deconvb_m->get_argument(0),
-                                        deconvb_m->get_argument(1),
-                                        deconvb_m->get_argument(2),
-                                        deconvb_m->get_window_movement_strides_forward(),
-                                        deconvb_m->get_window_dilation_strides_forward(),
-                                        deconvb_m->get_padding_below_forward(),
-                                        deconvb_m->get_padding_above_forward(),
-                                        deconvb_m->get_data_dilation_strides_forward(),
-                                        true);
+                deconvb_m->get_data_batch_shape(),
+                deconvb_m->get_argument(0),
+                deconvb_m->get_argument(1),
+                deconvb_m->get_argument(2),
+                deconvb_m->get_window_movement_strides_forward(),
+                deconvb_m->get_window_dilation_strides_forward(),
+                deconvb_m->get_padding_below_forward(),
+                deconvb_m->get_padding_above_forward(),
+                deconvb_m->get_data_dilation_strides_forward(),
+                true);
             ngraph::replace_node(m.get_match_root(), g_deconvbias_relu);
-            std::cout << "-- Doing the deconv+relu fusion -- \n";
             return true;
         };
 

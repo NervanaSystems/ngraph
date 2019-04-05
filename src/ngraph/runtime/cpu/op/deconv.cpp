@@ -94,7 +94,8 @@ void op::DeconvolutionBias::validate_and_infer_types()
     element::Type forward_result_et;
     PartialShape forward_result_shape;
 
-    const PartialShape& fwd_filters_shape{filters_shape[1], filters_shape[0], filters_shape[2],filters_shape[3]};
+    const PartialShape& fwd_filters_shape{
+        filters_shape[1], filters_shape[0], filters_shape[2], filters_shape[3]};
     std::tie(forward_result_et, forward_result_shape) =
         infer_convolution_forward(this,
                                   delta_et,
@@ -109,25 +110,40 @@ void op::DeconvolutionBias::validate_and_infer_types()
     NGRAPH_DEBUG << "\tpartial filter_shape: " << filters_shape << "delta_shape: " << delta_shape
                  << ", inferred_res_shape: " << forward_result_shape << endl;
 
-    NODE_VALIDATION_CHECK(this, forward_result_shape.compatible(delta_shape),
-        "Inferred forward output shape (", forward_result_shape, ") does not match shape of ",
-        "data_batch (", m_data_batch_shape, ").");
-
-    NODE_VALIDATION_CHECK(this, filters_et.compatible(bias_et),
-        "Filter element type (", filters_et, ") does not match bias element type (",
-        bias_et, ").");
-
-
-    NODE_VALIDATION_CHECK(this, static_cast<size_t>(bias_shape.rank()) == 1, "bias_shape size(",
-        bias_shape.rank(), ") is not equal to 1");
+    NODE_VALIDATION_CHECK(this,
+                          forward_result_shape.compatible(delta_shape),
+                          "Inferred forward output shape (",
+                          forward_result_shape,
+                          ") does not match shape of ",
+                          "data_batch (",
+                          m_data_batch_shape,
+                          ").");
 
     NODE_VALIDATION_CHECK(this,
-        static_cast<size_t>(bias_shape[0]) == static_cast<size_t>(filters_shape[0]),
-        "Filter input channel count (", filters_shape, ") does not compatible with ",
-        "bias shape channel count (", bias_shape, ").");
+                          filters_et.compatible(bias_et),
+                          "Filter element type (",
+                          filters_et,
+                          ") does not match bias element type (",
+                          bias_et,
+                          ").");
+
+    NODE_VALIDATION_CHECK(this,
+                          static_cast<size_t>(bias_shape.rank()) == 1,
+                          "bias_shape size(",
+                          bias_shape.rank(),
+                          ") is not equal to 1");
+
+    NODE_VALIDATION_CHECK(this,
+                          static_cast<size_t>(bias_shape[0]) ==
+                              static_cast<size_t>(filters_shape[0]),
+                          "Filter input channel count (",
+                          filters_shape,
+                          ") does not compatible with ",
+                          "bias shape channel count (",
+                          bias_shape,
+                          ").");
 
     set_output_type(0, forward_result_et, m_data_batch_shape);
-
 }
 
 void op::DeconvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints,

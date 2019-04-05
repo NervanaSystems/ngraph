@@ -74,6 +74,7 @@ public:
             construct_fuse_lstm_recurrent_state();
             if (std::getenv("NGRAPH_DECONV_FUSE") != nullptr)
             {
+                // Note: enable when the deconv perf is better than convbackpropdata
                 construct_deconvolution_affine_folding();
                 construct_deconvolution_affine_folding_relu();
             }

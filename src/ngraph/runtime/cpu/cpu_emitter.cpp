@@ -2385,8 +2385,7 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::DeconvolutionBias)
             {
-                // CHECK: is there a reason why other ops have this unused variable? or can i cleanup?
-                //auto convolution = static_cast<const ngraph::op::DeconvolutionBias*>(node);
+                auto convolution = static_cast<const ngraph::op::DeconvolutionBias*>(node);
 
                 auto arg0_shape = args[0].get_shape();
                 auto arg1_shape = args[1].get_shape();
