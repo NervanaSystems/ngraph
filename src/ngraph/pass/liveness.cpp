@@ -75,9 +75,9 @@ bool pass::Liveness::run_on_function(shared_ptr<Function> function)
         node->liveness_new_list.clear();
         node->liveness_free_list.clear();
         unordered_set<descriptor::Tensor*> input_tensor_decls;
-        for (size_t i = 0; i < node->get_input_size(); i++)
+        for (auto& input : node->inputs())
         {
-            descriptor::Tensor& tensor = node->input(i).get_tensor();
+            descriptor::Tensor& tensor = input.get_tensor();
             if (persistent_tensors.find(&tensor) == persistent_tensors.end())
             {
                 input_tensor_decls.insert(&tensor);
@@ -85,9 +85,9 @@ bool pass::Liveness::run_on_function(shared_ptr<Function> function)
         }
 
         unordered_set<descriptor::Tensor*> output_tensor_decls;
-        for (size_t i = 0; i < node->get_output_size(); ++i)
+        for (auto& output : node->outputs())
         {
-            descriptor::Tensor& tensor = node->get_output_tensor(i);
+            descriptor::Tensor& tensor = output.get_tensor();
             if (persistent_tensors.find(&tensor) == persistent_tensors.end())
             {
                 output_tensor_decls.insert(&tensor);

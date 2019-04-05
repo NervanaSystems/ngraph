@@ -95,23 +95,20 @@ namespace ngraph
     {
         // So Adjoints can call generate_adjoints
         friend class autodiff::Adjoints;
+
         friend class descriptor::Input;
+
         template <typename NodeType>
         friend class Input; // Temporary for access to m_inputs and m_outputs
         template <typename NodeType>
         friend class Output; // Temporary for access to m_inputs and m_outputs
-        friend class pass::
-            GetOutputElementElimination; // Temporary for access to m_inputs and m_outputs
-        friend void replace_node_users_arguments(std::shared_ptr<Node> target,
-                                                 std::shared_ptr<Node> replacement);
+
         friend std::pair<std::shared_ptr<op::Result>, std::shared_ptr<op::Parameter>>
             insert_result_parameter_split(const std::shared_ptr<Node>& src_node,
                                           const std::shared_ptr<Node>& dst_node);
         friend void insert_new_node_between(const std::shared_ptr<Node>& src_node,
                                             const std::shared_ptr<Node>& dst_node,
                                             const std::shared_ptr<Node>& new_node);
-
-        friend class ngraph::pass::GetOutputElementElimination;
 
     protected:
         /// Throws if the node is invalid.
@@ -269,7 +266,7 @@ namespace ngraph
 
         /// Returns the set of inputs using output i
         const std::set<descriptor::Input*>&
-            get_output_input_descriptors(size_t i) const OLD_NODE_APIS_DEPRECATED;
+            get_output_inputs(size_t i) const OLD_NODE_APIS_DEPRECATED;
 
         /// Returns the number of inputs for the op
         size_t get_input_size() const;
@@ -324,22 +321,34 @@ namespace ngraph
         bool operator<(const Node& other) const { return m_instance_id < other.m_instance_id; }
         static const size_t placement_invalid = -1;
 
-        void replace_input_source_output(size_t input_index, const Output<Node>& src_output);
-        void replace_input_source_output(size_t input_index,
-                                         const std::shared_ptr<Node>& source_node,
-                                         size_t output_index);
-        std::set<Input<Node>> get_output_target_inputs(size_t output_index) const;
-        void remove_output_target_input(size_t output_index, const Input<Node>& target_input);
+        /// \return A vector containing a handle for each of this node's inputs, in order.
+        // TODO: Rename to get_inputs()?
+        std::vector<Input<Node>> inputs();
 
-        // TODO: Rename to get_inputs()
-        std::vector<Input<Node>> get_node_inputs();
+        /// \return A vector containing a handle for each of this node's inputs, in order.
+        std::vector<Input<const Node>> inputs() const;
 
-        // TODO: Rename to get_outputs()
-        std::vector<Output<Node>> get_node_outputs();
+        /// \return A vector containing a handle for each of this node's outputs, in order.
+        // TODO: Rename to get_outputs()?
+        std::vector<Output<Node>> outputs();
 
+        /// \return A vector containing a handle for each of this node's outputs, in order.
+        std::vector<Output<const Node>> outputs() const;
+
+        /// \return A handle to the `input_index`th input of this node.
+        /// \throw std::out_of_range if the node does not have at least `input_index+1` inputs.
         Input<Node> input(size_t input_index);
+
+        /// \return A handle to the `input_index`th input of this node.
+        /// \throw std::out_of_range if the node does not have at least `input_index+1` inputs.
         Input<const Node> input(size_t input_index) const;
+
+        /// \return A handle to the `output_index`th output of this node.
+        /// \throw std::out_of_range if the node does not have at least `output_index+1` outputs.
         Output<Node> output(size_t output_index);
+
+        /// \return A handle to the `output_index`th output of this node.
+        /// \throw std::out_of_range if the node does not have at least `output_index+1` outputs.
         Output<const Node> output(size_t output_index) const;
 
     protected:
@@ -416,6 +425,7 @@ namespace ngraph
         /// \brief Replaces the source output of this input.
         /// \param new_source_node The node for the output that will replace this input's source.
         /// \param output_index The index of the output that will replace this input's source.
+        // TODO(amprocte): Get rid of shared_ptr here?
         void replace_source_output(const std::shared_ptr<Node>& new_source_node,
                                    size_t output_index) const;
 
@@ -514,6 +524,8 @@ namespace ngraph
 
         /// \brief Removes a target input from the output referenced by this output handle.
         /// \param target_input The target input to remove.
+        ///
+        // TODO(amprocte): Investigate whether this really ought to be public.
         void remove_target_input(const Input<Node>& target_input) const;
 
         bool operator==(const Output& other) const
@@ -596,27 +608,83 @@ namespace ngraph
     template <typename NodeType>
     void Input<NodeType>::replace_source_output(const Output<Node>& new_source_output) const
     {
-        m_node->replace_input_source_output(
-            m_index, new_source_output.get_node_shared_ptr(), new_source_output.get_index());
+        m_node->m_inputs.at(m_index).replace_output(new_source_output.get_node_shared_ptr(),
+                                                    new_source_output.get_index());
     }
 
     template <typename NodeType>
     void Input<NodeType>::replace_source_output(const std::shared_ptr<Node>& new_source_node,
                                                 size_t output_index) const
     {
-        m_node->replace_input_source_output(m_index, new_source_node, output_index);
+        replace_source_output(new_source_node->output(output_index));
     }
 
     template <typename NodeType>
     std::set<Input<Node>> Output<NodeType>::get_target_inputs() const
     {
-        return m_node->get_output_target_inputs(m_index);
+        std::set<Input<Node>> result;
+
+        for (auto& input : m_node->m_outputs[m_index].get_inputs())
+        {
+            result.emplace(input->get_raw_pointer_node(), input->get_index());
+        }
+
+        return result;
     }
 
     template <typename NodeType>
     void Output<NodeType>::remove_target_input(const Input<Node>& target_input) const
     {
-        m_node->remove_output_target_input(m_index, target_input);
+        m_node->m_outputs.at(m_index).remove_input(
+            &(target_input.get_node()->m_inputs.at(target_input.get_index())));
+    }
+
+    inline std::vector<Input<Node>> Node::inputs()
+    {
+        std::vector<Input<Node>> result;
+
+        for (size_t i = 0; i < get_input_size(); i++)
+        {
+            result.emplace_back(this, i);
+        }
+
+        return result;
+    }
+
+    inline std::vector<Input<const Node>> Node::inputs() const
+    {
+        std::vector<Input<const Node>> result;
+
+        for (size_t i = 0; i < get_input_size(); i++)
+        {
+            result.emplace_back(this, i);
+        }
+
+        return result;
+    }
+
+    inline std::vector<Output<Node>> Node::outputs()
+    {
+        std::vector<Output<Node>> result;
+
+        for (size_t i = 0; i < get_output_size(); i++)
+        {
+            result.emplace_back(shared_from_this(), i);
+        }
+
+        return result;
+    }
+
+    inline std::vector<Output<const Node>> Node::outputs() const
+    {
+        std::vector<Output<const Node>> result;
+
+        for (size_t i = 0; i < get_output_size(); i++)
+        {
+            result.emplace_back(shared_from_this(), i);
+        }
+
+        return result;
     }
 
     class NodeValidationFailure : public CheckFailure
@@ -654,5 +722,3 @@ namespace ngraph
 
 #define NODE_VALIDATION_CHECK(node, cond, ...)                                                     \
     NGRAPH_CHECK(::ngraph::NodeValidationFailure, (node), (cond), __VA_ARGS__)
-
-#undef OLD_NODE_APIS_DEPRECATED

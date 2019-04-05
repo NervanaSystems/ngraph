@@ -210,8 +210,8 @@ TEST(pattern, graph_rewrite)
                                             ParameterVector{a, b, c});
         pass_manager.run_passes(f);
 
-        ASSERT_TRUE(graph_a->get_output_target_inputs(0).empty());
-        ASSERT_TRUE(graph_b->get_output_target_inputs(0).empty());
+        ASSERT_TRUE(graph_a->output(0).get_target_inputs().empty());
+        ASSERT_TRUE(graph_b->output(0).get_target_inputs().empty());
 
         auto expected = ngraph::NodeVector{a, b, a, c, b};
         ASSERT_TRUE(count_ops_of_type<op::Add>(f) == 0);
@@ -226,11 +226,12 @@ TEST(pattern, graph_rewrite)
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(1), a);
         ASSERT_EQ(graph->input(1).get_source_output(),
-                  Output<Node>(a, 0)); // graph's input points to a's output
-        ASSERT_TRUE(sum->get_output_target_inputs(0)
+                  a->output(0)); // graph's input points to a's output
+        ASSERT_TRUE(sum->output(0)
+                        .get_target_inputs()
                         .empty()); // graph's input is removed from sum's target inptus
-        ASSERT_TRUE(a->get_output_target_inputs(0).count(
-            Input<Node>(graph.get(), 1))); // a's output feeds into graph's input
+        ASSERT_TRUE(a->output(0).get_target_inputs().count(
+            graph->input(1))); // a's output feeds into graph's input
     }
 
     {
@@ -242,11 +243,12 @@ TEST(pattern, graph_rewrite)
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(1), a);
         ASSERT_EQ(graph->input(1).get_source_output(),
-                  Output<Node>(a, 0)); // graph's input points to a's output
-        ASSERT_TRUE(mul->get_output_target_inputs(0)
+                  a->output(0)); // graph's input points to a's output
+        ASSERT_TRUE(mul->output(0)
+                        .get_target_inputs()
                         .empty()); // graph's input is removed from sum's target inputs
-        ASSERT_TRUE(a->get_output_target_inputs(0).count(
-            Input<Node>(graph.get(), 1))); // a's output feeds into graph's input
+        ASSERT_TRUE(a->output(0).get_target_inputs().count(
+            graph->input(1))); // a's output feeds into graph's input
     }
 
     {
@@ -257,9 +259,9 @@ TEST(pattern, graph_rewrite)
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(0), a);
         ASSERT_EQ(graph->input(0).get_source_output(),
-                  Output<Node>(a, 0)); // graph's input points to a's output
-        ASSERT_TRUE(a->get_output_target_inputs(0).count(
-            Input<Node>(graph.get(), 0))); // a's output feeds into graph's input
+                  a->output(0)); // graph's input points to a's output
+        ASSERT_TRUE(a->output(0).get_target_inputs().count(
+            graph->input(0))); // a's output feeds into graph's input
     }
 
     {
@@ -271,9 +273,9 @@ TEST(pattern, graph_rewrite)
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(1), a);
         ASSERT_EQ(graph->input(1).get_source_output(),
-                  Output<Node>(a, 0)); // graph's input points to a's output
-        ASSERT_TRUE(a->get_output_target_inputs(0).count(
-            Input<Node>(graph.get(), 1))); // a's output feeds into graph's input
+                  a->output(0)); // graph's input points to a's output
+        ASSERT_TRUE(a->output(0).get_target_inputs().count(
+            graph->input(1))); // a's output feeds into graph's input
     }
 
     {
@@ -284,9 +286,9 @@ TEST(pattern, graph_rewrite)
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(1), a);
         ASSERT_EQ(graph->input(1).get_source_output(),
-                  Output<Node>(a, 0)); // graph's input points to a's output
-        ASSERT_TRUE(a->get_output_target_inputs(0).count(
-            Input<Node>(graph.get(), 1))); // a's output feeds into graph's input
+                  a->output(0)); // graph's input points to a's output
+        ASSERT_TRUE(a->output(0).get_target_inputs().count(
+            graph->input(1))); // a's output feeds into graph's input
     }
 }
 

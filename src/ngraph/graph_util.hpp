@@ -319,6 +319,10 @@ namespace ngraph
         const std::string& filename,
         std::function<void(const Node& node, std::vector<std::string>& attributes)> = nullptr);
 
-    std::vector<Input<Node>> get_node_inputs_from(Node& src, Node& dst);
-    std::vector<Output<Node>> get_node_outputs_to(Node& src, Node& dst);
+    /// \return A vector containing handles for each input of dst that is connected to an output
+    ///         of `src`.
+    std::vector<Input<Node>> get_inputs_from(Node& src, Node& dst);
+    /// \return A vector containing a handle for each output of src that is connected to an input
+    ///         of `dst`.
+    std::vector<Output<Node>> get_outputs_to(Node& src, Node& dst);
 }

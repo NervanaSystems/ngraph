@@ -72,9 +72,9 @@ bool pass::ShapeSpecialization::run_on_function(std::shared_ptr<Function> f)
     // input).
     for (auto& n : f->get_ops())
     {
-        for (size_t i = 0; i < n->get_output_size(); i++)
+        for (auto& output : n->outputs())
         {
-            for (auto& input : n->get_output_target_inputs(i))
+            for (auto& input : output.get_target_inputs())
             {
                 if (input.get_is_relevant_to_shapes())
                 {
@@ -141,11 +141,9 @@ bool pass::ShapeSpecialization::run_on_function(std::shared_ptr<Function> f)
                                   n->get_output_element_type(i) ==
                                       replacement_constants[i]->get_output_element_type(0));
 
-                    auto replacement_output = Output<Node>(replacement_constants.at(i), 0);
-                    auto output = Output<Node>(n, i);
-                    for (auto& input : output.get_target_inputs())
+                    for (auto& input : n->output(i).get_target_inputs())
                     {
-                        input.replace_source_output(replacement_output);
+                        input.replace_source_output(replacement_constants.at(i)->output(0));
                         changes_made = true;
                     }
                 }

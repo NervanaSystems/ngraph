@@ -49,7 +49,7 @@ static bool verify_no_internal_zero_length_ops(shared_ptr<Function> f)
             continue;
         }
 
-        for (auto& output : n->get_node_outputs())
+        for (auto& output : n->outputs())
         {
             if (has_zero_dim(output))
             {
@@ -65,7 +65,7 @@ static bool verify_no_internal_zero_length_ops(shared_ptr<Function> f)
     // zero-length nodes (which violates our assumption)
     for (auto r : f->get_results())
     {
-        for (auto& input : r->get_node_inputs())
+        for (auto& input : r->inputs())
         {
             if (zero_length_source_outputs.count(input.get_source_output()) != 0)
             {

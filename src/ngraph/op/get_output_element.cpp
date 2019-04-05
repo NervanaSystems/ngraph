@@ -63,7 +63,7 @@ NodeVector op::get_output_elements(const shared_ptr<Node>& mon)
 {
     NodeVector goes(mon->get_output_size());
 
-    for (auto goe_input : mon->get_output_target_inputs(0))
+    for (auto goe_input : mon->output(0).get_target_inputs())
     {
         auto goe = static_cast<op::GetOutputElement*>(goe_input.get_node());
         goes.at(goe->get_n()) = goe_input.get_node()->shared_from_this();

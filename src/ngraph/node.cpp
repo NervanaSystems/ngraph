@@ -342,7 +342,7 @@ shared_ptr<descriptor::Tensor> Node::get_output_tensor_ptr() const
     return get_output_tensor_ptr(0);
 }
 
-const std::set<descriptor::Input*>& Node::get_output_input_descriptors(size_t i) const
+const std::set<descriptor::Input*>& Node::get_output_inputs(size_t i) const
 {
     return m_outputs.at(i).get_inputs();
 }
@@ -511,53 +511,4 @@ void Node::validate_and_infer_elementwise_logical()
         ".");
 
     set_output_type(0, element::boolean, args_pshape);
-}
-
-void Node::replace_input_source_output(size_t input_index,
-                                       const std::shared_ptr<Node>& src_node,
-                                       size_t output_index)
-{
-    m_inputs.at(input_index).replace_output(src_node, output_index);
-}
-
-std::set<Input<Node>> Node::get_output_target_inputs(size_t output_index) const
-{
-    std::set<Input<Node>> result;
-
-    for (auto& input : m_outputs[output_index].get_inputs())
-    {
-        result.emplace(input->get_raw_pointer_node(), input->get_index());
-    }
-
-    return result;
-}
-
-void Node::remove_output_target_input(size_t output_index, const Input<Node>& target_input)
-{
-    m_outputs.at(output_index)
-        .remove_input(&(target_input.get_node()->m_inputs.at(target_input.get_index())));
-}
-
-std::vector<Input<Node>> Node::get_node_inputs()
-{
-    std::vector<Input<Node>> result;
-
-    for (size_t i = 0; i < get_input_size(); i++)
-    {
-        result.emplace_back(this, i);
-    }
-
-    return result;
-}
-
-std::vector<Output<Node>> Node::get_node_outputs()
-{
-    std::vector<Output<Node>> result;
-
-    for (size_t i = 0; i < get_output_size(); i++)
-    {
-        result.emplace_back(shared_from_this(), i);
-    }
-
-    return result;
 }

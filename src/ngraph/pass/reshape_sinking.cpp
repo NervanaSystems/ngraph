@@ -70,7 +70,7 @@ static void insert_reshape(shared_ptr<Node> target, shared_ptr<Node> reshape, si
 {
     auto arg = target->get_argument(input_index);
     auto new_reshape = reshape->copy_with_new_args({arg});
-    target->replace_input_source_output(input_index, new_reshape, 0);
+    target->input(input_index).replace_source_output(new_reshape->output(0));
 }
 
 static void delete_reshape(shared_ptr<Node> reshape)
@@ -137,7 +137,7 @@ void swim(Input<Node> input, shared_ptr<op::Reshape> reshape)
         NGRAPH_DEBUG << "Processing (swimming) " << n->get_name();
         if (auto unary = dynamic_pointer_cast<op::util::UnaryElementwiseArithmetic>(n))
         {
-            Swimmer nsw{Input<Node>(unary.get(), 0), csw.reshape};
+            Swimmer nsw{unary->input(0), csw.reshape};
             work_queue.push_back(nsw);
             NGRAPH_DEBUG << "Propagating reshape " << describe_reshape(csw.reshape) << " for "
                          << n->get_name() << " to " << unary->get_argument(0);
@@ -314,12 +314,12 @@ static void sink_binary(shared_ptr<op::util::BinaryElementwiseArithmetic> binary
     else if (reorders.at(left)->get_input_order() == ngraph::get_default_order(left->get_shape()))
     {
         convert_binary_to_default_order(
-            binary, Input<Node>(binary.get(), 0), right, reorders, reshapes_to_delete);
+            binary, binary->input(0), right, reorders, reshapes_to_delete);
     }
     else if (reorders.at(right)->get_input_order() == ngraph::get_default_order(right->get_shape()))
     {
         convert_binary_to_default_order(
-            binary, Input<Node>(binary.get(), 1), left, reorders, reshapes_to_delete);
+            binary, binary->input(1), left, reorders, reshapes_to_delete);
     }
     else
     {
