@@ -122,6 +122,9 @@ model_dequantize_linear_1d_zero_scale_int8
 model_dequantize_linear_1d_zero_scale_int8_4d
 model_dequantize_linear_1d_zero_scale_uint8_negative_axis
 model_quantize_linear
+model_quantize_linear_zero_point
+quantize_linear_axis_zero
+model_quantize_linear_axis_negative
 model_quant_conv_linear
 
 # This should be implemented
