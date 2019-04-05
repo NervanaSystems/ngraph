@@ -172,6 +172,8 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
 
         ctx->first_iteration = true;
 
+        ctx->buffer_data = std::vector<void*>(m_external_function->get_buffer_data_size());
+
         // Create temporary buffer pools
         size_t alignment = runtime::cpu::CPU_ExternalFunction::s_memory_pool_alignment;
         for (auto buffer_size : m_external_function->get_memory_buffer_sizes())
@@ -181,8 +183,18 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
         }
         const auto& mkldnn_emitter = m_external_function->get_mkldnn_emitter();
 
-        ctx->mkldnn_primitives =
-            std::vector<mkldnn::primitive*>(mkldnn_emitter->get_mkldnn_primitives().size());
+        if (m_external_function->is_direct_execution())
+        {
+            ctx->mkldnn_primitives =
+                std::vector<mkldnn::primitive*>(mkldnn_emitter->get_mkldnn_primitives().size());
+        }
+        else
+        {
+            // single thread for codegen
+            NGRAPH_ASSERT(m_concurrency == 1);
+            ctx->mkldnn_primitives = mkldnn_emitter->get_mkldnn_primitives();
+            ctx->mkldnn_workspaces = mkldnn_emitter->get_mkldnn_workspaces();
+        }
 
         ctx->states = m_external_function->m_states.data();
 

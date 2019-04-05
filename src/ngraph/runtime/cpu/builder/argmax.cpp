@@ -37,8 +37,10 @@ namespace ngraph
                 const ngraph::op::ArgMax* argmax = static_cast<const ngraph::op::ArgMax*>(node);
                 CPUKernelFunctor functor;
 
-                auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto& arg_tensor_index =
+                    external_function->get_tensor_data_index(args[0].get_name());
+                auto& out_tensor_index =
+                    external_function->get_tensor_data_index(out[0].get_name());
                 if (out[0].get_element_type() != element::i64 &&
                     out[0].get_element_type() != element::i32)
                 {
@@ -62,7 +64,12 @@ namespace ngraph
 
                         functor = [&, kernel, in_shape, out_shape, axis](
                             CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                            kernel(arg_tensor, out_tensor, in_shape, out_shape, axis, ectx->arena);
+                            kernel(ctx->buffer_data[arg_tensor_index],
+                                   ctx->buffer_data[out_tensor_index],
+                                   in_shape,
+                                   out_shape,
+                                   axis,
+                                   ectx->arena);
                         };
                     }
                     else
@@ -74,7 +81,12 @@ namespace ngraph
 
                         functor = [&, kernel, in_shape, out_shape, axis](
                             CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                            kernel(arg_tensor, out_tensor, in_shape, out_shape, axis, ectx->arena);
+                            kernel(ctx->buffer_data[arg_tensor_index],
+                                   ctx->buffer_data[out_tensor_index],
+                                   in_shape,
+                                   out_shape,
+                                   axis,
+                                   ectx->arena);
                         };
                     }
                 }
@@ -90,7 +102,12 @@ namespace ngraph
 
                         functor = [&, kernel, in_shape, out_shape, axis](
                             CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                            kernel(arg_tensor, out_tensor, in_shape, out_shape, axis, ectx->arena);
+                            kernel(ctx->buffer_data[arg_tensor_index],
+                                   ctx->buffer_data[out_tensor_index],
+                                   in_shape,
+                                   out_shape,
+                                   axis,
+                                   ectx->arena);
                         };
                     }
                     else
@@ -103,7 +120,12 @@ namespace ngraph
 
                         functor = [&, kernel, in_shape, out_shape, axis](
                             CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                            kernel(arg_tensor, out_tensor, in_shape, out_shape, axis, ectx->arena);
+                            kernel(ctx->buffer_data[arg_tensor_index],
+                                   ctx->buffer_data[out_tensor_index],
+                                   in_shape,
+                                   out_shape,
+                                   axis,
+                                   ectx->arena);
                         };
                     }
                 }
@@ -119,7 +141,12 @@ namespace ngraph
 
                         functor = [&, kernel, in_shape, out_shape, axis](
                             CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                            kernel(arg_tensor, out_tensor, in_shape, out_shape, axis, ectx->arena);
+                            kernel(ctx->buffer_data[arg_tensor_index],
+                                   ctx->buffer_data[out_tensor_index],
+                                   in_shape,
+                                   out_shape,
+                                   axis,
+                                   ectx->arena);
                         };
                     }
                     else
@@ -131,7 +158,12 @@ namespace ngraph
 
                         functor = [&, kernel, in_shape, out_shape, axis](
                             CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                            kernel(arg_tensor, out_tensor, in_shape, out_shape, axis, ectx->arena);
+                            kernel(ctx->buffer_data[arg_tensor_index],
+                                   ctx->buffer_data[out_tensor_index],
+                                   in_shape,
+                                   out_shape,
+                                   axis,
+                                   ectx->arena);
                         };
                     }
                 }

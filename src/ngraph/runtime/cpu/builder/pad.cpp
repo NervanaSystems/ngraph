@@ -35,9 +35,11 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& padding_value = external_function->get_tensor_data(args[1].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto& arg_tensor_index =
+                    external_function->get_tensor_data_index(args[0].get_name());
+                auto& padding_value = external_function->get_tensor_data_index(args[1].get_name());
+                auto& out_tensor_index =
+                    external_function->get_tensor_data_index(out[0].get_name());
 
                 auto pad = static_cast<const ngraph::op::Pad*>(node);
 
@@ -57,9 +59,9 @@ namespace ngraph
 
                     auto functor = [&, kernel, arg_shape, out_shape, padding_below, padding_above](
                         CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        kernel(arg_tensor,
-                               out_tensor,
-                               padding_value,
+                        kernel(ctx->buffer_data[arg_tensor_index],
+                               ctx->buffer_data[out_tensor_index],
+                               ctx->buffer_data[padding_value],
                                arg_shape,
                                out_shape,
                                padding_below,
@@ -85,9 +87,9 @@ namespace ngraph
                                     padding_above,
                                     padding_interior](CPURuntimeContext* ctx,
                                                       CPUExecutionContext* ectx) {
-                        kernel(arg_tensor,
-                               padding_value,
-                               out_tensor,
+                        kernel(ctx->buffer_data[arg_tensor_index],
+                               ctx->buffer_data[padding_value],
+                               ctx->buffer_data[out_tensor_index],
                                arg_shape,
                                out_shape,
                                padding_below,

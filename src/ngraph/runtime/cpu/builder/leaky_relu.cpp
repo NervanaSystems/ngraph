@@ -34,8 +34,10 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                auto& input_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto& input_tensor_index =
+                    external_function->get_tensor_data_index(args[0].get_name());
+                auto& out_tensor_index =
+                    external_function->get_tensor_data_index(out[0].get_name());
                 size_t count = out[0].get_size();
 
                 auto alpha = static_cast<const op::LeakyRelu*>(node)->get_alpha();
@@ -55,8 +57,10 @@ namespace ngraph
                             mkldnn_emitter->build_leaky_relu(
                                 ctx->mkldnn_primitives, leaky_relu_desc, deps, leaky_relu_index);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], input_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[0], ctx->buffer_data[input_tensor_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[1], ctx->buffer_data[out_tensor_index]);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, leaky_relu_index);
                     };
                     functors.emplace_back(functor);
@@ -70,7 +74,11 @@ namespace ngraph
 
                     auto functor = [&, kernel, alpha, count](CPURuntimeContext* ctx,
                                                              CPUExecutionContext* ectx) {
-                        kernel(input_tensor, out_tensor, alpha, count, ectx->arena);
+                        kernel(ctx->buffer_data[input_tensor_index],
+                               ctx->buffer_data[out_tensor_index],
+                               alpha,
+                               count,
+                               ectx->arena);
                     };
                     functors.emplace_back(functor);
                 }

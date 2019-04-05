@@ -126,7 +126,9 @@ namespace ngraph
                 static constexpr size_t s_memory_pool_alignment = 4096;
 
                 std::vector<CPUKernelFunctor>& get_functors() { return functors; }
-                void*& get_tensor_data(const std::string& name);
+                // return an index into the cpu_runtime_context's buffer_data vector to get the tensor
+                size_t& get_tensor_data_index(const std::string& name);
+                const size_t get_buffer_data_size() const { return buffer_data_size; }
                 std::function<void(CPURuntimeContext*, std::vector<void*>&, std::vector<void*>&)>&
                     get_executor()
                 {
@@ -257,7 +259,8 @@ namespace ngraph
                     enable_nodename_list;
                 std::function<void(CPURuntimeContext*, std::vector<void*>&, std::vector<void*>&)>
                     executor;
-                std::unordered_map<std::string, void*> tensor_data;
+                // name of a tensor and index into the cpu_runtime_context's buffer_data vector to get the tensor
+                std::unordered_map<std::string, size_t> tensor_data;
                 std::unordered_map<std::string, bool> tensor_stale;
                 // Each tensor is put into one buffer set.
                 // All the tensors in the same buffer set share the same memory buffer.
@@ -272,20 +275,25 @@ namespace ngraph
                 std::unordered_map<descriptor::Tensor*, size_t> tensor_to_bufferID;
                 std::unordered_map<std::string, std::string> tensor_alias;
 
-                // tensor pointer and its offset into the memory allocated for intermediates
+                // index into the cpu_runtime_context's buffer_data vector to get a tensor,
+                // and the tensor's offset into the memory allocated for intermediates.
                 // used to calculate the correct address at runtime
-                std::list<std::pair<std::reference_wrapper<void*>, size_t>> intermediates_offsets;
-                // tensor pointer, input index, offset into the input, and if the input is stale
+                std::list<std::pair<size_t, size_t>> intermediates_offsets;
+                // index into the cpu_runtime_context's buffer_data vector to get a tensor,
+                // and the tensor pointer.
+                // used to get the address at runtime
+                std::list<std::pair<size_t, void*>> constant_tensor_data;
+                // index into the cpu_runtime_context's buffer_data vector to get a tensor,
+                // input index, offset into the input, and if the input is stale
                 // used to calculate the correct address at runtime
-                std::list<std::tuple<std::reference_wrapper<void*>,
-                                     size_t,
-                                     size_t,
-                                     std::reference_wrapper<bool>>>
+                std::list<std::tuple<size_t, size_t, size_t, std::reference_wrapper<bool>>>
                     function_input_index_offset;
-                // tensor pointer, output index, and offset into the output
+                // index to the cpu_runtime_context's buffer_data vector to get a tensor,
+                // output index, and offset into the output.
                 // used to calculate the correct address at runtime
-                std::list<std::tuple<std::reference_wrapper<void*>, size_t, size_t>>
-                    function_output_index_offset;
+                std::list<std::tuple<size_t, size_t, size_t>> function_output_index_offset;
+                //size of the cpu_runtime_context's buffer_data vector.
+                size_t buffer_data_size = 0;
                 std::unordered_map<std::string, std::shared_ptr<CPU_ExternalFunction>> callees;
                 bool m_is_built;
                 std::vector<runtime::PerformanceCounter> m_perf_counters;
@@ -294,7 +302,7 @@ namespace ngraph
                 std::unordered_map<std::string, Halide::Func> halide_functions;
                 std::unordered_map<std::string, Halide::ImageParam> subgraph_params;
                 std::unordered_map<std::string, int> subgraph_param_sizes;
-                std::unordered_map<std::string, std::reference_wrapper<void*>> subgraph_param_ptrs;
+                std::unordered_map<std::string, size_t> subgraph_param_ptrs;
 #endif
             };
         }

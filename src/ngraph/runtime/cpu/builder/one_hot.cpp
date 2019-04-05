@@ -39,8 +39,10 @@ namespace ngraph
 
                 auto& functors = external_function->get_functors();
 
-                auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto& arg_tensor_index =
+                    external_function->get_tensor_data_index(args[0].get_name());
+                auto& out_tensor_index =
+                    external_function->get_tensor_data_index(out[0].get_name());
 
                 if (arg_rank == 0)
                 {
@@ -49,7 +51,11 @@ namespace ngraph
                         kernel, out[0].get_element_type(), runtime::cpu::kernel::one_hot_rank_0);
                     auto functor = [&, kernel, out_shape, one_hot_axis](CPURuntimeContext* ctx,
                                                                         CPUExecutionContext* ectx) {
-                        kernel(arg_tensor, out_tensor, out_shape, one_hot_axis, ectx->arena);
+                        kernel(ctx->buffer_data[arg_tensor_index],
+                               ctx->buffer_data[out_tensor_index],
+                               out_shape,
+                               one_hot_axis,
+                               ectx->arena);
                     };
 
                     functors.emplace_back(functor);
@@ -61,8 +67,8 @@ namespace ngraph
                         kernel, out[0].get_element_type(), runtime::cpu::kernel::one_hot_rank_1);
                     auto functor = [&, kernel, arg_shape, out_shape, one_hot_axis](
                         CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        kernel(arg_tensor,
-                               out_tensor,
+                        kernel(ctx->buffer_data[arg_tensor_index],
+                               ctx->buffer_data[out_tensor_index],
                                arg_shape,
                                out_shape,
                                one_hot_axis,
@@ -80,7 +86,11 @@ namespace ngraph
                                   runtime::cpu::kernel::one_hot_rank_2_or_more);
                     auto functor = [&, kernel, arg_shape, out_shape, one_hot_axis](
                         CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        kernel(arg_tensor, out_tensor, arg_shape, out_shape, one_hot_axis);
+                        kernel(ctx->buffer_data[arg_tensor_index],
+                               ctx->buffer_data[out_tensor_index],
+                               arg_shape,
+                               out_shape,
+                               one_hot_axis);
                     };
 
                     functors.emplace_back(functor);

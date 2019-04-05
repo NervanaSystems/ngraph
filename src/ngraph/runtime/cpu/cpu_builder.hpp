@@ -208,11 +208,14 @@
     SELECT_KERNEL(kernel, args[0].get_element_type(), OP);                                         \
                                                                                                    \
     auto element_count = out[0].get_size();                                                        \
-    auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());                    \
-    auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());                     \
+    auto& arg0_tensor = external_function->get_tensor_data_index(args[0].get_name());              \
+    auto& out0_tensor = external_function->get_tensor_data_index(out[0].get_name());               \
                                                                                                    \
     auto functor = [&, kernel, element_count](CPURuntimeContext* ctx, CPUExecutionContext* ectx) { \
-        kernel(arg0_tensor, out0_tensor, element_count, ectx->arena);                              \
+        kernel(ctx->buffer_data[arg0_tensor],                                                      \
+               ctx->buffer_data[out0_tensor],                                                      \
+               element_count,                                                                      \
+               ectx->arena);                                                                       \
     };                                                                                             \
     functors.emplace_back(functor);
 
@@ -223,12 +226,16 @@
     SELECT_KERNEL(kernel, args[0].get_element_type(), OP);                                         \
                                                                                                    \
     auto element_count = out[0].get_size();                                                        \
-    auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());                    \
-    auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());                    \
-    auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());                     \
+    auto& arg0_tensor = external_function->get_tensor_data_index(args[0].get_name());              \
+    auto& arg1_tensor = external_function->get_tensor_data_index(args[1].get_name());              \
+    auto& out0_tensor = external_function->get_tensor_data_index(out[0].get_name());               \
                                                                                                    \
     auto functor = [&, kernel, element_count](CPURuntimeContext* ctx, CPUExecutionContext* ectx) { \
-        kernel(arg0_tensor, arg1_tensor, out0_tensor, element_count, ectx->arena);                 \
+        kernel(ctx->buffer_data[arg0_tensor],                                                      \
+               ctx->buffer_data[arg1_tensor],                                                      \
+               ctx->buffer_data[out0_tensor],                                                      \
+               element_count,                                                                      \
+               ectx->arena);                                                                       \
     };                                                                                             \
     functors.emplace_back(functor);
 

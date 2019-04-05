@@ -35,8 +35,10 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto& arg0_tensor_index =
+                    external_function->get_tensor_data_index(args[0].get_name());
+                auto& out_tensor_index =
+                    external_function->get_tensor_data_index(out[0].get_name());
 
                 auto input_shape = args[0].get_shape();
                 auto out_shape = out[0].get_shape();
@@ -54,8 +56,10 @@ namespace ngraph
                         mkldnn_emitter->build_sigmoid_forward(
                             ctx->mkldnn_primitives, sigmoid_desc, deps, sigmoid_index);
                     }
-                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
-                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(
+                        ctx, deps[0], ctx->buffer_data[arg0_tensor_index]);
+                    cpu::mkldnn_utils::set_memory_ptr(
+                        ctx, deps[1], ctx->buffer_data[out_tensor_index]);
                     cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, sigmoid_index);
                 };
                 functors.emplace_back(functor);
@@ -66,9 +70,12 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto& arg0_tensor_index =
+                    external_function->get_tensor_data_index(args[0].get_name());
+                auto& arg1_tensor_index =
+                    external_function->get_tensor_data_index(args[1].get_name());
+                auto& out_tensor_index =
+                    external_function->get_tensor_data_index(out[0].get_name());
 
                 auto input_shape = args[0].get_shape();
                 auto delta_shape = args[1].get_shape();
@@ -88,9 +95,12 @@ namespace ngraph
                         mkldnn_emitter->build_sigmoid_backward(
                             ctx->mkldnn_primitives, bwd_desc, fwd_desc, deps, sigmoid_index);
                     }
-                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
-                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
-                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(
+                        ctx, deps[0], ctx->buffer_data[arg0_tensor_index]);
+                    cpu::mkldnn_utils::set_memory_ptr(
+                        ctx, deps[1], ctx->buffer_data[arg1_tensor_index]);
+                    cpu::mkldnn_utils::set_memory_ptr(
+                        ctx, deps[2], ctx->buffer_data[out_tensor_index]);
                     cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, sigmoid_index);
                 };
                 functors.emplace_back(functor);
@@ -101,10 +111,13 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
-                auto tensor_size = shape_size(args[0].get_shape());
+                auto& arg0_tensor_index =
+                    external_function->get_tensor_data_index(args[0].get_name());
+                auto& arg1_tensor_index =
+                    external_function->get_tensor_data_index(args[1].get_name());
+                auto& out_tensor_index =
+                    external_function->get_tensor_data_index(out[0].get_name());
+                auto tensor_index_size = shape_size(args[0].get_shape());
 
                 auto sigmoid_mul = static_cast<const ngraph::op::SigmoidMultiply*>(node);
 
@@ -113,10 +126,15 @@ namespace ngraph
                         static_cast<size_t>(ngraph::op::SigmoidMultiply::FunctionType::NumTypes) +
                     static_cast<size_t>(sigmoid_mul->get_input_func_type(1));
 
-                auto functor = [&, index, tensor_size](CPURuntimeContext* ctx,
-                                                       CPUExecutionContext* ectx) {
+                auto functor = [&, index, tensor_index_size](CPURuntimeContext* ctx,
+                                                             CPUExecutionContext* ectx) {
                     ngraph::runtime::cpu::kernel::sigmoid_multiply(
-                        arg0_tensor, arg1_tensor, out_tensor, tensor_size, index, ectx->arena);
+                        ctx->buffer_data[arg0_tensor_index],
+                        ctx->buffer_data[arg1_tensor_index],
+                        ctx->buffer_data[out_tensor_index],
+                        tensor_index_size,
+                        index,
+                        ectx->arena);
                 };
 
                 functors.emplace_back(functor);
@@ -126,12 +144,17 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::SigmoidMultiplyBackprop)
             {
                 auto& functors = external_function->get_functors();
-                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
-                auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
-                auto& out1_tensor = external_function->get_tensor_data(out[1].get_name());
-                auto tensor_size = shape_size(args[0].get_shape());
+                auto& arg0_tensor_index =
+                    external_function->get_tensor_data_index(args[0].get_name());
+                auto& arg1_tensor_index =
+                    external_function->get_tensor_data_index(args[1].get_name());
+                auto& arg2_tensor_index =
+                    external_function->get_tensor_data_index(args[2].get_name());
+                auto& out0_tensor_index =
+                    external_function->get_tensor_data_index(out[0].get_name());
+                auto& out1_tensor_index =
+                    external_function->get_tensor_data_index(out[1].get_name());
+                auto tensor_index_size = shape_size(args[0].get_shape());
 
                 auto sigmoid_mul = static_cast<const ngraph::op::SigmoidMultiplyBackprop*>(node);
 
@@ -140,16 +163,17 @@ namespace ngraph
                         static_cast<size_t>(ngraph::op::SigmoidMultiply::FunctionType::NumTypes) +
                     static_cast<size_t>(sigmoid_mul->get_input_func_type(1));
 
-                auto functor = [&, index, tensor_size](CPURuntimeContext* ctx,
-                                                       CPUExecutionContext* ectx) {
-                    ngraph::runtime::cpu::kernel::sigmoid_multiply_backprop(arg0_tensor,
-                                                                            arg1_tensor,
-                                                                            arg2_tensor,
-                                                                            out0_tensor,
-                                                                            out1_tensor,
-                                                                            tensor_size,
-                                                                            index,
-                                                                            ectx->arena);
+                auto functor = [&, index, tensor_index_size](CPURuntimeContext* ctx,
+                                                             CPUExecutionContext* ectx) {
+                    ngraph::runtime::cpu::kernel::sigmoid_multiply_backprop(
+                        ctx->buffer_data[arg0_tensor_index],
+                        ctx->buffer_data[arg1_tensor_index],
+                        ctx->buffer_data[arg2_tensor_index],
+                        ctx->buffer_data[out0_tensor_index],
+                        ctx->buffer_data[out1_tensor_index],
+                        tensor_index_size,
+                        index,
+                        ectx->arena);
                 };
 
                 functors.emplace_back(functor);

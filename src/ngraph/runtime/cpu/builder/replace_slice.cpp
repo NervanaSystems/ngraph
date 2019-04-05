@@ -34,10 +34,13 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& arg0_tensor_index =
+                    external_function->get_tensor_data_index(args[0].get_name());
+                auto& arg1_tensor_index =
+                    external_function->get_tensor_data_index(args[1].get_name());
 
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto& out_tensor_index =
+                    external_function->get_tensor_data_index(out[0].get_name());
 
                 auto replace_slice = static_cast<const ngraph::op::ReplaceSlice*>(node);
 
@@ -62,7 +65,9 @@ namespace ngraph
                 {
                     size_t size = args[0].get_element_type().size();
                     auto functor = [&, size](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        memcpy(out_tensor, arg1_tensor, size);
+                        memcpy(ctx->buffer_data[out_tensor_index],
+                               ctx->buffer_data[arg1_tensor_index],
+                               size);
                     };
                     functors.emplace_back(functor);
                     return;
@@ -81,9 +86,9 @@ namespace ngraph
                     auto functor =
                         [&, kernel, arg0_shape, arg1_shape, lower_bounds, upper_bounds, strides](
                             CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                            kernel(arg0_tensor,
-                                   arg1_tensor,
-                                   out_tensor,
+                            kernel(ctx->buffer_data[arg0_tensor_index],
+                                   ctx->buffer_data[arg1_tensor_index],
+                                   ctx->buffer_data[out_tensor_index],
                                    arg0_shape,
                                    arg1_shape,
                                    lower_bounds,
@@ -104,9 +109,9 @@ namespace ngraph
 
                     auto functor = [&, kernel, arg0_shape, arg1_shape, lower_bounds](
                         CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        kernel(arg0_tensor,
-                               arg1_tensor,
-                               out_tensor,
+                        kernel(ctx->buffer_data[arg0_tensor_index],
+                               ctx->buffer_data[arg1_tensor_index],
+                               ctx->buffer_data[out_tensor_index],
                                arg0_shape,
                                arg1_shape,
                                lower_bounds,

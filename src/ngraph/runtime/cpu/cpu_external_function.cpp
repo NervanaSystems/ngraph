@@ -1234,9 +1234,11 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             {
                 for (auto& ele_t : ele.second.second)
                 {
+                    tensor_data[ele_t->get_name()] = buffer_data_size;
                     intermediates_offsets.emplace_back(tensor_data[ele_t->get_name()],
                                                        ele_t->get_pool_offset());
                     m_tensor_roles[ele_t->get_name()] = CPUTensorRole::INTERMEDIATE;
+                    buffer_data_size++;
                 }
             }
         }
@@ -1248,16 +1250,22 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         if (node->is_constant())
         {
             auto output_tensor = &node->get_output_tensor();
-            tensor_data[output_tensor->get_name()] =
-                const_cast<void*>(static_pointer_cast<ngraph::op::Constant>(node)->get_data_ptr());
+            tensor_data[output_tensor->get_name()] = buffer_data_size;
+            constant_tensor_data.emplace_back(
+                buffer_data_size,
+                const_cast<void*>(static_pointer_cast<ngraph::op::Constant>(node)->get_data_ptr()));
             auto tensor_set = get_tensor_set(output_tensor);
             // process all tensors in the set containing the output tensor of the constant
             for (auto& ele_t : tensor_set)
             {
                 NGRAPH_ASSERT(ele_t->get_pool_offset() == 0) << "no offset set for constants";
                 m_tensor_roles[ele_t->get_name()] = CPUTensorRole::CONSTANT;
-                tensor_alias[ele_t->get_name()] = output_tensor->get_name();
+                if (ele_t->get_name() != output_tensor->get_name())
+                {
+                    tensor_alias[ele_t->get_name()] = output_tensor->get_name();
+                }
             }
+            buffer_data_size++;
         }
     }
 
@@ -1275,8 +1283,10 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             for (auto& ele_t : tensor_set)
             {
                 m_tensor_roles[ele_t->get_name()] = CPUTensorRole::INPUT;
+                tensor_data[ele_t->get_name()] = buffer_data_size;
                 function_input_index_offset.emplace_back(
                     tensor_data[ele_t->get_name()], arg_index, ele_t->get_pool_offset(), stale);
+                buffer_data_size++;
             }
         }
         arg_index++;
@@ -1293,8 +1303,10 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         for (auto& ele_t : tensor_set)
         {
             m_tensor_roles[ele_t->get_name()] = CPUTensorRole::OUTPUT;
+            tensor_data[ele_t->get_name()] = buffer_data_size;
             function_output_index_offset.emplace_back(
                 tensor_data[ele_t->get_name()], i, ele_t->get_pool_offset());
+            buffer_data_size++;
         }
     }
 
@@ -1344,7 +1356,12 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             cacheable = op_annotations->is_cacheable();
         }
 
+        // When there are multiple threads making call, do not do caching.
+        const auto envConcurrency = std::getenv("NGRAPH_CONCURRENCY");
+        auto concurrency = envConcurrency == nullptr ? 1 : std::atoi(envConcurrency);
+
         bool disable_caching =
+            (concurrency > 1) ||
             (reuse_memory &&
              !cacheable) // Check cacheability only if we are reusing intermediate tensors
             || computes_result(node.get()) || possibly_overwritten(node.get());
@@ -1481,19 +1498,25 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         {
             for (auto& p : intermediates_offsets)
             {
-                p.first.get() = static_cast<uint8_t*>(ctx->memory_buffers[0]->get_ptr()) + p.second;
+                ctx->buffer_data[p.first] =
+                    static_cast<uint8_t*>(ctx->memory_buffers[0]->get_ptr()) + p.second;
+            }
+
+            for (auto& p : constant_tensor_data)
+            {
+                ctx->buffer_data[p.first] = p.second;
             }
         }
 
         for (const auto& p : function_input_index_offset)
         {
-            get<0>(p).get() = static_cast<uint8_t*>(inputs[get<1>(p)]) + get<2>(p);
+            ctx->buffer_data[get<0>(p)] = static_cast<uint8_t*>(inputs[get<1>(p)]) + get<2>(p);
             get<3>(p).get() = ctx->p_en[get<1>(p)];
         }
 
         for (const auto& p : function_output_index_offset)
         {
-            get<0>(p).get() = static_cast<uint8_t*>(outputs[get<1>(p)]) + get<2>(p);
+            ctx->buffer_data[get<0>(p)] = static_cast<uint8_t*>(outputs[get<1>(p)]) + get<2>(p);
         }
 
         auto functor = functors.begin();
@@ -1619,12 +1642,14 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
                         ss << op_names.at(i) << " will be executed with the following inputs:\n";
                         for (auto& is : this->m_op_attrs.at(i).Inputs)
                         {
-                            ss << "\t" << is << " = " << this->get_tensor_data(is) << std::endl;
+                            ss << "\t" << is << " = "
+                               << ctx->buffer_data[this->get_tensor_data_index(is)] << std::endl;
                         }
                         ss << "and outputs :\n";
                         for (auto& os : this->m_op_attrs.at(i).Outputs)
                         {
-                            ss << "\t" << os << " = " << this->get_tensor_data(os) << std::endl;
+                            ss << "\t" << os << " = "
+                               << ctx->buffer_data[this->get_tensor_data_index(os)] << std::endl;
                         }
                     }
                     write_to_file(ss.str(), s_debug_dir, filename);
@@ -1699,7 +1724,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
     }
 }
 
-void*& runtime::cpu::CPU_ExternalFunction::get_tensor_data(const std::string& name)
+size_t& runtime::cpu::CPU_ExternalFunction::get_tensor_data_index(const std::string& name)
 {
     if (tensor_alias.count(name))
     {

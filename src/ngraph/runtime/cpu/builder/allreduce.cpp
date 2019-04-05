@@ -40,8 +40,10 @@ namespace ngraph
                 static int call_seq = 0;
 
                 auto& functors = external_function->get_functors();
-                auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto& arg_tensor_index =
+                    external_function->get_tensor_data_index(args[0].get_name());
+                auto& out_tensor_index =
+                    external_function->get_tensor_data_index(out[0].get_name());
                 auto count = static_cast<int>(out[0].get_size());
 
                 auto external_function_name = external_function->get_function_name();
@@ -68,8 +70,12 @@ namespace ngraph
 
                 auto functor = [&, count, data_type](CPURuntimeContext* ctx,
                                                      CPUExecutionContext* ectx) {
-                    MLSL::CommReq* req = ctx->mlsl_dist->AllReduce(
-                        arg_tensor, out_tensor, count, data_type, MLSL::RT_SUM, MLSL::GT_DATA);
+                    MLSL::CommReq* req = ctx->mlsl_dist->AllReduce(arg_tensor_index,
+                                                                   out_tensor_index,
+                                                                   count,
+                                                                   data_type,
+                                                                   MLSL::RT_SUM,
+                                                                   MLSL::GT_DATA);
                     ctx->mlsl_env->Wait(req);
                 };
 #elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
@@ -98,8 +104,12 @@ namespace ngraph
                                        node_name.c_str(),
                                        node_friendly_name.c_str(),
                                        count);
-                    MPI_Allreduce(
-                        arg_tensor, out_tensor, count, data_type, MPI_SUM, MPI_COMM_WORLD);
+                    MPI_Allreduce(ctx->buffer_data[arg_tensor_index],
+                                  ctx->buffer_data[out_tensor_index],
+                                  count,
+                                  data_type,
+                                  MPI_SUM,
+                                  MPI_COMM_WORLD);
                 };
 #else
                 throw ngraph_error("Distributed Library not supported/mentioned");

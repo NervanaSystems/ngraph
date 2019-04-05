@@ -177,14 +177,17 @@ namespace ngraph
                 auto& functors = external_function->get_functors();
 
                 auto element_count = out[0].get_size();
-                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto& arg0_tensor = external_function->get_tensor_data_index(args[0].get_name());
+                auto& arg1_tensor = external_function->get_tensor_data_index(args[1].get_name());
+                auto& out0_tensor = external_function->get_tensor_data_index(out[0].get_name());
 
                 auto functor = [&, element_count](CPURuntimeContext* ctx,
                                                   CPUExecutionContext* ectx) {
-                    runtime::cpu::kernel::logical_and(
-                        arg0_tensor, arg1_tensor, out0_tensor, element_count, ectx->arena);
+                    runtime::cpu::kernel::logical_and(ctx->buffer_data[arg0_tensor],
+                                                      ctx->buffer_data[arg1_tensor],
+                                                      ctx->buffer_data[out0_tensor],
+                                                      element_count,
+                                                      ectx->arena);
                 };
                 functors.emplace_back(functor);
             }
@@ -195,14 +198,17 @@ namespace ngraph
                 auto& functors = external_function->get_functors();
 
                 auto element_count = out[0].get_size();
-                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto& arg0_tensor = external_function->get_tensor_data_index(args[0].get_name());
+                auto& arg1_tensor = external_function->get_tensor_data_index(args[1].get_name());
+                auto& out0_tensor = external_function->get_tensor_data_index(out[0].get_name());
 
                 auto functor = [&, element_count](CPURuntimeContext* ctx,
                                                   CPUExecutionContext* ectx) {
-                    runtime::cpu::kernel::logical_or(
-                        arg0_tensor, arg1_tensor, out0_tensor, element_count, ectx->arena);
+                    runtime::cpu::kernel::logical_or(ctx->buffer_data[arg0_tensor],
+                                                     ctx->buffer_data[arg1_tensor],
+                                                     ctx->buffer_data[out0_tensor],
+                                                     element_count,
+                                                     ectx->arena);
                 };
                 functors.emplace_back(functor);
             }
@@ -343,23 +349,23 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                vector<void**> dest;
+                vector<size_t*> dest;
                 for (auto& result : external_function->get_function()->get_results())
                 {
                     if (result.get() == node)
                     {
-                        dest.push_back(&external_function->get_tensor_data(
+                        dest.push_back(&external_function->get_tensor_data_index(
                             result->get_output_tensor(0).get_name()));
                     }
                 }
                 auto& src =
-                    external_function->get_tensor_data(node->get_output_tensor(0).get_name());
+                    external_function->get_tensor_data_index(node->get_output_tensor(0).get_name());
                 auto size = node->get_output_tensor(0).size();
                 auto functor = [&, dest, src, size](CPURuntimeContext* ctx,
                                                     CPUExecutionContext* ectx) {
                     for (auto p : dest)
                     {
-                        memcpy(*p, src, size);
+                        memcpy(ctx->buffer_data[*p], ctx->buffer_data[src], size);
                     }
                 };
                 functors.emplace_back(functor);

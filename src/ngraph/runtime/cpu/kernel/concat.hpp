@@ -34,7 +34,7 @@ namespace ngraph
             namespace kernel
             {
                 template <typename ElementType, int Rank>
-                void concat(std::vector<std::reference_wrapper<void*>> inputs,
+                void concat(std::vector<void*> inputs,
                             std::vector<Shape> input_shapes,
                             void* output,
                             Shape output_shape,
@@ -59,7 +59,7 @@ namespace ngraph
                         }
 
                         Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> in(
-                            static_cast<ElementType*>(inputs[i].get()), in_dims);
+                            static_cast<ElementType*>(inputs[i]), in_dims);
                         out.slice(concat_pos, in_dims)
                             .device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
                                 0)) = in;

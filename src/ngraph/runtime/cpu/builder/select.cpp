@@ -32,11 +32,15 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
+                auto& arg0_tensor_index =
+                    external_function->get_tensor_data_index(args[0].get_name());
+                auto& arg1_tensor_index =
+                    external_function->get_tensor_data_index(args[1].get_name());
+                auto& arg2_tensor_index =
+                    external_function->get_tensor_data_index(args[2].get_name());
 
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto& out_tensor_index =
+                    external_function->get_tensor_data_index(out[0].get_name());
 
                 auto element_count = args[0].get_size();
 
@@ -46,10 +50,10 @@ namespace ngraph
 
                 auto functor = [&, kernel, element_count](CPURuntimeContext* ctx,
                                                           CPUExecutionContext* ectx) {
-                    kernel(arg0_tensor,
-                           arg1_tensor,
-                           arg2_tensor,
-                           out_tensor,
+                    kernel(ctx->buffer_data[arg0_tensor_index],
+                           ctx->buffer_data[arg1_tensor_index],
+                           ctx->buffer_data[arg2_tensor_index],
+                           ctx->buffer_data[out_tensor_index],
                            element_count,
                            ectx->arena);
                 };

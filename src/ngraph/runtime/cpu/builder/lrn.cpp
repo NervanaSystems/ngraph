@@ -37,8 +37,10 @@ namespace ngraph
                 const ngraph::op::LRN* lrn = static_cast<const ngraph::op::LRN*>(node);
                 CPUKernelFunctor functor;
 
-                auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto& arg_tensor_index =
+                    external_function->get_tensor_data_index(args[0].get_name());
+                auto& out_tensor_index =
+                    external_function->get_tensor_data_index(out[0].get_name());
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -55,8 +57,10 @@ namespace ngraph
                             mkldnn_emitter->build_lrn_forward(
                                 ctx->mkldnn_primitives, lrn_desc, deps, lrn_index);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[0], ctx->buffer_data[arg_tensor_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[1], ctx->buffer_data[out_tensor_index]);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, lrn_index);
                     };
                 }
@@ -73,13 +77,14 @@ namespace ngraph
                     {
                         functor = [&, alpha, beta, bias, arg_shape, nsize](
                             CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                            ngraph::runtime::reference::lrn<float>(static_cast<float*>(arg_tensor),
-                                                                   static_cast<float*>(out_tensor),
-                                                                   arg_shape,
-                                                                   alpha,
-                                                                   beta,
-                                                                   bias,
-                                                                   nsize);
+                            ngraph::runtime::reference::lrn<float>(
+                                static_cast<float*>(ctx->buffer_data[arg_tensor_index]),
+                                static_cast<float*>(ctx->buffer_data[out_tensor_index]),
+                                arg_shape,
+                                alpha,
+                                beta,
+                                bias,
+                                nsize);
                         };
                     }
                     else if (element_type == element::f64)
@@ -87,8 +92,8 @@ namespace ngraph
                         functor = [&, alpha, beta, bias, arg_shape, nsize](
                             CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                             ngraph::runtime::reference::lrn<double>(
-                                static_cast<double*>(arg_tensor),
-                                static_cast<double*>(out_tensor),
+                                static_cast<double*>(ctx->buffer_data[arg_tensor_index]),
+                                static_cast<double*>(ctx->buffer_data[out_tensor_index]),
                                 arg_shape,
                                 alpha,
                                 beta,

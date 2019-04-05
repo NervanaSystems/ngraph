@@ -36,8 +36,10 @@ namespace ngraph
                 {
                     auto& functors = external_function->get_functors();
 
-                    auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
-                    auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                    auto& arg_tensor_index =
+                        external_function->get_tensor_data_index(args[0].get_name());
+                    auto& out_tensor_index =
+                        external_function->get_tensor_data_index(out[0].get_name());
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto relu_desc = mkldnn_emitter->get_relu_forward_desc(node);
@@ -52,8 +54,10 @@ namespace ngraph
                             mkldnn_emitter->build_relu_forward(
                                 ctx->mkldnn_primitives, relu_desc, deps, relu_index);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[0], ctx->buffer_data[arg_tensor_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[1], ctx->buffer_data[out_tensor_index]);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, relu_index);
                     };
                     functors.emplace_back(functor);
@@ -69,9 +73,12 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                auto& arg_fwd_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& delta_tensor = external_function->get_tensor_data(args[1].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto& arg_fwd_tensor_index =
+                    external_function->get_tensor_data_index(args[0].get_name());
+                auto& delta_tensor_index =
+                    external_function->get_tensor_data_index(args[1].get_name());
+                auto& out_tensor_index =
+                    external_function->get_tensor_data_index(out[0].get_name());
                 size_t count = out[0].get_size();
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
@@ -90,9 +97,12 @@ namespace ngraph
                             mkldnn_emitter->build_relu_backward(
                                 ctx->mkldnn_primitives, bwd_desc, fwd_desc, deps, relu_index);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg_fwd_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], delta_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[0], ctx->buffer_data[arg_fwd_tensor_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[1], ctx->buffer_data[delta_tensor_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[2], ctx->buffer_data[out_tensor_index]);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, relu_index);
                     };
                     functors.emplace_back(functor);
@@ -106,7 +116,11 @@ namespace ngraph
 
                     auto functor = [&, kernel, count](CPURuntimeContext* ctx,
                                                       CPUExecutionContext* ectx) {
-                        kernel(arg_fwd_tensor, delta_tensor, out_tensor, count, ectx->arena);
+                        kernel(ctx->buffer_data[arg_fwd_tensor_index],
+                               ctx->buffer_data[delta_tensor_index],
+                               ctx->buffer_data[out_tensor_index],
+                               count,
+                               ectx->arena);
                     };
                     functors.emplace_back(functor);
                 }

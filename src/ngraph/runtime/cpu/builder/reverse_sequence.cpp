@@ -34,9 +34,12 @@ namespace ngraph
 
                 auto& functors = external_function->get_functors();
 
-                auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& seq_len_tensor = external_function->get_tensor_data(args[1].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto& arg_tensor_index =
+                    external_function->get_tensor_data_index(args[0].get_name());
+                auto& seq_len_tensor_index =
+                    external_function->get_tensor_data_index(args[1].get_name());
+                auto& out_tensor_index =
+                    external_function->get_tensor_data_index(out[0].get_name());
 
                 auto arg_shape = args[0].get_shape();
 
@@ -61,12 +64,12 @@ namespace ngraph
 
                 auto functor = [&, kernel, arg_shape, batch_axis, sequence_axis](
                     CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                    kernel(arg_tensor,
-                           out_tensor,
+                    kernel(ctx->buffer_data[arg_tensor_index],
+                           ctx->buffer_data[out_tensor_index],
                            arg_shape,
                            batch_axis,
                            sequence_axis,
-                           seq_len_tensor,
+                           ctx->buffer_data[seq_len_tensor_index],
                            ectx->arena);
                 };
                 functors.emplace_back(functor);

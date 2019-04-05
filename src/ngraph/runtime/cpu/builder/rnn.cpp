@@ -40,13 +40,20 @@ namespace ngraph
 
                 auto& functors = external_function->get_functors();
 
-                auto& src_layer_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& src_iter_tensor = external_function->get_tensor_data(args[1].get_name());
-                auto& weights_layer_tensor = external_function->get_tensor_data(args[2].get_name());
-                auto& weights_iter_tensor = external_function->get_tensor_data(args[3].get_name());
-                auto& bias_tensor = external_function->get_tensor_data(args[4].get_name());
-                auto& dst_layer_tensor = external_function->get_tensor_data(out[0].get_name());
-                auto& dst_iter_tensor = external_function->get_tensor_data(out[1].get_name());
+                auto& src_layer_tensor_index =
+                    external_function->get_tensor_data_index(args[0].get_name());
+                auto& src_iter_tensor_index =
+                    external_function->get_tensor_data_index(args[1].get_name());
+                auto& weights_layer_tensor_index =
+                    external_function->get_tensor_data_index(args[2].get_name());
+                auto& weights_iter_tensor_index =
+                    external_function->get_tensor_data_index(args[3].get_name());
+                auto& bias_tensor_index =
+                    external_function->get_tensor_data_index(args[4].get_name());
+                auto& dst_layer_tensor_index =
+                    external_function->get_tensor_data_index(out[0].get_name());
+                auto& dst_iter_tensor_index =
+                    external_function->get_tensor_data_index(out[1].get_name());
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 auto rnn_desc =
@@ -68,13 +75,20 @@ namespace ngraph
                                                           deps,
                                                           rnn_index);
                     }
-                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], src_layer_tensor);
-                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], src_iter_tensor);
-                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], weights_layer_tensor);
-                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], weights_iter_tensor);
-                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[4], bias_tensor);
-                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[5], dst_layer_tensor);
-                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[6], dst_iter_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(
+                        ctx, deps[0], ctx->buffer_data[src_layer_tensor_index]);
+                    cpu::mkldnn_utils::set_memory_ptr(
+                        ctx, deps[1], ctx->buffer_data[src_iter_tensor_index]);
+                    cpu::mkldnn_utils::set_memory_ptr(
+                        ctx, deps[2], ctx->buffer_data[weights_layer_tensor_index]);
+                    cpu::mkldnn_utils::set_memory_ptr(
+                        ctx, deps[3], ctx->buffer_data[weights_iter_tensor_index]);
+                    cpu::mkldnn_utils::set_memory_ptr(
+                        ctx, deps[4], ctx->buffer_data[bias_tensor_index]);
+                    cpu::mkldnn_utils::set_memory_ptr(
+                        ctx, deps[5], ctx->buffer_data[dst_layer_tensor_index]);
+                    cpu::mkldnn_utils::set_memory_ptr(
+                        ctx, deps[6], ctx->buffer_data[dst_iter_tensor_index]);
                     cpu::mkldnn_utils::set_memory_ptr(
                         ctx, deps[7], ctx->mkldnn_workspaces[deps[8]]);
                     cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, rnn_index);

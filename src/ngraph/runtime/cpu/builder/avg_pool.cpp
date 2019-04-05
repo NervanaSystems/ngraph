@@ -39,8 +39,10 @@ namespace ngraph
                 auto arg0_shape = args[0].get_shape();
                 auto out_shape = out[0].get_shape();
 
-                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto& arg0_tensor_index =
+                    external_function->get_tensor_data_index(args[0].get_name());
+                auto& out_tensor_index =
+                    external_function->get_tensor_data_index(out[0].get_name());
 
                 auto window_shape = avg_pool->get_window_shape();
                 auto window_movement_strides = avg_pool->get_window_movement_strides();
@@ -66,8 +68,10 @@ namespace ngraph
                             mkldnn_emitter->build_pooling_forward(
                                 ctx->mkldnn_primitives, avg_pool_desc, deps, avg_pool_index);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[0], ctx->buffer_data[arg0_tensor_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[1], ctx->buffer_data[out_tensor_index]);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, avg_pool_index);
                     };
                     functors.emplace_back(functor);
@@ -89,8 +93,8 @@ namespace ngraph
                                     padding_above,
                                     include_padding_in_avg_computation](CPURuntimeContext* ctx,
                                                                         CPUExecutionContext* ectx) {
-                        kernel(arg0_tensor,
-                               out_tensor,
+                        kernel(ctx->buffer_data[arg0_tensor_index],
+                               ctx->buffer_data[out_tensor_index],
                                arg0_shape,
                                out_shape,
                                window_shape,
@@ -113,8 +117,10 @@ namespace ngraph
                 auto delta_shape = args[0].get_shape();
                 auto out_shape = out[0].get_shape();
 
-                auto& delta_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto& delta_tensor_index =
+                    external_function->get_tensor_data_index(args[0].get_name());
+                auto& out_tensor_index =
+                    external_function->get_tensor_data_index(out[0].get_name());
 
                 auto window_shape = apb->get_window_shape();
                 auto window_movement_strides = apb->get_window_movement_strides();
@@ -146,8 +152,10 @@ namespace ngraph
                                                                    deps,
                                                                    avg_pool_index);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], delta_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[0], ctx->buffer_data[delta_tensor_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[1], ctx->buffer_data[out_tensor_index]);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, avg_pool_index);
                     };
                     functors.emplace_back(functor);
@@ -168,8 +176,8 @@ namespace ngraph
                                     padding_above,
                                     include_padding_in_avg_computation](CPURuntimeContext* ctx,
                                                                         CPUExecutionContext* ectx) {
-                        kernel(delta_tensor,
-                               out_tensor,
+                        kernel(ctx->buffer_data[delta_tensor_index],
+                               ctx->buffer_data[out_tensor_index],
                                delta_shape,
                                out_shape,
                                window_shape,

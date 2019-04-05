@@ -37,8 +37,10 @@ namespace ngraph
                 auto broadcast = static_cast<const ngraph::op::Broadcast*>(node);
                 auto broadcast_axes = broadcast->get_broadcast_axes();
 
-                auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto& arg_tensor_index =
+                    external_function->get_tensor_data_index(args[0].get_name());
+                auto& out_tensor_index =
+                    external_function->get_tensor_data_index(out[0].get_name());
 
                 auto arg_shape = args[0].get_shape();
                 auto out_shape = out[0].get_shape();
@@ -130,7 +132,9 @@ namespace ngraph
                 {
                     size_t size = out[0].get_size() * out[0].get_element_type().size();
                     auto functor = [&, size](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        memcpy(out_tensor, arg_tensor, size);
+                        memcpy(ctx->buffer_data[out_tensor_index],
+                               ctx->buffer_data[arg_tensor_index],
+                               size);
                     };
                     functors.emplace_back(functor);
                     return;
@@ -167,7 +171,11 @@ namespace ngraph
 
                 auto functor = [&, kernel, expanded_input_shape, out_shape](
                     CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                    kernel(arg_tensor, out_tensor, expanded_input_shape, out_shape, ectx->arena);
+                    kernel(ctx->buffer_data[arg_tensor_index],
+                           ctx->buffer_data[out_tensor_index],
+                           expanded_input_shape,
+                           out_shape,
+                           ectx->arena);
                 };
                 functors.emplace_back(functor);
             }

@@ -84,7 +84,8 @@ namespace ngraph
 
                 auto out_tensor_name = hs->get_ops().back()->get_output_tensor_ptr()->get_name();
                 auto& functors = external_function->get_functors();
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto& out_tensor_index =
+                    external_function->get_tensor_data_index(out[0].get_name());
                 auto& terminal_func = halide_functions[out_tensor_name];
                 auto out_size = out[0].get_size();
 
@@ -96,7 +97,8 @@ namespace ngraph
                             subgraph_param_sizes.at(param.first));
                         param.second.set(param_buffer);
                     }
-                    Halide::Buffer<float> out_buffer(static_cast<float*>(out_tensor), out_size);
+                    Halide::Buffer<float> out_buffer(
+                        static_cast<float*>(ctx->buffer_data[out_tensor_index]), out_size);
                     terminal_func.realize(out_buffer);
                 };
                 functors.emplace_back(functor);

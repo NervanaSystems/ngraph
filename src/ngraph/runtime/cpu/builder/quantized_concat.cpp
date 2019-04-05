@@ -35,18 +35,19 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& functors = external_function->get_functors();
-                    vector<reference_wrapper<void*>> arg_tensors;
+                    vector<size_t> arg_tensor_indexs;
                     for (auto& arg : args)
                     {
                         if (shape_size(arg.get_shape()))
                         {
-                            arg_tensors.emplace_back(
-                                external_function->get_tensor_data(arg.get_name()));
+                            arg_tensor_indexs.emplace_back(
+                                external_function->get_tensor_data_index(arg.get_name()));
                         }
                     }
                     auto nargs = args.size();
 
-                    auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                    auto& out_tensor_index =
+                        external_function->get_tensor_data_index(out[0].get_name());
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto concat_pd =
@@ -62,7 +63,7 @@ namespace ngraph
                     auto& deps = mkldnn_emitter->get_primitive_deps(concat_index);
 
                     auto functor =
-                        [&, concat_pd, inputs_data_desc, arg_tensors, nargs, concat_index](
+                        [&, concat_pd, inputs_data_desc, arg_tensor_indexs, nargs, concat_index](
                             CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                             if (ctx->first_iteration)
                             {
@@ -74,9 +75,11 @@ namespace ngraph
                             }
                             for (size_t i = 0; i < nargs; i++)
                             {
-                                cpu::mkldnn_utils::set_memory_ptr(ctx, deps[i], arg_tensors[i]);
+                                cpu::mkldnn_utils::set_memory_ptr(
+                                    ctx, deps[i], ctx->buffer_data[arg_tensor_indexs[i]]);
                             }
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[nargs], out_tensor);
+                            cpu::mkldnn_utils::set_memory_ptr(
+                                ctx, deps[nargs], ctx->buffer_data[out_tensor_index]);
                             cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, concat_index);
                         };
 

@@ -36,8 +36,10 @@ namespace ngraph
                 auto gm = static_cast<const ngraph::op::GenerateMask*>(node);
                 CPUKernelFunctor functor;
 
-                auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto& arg_tensor_index =
+                    external_function->get_tensor_data_index(args[0].get_name());
+                auto& out_tensor_index =
+                    external_function->get_tensor_data_index(out[0].get_name());
 
                 size_t element_count = out[0].get_size();
 
@@ -48,22 +50,26 @@ namespace ngraph
                 {
                     functor = [&, index, element_count](CPURuntimeContext* ctx,
                                                         CPUExecutionContext* ectx) {
-                        bool training = static_cast<bool>(static_cast<float*>(arg_tensor)[0]);
-                        reference::generate_mask(static_cast<float*>(out_tensor),
-                                                 element_count,
-                                                 static_cast<RNGState*>(ctx->states[index]),
-                                                 training);
+                        bool training = static_cast<bool>(
+                            static_cast<float*>(ctx->buffer_data[arg_tensor_index])[0]);
+                        reference::generate_mask(
+                            static_cast<float*>(ctx->buffer_data[out_tensor_index]),
+                            element_count,
+                            static_cast<RNGState*>(ctx->states[index]),
+                            training);
                     };
                 }
                 else if (args[0].get_element_type() == element::f64)
                 {
                     functor = [&, index, element_count](CPURuntimeContext* ctx,
                                                         CPUExecutionContext* ectx) {
-                        bool training = static_cast<bool>(static_cast<double*>(arg_tensor)[0]);
-                        reference::generate_mask(static_cast<double*>(out_tensor),
-                                                 element_count,
-                                                 static_cast<RNGState*>(ctx->states[index]),
-                                                 training);
+                        bool training = static_cast<bool>(
+                            static_cast<double*>(ctx->buffer_data[arg_tensor_index])[0]);
+                        reference::generate_mask(
+                            static_cast<double*>(ctx->buffer_data[out_tensor_index]),
+                            element_count,
+                            static_cast<RNGState*>(ctx->states[index]),
+                            training);
                     };
                 }
                 else

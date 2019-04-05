@@ -36,8 +36,10 @@ namespace ngraph
                 {
                     auto& functors = external_function->get_functors();
 
-                    auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
-                    auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                    auto& arg_tensor_index =
+                        external_function->get_tensor_data_index(args[0].get_name());
+                    auto& out_tensor_index =
+                        external_function->get_tensor_data_index(out[0].get_name());
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto qmax_pool_desc =
@@ -54,8 +56,10 @@ namespace ngraph
                             mkldnn_emitter->build_pooling_forward(
                                 ctx->mkldnn_primitives, qmax_pool_desc, deps, qmax_pool_index);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[0], ctx->buffer_data[arg_tensor_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[1], ctx->buffer_data[out_tensor_index]);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, qmax_pool_index);
                     };
                     functors.emplace_back(functor);

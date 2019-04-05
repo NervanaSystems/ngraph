@@ -35,9 +35,12 @@ namespace ngraph
                 auto& functors = external_function->get_functors();
 
                 CPUKernelFunctor functor;
-                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto& arg0_tensor_index =
+                    external_function->get_tensor_data_index(args[0].get_name());
+                auto& arg1_tensor_index =
+                    external_function->get_tensor_data_index(args[1].get_name());
+                auto& out_tensor_index =
+                    external_function->get_tensor_data_index(out[0].get_name());
 
                 if (out[0].get_element_type() != element::f32 &&
                     out[0].get_element_type() != element::f64)
@@ -57,9 +60,9 @@ namespace ngraph
                                                                CPUExecutionContext* ectx) {
 
                             ngraph::runtime::reference::embedding<float, float>(
-                                static_cast<float*>(arg0_tensor),
-                                static_cast<float*>(arg1_tensor),
-                                static_cast<float*>(out_tensor),
+                                static_cast<float*>(ctx->buffer_data[arg0_tensor_index]),
+                                static_cast<float*>(ctx->buffer_data[arg1_tensor_index]),
+                                static_cast<float*>(ctx->buffer_data[out_tensor_index]),
                                 element_count,
                                 in_shape);
                         };
@@ -70,9 +73,9 @@ namespace ngraph
                                                                CPUExecutionContext* ectx) {
 
                             ngraph::runtime::reference::embedding<float, int>(
-                                static_cast<int*>(arg0_tensor),
-                                static_cast<float*>(arg1_tensor),
-                                static_cast<float*>(out_tensor),
+                                static_cast<int*>(ctx->buffer_data[arg0_tensor_index]),
+                                static_cast<float*>(ctx->buffer_data[arg1_tensor_index]),
+                                static_cast<float*>(ctx->buffer_data[out_tensor_index]),
                                 element_count,
                                 in_shape);
                         };
@@ -91,9 +94,9 @@ namespace ngraph
                                                                CPUExecutionContext* ectx) {
 
                             ngraph::runtime::reference::embedding<int, float>(
-                                static_cast<float*>(arg0_tensor),
-                                static_cast<int*>(arg1_tensor),
-                                static_cast<int*>(out_tensor),
+                                static_cast<float*>(ctx->buffer_data[arg0_tensor_index]),
+                                static_cast<int*>(ctx->buffer_data[arg1_tensor_index]),
+                                static_cast<int*>(ctx->buffer_data[out_tensor_index]),
                                 element_count,
                                 in_shape);
                         };
@@ -104,9 +107,9 @@ namespace ngraph
                                                                CPUExecutionContext* ectx) {
 
                             ngraph::runtime::reference::embedding<int, int>(
-                                static_cast<int*>(arg0_tensor),
-                                static_cast<int*>(arg1_tensor),
-                                static_cast<int*>(out_tensor),
+                                static_cast<int*>(ctx->buffer_data[arg0_tensor_index]),
+                                static_cast<int*>(ctx->buffer_data[arg1_tensor_index]),
+                                static_cast<int*>(ctx->buffer_data[out_tensor_index]),
                                 element_count,
                                 in_shape);
                         };

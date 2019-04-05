@@ -61,6 +61,8 @@ namespace ngraph
                 int64_t* op_durations;
                 bool* p_en;
                 bool first_iteration;
+                // stores tensor pointers
+                std::vector<void*> buffer_data;
                 std::vector<mkldnn::primitive*> mkldnn_primitives;
                 std::vector<AlignedBuffer*> memory_buffers;
                 std::vector<char*> mkldnn_workspaces;
