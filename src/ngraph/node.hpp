@@ -56,27 +56,10 @@ namespace ngraph
     template <typename NodeType>
     class Output;
 
-    namespace pass
-    {
-        class GetOutputElementElimination;
-    }
     namespace op
     {
         class Constant;
-        class Parameter;
-        class Result;
     } // namespace op
-
-    void replace_node_users_arguments(std::shared_ptr<Node> target,
-                                      std::shared_ptr<Node> replacement);
-
-    std::pair<std::shared_ptr<op::Result>, std::shared_ptr<op::Parameter>>
-        insert_result_parameter_split(const std::shared_ptr<Node>& src_node,
-                                      const std::shared_ptr<Node>& dst_node);
-
-    void insert_new_node_between(const std::shared_ptr<Node>& src_node,
-                                 const std::shared_ptr<Node>& dst_node,
-                                 const std::shared_ptr<Node>& new_node);
 
     std::string node_validation_assertion_string(const Node* node);
 
@@ -93,22 +76,19 @@ namespace ngraph
     /// or a (possibly empty) tuple of values.
     class Node : public std::enable_shared_from_this<Node>
     {
-        // So Adjoints can call generate_adjoints
+        // For access to generate_adjoints.
         friend class autodiff::Adjoints;
 
+        // For access to m_outputs.
         friend class descriptor::Input;
 
+        // For access to m_inputs and m_outputs.
         template <typename NodeType>
-        friend class Input; // Temporary for access to m_inputs and m_outputs
-        template <typename NodeType>
-        friend class Output; // Temporary for access to m_inputs and m_outputs
+        friend class Input;
 
-        friend std::pair<std::shared_ptr<op::Result>, std::shared_ptr<op::Parameter>>
-            insert_result_parameter_split(const std::shared_ptr<Node>& src_node,
-                                          const std::shared_ptr<Node>& dst_node);
-        friend void insert_new_node_between(const std::shared_ptr<Node>& src_node,
-                                            const std::shared_ptr<Node>& dst_node,
-                                            const std::shared_ptr<Node>& new_node);
+        // For access to m_outputs.
+        template <typename NodeType>
+        friend class Output;
 
     protected:
         /// Throws if the node is invalid.
