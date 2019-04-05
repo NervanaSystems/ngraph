@@ -68,7 +68,7 @@ namespace ngraph
                 // The following functions build the MKLDNN primitive for each type of nGraph Node.
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Add)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Add)
                 {
                     std::vector<float> scale_vector(2, 1);
                     std::vector<mkldnn::memory::primitive_desc> inputs_pd;
@@ -81,56 +81,52 @@ namespace ngraph
                     inputs_pd.push_back(mkldnn::memory::primitive_desc(
                         input1_data_desc, executor::global_cpu_engine));
 
-                    mkldnn_emitter.build_elementwise_add(input0_data_desc,
-                                                         input1_data_desc,
-                                                         result_desc,
-                                                         scale_vector,
-                                                         inputs_pd,
-                                                         node);
+                    return mkldnn_emitter.build_elementwise_add(
+                        input0_data_desc, input1_data_desc, result_desc, scale_vector, inputs_pd);
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Lstm)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Lstm)
                 {
-                    mkldnn_emitter.build_rnn<Lstm>(node);
+                    return mkldnn_emitter.build_rnn<Lstm>(node);
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Rnn)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Rnn)
                 {
-                    mkldnn_emitter.build_rnn<Rnn>(node);
+                    return mkldnn_emitter.build_rnn<Rnn>(node);
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(BatchNormTraining)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(BatchNormTraining)
                 {
-                    mkldnn_emitter.build_batch_norm_primitive<BatchNormInference>(
+                    return mkldnn_emitter.build_batch_norm_primitive<BatchNormInference>(
                         node, false /*Append relu*/, true /*Training*/);
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(BatchNormInference)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(BatchNormInference)
                 {
-                    mkldnn_emitter.build_batch_norm_primitive<BatchNormInference>(
+                    return mkldnn_emitter.build_batch_norm_primitive<BatchNormInference>(
                         node, false /*Append relu*/, false /*Training*/);
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(BatchNormTrainingRelu)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(BatchNormTrainingRelu)
                 {
-                    mkldnn_emitter.build_batch_norm_primitive<BatchNormTrainingRelu>(
+                    return mkldnn_emitter.build_batch_norm_primitive<BatchNormTrainingRelu>(
                         node, true /*Append relu*/, true /*Training*/);
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(BatchNormInferenceRelu)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(BatchNormInferenceRelu)
                 {
-                    mkldnn_emitter.build_batch_norm_primitive<BatchNormInferenceRelu>(
+                    return mkldnn_emitter.build_batch_norm_primitive<BatchNormInferenceRelu>(
                         node, true /*Append relu*/, false /*Training*/);
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(BatchNormTrainingBackprop)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(BatchNormTrainingBackprop)
                 {
                     const auto& args = node->get_inputs();
                     auto weights_shape =
@@ -146,19 +142,18 @@ namespace ngraph
                         weights_shape, args[0].get_element_type(), mkldnn::memory::format::nc);
 
                     const auto* batchnorm = static_cast<const BatchNormTrainingBackprop*>(node);
-                    mkldnn_emitter.build_batchnorm_backward(weights_desc,
-                                                            input_desc,
-                                                            mean_desc,
-                                                            variance_desc,
-                                                            delta_desc,
-                                                            dinput_desc,
-                                                            dweights_desc,
-                                                            batchnorm->get_eps_value(),
-                                                            node);
+                    return mkldnn_emitter.build_batchnorm_backward(weights_desc,
+                                                                   input_desc,
+                                                                   mean_desc,
+                                                                   variance_desc,
+                                                                   delta_desc,
+                                                                   dinput_desc,
+                                                                   dweights_desc,
+                                                                   batchnorm->get_eps_value());
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Concat)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Concat)
                 {
                     std::vector<mkldnn::memory::desc> inputs_data_desc;
                     for (size_t i = 0, end = node->get_inputs().size(); i < end; i++)
@@ -170,28 +165,27 @@ namespace ngraph
 
                     size_t concat_dim =
                         (static_cast<const Concat*>(node))->get_concatenation_axis();
-                    mkldnn_emitter.build_concat(inputs_data_desc, result_desc, concat_dim, node);
+                    return mkldnn_emitter.build_concat(inputs_data_desc, result_desc, concat_dim);
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(LRN)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(LRN)
                 {
                     auto input_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
                     const auto* lrn = static_cast<const LRN*>(node);
 
-                    mkldnn_emitter.build_lrn_forward(input_data_desc,
-                                                     result_desc,
-                                                     static_cast<float>(lrn->get_alpha()),
-                                                     static_cast<float>(lrn->get_beta()),
-                                                     static_cast<float>(lrn->get_bias()),
-                                                     static_cast<int>(lrn->get_nsize()),
-                                                     node);
+                    return mkldnn_emitter.build_lrn_forward(input_data_desc,
+                                                            result_desc,
+                                                            static_cast<float>(lrn->get_alpha()),
+                                                            static_cast<float>(lrn->get_beta()),
+                                                            static_cast<float>(lrn->get_bias()),
+                                                            static_cast<int>(lrn->get_nsize()));
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Slice)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Slice)
                 {
                     const auto& out = node->get_outputs();
                     const Slice* slice = static_cast<const Slice*>(node);
@@ -200,30 +194,30 @@ namespace ngraph
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                    mkldnn_emitter.build_slice(
-                        input_desc, result_desc, lower_bounds, out_shape, node);
+                    return mkldnn_emitter.build_slice(
+                        input_desc, result_desc, lower_bounds, out_shape);
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(ConvolutionRelu)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(ConvolutionRelu)
                 {
-                    mkldnn_emitter.build_convolution<ConvolutionRelu>(node);
+                    return mkldnn_emitter.build_convolution<ConvolutionRelu>(node);
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(QuantizedConvolutionRelu)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(QuantizedConvolutionRelu)
                 {
-                    mkldnn_emitter.build_convolution<QuantizedConvolutionRelu>(node);
+                    return mkldnn_emitter.build_convolution<QuantizedConvolutionRelu>(node);
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(QuantizedConvolution)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(QuantizedConvolution)
                 {
-                    mkldnn_emitter.build_convolution<QuantizedConvolution>(node);
+                    return mkldnn_emitter.build_convolution<QuantizedConvolution>(node);
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(GroupConvolution)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(GroupConvolution)
                 {
                     Strides window_dilation_strides_adjusted;
                     auto convolution = static_cast<const ngraph::op::GroupConvolution*>(node);
@@ -239,18 +233,18 @@ namespace ngraph
                     auto padding_above = convolution->get_padding_above();
                     auto filter_strides = convolution->get_window_movement_strides();
 
-                    mkldnn_emitter.build_convolution_forward(input_data_desc,
-                                                             weights_desc,
-                                                             result_desc,
-                                                             filter_strides,
-                                                             window_dilation_strides_adjusted,
-                                                             padding_below,
-                                                             padding_above,
-                                                             node);
+                    return mkldnn_emitter.build_convolution_forward(
+                        input_data_desc,
+                        weights_desc,
+                        result_desc,
+                        filter_strides,
+                        window_dilation_strides_adjusted,
+                        padding_below,
+                        padding_above);
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(GroupConvolutionBias)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(GroupConvolutionBias)
                 {
                     Strides window_dilation_strides_adjusted;
                     auto convolution = static_cast<const ngraph::op::GroupConvolutionBias*>(node);
@@ -278,27 +272,27 @@ namespace ngraph
                             ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, ops_beta);
                     }
 
-                    mkldnn_emitter.build_convolution_forward(input_data_desc,
-                                                             weights_desc,
-                                                             bias_desc,
-                                                             result_desc,
-                                                             filter_strides,
-                                                             window_dilation_strides_adjusted,
-                                                             padding_below,
-                                                             padding_above,
-                                                             node,
-                                                             ops);
+                    return mkldnn_emitter.build_convolution_forward(
+                        input_data_desc,
+                        weights_desc,
+                        bias_desc,
+                        result_desc,
+                        filter_strides,
+                        window_dilation_strides_adjusted,
+                        padding_below,
+                        padding_above,
+                        ops);
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Convolution)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Convolution)
                 {
-                    mkldnn_emitter.build_convolution<Convolution>(node);
+                    return mkldnn_emitter.build_convolution<Convolution>(node);
                 }
 
                 template <typename OpTy>
-                void build_convolution_backward(MKLDNNEmitter& mkldnn_emitter,
-                                                const ngraph::Node* node)
+                size_t build_convolution_backward(MKLDNNEmitter& mkldnn_emitter,
+                                                  const ngraph::Node* node)
                 {
                     auto convolution = static_cast<const OpTy*>(node);
 
@@ -325,34 +319,30 @@ namespace ngraph
                             arg0_desc.data.format = mkldnn_oidhw;
                         }
 
-                        mkldnn_emitter.build_convolution_backward_data(
+                        return mkldnn_emitter.build_convolution_backward_data(
                             arg0_desc,
                             arg1_desc,
                             out0_desc,
                             convolution->get_window_movement_strides_forward(),
                             window_dilation_strides_adjusted,
                             convolution->get_padding_below_forward(),
-                            convolution->get_padding_above_forward(),
-                            node);
-                        return;
+                            convolution->get_padding_above_forward());
                     }
                     if (std::is_same<OpTy, ngraph::op::ConvolutionBackpropFilters>())
                     {
-                        mkldnn_emitter.build_convolution_backward_weights(
+                        return mkldnn_emitter.build_convolution_backward_weights(
                             arg0_desc,
                             arg1_desc,
                             out0_desc,
                             convolution->get_window_movement_strides_forward(),
                             window_dilation_strides_adjusted,
                             convolution->get_padding_below_forward(),
-                            convolution->get_padding_above_forward(),
-                            node);
-                        return;
+                            convolution->get_padding_above_forward());
                     }
                     if (std::is_same<OpTy, ngraph::op::ConvolutionBiasBackpropFiltersBias>())
                     {
                         auto out1_desc = mkldnn_utils::get_output_mkldnn_md(node, 1);
-                        mkldnn_emitter.build_convolution_backward_weights_bias(
+                        return mkldnn_emitter.build_convolution_backward_weights_bias(
                             arg0_desc,
                             arg1_desc,
                             out0_desc,
@@ -360,126 +350,126 @@ namespace ngraph
                             convolution->get_window_movement_strides_forward(),
                             window_dilation_strides_adjusted,
                             convolution->get_padding_below_forward(),
-                            convolution->get_padding_above_forward(),
-                            node);
-                        return;
+                            convolution->get_padding_above_forward());
                     }
 
                     throw ngraph_error(std::string("Unknown op ") + convolution->get_name());
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(ConvolutionBackpropFilters)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(ConvolutionBackpropFilters)
                 {
-                    build_convolution_backward<ConvolutionBackpropFilters>(mkldnn_emitter, node);
+                    return build_convolution_backward<ConvolutionBackpropFilters>(mkldnn_emitter,
+                                                                                  node);
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(ConvolutionBackpropData)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(ConvolutionBackpropData)
                 {
-                    build_convolution_backward<ConvolutionBackpropData>(mkldnn_emitter, node);
+                    return build_convolution_backward<ConvolutionBackpropData>(mkldnn_emitter,
+                                                                               node);
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(QuantizedConvolutionBias)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(QuantizedConvolutionBias)
                 {
-                    mkldnn_emitter.build_convolution<QuantizedConvolutionBias>(node);
+                    return mkldnn_emitter.build_convolution<QuantizedConvolutionBias>(node);
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(QuantizedConvolutionBiasAdd)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(QuantizedConvolutionBiasAdd)
                 {
-                    mkldnn_emitter.build_convolution<QuantizedConvolutionBiasAdd>(node);
+                    return mkldnn_emitter.build_convolution<QuantizedConvolutionBiasAdd>(node);
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(
                     QuantizedConvolutionBiasSignedAdd)
                 {
-                    mkldnn_emitter.build_convolution<QuantizedConvolutionBiasSignedAdd>(node);
+                    return mkldnn_emitter.build_convolution<QuantizedConvolutionBiasSignedAdd>(
+                        node);
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(ConvolutionBias)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(ConvolutionBias)
                 {
-                    mkldnn_emitter.build_convolution<ConvolutionBias>(node);
+                    return mkldnn_emitter.build_convolution<ConvolutionBias>(node);
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(ConvolutionBiasAdd)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(ConvolutionBiasAdd)
                 {
-                    mkldnn_emitter.build_convolution<ConvolutionBiasAdd>(node);
+                    return mkldnn_emitter.build_convolution<ConvolutionBiasAdd>(node);
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(ConvolutionAdd)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(ConvolutionAdd)
                 {
-                    mkldnn_emitter.build_convolution<ConvolutionAdd>(node);
+                    return mkldnn_emitter.build_convolution<ConvolutionAdd>(node);
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(
                     ConvolutionBiasBackpropFiltersBias)
                 {
-                    build_convolution_backward<ConvolutionBiasBackpropFiltersBias>(mkldnn_emitter,
-                                                                                   node);
+                    return build_convolution_backward<ConvolutionBiasBackpropFiltersBias>(
+                        mkldnn_emitter, node);
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(MaxPool)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(MaxPool)
                 {
                     auto max_pool = static_cast<const ngraph::op::MaxPool*>(node);
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                    mkldnn_emitter.build_pooling_forward(mkldnn::algorithm::pooling_max,
-                                                         input_desc,
-                                                         result_desc,
-                                                         max_pool->get_window_movement_strides(),
-                                                         max_pool->get_window_shape(),
-                                                         max_pool->get_padding_below(),
-                                                         max_pool->get_padding_above(),
-                                                         node);
-                }
-
-                template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(QuantizedMaxPool)
-                {
-                    mkldnn_emitter.build_quantized_max_pool(node);
-                }
-
-                template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(QuantizedAvgPool)
-                {
-                    mkldnn_emitter.build_quantized_avg_pool(node);
-                }
-
-                template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(MaxPoolWithIndices)
-                {
-                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    auto max_pool = static_cast<const ngraph::op::MaxPoolWithIndices*>(node);
-
-                    mkldnn_emitter.build_max_pooling_with_indices_forward(
+                    return mkldnn_emitter.build_pooling_forward(
                         mkldnn::algorithm::pooling_max,
                         input_desc,
                         result_desc,
                         max_pool->get_window_movement_strides(),
                         max_pool->get_window_shape(),
                         max_pool->get_padding_below(),
-                        max_pool->get_padding_above(),
-                        node);
+                        max_pool->get_padding_above());
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(AvgPool)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(QuantizedMaxPool)
+                {
+                    return mkldnn_emitter.build_quantized_max_pool(node);
+                }
+
+                template <>
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(QuantizedAvgPool)
+                {
+                    return mkldnn_emitter.build_quantized_avg_pool(node);
+                }
+
+                template <>
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(MaxPoolWithIndices)
+                {
+                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+                    auto max_pool = static_cast<const ngraph::op::MaxPoolWithIndices*>(node);
+
+                    return mkldnn_emitter.build_max_pooling_with_indices_forward(
+                        mkldnn::algorithm::pooling_max,
+                        input_desc,
+                        result_desc,
+                        max_pool->get_window_movement_strides(),
+                        max_pool->get_window_shape(),
+                        max_pool->get_padding_below(),
+                        max_pool->get_padding_above());
+                }
+
+                template <>
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(AvgPool)
                 {
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
                     auto avg_pool = static_cast<const ngraph::op::AvgPool*>(node);
 
-                    mkldnn_emitter.build_pooling_forward(
+                    return mkldnn_emitter.build_pooling_forward(
                         (avg_pool->get_include_padding_in_avg_computation()
                              ? mkldnn::algorithm::pooling_avg_include_padding
                              : mkldnn::algorithm::pooling_avg_exclude_padding),
@@ -488,18 +478,17 @@ namespace ngraph
                         avg_pool->get_window_movement_strides(),
                         avg_pool->get_window_shape(),
                         avg_pool->get_padding_below(),
-                        avg_pool->get_padding_above(),
-                        node);
+                        avg_pool->get_padding_above());
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(AvgPoolBackprop)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(AvgPoolBackprop)
                 {
                     auto diff_dst_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto diff_src_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
                     auto apb = static_cast<const ngraph::op::AvgPoolBackprop*>(node);
 
-                    mkldnn_emitter.build_pooling_backward(
+                    return mkldnn_emitter.build_pooling_backward(
                         (apb->get_include_padding_in_avg_computation()
                              ? mkldnn::algorithm::pooling_avg_include_padding
                              : mkldnn::algorithm::pooling_avg_exclude_padding),
@@ -508,49 +497,47 @@ namespace ngraph
                         apb->get_window_movement_strides(),
                         apb->get_window_shape(),
                         apb->get_padding_below(),
-                        apb->get_padding_above(),
-                        node);
+                        apb->get_padding_above());
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(MaxPoolBackprop)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(MaxPoolBackprop)
                 {
                     auto fprop_src_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto diff_dst_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
                     auto diff_src_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
                     auto mpb = static_cast<const ngraph::op::MaxPoolBackprop*>(node);
 
-                    mkldnn_emitter.build_max_pooling_backward(mkldnn::algorithm::pooling_max,
-                                                              fprop_src_desc,
-                                                              diff_dst_desc,
-                                                              diff_src_desc,
-                                                              mpb->get_window_movement_strides(),
-                                                              mpb->get_window_shape(),
-                                                              mpb->get_padding_below(),
-                                                              mpb->get_padding_above(),
-                                                              node);
+                    return mkldnn_emitter.build_max_pooling_backward(
+                        mkldnn::algorithm::pooling_max,
+                        fprop_src_desc,
+                        diff_dst_desc,
+                        diff_src_desc,
+                        mpb->get_window_movement_strides(),
+                        mpb->get_window_shape(),
+                        mpb->get_padding_below(),
+                        mpb->get_padding_above());
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(MaxPoolWithIndicesBackprop)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(MaxPoolWithIndicesBackprop)
                 {
                     auto diff_dst_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
                     auto diff_src_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
                     auto mpb = static_cast<const ngraph::op::MaxPoolWithIndicesBackprop*>(node);
 
-                    mkldnn_emitter.build_max_pooling_with_indices_backward(
+                    return mkldnn_emitter.build_max_pooling_with_indices_backward(
                         mkldnn::algorithm::pooling_max,
                         diff_dst_desc,
                         diff_src_desc,
                         mpb->get_window_movement_strides(),
                         mpb->get_window_shape(),
                         mpb->get_padding_below(),
-                        mpb->get_padding_above(),
-                        node);
+                        mpb->get_padding_above());
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(
                     ngraph::runtime::cpu::op::ConvertLayout)
                 {
                     const auto& args = node->get_inputs();
@@ -593,70 +580,70 @@ namespace ngraph
                             mkldnn::memory::format::goihw);
                     }
 
-                    mkldnn_emitter.build_reorder(input_desc, result_desc, node);
+                    return mkldnn_emitter.build_reorder(input_desc, result_desc);
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(ReluBackprop)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(ReluBackprop)
                 {
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                    mkldnn_emitter.build_relu_backward(input_desc, delta_desc, result_desc, node);
+                    return mkldnn_emitter.build_relu_backward(input_desc, delta_desc, result_desc);
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Relu)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Relu)
                 {
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    mkldnn_emitter.build_relu_forward(input_desc, result_desc, node);
+                    return mkldnn_emitter.build_relu_forward(input_desc, result_desc);
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(LeakyRelu)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(LeakyRelu)
                 {
                     auto leaky_relu_node = static_cast<const ngraph::op::LeakyRelu*>(node);
                     float alpha = leaky_relu_node->get_alpha();
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                    mkldnn_emitter.build_leaky_relu(input_desc, result_desc, alpha, node);
+                    return mkldnn_emitter.build_leaky_relu(input_desc, result_desc, alpha);
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(BoundedRelu)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(BoundedRelu)
                 {
                     auto bounded_relu_node = static_cast<const ngraph::op::BoundedRelu*>(node);
                     float alpha = bounded_relu_node->get_alpha();
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                    mkldnn_emitter.build_bounded_relu(input_desc, result_desc, alpha, node);
+                    return mkldnn_emitter.build_bounded_relu(input_desc, result_desc, alpha);
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Sigmoid)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Sigmoid)
                 {
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    mkldnn_emitter.build_sigmoid_forward(input_desc, result_desc, node);
+                    return mkldnn_emitter.build_sigmoid_forward(input_desc, result_desc);
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(SigmoidBackprop)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(SigmoidBackprop)
                 {
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                    mkldnn_emitter.build_sigmoid_backward(
-                        input_desc, delta_desc, result_desc, node);
+                    return mkldnn_emitter.build_sigmoid_backward(
+                        input_desc, delta_desc, result_desc);
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Softmax)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Softmax)
                 {
                     auto softmax = static_cast<const ngraph::op::Softmax*>(node);
 
@@ -669,20 +656,20 @@ namespace ngraph
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                    mkldnn_emitter.build_softmax_forward(
-                        input_desc, result_desc, softmax_axis, node);
+                    return mkldnn_emitter.build_softmax_forward(
+                        input_desc, result_desc, softmax_axis);
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Dequantize)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Dequantize)
                 {
                     auto input_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    mkldnn_emitter.build_dequantization(node, input_data_desc, result_desc);
+                    return mkldnn_emitter.build_dequantization(node, input_data_desc, result_desc);
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Quantize)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Quantize)
                 {
                     auto input_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
@@ -699,12 +686,12 @@ namespace ngraph
                     std::vector<float> scales;
                     scales.push_back(1.0 / scale[0]);
 
-                    mkldnn_emitter.build_quantize_reorder(
-                        input_data_desc, result_desc, scales, node);
+                    return mkldnn_emitter.build_quantize_reorder(
+                        input_data_desc, result_desc, scales);
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(QuantizedConcat)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(QuantizedConcat)
                 {
                     int args_size = node->get_inputs().size();
 
@@ -718,7 +705,7 @@ namespace ngraph
 
                     size_t concat_dim =
                         (static_cast<const QuantizedConcat*>(node))->get_concatenation_axis();
-                    mkldnn_emitter.build_concat(inputs_data_desc, result_desc, concat_dim, node);
+                    return mkldnn_emitter.build_concat(inputs_data_desc, result_desc, concat_dim);
                 }
             }
         }
@@ -804,7 +791,8 @@ bool MKLDNNPrimitiveBuildPass::run_on_call_graph(const std::list<std::shared_ptr
             NGRAPH_ASSERT(handler != prim_build_dispatcher.end())
                 << "Unsupported node '" << node->description() << "' in MKLDNNPrimitiveBuildPass";
 
-            handler->second(m_mkldnn_emitter, node);
+            size_t primitive_idx = handler->second(m_mkldnn_emitter, node);
+            m_mkldnn_emitter.set_primitive_index(node, primitive_idx);
         }
     }
 

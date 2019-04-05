@@ -26,6 +26,11 @@
     build_primitive<op_name>(ngraph::runtime::cpu::MKLDNNEmitter & mkldnn_emitter,                 \
                              ngraph::Node * node)
 
+namespace mkldnn
+{
+    struct primitive;
+}
+
 namespace ngraph
 {
     class Node;
@@ -39,7 +44,7 @@ namespace ngraph
             namespace pass
             {
                 using PrimitiveBuildFunction =
-                    std::function<void(ngraph::runtime::cpu::MKLDNNEmitter&, ngraph::Node*)>;
+                    std::function<size_t(ngraph::runtime::cpu::MKLDNNEmitter&, ngraph::Node*)>;
                 using PrimitiveBuildOpMap =
                     std::unordered_map<std::type_index, PrimitiveBuildFunction>;
 
@@ -59,8 +64,9 @@ namespace ngraph
                     bool run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes) override;
 
                     template <typename OP>
-                    static void build_primitive(ngraph::runtime::cpu::MKLDNNEmitter& mkldnn_emitter,
-                                                ngraph::Node* node)
+                    static size_t
+                        build_primitive(ngraph::runtime::cpu::MKLDNNEmitter& mkldnn_emitter,
+                                        ngraph::Node* node)
                     {
                         throw std::runtime_error("Unimplemented op '" + node->description() +
                                                  "' in MKLDNNPrimitiveBuildPass");

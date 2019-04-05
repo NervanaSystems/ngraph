@@ -59,8 +59,8 @@ namespace ngraph
 
                     size_t concat_dim = (static_cast<const ngraph::op::QuantizedConcat*>(node))
                                             ->get_concatenation_axis();
-                    auto concat_index = mkldnn_emitter->build_concat(
-                        inputs_data_desc, result_desc, concat_dim, node);
+                    auto concat_index =
+                        mkldnn_emitter->build_concat(inputs_data_desc, result_desc, concat_dim);
                     auto& deps = mkldnn_emitter->get_primitive_deps(concat_index);
 
                     auto functor = [&, arg_tensors, nargs, concat_index](
