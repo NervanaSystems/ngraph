@@ -24,6 +24,8 @@
 #include "gtest/gtest.h"
 #include "ngraph/event_tracing.hpp"
 #include "ngraph/file_util.hpp"
+#include "ngraph/log.hpp"
+#include "ngraph/util.hpp"
 
 using namespace std;
 
@@ -39,9 +41,9 @@ TEST(event_tracing, event_file)
         std::thread next_thread([&] {
             std::ostringstream oss;
             oss << "Event: " << id;
-            ngraph::Event event(oss.str(), "Dummy", "none");
+            ngraph::Event event(oss.str(), "Dummy");
             std::this_thread::sleep_for(std::chrono::milliseconds(200));
-            event.Stop();
+            event.stop();
             ngraph::Event::write_trace(event);
         });
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
@@ -62,4 +64,28 @@ TEST(event_tracing, event_file)
     // Validate the JSON objects - there should be 10 of them
     // TODO
     ngraph::Event::disable_event_tracing();
+}
+
+TEST(benchmark, event_tracing)
+{
+    size_t outer_size = 10000;
+    size_t inner_size = 100;
+    ngraph::Event::enable_event_tracing();
+    ngraph::stopwatch timer;
+    timer.start();
+    for (size_t outer = 0; outer < outer_size; ++outer)
+    {
+        ngraph::Event outer_event("outer", "Dummy");
+        for (size_t inner = 0; inner < inner_size; ++inner)
+        {
+            ngraph::Event inner_event("inner", "Dummy");
+            inner_event.stop();
+            ngraph::Event::write_trace(inner_event);
+        }
+        outer_event.stop();
+        ngraph::Event::write_trace(outer_event);
+    }
+    timer.stop();
+    ngraph::Event::disable_event_tracing();
+    NGRAPH_INFO << "time " << timer.get_milliseconds() << "ms";
 }

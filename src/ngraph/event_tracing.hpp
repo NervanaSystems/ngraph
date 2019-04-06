@@ -31,6 +31,8 @@
 #include <unistd.h>
 #endif
 
+#include "nlohmann/json.hpp"
+
 namespace ngraph
 {
     //
@@ -69,9 +71,9 @@ namespace ngraph
     public:
         explicit Event(const std::string& name,
                        const std::string& category,
-                       const std::string& args)
+                       nlohmann::json args = nullptr)
             : m_pid(getpid())
-            , m_start(std::chrono::high_resolution_clock::now())
+            , m_start(get_current_microseconds())
             , m_stopped(false)
             , m_name(name)
             , m_category(category)
@@ -80,14 +82,13 @@ namespace ngraph
             m_stop = m_start;
         }
 
-        void Stop()
+        void stop()
         {
-            if (m_stopped)
+            if (!m_stopped)
             {
-                return;
+                m_stopped = true;
+                m_stop = get_current_microseconds();
             }
-            m_stopped = true;
-            m_stop = std::chrono::high_resolution_clock::now();
         }
 
         static void write_trace(const Event& event);
@@ -100,13 +101,18 @@ namespace ngraph
         Event& operator=(Event const&) = delete;
 
     private:
+        static std::chrono::microseconds get_current_microseconds()
+        {
+            return std::chrono::duration_cast<std::chrono::microseconds>(
+                std::chrono::high_resolution_clock::now().time_since_epoch());
+        }
         int m_pid;
-        std::chrono::time_point<std::chrono::high_resolution_clock> m_start;
-        std::chrono::time_point<std::chrono::high_resolution_clock> m_stop;
+        std::chrono::microseconds m_start;
+        std::chrono::microseconds m_stop;
         bool m_stopped;
         std::string m_name;
         std::string m_category;
-        std::string m_args;
+        nlohmann::json m_args;
 
         static std::mutex s_file_mutex;
         static std::ofstream s_event_log;
