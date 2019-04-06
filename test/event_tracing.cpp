@@ -28,65 +28,67 @@
 #include "ngraph/util.hpp"
 
 using namespace std;
+using namespace ngraph;
 
 TEST(event_tracing, event_file)
 {
     // Set the environment variable to ensure logging
-    ngraph::Event::enable_event_tracing();
-    std::vector<std::thread> threads;
-    std::mutex mtx;
+    event::Duration::enable_event_tracing();
+    vector<thread> threads;
+    mutex mtx;
     for (auto i = 0; i < 10; i++)
     {
         int id = i;
-        std::thread next_thread([&] {
-            std::ostringstream oss;
+        thread next_thread([&] {
+            ostringstream oss;
             oss << "Event: " << id;
-            ngraph::Event event(oss.str(), "Dummy");
-            std::this_thread::sleep_for(std::chrono::milliseconds(2));
+            event::Duration event(oss.str(), "Dummy");
+            this_thread::sleep_for(chrono::milliseconds(2));
             event.stop();
-            ngraph::Event::write_trace(event);
+            event::Duration::write_trace(event);
         });
-        std::this_thread::sleep_for(std::chrono::milliseconds(2));
-        threads.push_back(std::move(next_thread));
+        this_thread::sleep_for(chrono::milliseconds(2));
+        threads.push_back(move(next_thread));
     }
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    this_thread::sleep_for(chrono::milliseconds(200));
 
     for (auto& next : threads)
     {
         next.join();
     }
-    ngraph::Event::finalize_tracing();
+
+    event::Manager::close();
 
     // Now read the file
     auto json_string = ngraph::file_util::read_file_to_string("ngraph_event_trace.json");
-    nlohmann::json json_from_file(json_string);
+    nlohmann::json json_from_file = nlohmann::json::parse(json_string);
 
-    // Validate the JSON objects - there should be 10 of them
-    // TODO
-    ngraph::Event::disable_event_tracing();
+    EXPECT_EQ(10, json_from_file.size());
+
+    event::Duration::disable_event_tracing();
 }
 
 TEST(benchmark, event_tracing)
 {
     size_t outer_size = 10000;
     size_t inner_size = 100;
-    ngraph::Event::enable_event_tracing();
+    event::Duration::enable_event_tracing();
     ngraph::stopwatch timer;
     timer.start();
     for (size_t outer = 0; outer < outer_size; ++outer)
     {
-        ngraph::Event outer_event("outer", "Dummy");
+        event::Duration outer_event("outer", "Dummy");
         for (size_t inner = 0; inner < inner_size; ++inner)
         {
-            ngraph::Event inner_event("inner", "Dummy");
+            event::Duration inner_event("inner", "Dummy");
             inner_event.stop();
-            ngraph::Event::write_trace(inner_event);
+            event::Duration::write_trace(inner_event);
         }
         outer_event.stop();
-        ngraph::Event::write_trace(outer_event);
+        event::Duration::write_trace(outer_event);
     }
     timer.stop();
-    ngraph::Event::disable_event_tracing();
+    event::Duration::disable_event_tracing();
     NGRAPH_INFO << "time " << timer.get_milliseconds() << "ms";
 }

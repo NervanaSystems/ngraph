@@ -35,89 +35,121 @@
 
 namespace ngraph
 {
-    //
-    // This class records timestamps for a given user defined event and
-    // produces output in the chrome tracing format that can be used to view
-    // the events of a running program
-    //
-    // Following is the format of a trace event
-    //
-    // {
-    //   "name": "myName",
-    //   "cat": "category,list",
-    //   "ph": "B",
-    //   "ts": 12345,
-    //   "pid": 123,
-    //   "tid": 456,
-    //   "args": {
-    //     "someArg": 1,
-    //     "anotherArg": {
-    //       "value": "my value"
-    //     }
-    //   }
-    // }
-    //
-    // The trace file format is defined here:
-    // https://docs.google.com/document/d/1CvAClvFfyA5R-PhYUmn5OOQtYMH4h6I0nSsKchNAySU/preview
-    //
-    // The trace file can be viewed by Chrome browser using the
-    // URL: chrome://tracing/
-    //
-    // More information about this is at:
-    // http://dev.chromium.org/developers/how-tos/trace-event-profiling-tool
-
-    class Event
+    namespace event
     {
-    public:
-        explicit Event(const std::string& name,
-                       const std::string& category,
-                       nlohmann::json args = nullptr)
-            : m_pid(getpid())
-            , m_start(get_current_microseconds())
-            , m_stopped(false)
-            , m_name(name)
-            , m_category(category)
-            , m_args(args)
+        class Duration;
+        class Object;
+        class Manager;
+    }
+}
+
+//
+// This class records timestamps for a given user defined event and
+// produces output in the chrome tracing format that can be used to view
+// the events of a running program
+//
+// Following is the format of a trace event
+//
+// {
+//   "name": "myName",
+//   "cat": "category,list",
+//   "ph": "B",
+//   "ts": 12345,
+//   "pid": 123,
+//   "tid": 456,
+//   "args": {
+//     "someArg": 1,
+//     "anotherArg": {
+//       "value": "my value"
+//     }
+//   }
+// }
+//
+// The trace file format is defined here:
+// https://docs.google.com/document/d/1CvAClvFfyA5R-PhYUmn5OOQtYMH4h6I0nSsKchNAySU/preview
+//
+// The trace file can be viewed by Chrome browser using the
+// URL: chrome://tracing/
+//
+// More information about this is at:
+// http://dev.chromium.org/developers/how-tos/trace-event-profiling-tool
+
+class ngraph::event::Manager
+{
+public:
+    static void open(const std::string& path);
+    static void close();
+    static std::ofstream& get_output_stream();
+    static const std::string& get_process_id();
+    static std::chrono::microseconds get_current_microseconds()
+    {
+        return std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::high_resolution_clock::now().time_since_epoch());
+    }
+    static std::string get_thread_id()
+    {
+        std::ostringstream thread_id;
+        thread_id << std::this_thread::get_id();
+        return thread_id.str();
+    }
+
+private:
+    static std::ostream m_ostream;
+};
+
+class ngraph::event::Duration
+{
+public:
+    explicit Duration(const std::string& name,
+                      const std::string& category,
+                      nlohmann::json args = nullptr)
+        : m_start(Manager::get_current_microseconds())
+        , m_stopped(false)
+        , m_name(name)
+        , m_category(category)
+        , m_args(args)
+    {
+        m_stop = m_start;
+    }
+
+    void stop()
+    {
+        if (!m_stopped)
         {
-            m_stop = m_start;
+            m_stopped = true;
+            m_stop = Manager::get_current_microseconds();
         }
+    }
 
-        void stop()
-        {
-            if (!m_stopped)
-            {
-                m_stopped = true;
-                m_stop = get_current_microseconds();
-            }
-        }
+    static void write_trace(const Duration& event);
+    static bool is_tracing_enabled() { return s_tracing_enabled; }
+    static void enable_event_tracing();
+    static void disable_event_tracing();
 
-        static void write_trace(const Event& event);
-        static bool is_tracing_enabled() { return s_tracing_enabled; }
-        static void enable_event_tracing();
-        static void disable_event_tracing();
-        static void finalize_tracing();
+    Duration(const Duration&) = delete;
+    Duration& operator=(Duration const&) = delete;
 
-        Event(const Event&) = delete;
-        Event& operator=(Event const&) = delete;
+private:
+    std::string to_json() const;
+    std::chrono::microseconds m_start;
+    std::chrono::microseconds m_stop;
+    bool m_stopped;
+    std::string m_name;
+    std::string m_category;
+    nlohmann::json m_args;
 
-    private:
-        static std::chrono::microseconds get_current_microseconds()
-        {
-            return std::chrono::duration_cast<std::chrono::microseconds>(
-                std::chrono::high_resolution_clock::now().time_since_epoch());
-        }
-        std::string to_json() const;
-        int m_pid;
-        std::chrono::microseconds m_start;
-        std::chrono::microseconds m_stop;
-        bool m_stopped;
-        std::string m_name;
-        std::string m_category;
-        nlohmann::json m_args;
+    static std::mutex s_file_mutex;
+    static bool s_tracing_enabled;
+};
 
-        static std::mutex s_file_mutex;
-        static std::ofstream s_event_log;
-        static bool s_tracing_enabled;
-    };
+class ngraph::event::Object
+{
+public:
+    Object(const std::string& name, nlohmann::json args);
+    void snapshot(nlohmann::json args);
+    void destroy();
 
-} // namespace ngraph
+private:
+    const std::string m_name;
+    size_t m_id;
+};
