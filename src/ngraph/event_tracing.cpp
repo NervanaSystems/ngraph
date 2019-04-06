@@ -53,12 +53,12 @@ void event::Duration::stop()
             Manager::get_output_stream() << ",\n";
         }
 
-        string s1 =
-            R"({"name":")" + m_name + R"(","cat":")" + m_category + R"(","ph":"X")" +
-            R"(,"pid":)" + Manager::get_process_id() + R"(,"tid":)" + Manager::get_thread_id() +
-            R"(,"ts":)" + to_string(m_start) + R"(,"dur":)" + to_string(stop_time - m_start) + "}";
-
-        Manager::get_output_stream() << s1;
+        Manager::get_output_stream() <<
+            R"({"name":")" << m_name << R"(","cat":")" << m_category << R"(","ph":"X","pid":)"
+                                     << Manager::get_process_id() << R"(,"tid":)"
+                                     << Manager::get_thread_id() <<
+            R"(,"ts":)" << to_string(m_start) << R"(,"dur":)" << to_string(stop_time - m_start)
+                                     << "}";
     }
 }
 
@@ -79,10 +79,10 @@ event::Object::Object(const string& name, nlohmann::json args)
         {
             Manager::get_output_stream() << ",\n";
         }
-        out << R"({"name":")" + m_name + R"(","ph":"N")" + R"(,"id":")" + to_string(m_id) +
-                   R"(","ts":)" + to_string(Manager::get_current_microseconds().count()) +
-                   R"(,"pid":)" + Manager::get_process_id() + R"(,"tid":)" +
-                   Manager::get_thread_id() + "},\n";
+        out << R"({"name":")" << m_name << R"(","ph":"N","id":")" << to_string(m_id) <<
+            R"(","ts":)" << to_string(Manager::get_current_microseconds().count()) <<
+            R"(,"pid":)" << Manager::get_process_id() << R"(,"tid":)" << Manager::get_thread_id()
+            << "},\n";
         write_snapshot(out, args);
     }
 }
@@ -108,10 +108,10 @@ void event::Object::snapshot(nlohmann::json args)
 
 void event::Object::write_snapshot(ostream& out, nlohmann::json& args)
 {
-    out << R"({"name":")" + m_name + R"(","ph":"O")" + R"(,"id":")" + to_string(m_id) +
-               R"(","ts":)" + to_string(Manager::get_current_microseconds().count()) +
-               R"(,"pid":)" + Manager::get_process_id() + R"(,"tid":)" + Manager::get_thread_id() +
-               R"(,"args":)" + args.dump() + "}";
+    out << R"({"name":")" << m_name << R"(","ph":"O","id":")" << to_string(m_id) <<
+        R"(","ts":)" << to_string(Manager::get_current_microseconds().count()) <<
+        R"(,"pid":)" << Manager::get_process_id() << R"(,"tid":)" << Manager::get_thread_id() <<
+        R"(,"args":)" << args.dump() << "}";
 }
 
 void event::Object::destroy()
@@ -129,10 +129,10 @@ void event::Object::destroy()
         {
             Manager::get_output_stream() << ",\n";
         }
-        out << R"({"name":")" + m_name + R"(","ph":"D")" + R"(,"id":")" + to_string(m_id) +
-                   R"(","ts":)" + to_string(Manager::get_current_microseconds().count()) +
-                   R"(,"pid":)" + Manager::get_process_id() + R"(,"tid":)" +
-                   Manager::get_thread_id() + "}";
+        out << R"({"name":")" << m_name << R"(","ph":"D","id":")" << to_string(m_id) <<
+            R"(","ts":)" << to_string(Manager::get_current_microseconds().count()) <<
+            R"(,"pid":)" << Manager::get_process_id() << R"(,"tid":)" << Manager::get_thread_id()
+            << "}";
     }
 }
 
