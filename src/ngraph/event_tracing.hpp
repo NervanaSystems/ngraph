@@ -77,7 +77,7 @@ namespace ngraph
 class ngraph::event::Manager
 {
 public:
-    static void open(const std::string& path);
+    static void open(const std::string& path = "ngraph_event_trace.json");
     static void close();
     static std::ofstream& get_output_stream();
     static const std::string& get_process_id();
@@ -92,9 +92,15 @@ public:
         thread_id << std::this_thread::get_id();
         return thread_id.str();
     }
+    static std::mutex& get_mutex() { return s_file_mutex; }
+    static bool is_tracing_enabled() { return s_tracing_enabled; }
+    static void enable_event_tracing();
+    static void disable_event_tracing();
 
 private:
-    static std::ostream m_ostream;
+    static std::ostream s_ostream;
+    static std::mutex s_file_mutex;
+    static bool s_tracing_enabled;
 };
 
 class ngraph::event::Duration
@@ -103,43 +109,24 @@ public:
     explicit Duration(const std::string& name,
                       const std::string& category,
                       nlohmann::json args = nullptr)
-        : m_start(Manager::get_current_microseconds())
-        , m_stopped(false)
+        : m_start(Manager::get_current_microseconds().count())
         , m_name(name)
         , m_category(category)
         , m_args(args)
     {
-        m_stop = m_start;
     }
 
-    void stop()
-    {
-        if (!m_stopped)
-        {
-            m_stopped = true;
-            m_stop = Manager::get_current_microseconds();
-        }
-    }
-
-    static void write_trace(const Duration& event);
-    static bool is_tracing_enabled() { return s_tracing_enabled; }
-    static void enable_event_tracing();
-    static void disable_event_tracing();
+    void stop();
 
     Duration(const Duration&) = delete;
     Duration& operator=(Duration const&) = delete;
 
 private:
     std::string to_json() const;
-    std::chrono::microseconds m_start;
-    std::chrono::microseconds m_stop;
-    bool m_stopped;
+    size_t m_start;
     std::string m_name;
     std::string m_category;
     nlohmann::json m_args;
-
-    static std::mutex s_file_mutex;
-    static bool s_tracing_enabled;
 };
 
 class ngraph::event::Object
@@ -150,6 +137,7 @@ public:
     void destroy();
 
 private:
+    void write_snapshot(std::ostream& out, nlohmann::json& args);
     const std::string m_name;
     size_t m_id;
 };

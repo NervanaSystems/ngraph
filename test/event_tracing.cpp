@@ -30,10 +30,9 @@
 using namespace std;
 using namespace ngraph;
 
-TEST(event_tracing, event_file)
+TEST(event_tracing, duration)
 {
-    // Set the environment variable to ensure logging
-    event::Duration::enable_event_tracing();
+    event::Manager::enable_event_tracing();
     vector<thread> threads;
     mutex mtx;
     for (auto i = 0; i < 10; i++)
@@ -45,7 +44,6 @@ TEST(event_tracing, event_file)
             event::Duration event(oss.str(), "Dummy");
             this_thread::sleep_for(chrono::milliseconds(2));
             event.stop();
-            event::Duration::write_trace(event);
         });
         this_thread::sleep_for(chrono::milliseconds(2));
         threads.push_back(move(next_thread));
@@ -66,14 +64,49 @@ TEST(event_tracing, event_file)
 
     EXPECT_EQ(10, json_from_file.size());
 
-    event::Duration::disable_event_tracing();
+    event::Manager::disable_event_tracing();
+}
+
+TEST(event_tracing, object)
+{
+    event::Manager::enable_event_tracing();
+
+    vector<event::Object> objects;
+    for (size_t i = 0; i < 10; ++i)
+    {
+        stringstream ss;
+        ss << "object_" << i;
+        nlohmann::json args;
+        args["arg0"] = i * 10;
+        args["arg1"] = i * 20;
+        args["arg2"] = i * 30;
+        objects.emplace_back(ss.str(), args);
+    }
+    this_thread::sleep_for(chrono::milliseconds(10));
+    for (event::Object& obj : objects)
+    {
+        nlohmann::json args;
+        args["arg0.1"] = "one";
+        args["arg1.1"] = "two";
+        args["arg2.1"] = "three";
+        obj.snapshot(args);
+    }
+    this_thread::sleep_for(chrono::milliseconds(10));
+    for (event::Object& obj : objects)
+    {
+        obj.destroy();
+    }
+
+    event::Manager::close();
+
+    event::Manager::disable_event_tracing();
 }
 
 TEST(benchmark, event_tracing)
 {
     size_t outer_size = 10000;
     size_t inner_size = 100;
-    event::Duration::enable_event_tracing();
+    event::Manager::enable_event_tracing();
     ngraph::stopwatch timer;
     timer.start();
     for (size_t outer = 0; outer < outer_size; ++outer)
@@ -83,12 +116,10 @@ TEST(benchmark, event_tracing)
         {
             event::Duration inner_event("inner", "Dummy");
             inner_event.stop();
-            event::Duration::write_trace(inner_event);
         }
         outer_event.stop();
-        event::Duration::write_trace(outer_event);
     }
     timer.stop();
-    event::Duration::disable_event_tracing();
+    event::Manager::disable_event_tracing();
     NGRAPH_INFO << "time " << timer.get_milliseconds() << "ms";
 }
