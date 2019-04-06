@@ -42,11 +42,11 @@ TEST(event_tracing, event_file)
             std::ostringstream oss;
             oss << "Event: " << id;
             ngraph::Event event(oss.str(), "Dummy");
-            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+            std::this_thread::sleep_for(std::chrono::milliseconds(2));
             event.stop();
             ngraph::Event::write_trace(event);
         });
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        std::this_thread::sleep_for(std::chrono::milliseconds(2));
         threads.push_back(std::move(next_thread));
     }
 
@@ -56,6 +56,7 @@ TEST(event_tracing, event_file)
     {
         next.join();
     }
+    ngraph::Event::finalize_tracing();
 
     // Now read the file
     auto json_string = ngraph::file_util::read_file_to_string("ngraph_event_trace.json");

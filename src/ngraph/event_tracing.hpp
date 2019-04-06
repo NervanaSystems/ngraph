@@ -95,7 +95,7 @@ namespace ngraph
         static bool is_tracing_enabled() { return s_tracing_enabled; }
         static void enable_event_tracing();
         static void disable_event_tracing();
-        std::string to_json() const;
+        static void finalize_tracing();
 
         Event(const Event&) = delete;
         Event& operator=(Event const&) = delete;
@@ -106,6 +106,7 @@ namespace ngraph
             return std::chrono::duration_cast<std::chrono::microseconds>(
                 std::chrono::high_resolution_clock::now().time_since_epoch());
         }
+        std::string to_json() const;
         int m_pid;
         std::chrono::microseconds m_start;
         std::chrono::microseconds m_stop;

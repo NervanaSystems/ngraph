@@ -32,6 +32,13 @@ mutex ngraph::Event::s_file_mutex;
 ofstream ngraph::Event::s_event_log;
 bool ngraph::Event::s_tracing_enabled = read_tracing_env_var();
 
+void ngraph::Event::finalize_tracing()
+{
+    s_event_log << "\n]\n";
+    s_event_log.close();
+    disable_event_tracing();
+}
+
 void ngraph::Event::write_trace(const ngraph::Event& event)
 {
     if (is_tracing_enabled())
@@ -51,7 +58,7 @@ void ngraph::Event::write_trace(const ngraph::Event& event)
             s_event_log << ",\n";
         }
 
-        s_event_log << event.to_json() << "\n";
+        s_event_log << event.to_json();
     }
 }
 
@@ -60,8 +67,8 @@ string ngraph::Event::to_json() const
     ostringstream thread_id;
     thread_id << this_thread::get_id();
 
-    // auto start_time = m_start.time_since_epoch().count() / 1000;
-    // auto stop_time = m_stop.time_since_epoch().count() / 1000;
+    auto start_time = m_start.count();
+    auto stop_time = m_stop.count();
 
     // string s1 = "{\"name\":" + m_name + ",\"cat\":" + m_category + ",\"ph\":\"B\"" + ",\"pid\":" +
     //             to_string(m_pid) + ",\"tid\":" + thread_id.str() + ",\"ts\":" +
@@ -71,10 +78,10 @@ string ngraph::Event::to_json() const
     //             to_string(stop_time) + ",\"args\"," + m_args + "}";
     // return s1 + ",\n" + s2;
 
-    // string s1 = "{\"name\":\"" + m_name + "\",\"cat\":\"" + m_category + "\",\"ph\":\"X\"" +
-    //             ",\"pid\":" + to_string(m_pid) + ",\"tid\":" + thread_id.str() + ",\"ts\":" +
-    //             to_string(start_time) + ",\"dur\":" + to_string(stop_time - start_time) + "}";
-    // return s1;
+    string s1 = "{\"name\":\"" + m_name + "\",\"cat\":\"" + m_category + "\",\"ph\":\"X\"" +
+                ",\"pid\":" + to_string(m_pid) + ",\"tid\":" + thread_id.str() + ",\"ts\":" +
+                to_string(start_time) + ",\"dur\":" + to_string(stop_time - start_time) + "}";
+    return s1;
 
     // nlohmann::json jstart;
     // jstart["name"] = m_name;
@@ -101,19 +108,19 @@ string ngraph::Event::to_json() const
     // }
     // return jstart.dump() + ",\n" + jend.dump();
 
-    nlohmann::json j;
-    j["name"] = m_name;
-    j["cat"] = m_category;
-    j["ph"] = "X";
-    j["pid"] = m_pid;
-    j["tid"] = thread_id.str();
-    j["ts"] = m_start.count();
-    j["dur"] = m_stop.count() - m_start.count();
-    if (!m_args.empty())
-    {
-        j["args"] = m_args;
-    }
-    return j.dump();
+    // nlohmann::json j;
+    // j["name"] = m_name;
+    // j["cat"] = m_category;
+    // j["ph"] = "X";
+    // j["pid"] = m_pid;
+    // j["tid"] = thread_id.str();
+    // j["ts"] = start_time;
+    // j["dur"] = stop_time - start_time;
+    // if (!m_args.empty())
+    // {
+    //     j["args"] = m_args;
+    // }
+    // return j.dump();
 }
 
 void ngraph::Event::enable_event_tracing()
