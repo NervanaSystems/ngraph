@@ -188,3 +188,16 @@ void event::Manager::disable_event_tracing()
 {
     s_tracing_enabled = false;
 }
+
+const std::string& event::Manager::get_thread_id()
+{
+    std::thread::id tid = std::this_thread::get_id();
+    static std::unordered_map<std::thread::id, std::string> tid_map;
+    std::string& rc = tid_map[tid];
+    if (rc.empty())
+    {
+        std::hash<std::thread::id> tid_hash;
+        rc = std::to_string(tid_hash(tid));
+    }
+    return rc;
+}

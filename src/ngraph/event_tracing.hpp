@@ -77,9 +77,17 @@ namespace ngraph
 
 class ngraph::event::Manager
 {
+    friend class Duration;
+    friend class Object;
+
 public:
     static void open(const std::string& path = "ngraph_event_trace.json");
     static void close();
+    static bool is_tracing_enabled() { return s_tracing_enabled; }
+    static void enable_event_tracing();
+    static void disable_event_tracing();
+
+private:
     static std::ofstream& get_output_stream();
     static const std::string& get_process_id();
     static std::chrono::microseconds get_current_microseconds()
@@ -87,24 +95,8 @@ public:
         return std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::high_resolution_clock::now().time_since_epoch());
     }
-    static const std::string& get_thread_id()
-    {
-        std::thread::id tid = std::this_thread::get_id();
-        static std::unordered_map<std::thread::id, std::string> tid_map;
-        std::string& rc = tid_map[tid];
-        if (rc.empty())
-        {
-            std::hash<std::thread::id> tid_hash;
-            rc = std::to_string(tid_hash(tid));
-        }
-        return rc;
-    }
+    static const std::string& get_thread_id();
     static std::mutex& get_mutex() { return s_file_mutex; }
-    static bool is_tracing_enabled() { return s_tracing_enabled; }
-    static void enable_event_tracing();
-    static void disable_event_tracing();
-
-private:
     static std::ostream s_ostream;
     static std::mutex s_file_mutex;
     static bool s_tracing_enabled;
