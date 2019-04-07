@@ -49,7 +49,7 @@
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/erf.hpp"
 #include "ngraph/op/exp.hpp"
-#include "ngraph/op/experimental/batch_dot.hpp"
+#include "ngraph/op/experimental/batch_mat_mul.hpp"
 #include "ngraph/op/experimental/dyn_broadcast.hpp"
 #include "ngraph/op/experimental/dyn_pad.hpp"
 #include "ngraph/op/experimental/dyn_reshape.hpp"
@@ -561,11 +561,11 @@ static shared_ptr<ngraph::Function>
                                                         include_padding_in_avg_computation);
                 break;
             }
-            case OP_TYPEID::BatchDot:
+            case OP_TYPEID::BatchMatMul:
             {
                 bool transpose_arg0 = node_js.at("transpose_arg0").get<bool>();
                 bool transpose_arg1 = node_js.at("transpose_arg1").get<bool>();
-                node = make_shared<op::BatchDot>(args[0], args[1], transpose_arg0, transpose_arg1);
+                node = make_shared<op::BatchMatMul>(args[0], args[1], transpose_arg0, transpose_arg1);
                 break;
             }
 
@@ -1438,9 +1438,9 @@ static json write(const Node& n, bool binary_constant_data)
         node["include_padding_in_avg_computation"] = tmp->get_include_padding_in_avg_computation();
         break;
     }
-    case OP_TYPEID::BatchDot:
+    case OP_TYPEID::BatchMatMul:
     {
-        auto tmp = dynamic_cast<const op::BatchDot*>(&n);
+        auto tmp = dynamic_cast<const op::BatchMatMul*>(&n);
         node["transpose_arg0"] = tmp->get_transpose_arg0();
         node["transpose_arg1"] = tmp->get_transpose_arg1();
         break;

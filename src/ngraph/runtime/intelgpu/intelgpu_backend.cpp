@@ -1995,7 +1995,7 @@ shared_ptr<runtime::Executable>
             break;
         }
         case OP_TYPEID::AllReduce:
-        case OP_TYPEID::BatchDot:
+        case OP_TYPEID::BatchMatMul:
         case OP_TYPEID::BroadcastDistributed:
         case OP_TYPEID::BroadcastLike:
         case OP_TYPEID::DynReshape:

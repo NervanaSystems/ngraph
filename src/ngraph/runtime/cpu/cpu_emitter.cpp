@@ -52,7 +52,7 @@
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/erf.hpp"
 #include "ngraph/op/exp.hpp"
-#include "ngraph/op/experimental/batch_dot.hpp"
+#include "ngraph/op/experimental/batch_mat_mul.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_concat.hpp"
@@ -375,7 +375,7 @@ namespace ngraph
             }
 
             template <typename T>
-            static void emitBatchDot(const ngraph::Node* node,
+            static void emitBatchMatMiul(const ngraph::Node* node,
                                      const Shape& shape_a,
                                      const Shape& shape_b,
                                      const Shape& shape_c,
@@ -449,7 +449,7 @@ namespace ngraph
                 const Shape& arg2_shape = node->get_shape();                 // bias (C)
                 const Shape& padded_result_shape = pad_with(node->get_shape(), 1, 3);
                 // Step 1: dot(A,B)
-                emitBatchDot<ngraph::op::MatmulBias>(node,
+                emitBatchMatMiul<ngraph::op::MatmulBias>(node,
                                                      arg0_shape,
                                                      arg1_shape,
                                                      padded_result_shape,
@@ -568,10 +568,10 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchDot)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchMatMul)
             {
-                const auto* cg = static_cast<const ngraph::op::BatchDot*>(node);
-                emitBatchDot<ngraph::op::BatchDot>(node,
+                const auto* cg = static_cast<const ngraph::op::BatchMatMul*>(node);
+                emitBatchMatMiul<ngraph::op::BatchMatMul>(node,
                                                    cg->get_input_shape(0),
                                                    cg->get_input_shape(1),
                                                    out[0].get_shape(),

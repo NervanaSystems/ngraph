@@ -13055,24 +13055,24 @@ TEST(type_prop, dynslice_params_et_wrong)
     }
 }
 
-TEST(type_prop, batchdot_deduce_3d)
+TEST(type_prop, batchmatmul_deduce_3d)
 {
     // Deduce type for matrix/matrix arguments
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{5, 4, 2});
     auto param2 = make_shared<op::Parameter>(element::f32, Shape{5, 2, 3});
-    auto bc = make_shared<op::BatchDot>(param1, param2);
+    auto bc = make_shared<op::BatchMatMul>(param1, param2);
     ASSERT_EQ(bc->get_element_type(), element::f32);
     ASSERT_EQ(bc->get_shape(), (Shape{5, 4, 3}));
 }
 
-TEST(type_prop, batchdot_deduce_left_rank_wrong)
+TEST(type_prop, batchmatmul_deduce_left_rank_wrong)
 {
     // Type deduction fails due to element type mismatch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{2, 5, 4, 2});
     auto param2 = make_shared<op::Parameter>(element::f32, Shape{5, 2, 5});
     try
     {
-        auto bc = make_shared<op::BatchDot>(param1, param2);
+        auto bc = make_shared<op::BatchMatMul>(param1, param2);
         // Should have thrown, so fail if it didn't
         FAIL() << "Element type mismatch not detected";
     }
@@ -13086,14 +13086,14 @@ TEST(type_prop, batchdot_deduce_left_rank_wrong)
     }
 }
 
-TEST(type_prop, batchdot_deduce_right_rank_wrong)
+TEST(type_prop, batchmatmul_deduce_right_rank_wrong)
 {
     // Type deduction fails due to element type mismatch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{5, 4, 2});
     auto param2 = make_shared<op::Parameter>(element::f32, Shape{2, 5, 2, 5});
     try
     {
-        auto bc = make_shared<op::BatchDot>(param1, param2);
+        auto bc = make_shared<op::BatchMatMul>(param1, param2);
         // Should have thrown, so fail if it didn't
         FAIL() << "Element type mismatch not detected";
     }
@@ -13107,41 +13107,41 @@ TEST(type_prop, batchdot_deduce_right_rank_wrong)
     }
 }
 
-TEST(type_prop, batchdot_deduce_rank_transpose0)
+TEST(type_prop, batchmatmul_deduce_rank_transpose0)
 {
     // Type deduction fails due to element type mismatch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{3, 5, 4});
     auto param2 = make_shared<op::Parameter>(element::f32, Shape{3, 5, 2});
-    auto bc = make_shared<op::BatchDot>(param1, param2, true, false);
+    auto bc = make_shared<op::BatchMatMul>(param1, param2, true, false);
     ASSERT_EQ(bc->get_shape(), (Shape{3, 4, 2}));
 }
 
-TEST(type_prop, batchdot_deduce_rank_transpose1)
+TEST(type_prop, batchmatmul_deduce_rank_transpose1)
 {
     // Type deduction fails due to element type mismatch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{3, 2, 4});
     auto param2 = make_shared<op::Parameter>(element::f32, Shape{3, 5, 4});
-    auto bc = make_shared<op::BatchDot>(param1, param2, false, true);
+    auto bc = make_shared<op::BatchMatMul>(param1, param2, false, true);
     ASSERT_EQ(bc->get_shape(), (Shape{3, 2, 5}));
 }
 
-TEST(type_prop, batchdot_deduce_rank_transpose_both)
+TEST(type_prop, batchmatmul_deduce_rank_transpose_both)
 {
     // Type deduction fails due to element type mismatch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{3, 4, 2});
     auto param2 = make_shared<op::Parameter>(element::f32, Shape{3, 5, 4});
-    auto bc = make_shared<op::BatchDot>(param1, param2, true, true);
+    auto bc = make_shared<op::BatchMatMul>(param1, param2, true, true);
     ASSERT_EQ(bc->get_shape(), (Shape{3, 2, 5}));
 }
 
-TEST(type_prop, batchdot_deduce_element_type_mismatch)
+TEST(type_prop, batchmatmul_deduce_element_type_mismatch)
 {
     // Type deduction fails due to element type mismatch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{5, 4, 2});
     auto param2 = make_shared<op::Parameter>(element::i32, Shape{5, 2, 5});
     try
     {
-        auto bc = make_shared<op::BatchDot>(param1, param2);
+        auto bc = make_shared<op::BatchMatMul>(param1, param2);
         // Should have thrown, so fail if it didn't
         FAIL() << "Element type mismatch not detected";
     }
@@ -13155,16 +13155,16 @@ TEST(type_prop, batchdot_deduce_element_type_mismatch)
     }
 }
 
-TEST(type_prop, batchdot_deduce_reduction_axes_size_mismatch)
+TEST(type_prop, batchmatmul_deduce_reduction_axes_size_mismatch)
 {
     // Type deduction fails due to reduction axes size mismatch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{6, 4, 2});
     auto param2 = make_shared<op::Parameter>(element::f32, Shape{6, 3, 5});
     try
     {
-        auto bc = make_shared<op::BatchDot>(param1, param2);
+        auto bc = make_shared<op::BatchMatMul>(param1, param2);
         // Should have thrown, so fail if it didn't
-        FAIL() << "BatchDot reduction axes size mismatch not detected";
+        FAIL() << "BatchMatMul reduction axes size mismatch not detected";
     }
     catch (const NodeValidationFailure& error)
     {
@@ -13176,68 +13176,68 @@ TEST(type_prop, batchdot_deduce_reduction_axes_size_mismatch)
     }
 }
 
-TEST(type_prop, batchdot_partial_both_rank_dynamic_implicit)
+TEST(type_prop, batchmatmul_partial_both_rank_dynamic_implicit)
 {
     auto param0 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto d = make_shared<op::BatchDot>(param0, param1);
+    auto d = make_shared<op::BatchMatMul>(param0, param1);
 
     ASSERT_TRUE(d->get_output_partial_shape(0).rank().same_scheme(3));
 }
 
-TEST(type_prop, batchdot_partial_left_rank_dynamic_right_rank_static_dynamic)
+TEST(type_prop, batchmatmul_partial_left_rank_dynamic_right_rank_static_dynamic)
 {
     auto param0 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     auto param1 =
         make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3});
-    auto d = make_shared<op::BatchDot>(param0, param1);
+    auto d = make_shared<op::BatchMatMul>(param0, param1);
 
     ASSERT_TRUE(d->get_output_partial_shape(0).rank().same_scheme(3));
 }
 
-TEST(type_prop, batchdot_partial_left_rank_static_dynamic_right_rank_dynamic)
+TEST(type_prop, batchmatmul_partial_left_rank_static_dynamic_right_rank_dynamic)
 {
     auto param0 =
         make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3});
     auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto d = make_shared<op::BatchDot>(param0, param1);
+    auto d = make_shared<op::BatchMatMul>(param0, param1);
 
     ASSERT_TRUE(d->get_output_partial_shape(0).rank().same_scheme(3));
 }
 
-TEST(type_prop, batchdot_partial_left_rank_static_dynamic_right_rank_static)
+TEST(type_prop, batchmatmul_partial_left_rank_static_dynamic_right_rank_static)
 {
     auto param0 =
         make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 4});
     auto param1 = make_shared<op::Parameter>(element::f32, PartialShape{3, 4, 5});
-    auto d = make_shared<op::BatchDot>(param0, param1);
+    auto d = make_shared<op::BatchMatMul>(param0, param1);
 
     ASSERT_TRUE(d->get_output_partial_shape(0).same_scheme(PartialShape{3, 2, 5}));
 }
 
-TEST(type_prop, batchdot_partial_left_et_dynamic)
+TEST(type_prop, batchmatmul_partial_left_et_dynamic)
 {
     auto param0 = make_shared<op::Parameter>(element::dynamic, PartialShape::dynamic());
     auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto d = make_shared<op::BatchDot>(param0, param1);
+    auto d = make_shared<op::BatchMatMul>(param0, param1);
 
     ASSERT_EQ(d->get_output_element_type(0), element::f32);
 }
 
-TEST(type_prop, batchdot_partial_right_et_dynamic)
+TEST(type_prop, batchmatmul_partial_right_et_dynamic)
 {
     auto param0 = make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
     auto param1 = make_shared<op::Parameter>(element::dynamic, PartialShape::dynamic());
-    auto d = make_shared<op::BatchDot>(param0, param1);
+    auto d = make_shared<op::BatchMatMul>(param0, param1);
 
     ASSERT_EQ(d->get_output_element_type(0), element::i32);
 }
 
-TEST(type_prop, batchdot_partial_both_et_dynamic)
+TEST(type_prop, batchmatmul_partial_both_et_dynamic)
 {
     auto param0 = make_shared<op::Parameter>(element::dynamic, PartialShape::dynamic());
     auto param1 = make_shared<op::Parameter>(element::dynamic, PartialShape::dynamic());
-    auto d = make_shared<op::BatchDot>(param0, param1);
+    auto d = make_shared<op::BatchMatMul>(param0, param1);
 
     ASSERT_EQ(d->get_output_element_type(0), element::dynamic);
 }

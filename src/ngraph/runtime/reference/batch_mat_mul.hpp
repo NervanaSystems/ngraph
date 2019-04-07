@@ -30,7 +30,7 @@ namespace ngraph
         namespace reference
         {
             template <typename T>
-            void batch_dot(const T* arg0,
+            void batch_mat_mul(const T* arg0,
                            const T* arg1,
                            T* out,
                            const Shape& arg0_shape,

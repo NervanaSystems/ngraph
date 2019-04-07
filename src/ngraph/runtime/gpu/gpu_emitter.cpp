@@ -59,7 +59,7 @@
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/erf.hpp"
 #include "ngraph/op/exp.hpp"
-#include "ngraph/op/experimental/batch_dot.hpp"
+#include "ngraph/op/experimental/batch_mat_mul.hpp"
 #include "ngraph/op/experimental/dyn_broadcast.hpp"
 #include "ngraph/op/experimental/dyn_pad.hpp"
 #include "ngraph/op/experimental/dyn_reshape.hpp"
@@ -331,7 +331,7 @@ std::string runtime::gpu::GPU_Emitter::emit_AvgPoolBackprop(EMIT_ARGS)
     }
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_BatchDot(EMIT_ARGS)
+std::string runtime::gpu::GPU_Emitter::emit_BatchMatMiul(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }

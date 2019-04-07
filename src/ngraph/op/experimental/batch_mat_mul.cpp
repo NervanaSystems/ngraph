@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "batch_dot.hpp"
+#include "batch_mat_mul.hpp"
 #include "ngraph/dimension.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/experimental/dyn_reshape.hpp"
@@ -24,25 +24,25 @@
 using namespace std;
 using namespace ngraph;
 
-op::BatchDot::BatchDot(const shared_ptr<Node>& arg0,
+op::BatchMatMul::BatchMatMul(const shared_ptr<Node>& arg0,
                        const shared_ptr<Node>& arg1,
                        bool transpose_arg0,
                        bool transpose_arg1)
-    : Op("BatchDot", check_single_output_args({arg0, arg1}))
+    : Op("BatchMatMul", check_single_output_args({arg0, arg1}))
     , m_transpose_arg0(transpose_arg0)
     , m_transpose_arg1(transpose_arg1)
 {
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::BatchDot::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::BatchMatMul::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<BatchDot>(
+    return make_shared<BatchMatMul>(
         new_args.at(0), new_args.at(1), m_transpose_arg0, m_transpose_arg1);
 }
 
-void op::BatchDot::validate_and_infer_types()
+void op::BatchMatMul::validate_and_infer_types()
 {
     // Check input types
     const auto& arg0_et = get_input_element_type(0);
@@ -74,10 +74,10 @@ void op::BatchDot::validate_and_infer_types()
     {
         NODE_VALIDATION_CHECK(this,
                               arg0_shape[0].compatible(arg1_shape[0]),
-                              "Batch size dimensions are not equal while creating BatchDot.");
+                              "Batch size dimensions are not equal while creating BatchMatMul.");
         NODE_VALIDATION_CHECK(this,
                               arg0_shape[dot_dim_arg0].compatible(arg1_shape[dot_dim_arg1]),
-                              "Product dimensions are not equal while creating BatchDot.");
+                              "Product dimensions are not equal while creating BatchMatMul.");
         auto batch_size = arg0_shape[0].is_static() ? arg0_shape[0] : arg1_shape[0];
         output_shape =
             PartialShape{batch_size, arg0_shape[3 - dot_dim_arg0], arg1_shape[3 - dot_dim_arg1]};
@@ -86,7 +86,7 @@ void op::BatchDot::validate_and_infer_types()
     set_output_type(0, output_et, output_shape);
 }
 
-void op::BatchDot::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::BatchMatMul::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
     auto delta = deltas.at(0); // NxIxK
 
@@ -108,13 +108,13 @@ void op::BatchDot::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVec
             // Applies dynamic transpose
             // XXX lfeng: to be implemented using reshape that supports PartialShape
             throw ngraph_error(
-                "generate_adjoints not implemented for BatchDot with dynamic input shapes");
+                "generate_adjoints not implemented for BatchMatMul with dynamic input shapes");
         }
     };
 
     // If arg1 is already transposed, it does not need to be transposed again
     auto delta_dot_arg1 =
-        make_shared<op::BatchDot>(delta, arg1, false, !m_transpose_arg1); // IK.KJ->IJ
+        make_shared<op::BatchMatMul>(delta, arg1, false, !m_transpose_arg1); // IK.KJ->IJ
     // If arg0 is transposed, the result need to be transposed to match original arg0 shape.
     if (m_transpose_arg0)
     {
@@ -125,7 +125,7 @@ void op::BatchDot::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVec
         adjoints.add_delta(arg0, delta_dot_arg1);
     }
 
-    auto arg0_dot_delta = make_shared<BatchDot>(arg0, delta, !m_transpose_arg0, false); // JI.IK->JK
+    auto arg0_dot_delta = make_shared<BatchMatMul>(arg0, delta, !m_transpose_arg0, false); // JI.IK->JK
     if (m_transpose_arg1)
     {
         adjoints.add_delta(arg1, batch_transpose(arg0_dot_delta));

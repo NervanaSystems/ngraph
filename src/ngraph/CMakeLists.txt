@@ -132,8 +132,8 @@ set (SRC
     op/erf.hpp
     op/exp.cpp
     op/exp.hpp
-    op/experimental/batch_dot.cpp
-    op/experimental/batch_dot.hpp
+    op/experimental/batch_mat_mul.cpp
+    op/experimental/batch_mat_mul.hpp
     op/experimental/dyn_broadcast.cpp
     op/experimental/dyn_broadcast.hpp
     op/experimental/dyn_pad.cpp

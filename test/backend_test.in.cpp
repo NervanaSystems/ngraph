@@ -7356,19 +7356,19 @@ TEST(${BACKEND_NAME}, batch_dot_forward)
     dot_params.insert(dot_params.end(), dot_b_params.begin(), dot_b_params.end());
     auto ref_f = make_shared<Function>(dot_concat, dot_params);
 
-    auto make_batchdot = [](ParameterVector& params) {
+    auto make_batchmatmul = [](ParameterVector& params) {
         Shape shape_a{3, 2, 3};
         Shape shape_b{3, 3, 2};
         auto A = make_shared<op::Parameter>(element::f32, shape_a);
         auto B = make_shared<op::Parameter>(element::f32, shape_b);
         params.push_back(A);
         params.push_back(B);
-        return make_shared<op::BatchDot>(A, B);
+        return make_shared<op::BatchMatMul>(A, B);
     };
 
-    ParameterVector batchdot_params;
-    auto batchdot = make_batchdot(batchdot_params);
-    auto backend_f = make_shared<Function>(batchdot, batchdot_params);
+    ParameterVector batchmatmul_params;
+    auto batchmatmul = make_batchmatmul(batchmatmul_params);
+    auto backend_f = make_shared<Function>(batchmatmul, batchmatmul_params);
 
     test::Uniform<float> dot_rng(-1.0f, 1.0f);
     vector<vector<float>> dot_args;
@@ -7379,16 +7379,16 @@ TEST(${BACKEND_NAME}, batch_dot_forward)
         dot_args.push_back(tensor_val);
     }
 
-    test::Uniform<float> batchdot_rng(-1.0f, 1.0f);
-    vector<vector<float>> batchdot_args;
-    for (shared_ptr<op::Parameter> param : batchdot_params)
+    test::Uniform<float> batchmatmul_rng(-1.0f, 1.0f);
+    vector<vector<float>> batchmatmul_args;
+    for (shared_ptr<op::Parameter> param : batchmatmul_params)
     {
         vector<float> tensor_val(shape_size(param->get_shape()));
-        batchdot_rng.initialize(tensor_val);
-        batchdot_args.push_back(tensor_val);
+        batchmatmul_rng.initialize(tensor_val);
+        batchmatmul_args.push_back(tensor_val);
     }
     auto ref_results = execute(ref_f, dot_args, "INTERPRETER");
-    auto backend_results = execute(backend_f, batchdot_args, "${BACKEND_NAME}");
+    auto backend_results = execute(backend_f, batchmatmul_args, "${BACKEND_NAME}");
     for (size_t i = 0; i < ref_results.size(); i++)
     {
         EXPECT_TRUE(test::all_close(ref_results.at(i), backend_results.at(i), 1.0e-4f, 1.0e-4f));

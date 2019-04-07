@@ -30,7 +30,7 @@
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/dequantize.hpp"
-#include "ngraph/op/experimental/batch_dot.hpp"
+#include "ngraph/op/experimental/batch_mat_mul.hpp"
 #include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
@@ -3056,7 +3056,7 @@ TEST(cpu_fusion, fuse_batch_dot)
     stringstream ss(json_string);
     shared_ptr<Function> func = ngraph::deserialize(ss);
     pass_manager.run_passes(func);
-    size_t ccg = count_ops_of_type<op::BatchDot>(func);
+    size_t ccg = count_ops_of_type<op::BatchMatMul>(func);
     ASSERT_EQ(ccg, 1);
 }
 
