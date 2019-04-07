@@ -35,6 +35,17 @@ static bool read_tracing_env_var()
 mutex event::Manager::s_file_mutex;
 bool event::Manager::s_tracing_enabled = read_tracing_env_var();
 
+event::Duration::Duration(const std::string& name, const std::string& category, nlohmann::json args)
+{
+    if (Manager::is_tracing_enabled())
+    {
+        m_start = Manager::get_current_microseconds().count();
+        m_name = name;
+        m_category = category;
+        m_args = args;
+    }
+}
+
 void event::Duration::stop()
 {
     if (Manager::is_tracing_enabled())
@@ -141,7 +152,7 @@ void event::Manager::open(const string& path)
     ofstream& out = get_output_stream();
     if (out.is_open() == false)
     {
-        out.open("ngraph_event_trace.json", ios_base::trunc);
+        out.open(path, ios_base::trunc);
         out << "[\n";
     }
 }

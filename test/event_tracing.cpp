@@ -106,20 +106,48 @@ TEST(benchmark, event_tracing)
 {
     size_t outer_size = 10000;
     size_t inner_size = 100;
+
     event::Manager::enable_event_tracing();
-    ngraph::stopwatch timer;
-    timer.start();
-    for (size_t outer = 0; outer < outer_size; ++outer)
     {
-        event::Duration outer_event("outer", "Dummy");
-        for (size_t inner = 0; inner < inner_size; ++inner)
+        ngraph::stopwatch timer;
+        timer.start();
+        for (size_t outer = 0; outer < outer_size; ++outer)
         {
-            event::Duration inner_event("inner", "Dummy");
-            inner_event.stop();
+            event::Duration outer_event("outer", "Dummy");
+            for (size_t inner = 0; inner < inner_size; ++inner)
+            {
+                event::Duration inner_event("inner", "Dummy");
+                inner_event.stop();
+            }
+            outer_event.stop();
         }
-        outer_event.stop();
+        timer.stop();
+        NGRAPH_INFO << "enabled time " << timer.get_milliseconds() << "ms";
+        NGRAPH_INFO << "enabled time "
+                    << static_cast<double>(timer.get_milliseconds()) /
+                           (outer_size * inner_size + outer_size)
+                    << "ms per call";
     }
-    timer.stop();
+
     event::Manager::disable_event_tracing();
-    NGRAPH_INFO << "time " << timer.get_milliseconds() << "ms";
+    {
+        ngraph::stopwatch timer;
+        timer.start();
+        for (size_t outer = 0; outer < outer_size; ++outer)
+        {
+            event::Duration outer_event("outer", "Dummy");
+            for (size_t inner = 0; inner < inner_size; ++inner)
+            {
+                event::Duration inner_event("inner", "Dummy");
+                inner_event.stop();
+            }
+            outer_event.stop();
+        }
+        timer.stop();
+        NGRAPH_INFO << "disabled time " << timer.get_milliseconds() << "ms";
+        NGRAPH_INFO << "disabled time "
+                    << static_cast<double>(timer.get_milliseconds()) /
+                           (outer_size * inner_size + outer_size)
+                    << "ms per call";
+    }
 }

@@ -108,13 +108,7 @@ class ngraph::event::Duration
 public:
     explicit Duration(const std::string& name,
                       const std::string& category,
-                      nlohmann::json args = nullptr)
-        : m_start(Manager::get_current_microseconds().count())
-        , m_name(name)
-        , m_category(category)
-        , m_args(args)
-    {
-    }
+                      nlohmann::json args = nullptr);
 
     void stop();
 
