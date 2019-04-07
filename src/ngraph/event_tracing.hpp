@@ -18,7 +18,6 @@
 
 #include <chrono>
 #include <fstream>
-#include <functional>
 #include <iostream>
 #include <mutex>
 #include <string>
@@ -95,7 +94,7 @@ private:
         return std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::high_resolution_clock::now().time_since_epoch());
     }
-    static const std::string& get_thread_id();
+    static std::string get_thread_id();
     static std::mutex& get_mutex() { return s_file_mutex; }
     static std::ostream s_ostream;
     static std::mutex s_file_mutex;

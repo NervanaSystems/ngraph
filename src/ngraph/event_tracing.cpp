@@ -35,7 +35,7 @@ static bool read_tracing_env_var()
 mutex event::Manager::s_file_mutex;
 bool event::Manager::s_tracing_enabled = read_tracing_env_var();
 
-event::Duration::Duration(const std::string& name, const std::string& category, nlohmann::json args)
+event::Duration::Duration(const string& name, const string& category, nlohmann::json args)
 {
     if (Manager::is_tracing_enabled())
     {
@@ -189,15 +189,21 @@ void event::Manager::disable_event_tracing()
     s_tracing_enabled = false;
 }
 
-const std::string& event::Manager::get_thread_id()
+string event::Manager::get_thread_id()
 {
-    std::thread::id tid = std::this_thread::get_id();
-    static std::unordered_map<std::thread::id, std::string> tid_map;
-    std::string& rc = tid_map[tid];
-    if (rc.empty())
+    thread::id tid = this_thread::get_id();
+    static map<thread::id, string> tid_map;
+    auto it = tid_map.find(tid);
+    string rc;
+    if (it == tid_map.end())
     {
-        std::hash<std::thread::id> tid_hash;
-        rc = std::to_string(tid_hash(tid));
+        hash<thread::id> tid_hash;
+        rc = to_string(tid_hash(tid));
+        tid_map.insert({tid, rc});
+    }
+    else
+    {
+        rc = it->second;
     }
     return rc;
 }
