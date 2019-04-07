@@ -18,6 +18,7 @@
 
 #include <chrono>
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <mutex>
 #include <string>
@@ -86,11 +87,17 @@ public:
         return std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::high_resolution_clock::now().time_since_epoch());
     }
-    static std::string get_thread_id()
+    static const std::string& get_thread_id()
     {
-        std::ostringstream thread_id;
-        thread_id << std::this_thread::get_id();
-        return thread_id.str();
+        std::thread::id tid = std::this_thread::get_id();
+        static std::unordered_map<std::thread::id, std::string> tid_map;
+        std::string& rc = tid_map[tid];
+        if (rc.empty())
+        {
+            std::hash<std::thread::id> tid_hash;
+            rc = std::to_string(tid_hash(tid));
+        }
+        return rc;
     }
     static std::mutex& get_mutex() { return s_file_mutex; }
     static bool is_tracing_enabled() { return s_tracing_enabled; }
