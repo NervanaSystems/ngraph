@@ -135,6 +135,7 @@
 #include "ngraph/pass/propagate_cacheability.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
 #include "ngraph/pass/reshape_sinking.hpp"
+#include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/pass/zero_dim_tensor_elimination.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
@@ -463,7 +464,9 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
 
     ngraph::pass::Manager pass_manager;
+    //pass_manager.register_pass<ngraph::pass::VisualizeTree>("before.pdf");
     register_common_passes(pass_manager, pass_config);
+    //pass_manager.register_pass<ngraph::pass::VisualizeTree>("after.pdf");
     unordered_map<Node*, Node*> node_function_map;
     string common_function_string;
     auto femitter = bind(&ngraph::runtime::cpu::CPU_ExternalFunction::emit_op_as_function,
@@ -1192,7 +1195,9 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
     static StaticInitializers s_static_initializers(s_debug_dir);
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
     ngraph::pass::Manager pass_manager;
+    pass_manager.register_pass<ngraph::pass::VisualizeTree>("before.pdf");
     register_common_passes(pass_manager, pass_config);
+    pass_manager.register_pass<ngraph::pass::VisualizeTree>("after.pdf");
     pass_manager.run_passes(m_function, false);
 
     // Store layouts assigned for arguments

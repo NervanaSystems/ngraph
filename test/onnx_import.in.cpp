@@ -1878,6 +1878,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_top_k)
     EXPECT_TRUE(test::all_close(expected_indices_output, indices_output));
 }
 
+//this one will fail: onnx_CPU.model_lstm_fwd_with_clip
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_lstm_fwd_with_clip)
 {
     auto function = onnx_import::import_onnx_model(
