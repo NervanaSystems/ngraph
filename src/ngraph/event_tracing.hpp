@@ -22,7 +22,14 @@
 #include <mutex>
 #include <string>
 #include <thread>
+#ifdef _WIN32
+#include <windows.h>
+// windows.h must be before processthreadsapi.h so we need this comment
+#include <processthreadsapi.h>
+#define getpid() GetCurrentProcessId()
+#else
 #include <unistd.h>
+#endif
 
 namespace ngraph
 {
@@ -84,21 +91,9 @@ namespace ngraph
         }
 
         static void write_trace(const Event& event);
-        static bool is_tracing_enabled()
-        {
-            static bool s_check_env = true;
-            if (s_check_env)
-            {
-                s_check_env = false;
-                if (std::getenv("NGRAPH_ENABLE_TRACING") != nullptr)
-                {
-                    s_tracing_enabled = true;
-                }
-            }
-            return s_tracing_enabled;
-        }
-        static void enable_event_tracing() { s_tracing_enabled = true; }
-        static void disable_event_tracing() { s_tracing_enabled = false; }
+        static bool is_tracing_enabled() { return s_tracing_enabled; }
+        static void enable_event_tracing();
+        static void disable_event_tracing();
         std::string to_json() const;
 
         Event(const Event&) = delete;
