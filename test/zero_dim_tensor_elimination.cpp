@@ -48,9 +48,9 @@ TEST(zero_dim_tensor_elimination, zero_sum)
     auto f = std::make_shared<Function>(NodeVector{sum_node, constant}, ParameterVector{A});
     pass::Manager pass_manager;
 
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("before.png");
     pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("after.png");
     pass_manager.run_passes(f);
     ASSERT_EQ(count_ops_of_type<op::Sum>(f), 0);
 }
@@ -68,9 +68,9 @@ TEST(zero_dim_tensor_elimination, zero_const_conv)
         std::make_shared<Function>(NodeVector{abs_node, constant}, ParameterVector{A, weights});
     pass::Manager pass_manager;
 
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("before.png");
     pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("after.png");
     pass_manager.run_passes(f);
     ASSERT_EQ(count_ops_of_type<op::Convolution>(f), 0);
 }
@@ -87,9 +87,9 @@ TEST(zero_dim_tensor_elimination, zero_const_avg_pool)
     auto f = std::make_shared<Function>(NodeVector{abs_node, constant}, ParameterVector{A});
     pass::Manager pass_manager;
 
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("before.png");
     pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("after.png");
     pass_manager.run_passes(f);
     ASSERT_EQ(count_ops_of_type<op::AvgPool>(f), 0);
 }
@@ -106,9 +106,9 @@ TEST(zero_dim_tensor_elimination, zero_const_pad)
     auto f = std::make_shared<Function>(NodeVector{abs_node, constant}, ParameterVector{A, B});
     pass::Manager pass_manager;
 
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("before.png");
     pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("after.png");
     pass_manager.run_passes(f);
     ASSERT_EQ(count_ops_of_type<op::Broadcast>(f), 1);
 }
@@ -125,9 +125,9 @@ TEST(zero_dim_tensor_elimination, zero_const_slice)
     auto f = std::make_shared<Function>(NodeVector{abs_node, constant}, ParameterVector{A, B});
     pass::Manager pass_manager;
 
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("before.png");
     pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("after.png");
     pass_manager.run_passes(f);
     ASSERT_EQ(count_ops_of_type<op::Broadcast>(f), 1);
     ASSERT_EQ(count_ops_of_type<op::Slice>(f), 0);
