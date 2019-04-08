@@ -129,9 +129,17 @@ bool runtime::cpu::CPU_Debugger::delete_breakpoint(std::shared_ptr<Node> op)
 
 void* runtime::cpu::CPU_Debugger::inspect(std::shared_ptr<Node> op, size_t output_index)
 {
-    auto index = m_callframe.m_external_function->get_tensor_data_index(op->get_name() + "_" +
-                                                                        to_string(output_index));
-    return m_callframe.ctx_vec[0]->buffer_data[index];
+    if (m_callframe.m_external_function->is_direct_execution())
+    {
+        auto m_callframe.m_external_function->get_tensor_data(op->get_name() + "_" +
+                                                                to_string(output_index));
+        return m_callframe.ctx_vec[0]->buffer_data[index];
+    }
+    else
+    {
+        return m_callframe.m_external_function->tensor_data.at(op->get_name() + "_" +
+                                                               to_string(output_index));
+    }
 }
 
 bool runtime::cpu::CPU_Debugger::add_tracepoint(

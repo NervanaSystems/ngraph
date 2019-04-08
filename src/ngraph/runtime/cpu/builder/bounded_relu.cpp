@@ -40,7 +40,7 @@ namespace ngraph
                     external_function->get_tensor_data_index(out[0].get_name());
                 size_t count = out[0].get_size();
 
-                auto alpha = static_cast<const op::BoundedRelu*>(node)->get_alpha();
+                auto alpha = static_cast<const ngraph::op::BoundedRelu*>(node)->get_alpha();
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {

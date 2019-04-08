@@ -30,9 +30,11 @@ set(SRC
     algebraic_simplification.cpp
     all_close_f.cpp
     assertion.cpp
+    bfloat16.cpp
     build_graph.cpp
     builder_autobroadcast.cpp
     constant_folding.cpp
+    concat_fusion.cpp
     control_dependencies.cpp
     coordinate.cpp
     copy.cpp
@@ -40,18 +42,22 @@ set(SRC
     cpio.cpp
     cse.cpp
     element_type.cpp
+    event_tracing.cpp
     file_util.cpp
     includes.cpp
     input_output_assign.cpp
     main.cpp
     misc.cpp
+    node_input_output.cpp
     nop_elimination.cpp
     op.cpp
     partial_shape.cpp
     pass_liveness.cpp
     pass_manager.cpp
     pass_memory_layout.cpp
+    pass_shape_specialization.cpp
     pattern.cpp
+    provenance.cpp
     reshape_elimination.cpp
     reshape_sinking.cpp
     serialize.cpp
@@ -137,6 +143,7 @@ set(MULTI_TEST_SRC
     backend_comparison.in.cpp
     backend_dot.in.cpp
     backend_embedding_lookup.in.cpp
+    backend_fusedop.in.cpp
     backend_one_hot.in.cpp
     backend_pool.in.cpp
     backend_reshape.in.cpp
