@@ -1009,8 +1009,7 @@ TEST(cpu_test, thread_safe_calls_convolution_2d_2items)
 
     auto handle = backend->compile(function);
 
-    auto make_call = [shape_a, shape_b, shape_r, expected_result, &backend](
-        std::shared_ptr<ngraph::runtime::Executable> handle) {
+    auto make_call = [&]() {
         // Create some tensors for input/output
         auto a = backend->create_tensor(element::f32, shape_a);
         copy_data(
@@ -1038,9 +1037,9 @@ TEST(cpu_test, thread_safe_calls_convolution_2d_2items)
             vector<float>{expected_result}, read_vector<float>(result), tolerance));
     };
 
-    std::thread call1(make_call, handle);
-    std::thread call2(make_call, handle);
-    std::thread call3(make_call, handle);
+    std::thread call1(make_call);
+    std::thread call2(make_call);
+    std::thread call3(make_call);
     call1.join();
     call2.join();
     call3.join();
