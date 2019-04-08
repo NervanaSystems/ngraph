@@ -217,14 +217,19 @@ bool runtime::gpu::GPU_Backend::is_supported(const Node& op) const
 {
     set<string> unsupported_ops = {"Quantize",
                                    "Dequantize",
+                                   "DynReshape",
+                                   "DynSlice",
                                    "ShapeOf",
                                    "All",
                                    "Any",
                                    "AllReduce",
+                                   "DynPad"
                                    "SelectAndScatter",
                                    "StopGradient",
                                    "EmbeddingLookup",
-                                   "GenerateMask"};
+                                   "GenerateMask",
+                                   "DynBroadcast",
+                                   "Transpose"};
 
     set<string> float_only = {"MaxPoolBackprop", "AvgPoolBackprop", "MaxPool", "Dot"};
 

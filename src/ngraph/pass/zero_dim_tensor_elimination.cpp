@@ -19,8 +19,6 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/node_input.hpp"
-#include "ngraph/node_output.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/concat.hpp"
@@ -35,7 +33,7 @@
 using namespace std;
 using namespace ngraph;
 
-static bool has_zero_dim(const NodeOutput& output)
+static bool has_zero_dim(const Output<Node>& output)
 {
     const auto& shape = output.get_shape();
     return find(shape.begin(), shape.end(), 0) != shape.end();
@@ -43,7 +41,7 @@ static bool has_zero_dim(const NodeOutput& output)
 
 static bool verify_no_internal_zero_length_ops(shared_ptr<Function> f)
 {
-    set<NodeOutput> zero_length_source_outputs;
+    set<Output<Node>> zero_length_source_outputs;
     for (auto n : f->get_ordered_ops())
     {
         if (n->is_output() || n->is_parameter() || n->get_output_size() > 1)
@@ -51,7 +49,7 @@ static bool verify_no_internal_zero_length_ops(shared_ptr<Function> f)
             continue;
         }
 
-        for (auto& output : n->get_node_outputs())
+        for (auto& output : n->outputs())
         {
             if (has_zero_dim(output))
             {
@@ -67,7 +65,7 @@ static bool verify_no_internal_zero_length_ops(shared_ptr<Function> f)
     // zero-length nodes (which violates our assumption)
     for (auto r : f->get_results())
     {
-        for (auto& input : r->get_node_inputs())
+        for (auto& input : r->inputs())
         {
             if (zero_length_source_outputs.count(input.get_source_output()) != 0)
             {
@@ -134,7 +132,7 @@ bool pass::ZeroDimTensorElimination::run_on_function(shared_ptr<Function> f)
             }
         }
 
-        auto source_output = n->get_input_source_output(0);
+        auto source_output = n->input(0).get_source_output();
 
         if (source_output.get_node()->get_output_size() != 1 || !has_zero_dim(source_output))
         {

@@ -61,6 +61,7 @@ string runtime::intelgpu::get_opencl_type_min_max_value(const element::Type& ngr
     case element::Type_t::u16: return is_min ? "0" : "USHRT_MAX";
     case element::Type_t::i8: return is_min ? "CHAR_MIN" : "CHAR_MAX";
     case element::Type_t::u8: return is_min ? "0" : "UCHAR_MAX";
+    case element::Type_t::boolean: return is_min ? "0" : "1";
     }
 
     throw ngraph_error("Unsupported type '" + ngraph_type.c_type_string() +
@@ -321,13 +322,16 @@ void runtime::intelgpu::do_pad_operation(cldnn::topology& topology,
                                          const string& output_name,
                                          const Shape& output_shape,
                                          const element::Type& output_type,
-                                         const Shape& pad_below,
-                                         const Shape& pad_interior)
+                                         const CoordinateDiff& pad_below)
 {
     const string entry_point_name = "op_pad_" + output_name;
     const size_t cldnn_gws_lim = 3;
     CodeWriter writer;
     vector<size_t> gws;
+
+    // FIXME: Compatibility hack added by amprocte now that interior padding has been removed
+    // from nGraph's Pad op.
+    Shape pad_interior(pad_below.size(), 0);
 
     // The kernel name and parameters
     gen_func_def(writer, entry_point_name, {2, "float"}, {input_shape, {1}}, "float", output_shape);
@@ -1694,8 +1698,42 @@ void runtime::intelgpu::do_convert_operation(cldnn::topology& topology,
     {
         gws = generate_loops(writer, output_shape, true);
 
-        writer << "output" << access_dims(output_shape) << " = convert_" << output_type_name
-               << "(input0" << access_dims(output_shape) << ");\n";
+        if (((input_type.get_type_enum() == element::Type_t::f64) ||
+             (input_type.get_type_enum() == element::Type_t::f32)) &&
+            (output_type.get_type_enum() != element::Type_t::boolean))
+        {
+            // this is the workaround for OpenCL to be same as with CPU floating point operations
+            writer << input_type_name << " input_var = input0" << access_dims(output_shape) << ";\n"
+                   << output_type_name << " output_var = 0;\n";
+
+            writer << "if (input_var > " << get_opencl_type_min_max_value(output_type, false);
+            if (!output_type.is_real())
+            {
+                writer << " || isnan(input_var)";
+            }
+            writer << ")\n";
+            writer.block_begin();
+            {
+                writer << "output_var = " << get_opencl_type_min_max_value(output_type, true)
+                       << ";\n";
+            }
+            writer.block_end();
+
+            writer << "else\n";
+
+            writer.block_begin();
+            {
+                writer << "output_var = convert_" << output_type_name << "(input_var);\n";
+            }
+            writer.block_end();
+
+            writer << "output" << access_dims(output_shape) << " = output_var;\n";
+        }
+        else
+        {
+            writer << "output" << access_dims(output_shape) << " = convert_" << output_type_name
+                   << "(input0" << access_dims(output_shape) << ");\n";
+        }
 
         generate_loops(writer, output_shape, false);
     }

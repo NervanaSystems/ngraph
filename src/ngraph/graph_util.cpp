@@ -26,8 +26,6 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/node_input.hpp"
-#include "ngraph/node_output.hpp"
 #include "ngraph/node_vector.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
@@ -67,17 +65,16 @@ void ngraph::traverse_nodes(const Function* p,
     traverse_nodes(nodes, f, include_control_deps);
 }
 
-// This version of traverses directly from input/output nodes to perform functions on
-// graphs that are not wrapped by functions. Most useful for finding parameters of a graph
-// directly from the result nodes, not from function parameters.
-void ngraph::traverse_nodes(const NodeVector& io_nodes,
+void ngraph::traverse_nodes(const NodeVector& subgraph_results,
                             std::function<void(std::shared_ptr<Node>)> f,
-                            bool include_control_deps)
+                            bool include_control_deps,
+                            const NodeVector& subgraph_params)
 {
-    std::unordered_set<std::shared_ptr<Node>> instances_seen;
+    std::unordered_set<std::shared_ptr<Node>> instances_seen{subgraph_params.begin(),
+                                                             subgraph_params.end()};
     std::deque<std::shared_ptr<Node>> stack;
 
-    for (auto r : io_nodes)
+    for (auto r : subgraph_results)
     {
         stack.push_front(r);
     }
@@ -152,19 +149,32 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
     }
 
     // Fix input/output descriptors
-    assert(target->get_outputs().size() == replacement->get_outputs().size());
+    assert(target->get_output_size() == replacement->get_output_size());
+
+    auto set_replacement_prov = [replacement](std::shared_ptr<Node> node) {
+        replacement->merge_provenance_tags_from(node);
+    };
+    traverse_nodes({target}, set_replacement_prov, false, replacement->get_arguments());
+
+    auto propagate_replacement_prov = [replacement](std::shared_ptr<Node> node) {
+        if (is_post_dominated(node.get(), replacement.get()))
+        {
+            node->merge_provenance_tags_from(replacement);
+        }
+    };
+
+    traverse_nodes({replacement}, propagate_replacement_prov, false);
 
     // For each of target's output O with replacement output O_rep:
     //     For each O's connected downstream input I:
     //         Change I's connected upstream output to O_rep
     for (size_t i = 0; i < target->get_output_size(); i++)
     {
-        for (auto& input : target->get_output_target_inputs(i))
+        for (auto& input : target->output(i).get_target_inputs())
         {
-            input.replace_source_output(replacement, i);
+            input.replace_source_output(replacement->output(i));
         }
     }
-    replacement->merge_provenance_tags_from(target);
 }
 
 // Check if all paths from X to a result go through Y
@@ -344,19 +354,19 @@ pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
     par_node->set_placement(dst_node->get_placement());
 
     // Fix input / output among src, dst and par
-    std::set<NodeInput> dst_inputs = get_node_inputs_from(*src_node, *dst_node);
+    std::vector<Input<Node>> dst_inputs = get_inputs_from(*src_node, *dst_node);
     NGRAPH_ASSERT(dst_inputs.size() == 1) << "insert_result_parameter_split encountered more than "
                                              "one input between the source and destination nodes";
-    auto& dst_input = *(dst_inputs.begin());
+    auto& dst_input = dst_inputs[0];
 
-    std::set<NodeOutput> src_outputs = get_node_outputs_to(*src_node, *dst_node);
+    std::vector<Output<Node>> src_outputs = get_outputs_to(*src_node, *dst_node);
     NGRAPH_ASSERT(src_outputs.size() == 1) << "insert_result_parameter_split encountered more than "
                                               "one output between the source and destination nodes";
-    auto& src_output = *(src_outputs.begin());
+    auto& src_output = src_outputs[0];
 
     src_output.remove_target_input(dst_input); // Remove [0]
-    dst_input.replace_source_output(par_node,
-                                    0); // Remove [0] (again), add [8], remove [1], add [9]
+    dst_input.replace_source_output(
+        par_node->output(0)); // Remove [0] (again), add [8], remove [1], add [9]
 
     // Add res node
     shared_ptr<op::Result> res_node = make_shared<op::Result>(src_node); // Add [4], [5], [6], [7]
@@ -410,19 +420,19 @@ void ngraph::insert_new_node_between(const shared_ptr<Node>& src_node,
                                      const shared_ptr<Node>& new_node)
 {
     // Fix input / output
-    std::set<NodeInput> dst_inputs = get_node_inputs_from(*src_node, *dst_node);
+    std::vector<Input<Node>> dst_inputs = get_inputs_from(*src_node, *dst_node);
     NGRAPH_ASSERT(dst_inputs.size() == 1) << "insert_new_node_between encountered more than one "
                                              "input between the source and destination nodes";
-    auto& dst_input = *(dst_inputs.begin());
+    auto& dst_input = dst_inputs[0];
 
-    std::set<NodeOutput> src_outputs = get_node_outputs_to(*src_node, *dst_node);
+    std::vector<Output<Node>> src_outputs = get_outputs_to(*src_node, *dst_node);
     NGRAPH_ASSERT(src_outputs.size() == 1) << "insert_new_node_between encountered more than one "
                                               "output between the source and destination nodes";
-    auto& src_output = *(src_outputs.begin());
+    auto& src_output = src_outputs[0];
 
     src_output.remove_target_input(dst_input); // Remove [0]
-    dst_input.replace_source_output(new_node,
-                                    0); // Remove [0] (again), add [8], remove [1], add [9]
+    dst_input.replace_source_output(
+        new_node->output(0)); // Remove [0] (again), add [8], remove [1], add [9]
 }
 
 std::shared_ptr<Node> ngraph::make_zero(const element::Type& element_type, const Shape& shape)
@@ -487,6 +497,13 @@ NodeVector ngraph::get_subgraph_outputs(const NodeVector& nodes,
     return outputs;
 }
 
+NodeVector ngraph::extract_subgraph(const NodeVector& results, const NodeVector& args)
+{
+    NodeVector subgraph;
+    traverse_nodes(results, [&](std::shared_ptr<Node> n) { subgraph.push_back(n); }, true, args);
+    return subgraph;
+}
+
 bool ngraph::is_used(Node* node)
 {
     std::unordered_set<Node*> instances_seen;
@@ -528,9 +545,9 @@ size_t ngraph::get_user_count(Node* node)
 
 bool ngraph::possibly_overwritten(Node* node)
 {
-    for (size_t i = 0; i < node->get_output_size(); i++)
+    for (auto& output : node->outputs())
     {
-        for (auto& input : node->get_output_target_inputs(i))
+        for (auto& input : output.get_target_inputs())
         {
             if (input.get_node()->is_op())
             {
@@ -595,30 +612,30 @@ void ngraph::plot_graph(
     pass_manager.run_passes(f);
 }
 
-std::set<NodeInput> ngraph::get_node_inputs_from(Node& src, Node& dst)
+std::vector<Input<Node>> ngraph::get_inputs_from(Node& src, Node& dst)
 {
-    std::set<NodeInput> result = dst.get_node_inputs();
+    std::vector<Input<Node>> result;
 
-    for (auto it = std::begin(result); it != std::end(result); it++)
+    for (auto& input : dst.inputs())
     {
-        if (it->get_source_output().get_node().get() != &src)
+        if (input.get_source_output().get_node() == &src)
         {
-            result.erase(it);
+            result.push_back(input);
         }
     }
 
     return result;
 }
 
-std::set<NodeOutput> ngraph::get_node_outputs_to(Node& src, Node& dst)
+std::vector<Output<Node>> ngraph::get_outputs_to(Node& src, Node& dst)
 {
-    std::set<NodeOutput> result = src.get_node_outputs();
+    std::vector<Output<Node>> result;
 
-    for (auto it = std::begin(result); it != std::end(result); it++)
+    for (auto& output : src.outputs())
     {
         bool targets_dst = false;
 
-        for (auto& input : it->get_target_inputs())
+        for (auto& input : output.get_target_inputs())
         {
             if (input.get_node() == &dst)
             {
@@ -627,9 +644,9 @@ std::set<NodeOutput> ngraph::get_node_outputs_to(Node& src, Node& dst)
             }
         }
 
-        if (!targets_dst)
+        if (targets_dst)
         {
-            result.erase(it);
+            result.push_back(output);
         }
     }
 

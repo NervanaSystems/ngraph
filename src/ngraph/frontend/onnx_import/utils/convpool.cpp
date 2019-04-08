@@ -82,8 +82,15 @@ namespace ngraph
                     Shape pad_shape;
                     for (std::size_t idx = 0; idx < input.size(); ++idx)
                     {
-                        pad_shape.emplace_back((output.at(idx) - 1) * strides.at(idx) +
-                                               kernel.at(idx) - input.at(idx));
+                        // for `SAME` pading formula is: max((output - 1) * strides[1] + kernel - input, 0)
+                        // Element type of shape is unsigned long.
+                        // During pad computation we can get a value as result value
+                        // During max computation unsigned long(-1) is greater than 0
+                        // so std::max won't work corectly without casting
+                        pad_shape.emplace_back(
+                            std::max(static_cast<long>((output.at(idx) - 1) * strides.at(idx) +
+                                                       kernel.at(idx) - input.at(idx)),
+                                     0L));
                     }
                     return pad_shape;
                 }
@@ -93,6 +100,10 @@ namespace ngraph
                                              const Strides& strides,
                                              const std::string& auto_pad)
                 {
+                    if (auto_pad == "VALID")
+                    {
+                        return CoordinateDiff(input_shape.size());
+                    }
                     CoordinateDiff pads_begin;
                     CoordinateDiff pads_end;
                     // Omit {N,C} axes

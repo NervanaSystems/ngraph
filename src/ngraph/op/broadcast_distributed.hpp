@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2018 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,17 +14,25 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/node_output.hpp"
-#include "ngraph/node_input.hpp"
+#pragma once
 
-using namespace ngraph;
+#include <memory>
 
-std::set<NodeInput> NodeOutput::get_target_inputs() const
+#include "ngraph/op/op.hpp"
+
+namespace ngraph
 {
-    return m_node->get_output_target_inputs(m_index);
-}
+    namespace op
+    {
+        class BroadcastDistributed : public Op
+        {
+        public:
+            BroadcastDistributed(const std::shared_ptr<Node>& arg);
 
-void NodeOutput::remove_target_input(const NodeInput& target_input) const
-{
-    m_node->remove_output_target_input(m_index, target_input);
+            void validate_and_infer_types() override;
+
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+        };
+    }
 }

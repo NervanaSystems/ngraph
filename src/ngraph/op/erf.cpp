@@ -14,25 +14,21 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/node_input.hpp"
-#include "ngraph/node_output.hpp"
+#include "ngraph/op/erf.hpp"
+#include "ngraph/log.hpp"
+#include "ngraph/util.hpp"
 
+using namespace std;
 using namespace ngraph;
 
-NodeOutput NodeInput::get_source_output() const
+shared_ptr<Node> op::Erf::copy_with_new_args(const NodeVector& new_args) const
 {
-    auto& output_descriptor = m_node->private_get_inputs().at(m_index).get_output();
-    return NodeOutput(output_descriptor.get_node(), output_descriptor.get_index());
+    check_new_args_count(this, new_args);
+    return make_shared<Erf>(new_args.at(0));
 }
 
-void NodeInput::replace_source_output(const NodeOutput& new_source_output) const
+op::Erf::Erf(shared_ptr<Node> arg)
+    : UnaryElementwiseArithmetic("Erf", arg)
 {
-    m_node->replace_input_source_output(
-        m_index, new_source_output.get_node(), new_source_output.get_index());
-}
-
-void NodeInput::replace_source_output(const std::shared_ptr<Node>& new_source_node,
-                                      size_t output_index) const
-{
-    m_node->replace_input_source_output(m_index, new_source_node, output_index);
+    constructor_validate_and_infer_types();
 }

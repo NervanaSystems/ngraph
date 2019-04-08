@@ -20,11 +20,10 @@
 #include <typeinfo>
 
 #include "ngraph/autodiff/adjoints.hpp"
+#include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/node_input.hpp"
-#include "ngraph/node_output.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/placement.hpp"
@@ -101,6 +100,16 @@ void Node::set_output_size(size_t n)
 
 void Node::validate_and_infer_types()
 {
+}
+
+void Node::set_input_is_relevant_to_shape(size_t i, bool relevant)
+{
+    m_inputs.at(i).m_is_relevant_to_shape = relevant;
+}
+
+void Node::set_input_is_relevant_to_value(size_t i, bool relevant)
+{
+    m_inputs.at(i).m_is_relevant_to_value = relevant;
 }
 
 void Node::set_output_type(size_t i, const element::Type& element_type, const PartialShape& pshape)
@@ -347,7 +356,7 @@ shared_ptr<descriptor::Tensor> Node::get_output_tensor_ptr() const
         throw ngraph_error(
             "get_output_tensor_ptr() must be called on a node with exactly one output.");
     }
-    return get_output_tensor_ptr(0);
+    return m_outputs[0].get_tensor_ptr();
 }
 
 const std::set<descriptor::Input*>& Node::get_output_inputs(size_t i) const
@@ -519,64 +528,4 @@ void Node::validate_and_infer_elementwise_logical()
         ".");
 
     set_output_type(0, element::boolean, args_pshape);
-}
-
-void Node::replace_input_source_output(size_t input_index,
-                                       const std::shared_ptr<Node>& src_node,
-                                       size_t output_index)
-{
-    m_inputs.at(input_index).replace_output(src_node, output_index);
-}
-
-NodeOutput Node::get_input_source_output(size_t input_index) const
-{
-    auto& output_descriptor = m_inputs.at(input_index).get_output();
-    return NodeOutput(output_descriptor.get_node(), output_descriptor.get_index());
-}
-
-descriptor::Tensor& Node::get_input_tensor(size_t i) const
-{
-    return m_inputs.at(i).get_output().get_tensor();
-}
-
-std::set<NodeInput> Node::get_output_target_inputs(size_t output_index) const
-{
-    std::set<NodeInput> result;
-
-    for (auto& input : m_outputs[output_index].get_inputs())
-    {
-        result.emplace(input->get_raw_pointer_node(), input->get_index());
-    }
-
-    return result;
-}
-
-void Node::remove_output_target_input(size_t output_index, const NodeInput& target_input)
-{
-    m_outputs.at(output_index)
-        .remove_input(&(target_input.get_node()->m_inputs.at(target_input.get_index())));
-}
-
-std::set<NodeInput> Node::get_node_inputs()
-{
-    std::set<NodeInput> result;
-
-    for (size_t i = 0; i < get_input_size(); i++)
-    {
-        result.emplace(this, i);
-    }
-
-    return result;
-}
-
-std::set<NodeOutput> Node::get_node_outputs()
-{
-    std::set<NodeOutput> result;
-
-    for (size_t i = 0; i < get_output_size(); i++)
-    {
-        result.emplace(shared_from_this(), i);
-    }
-
-    return result;
 }

@@ -38,8 +38,29 @@
 using namespace ngraph;
 using namespace std;
 
+bool static is_codegen_mode()
+{
+    static bool codegen_set = false;
+    static bool codegen_mode = false;
+    if (!codegen_set)
+    {
+        const char* ngraph_codegen = std::getenv("NGRAPH_CODEGEN");
+        codegen_mode = (ngraph_codegen != nullptr) && std::string(ngraph_codegen) != "0";
+        codegen_set = true;
+    }
+    return codegen_mode;
+}
+
+// These tests are for DEX mode only.
 TEST(debugger, add_breakpoint)
 {
+    if (is_codegen_mode())
+    {
+        //TODO change to skip when there is a new release of gtest
+        NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
+        return;
+    }
+
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
@@ -68,6 +89,7 @@ TEST(debugger, add_breakpoint)
 
     dbg.add_breakpoint(neg);
     dbg.call({result}, {a, b});
+
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn)), 777);
     dbg.step();
@@ -76,6 +98,13 @@ TEST(debugger, add_breakpoint)
 
 TEST(debugger, stepping)
 {
+    if (is_codegen_mode())
+    {
+        //TODO change to skip when there is a new release of gtest
+        NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
+        return;
+    }
+
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
@@ -104,6 +133,7 @@ TEST(debugger, stepping)
 
     dbg.add_breakpoint(add);
     dbg.call({result}, {a, b});
+
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
     dbg.step();
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn)), 777);
@@ -113,6 +143,13 @@ TEST(debugger, stepping)
 
 TEST(debugger, delete_breakpoint)
 {
+    if (is_codegen_mode())
+    {
+        //TODO change to skip when there is new release of gtest
+        NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
+        return;
+    }
+
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
@@ -146,6 +183,7 @@ TEST(debugger, delete_breakpoint)
     dbg.delete_breakpoint(absn);
     dbg.delete_breakpoint(neg);
     dbg.call({result}, {a, b});
+
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn)), 777);
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg)), -777);
@@ -153,6 +191,13 @@ TEST(debugger, delete_breakpoint)
 
 TEST(debugger, while_stepping)
 {
+    if (is_codegen_mode())
+    {
+        //TODO change to skip when there is new release of gtest
+        NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
+        return;
+    }
+
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
@@ -184,6 +229,7 @@ TEST(debugger, while_stepping)
     while (dbg.step())
     {
     };
+
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn)), 777);
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg)), -777);
@@ -191,6 +237,13 @@ TEST(debugger, while_stepping)
 
 TEST(debugger, resume)
 {
+    if (is_codegen_mode())
+    {
+        //TODO change to skip when there is new release of gtest
+        NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
+        return;
+    }
+
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
@@ -219,6 +272,7 @@ TEST(debugger, resume)
 
     dbg.add_breakpoint(absn);
     dbg.call({result}, {a, b});
+
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
     dbg.resume();
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn)), 777);
