@@ -45,7 +45,7 @@ namespace ngraph
             /// \param arg0 Output that produces the first input tensor.
             /// \param arg1 Output that produces the second input tensor.
             /// \param arg2 Output that produces the third input tensor.
-            Select(const NodeOutput& arg0, const NodeOutput& arg1, const NodeOutput& arg2);
+            Select(const Output<Node>& arg0, const Output<Node>& arg1, const Output<Node>& arg2);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

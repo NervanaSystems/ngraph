@@ -26,7 +26,7 @@ namespace ngraph
         class AllReduce : public Op
         {
         public:
-            AllReduce(const NodeOutput& arg);
+            AllReduce(const Output<Node>& arg);
 
             void validate_and_infer_types() override;
 

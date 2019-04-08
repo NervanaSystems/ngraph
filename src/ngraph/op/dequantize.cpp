@@ -20,9 +20,9 @@
 using namespace std;
 using namespace ngraph;
 
-op::Dequantize::Dequantize(const NodeOutput& input,
-                           const NodeOutput& scale,
-                           const NodeOutput& offset,
+op::Dequantize::Dequantize(const Output<Node>& input,
+                           const Output<Node>& scale,
+                           const Output<Node>& offset,
                            const element::Type& type,
                            const AxisSet& axes)
 

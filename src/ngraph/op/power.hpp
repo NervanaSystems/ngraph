@@ -43,7 +43,7 @@ namespace ngraph
             ///
             /// \param arg0 Output that produces the first input tensor.
             /// \param arg1 Output that produces the second input tensor.
-            Power(const NodeOutput& arg0, const NodeOutput& arg1);
+            Power(const Output<Node>& arg0, const Output<Node>& arg1);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

@@ -78,7 +78,7 @@ namespace ngraph
             ///
             /// \param arg The tensor to be summed.
             /// \param reduction_axes The axis positions (0-based) to be eliminated.
-            Sum(const NodeOutput& arg, const AxisSet& reduction_axes);
+            Sum(const Output<Node>& arg, const AxisSet& reduction_axes);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

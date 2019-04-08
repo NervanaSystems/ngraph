@@ -33,7 +33,7 @@ namespace ngraph
             ///
             /// \param arg The tensor to be reduced.
             /// \param reduction_axes The axis positions (0-based) to be eliminated.
-            Product(const NodeOutput& arg, const AxisSet& reduction_axes);
+            Product(const Output<Node>& arg, const AxisSet& reduction_axes);
 
             /// \return The default value for Product.
             virtual std::shared_ptr<Node> get_default_value() const override

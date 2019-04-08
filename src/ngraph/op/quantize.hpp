@@ -82,9 +82,9 @@ namespace ngraph
             /// \param type output element type
             /// \param axes axis positions on which `scale` and `offset` are specified
             /// \param round_mode describes how to perform ROUND function (see above)
-            Quantize(const NodeOutput& input,
-                     const NodeOutput& scale,
-                     const NodeOutput& offset,
+            Quantize(const Output<Node>& input,
+                     const Output<Node>& scale,
+                     const Output<Node>& offset,
                      const ngraph::element::Type& type,
                      const ngraph::AxisSet& axes,
                      RoundMode round_mode);

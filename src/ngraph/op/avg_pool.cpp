@@ -22,7 +22,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::AvgPool::AvgPool(const NodeOutput& arg,
+op::AvgPool::AvgPool(const Output<Node>& arg,
                      const Shape& window_shape,
                      const Strides& window_movement_strides,
                      const Shape& padding_below,
@@ -73,14 +73,14 @@ void op::AvgPool::validate_and_infer_types()
                                                   m_include_padding_in_avg_computation));
 }
 
-op::AvgPool::AvgPool(const NodeOutput& arg,
+op::AvgPool::AvgPool(const Output<Node>& arg,
                      const Shape& window_shape,
                      const Strides& window_movement_strides)
     : AvgPool(arg, window_shape, window_movement_strides, Shape(), Shape(), false)
 {
 }
 
-op::AvgPool::AvgPool(const NodeOutput& arg, const Shape& window_shape)
+op::AvgPool::AvgPool(const Output<Node>& arg, const Shape& window_shape)
     : AvgPool(arg, window_shape, Strides(), Shape(), Shape(), false)
 {
 }
@@ -97,7 +97,7 @@ shared_ptr<Node> op::AvgPool::copy_with_new_args(const NodeVector& new_args) con
 }
 
 op::AvgPoolBackprop::AvgPoolBackprop(const Shape& forward_arg_shape,
-                                     const NodeOutput& delta,
+                                     const Output<Node>& delta,
                                      const Shape& window_shape,
                                      const Strides& window_movement_strides,
                                      const Shape& padding_below,

@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Subtract::Subtract(const NodeOutput& arg0, const NodeOutput& arg1)
+op::Subtract::Subtract(const Output<Node>& arg0, const Output<Node>& arg1)
     : BinaryElementwiseArithmetic("Subtract", arg0, arg1)
 {
     constructor_validate_and_infer_types();
@@ -43,7 +43,7 @@ void op::Subtract::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVec
     adjoints.add_delta(y, -delta);
 }
 
-shared_ptr<ngraph::Node> ngraph::operator-(const NodeOutput& arg0, const NodeOutput& arg1)
+shared_ptr<ngraph::Node> ngraph::operator-(const Output<Node>& arg0, const Output<Node>& arg1)
 {
     return make_shared<ngraph::op::Subtract>(arg0, arg1);
 }

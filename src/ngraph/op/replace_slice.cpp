@@ -21,8 +21,8 @@
 using namespace std;
 using namespace ngraph;
 
-op::ReplaceSlice::ReplaceSlice(const NodeOutput& arg0,
-                               const NodeOutput& arg1,
+op::ReplaceSlice::ReplaceSlice(const Output<Node>& arg0,
+                               const Output<Node>& arg1,
                                const Coordinate& lower_bounds,
                                const Coordinate& upper_bounds,
                                const Strides& strides)
@@ -34,8 +34,8 @@ op::ReplaceSlice::ReplaceSlice(const NodeOutput& arg0,
     constructor_validate_and_infer_types();
 }
 
-op::ReplaceSlice::ReplaceSlice(const NodeOutput& arg0,
-                               const NodeOutput& arg1,
+op::ReplaceSlice::ReplaceSlice(const Output<Node>& arg0,
+                               const Output<Node>& arg1,
                                const Coordinate& lower_bounds,
                                const Coordinate& upper_bounds)
     : Op("ReplaceSlice", {arg0, arg1})

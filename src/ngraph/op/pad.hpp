@@ -42,8 +42,8 @@ namespace ngraph
             /// \param padding_below The padding-below widths.
             /// \param padding_above The padding-above widths.
             /// \param pad_mode The padding mode: CONSTANT(default), EDGE or REFLECT.
-            Pad(const NodeOutput& arg,
-                const NodeOutput& arg_pad_value,
+            Pad(const Output<Node>& arg,
+                const Output<Node>& arg_pad_value,
                 const CoordinateDiff& padding_below,
                 const CoordinateDiff& padding_above,
                 PadMode pad_mode = PadMode::CONSTANT);

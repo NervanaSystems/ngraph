@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::LRN::LRN(const NodeOutput& arg, double alpha, double beta, double bias, size_t nsize)
+op::LRN::LRN(const Output<Node>& arg, double alpha, double beta, double bias, size_t nsize)
     : UnaryElementwiseArithmetic("LRN", arg)
     , m_alpha(alpha)
     , m_beta(beta)

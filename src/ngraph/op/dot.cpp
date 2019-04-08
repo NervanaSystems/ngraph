@@ -29,13 +29,13 @@
 using namespace std;
 using namespace ngraph;
 
-op::Dot::Dot(const NodeOutput& arg0, const NodeOutput& arg1)
+op::Dot::Dot(const Output<Node>& arg0, const Output<Node>& arg1)
     : Dot(arg0, arg1, 0, false)
 {
 }
 
-op::Dot::Dot(const NodeOutput& arg0,
-             const NodeOutput& arg1,
+op::Dot::Dot(const Output<Node>& arg0,
+             const Output<Node>& arg1,
              size_t reduction_axes_count,
              bool has_reduction_axes_count)
     : Op("Dot", {arg0, arg1})

@@ -34,7 +34,7 @@ namespace ngraph
                 /// \param arg Output that produces the first input tensor.
                 /// \param reduction_axes The axis positions (0-based) to be eliminated.
                 ArithmeticReduction(const std::string& node_type,
-                                    const NodeOutput& arg,
+                                    const Output<Node>& arg,
                                     const AxisSet& reduction_axes);
 
                 void validate_and_infer_types() override;

@@ -305,7 +305,7 @@ namespace ngraph
             /// \param like Output producing the tensor that will supply the element type.
             /// \param value The value of the scalar.
             template <typename T>
-            ScalarConstantLike(const NodeOutput& like, T value)
+            ScalarConstantLike(const Output<Node>& like, T value)
                 : ScalarConstantLikeBase("ScalarConstantLike", {like})
                 , m_value(static_cast<double>(value))
             {

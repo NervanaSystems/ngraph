@@ -19,8 +19,8 @@
 using namespace std;
 using namespace ngraph;
 
-op::UpdateSlice::UpdateSlice(const NodeOutput& arg0,
-                             const NodeOutput& arg1,
+op::UpdateSlice::UpdateSlice(const Output<Node>& arg0,
+                             const Output<Node>& arg1,
                              const Coordinate& lower_bounds,
                              const Coordinate& upper_bounds,
                              const Strides& strides)
@@ -32,8 +32,8 @@ op::UpdateSlice::UpdateSlice(const NodeOutput& arg0,
     constructor_validate_and_infer_types();
 }
 
-op::UpdateSlice::UpdateSlice(const NodeOutput& arg0,
-                             const NodeOutput& arg1,
+op::UpdateSlice::UpdateSlice(const Output<Node>& arg0,
+                             const Output<Node>& arg1,
                              const Coordinate& lower_bounds,
                              const Coordinate& upper_bounds)
     : Op("UpdateSlice", {arg0, arg1})

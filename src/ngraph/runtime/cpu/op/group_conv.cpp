@@ -25,8 +25,8 @@
 using namespace std;
 using namespace ngraph;
 
-op::GroupConvolution::GroupConvolution(const NodeOutput& data_batch,
-                                       const NodeOutput& filters,
+op::GroupConvolution::GroupConvolution(const Output<Node>& data_batch,
+                                       const Output<Node>& filters,
                                        const Strides& window_movement_strides,
                                        const Strides& window_dilation_strides,
                                        const CoordinateDiff& padding_below,

@@ -35,9 +35,9 @@ namespace ngraph
             // \param gamma gamma scaling for normalized value. [C]
             // \param beta bias added to the scaled normalized value [C]
             // \param epsilon Avoids divsion by 0 if input has 0 variance
-            BatchNormTraining(const NodeOutput& input,
-                              const NodeOutput& gamma,
-                              const NodeOutput& beta,
+            BatchNormTraining(const Output<Node>& input,
+                              const Output<Node>& gamma,
+                              const Output<Node>& beta,
                               double epsilon);
 
             // \deprecated
@@ -61,9 +61,9 @@ namespace ngraph
             //   output[1]: shall have rank 1, with the same span as input's channel axis.
             //   output[2]: shall have rank 1, with the same span as input's channel axis.
             BatchNormTraining(double eps,
-                              const NodeOutput& gamma,
-                              const NodeOutput& beta,
-                              const NodeOutput& input);
+                              const Output<Node>& gamma,
+                              const Output<Node>& beta,
+                              const Output<Node>& input);
 
             void validate_and_infer_types() override;
 
@@ -92,11 +92,11 @@ namespace ngraph
             // \param mean value for mean normalization [C]
             // \param variance value for variance normalization [C]
             // \param epsilon Avoids divsion by 0 if input has 0 variance
-            BatchNormInference(const NodeOutput& input,
-                               const NodeOutput& gamma,
-                               const NodeOutput& beta,
-                               const NodeOutput& mean,
-                               const NodeOutput& variance,
+            BatchNormInference(const Output<Node>& input,
+                               const Output<Node>& gamma,
+                               const Output<Node>& beta,
+                               const Output<Node>& mean,
+                               const Output<Node>& variance,
                                double epsilon);
 
             // \deprecated
@@ -118,11 +118,11 @@ namespace ngraph
             //   variance: must have rank 1, with the same span as input's channel axis.
             //   output:   shall have the same shape as 'input'.
             BatchNormInference(double eps,
-                               const NodeOutput& gamma,
-                               const NodeOutput& beta,
-                               const NodeOutput& input,
-                               const NodeOutput& mean,
-                               const NodeOutput& variance);
+                               const Output<Node>& gamma,
+                               const Output<Node>& beta,
+                               const Output<Node>& input,
+                               const Output<Node>& mean,
+                               const Output<Node>& variance);
 
             void validate_and_infer_types() override;
 
@@ -150,23 +150,23 @@ namespace ngraph
         class BatchNormTrainingBackprop : public Op
         {
         public:
-            BatchNormTrainingBackprop(const NodeOutput& input,
-                                      const NodeOutput& gamma,
-                                      const NodeOutput& beta,
-                                      const NodeOutput& mean,
-                                      const NodeOutput& variance,
-                                      const NodeOutput& delta,
+            BatchNormTrainingBackprop(const Output<Node>& input,
+                                      const Output<Node>& gamma,
+                                      const Output<Node>& beta,
+                                      const Output<Node>& mean,
+                                      const Output<Node>& variance,
+                                      const Output<Node>& delta,
                                       double epsilon);
 
             // \deprecated
             BatchNormTrainingBackprop(double epsilon,
-                                      const NodeOutput& gamma,
-                                      const NodeOutput& beta,
-                                      const NodeOutput& input,
+                                      const Output<Node>& gamma,
+                                      const Output<Node>& beta,
+                                      const Output<Node>& input,
 
-                                      const NodeOutput& mean,
-                                      const NodeOutput& variance,
-                                      const NodeOutput& delta);
+                                      const Output<Node>& mean,
+                                      const Output<Node>& variance,
+                                      const Output<Node>& delta);
 
             void validate_and_infer_types() override;
 

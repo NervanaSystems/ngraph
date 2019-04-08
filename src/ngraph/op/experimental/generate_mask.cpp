@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::GenerateMask::GenerateMask(const NodeOutput& training,
+op::GenerateMask::GenerateMask(const Output<Node>& training,
                                const Shape& shape,
                                const element::Type& element_type,
                                unsigned int seed,

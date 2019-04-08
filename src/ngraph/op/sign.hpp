@@ -30,7 +30,7 @@ namespace ngraph
             /// \brief Constructs an elementwise sign operation.
             ///
             /// \param arg Output that produces the input tensor.
-            Sign(const NodeOutput& arg);
+            Sign(const Output<Node>& arg);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

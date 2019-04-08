@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Or::Or(const NodeOutput& arg0, const NodeOutput& arg1)
+op::Or::Or(const Output<Node>& arg0, const Output<Node>& arg1)
     : BinaryElementwiseLogical("Or", arg0, arg1)
 {
     constructor_validate_and_infer_types();

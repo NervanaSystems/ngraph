@@ -22,7 +22,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Cos::Cos(const NodeOutput& arg)
+op::Cos::Cos(const Output<Node>& arg)
     : UnaryElementwiseArithmetic("Cos", arg)
 {
     constructor_validate_and_infer_types();

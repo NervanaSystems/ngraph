@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include "ngraph/output_vector.hpp"
-#include "ngraph/node_output.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
@@ -26,6 +25,6 @@ OutputVector::OutputVector(const std::initializer_list<std::shared_ptr<Node>>& n
 }
 
 OutputVector::OutputVector(const std::vector<std::shared_ptr<Node>>& nodes)
-    : std::vector<NodeOutput>(nodes.begin(), nodes.end())
+    : std::vector<Output<Node>>(nodes.begin(), nodes.end())
 {
 }

@@ -23,7 +23,7 @@ namespace ngraph
 {
     namespace op
     {
-        // TODO(amprocte): Convert this to use NodeOutput, including things like get_bias(),
+        // TODO(amprocte): Convert this to use Output<Node>, including things like get_bias(),
         // get_filters().
 
         class QuantizedConvolution : public Op

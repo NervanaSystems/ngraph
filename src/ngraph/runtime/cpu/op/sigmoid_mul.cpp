@@ -52,8 +52,8 @@ ngraph::op::SigmoidMultiply::FunctionType
     }
 }
 
-op::SigmoidMultiply::SigmoidMultiply(const NodeOutput& input_0,
-                                     const NodeOutput& input_1,
+op::SigmoidMultiply::SigmoidMultiply(const Output<Node>& input_0,
+                                     const Output<Node>& input_1,
                                      const FunctionType input_0_type,
                                      const FunctionType input_1_type)
     : Op("SigmoidMultiply", {input_0, input_1})
@@ -105,9 +105,9 @@ void op::SigmoidMultiply::generate_adjoints(autodiff::Adjoints& adjoints, const 
     adjoints.add_delta(input_1, input_1_delta);
 }
 
-op::SigmoidMultiplyBackprop::SigmoidMultiplyBackprop(const NodeOutput& input_0,
-                                                     const NodeOutput& input_1,
-                                                     const NodeOutput& delta,
+op::SigmoidMultiplyBackprop::SigmoidMultiplyBackprop(const Output<Node>& input_0,
+                                                     const Output<Node>& input_1,
+                                                     const Output<Node>& delta,
                                                      const std::array<FunctionType, 2>& input_type)
     : Op("SigmoidMultiplyBackprop", {input_0, input_1, delta})
     , m_input_type(input_type)

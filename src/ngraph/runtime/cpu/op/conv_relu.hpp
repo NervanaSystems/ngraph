@@ -31,8 +31,8 @@ namespace ngraph
         public:
             CPU_BACKEND_API ConvolutionRelu(const std::shared_ptr<op::Convolution>& conv);
 
-            CPU_BACKEND_API ConvolutionRelu(const NodeOutput& data_batch,
-                                            const NodeOutput& filters,
+            CPU_BACKEND_API ConvolutionRelu(const Output<Node>& data_batch,
+                                            const Output<Node>& filters,
                                             const Strides& window_movement_strides,
                                             const Strides& window_dilation_strides,
                                             const CoordinateDiff& padding_below,

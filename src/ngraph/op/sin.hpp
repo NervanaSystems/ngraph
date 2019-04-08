@@ -41,7 +41,7 @@ namespace ngraph
             /// \brief Constructs a sine operation.
             ///
             /// \param arg Output that produces the input tensor.
-            Sin(const NodeOutput& arg);
+            Sin(const Output<Node>& arg);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

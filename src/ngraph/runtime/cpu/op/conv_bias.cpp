@@ -50,7 +50,7 @@ void op::util::validate_convbias_shapes(const Shape& data_shape,
 }
 
 op::ConvolutionBias::ConvolutionBias(const shared_ptr<op::Convolution>& conv,
-                                     const NodeOutput& bias,
+                                     const Output<Node>& bias,
                                      const bool with_relu)
     : Op("ConvolutionBias",
          {conv->get_input_source_output(0), conv->get_input_source_output(1), bias})
@@ -74,9 +74,9 @@ op::ConvolutionBias::ConvolutionBias(const shared_ptr<op::Convolution>& conv,
     set_output_type(0, conv->get_element_type(), conv->get_shape());
 }
 
-op::ConvolutionBias::ConvolutionBias(const NodeOutput& data_batch,
-                                     const NodeOutput& filters,
-                                     const NodeOutput& bias,
+op::ConvolutionBias::ConvolutionBias(const Output<Node>& data_batch,
+                                     const Output<Node>& filters,
+                                     const Output<Node>& bias,
                                      const Strides& window_movement_strides,
                                      const Strides& window_dilation_strides,
                                      const CoordinateDiff& padding_below,
@@ -186,10 +186,10 @@ void op::ConvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints, const 
 }
 
 op::ConvolutionBiasBackpropFiltersBias::ConvolutionBiasBackpropFiltersBias(
-    const NodeOutput& data_batch,
+    const Output<Node>& data_batch,
     const Shape& filters_shape,
     const Shape& bias_shape,
-    const NodeOutput& output_delta,
+    const Output<Node>& output_delta,
     const Strides& window_movement_strides_forward,
     const Strides& window_dilation_strides_forward,
     const CoordinateDiff& padding_below_forward,
@@ -267,7 +267,7 @@ shared_ptr<Node>
 }
 
 op::ConvolutionBiasAdd::ConvolutionBiasAdd(const std::shared_ptr<op::ConvolutionBias>& conv,
-                                           const NodeOutput& sum_input,
+                                           const Output<Node>& sum_input,
                                            bool with_relu)
     : Op("ConvolutionBiasAdd",
          {conv->get_input_source_output(0),
@@ -289,10 +289,10 @@ op::ConvolutionBiasAdd::ConvolutionBiasAdd(const std::shared_ptr<op::Convolution
     set_output_type(0, conv->get_element_type(), conv->get_shape());
 }
 
-op::ConvolutionBiasAdd::ConvolutionBiasAdd(const NodeOutput& data_batch,
-                                           const NodeOutput& filters,
-                                           const NodeOutput& bias,
-                                           const NodeOutput& sum_input,
+op::ConvolutionBiasAdd::ConvolutionBiasAdd(const Output<Node>& data_batch,
+                                           const Output<Node>& filters,
+                                           const Output<Node>& bias,
+                                           const Output<Node>& sum_input,
                                            const Strides& window_movement_strides,
                                            const Strides& window_dilation_strides,
                                            const CoordinateDiff& padding_below,

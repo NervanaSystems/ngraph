@@ -19,16 +19,16 @@
 #include <memory>
 #include <vector>
 
-#include "ngraph/node_output.hpp"
+#include "ngraph/node.hpp"
 
 namespace ngraph
 {
     /// \brief Zero or more node outputs.
-    class OutputVector : public std::vector<NodeOutput>
+    class OutputVector : public std::vector<Output<Node>>
     {
     public:
-        OutputVector(const std::initializer_list<NodeOutput>& outputs)
-            : std::vector<NodeOutput>(outputs)
+        OutputVector(const std::initializer_list<Output<Node>>& outputs)
+            : std::vector<Output<Node>>(outputs)
         {
         }
 
@@ -37,7 +37,7 @@ namespace ngraph
         OutputVector(const std::vector<std::shared_ptr<Node>>& nodes);
 
         OutputVector(const OutputVector& outputs)
-            : std::vector<NodeOutput>(outputs)
+            : std::vector<Output<Node>>(outputs)
         {
         }
 

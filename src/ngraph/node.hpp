@@ -103,7 +103,7 @@ namespace ngraph
 
         Node(const std::string& node_type, const NodeVector& arguments, size_t output_size = 1);
         Node(const std::string& node_type,
-             const std::vector<NodeOutput>& source_outputs,
+             const std::vector<Output<Node>>& source_outputs,
              size_t output_size = 1);
 
         virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}

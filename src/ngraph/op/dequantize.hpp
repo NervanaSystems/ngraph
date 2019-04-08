@@ -36,9 +36,9 @@ namespace ngraph
             /// \param offset offset used for mapping
             /// \param type output element type
             /// \param axes axis positions on which `scale` and `offset` are specified
-            Dequantize(const NodeOutput& input,
-                       const NodeOutput& scale,
-                       const NodeOutput& offset,
+            Dequantize(const Output<Node>& input,
+                       const Output<Node>& scale,
+                       const Output<Node>& offset,
                        const ngraph::element::Type& type,
                        const ngraph::AxisSet& axes);
 

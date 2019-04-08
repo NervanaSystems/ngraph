@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Min::Min(const NodeOutput& arg, const AxisSet& reduction_axes)
+op::Min::Min(const Output<Node>& arg, const AxisSet& reduction_axes)
     : ArithmeticReduction("Min", arg, reduction_axes)
 {
     constructor_validate_and_infer_types();

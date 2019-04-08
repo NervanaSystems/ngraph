@@ -33,7 +33,7 @@ namespace ngraph
             ///
             /// \param arg Output producing tensor to be reduced.
             /// \param reduction_axes The axis positions (0-based) to be eliminated.
-            All(const NodeOutput& arg, const AxisSet& reduction_axes);
+            All(const Output<Node>& arg, const AxisSet& reduction_axes);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

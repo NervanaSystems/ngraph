@@ -24,7 +24,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Result::Result(const NodeOutput& arg)
+op::Result::Result(const Output<Node>& arg)
     : Op("Result", {arg})
 {
     constructor_validate_and_infer_types();

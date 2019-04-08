@@ -30,7 +30,7 @@ namespace ngraph
                 size_t get_reduction_axis() const { return m_axis; }
                 element::Type get_index_element_type() const { return m_index_element_type; }
                 IndexReduction(const std::string& node_type,
-                               const NodeOutput& arg,
+                               const Output<Node>& arg,
                                size_t axis,
                                const element::Type& index_element_type);
 

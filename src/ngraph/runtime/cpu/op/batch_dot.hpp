@@ -25,7 +25,10 @@ namespace ngraph
         class BatchDot : public Op
         {
         public:
-            BatchDot(const NodeOutput& a, const NodeOutput& b, bool transpose_a, bool transpose_b);
+            BatchDot(const Output<Node>& a,
+                     const Output<Node>& b,
+                     bool transpose_a,
+                     bool transpose_b);
 
             bool get_is_a_transposed() const { return m_transpose_a; }
             bool get_is_b_transposed() const { return m_transpose_b; }

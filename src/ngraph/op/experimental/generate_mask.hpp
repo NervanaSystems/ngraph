@@ -31,7 +31,7 @@ namespace ngraph
         public:
             /// \brief Constructs a GenerateMask node with a given shape, sed,
             /// probability and training/inference mode
-            GenerateMask(const NodeOutput& training,
+            GenerateMask(const Output<Node>& training,
                          const Shape& shape,
                          const element::Type& element_type,
                          unsigned int seed,

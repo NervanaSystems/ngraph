@@ -30,7 +30,7 @@ namespace ngraph
             ///
             /// \param arg          Output that produces the input tensor.
             /// \param element_type Element type for the output tensor.
-            Convert(const NodeOutput& arg, const ngraph::element::Type& element_type);
+            Convert(const Output<Node>& arg, const ngraph::element::Type& element_type);
 
             void validate_and_infer_types() override;
 

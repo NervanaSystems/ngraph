@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Cosh::Cosh(const NodeOutput& arg)
+op::Cosh::Cosh(const Output<Node>& arg)
     : UnaryElementwiseArithmetic("Cosh", arg)
 {
     constructor_validate_and_infer_types();

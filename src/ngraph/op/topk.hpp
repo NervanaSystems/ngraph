@@ -37,7 +37,7 @@ namespace ngraph
             /// \param index_element_type produce indices. Currently, only int64 or int32 are supported
             /// \param k Number of top indices to compute. Compute all indices if k = 0
             /// \param compute_max Compute top k max or top k min?
-            TopK(const NodeOutput& arg,
+            TopK(const Output<Node>& arg,
                  size_t top_k_axis,
                  const element::Type& index_element_type,
                  size_t k = 0,

@@ -30,7 +30,7 @@ namespace ngraph
             ///
             /// \param arg The tensor to be reduced.
             /// \param reduction_axes The axis positions (0-based) to be eliminated.
-            Max(const NodeOutput& arg, const AxisSet& reduction_axes);
+            Max(const Output<Node>& arg, const AxisSet& reduction_axes);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

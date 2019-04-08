@@ -36,7 +36,7 @@ namespace ngraph
             ///
             /// Output `[d1, ...]`
             ///
-            Asin(const NodeOutput& arg);
+            Asin(const Output<Node>& arg);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

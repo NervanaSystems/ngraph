@@ -28,15 +28,15 @@ namespace ngraph
         {
         public:
             GroupConvolutionBias(const std::shared_ptr<op::GroupConvolution>& conv,
-                                 const NodeOutput& bias,
+                                 const Output<Node>& bias,
                                  const size_t groups,
                                  const Shape& output_shape,
                                  bool with_relu,
                                  float alpha = 1.0);
 
-            GroupConvolutionBias(const NodeOutput& data_batch,
-                                 const NodeOutput& filters,
-                                 const NodeOutput& bias,
+            GroupConvolutionBias(const Output<Node>& data_batch,
+                                 const Output<Node>& filters,
+                                 const Output<Node>& bias,
                                  const Strides& window_movement_strides,
                                  const Strides& window_dilation_strides,
                                  const CoordinateDiff& padding_below,

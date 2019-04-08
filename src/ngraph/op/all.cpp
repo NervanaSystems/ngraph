@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::All::All(const NodeOutput& arg, const AxisSet& reduction_axes)
+op::All::All(const Output<Node>& arg, const AxisSet& reduction_axes)
     : LogicalReduction("All", arg, reduction_axes)
 {
     constructor_validate_and_infer_types();

@@ -48,11 +48,11 @@ namespace ngraph
         class Rnn : public Op
         {
         public:
-            CPU_BACKEND_API Rnn(const NodeOutput& src_layer,
-                                const NodeOutput& src_iter,
-                                const NodeOutput& weights_layer,
-                                const NodeOutput& weights_iter,
-                                const NodeOutput& bias,
+            CPU_BACKEND_API Rnn(const Output<Node>& src_layer,
+                                const Output<Node>& src_iter,
+                                const Output<Node>& weights_layer,
+                                const Output<Node>& weights_iter,
+                                const Output<Node>& bias,
                                 size_t num_timesteps,
                                 size_t num_gates_per_cell,
                                 size_t src_sequence_length,

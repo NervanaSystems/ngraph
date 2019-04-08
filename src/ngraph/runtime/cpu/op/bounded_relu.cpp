@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::BoundedRelu::BoundedRelu(const NodeOutput& arg, float alpha)
+op::BoundedRelu::BoundedRelu(const Output<Node>& arg, float alpha)
     : UnaryElementwiseArithmetic("BoundedRelu", {arg})
     , m_alpha(alpha)
 {

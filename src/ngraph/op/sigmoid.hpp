@@ -28,7 +28,7 @@ namespace ngraph
         class Sigmoid : public util::UnaryElementwiseArithmetic
         {
         public:
-            Sigmoid(const NodeOutput& arg);
+            Sigmoid(const Output<Node>& arg);
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
@@ -43,7 +43,7 @@ namespace ngraph
             /// \brief Constructs a SigmoidBackprop operation.
             ///
             /// \param arg Node that produces the Sigmoid forward input tensor.
-            SigmoidBackprop(const NodeOutput& arg, const NodeOutput& delta);
+            SigmoidBackprop(const Output<Node>& arg, const Output<Node>& delta);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

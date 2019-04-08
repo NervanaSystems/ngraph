@@ -19,9 +19,9 @@
 #include "ngraph/op/get_output_element.hpp"
 
 ngraph::op::BatchNormTrainingRelu::BatchNormTrainingRelu(double eps,
-                                                         const NodeOutput& gamma,
-                                                         const NodeOutput& beta,
-                                                         const NodeOutput& input)
+                                                         const Output<Node>& gamma,
+                                                         const Output<Node>& beta,
+                                                         const Output<Node>& input)
     : Op("BatchNormTrainingRelu", {gamma, beta, input})
     , m_epsilon(eps)
 {
@@ -77,11 +77,11 @@ ngraph::op::BatchNormTrainingRelu::BatchNormTrainingRelu(double eps,
 }
 
 ngraph::op::BatchNormInferenceRelu::BatchNormInferenceRelu(double eps,
-                                                           const NodeOutput& gamma,
-                                                           const NodeOutput& beta,
-                                                           const NodeOutput& input,
-                                                           const NodeOutput& mean,
-                                                           const NodeOutput& variance)
+                                                           const Output<Node>& gamma,
+                                                           const Output<Node>& beta,
+                                                           const Output<Node>& input,
+                                                           const Output<Node>& mean,
+                                                           const Output<Node>& variance)
     : Op("BatchNormInferenceRelu", {gamma, beta, input, mean, variance})
     , m_epsilon(eps)
 {

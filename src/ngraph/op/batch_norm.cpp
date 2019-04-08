@@ -22,9 +22,9 @@
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/validation_util.hpp"
 
-ngraph::op::BatchNormTraining::BatchNormTraining(const NodeOutput& input,
-                                                 const NodeOutput& gamma,
-                                                 const NodeOutput& beta,
+ngraph::op::BatchNormTraining::BatchNormTraining(const Output<Node>& input,
+                                                 const Output<Node>& gamma,
+                                                 const Output<Node>& beta,
                                                  double epsilon)
     : Op("BatchNormTraining", {gamma, beta, input})
     , m_epsilon(epsilon)
@@ -34,9 +34,9 @@ ngraph::op::BatchNormTraining::BatchNormTraining(const NodeOutput& input,
 
 // DEPRECATED
 ngraph::op::BatchNormTraining::BatchNormTraining(double eps,
-                                                 const NodeOutput& gamma,
-                                                 const NodeOutput& beta,
-                                                 const NodeOutput& input)
+                                                 const Output<Node>& gamma,
+                                                 const Output<Node>& beta,
+                                                 const Output<Node>& input)
     : Op("BatchNormTraining", {gamma, beta, input})
     , m_epsilon(eps)
 {
@@ -111,11 +111,11 @@ void ngraph::op::BatchNormTraining::generate_adjoints(autodiff::Adjoints& adjoin
     adjoints.add_delta(beta, dbeta);
 }
 
-ngraph::op::BatchNormInference::BatchNormInference(const NodeOutput& input,
-                                                   const NodeOutput& gamma,
-                                                   const NodeOutput& beta,
-                                                   const NodeOutput& mean,
-                                                   const NodeOutput& variance,
+ngraph::op::BatchNormInference::BatchNormInference(const Output<Node>& input,
+                                                   const Output<Node>& gamma,
+                                                   const Output<Node>& beta,
+                                                   const Output<Node>& mean,
+                                                   const Output<Node>& variance,
                                                    double epsilon)
     : Op("BatchNormInference", {gamma, beta, input, mean, variance})
     , m_epsilon(epsilon)
@@ -125,11 +125,11 @@ ngraph::op::BatchNormInference::BatchNormInference(const NodeOutput& input,
 
 // DEPRECATED
 ngraph::op::BatchNormInference::BatchNormInference(double eps,
-                                                   const NodeOutput& gamma,
-                                                   const NodeOutput& beta,
-                                                   const NodeOutput& input,
-                                                   const NodeOutput& mean,
-                                                   const NodeOutput& variance)
+                                                   const Output<Node>& gamma,
+                                                   const Output<Node>& beta,
+                                                   const Output<Node>& input,
+                                                   const Output<Node>& mean,
+                                                   const Output<Node>& variance)
     : Op("BatchNormInference", {gamma, beta, input, mean, variance})
     , m_epsilon(eps)
 {
@@ -167,12 +167,12 @@ std::shared_ptr<ngraph::Node>
         new_args.at(2), new_args.at(0), new_args.at(1), new_args.at(3), new_args.at(4), m_epsilon);
 }
 
-ngraph::op::BatchNormTrainingBackprop::BatchNormTrainingBackprop(const NodeOutput& input,
-                                                                 const NodeOutput& gamma,
-                                                                 const NodeOutput& beta,
-                                                                 const NodeOutput& mean,
-                                                                 const NodeOutput& variance,
-                                                                 const NodeOutput& delta,
+ngraph::op::BatchNormTrainingBackprop::BatchNormTrainingBackprop(const Output<Node>& input,
+                                                                 const Output<Node>& gamma,
+                                                                 const Output<Node>& beta,
+                                                                 const Output<Node>& mean,
+                                                                 const Output<Node>& variance,
+                                                                 const Output<Node>& delta,
                                                                  double epsilon)
     : Op("BatchNormTrainingBackprop", {gamma, beta, input, mean, variance, delta})
     , m_epsilon(epsilon)
@@ -183,12 +183,12 @@ ngraph::op::BatchNormTrainingBackprop::BatchNormTrainingBackprop(const NodeOutpu
 }
 
 ngraph::op::BatchNormTrainingBackprop::BatchNormTrainingBackprop(double epsilon,
-                                                                 const NodeOutput& gamma,
-                                                                 const NodeOutput& beta,
-                                                                 const NodeOutput& input,
-                                                                 const NodeOutput& mean,
-                                                                 const NodeOutput& variance,
-                                                                 const NodeOutput& delta)
+                                                                 const Output<Node>& gamma,
+                                                                 const Output<Node>& beta,
+                                                                 const Output<Node>& input,
+                                                                 const Output<Node>& mean,
+                                                                 const Output<Node>& variance,
+                                                                 const Output<Node>& delta)
     : Op("BatchNormTrainingBackprop", {gamma, beta, input, mean, variance, delta})
     , m_epsilon(epsilon)
 

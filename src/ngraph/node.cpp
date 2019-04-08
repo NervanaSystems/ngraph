@@ -51,7 +51,7 @@ Node::Node(const std::string& node_type, const NodeVector& arguments, size_t out
 }
 
 Node::Node(const std::string& node_type,
-           const std::vector<NodeOutput>& source_outputs,
+           const std::vector<Output<Node>>& source_outputs,
            size_t output_size)
     : m_node_type(node_type)
     , m_instance_id(m_next_instance_id.fetch_add(1))
@@ -62,7 +62,7 @@ Node::Node(const std::string& node_type,
     for (auto source_output : source_outputs)
     {
         m_inputs.emplace_back(
-            this, i++, source_output.get_node()->get_outputs().at(source_output.get_index()));
+            this, i++, source_output.get_node()->m_outputs.at(source_output.get_index()));
     }
     set_output_size(output_size);
 }

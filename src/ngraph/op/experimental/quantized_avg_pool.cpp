@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::QuantizedAvgPool::QuantizedAvgPool(const NodeOutput& arg,
+op::QuantizedAvgPool::QuantizedAvgPool(const Output<Node>& arg,
                                        const Shape& window_shape,
                                        const Strides& window_movement_strides,
                                        const Shape& padding_below,

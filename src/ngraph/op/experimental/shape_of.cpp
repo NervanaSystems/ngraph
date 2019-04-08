@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::ShapeOf::ShapeOf(const NodeOutput& arg)
+op::ShapeOf::ShapeOf(const Output<Node>& arg)
     : Op("ShapeOf", {arg})
 {
     constructor_validate_and_infer_types();

@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Abs::Abs(const NodeOutput& arg)
+op::Abs::Abs(const Output<Node>& arg)
     : UnaryElementwiseArithmetic("Abs", arg)
 {
     constructor_validate_and_infer_types();

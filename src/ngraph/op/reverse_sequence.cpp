@@ -25,8 +25,8 @@
 using namespace std;
 using namespace ngraph;
 
-op::ReverseSequence::ReverseSequence(const NodeOutput& arg,
-                                     const NodeOutput& seq_indices,
+op::ReverseSequence::ReverseSequence(const Output<Node>& arg,
+                                     const Output<Node>& seq_indices,
                                      size_t batch_axis,
                                      size_t seq_axis)
     : Op("ReverseSequence", {arg, seq_indices})

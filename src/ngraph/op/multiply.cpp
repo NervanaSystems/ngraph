@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Multiply::Multiply(const NodeOutput& arg0, const NodeOutput& arg1)
+op::Multiply::Multiply(const Output<Node>& arg0, const Output<Node>& arg1)
     : BinaryElementwiseArithmetic("Multiply", arg0, arg1)
 {
     constructor_validate_and_infer_types();
@@ -42,7 +42,7 @@ void op::Multiply::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVec
     adjoints.add_delta(y, x * delta);
 }
 
-shared_ptr<Node> ngraph::operator*(const NodeOutput& arg0, const NodeOutput& arg1)
+shared_ptr<Node> ngraph::operator*(const Output<Node>& arg0, const Output<Node>& arg1)
 {
     return make_shared<op::Multiply>(arg0, arg1);
 }

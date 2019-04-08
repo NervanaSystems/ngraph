@@ -33,7 +33,7 @@ namespace ngraph
             /// \brief Constructs a LeakyRelu operation.
             ///
             /// \param arg Node input to the Relu.
-            LeakyRelu(const NodeOutput& arg, float alpha);
+            LeakyRelu(const Output<Node>& arg, float alpha);
             float get_alpha() const { return m_alpha; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

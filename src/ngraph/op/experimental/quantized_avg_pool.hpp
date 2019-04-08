@@ -43,7 +43,7 @@ namespace ngraph
             /// \param include_padding_in_avg_computation If true then averages include padding
             ///  elements, each treated as the number zero.  If false, padding elements are entirely
             ///  ignored when computing averages.
-            QuantizedAvgPool(const NodeOutput& arg,
+            QuantizedAvgPool(const Output<Node>& arg,
                              const Shape& window_shape,
                              const Strides& window_movement_strides,
                              const Shape& padding_below,

@@ -30,7 +30,7 @@ namespace ngraph
             /// \brief Allows a value to be used as a function result.
             ///
             /// \param arg Output that produces the input tensor.
-            Result(const NodeOutput& arg);
+            Result(const Output<Node>& arg);
 
             void validate_and_infer_types() override;
 

@@ -34,7 +34,7 @@ namespace ngraph
             /// \param window_movement_strides The window movement strides.
             /// \param padding_below The below-padding shape.
             /// \param padding_above The above-padding shape.
-            MaxPool(const NodeOutput& arg,
+            MaxPool(const Output<Node>& arg,
                     const Shape& window_shape,
                     const Strides& window_movement_strides,
                     const Shape& padding_below,
@@ -47,7 +47,7 @@ namespace ngraph
             /// \param arg The output producing the input data batch tensor.
             /// \param window_shape The window shape.
             /// \param window_movement_strides The window movement strides.
-            MaxPool(const NodeOutput& arg,
+            MaxPool(const Output<Node>& arg,
                     const Shape& window_shape,
                     const Strides& window_movement_strides);
 
@@ -55,7 +55,7 @@ namespace ngraph
             ///
             /// \param arg The output producing the input data batch tensor.
             /// \param window_shape The window shape.
-            MaxPool(const NodeOutput& arg, const Shape& window_shape);
+            MaxPool(const Output<Node>& arg, const Shape& window_shape);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -87,16 +87,16 @@ namespace ngraph
         class MaxPoolBackprop : public Op
         {
         public:
-            MaxPoolBackprop(const NodeOutput& arg_forward,
-                            const NodeOutput& delta,
+            MaxPoolBackprop(const Output<Node>& arg_forward,
+                            const Output<Node>& delta,
                             const Shape& window_shape,
                             const Strides& window_movement_strides,
                             const Shape& padding_below,
                             const Shape& padding_above);
 
-            MaxPoolBackprop(const NodeOutput& arg_forward,
-                            const NodeOutput& delta,
-                            const NodeOutput& result_forward,
+            MaxPoolBackprop(const Output<Node>& arg_forward,
+                            const Output<Node>& delta,
+                            const Output<Node>& result_forward,
                             const Shape& window_shape,
                             const Strides& window_movement_strides,
                             const Shape& padding_below,

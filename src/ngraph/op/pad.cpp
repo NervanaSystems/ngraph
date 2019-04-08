@@ -21,8 +21,8 @@
 using namespace std;
 using namespace ngraph;
 
-op::Pad::Pad(const NodeOutput& arg,
-             const NodeOutput& arg_pad_value,
+op::Pad::Pad(const Output<Node>& arg,
+             const Output<Node>& arg_pad_value,
              const CoordinateDiff& padding_below,
              const CoordinateDiff& padding_above,
              PadMode pad_mode)

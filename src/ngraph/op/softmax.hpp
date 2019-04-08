@@ -38,7 +38,7 @@ namespace ngraph
             ///
             /// Output `[d0, ...]`
             ///
-            Softmax(const NodeOutput& arg, const AxisSet& axes);
+            Softmax(const Output<Node>& arg, const AxisSet& axes);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

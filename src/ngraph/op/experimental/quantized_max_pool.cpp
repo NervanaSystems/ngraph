@@ -22,7 +22,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::QuantizedMaxPool::QuantizedMaxPool(const NodeOutput& arg,
+op::QuantizedMaxPool::QuantizedMaxPool(const Output<Node>& arg,
                                        const Shape& window_shape,
                                        const Strides& window_movement_strides,
                                        const Shape& padding_below,

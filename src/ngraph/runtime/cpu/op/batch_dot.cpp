@@ -32,7 +32,10 @@ shared_ptr<Node> op::BatchDot::copy_with_new_args(const NodeVector& new_args) co
     return make_shared<BatchDot>(new_args.at(0), new_args.at(1), m_transpose_a, m_transpose_b);
 }
 
-op::BatchDot::BatchDot(const NodeOutput& a, const NodeOutput& b, bool transpose_a, bool transpose_b)
+op::BatchDot::BatchDot(const Output<Node>& a,
+                       const Output<Node>& b,
+                       bool transpose_a,
+                       bool transpose_b)
     : Op("BatchDot", {a, b})
     , m_transpose_a(transpose_a)
     , m_transpose_b(transpose_b)

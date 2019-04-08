@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Slice::Slice(const NodeOutput& arg,
+op::Slice::Slice(const Output<Node>& arg,
                  const Coordinate& lower_bounds,
                  const Coordinate& upper_bounds,
                  const Strides& strides)
@@ -31,7 +31,7 @@ op::Slice::Slice(const NodeOutput& arg,
     constructor_validate_and_infer_types();
 }
 
-op::Slice::Slice(const NodeOutput& arg,
+op::Slice::Slice(const Output<Node>& arg,
                  const Coordinate& lower_bounds,
                  const Coordinate& upper_bounds)
     : Op("Slice", {arg})

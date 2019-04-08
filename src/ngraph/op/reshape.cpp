@@ -23,7 +23,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Reshape::Reshape(const NodeOutput& arg,
+op::Reshape::Reshape(const Output<Node>& arg,
                      const AxisVector& input_order,
                      const Shape& output_shape)
     : Op("Reshape", {arg})

@@ -27,9 +27,9 @@ namespace ngraph
         class MatmulBias : public Op
         {
         public:
-            CPU_BACKEND_API MatmulBias(const NodeOutput& W,
-                                       const NodeOutput& x,
-                                       const NodeOutput& b,
+            CPU_BACKEND_API MatmulBias(const Output<Node>& W,
+                                       const Output<Node>& x,
+                                       const Output<Node>& b,
                                        Shape shape_w,
                                        Shape shape_x,
                                        bool transpose_w,

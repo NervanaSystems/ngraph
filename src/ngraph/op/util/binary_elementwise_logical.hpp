@@ -51,8 +51,8 @@ namespace ngraph
                 /// \param arg0 Output that produces the first input tensor.
                 /// \param arg1 Output that produces the second input tensor.
                 BinaryElementwiseLogical(const std::string& node_type,
-                                         const NodeOutput& arg0,
-                                         const NodeOutput& arg1);
+                                         const Output<Node>& arg0,
+                                         const Output<Node>& arg1);
 
                 void validate_and_infer_types() override;
             };

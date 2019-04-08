@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Ceiling::Ceiling(const NodeOutput& arg)
+op::Ceiling::Ceiling(const Output<Node>& arg)
     : UnaryElementwiseArithmetic("Ceiling", arg)
 {
     constructor_validate_and_infer_types();

@@ -48,8 +48,8 @@ namespace ngraph
             ///
             /// Output `[N, C_OUT, R1, ... Rf]`
             ///
-            Convolution(const NodeOutput& data_batch,
-                        const NodeOutput& filters,
+            Convolution(const Output<Node>& data_batch,
+                        const Output<Node>& filters,
                         const Strides& window_movement_strides,
                         const Strides& window_dilation_strides,
                         const CoordinateDiff& padding_below,
@@ -73,8 +73,8 @@ namespace ngraph
             ///
             /// Output `[N, C_OUT, R1, ... Rf]`
             ///
-            Convolution(const NodeOutput& data_batch,
-                        const NodeOutput& filters,
+            Convolution(const Output<Node>& data_batch,
+                        const Output<Node>& filters,
                         const Strides& window_movement_strides,
                         const Strides& window_dilation_strides,
                         const CoordinateDiff& padding_below,
@@ -93,8 +93,8 @@ namespace ngraph
             ///
             /// Output `[N, C_OUT, R1, ... Rf]`
             ///
-            Convolution(const NodeOutput& data_batch,
-                        const NodeOutput& filters,
+            Convolution(const Output<Node>& data_batch,
+                        const Output<Node>& filters,
                         const Strides& window_movement_strides,
                         const Strides& window_dilation_strides);
 
@@ -109,8 +109,8 @@ namespace ngraph
             ///
             /// Output `[N, C_OUT, R1, ... Rf]`
             ///
-            Convolution(const NodeOutput& data_batch,
-                        const NodeOutput& filters,
+            Convolution(const Output<Node>& data_batch,
+                        const Output<Node>& filters,
                         const Strides& window_movement_strides);
 
             /// \brief Constructs a batched convolution operation with no window dilation or movement stride (i.e., padding above and below are 0 everywhere, and all window/data dilation strides and window movement strides are 1).
@@ -122,7 +122,7 @@ namespace ngraph
             ///
             /// Output `[N, C_OUT, R1, ... Rf]`
             ///
-            Convolution(const NodeOutput& data_batch, const NodeOutput& filters);
+            Convolution(const Output<Node>& data_batch, const Output<Node>& filters);
 
             void validate_and_infer_types() override;
 
@@ -177,8 +177,8 @@ namespace ngraph
             /// \param padding_above_forward The padding-above sizes from forward-prop.
             /// \param data_dilation_strides_forward The data dilation strides from forward-prop.
             ConvolutionBackpropData(const Shape& data_batch_shape,
-                                    const NodeOutput& filters,
-                                    const NodeOutput& output_delta,
+                                    const Output<Node>& filters,
+                                    const Output<Node>& output_delta,
                                     const Strides& window_movement_strides_forward,
                                     const Strides& window_dilation_strides_forward,
                                     const CoordinateDiff& padding_below_forward,
@@ -246,9 +246,9 @@ namespace ngraph
             /// \param padding_below_forward The padding-below sizes from forward-prop.
             /// \param padding_above_forward The padding-above sizes from forward-prop.
             /// \param data_dilation_strides_forward The data dilation strides from forward-prop.
-            ConvolutionBackpropFilters(const NodeOutput& data_batch,
+            ConvolutionBackpropFilters(const Output<Node>& data_batch,
                                        const Shape& filters_shape,
-                                       const NodeOutput& output_delta,
+                                       const Output<Node>& output_delta,
                                        const Strides& window_movement_strides_forward,
                                        const Strides& window_dilation_strides_forward,
                                        const CoordinateDiff& padding_below_forward,

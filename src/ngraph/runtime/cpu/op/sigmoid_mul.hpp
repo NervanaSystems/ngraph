@@ -40,8 +40,8 @@ namespace ngraph
             };
             /// Input nodes are expected to be actual inputs where the corresponding input
             /// FunctionType will be applied to those inputs in the fused operation.
-            CPU_BACKEND_API SigmoidMultiply(const NodeOutput& input_0,
-                                            const NodeOutput& input_1,
+            CPU_BACKEND_API SigmoidMultiply(const Output<Node>& input_0,
+                                            const Output<Node>& input_1,
                                             const FunctionType input_0_type,
                                             const FunctionType input_1_type);
             /// WARNING: copy_with_new_args() implicitly expects new args must match the original input function types.
@@ -73,9 +73,9 @@ namespace ngraph
             /// \param input_1 Forward input node 1.
             /// \param delta Backprop delta node.
             /// \param input_type Function type for the input nodes.
-            SigmoidMultiplyBackprop(const NodeOutput& input_0,
-                                    const NodeOutput& input_1,
-                                    const NodeOutput& delta,
+            SigmoidMultiplyBackprop(const Output<Node>& input_0,
+                                    const Output<Node>& input_1,
+                                    const Output<Node>& delta,
                                     const std::array<FunctionType, 2>& input_type);
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

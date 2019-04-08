@@ -20,7 +20,7 @@
 using namespace ngraph;
 using namespace std;
 
-op::Not::Not(const NodeOutput& arg)
+op::Not::Not(const Output<Node>& arg)
     : Op("Not", {arg})
 {
     constructor_validate_and_infer_types();

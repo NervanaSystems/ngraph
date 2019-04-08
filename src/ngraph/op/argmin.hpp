@@ -33,7 +33,7 @@ namespace ngraph
             /// \param arg The input tensor
             /// \param axis The axis along which to compute an index for minimum
             /// \param index_element_type produce indices. Currently, only int64 or int32 are supported
-            ArgMin(const NodeOutput& arg, size_t axis, const element::Type& index_element_type)
+            ArgMin(const Output<Node>& arg, size_t axis, const element::Type& index_element_type)
                 : IndexReduction("ArgMin", arg, axis, index_element_type)
             {
             }

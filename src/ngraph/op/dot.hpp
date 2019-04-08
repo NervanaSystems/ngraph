@@ -33,8 +33,8 @@ namespace ngraph
             /// \param arg0 The output producing the first argument.
             /// \param arg1 The output producing the second argument.
             /// \param reduction_axes_count The number of axes to dot.
-            Dot(const NodeOutput& arg0,
-                const NodeOutput& arg1,
+            Dot(const Output<Node>& arg0,
+                const Output<Node>& arg1,
                 size_t reduction_axes_count,
                 bool has_reduction_axes_count = true);
 
@@ -48,7 +48,7 @@ namespace ngraph
             ///
             /// \param arg0 The output producing the first argument.
             /// \param arg1 The output producing the second argument.
-            Dot(const NodeOutput& arg0, const NodeOutput& arg1);
+            Dot(const Output<Node>& arg0, const Output<Node>& arg1);
 
             void validate_and_infer_types() override;
 

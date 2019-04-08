@@ -29,12 +29,12 @@ namespace ngraph
         {
         public:
             CPU_BACKEND_API ConvolutionBias(const std::shared_ptr<op::Convolution>& conv,
-                                            const NodeOutput& bias,
+                                            const Output<Node>& bias,
                                             const bool with_relu = false);
 
-            CPU_BACKEND_API ConvolutionBias(const NodeOutput& data_batch,
-                                            const NodeOutput& filters,
-                                            const NodeOutput& bias,
+            CPU_BACKEND_API ConvolutionBias(const Output<Node>& data_batch,
+                                            const Output<Node>& filters,
+                                            const Output<Node>& bias,
                                             const Strides& window_movement_strides,
                                             const Strides& window_dilation_strides,
                                             const CoordinateDiff& padding_below,
@@ -71,10 +71,10 @@ namespace ngraph
         class ConvolutionBiasBackpropFiltersBias : public Op
         {
         public:
-            ConvolutionBiasBackpropFiltersBias(const NodeOutput& data_batch,
+            ConvolutionBiasBackpropFiltersBias(const Output<Node>& data_batch,
                                                const Shape& filters_shape,
                                                const Shape& bias_shape,
-                                               const NodeOutput& output_delta,
+                                               const Output<Node>& output_delta,
                                                const Strides& window_movement_strides_forward,
                                                const Strides& window_dilation_strides_forward,
                                                const CoordinateDiff& padding_below_forward,
@@ -160,13 +160,13 @@ namespace ngraph
         {
         public:
             ConvolutionBiasAdd(const std::shared_ptr<op::ConvolutionBias>& conv,
-                               const NodeOutput& sum_input,
+                               const Output<Node>& sum_input,
                                bool with_relu);
 
-            ConvolutionBiasAdd(const NodeOutput& data_batch,
-                               const NodeOutput& filters,
-                               const NodeOutput& bias,
-                               const NodeOutput& sum_input,
+            ConvolutionBiasAdd(const Output<Node>& data_batch,
+                               const Output<Node>& filters,
+                               const Output<Node>& bias,
+                               const Output<Node>& sum_input,
                                const Strides& window_movement_strides,
                                const Strides& window_dilation_strides,
                                const CoordinateDiff& padding_below,

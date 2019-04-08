@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Exp::Exp(const NodeOutput& arg)
+op::Exp::Exp(const Output<Node>& arg)
     : UnaryElementwiseArithmetic("Exp", arg)
 {
     constructor_validate_and_infer_types();

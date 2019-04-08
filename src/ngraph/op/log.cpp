@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Log::Log(const NodeOutput& arg)
+op::Log::Log(const Output<Node>& arg)
     : UnaryElementwiseArithmetic("Log", arg)
 {
     constructor_validate_and_infer_types();

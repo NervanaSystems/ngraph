@@ -25,7 +25,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::MaxPool::MaxPool(const NodeOutput& arg,
+op::MaxPool::MaxPool(const Output<Node>& arg,
                      const Shape& window_shape,
                      const Strides& window_movement_strides,
                      const Shape& padding_below,
@@ -74,14 +74,14 @@ void op::MaxPool::validate_and_infer_types()
                                                   true));
 }
 
-op::MaxPool::MaxPool(const NodeOutput& arg,
+op::MaxPool::MaxPool(const Output<Node>& arg,
                      const Shape& window_shape,
                      const Strides& window_movement_strides)
     : MaxPool(arg, window_shape, window_movement_strides, Shape(), Shape())
 {
 }
 
-op::MaxPool::MaxPool(const NodeOutput& arg, const Shape& window_shape)
+op::MaxPool::MaxPool(const Output<Node>& arg, const Shape& window_shape)
     : MaxPool(arg, window_shape, Strides(), Shape(), Shape())
 {
 }
@@ -96,8 +96,8 @@ shared_ptr<Node> op::MaxPool::copy_with_new_args(const NodeVector& new_args) con
                                 m_padding_above);
 }
 
-op::MaxPoolBackprop::MaxPoolBackprop(const NodeOutput& arg_forward,
-                                     const NodeOutput& delta,
+op::MaxPoolBackprop::MaxPoolBackprop(const Output<Node>& arg_forward,
+                                     const Output<Node>& delta,
                                      const Shape& window_shape,
                                      const Strides& window_movement_strides,
                                      const Shape& padding_below,
@@ -111,9 +111,9 @@ op::MaxPoolBackprop::MaxPoolBackprop(const NodeOutput& arg_forward,
     constructor_validate_and_infer_types();
 }
 
-op::MaxPoolBackprop::MaxPoolBackprop(const NodeOutput& arg_forward,
-                                     const NodeOutput& delta,
-                                     const NodeOutput& result_forward,
+op::MaxPoolBackprop::MaxPoolBackprop(const Output<Node>& arg_forward,
+                                     const Output<Node>& delta,
+                                     const Output<Node>& result_forward,
                                      const Shape& window_shape,
                                      const Strides& window_movement_strides,
                                      const Shape& padding_below,

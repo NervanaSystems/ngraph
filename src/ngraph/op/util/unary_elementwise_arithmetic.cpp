@@ -19,7 +19,7 @@
 using namespace ngraph;
 
 op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(const std::string& node_type,
-                                                                 const NodeOutput& arg)
+                                                                 const Output<Node>& arg)
     : Op(node_type, {arg})
 {
 }

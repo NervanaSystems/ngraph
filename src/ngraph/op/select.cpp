@@ -26,7 +26,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Select::Select(const NodeOutput& arg0, const NodeOutput& arg1, const NodeOutput& arg2)
+op::Select::Select(const Output<Node>& arg0, const Output<Node>& arg1, const Output<Node>& arg2)
     : Op("Select", {arg0, arg1, arg2})
 {
     constructor_validate_and_infer_types();

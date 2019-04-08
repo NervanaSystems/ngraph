@@ -40,11 +40,11 @@ namespace ngraph
 
             // This version of the LSTM op supports MKLDNN emitter code, this can be used standalone for computing RNN
             // without fusing RNN cell (LSTM)'s across time steps.
-            Lstm(const NodeOutput& src_layer,
-                 const NodeOutput& src_iter,
-                 const NodeOutput& weights_layer,
-                 const NodeOutput& weights_iter,
-                 const NodeOutput& bias,
+            Lstm(const Output<Node>& src_layer,
+                 const Output<Node>& src_iter,
+                 const Output<Node>& weights_layer,
+                 const Output<Node>& weights_iter,
+                 const Output<Node>& bias,
                  ngraph::runtime::cpu::rnn_utils::rnntype rnn_type);
             Shape get_output_tensor_shape() const { return m_output_tensor_shape; }
             Shape get_output_cell_shape() const { return m_output_cell_shape; }

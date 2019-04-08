@@ -50,7 +50,7 @@ namespace ngraph
             ///
             /// \param arg The input tensor, some of whose axes are to be reversed.
             /// \param reversed_axes The axes to reverse.
-            Reverse(const NodeOutput& arg, const AxisSet& reversed_axes);
+            Reverse(const Output<Node>& arg, const AxisSet& reversed_axes);
 
             void validate_and_infer_types() override;
 

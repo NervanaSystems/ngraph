@@ -23,7 +23,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::TopK::TopK(const NodeOutput& arg,
+op::TopK::TopK(const Output<Node>& arg,
                size_t top_k_axis,
                const element::Type& index_element_type,
                size_t k,

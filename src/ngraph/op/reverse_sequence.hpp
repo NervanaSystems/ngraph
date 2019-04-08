@@ -30,8 +30,8 @@ namespace ngraph
             /// \brief Constructs an arcsin operation.
             ///
             /// \param arg Node that produces the input tensor.
-            ReverseSequence(const NodeOutput& arg,
-                            const NodeOutput& seq_lengths,
+            ReverseSequence(const Output<Node>& arg,
+                            const Output<Node>& seq_lengths,
                             size_t batch_axis,
                             size_t seq_axis);
 

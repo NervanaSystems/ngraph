@@ -67,7 +67,7 @@ namespace ngraph
             ///                    sequence \f$(0,\dots,n-1)\f$ where \f$n\f$ is the rank of the input tensor.
             /// \param output_shape The output shape. If the input shape is \f$(a_0,\dots,a_{k-1})\f$ then the output shape must
             ///        be of the form \f$(b_0,\dots,b_{j-1})\f$ where \f$\Pi(a_i) = \Pi(b_i)\f$.
-            Reshape(const NodeOutput& arg,
+            Reshape(const Output<Node>& arg,
                     const AxisVector& input_order,
                     const Shape& output_shape);
 

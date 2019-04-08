@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Sin::Sin(const NodeOutput& arg)
+op::Sin::Sin(const Output<Node>& arg)
     : UnaryElementwiseArithmetic("Sin", arg)
 {
     constructor_validate_and_infer_types();

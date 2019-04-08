@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::AllReduce::AllReduce(const NodeOutput& arg)
+op::AllReduce::AllReduce(const Output<Node>& arg)
     : Op("AllReduce", {arg})
 {
     constructor_validate_and_infer_types();

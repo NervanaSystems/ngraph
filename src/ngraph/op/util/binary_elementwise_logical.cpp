@@ -20,8 +20,8 @@ using namespace std;
 using namespace ngraph;
 
 op::util::BinaryElementwiseLogical::BinaryElementwiseLogical(const string& node_type,
-                                                             const NodeOutput& arg0,
-                                                             const NodeOutput& arg1)
+                                                             const Output<Node>& arg0,
+                                                             const Output<Node>& arg1)
     : Op(node_type, {arg0, arg1})
 {
 }

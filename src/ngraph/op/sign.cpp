@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Sign::Sign(const NodeOutput& arg)
+op::Sign::Sign(const Output<Node>& arg)
     : UnaryElementwiseArithmetic("Sign", arg)
 {
     constructor_validate_and_infer_types();

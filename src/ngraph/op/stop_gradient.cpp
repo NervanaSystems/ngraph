@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::StopGradient::StopGradient(const NodeOutput& arg)
+op::StopGradient::StopGradient(const Output<Node>& arg)
     : UnaryElementwiseArithmetic("StopGradient", arg)
 {
     constructor_validate_and_infer_types();

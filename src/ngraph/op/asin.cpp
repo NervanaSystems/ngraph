@@ -31,7 +31,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Asin::Asin(const NodeOutput& arg)
+op::Asin::Asin(const Output<Node>& arg)
     : UnaryElementwiseArithmetic("Asin", arg)
 {
     constructor_validate_and_infer_types();

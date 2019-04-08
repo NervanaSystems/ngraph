@@ -40,7 +40,7 @@ void op::util::validate_conv_shapes(const Node* node,
 }
 
 op::ConvolutionAdd::ConvolutionAdd(const std::shared_ptr<op::Convolution>& conv,
-                                   const NodeOutput& sum_input,
+                                   const Output<Node>& sum_input,
                                    bool with_relu)
     : Op("ConvolutionAdd",
          {conv->get_input_source_output(0), conv->get_input_source_output(1), sum_input})
@@ -57,9 +57,9 @@ op::ConvolutionAdd::ConvolutionAdd(const std::shared_ptr<op::Convolution>& conv,
     set_output_type(0, conv->get_element_type(), conv->get_shape());
 }
 
-op::ConvolutionAdd::ConvolutionAdd(const NodeOutput& data_batch,
-                                   const NodeOutput& filters,
-                                   const NodeOutput& sum_input,
+op::ConvolutionAdd::ConvolutionAdd(const Output<Node>& data_batch,
+                                   const Output<Node>& filters,
+                                   const Output<Node>& sum_input,
                                    const Strides& window_movement_strides,
                                    const Strides& window_dilation_strides,
                                    const CoordinateDiff& padding_below,

@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::LeakyRelu::LeakyRelu(const NodeOutput& arg, float alpha)
+op::LeakyRelu::LeakyRelu(const Output<Node>& arg, float alpha)
     : UnaryElementwiseArithmetic("LeakyRelu", {arg})
     , m_alpha(alpha)
 {

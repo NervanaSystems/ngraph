@@ -31,7 +31,7 @@ namespace ngraph
         class MaxPoolWithIndices : public Op
         {
         public:
-            MaxPoolWithIndices(const NodeOutput& arg,
+            MaxPoolWithIndices(const Output<Node>& arg,
                                const Shape& window_shape,
                                const Strides& window_movement_strides,
                                const Shape& padding_below,
@@ -64,9 +64,9 @@ namespace ngraph
         class MaxPoolWithIndicesBackprop : public Op
         {
         public:
-            MaxPoolWithIndicesBackprop(const NodeOutput& arg_forward,
-                                       const NodeOutput& delta,
-                                       const NodeOutput& indices,
+            MaxPoolWithIndicesBackprop(const Output<Node>& arg_forward,
+                                       const Output<Node>& delta,
+                                       const Output<Node>& indices,
                                        const Shape& window_shape,
                                        const Strides& window_movement_strides,
                                        const Shape& padding_below,
