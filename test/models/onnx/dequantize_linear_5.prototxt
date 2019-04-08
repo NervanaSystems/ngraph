@@ -3,50 +3,56 @@ producer_name: "ngraph ONNXImporter"
 graph {
   node {
     input: "X"
-    input: "y_scale"
-    input: "y_zero_point"
+    input: "scale"
+    input: "zero_point"
     output: "Y"
-    name: "QuantizeLinear"
-    op_type: "QuantizeLinear"
+    name: "node1"
+    op_type: "DequantizeLinear"
+    attribute {
+      name: "axis"
+      i: -2
+      type: INT
+    }
   }
-  name: "test_graph"
-  initializer {
-    data_type: 2
-    name: "y_zero_point"
-    raw_data: "\000"
-  }
+  name: "test"
   input {
     name: "X"
     type {
       tensor_type {
-        elem_type: 1
+        elem_type: 2
         shape {
           dim {
-            dim_value: 2
+            dim_value: 3
           }
           dim {
-            dim_value: 2
+            dim_value: 4
           }
         }
       }
     }
   }
   input {
-    name: "y_scale"
+    name: "scale"
     type {
       tensor_type {
         elem_type: 1
         shape {
+          dim {
+            dim_value: 3
+          }
         }
       }
     }
   }
   input {
-    name: "y_zero_point"
+    name: "zero_point"
     type {
       tensor_type {
         elem_type: 2
         shape {
+          dim {
+            dim_value: 3
+          }
         }
       }
     }
@@ -55,13 +61,13 @@ graph {
     name: "Y"
     type {
       tensor_type {
-        elem_type: 2
+        elem_type: 1
         shape {
           dim {
-            dim_value: 2
+            dim_value: 3
           }
           dim {
-            dim_value: 2
+            dim_value: 4
           }
         }
       }
@@ -69,5 +75,5 @@ graph {
   }
 }
 opset_import {
-  version: 4
+  version: 10
 }
