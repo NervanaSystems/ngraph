@@ -23,31 +23,36 @@
 
 using namespace std;
 
+static bool read_tracing_env_var()
+{
+    return (std::getenv("NGRAPH_ENABLE_TRACING") != nullptr);
+}
+
 mutex ngraph::Event::s_file_mutex;
 ofstream ngraph::Event::s_event_log;
-bool ngraph::Event::s_tracing_enabled = false;
+bool ngraph::Event::s_tracing_enabled = read_tracing_env_var();
 
 void ngraph::Event::write_trace(const ngraph::Event& event)
 {
-    lock_guard<mutex> lock(s_file_mutex);
-    if (!is_tracing_enabled())
+    if (is_tracing_enabled())
     {
-        return;
-    }
+        lock_guard<mutex> lock(s_file_mutex);
 
-    static bool so_initialized = false;
-    if (!so_initialized)
-    {
-        // Open the file
-        s_event_log.open("ngraph_event_trace.json", ios_base::trunc);
-        s_event_log << "[\n";
-        s_event_log << event.to_json() << "\n";
-        so_initialized = true;
-        return;
-    }
+        static bool so_initialized = false;
+        if (!so_initialized)
+        {
+            // Open the file
+            s_event_log.open("ngraph_event_trace.json", ios_base::trunc);
+            s_event_log << "[\n";
+            so_initialized = true;
+        }
+        else
+        {
+            s_event_log << ",\n";
+        }
 
-    s_event_log << ",\n";
-    s_event_log << event.to_json() << "\n" << flush;
+        s_event_log << event.to_json() << "\n" << flush;
+    }
 }
 
 string ngraph::Event::to_json() const
@@ -72,4 +77,14 @@ string ngraph::Event::to_json() const
     ostringstream output;
     output << json_start << ",\n" << json_end;
     return output.str();
+}
+
+void ngraph::Event::enable_event_tracing()
+{
+    s_tracing_enabled = true;
+}
+
+void ngraph::Event::disable_event_tracing()
+{
+    s_tracing_enabled = false;
 }

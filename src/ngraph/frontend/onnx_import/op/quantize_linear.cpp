@@ -40,20 +40,36 @@ namespace ngraph
                     std::shared_ptr<ngraph::Node> y_scale = inputs.at(1);
                     std::shared_ptr<ngraph::Node> y_zero_point = inputs.at(2);
 
+                    // get axis twice with two default values to see if it is set
+                    int64_t axis_0{node.get_attribute_value<int64_t>("axis", 0)};
+                    int64_t axis_1{node.get_attribute_value<int64_t>("axis", 1)};
+
+                    AxisSet axes;
+
+                    // if axis attribute is set
+                    if (axis_0 == axis_1)
+                    {
+                        // positive axis
+                        if (axis_0 >= 0)
+                        {
+                            axes.insert(axis_0);
+                        }
+                        // negative axis
+                        else if (axis_0 < 0)
+                        {
+                            axes.insert(x->get_shape().size() + axis_0);
+                        }
+                    }
+
                     Shape y_scale_shape = y_scale->get_shape();
                     Shape y_zero_point_shape = y_zero_point->get_shape();
-
-                    ASSERT_VALID_ARGUMENT(node, y_scale_shape.size() == 0)
-                        << "y_scale must be a scalar.";
-                    ASSERT_VALID_ARGUMENT(node, y_zero_point_shape.size() == 0)
-                        << "y_zero_point must be a scalar.";
 
                     return {std::make_shared<ngraph::op::Quantize>(
                         x,
                         y_scale,
                         y_zero_point,
                         y_zero_point->get_element_type(),
-                        AxisSet{},
+                        axes,
                         ngraph::op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN)};
                 }
 

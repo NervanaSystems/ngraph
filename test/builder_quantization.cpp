@@ -23,6 +23,7 @@
 #include "gtest/gtest.h"
 #include "ngraph/builder/quantization.hpp"
 #include "ngraph/builder/quantization/quantized_linear_convolution.hpp"
+#include "ngraph/builder/quantization/quantized_linear_dot.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/pass/constant_folding.hpp"
@@ -1216,6 +1217,31 @@ TEST(builder, scaled_quantize_concat_unsigned_varying)
               read_vector<uint8_t>(result));
 }
 
+TEST(builder, scaled_QDotInteger)
+{
+    Shape shape_a{1, 2}; // input shape
+    vector<uint8_t> a_data = {2, 3};
+    Shape shape_b{3, 2}; // filter shape
+    vector<int8_t> b_data = {0, 1, 2, 3, 4, 5};
+    auto A = make_shared<op::Parameter>(element::u8, shape_a);
+    auto B = make_shared<op::Parameter>(element::i8, shape_b);
+
+    Shape shape_r{1, 3}; // output shape
+    auto QD = ngraph::builder::quantization::QuantizedDotInteger(A, B);
+    auto f = make_shared<Function>(NodeVector{QD}, ParameterVector{A, B});
+    constant_fold(f);
+    auto backend = runtime::Backend::create("CPU");
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::u8, shape_a);
+    copy_data(a, a_data);
+    auto b = backend->create_tensor(element::i8, shape_b);
+    copy_data(b, b_data);
+    auto result = backend->create_tensor(element::i32, shape_r);
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b});
+    EXPECT_EQ((vector<int32_t>{3, 13, 23}), read_vector<int32_t>(result));
+}
+
 // QuantizedDot
 TEST(builder, dynamic_scaled_QD)
 {
@@ -1261,42 +1287,20 @@ TEST(builder, dynamic_scaled_QD)
 
     // QuantizedDot (no requantize, no relu)
     auto f_nrequantize = make_function(false, false);
-    auto f_nrequantize_r = backend->create_tensor(element::f32, shape_r);
+    auto f_nrequantize_r = backend->create_tensor(element::i32, shape_r);
     auto f_nrequantize_handle = backend->compile(f_nrequantize);
     f_nrequantize_handle->call_with_validate({f_nrequantize_r}, {a, b, d, e, e_a, g, h, i});
-    EXPECT_EQ((vector<float>{25.584705352783203,
-                             33.88588333129883,
-                             44.71411895751953,
-                             70.78588104248047,
-                             -1.3305882215499878,
-                             105.76588439941406,
-                             66.03529357910156,
-                             37.86000061035156,
-                             117.58235168457031,
-                             63.0811767578125,
-                             -2.6364705562591553,
-                             124.02706146240234}),
-              read_vector<float>(f_nrequantize_r));
+    EXPECT_EQ((vector<int32_t>{26, 34, 45, 71, -1, 106, 66, 38, 118, 63, -3, 124}),
+              read_vector<int32_t>(f_nrequantize_r));
 
     // QuantizedDot with relu
     auto f_nrequantize_relu = make_function(false, true);
-    auto f_nrequantize_relu_r = backend->create_tensor(element::f32, shape_r);
+    auto f_nrequantize_relu_r = backend->create_tensor(element::i32, shape_r);
     auto f_nrequantize_relu_handle = backend->compile(f_nrequantize_relu);
     f_nrequantize_relu_handle->call_with_validate({f_nrequantize_relu_r},
                                                   {a, b, d, e, e_a, g, h, i});
-    EXPECT_EQ((vector<float>{25.584705352783203,
-                             33.88588333129883,
-                             44.71411895751953,
-                             70.78588104248047,
-                             -0.0,
-                             105.76588439941406,
-                             66.03529357910156,
-                             37.86000061035156,
-                             117.58235168457031,
-                             63.0811767578125,
-                             -0.0,
-                             124.02706146240234}),
-              read_vector<float>(f_nrequantize_relu_r));
+    EXPECT_EQ((vector<int32_t>{26, 34, 45, 71, 0, 106, 66, 38, 118, 63, 0, 124}),
+              read_vector<int32_t>(f_nrequantize_relu_r));
 
     // QuantizedDot with requantize and no relu
     auto f_requantize = make_function(true, false);
