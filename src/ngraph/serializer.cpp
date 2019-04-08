@@ -1350,9 +1350,9 @@ static json write(const Node& n, bool binary_constant_data)
     {
         control_deps.push_back(cdep->get_name());
     }
-    for (size_t i = 0; i < n.get_output_size(); ++i)
+    for (auto& output : n.outputs())
     {
-        outputs.push_back(n.get_output_tensor(i).get_name());
+        outputs.push_back(output.get_tensor().get_name());
     }
 
     node["inputs"] = inputs;

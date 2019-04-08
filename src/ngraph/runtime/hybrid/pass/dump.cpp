@@ -51,9 +51,9 @@ bool runtime::hybrid::pass::Dump::run_on_module(vector<shared_ptr<Function>>& fu
                 out << ") -> ";
 
                 vector<string> outputs;
-                for (size_t i = 0; i < node->get_output_size(); ++i)
+                for (const Output<Node>& output : node->outputs())
                 {
-                    outputs.push_back(node->get_output_tensor(i).get_name());
+                    outputs.push_back(output.get_tensor().get_name());
                 }
                 out << join(outputs);
                 out << "\n";

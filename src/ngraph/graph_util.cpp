@@ -365,8 +365,8 @@ pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
     auto& src_output = src_outputs[0];
 
     src_output.remove_target_input(dst_input); // Remove [0]
-    dst_input.replace_source_output(par_node,
-                                    0); // Remove [0] (again), add [8], remove [1], add [9]
+    dst_input.replace_source_output(
+        par_node->output(0)); // Remove [0] (again), add [8], remove [1], add [9]
 
     // Add res node
     shared_ptr<op::Result> res_node = make_shared<op::Result>(src_node); // Add [4], [5], [6], [7]
@@ -431,8 +431,8 @@ void ngraph::insert_new_node_between(const shared_ptr<Node>& src_node,
     auto& src_output = src_outputs[0];
 
     src_output.remove_target_input(dst_input); // Remove [0]
-    dst_input.replace_source_output(new_node,
-                                    0); // Remove [0] (again), add [8], remove [1], add [9]
+    dst_input.replace_source_output(
+        new_node->output(0)); // Remove [0] (again), add [8], remove [1], add [9]
 }
 
 std::shared_ptr<Node> ngraph::make_zero(const element::Type& element_type, const Shape& shape)

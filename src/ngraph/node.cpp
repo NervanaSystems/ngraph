@@ -339,7 +339,7 @@ shared_ptr<descriptor::Tensor> Node::get_output_tensor_ptr() const
         throw ngraph_error(
             "get_output_tensor_ptr() must be called on a node with exactly one output.");
     }
-    return get_output_tensor_ptr(0);
+    return m_outputs[0].get_tensor_ptr();
 }
 
 const std::set<descriptor::Input*>& Node::get_output_inputs(size_t i) const

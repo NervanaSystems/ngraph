@@ -42,10 +42,10 @@
 //
 // Enable the deprecation with -DNGRAPH_DEPRECATE_OLD_NODE_APIS=ON at cmake time.
 #ifdef NGRAPH_DEPRECATE_OLD_NODE_APIS
-#define OLD_NODE_APIS_DEPRECATED __attribute__((deprecated))
+#define OLD_NODE_APIS_DEPRECATED(msg) __attribute__((deprecated((msg))))
 #undef NGRAPH_DEPRECATE_OLD_NODE_APIS
 #else
-#define OLD_NODE_APIS_DEPRECATED
+#define OLD_NODE_APIS_DEPRECATED(msg)
 #endif
 
 namespace ngraph
@@ -181,6 +181,7 @@ namespace ngraph
         // TODO(amprocte): should be protected
         void set_input_is_relevant_to_value(size_t i, bool relevant = true);
 
+        // TODO(amprocte): should this be protected?
         void set_output_type(size_t i,
                              const element::Type& element_type,
                              const PartialShape& pshape);
@@ -196,13 +197,19 @@ namespace ngraph
         virtual std::ostream& write_short_description(std::ostream&) const;
         virtual std::ostream& write_long_description(std::ostream&) const;
 
-        std::deque<descriptor::Input>& get_inputs() OLD_NODE_APIS_DEPRECATED { return m_inputs; }
-        const std::deque<descriptor::Input>& get_inputs() const OLD_NODE_APIS_DEPRECATED
+        std::deque<descriptor::Input>& get_inputs() OLD_NODE_APIS_DEPRECATED("use inputs() instead")
         {
             return m_inputs;
         }
-        std::deque<descriptor::Output>& get_outputs() OLD_NODE_APIS_DEPRECATED;
-        const std::deque<descriptor::Output>& get_outputs() const OLD_NODE_APIS_DEPRECATED;
+        const std::deque<descriptor::Input>& get_inputs() const
+            OLD_NODE_APIS_DEPRECATED("use inputs() instead")
+        {
+            return m_inputs;
+        }
+        std::deque<descriptor::Output>& get_outputs()
+            OLD_NODE_APIS_DEPRECATED("use outputs() instead");
+        const std::deque<descriptor::Output>& get_outputs() const
+            OLD_NODE_APIS_DEPRECATED("use outputs() instead");
 
         /// Get control dependencies registered on the node
         const std::set<std::shared_ptr<Node>>& get_control_dependencies() const;
@@ -214,50 +221,69 @@ namespace ngraph
             m_control_dependencies.erase(node);
         }
 
-        /// Returns the number of outputs on the for the node.
+        /// Returns the number of outputs from the node.
         size_t get_output_size() const;
 
         /// Returns the element type for output i
+        // TODO: deprecate in favor of node->output(i).get_element_type()
         const element::Type& get_output_element_type(size_t i) const;
 
         /// Checks that there is exactly one output and returns its element type
+        // TODO: deprecate in favor of node->output(0).get_element_type() with a suitable check in
+        // the calling code, or updates to the calling code if it is making an invalid assumption
+        // of only one output.
         const element::Type& get_element_type() const;
 
         /// Returns the shape for output i
+        // TODO: deprecate in favor of node->output(i).get_shape()
         const Shape& get_output_shape(size_t i) const;
 
         /// Returns the partial shape for output i
         const PartialShape& get_output_partial_shape(size_t i) const;
 
         /// Checks that there is exactly one output and returns its shape
+        // TODO: deprecate in favor of node->output(0).get_shape() with a suitable check in the
+        // calling code, or updates to the calling code if it is making an invalid assumption of
+        // only one output.
         const Shape& get_shape() const;
 
         /// Returns the tensor for output i
-        descriptor::Tensor& get_output_tensor(size_t i) const;
+        descriptor::Tensor& get_output_tensor(size_t i) const
+            OLD_NODE_APIS_DEPRECATED("use node->output(i).get_tensor() instead");
 
         /// Checks that there is exactly one output and returns its tensor.
-        descriptor::Tensor& get_output_tensor() const;
+        descriptor::Tensor& get_output_tensor() const OLD_NODE_APIS_DEPRECATED(
+            "use node->output(0).get_tensor() instead; insert a check that the node has only one "
+            "output, or update calling code not to assume only one output");
 
         /// Returns the tensor of output i
-        std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr(size_t i) const;
+        // TODO: Investigate whether this really needs to be shared_ptr. If so, we'll need a
+        // replacement in Output.
+        std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr(size_t i) const
+            OLD_NODE_APIS_DEPRECATED("use &node->output(i).get_tensor() instead");
 
         /// Checks that there is exactly one output and returns its tensor.
-        std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr() const;
+        std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr() const OLD_NODE_APIS_DEPRECATED(
+            "use &node->output(i).get_tensor() instead; insert a check that the node has only one "
+            "output, or update calling code not to assume only one output");
 
         /// Returns the set of inputs using output i
-        const std::set<descriptor::Input*>&
-            get_output_inputs(size_t i) const OLD_NODE_APIS_DEPRECATED;
+        const std::set<descriptor::Input*>& get_output_inputs(size_t i) const
+            OLD_NODE_APIS_DEPRECATED("use node->output(i).get_target_inputs() instead");
 
         /// Returns the number of inputs for the op
         size_t get_input_size() const;
 
         /// Returns the element type of input i
+        // TODO: deprecate in favor of node->input(i).get_element_type()
         const element::Type& get_input_element_type(size_t i) const;
 
         /// Returns the shape of input i
+        // TODO: deprecate in favor of node->input(i).get_shape()
         const Shape& get_input_shape(size_t i) const;
 
         /// Returns the partial shape of input i
+        // TODO: deprecate in favor of node->input(i).get_partial_shape()
         const PartialShape& get_input_partial_shape(size_t i) const;
 
         std::unordered_set<descriptor::Tensor*> liveness_new_list;
@@ -401,13 +427,6 @@ namespace ngraph
         /// \brief Replaces the source output of this input.
         /// \param new_source_output A handle for the output that will replace this input's source.
         void replace_source_output(const Output<Node>& new_source_output) const;
-
-        /// \brief Replaces the source output of this input.
-        /// \param new_source_node The node for the output that will replace this input's source.
-        /// \param output_index The index of the output that will replace this input's source.
-        // TODO(amprocte): Get rid of shared_ptr here?
-        void replace_source_output(const std::shared_ptr<Node>& new_source_node,
-                                   size_t output_index) const;
 
         bool operator==(const Input& other) const
         {
@@ -590,13 +609,6 @@ namespace ngraph
     {
         m_node->m_inputs.at(m_index).replace_output(new_source_output.get_node_shared_ptr(),
                                                     new_source_output.get_index());
-    }
-
-    template <typename NodeType>
-    void Input<NodeType>::replace_source_output(const std::shared_ptr<Node>& new_source_node,
-                                                size_t output_index) const
-    {
-        replace_source_output(new_source_node->output(output_index));
     }
 
     template <typename NodeType>

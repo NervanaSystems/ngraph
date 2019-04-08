@@ -41,17 +41,17 @@ bool runtime::hybrid::pass::Liveness::run_on_function(shared_ptr<ngraph::Functio
     unordered_set<descriptor::Tensor*> output_tensors;
     for (const shared_ptr<op::Parameter>& node : function->get_parameters())
     {
-        for (size_t i = 0; i < node->get_output_size(); ++i)
+        for (auto& output : node->outputs())
         {
-            descriptor::Tensor& tensor = node->get_output_tensor(i);
+            descriptor::Tensor& tensor = output.get_tensor();
             persistent_tensors.insert(&tensor);
         }
     }
     for (const shared_ptr<op::Result>& node : function->get_results())
     {
-        for (size_t i = 0; i < node->get_output_size(); ++i)
+        for (auto& output : node->outputs())
         {
-            descriptor::Tensor& tensor = node->get_output_tensor(i);
+            descriptor::Tensor& tensor = output.get_tensor();
             persistent_tensors.insert(&tensor);
             output_tensors.insert(&tensor);
         }
@@ -60,9 +60,9 @@ bool runtime::hybrid::pass::Liveness::run_on_function(shared_ptr<ngraph::Functio
     {
         if (auto constant_node = dynamic_pointer_cast<op::Constant>(node))
         {
-            for (size_t i = 0; i < constant_node->get_output_size(); ++i)
+            for (auto& output : constant_node->outputs())
             {
-                descriptor::Tensor& tensor = constant_node->get_output_tensor(i);
+                descriptor::Tensor& tensor = output.get_tensor();
                 persistent_tensors.insert(&tensor);
             }
         }

@@ -192,7 +192,7 @@ void swim(Input<Node> input, shared_ptr<op::Reshape> reshape)
 
             auto new_broadcast = make_shared<op::Broadcast>(
                 broadcast_input, broadcast_reshape->get_shape(), new_broadcast_axes);
-            csw.input.replace_source_output(new_broadcast, 0);
+            csw.input.replace_source_output(new_broadcast->output(0));
         }
         //TODO: Add cases to push through Reshape and BinaryElementwiseArithmetic
         else
@@ -200,7 +200,7 @@ void swim(Input<Node> input, shared_ptr<op::Reshape> reshape)
             //materialize
             auto new_reshape = csw.reshape->copy_with_new_args({n});
             NGRAPH_DEBUG << "Materializing new reshape " << describe_reshape(new_reshape);
-            csw.input.replace_source_output(new_reshape, 0);
+            csw.input.replace_source_output(new_reshape->output(0));
         }
     }
 }
