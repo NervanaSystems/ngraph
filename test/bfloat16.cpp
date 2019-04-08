@@ -22,14 +22,13 @@
 #include "ngraph/type/bfloat16.hpp"
 #include "util/float_util.hpp"
 
-using namespace std;
 using namespace ngraph;
 
 template <typename T>
-string to_hex(T value)
+std::string to_hex(T value)
 {
-    stringstream ss;
-    ss << "0x" << hex << setw(sizeof(T) * 2) << setfill('0') << value;
+    std::stringstream ss;
+    ss << "0x" << std::hex << std::setw(sizeof(T) * 2) << std::setfill('0') << value;
     return ss.str();
 }
 
@@ -41,28 +40,28 @@ string to_hex(T value)
 TEST(bfloat16, conversions)
 {
     bfloat16 bf;
-    string source_string;
-    string bf_string;
+    const char* source_string;
+    std::string bf_string;
 
     // 1.f, the ground-truth value
     source_string = "0  01111111  000 0000";
     bf = test::bits_to_bfloat16(source_string);
     EXPECT_EQ(bf, bfloat16(1.0));
     bf_string = test::bfloat16_to_bits(bf);
-    EXPECT_STREQ(source_string.c_str(), bf_string.c_str());
+    EXPECT_STREQ(source_string, bf_string.c_str());
 
     // 1.03125f, the exact upper bound
     source_string = "0  01111111  000 0100";
     bf = test::bits_to_bfloat16(source_string);
     EXPECT_EQ(bf, bfloat16(1.03125));
     bf_string = test::bfloat16_to_bits(bf);
-    EXPECT_STREQ(source_string.c_str(), bf_string.c_str());
+    EXPECT_STREQ(source_string, bf_string.c_str());
 }
 
 TEST(bfloat16, round_to_nearest)
 {
-    string fstring;
-    string expected;
+    const char* fstring;
+    std::string expected;
     float fvalue;
     uint16_t bf_round;
 
@@ -90,7 +89,7 @@ TEST(bfloat16, round_to_nearest)
 
 TEST(bfloat16, round_to_nearest_even)
 {
-    string fstring;
+    const char* fstring;
     float fvalue;
     uint16_t bf_round;
 
@@ -123,7 +122,7 @@ TEST(bfloat16, round_to_nearest_even)
 TEST(bfloat16, to_float)
 {
     bfloat16 bf;
-    string source_string;
+    const char* source_string;
 
     // 1.f, the ground-truth value
     source_string = "0  01111111  000 0000";
@@ -144,8 +143,8 @@ TEST(benchmark, bfloat16)
     ngraph::runtime::AlignedBuffer data(buffer_size * sizeof(float), 4096);
     float* f = static_cast<float*>(data.get_ptr());
     // vector<float> data(buffer_size);
-    mt19937 rng(2112);
-    uniform_real_distribution<float> distribution(-300, 300);
+    std::mt19937 rng(2112);
+    std::uniform_real_distribution<float> distribution(-300, 300);
     for (size_t i = 0; i < buffer_size; ++i)
     {
         f[i] = distribution(rng);
