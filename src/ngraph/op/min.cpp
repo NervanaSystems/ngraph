@@ -39,14 +39,11 @@ shared_ptr<Node> op::Min::get_default_value() const
     case element::Type_t::boolean:
         return make_constant_from_string("1", get_element_type(), get_shape());
     case element::Type_t::bf16:
-        return make_constant_from_string(
-            to_string(numeric_limits<float>::max()), get_element_type(), get_shape());
+        return make_constant_from_string("INFINITY", get_element_type(), get_shape());
     case element::Type_t::f32:
-        return make_constant_from_string(
-            to_string(numeric_limits<float>::max()), get_element_type(), get_shape());
+        return make_constant_from_string("INFINITY", get_element_type(), get_shape());
     case element::Type_t::f64:
-        return make_constant_from_string(
-            to_string(numeric_limits<double>::max()), get_element_type(), get_shape());
+        return make_constant_from_string("INFINITY", get_element_type(), get_shape());
     case element::Type_t::i8:
         return make_constant_from_string(
             to_string(numeric_limits<int8_t>::max()), get_element_type(), get_shape());
