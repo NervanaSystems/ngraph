@@ -124,17 +124,17 @@ public:
     virtual Allocator* get_host_memory_allocator()
     {
         return ngraph::runtime::get_ngraph_allocator();
-    };
+    }
 
     /// \brief Set the host memory allocator to be used by the backend
-    /// \param pointer to host memory allocator object
-    virtual void set_host_memory_allocator(Allocator* allocator){};
+    /// \param allocator is pointer to host memory allocator object
+    virtual void set_host_memory_allocator(Allocator* allocator){}
 
     /// \brief Returns memory allocator used by backend for device allocations
     virtual Allocator* get_device_memory_allocator()
     {
         return ngraph::runtime::get_ngraph_allocator();
-    };
+    }
 
     /// \brief method for each supported backend to determine if the passed pointer is in device pinned memory or not
     /// \param ptr pointer to the memory to determine if its in device memory or not

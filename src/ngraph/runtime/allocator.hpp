@@ -37,6 +37,7 @@ namespace ngraph
 class ngraph::runtime::Allocator
 {
 public:
+    virtual ~Allocator() = 0;
     /// \brief allocates memory with the given size and alignment requirement
     /// \param size exact size of bytes to allocate
     /// \param alignment specifies the alignment. Must be a valid alignment supported by the implementation.
