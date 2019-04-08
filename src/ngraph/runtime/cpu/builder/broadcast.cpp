@@ -41,7 +41,7 @@ namespace ngraph
 
                 auto arg_shape = broadcast->get_argument(0)->get_shape();
                 out_shape = broadcast->get_shape();
-              
+
                 // TODO(jmenon): Shape transformations, rank reduction etc. needs to be general
                 // and not in any one builder. Move this to the Halide analysis phase.
 
@@ -193,8 +193,10 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                auto& arg_tensor_index = external_function->get_tensor_data_index(args[0].get_name());
-                auto& out_tensor_index = external_function->get_tensor_data_index(out[0].get_name());
+                auto& arg_tensor_index =
+                    external_function->get_tensor_data_index(args[0].get_name());
+                auto& out_tensor_index =
+                    external_function->get_tensor_data_index(out[0].get_name());
 
                 std::function<decltype(runtime::cpu::kernel::broadcast<float, 2>)> kernel;
                 Shape expanded_input_shape, out_shape;
@@ -206,15 +208,20 @@ namespace ngraph
                 {
                     functor = [&, kernel, expanded_input_shape, out_shape](
                         CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        kernel(
-                            ctx->buffer_data[arg_tensor_index], ctx->buffer_data[out_tensor_index], expanded_input_shape, out_shape, ectx->arena);
+                        kernel(ctx->buffer_data[arg_tensor_index],
+                               ctx->buffer_data[out_tensor_index],
+                               expanded_input_shape,
+                               out_shape,
+                               ectx->arena);
                     };
                     functors.emplace_back(functor);
                 }
                 else
                 {
                     functor = [&, size](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        memcpy(ctx->buffer_data[out_tensor_index], ctx->buffer_data[arg_tensor_index], size);
+                        memcpy(ctx->buffer_data[out_tensor_index],
+                               ctx->buffer_data[arg_tensor_index],
+                               size);
                     };
                     functors.emplace_back(functor);
                 }

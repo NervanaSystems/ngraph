@@ -128,7 +128,7 @@ namespace ngraph
                 std::vector<CPUKernelFunctor>& get_functors() { return functors; }
                 // return an index into the cpu_runtime_context's buffer_data vector to get the tensor
                 size_t& get_tensor_data_index(const std::string& name);
-                const size_t get_buffer_data_size() const { return buffer_data_size; }
+                size_t get_buffer_data_size() const { return buffer_data_size; }
                 std::function<void(CPURuntimeContext*, std::vector<void*>&, std::vector<void*>&)>&
                     get_executor()
                 {

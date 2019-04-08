@@ -167,8 +167,10 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                auto& arg_tensor_index = external_function->get_tensor_data_index(args[0].get_name());
-                auto& out_tensor_index = external_function->get_tensor_data_index(out[0].get_name());
+                auto& arg_tensor_index =
+                    external_function->get_tensor_data_index(args[0].get_name());
+                auto& out_tensor_index =
+                    external_function->get_tensor_data_index(out[0].get_name());
 
                 std::function<decltype(runtime::cpu::kernel::reshape_1d<float, 2>)> kernel;
                 std::function<decltype(runtime::cpu::kernel::reshape_ref<float>)> ref_kernel;
@@ -213,16 +215,21 @@ namespace ngraph
                 else if (skip_reshape)
                 {
                     functor = [&, size](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        if (out_tensor != arg_tensor)
+                        if (ctx->buffer_data[out_tensor_index] !=
+                            ctx->buffer_data[arg_tensor_index])
                         {
-                            memcpy(ctx->buffer_data[out_tensor_index], ctx->buffer_data[arg_tensor_index], size);
+                            memcpy(ctx->buffer_data[out_tensor_index],
+                                   ctx->buffer_data[arg_tensor_index],
+                                   size);
                         }
                     };
                 }
                 else
                 {
                     functor = [&, size](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        memcpy(ctx->buffer_data[out_tensor_index], ctx->buffer_data[arg_tensor_index], size);
+                        memcpy(ctx->buffer_data[out_tensor_index],
+                               ctx->buffer_data[arg_tensor_index],
+                               size);
                     };
                 }
                 functors.emplace_back(functor);

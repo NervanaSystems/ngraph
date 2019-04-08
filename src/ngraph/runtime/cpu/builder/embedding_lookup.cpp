@@ -87,9 +87,9 @@ namespace ngraph
                                                                CPUExecutionContext* ectx) {
 
                             ngraph::runtime::reference::embedding<float, int64_t>(
-                                static_cast<int64_t*>(arg0_tensor),
-                                static_cast<float*>(arg1_tensor),
-                                static_cast<float*>(out_tensor),
+                                static_cast<int64_t*>(ctx->buffer_data[arg0_tensor_index]),
+                                static_cast<float*>(ctx->buffer_data[arg1_tensor_index]),
+                                static_cast<float*>(ctx->buffer_data[out_tensor_index]),
                                 element_count,
                                 in_shape);
                         };
@@ -134,9 +134,9 @@ namespace ngraph
                                                                CPUExecutionContext* ectx) {
 
                             ngraph::runtime::reference::embedding<int, int64_t>(
-                                static_cast<int64_t*>(arg0_tensor),
-                                static_cast<int*>(arg1_tensor),
-                                static_cast<int*>(out_tensor),
+                                static_cast<int64_t*>(ctx->buffer_data[arg0_tensor_index]),
+                                static_cast<int*>(ctx->buffer_data[arg1_tensor_index]),
+                                static_cast<int*>(ctx->buffer_data[out_tensor_index]),
                                 element_count,
                                 in_shape);
                         };

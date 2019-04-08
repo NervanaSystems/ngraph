@@ -131,14 +131,15 @@ void* runtime::cpu::CPU_Debugger::inspect(std::shared_ptr<Node> op, size_t outpu
 {
     if (m_callframe.m_external_function->is_direct_execution())
     {
-        auto m_callframe.m_external_function->get_tensor_data(op->get_name() + "_" +
-                                                                to_string(output_index));
+        auto index = m_callframe.m_external_function->get_tensor_data_index(
+            op->get_name() + "_" + to_string(output_index));
         return m_callframe.ctx_vec[0]->buffer_data[index];
     }
     else
     {
-        return m_callframe.m_external_function->tensor_data.at(op->get_name() + "_" +
-                                                               to_string(output_index));
+        auto index = m_callframe.m_external_function->tensor_data.at(op->get_name() + "_" +
+                                                                     to_string(output_index));
+        return m_callframe.ctx_vec[0]->buffer_data[index];
     }
 }
 
