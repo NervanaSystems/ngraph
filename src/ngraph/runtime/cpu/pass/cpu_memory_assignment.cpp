@@ -323,9 +323,18 @@ void runtime::cpu::pass::CPUMemoryAssignment::propagate_in_place_slice(
                 if (oi_pair.input == index)
                 {
                     auto input_tensor = &op->get_inputs().at(oi_pair.input).get_tensor();
-                    auto input_bufferID = get_bufferID(input_tensor);
                     size_t output_index = oi_pair.output;
                     auto output_tensor = &op->get_outputs().at(output_index).get_tensor();
+
+                    //there do have case the tensor can not be found
+                    //might be because some ops is been eleminated but not been clean completely
+                    if (m_tensor_to_bufferID.find(input_tensor) == m_tensor_to_bufferID.end() ||
+                        m_tensor_to_bufferID.find(output_tensor) == m_tensor_to_bufferID.end())
+                    {
+                        continue;
+                    }
+
+                    auto input_bufferID = get_bufferID(input_tensor);
                     auto output_bufferID = get_bufferID(output_tensor);
 
                     // same set, in place op allowed
