@@ -20,8 +20,8 @@
 using namespace std;
 using namespace ngraph;
 
-op::Relu::Relu(shared_ptr<Node> arg)
-    : UnaryElementwiseArithmetic("Relu", {arg})
+op::Relu::Relu(const Output<Node>& arg)
+    : UnaryElementwiseArithmetic("Relu", arg)
 {
     constructor_validate_and_infer_types();
 }

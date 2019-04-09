@@ -19,8 +19,8 @@
 using namespace std;
 using namespace ngraph;
 
-op::BroadcastDistributed::BroadcastDistributed(const shared_ptr<Node>& arg)
-    : Op("BroadcastDistributed", check_single_output_args({arg}))
+op::BroadcastDistributed::BroadcastDistributed(const Output<Node>& arg)
+    : Op("BroadcastDistributed", {arg})
 {
     constructor_validate_and_infer_types();
 }

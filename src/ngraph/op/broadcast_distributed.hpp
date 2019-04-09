@@ -27,7 +27,7 @@ namespace ngraph
         class BroadcastDistributed : public Op
         {
         public:
-            BroadcastDistributed(const std::shared_ptr<Node>& arg);
+            BroadcastDistributed(const Output<Node>& arg);
 
             void validate_and_infer_types() override;
 

@@ -35,8 +35,8 @@ namespace ngraph
         public:
             /// \brief Constructs a Relu operation.
             ///
-            /// \param arg Node that produces the input tensor.
-            Relu(std::shared_ptr<ngraph::Node> arg);
+            /// \param arg Output that produces the input tensor.
+            Relu(const Output<Node>& arg);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

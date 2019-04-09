@@ -33,6 +33,7 @@ namespace ngraph
                 ///
                 /// \return A vector of nodes comprising the sub-graph. The order of output
                 ///         tensors must match the match output tensors of the FusedOp
+                // TODO: Should return OutputVector
                 virtual NodeVector decompose_op() const = 0;
 
                 void validate_and_infer_types() override;
@@ -44,7 +45,7 @@ namespace ngraph
                 /// \brief Constructs a FusedOp
                 ///
                 /// \param args Nodes that produce the input tensors for the fused op
-                FusedOp(const std::string& node_type, const NodeVector& args);
+                FusedOp(const std::string& node_type, const OutputVector& args);
             };
         }
     }

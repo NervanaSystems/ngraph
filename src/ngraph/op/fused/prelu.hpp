@@ -35,8 +35,7 @@ namespace ngraph
             ///
             /// \param data Input tensor
             /// \param slope Multipliers for negative values
-            PRelu(const std::shared_ptr<ngraph::Node>& data,
-                  const std::shared_ptr<ngraph::Node>& slope);
+            PRelu(const Output<ngraph::Node>& data, const Output<ngraph::Node>& slope);
 
             virtual NodeVector decompose_op() const override;
 

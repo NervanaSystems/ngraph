@@ -20,7 +20,7 @@
 
 using namespace ngraph;
 
-op::util::FusedOp::FusedOp(const std::string& node_type, const NodeVector& args)
+op::util::FusedOp::FusedOp(const std::string& node_type, const OutputVector& args)
     : Op(node_type, args)
 {
 }
