@@ -26,6 +26,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
+#include "ngraph/output_vector.hpp"
 #include "ngraph/placement.hpp"
 
 using namespace std;
@@ -50,9 +51,7 @@ Node::Node(const std::string& node_type, const NodeVector& arguments, size_t out
     set_output_size(output_size);
 }
 
-Node::Node(const std::string& node_type,
-           const std::vector<Output<Node>>& source_outputs,
-           size_t output_size)
+Node::Node(const std::string& node_type, const OutputVector& source_outputs, size_t output_size)
     : m_node_type(node_type)
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_unique_name(description() + "_" + to_string(m_instance_id))
