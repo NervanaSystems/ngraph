@@ -70,12 +70,13 @@ namespace ngraph
 
                 auto functor = [&, count, data_type](CPURuntimeContext* ctx,
                                                      CPUExecutionContext* ectx) {
-                    MLSL::CommReq* req = ctx->mlsl_dist->AllReduce(arg_tensor_index,
-                                                                   out_tensor_index,
-                                                                   count,
-                                                                   data_type,
-                                                                   MLSL::RT_SUM,
-                                                                   MLSL::GT_DATA);
+                    MLSL::CommReq* req =
+                        ctx->mlsl_dist->AllReduce(ctx->buffer_data[arg_tensor_index],
+                                                  ctx->buffer_data[out_tensor_index],
+                                                  count,
+                                                  data_type,
+                                                  MLSL::RT_SUM,
+                                                  MLSL::GT_DATA);
                     ctx->mlsl_env->Wait(req);
                 };
 #elif NGRAPH_DISTRIBUTED_OMPI_ENABLE

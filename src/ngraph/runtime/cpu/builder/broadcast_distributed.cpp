@@ -38,7 +38,8 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& arg_tensor_index =
+                    external_function->get_tensor_data_index(args[0].get_name());
                 auto count = static_cast<int>(args[0].get_size());
 
 #ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
@@ -55,8 +56,8 @@ namespace ngraph
 
                 auto functor = [&, count, data_type](CPURuntimeContext* ctx,
                                                      CPUExecutionContext* ectx) {
-                    MLSL::CommReq* req =
-                        ctx->mlsl_dist->Bcast(arg_tensor, count, data_type, 0, MLSL::GT_DATA);
+                    MLSL::CommReq* req = ctx->mlsl_dist->Bcast(
+                        ctx->buffer_data[arg_tensor_index], count, data_type, 0, MLSL::GT_DATA);
                     ctx->mlsl_env->Wait(req);
                 };
 #elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
@@ -73,7 +74,8 @@ namespace ngraph
 
                 auto functor = [&, count, data_type](CPURuntimeContext* ctx,
                                                      CPUExecutionContext* ectx) {
-                    MPI_Bcast(arg_tensor, count, data_type, 0, MPI_COMM_WORLD);
+                    MPI_Bcast(
+                        ctx->buffer_data[arg_tensor_index], count, data_type, 0, MPI_COMM_WORLD);
                 };
 #else
                 throw ngraph_error("Distributed Library not supported/mentioned");

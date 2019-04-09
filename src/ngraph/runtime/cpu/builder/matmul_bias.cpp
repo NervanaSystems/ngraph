@@ -33,9 +33,12 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                auto& arg0_tensor = external_function->get_tensor_data_index(args[0].get_name());
-                auto& arg1_tensor = external_function->get_tensor_data_index(args[1].get_name());
-                auto& out0_tensor = external_function->get_tensor_data_index(out[0].get_name());
+                auto& arg0_tensor_index =
+                    external_function->get_tensor_data_index(args[0].get_name());
+                auto& arg1_tensor_index =
+                    external_function->get_tensor_data_index(args[1].get_name());
+                auto& out0_tensor_index =
+                    external_function->get_tensor_data_index(out[0].get_name());
 
                 const ngraph::op::MatmulBias* mm = static_cast<const ngraph::op::MatmulBias*>(node);
 
@@ -77,12 +80,12 @@ namespace ngraph
                             n,
                             k,
                             1.0f,
-                            static_cast<float*>(ctx->buffer_data[arg0_tensor]),
+                            static_cast<float*>(ctx->buffer_data[arg0_tensor_index]),
                             max<size_t>(1, lda),
-                            static_cast<float*>(ctx->buffer_data[arg1_tensor]),
+                            static_cast<float*>(ctx->buffer_data[arg1_tensor_index]),
                             max<size_t>(1, ldb),
                             beta,
-                            static_cast<float*>(ctx->buffer_data[out0_tensor]),
+                            static_cast<float*>(ctx->buffer_data[out0_tensor_index]),
                             max<size_t>(1, arg2_shape[1]));
                     };
 
@@ -91,7 +94,7 @@ namespace ngraph
 
                 if (args.size() > 2)
                 {
-                    auto& arg2_tensor =
+                    auto& arg2_tensor_index =
                         external_function->get_tensor_data_index(args[2].get_name());
 
                     auto axes = mm->get_broadcast_axes();
@@ -112,10 +115,10 @@ namespace ngraph
                                     1.0f,
                                     ones_row.data(),
                                     1UL,
-                                    static_cast<float*>(ctx->buffer_data[arg2_tensor]),
+                                    static_cast<float*>(ctx->buffer_data[arg2_tensor_index]),
                                     max<size_t>(1, arg2_shape[1]),
                                     1.0f,
-                                    static_cast<float*>(ctx->buffer_data[out0_tensor]),
+                                    static_cast<float*>(ctx->buffer_data[out0_tensor_index]),
                                     max<size_t>(1, arg2_shape[1]));
                             };
                         }
@@ -132,12 +135,12 @@ namespace ngraph
                                     arg2_shape[1],
                                     1,
                                     1.0f,
-                                    static_cast<float*>(ctx->buffer_data[arg2_tensor]),
+                                    static_cast<float*>(ctx->buffer_data[arg2_tensor_index]),
                                     1UL,
                                     ones_col.data(),
                                     max<size_t>(1, arg2_shape[1]),
                                     1.0f,
-                                    static_cast<float*>(ctx->buffer_data[out0_tensor]),
+                                    static_cast<float*>(ctx->buffer_data[out0_tensor_index]),
                                     max<size_t>(1, arg2_shape[1]));
                             };
                         }
@@ -153,22 +156,24 @@ namespace ngraph
 
                         bias_functor = [&, ones_scalar, arg2_shape](CPURuntimeContext* ctx,
                                                                     CPUExecutionContext* ectx) {
-                            vector<float> bias(arg2_shape[1],
-                                               *static_cast<float*>(ctx->buffer_data[arg2_tensor]));
-                            cblas::cblas_sgemm(cblas::Layout::RowMajor,
-                                               cblas::Transpose::None,
-                                               cblas::Transpose::None,
-                                               arg2_shape[0],
-                                               arg2_shape[1],
-                                               1,
-                                               1.0f,
-                                               ones_scalar.data(),
-                                               1UL,
-                                               bias.data(),
-                                               max<size_t>(1, arg2_shape[1]),
-                                               1.0f,
-                                               static_cast<float*>(ctx->buffer_data[out0_tensor]),
-                                               max<size_t>(1, arg2_shape[1]));
+                            vector<float> bias(
+                                arg2_shape[1],
+                                *static_cast<float*>(ctx->buffer_data[arg2_tensor_index]));
+                            cblas::cblas_sgemm(
+                                cblas::Layout::RowMajor,
+                                cblas::Transpose::None,
+                                cblas::Transpose::None,
+                                arg2_shape[0],
+                                arg2_shape[1],
+                                1,
+                                1.0f,
+                                ones_scalar.data(),
+                                1UL,
+                                bias.data(),
+                                max<size_t>(1, arg2_shape[1]),
+                                1.0f,
+                                static_cast<float*>(ctx->buffer_data[out0_tensor_index]),
+                                max<size_t>(1, arg2_shape[1]));
                         };
                     }
                 }
