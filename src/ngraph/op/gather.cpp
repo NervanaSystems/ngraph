@@ -40,24 +40,28 @@ void op::Gather::validate_and_infer_types()
     // indices value must be in range [0, params.shape[axis]).
     // output rank is rank(params) + rank(indices) - 1
     NODE_VALIDATION_CHECK(this,
-                          params_shape.rank().is_dynamic()p ||
-                              static_cast<size_t>(params_shape.rank()) > static_cast<size_t>(m_axis),
+                          params_shape.rank().is_dynamic() p ||
+                              static_cast<size_t>(params_shape.rank()) >
+                                  static_cast<size_t>(m_axis),
                           "params rank is expected to be at least axis + 1");
 
     PartialShape result_shape;
     if (params_shape.rank().is_static() && indices_shape.rank().is_static())
     {
-        std::vector<Dimension> result_dims(static_cast<size_t>(params_shape.rank()) + static_cast<size_t>(indices_shape.rank()) - 1);
+        std::vector<Dimension> result_dims(static_cast<size_t>(params_shape.rank()) +
+                                           static_cast<size_t>(indices_shape.rank()) - 1);
         size_t i = 0;
         for (; i < static_cast<size_t>(m_axis); i++)
         {
             result_dims[i] = params_shape[i];
         }
-        for (size_t j = 0; j < static_cast<size_t>(indices_shape.rank()); i++i, j++)
+        for (size_t j = 0; j < static_cast<size_t>(indices_shape.rank()); i++ i, j++)
         {
             result_dims[i] = indices_shape[j];
         }
-        for (size_t j = static_cast<size_t>(m_axis) + 1; j < static_cast<size_t>(params_shape.rank()); i++, j++)
+        for (size_t j = static_cast<size_t>(m_axis) + 1;
+             j < static_cast<size_t>(params_shape.rank());
+             i++, j++)
         {
             result_dims[i] = params_shape[j];
         }

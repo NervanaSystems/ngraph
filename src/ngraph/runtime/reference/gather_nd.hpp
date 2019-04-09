@@ -48,14 +48,17 @@ namespace ngraph
                 Strides indices_strides(indices_ndim, 1);
                 AxisVector indices_axis_order(indices_ndim);
                 iota(indices_axis_order.begin(), indices_axis_order.end(), 0);
-                CoordinateTransform indices_outer_transform(
-                    indices_shape, indices_start_corner, indices_inner_end_corner, indices_strides, indices_axis_order);
+                CoordinateTransform indices_outer_transform(indices_shape,
+                                                            indices_start_corner,
+                                                            indices_inner_end_corner,
+                                                            indices_strides,
+                                                            indices_axis_order);
 
                 // Create a matching CoordinateTransform for "out" that visits the same outer coordinates
                 size_t out_ndim = static_cast<size_t>(out_shape.size());
                 Coordinate out_start_corner(out_ndim, 0);
                 Coordinate out_end_corner(out_shape);
-                for(size_t i = indices_ndim - 1; i < out_ndim; i++)
+                for (size_t i = indices_ndim - 1; i < out_ndim; i++)
                 {
                     out_inner_end_corner[i] = 1;
                 }
@@ -76,15 +79,18 @@ namespace ngraph
                     Coordinate params_start_corner(params_ndim, 0);
                     Coordinate params_end_corner(params_shape);
                     auto indices_index = indices_transform.index(indices_coord);
-                    for(size_t i = 0; i < slice_rank; i++)
+                    for (size_t i = 0; i < slice_rank; i++)
                     {
                         U index = indices[indices_index];
                         params_start_corner[i] = index;
                         params_end_corner[i] = index + 1;
                         indices_index++;
                     }
-                    CoordinateTransform params_transform(
-                        params_shape, params_start_corner, params_end_corner, params_strides, params_axis_order);
+                    CoordinateTransform params_transform(params_shape,
+                                                         params_start_corner,
+                                                         params_end_corner,
+                                                         params_strides,
+                                                         params_axis_order);
                     auto out_index = out_transform.index(*out_coord_iter);
                     for (const Coordinate& params_coord : params_transform)
                     {
