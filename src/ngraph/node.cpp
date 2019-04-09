@@ -448,7 +448,7 @@ NodeVector Node::get_users(bool check_is_used) const
     return result;
 }
 
-std::string ngraph::node_validation_assertion_string(const Node* node)
+std::string ngraph::node_validation_failure_loc_string(const Node* node)
 {
     std::stringstream ss;
     ss << "While validating node '" << *node << "'";

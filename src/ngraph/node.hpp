@@ -60,7 +60,7 @@ namespace ngraph
                                  const std::shared_ptr<Node>& dst_node,
                                  const std::shared_ptr<Node>& new_node);
 
-    std::string node_validation_assertion_string(const Node* node);
+    std::string node_validation_failure_loc_string(const Node* node);
 
     const std::shared_ptr<Node>& check_single_output_arg(const std::shared_ptr<Node>& node,
                                                          size_t i);
@@ -329,7 +329,7 @@ namespace ngraph
         NodeValidationFailure(const CheckLocInfo& check_loc_info,
                               const Node* node,
                               const std::string& explanation)
-            : CheckFailure(check_loc_info, node_validation_assertion_string(node), explanation)
+            : CheckFailure(check_loc_info, node_validation_failure_loc_string(node), explanation)
         {
         }
     };
