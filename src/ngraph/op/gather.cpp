@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,41 +15,53 @@
 //*****************************************************************************
 
 #include "ngraph/op/gather.hpp"
-//#include "ngraph/log.hpp"
-#include "ngraph/util.hpp"
+#include "ngraph/shape.hpp"
 
 using namespace std;
 using namespace ngraph;
 
+static int PARAMS = 0;
+static int INDICES = 1;
+
 shared_ptr<Node> op::Gather::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Gather>(new_args.at(0), new_args.at(1));
+    return make_shared<Gather>(new_args.at(PARAMS), new_args.at(INDICES), m_axis);
 }
 
 void op::Gather::validate_and_infer_types()
 {
-    element::Type result_et = get_input_element_type(1);
+    element::Type result_et = get_input_element_type(PARAMS);
 
-    const PartialShape& arg0_shape = get_input_partial_shape(0);
-    const PartialShape& arg1_shape = get_input_partial_shape(1);
+    const PartialShape& params_shape = get_input_partial_shape(PARAMS);
+    const PartialShape& indices_shape = get_input_partial_shape(INDICES);
 
+    // params rank must be at least (axis + 1)
+    // indices value must be in range [0, params.shape[axis]).
+    // output rank is rank(params) + rank(indices) - 1
     NODE_VALIDATION_CHECK(this,
-                          arg1_shape.rank().is_dynamic() ||
-                              static_cast<size_t>(arg1_shape.rank()) == 2,
-                          "weights are expected to be a matrix");
+                          params_shape.rank().is_dynamic()p ||
+                              static_cast<size_t>(params_shape.rank()) > static_cast<size_t>(m_axis),
+                          "params rank is expected to be at least axis + 1");
 
     PartialShape result_shape;
-    if (arg0_shape.rank().is_static())
+    if (params_shape.rank().is_static() && indices_shape.rank().is_static())
     {
-        std::vector<Dimension> result_dims(static_cast<size_t>(arg0_shape.rank()) + 1);
-        for (size_t i = 0; i < static_cast<size_t>(arg0_shape.rank()); i++)
+        std::vector<Dimension> result_dims(static_cast<size_t>(params_shape.rank()) + static_cast<size_t>(indices_shape.rank()) - 1);
+        size_t i = 0;
+        for (; i < static_cast<size_t>(m_axis); i++)
         {
-            result_dims[i] = arg0_shape[i];
+            result_dims[i] = params_shape[i];
+        }
+        for (size_t j = 0; j < static_cast<size_t>(indices_shape.rank()); i++i, j++)
+        {
+            result_dims[i] = indices_shape[j];
+        }
+        for (size_t j = static_cast<size_t>(m_axis) + 1; j < static_cast<size_t>(params_shape.rank()); i++, j++)
+        {
+            result_dims[i] = params_shape[j];
         }
 
-        result_dims[result_dims.size() - 1] =
-            arg1_shape.rank().is_static() ? arg1_shape[1] : Dimension::dynamic();
         result_shape = PartialShape(result_dims);
     }
     else
