@@ -125,11 +125,11 @@ add_library(onnx_import STATIC
         op/pow.hpp
         op/prelu.cpp
         op/prelu.hpp
-        op/qmatmul.hpp
         op/quant_conv.cpp
         op/quant_conv.hpp
         op/quantize_linear.cpp
         op/quantize_linear.hpp
+        op/quantized_matmul.hpp
         op/reciprocal.cpp
         op/reciprocal.hpp
         op/reduce.cpp

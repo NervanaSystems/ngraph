@@ -28,7 +28,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector qmatmul(const Node& node) { return make_matmul_op(node, true); }
+                NodeVector quantized_matmul(const Node& node) { return make_matmul_op(node, true); }
             } // namespace set_1
 
         } //namespace op
