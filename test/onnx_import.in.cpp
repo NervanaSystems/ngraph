@@ -2691,23 +2691,23 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_quant_conv_linear_2d)
         file_util::path_join(SERIALIZED_ZOO, "onnx/qlinear_conv_2d.prototxt"));
 
     auto x =
-        read_binary_file<uint8_t>(file_util::path_join(SERIALIZED_ZOO, "onnx/qlinearconv2d/x.bin"));
-    auto x_scale = read_binary_file<float>(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/qlinearconv2d/x_scale.bin"));
+        read_binary_file<uint8_t>(file_util::path_join(TEST_FILES, "onnx/qlinearconv2d/x.bin"));
+    auto x_scale =
+        read_binary_file<float>(file_util::path_join(TEST_FILES, "onnx/qlinearconv2d/x_scale.bin"));
     auto x_zero_point = read_binary_file<uint8_t>(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/qlinearconv2d/x_zero_point.bin"));
+        file_util::path_join(TEST_FILES, "onnx/qlinearconv2d/x_zero_point.bin"));
 
     auto w =
-        read_binary_file<uint8_t>(file_util::path_join(SERIALIZED_ZOO, "onnx/qlinearconv2d/w.bin"));
-    auto w_scale = read_binary_file<float>(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/qlinearconv2d/w_scale.bin"));
+        read_binary_file<uint8_t>(file_util::path_join(TEST_FILES, "onnx/qlinearconv2d/w.bin"));
+    auto w_scale =
+        read_binary_file<float>(file_util::path_join(TEST_FILES, "onnx/qlinearconv2d/w_scale.bin"));
     auto w_zero_point = read_binary_file<uint8_t>(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/qlinearconv2d/w_zero_point.bin"));
+        file_util::path_join(TEST_FILES, "onnx/qlinearconv2d/w_zero_point.bin"));
 
-    auto y_scale = read_binary_file<float>(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/qlinearconv2d/y_scale.bin"));
+    auto y_scale =
+        read_binary_file<float>(file_util::path_join(TEST_FILES, "onnx/qlinearconv2d/y_scale.bin"));
     auto y_zero_point = read_binary_file<uint8_t>(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/qlinearconv2d/y_zero_point.bin"));
+        file_util::path_join(TEST_FILES, "onnx/qlinearconv2d/y_zero_point.bin"));
 
     auto backend = ngraph::runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2751,8 +2751,8 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_quant_conv_linear_2d)
     outputs.push_back(read_vector<uint8_t>(result_tensors[0]));
 
     std::vector<std::vector<uint8_t>> expected_output;
-    expected_output.push_back(read_binary_file<uint8_t>(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/qlinearconv2d/y.bin")));
+    expected_output.push_back(
+        read_binary_file<uint8_t>(file_util::path_join(TEST_FILES, "onnx/qlinearconv2d/y.bin")));
 
     EXPECT_EQ(expected_output.front(), outputs.front());
 }
@@ -2763,23 +2763,23 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_quant_conv_linear_3d)
         file_util::path_join(SERIALIZED_ZOO, "onnx/qlinear_conv_3d.prototxt"));
 
     auto x =
-        read_binary_file<uint8_t>(file_util::path_join(SERIALIZED_ZOO, "onnx/qlinearconv3d/x.bin"));
-    auto x_scale = read_binary_file<float>(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/qlinearconv3d/x_scale.bin"));
+        read_binary_file<uint8_t>(file_util::path_join(TEST_FILES, "onnx/qlinearconv3d/x.bin"));
+    auto x_scale =
+        read_binary_file<float>(file_util::path_join(TEST_FILES, "onnx/qlinearconv3d/x_scale.bin"));
     auto x_zero_point = read_binary_file<uint8_t>(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/qlinearconv3d/x_zero_point.bin"));
+        file_util::path_join(TEST_FILES, "onnx/qlinearconv3d/x_zero_point.bin"));
 
     auto w =
-        read_binary_file<uint8_t>(file_util::path_join(SERIALIZED_ZOO, "onnx/qlinearconv3d/w.bin"));
-    auto w_scale = read_binary_file<float>(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/qlinearconv3d/w_scale.bin"));
+        read_binary_file<uint8_t>(file_util::path_join(TEST_FILES, "onnx/qlinearconv3d/w.bin"));
+    auto w_scale =
+        read_binary_file<float>(file_util::path_join(TEST_FILES, "onnx/qlinearconv3d/w_scale.bin"));
     auto w_zero_point = read_binary_file<uint8_t>(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/qlinearconv3d/w_zero_point.bin"));
+        file_util::path_join(TEST_FILES, "onnx/qlinearconv3d/w_zero_point.bin"));
 
-    auto y_scale = read_binary_file<float>(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/qlinearconv3d/y_scale.bin"));
+    auto y_scale =
+        read_binary_file<float>(file_util::path_join(TEST_FILES, "onnx/qlinearconv3d/y_scale.bin"));
     auto y_zero_point = read_binary_file<uint8_t>(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/qlinearconv3d/y_zero_point.bin"));
+        file_util::path_join(TEST_FILES, "onnx/qlinearconv3d/y_zero_point.bin"));
 
     auto backend = ngraph::runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2823,8 +2823,8 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_quant_conv_linear_3d)
     outputs.push_back(read_vector<uint8_t>(result_tensors[0]));
 
     std::vector<std::vector<uint8_t>> expected_output;
-    expected_output.push_back(read_binary_file<uint8_t>(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/qlinearconv3d/y.bin")));
+    expected_output.push_back(
+        read_binary_file<uint8_t>(file_util::path_join(TEST_FILES, "onnx/qlinearconv3d/y.bin")));
 
     EXPECT_EQ(expected_output.front(), outputs.front());
 }
