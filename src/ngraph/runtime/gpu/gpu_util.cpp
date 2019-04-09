@@ -14,7 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cassert>
 #include <cstdlib>
 #include <cuda.h>
 #include <cuda_runtime.h>
@@ -40,7 +39,7 @@ void runtime::gpu::print_gpu_f32_tensor(const void* p, size_t element_count, siz
 
 void runtime::gpu::check_cuda_errors(CUresult err)
 {
-    assert(err == CUDA_SUCCESS);
+    NGRAPH_CHECK(err == CUDA_SUCCESS);
 }
 
 void* runtime::gpu::create_gpu_buffer(size_t buffer_size, const void* data)

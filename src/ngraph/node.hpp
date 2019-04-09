@@ -28,7 +28,6 @@
 #include <unordered_set>
 #include <vector>
 
-#include "ngraph/assertion.hpp"
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/check.hpp"
 #include "ngraph/descriptor/input.hpp"
@@ -358,4 +357,4 @@ namespace ngraph
 } // namespace ngraph
 
 #define NODE_VALIDATION_CHECK(node, cond, ...)                                                     \
-    NGRAPH_CHECK(::ngraph::NodeValidationFailure, (node), (cond), __VA_ARGS__)
+    NGRAPH_CHECK_HELPER(::ngraph::NodeValidationFailure, (node), (cond), ##__VA_ARGS__)

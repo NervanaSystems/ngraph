@@ -26,7 +26,7 @@ namespace ngraph
 {
     static inline std::ostream& write_all_to_stream(std::ostream& str) { return str; }
     template <typename T, typename... TS>
-    static inline std::ostream& write_all_to_stream(std::ostream& str, const T& arg, TS... args)
+    static inline std::ostream& write_all_to_stream(std::ostream& str, const T& arg, TS&&... args)
     {
         return write_all_to_stream(str << arg, args...);
     }
@@ -66,14 +66,17 @@ namespace ngraph
 
 // TODO(amprocte): refactor so we don't have to introduce a locally-scoped variable and risk
 // shadowing here.
-#define NGRAPH_CHECK(exc_class, ctx, check, ...)                                                   \
+#define NGRAPH_CHECK_HELPER(exc_class, ctx, check, ...)                                            \
     do                                                                                             \
     {                                                                                              \
         if (!(check))                                                                              \
         {                                                                                          \
             ::std::stringstream ss___;                                                             \
-            ::ngraph::write_all_to_stream(ss___, __VA_ARGS__);                                     \
+            ::ngraph::write_all_to_stream(ss___, ##__VA_ARGS__);                                   \
             throw exc_class(                                                                       \
                 (::ngraph::CheckLocInfo{__FILE__, __LINE__, #check}), (ctx), ss___.str());         \
         }                                                                                          \
     } while (0)
+
+#define NGRAPH_CHECK(cond, ...)                                                                    \
+    NGRAPH_CHECK_HELPER(::ngraph::CheckFailure, "", (cond), ##__VA_ARGS__)

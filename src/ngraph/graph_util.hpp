@@ -25,6 +25,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "ngraph/check.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/placement.hpp"
@@ -136,7 +137,7 @@ namespace ngraph
             }
         }
 
-        NGRAPH_ASSERT(nodes.size() == result_list.size());
+        NGRAPH_CHECK(nodes.size() == result_list.size());
         return result_list;
     }
 
@@ -214,7 +215,7 @@ namespace ngraph
             }
         }
 
-        NGRAPH_ASSERT(nodes.size() == result_list.size());
+        NGRAPH_CHECK(nodes.size() == result_list.size());
         return result_list;
     }
 

@@ -57,7 +57,7 @@ bool pass::PropagateCacheability::run_on_function(shared_ptr<Function> function)
                     {
                         auto arg_op = static_pointer_cast<op::Op>(arg);
                         auto arg_op_annotations = arg_op->get_op_annotations();
-                        NGRAPH_ASSERT(arg_op_annotations);
+                        NGRAPH_CHECK(arg_op_annotations);
                         if (!arg_op_annotations->is_cacheable())
                         {
                             cacheable = false;

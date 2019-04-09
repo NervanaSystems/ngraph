@@ -982,10 +982,10 @@ static shared_ptr<ngraph::Function>
                 // behavior is equivalent to interior padding of 0, so we will accept it under
                 // those conditions.
                 auto padding_interior = node_js.at("padding_interior").get<vector<size_t>>();
-                NGRAPH_ASSERT(std::all_of(padding_interior.begin(),
-                                          padding_interior.end(),
-                                          [](size_t s) { return s == 0; }))
-                    << "Legacy padding_interior field must be zero everywhere.";
+                NGRAPH_CHECK(std::all_of(padding_interior.begin(),
+                                         padding_interior.end(),
+                                         [](size_t s) { return s == 0; }),
+                             "Legacy padding_interior field must be zero everywhere.");
 
                 auto pad_mode = node_js.count("pad_mode") == 0
                                     ? op::PadMode::CONSTANT

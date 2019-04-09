@@ -131,15 +131,15 @@ bool pass::ShapeSpecialization::run_on_function(std::shared_ptr<Function> f)
             std::vector<std::shared_ptr<op::Constant>> replacement_constants = n->as_constants();
             if (replacement_constants.size() > 0)
             {
-                NGRAPH_ASSERT(n->get_output_size() == replacement_constants.size());
+                NGRAPH_CHECK(n->get_output_size() == replacement_constants.size());
 
                 for (size_t i = 0; i < n->get_output_size(); i++)
                 {
-                    NGRAPH_ASSERT(n->get_output_partial_shape(i).relaxes(
+                    NGRAPH_CHECK(n->get_output_partial_shape(i).relaxes(
                         replacement_constants[i]->get_output_partial_shape(0)));
-                    NGRAPH_ASSERT(n->get_output_element_type(i).is_dynamic() ||
-                                  n->get_output_element_type(i) ==
-                                      replacement_constants[i]->get_output_element_type(0));
+                    NGRAPH_CHECK(n->get_output_element_type(i).is_dynamic() ||
+                                 n->get_output_element_type(i) ==
+                                     replacement_constants[i]->get_output_element_type(0));
 
                     auto& replacement_output = replacement_constants.at(i)->get_outputs().at(0);
                     auto& output = n->get_outputs().at(i);

@@ -18,7 +18,6 @@
 
 #include <cmath>
 
-#include "ngraph/assertion.hpp"
 #include "ngraph/coordinate_transform.hpp"
 
 namespace ngraph
@@ -41,8 +40,8 @@ namespace ngraph
 
                 CoordinateTransform::Iterator output_it = output_transform.begin();
 
-                NGRAPH_ASSERT(shape_size(input_transform.get_target_shape()) ==
-                              shape_size(output_transform.get_target_shape()));
+                NGRAPH_CHECK(shape_size(input_transform.get_target_shape()) ==
+                             shape_size(output_transform.get_target_shape()));
 
                 for (const Coordinate& in_coord : input_transform)
                 {

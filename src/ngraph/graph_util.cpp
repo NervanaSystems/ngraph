@@ -14,7 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cassert>
 #include <deque>
 #include <unordered_map>
 #include <unordered_set>
@@ -149,7 +148,7 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
     }
 
     // Fix input/output descriptors
-    assert(target->get_outputs().size() == replacement->get_outputs().size());
+    NGRAPH_CHECK(target->get_outputs().size() == replacement->get_outputs().size());
 
     auto set_replacement_prov = [replacement](std::shared_ptr<Node> node) {
         replacement->merge_provenance_tags_from(node);
