@@ -1423,22 +1423,22 @@ TEST(cpu_fusion, max_pool_with_indices)
 
     {
         pass::Manager pass_manager;
-        pass_manager.register_pass<pass::VisualizeTree>("max_pool_fprop_before.pdf");
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_fprop_before.png");
         pass_manager.run_passes(f);
     }
 
     {
         NodeVector nv_cwi;
         pass::Manager pass_manager;
-        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_before.pdf");
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_before.png");
         pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
-        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_after.pdf");
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_after.png");
         pass_manager.run_passes(df);
     }
 
     {
         pass::Manager pass_manager;
-        pass_manager.register_pass<pass::VisualizeTree>("max_pool_fprop_after.pdf");
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_fprop_after.png");
         pass_manager.run_passes(f);
     }
 
@@ -1493,9 +1493,9 @@ TEST(cpu_fusion, backwards_maxpool_with_indices_n4_c1_hw4_2x2_max)
     {
         NodeVector nv_cwi;
         pass::Manager pass_manager;
-        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_before2.pdf");
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_before2.png");
         pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
-        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_after2.pdf");
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_after2.png");
         pass_manager.run_passes(df);
     }
 
@@ -1794,7 +1794,7 @@ void optimize_graph(std::shared_ptr<ngraph::Function>& f, std::shared_ptr<ngraph
     pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
     pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
     pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
-    pass_manager.register_pass<pass::VisualizeTree>("before.fprop_cache.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("before.fprop_cache.png");
 
     pass_manager.run_passes(f);
     pass_manager.run_passes(bf);
@@ -2140,9 +2140,9 @@ TEST(cpu_fusion, group_convolution_fusion)
 
     auto f = make_shared<Function>(NodeVector{concat}, ParameterVector{A, B});
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before_group.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("before_group.png");
     pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
-    pass_manager.register_pass<pass::VisualizeTree>("after_group.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("after_group.png");
     pass_manager.run_passes(f);
     auto gc =
         std::dynamic_pointer_cast<op::GroupConvolution>(f->get_results().at(0)->get_argument(0));
@@ -2495,9 +2495,9 @@ TEST(cpu_fusion, loop_kernel_fusion_bounded_relu)
     };
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before_relu_fusion.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("before_relu_fusion.png");
     pass_manager.register_pass<runtime::cpu::pass::CPULoopKernelFusion>(3);
-    pass_manager.register_pass<pass::VisualizeTree>("after_relu_fusion.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("after_relu_fusion.png");
     auto cpu_f = make_function();
     auto int_f = make_function();
     pass_manager.run_passes(cpu_f);
