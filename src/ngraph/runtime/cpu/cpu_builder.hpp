@@ -319,7 +319,7 @@ namespace ngraph
             BuildOpMap& GetGlobalBuildDispatcher();
 
             // build the map to use cpu kernel for node execution
-            BuildNodeExecutorMap& GetGlobalCFDispatcherCPU();
+            CPU_BACKEND_API BuildNodeExecutorMap& GetGlobalCFDispatcherCPU();
 
             class Builder
             {
