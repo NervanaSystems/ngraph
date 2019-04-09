@@ -16,7 +16,6 @@
 
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/node_input.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -102,7 +101,7 @@ op::Rnn::Rnn(const Output<Node>& src_layer,
     }
 
     auto et = src_layer.get_element_type();
-    for (auto& rnn_input : get_node_inputs())
+    for (auto& rnn_input : inputs())
     {
         if (rnn_input.get_element_type() != et)
         {

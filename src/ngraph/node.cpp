@@ -375,7 +375,7 @@ descriptor::Tensor& Node::get_output_tensor() const
     {
         throw ngraph_error("get_output_tensor() must be called on a node with exactly one output.");
     }
-    return get_output_tensor(0);
+    return m_outputs[0].get_tensor();
 }
 
 size_t Node::get_input_size() const

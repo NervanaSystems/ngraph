@@ -53,7 +53,7 @@ op::ConvolutionBias::ConvolutionBias(const shared_ptr<op::Convolution>& conv,
                                      const Output<Node>& bias,
                                      const bool with_relu)
     : Op("ConvolutionBias",
-         {conv->get_input_source_output(0), conv->get_input_source_output(1), bias})
+         {conv->input(0).get_source_output(), conv->input(1).get_source_output(), bias})
     , m_window_movement_strides(conv->get_window_movement_strides())
     , m_window_dilation_strides(conv->get_window_dilation_strides())
     , m_padding_below(conv->get_padding_below())
@@ -270,9 +270,9 @@ op::ConvolutionBiasAdd::ConvolutionBiasAdd(const std::shared_ptr<op::Convolution
                                            const Output<Node>& sum_input,
                                            bool with_relu)
     : Op("ConvolutionBiasAdd",
-         {conv->get_input_source_output(0),
-          conv->get_input_source_output(1),
-          conv->get_input_source_output(2),
+         {conv->input(0).get_source_output(),
+          conv->input(1).get_source_output(),
+          conv->input(2).get_source_output(),
           sum_input})
     , m_window_movement_strides(conv->get_window_movement_strides())
     , m_window_dilation_strides(conv->get_window_dilation_strides())

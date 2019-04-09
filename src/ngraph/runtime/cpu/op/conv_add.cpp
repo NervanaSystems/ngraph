@@ -43,7 +43,7 @@ op::ConvolutionAdd::ConvolutionAdd(const std::shared_ptr<op::Convolution>& conv,
                                    const Output<Node>& sum_input,
                                    bool with_relu)
     : Op("ConvolutionAdd",
-         {conv->get_input_source_output(0), conv->get_input_source_output(1), sum_input})
+         {conv->input(0).get_source_output(), conv->input(1).get_source_output(), sum_input})
     , m_window_movement_strides(conv->get_window_movement_strides())
     , m_window_dilation_strides(conv->get_window_dilation_strides())
     , m_padding_below(conv->get_padding_below())

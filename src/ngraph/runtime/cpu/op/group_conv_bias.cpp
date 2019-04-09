@@ -103,7 +103,7 @@ op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<op::GroupConvolu
                                                bool with_relu,
                                                float alpha)
     : Op("GroupConvolutionBias",
-         {conv->get_input_source_output(0), conv->get_input_source_output(1), bias})
+         {conv->input(0).get_source_output(), conv->input(1).get_source_output(), bias})
     , m_window_movement_strides(conv->get_window_movement_strides())
     , m_window_dilation_strides(conv->get_window_dilation_strides())
     , m_padding_below(conv->get_padding_below())

@@ -494,6 +494,13 @@ namespace ngraph
         {
         }
 
+        /// \brief Constructs an Output referencing a null node.
+        // TODO: Get rid of this.
+        Output(nullptr_t)
+            : Output(nullptr, 0)
+        {
+        }
+
         /// \return A pointer to the node referred to by this output handle.
         NodeType* get_node() const { return m_node; }
         /// \return A `shared_ptr` to the node referred to by this output handle.
