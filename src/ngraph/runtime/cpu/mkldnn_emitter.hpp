@@ -88,7 +88,7 @@ namespace ngraph
                 MKLDNNEmitter() {}
                 ~MKLDNNEmitter();
 
-                const std::vector<mkldnn::primitive*>& get_mkldnn_primitives() const;
+                std::vector<mkldnn::primitive*>& get_mkldnn_primitives();
                 const std::vector<char*>& get_mkldnn_workspaces();
 
                 // reserve the space for primitives for each op, different op requires different number of primitives.

@@ -192,7 +192,7 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
         {
             // single thread for codegen
             NGRAPH_ASSERT(m_concurrency == 1);
-            ctx->mkldnn_primitives = mkldnn_emitter->get_mkldnn_primitives();
+            ctx->mkldnn_primitives.swap(mkldnn_emitter->get_mkldnn_primitives());
             ctx->mkldnn_workspaces = mkldnn_emitter->get_mkldnn_workspaces();
         }
 
@@ -214,8 +214,7 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
         if (MLSL::Environment::GetEnv().IsInitialized())
         {
             ctx->mlsl_env = &MLSL::Environment::GetEnv();
-            ctx->mlsl_dist =
-                ctx->mlsl_env->CreateDistribution(ctx[i]->mlsl_env->GetProcessCount(), 1);
+            ctx->mlsl_dist = ctx->mlsl_env->CreateDistribution(ctx->mlsl_env->GetProcessCount(), 1);
         }
 #endif
     }

@@ -45,7 +45,7 @@ MKLDNNEmitter::~MKLDNNEmitter()
 #endif
 }
 
-const std::vector<mkldnn::primitive*>& MKLDNNEmitter::get_mkldnn_primitives() const
+std::vector<mkldnn::primitive*>& MKLDNNEmitter::get_mkldnn_primitives()
 {
     return m_mkldnn_primitives;
 }
