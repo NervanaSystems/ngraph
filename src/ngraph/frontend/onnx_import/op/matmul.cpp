@@ -73,8 +73,8 @@ namespace ngraph
                 {
                     const NodeVector& ng_inputs{node.get_ng_inputs()};
                     auto left = std::shared_ptr<ngraph::Node>{ng_inputs.at(0)};
-                    std::shared_ptr<ngraph::Node> right;
-                    std::shared_ptr<ngraph::Node> scale = nullptr;
+                    auto right = std::shared_ptr<ngraph::Node>{};
+                    auto scale = std::shared_ptr<ngraph::Node>{};
                     if (quantized)
                     {
                         NGRAPH_WARN
@@ -159,9 +159,9 @@ namespace ngraph
                     for (std::size_t g = 0; g < groups; ++g)
                     {
                         const auto& sliced_left = get_sub_matrix(left, g);
-                        std::shared_ptr<ngraph::Node> sliced_right = get_sub_matrix(right, g);
+                        auto sliced_right = get_sub_matrix(right, g);
 
-                        std::shared_ptr<ngraph::Node> sub_dot;
+                        auto sub_dot = std::shared_ptr<ngraph::Node>{};
 
                         if (quantized)
                         {
