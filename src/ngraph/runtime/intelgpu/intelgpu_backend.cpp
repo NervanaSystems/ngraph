@@ -410,7 +410,7 @@ shared_ptr<runtime::Executable>
         return it->second;
     }
 
-    auto cloned_func = clone_function(func);
+    auto cloned_func = clone_function(*func);
 
     set<cldnn::primitive_id> func_output_names;
     cldnn::topology topology;
