@@ -409,6 +409,8 @@ shared_ptr<runtime::Executable>
         return it->second;
     }
 
+    auto cloned_func = clone_function(func);
+
     set<cldnn::primitive_id> func_output_names;
     cldnn::topology topology;
     stopwatch timer_compile;
@@ -423,7 +425,7 @@ shared_ptr<runtime::Executable>
 
     if (m_dump_graph_enable)
     {
-        visualize_tree(func, "intelgpu_", "_orig");
+        visualize_tree(cloned_func, "intelgpu_", "_orig");
     }
 
     if (!m_disable_backend_optimizations)
@@ -439,15 +441,15 @@ shared_ptr<runtime::Executable>
         // GetOutputElementElimination must be after CommonSubexpressionElimination
         pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
 
-        pass_manager.run_passes(func);
+        pass_manager.run_passes(cloned_func);
 
         if (m_dump_graph_enable)
         {
-            visualize_tree(func, "intelgpu_", "_opt");
+            visualize_tree(cloned_func, "intelgpu_", "_opt");
         }
     }
 
-    for (shared_ptr<Node> op : func->get_ops())
+    for (shared_ptr<Node> op : cloned_func->get_ops())
     {
 // We want to check that every OP_TYPEID enumeration is included in the list.
 // These GCC flags enable compile-time checking so that if an enumeration
@@ -2055,7 +2057,7 @@ shared_ptr<runtime::Executable>
         consumed_memory = runtime::intelgpu::get_max_memory_rss() - consumed_memory;
     }
 
-    rc = make_shared<IntelGPUExecutable>(func,
+    rc = make_shared<IntelGPUExecutable>(cloned_func,
                                          cldnn_network,
                                          enable_timing,
                                          m_profile_enable,
