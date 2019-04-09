@@ -34,6 +34,9 @@ namespace ngraph
 class ngraph::runtime::intelgpu::IntelGPUExecutable : public runtime::Executable
 {
 public:
+    // IntelGPUExecutalbe is special here, it does not do a clone function.
+    // The clone function is been don in IntelGPUBackend.
+    // The way IntelGPUBackend handle the function make it hard to do clone here.
     IntelGPUExecutable(std::shared_ptr<Function> func,
                        std::shared_ptr<cldnn::network> network,
                        bool enable_timing,
