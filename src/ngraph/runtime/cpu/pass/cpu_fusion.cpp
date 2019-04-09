@@ -201,6 +201,13 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmul()
         auto mpattern = m.get_match_root();
         auto dot = m.get_match_root();
 
+        // check to determine if the node has dynamic shape, if it contains dynamic shape
+        // we will return safely without running this optimization.
+        if (ngraph::validate_for_dynamic_shapes({pattern_map[W], pattern_map[x], dot}))
+        {
+            return false;
+        }
+
         if (mpattern->get_element_type() != element::f32)
         {
             NGRAPH_DEBUG << "mpattern = " << mpattern->get_name() << " type is not float!";
@@ -303,11 +310,24 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
     ngraph::pattern::graph_rewrite_callback callback =
         [variance_label, mean_label, input, eps_label, gamma_label, beta_label](
             pattern::Matcher& m) {
+
+            auto pattern_map = m.get_pattern_map();
+            // check to determine if the node has dynamic shape, if it contains dynamic shape
+            // we will return safely without running this optimization.
+            if (ngraph::validate_for_dynamic_shapes({pattern_map[variance_label],
+                                                     pattern_map[mean_label],
+                                                     pattern_map[input],
+                                                     pattern_map[eps_label],
+                                                     pattern_map[gamma_label],
+                                                     pattern_map[beta_label],
+                                                     m.get_match_root()}))
+            {
+                return false;
+            }
             NGRAPH_DEBUG << "In a callback for construct_fprop_bn pattern against "
                          << m.get_match_root()->get_name();
 
             // TODO - add assert's based on the matched node
-            auto pattern_map = m.get_pattern_map();
             NGRAPH_DEBUG << "Input: " << pattern_map[input]->get_name() << " "
                          << pattern_map[input]->get_shape().size();
             NGRAPH_DEBUG << "Variance: " << pattern_map[variance_label]->get_name() << " "
@@ -440,6 +460,16 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_reshaped_conv(
                                                         conv_label](pattern::Matcher& m) {
         auto pattern_map = m.get_pattern_map();
 
+        if (ngraph::validate_for_dynamic_shapes({pattern_map[pad_input],
+                                                 pattern_map[pad_value],
+                                                 pattern_map[pad_label],
+                                                 pattern_map[reshape_label],
+                                                 pattern_map[conv_filter],
+                                                 pattern_map[conv_label],
+                                                 m.get_match_root()}))
+        {
+            return false;
+        }
         auto pad_value_op = std::dynamic_pointer_cast<ngraph::op::Constant>(pattern_map[pad_value]);
         if (!pad_value_op)
         {
@@ -525,6 +555,15 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_conv()
                                                         conv_filter,
                                                         conv_label](pattern::Matcher& m) {
         auto pattern_map = m.get_pattern_map();
+        if (ngraph::validate_for_dynamic_shapes({pattern_map[pad_input],
+                                                 pattern_map[pad_value],
+                                                 pattern_map[pad_label],
+                                                 pattern_map[conv_filter],
+                                                 pattern_map[conv_label],
+                                                 m.get_match_root()}))
+        {
+            return false;
+        }
 
         auto pad_value_op = std::dynamic_pointer_cast<ngraph::op::Constant>(pattern_map[pad_value]);
         if (!pad_value_op)
@@ -599,6 +638,15 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_conv_backprop_
                                                         output_delta,
                                                         conv_label](pattern::Matcher& m) {
         auto pattern_map = m.get_pattern_map();
+        if (ngraph::validate_for_dynamic_shapes({pattern_map[pad_input],
+                                                 pattern_map[pad_value],
+                                                 pattern_map[pad_label],
+                                                 pattern_map[output_delta],
+                                                 pattern_map[conv_label],
+                                                 m.get_match_root()}))
+        {
+            return false;
+        }
 
         auto pad_value_op = std::dynamic_pointer_cast<ngraph::op::Constant>(pattern_map[pad_value]);
         if (!pad_value_op)
@@ -667,11 +715,19 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias()
                                                             Strides{1, 1});
     auto p_conv_bias = pbroadcast + pconv1;
 
-    ngraph::pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
+    ngraph::pattern::graph_rewrite_callback callback = [data_batch, filters, pbias](
+        pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_conv_bias against node = "
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
+        if (ngraph::validate_for_dynamic_shapes({pattern_map[data_batch],
+                                                 pattern_map[filters],
+                                                 pattern_map[pbias],
+                                                 m.get_match_root()}))
+        {
+            return false;
+        }
         auto conv =
             std::static_pointer_cast<ngraph::op::Convolution>(m.get_match_root()->get_argument(0));
 
@@ -727,6 +783,11 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_bprop()
                      << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
+        if (ngraph::validate_for_dynamic_shapes(
+                {pattern_map[data_batch], pattern_map[delta], m.get_match_root()}))
+        {
+            return false;
+        }
         auto conv_bprop =
             std::static_pointer_cast<ngraph::op::ConvolutionBackpropFilters>(m.get_match_root());
 
@@ -812,6 +873,11 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
                      << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
+        if (ngraph::validate_for_dynamic_shapes(
+                {pattern_map[input], pattern_map[gamma], pattern_map[beta], m.get_match_root()}))
+        {
+            return false;
+        }
         auto m_bn = std::static_pointer_cast<ngraph::op::BatchNormTraining>(
             m.get_match_root()->get_argument(0)->get_inputs().at(0).get_output().get_node());
 
@@ -881,6 +947,15 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu_global_sta
                      << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
+        if (ngraph::validate_for_dynamic_shapes({pattern_map[input],
+                                                 pattern_map[mean],
+                                                 pattern_map[var],
+                                                 pattern_map[gamma],
+                                                 pattern_map[beta],
+                                                 m.get_match_root()}))
+        {
+            return false;
+        }
 
         auto bn_match = m.get_match_root()->get_inputs().at(0).get_output().get_node();
         if (bn_match->get_users().size() > 1)
@@ -935,10 +1010,16 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_relu()
 
     auto prelu = std::make_shared<ngraph::op::Relu>(pconv);
 
-    pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
+    pattern::graph_rewrite_callback callback = [data_batch, filters](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_conv_relu against "
                      << m.get_match_root()->get_name();
 
+        auto pattern_map = m.get_pattern_map();
+        if (ngraph::validate_for_dynamic_shapes(
+                {pattern_map[data_batch], pattern_map[filters], m.get_match_root()}))
+        {
+            return false;
+        }
         auto conv =
             std::static_pointer_cast<ngraph::op::Convolution>(m.get_match_root()->get_argument(0));
 
@@ -981,10 +1062,18 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_relu()
 
     auto prelu = std::make_shared<ngraph::op::Relu>(conv_bias);
 
-    pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
+    pattern::graph_rewrite_callback callback = [data_batch, filters, bias](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_conv_relu against "
                      << m.get_match_root()->get_name();
 
+        auto pattern_map = m.get_pattern_map();
+        if (ngraph::validate_for_dynamic_shapes({pattern_map[data_batch],
+                                                 pattern_map[filters],
+                                                 pattern_map[bias],
+                                                 m.get_match_root()}))
+        {
+            return false;
+        }
         auto conv = std::static_pointer_cast<ngraph::op::ConvolutionBias>(
             m.get_match_root()->get_argument(0));
 
@@ -1036,6 +1125,11 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_add()
 
         auto add_m = m.get_match_root();
         auto pattern_map = m.get_pattern_map();
+        if (ngraph::validate_for_dynamic_shapes(
+                {pattern_map[data_batch], pattern_map[filters], m.get_match_root()}))
+        {
+            return false;
+        }
         auto conv_m = std::dynamic_pointer_cast<ngraph::op::Convolution>(add_m->get_argument(1));
         auto inplace_input = add_m->get_argument(0);
 
@@ -1099,33 +1193,43 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_add_relu()
                                                               false);
     auto prelu = std::make_shared<ngraph::op::Relu>(pconv);
 
-    pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In a callback for construct_conv_add_relu against "
-                     << m.get_match_root()->get_name();
+    pattern::graph_rewrite_callback callback =
+        [data_batch, filters, add_input](pattern::Matcher& m) {
+            NGRAPH_DEBUG << "In a callback for construct_conv_add_relu against "
+                         << m.get_match_root()->get_name();
 
-        auto conv_m = std::static_pointer_cast<ngraph::op::ConvolutionAdd>(
-            m.get_match_root()->get_argument(0));
-        if (conv_m->get_users().size() > 1)
-        {
-            NGRAPH_DEBUG << "Convolution has more than one user";
-            return false;
-        }
+            auto pattern_map = m.get_pattern_map();
+            if (ngraph::validate_for_dynamic_shapes({pattern_map[data_batch],
+                                                     pattern_map[filters],
+                                                     pattern_map[add_input],
+                                                     m.get_match_root()}))
+            {
+                return false;
+            }
 
-        // ConvolutionAdd created only if it can run with MKLDNN.
-        // No further checks needed.
-        auto conv_n =
-            std::make_shared<ngraph::op::ConvolutionAdd>(conv_m->get_argument(0),
-                                                         conv_m->get_argument(1),
-                                                         conv_m->get_argument(2),
-                                                         conv_m->get_window_movement_strides(),
-                                                         conv_m->get_window_dilation_strides(),
-                                                         conv_m->get_padding_below(),
-                                                         conv_m->get_padding_above(),
-                                                         conv_m->get_data_dilation_strides(),
-                                                         true);
-        ngraph::replace_node(m.get_match_root(), conv_n);
-        return true;
-    };
+            auto conv_m = std::static_pointer_cast<ngraph::op::ConvolutionAdd>(
+                m.get_match_root()->get_argument(0));
+            if (conv_m->get_users().size() > 1)
+            {
+                NGRAPH_DEBUG << "Convolution has more than one user";
+                return false;
+            }
+
+            // ConvolutionAdd created only if it can run with MKLDNN.
+            // No further checks needed.
+            auto conv_n =
+                std::make_shared<ngraph::op::ConvolutionAdd>(conv_m->get_argument(0),
+                                                             conv_m->get_argument(1),
+                                                             conv_m->get_argument(2),
+                                                             conv_m->get_window_movement_strides(),
+                                                             conv_m->get_window_dilation_strides(),
+                                                             conv_m->get_padding_below(),
+                                                             conv_m->get_padding_above(),
+                                                             conv_m->get_data_dilation_strides(),
+                                                             true);
+            ngraph::replace_node(m.get_match_root(), conv_n);
+            return true;
+        };
 
     auto m = std::make_shared<pattern::Matcher>(prelu, callback, "CPUFusion.ConvAddRelu");
     this->add_matcher(m);
@@ -1149,12 +1253,21 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
     auto add_input = std::make_shared<pattern::op::Label>(element::f32, pconv->get_shape());
     auto padd = std::make_shared<ngraph::op::Add>(add_input, pconv);
 
-    pattern::graph_rewrite_callback callback = [data_batch, filters](pattern::Matcher& m) {
+    pattern::graph_rewrite_callback callback = [data_batch, filters, bias, add_input](
+        pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_conv_sum against "
                      << m.get_match_root()->get_name();
 
         auto add_m = m.get_match_root();
         auto pattern_map = m.get_pattern_map();
+        if (ngraph::validate_for_dynamic_shapes({pattern_map[data_batch],
+                                                 pattern_map[filters],
+                                                 pattern_map[bias],
+                                                 pattern_map[add_input],
+                                                 m.get_match_root()}))
+        {
+            return false;
+        }
         auto conv_m =
             std::dynamic_pointer_cast<ngraph::op::ConvolutionBias>(add_m->get_argument(1));
         auto inplace_input = add_m->get_argument(0);
@@ -1222,9 +1335,19 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add_relu()
                                                                   false);
     auto prelu = std::make_shared<ngraph::op::Relu>(pconv);
 
-    pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
+    pattern::graph_rewrite_callback callback = [data_batch, filters, bias, add_input](
+        pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_conv_sum against "
                      << m.get_match_root()->get_name();
+        auto pattern_map = m.get_pattern_map();
+        if (ngraph::validate_for_dynamic_shapes({pattern_map[data_batch],
+                                                 pattern_map[filters],
+                                                 pattern_map[bias],
+                                                 pattern_map[add_input],
+                                                 m.get_match_root()}))
+        {
+            return false;
+        }
 
         auto conv_m = std::static_pointer_cast<ngraph::op::ConvolutionBiasAdd>(
             m.get_match_root()->get_argument(0));
@@ -1287,6 +1410,11 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_multiply()
         NGRAPH_DEBUG << "In a callback for construct_sigmoid_multiply pattern against "
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
+        if (ngraph::validate_for_dynamic_shapes(
+                {pattern_map[sigmoid_0], pattern_map[sigmoid_1], m.get_match_root()}))
+        {
+            return false;
+        }
 
         if (m.get_match_root()->get_element_type() != element::f32)
         {
@@ -1345,6 +1473,12 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_leaky_relu()
                      << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
+        if (ngraph::validate_for_dynamic_shapes(
+                {pattern_map[input], pattern_map[alpha], m.get_match_root()}))
+        {
+            return false;
+        }
+
         if (!std::dynamic_pointer_cast<ngraph::op::Constant>(pattern_map[alpha]))
         {
             NGRAPH_DEBUG << "alpha must be constant for leaky relu";
@@ -1409,6 +1543,11 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_bounded_relu()
             return false;
         }
         auto pattern_map = m.get_pattern_map();
+        if (ngraph::validate_for_dynamic_shapes(
+                {pattern_map[relu_input], pattern_map[alpha], m.get_match_root()}))
+        {
+            return false;
+        }
         if (!std::dynamic_pointer_cast<ngraph::op::Constant>(pattern_map[alpha]))
         {
             NGRAPH_DEBUG << "alpha must be constant for bounded relu";
@@ -1467,6 +1606,17 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_folded_batch_nor
             NGRAPH_DEBUG << "In callback for folded batch norm against node = "
                          << m.get_match_root()->get_name();
             auto pattern_map = m.get_pattern_map();
+            if (ngraph::validate_for_dynamic_shapes({pattern_map[input],
+                                                     pattern_map[filters],
+                                                     pattern_map[bias],
+                                                     pattern_map[mean],
+                                                     pattern_map[var],
+                                                     pattern_map[gamma],
+                                                     pattern_map[beta],
+                                                     m.get_match_root()}))
+            {
+                return false;
+            }
 
             auto m_bn =
                 std::static_pointer_cast<ngraph::op::BatchNormInference>(m.get_match_root());
@@ -1554,6 +1704,15 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_affine_folding()
         NGRAPH_DEBUG << "In callback for conv affine folding against node = "
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
+        if (ngraph::validate_for_dynamic_shapes({pattern_map[input],
+                                                 pattern_map[filters],
+                                                 pattern_map[bias],
+                                                 pattern_map[conv_label],
+                                                 pattern_map[A_label],
+                                                 m.get_match_root()}))
+        {
+            return false;
+        }
 
         auto conv_m =
             std::static_pointer_cast<ngraph::op::ConvolutionBias>(pattern_map[conv_label]);
@@ -1700,6 +1859,17 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_groupconv_batchnorm_global
             NGRAPH_DEBUG << "In callback for groupconv BatchNorm folding against node = "
                          << m.get_match_root()->get_name();
             auto pattern_map = m.get_pattern_map();
+            if (ngraph::validate_for_dynamic_shapes({pattern_map[input],
+                                                     pattern_map[filters],
+                                                     pattern_map[conv_label],
+                                                     pattern_map[mean],
+                                                     pattern_map[var],
+                                                     pattern_map[gamma],
+                                                     pattern_map[beta],
+                                                     m.get_match_root()}))
+            {
+                return false;
+            }
 
             auto m_bn =
                 std::static_pointer_cast<ngraph::op::BatchNormInference>(m.get_match_root());
@@ -1805,6 +1975,15 @@ void ngraph::runtime::cpu::pass::CPUFusion::
             NGRAPH_DEBUG << "In callback for GroupConvBias + Relu folding against node = "
                          << m.get_match_root()->get_name();
             auto pattern_map = m.get_pattern_map();
+            if (ngraph::validate_for_dynamic_shapes({pattern_map[input],
+                                                     pattern_map[filters],
+                                                     pattern_map[conv_label],
+                                                     pattern_map[bias],
+                                                     pattern_map[num],
+                                                     m.get_match_root()}))
+            {
+                return false;
+            }
 
             auto conv_m =
                 std::static_pointer_cast<ngraph::op::GroupConvolutionBias>(pattern_map[conv_label]);
@@ -1866,6 +2045,13 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fuse_lstm_recurrent_state(
         [lstm1, lstm1_goe0_label, concat_label, lstm1_goe1_label](pattern::Matcher& m) {
             NGRAPH_DEBUG << "In Lstm concat fusion" << m.get_match_root()->get_name();
             auto pattern_map = m.get_pattern_map();
+            if (ngraph::validate_for_dynamic_shapes({pattern_map[lstm1_goe0_label],
+                                                     pattern_map[concat_label],
+                                                     pattern_map[lstm1_goe1_label],
+                                                     m.get_match_root()}))
+            {
+                return false;
+            }
 
             if (pattern_map[lstm1_goe0_label]->get_arguments()[0] !=
                 pattern_map[lstm1_goe1_label]->get_arguments()[0])
@@ -1898,6 +2084,13 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_update_slice()
         pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for update_slice = " << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
+        if (ngraph::validate_for_dynamic_shapes({pattern_map[input],
+                                                 pattern_map[update_input],
+                                                 pattern_map[slice_label],
+                                                 m.get_match_root()}))
+        {
+            return false;
+        }
         auto slice_m = std::static_pointer_cast<ngraph::op::Slice>(pattern_map[slice_label]);
         auto replace_m = std::static_pointer_cast<ngraph::op::ReplaceSlice>(m.get_match_root());
         if (replace_m->get_lower_bounds() != slice_m->get_lower_bounds() ||
@@ -1969,10 +2162,25 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconv_relu(bool with_
         std::make_shared<ngraph::op::Dequantize>(qconv, dq_scale, dq_zp, element::f32, AxisSet{});
     auto relu = std::make_shared<ngraph::op::Relu>(dq);
 
-    pattern::graph_rewrite_callback callback = [with_bias](pattern::Matcher& m) {
+    pattern::graph_rewrite_callback callback = [data_batch,
+                                                filters,
+                                                requantization_scale,
+                                                dq_scale,
+                                                dq_zp,
+                                                with_bias](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_qconv_relu against "
                      << m.get_match_root()->get_name();
 
+        auto pattern_map = m.get_pattern_map();
+        if (ngraph::validate_for_dynamic_shapes({pattern_map[data_batch],
+                                                 pattern_map[filters],
+                                                 pattern_map[requantization_scale],
+                                                 pattern_map[dq_scale],
+                                                 pattern_map[dq_zp],
+                                                 m.get_match_root()}))
+        {
+            return false;
+        }
         auto dq_m =
             std::static_pointer_cast<ngraph::op::Dequantize>(m.get_match_root()->get_argument(0));
 
@@ -2060,10 +2268,16 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qavg_pool()
         std::make_shared<ngraph::op::Dequantize>(input, dq_scale, dq_zp, element::f32, AxisSet{});
     auto avg_pool = std::make_shared<ngraph::op::AvgPool>(dq, Shape{1, 1});
 
-    pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
+    pattern::graph_rewrite_callback callback = [input, dq_scale, dq_zp](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_qavg_pool against "
                      << m.get_match_root()->get_name();
 
+        auto pattern_map = m.get_pattern_map();
+        if (ngraph::validate_for_dynamic_shapes(
+                {pattern_map[input], pattern_map[dq_scale], pattern_map[dq_zp], m.get_match_root()}))
+        {
+            return false;
+        }
         auto avg_pool_m = std::static_pointer_cast<ngraph::op::AvgPool>(m.get_match_root());
         auto dq_m = std::static_pointer_cast<ngraph::op::Dequantize>(avg_pool_m->get_argument(0));
 
@@ -2098,9 +2312,15 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qmax_pool()
         std::make_shared<ngraph::op::Dequantize>(input, dq_scale, dq_zp, element::f32, AxisSet{});
     auto max_pool = std::make_shared<ngraph::op::MaxPool>(dq, Shape{1, 1});
 
-    pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
+    pattern::graph_rewrite_callback callback = [input, dq_scale, dq_zp](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_qmax_pool against "
                      << m.get_match_root()->get_name();
+        auto pattern_map = m.get_pattern_map();
+        if (ngraph::validate_for_dynamic_shapes(
+                {pattern_map[input], pattern_map[dq_scale], pattern_map[dq_zp], m.get_match_root()}))
+        {
+            return false;
+        }
 
         auto max_pool_m = std::static_pointer_cast<ngraph::op::MaxPool>(m.get_match_root());
         auto dq_m = std::static_pointer_cast<ngraph::op::Dequantize>(max_pool_m->get_argument(0));

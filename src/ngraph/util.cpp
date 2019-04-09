@@ -527,3 +527,15 @@ AxisVector ngraph::get_permutation_to_default_order(const AxisVector& axis_order
     }
     return out;
 }
+
+bool ngraph::validate_for_dynamic_shapes(const NodeVector& nodes)
+{
+    for (auto& node : nodes)
+    {
+        if (node->is_dynamic())
+        {
+            return true;
+        }
+    }
+    return false;
+}

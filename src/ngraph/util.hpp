@@ -187,6 +187,7 @@ namespace ngraph
     void* aligned_alloc(size_t alignment, size_t size);
     void aligned_free(void*);
 
+    bool validate_for_dynamic_shapes(const NodeVector& nodes);
     void* ngraph_malloc(size_t size);
     void ngraph_free(void*);
 
