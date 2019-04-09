@@ -139,9 +139,9 @@ TEST(reshape_elimination, recurrent_reshapes)
     auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
 
     pass::Manager pass_manager;
-    // pass_manager.register_pass<pass::VisualizeTree>("before_recurrent_reshapes.pdf");
+    // pass_manager.register_pass<pass::VisualizeTree>("before_recurrent_reshapes.png");
     pass_manager.register_pass<pass::RecurrentReshapeElimination>();
-    // pass_manager.register_pass<pass::VisualizeTree>("after_recurrent_reshapes.pdf");
+    // pass_manager.register_pass<pass::VisualizeTree>("after_recurrent_reshapes.png");
     pass_manager.run_passes(optimized_f);
 
     test::Uniform<float> rng(0.0f, 100.0f);
@@ -188,11 +188,11 @@ TEST(reshape_elimination, recurrent_reshapes_elimination)
     auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
 
     pass::Manager pass_manager;
-    // pass_manager.register_pass<pass::VisualizeTree>("before_recurrent_reshapes_elimination.pdf");
+    // pass_manager.register_pass<pass::VisualizeTree>("before_recurrent_reshapes_elimination.png");
     pass_manager.register_pass<pass::RecurrentReshapeElimination>();
-    // pass_manager.register_pass<pass::VisualizeTree>("after_1_recurrent_reshapes_elimination.pdf");
+    // pass_manager.register_pass<pass::VisualizeTree>("after_1_recurrent_reshapes_elimination.png");
     pass_manager.register_pass<pass::ReshapeElimination>();
-    // pass_manager.register_pass<pass::VisualizeTree>("after_2_recurrent_reshapes_elimination.pdf");
+    // pass_manager.register_pass<pass::VisualizeTree>("after_2_recurrent_reshapes_elimination.png");
     pass_manager.run_passes(optimized_f);
 
     test::Uniform<float> rng(0.0f, 100.0f);
@@ -229,9 +229,9 @@ TEST(reshape_elimination, recurrent_reshapes_fan_out)
     auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
 
     pass::Manager pass_manager;
-    // pass_manager.register_pass<pass::VisualizeTree>("before_recurrent_reshapes_fan_out.pdf");
+    // pass_manager.register_pass<pass::VisualizeTree>("before_recurrent_reshapes_fan_out.png");
     pass_manager.register_pass<pass::RecurrentReshapeElimination>();
-    // pass_manager.register_pass<pass::VisualizeTree>("after_recurrent_reshapes_fan_out.pdf");
+    // pass_manager.register_pass<pass::VisualizeTree>("after_recurrent_reshapes_fan_out.png");
     pass_manager.run_passes(optimized_f);
 
     test::Uniform<float> rng(0.0f, 100.0f);
@@ -269,9 +269,9 @@ TEST(reshape_elimination, recurrent_reshapes_fan_out_at_end)
     auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
 
     pass::Manager pass_manager;
-    // pass_manager.register_pass<pass::VisualizeTree>("before_recurrent_reshapes_fan_out_at_end.pdf");
+    // pass_manager.register_pass<pass::VisualizeTree>("before_recurrent_reshapes_fan_out_at_end.png");
     pass_manager.register_pass<pass::RecurrentReshapeElimination>();
-    // pass_manager.register_pass<pass::VisualizeTree>("after_recurrent_reshapes_fan_out_at_end.pdf");
+    // pass_manager.register_pass<pass::VisualizeTree>("after_recurrent_reshapes_fan_out_at_end.png");
     pass_manager.run_passes(optimized_f);
 
     test::Uniform<float> rng(0.0f, 100.0f);
@@ -318,10 +318,10 @@ TEST(reshape_elimination, recurrent_reshapes_multiple_fusions)
 
     pass::Manager pass_manager;
     // pass_manager.register_pass<pass::VisualizeTree>(
-    //     "before_recurrent_reshapes_multiple_fusions.pdf");
+    //     "before_recurrent_reshapes_multiple_fusions.png");
     pass_manager.register_pass<pass::RecurrentReshapeElimination>();
     // pass_manager.register_pass<pass::VisualizeTree>(
-    //     "after_recurrent_reshapes_multiple_fusions.pdf");
+    //     "after_recurrent_reshapes_multiple_fusions.png");
     pass_manager.run_passes(optimized_f);
 
     test::Uniform<float> rng(0.0f, 100.0f);
@@ -360,9 +360,9 @@ TEST(reshape_elimination, nonrecurrent_reshapes)
     auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
 
     pass::Manager pass_manager;
-    // pass_manager.register_pass<pass::VisualizeTree>("before_nonrecurrent_reshapes.pdf");
+    // pass_manager.register_pass<pass::VisualizeTree>("before_nonrecurrent_reshapes.png");
     pass_manager.register_pass<pass::RecurrentReshapeElimination>();
-    // pass_manager.register_pass<pass::VisualizeTree>("after_nonrecurrent_reshapes.pdf");
+    // pass_manager.register_pass<pass::VisualizeTree>("after_nonrecurrent_reshapes.png");
     pass_manager.run_passes(optimized_f);
 
     test::Uniform<float> rng(0.0f, 100.0f);
@@ -412,10 +412,10 @@ TEST(reshape_elimination, recurrent_reshapes_multiple_branches)
 
     pass::Manager pass_manager;
     // pass_manager.register_pass<pass::VisualizeTree>(
-    //     "before_recurrent_reshapes_multiple_branches.pdf");
+    //     "before_recurrent_reshapes_multiple_branches.png");
     pass_manager.register_pass<pass::RecurrentReshapeElimination>();
     // pass_manager.register_pass<pass::VisualizeTree>(
-    //     "after_recurrent_reshapes_multiple_branches.pdf");
+    //     "after_recurrent_reshapes_multiple_branches.png");
     pass_manager.run_passes(optimized_f);
 
     test::Uniform<float> rng(0.0f, 100.0f);
