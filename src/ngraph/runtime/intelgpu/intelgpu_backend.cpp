@@ -62,6 +62,7 @@
 
 #include "ngraph/file_util.hpp"
 #include "ngraph/function.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/all.hpp"
 #include "ngraph/op/any.hpp"
