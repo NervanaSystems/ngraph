@@ -16,6 +16,10 @@
 
 #pragma once
 
+#include <vector>
+
+#include "ngraph/except.hpp"
+
 namespace ngraph
 {
     namespace op
