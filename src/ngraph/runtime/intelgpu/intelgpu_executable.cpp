@@ -75,16 +75,14 @@ runtime::intelgpu::IntelGPUExecutable::IntelGPUExecutable(shared_ptr<Function> f
                                                           double compilation_time,
                                                           double consumed_memory,
                                                           size_t profile_lines_limit_count)
+    : runtime::Executable(func)
 {
-    m_function = func;
     m_cldnn_network = network;
     m_performance_counters_enabled = enable_timing;
     m_profile_enable = enable_profile;
     m_compilation_time = compilation_time;
     m_consumed_memory = consumed_memory;
     m_profile_lines_limit_count = profile_lines_limit_count;
-
-    set_parameters_and_results(*func);
 }
 
 bool runtime::intelgpu::IntelGPUExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
