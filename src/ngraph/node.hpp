@@ -495,8 +495,8 @@ namespace ngraph
         }
 
         /// \brief Constructs an Output referencing a null node.
-        // TODO: Get rid of this.
-        Output(nullptr_t)
+        // TODO(amprocte): Deprecate/remove this?
+        Output(std::nullptr_t)
             : Output(nullptr, 0)
         {
         }
