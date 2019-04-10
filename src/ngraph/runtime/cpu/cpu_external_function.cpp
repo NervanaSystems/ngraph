@@ -65,6 +65,7 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/equal.hpp"
+#include "ngraph/op/erf.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
@@ -72,6 +73,8 @@
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
+#include "ngraph/op/experimental/quantized_dot.hpp"
+#include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -122,6 +125,7 @@
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/cse.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
+#include "ngraph/pass/fused_op_decomposition.hpp"
 #include "ngraph/pass/get_output_element_elimination.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/liveness.hpp"
@@ -178,6 +182,7 @@
 
 #ifdef NGRAPH_DISTRIBUTED_ENABLE
 #include "ngraph/op/allreduce.hpp"
+#include "ngraph/op/broadcast_distributed.hpp"
 #endif
 
 using namespace std;
@@ -288,6 +293,8 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Add), &runtime::cpu::CPU_Emitter::emit<op::Add>},
 #ifdef NGRAPH_DISTRIBUTED_ENABLE
     {TI(ngraph::op::AllReduce), &runtime::cpu::CPU_Emitter::emit<op::AllReduce>},
+    {TI(ngraph::op::BroadcastDistributed),
+     &runtime::cpu::CPU_Emitter::emit<op::BroadcastDistributed>},
 #endif
     {TI(ngraph::op::MatmulBias), &runtime::cpu::CPU_Emitter::emit<op::MatmulBias>},
     {TI(ngraph::op::Dot), &runtime::cpu::CPU_Emitter::emit<op::Dot>},
@@ -300,6 +307,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Concat), &runtime::cpu::CPU_Emitter::emit<op::Concat>},
     {TI(ngraph::op::Divide), &runtime::cpu::CPU_Emitter::emit<op::Divide>},
     {TI(ngraph::op::Equal), &runtime::cpu::CPU_Emitter::emit<op::Equal>},
+    {TI(ngraph::op::Erf), &runtime::cpu::CPU_Emitter::emit<op::Erf>},
     {TI(ngraph::op::GetOutputElement), &runtime::cpu::CPU_Emitter::emit<op::GetOutputElement>},
     {TI(ngraph::op::Greater), &runtime::cpu::CPU_Emitter::emit<op::Greater>},
     {TI(ngraph::op::GreaterEq), &runtime::cpu::CPU_Emitter::emit<op::GreaterEq>},
@@ -353,6 +361,8 @@ static const runtime::cpu::OpMap dispatcher{
      &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolutionBiasAdd>},
     {TI(ngraph::op::QuantizedConvolutionBiasSignedAdd),
      &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolutionBiasSignedAdd>},
+    {TI(ngraph::op::QuantizedDotBias), &runtime::cpu::CPU_Emitter::emit<op::QuantizedDotBias>},
+    {TI(ngraph::op::QuantizedDot), &runtime::cpu::CPU_Emitter::emit<op::QuantizedDot>},
     {TI(ngraph::op::ConvolutionRelu), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionRelu>},
     {TI(ngraph::op::QuantizedConvolution),
      &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolution>},
@@ -890,6 +900,7 @@ using namespace ngraph::runtime;
 
                 // Always enable nodes computing output tensors or nodes whose outputs might get
                 // overwritten due to inplace kernels
+                // TODO (jbobba) - Do we need to handle cacheability
                 if (computes_result(node.get()) || possibly_overwritten(node.get()))
                 {
                     writer << " || 1";
@@ -1107,6 +1118,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     auto pass_map = pass_config.get_enables();
 
     REGISTER_KNOBBED_PASS(LikeReplacement, true, ngraph::pass);
+    REGISTER_KNOBBED_PASS(FusedOpDecomposition, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(NopElimination, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(ZeroDimTensorElimination, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(LSTMFusion, true, runtime::cpu::pass);
@@ -1130,7 +1142,8 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     NodeVector nv_cwi; // We dont need CPUWorkspaceInsertion to return list of indices
     REGISTER_KNOBBED_PASS_WITH_ARGS(CPUWorkspaceInsertion, true, runtime::cpu::pass, nv_cwi, false);
     REGISTER_KNOBBED_PASS_WITH_ARGS(CPUAssignment, true, runtime::cpu::pass, this);
-    REGISTER_KNOBBED_PASS(ConstantFolding, false, ngraph::pass);
+    REGISTER_KNOBBED_PASS_WITH_ARGS(
+        ConstantFolding, true, ngraph::pass, GetGlobalCFDispatcherCPU());
     REGISTER_KNOBBED_PASS_WITH_ARGS(CPULayout, true, runtime::cpu::pass, this);
     REGISTER_KNOBBED_PASS_WITH_ARGS(
         CommonSubexpressionElimination, true, ngraph::pass, runtime::cpu::get_cse_handlers_map());
@@ -1265,7 +1278,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             auto output_tensor = &param->get_outputs().at(i).get_tensor();
             auto tensor_set = get_tensor_set(output_tensor);
 
-            auto stale = tensor_stale[output_tensor->get_name()];
+            auto& stale = tensor_stale[output_tensor->get_name()];
             // process all tensors in the set containing the output tensor of the parameter
             for (auto& ele_t : tensor_set)
             {
@@ -1330,6 +1343,8 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         handler->second(this, node.get(), in, out);
 
         auto cacheable = true;
+        auto reuse_memory = pass_config.get_pass_attribute("CPUMemoryAssignment::ReuseMemory") ||
+                            pass_config.get_pass_attribute("ReuseMemory");
         if (node->is_op())
         {
             auto op = std::static_pointer_cast<ngraph::op::Op>(node);
@@ -1338,7 +1353,9 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         }
 
         bool disable_caching =
-            !cacheable || computes_result(node.get()) || possibly_overwritten(node.get());
+            (reuse_memory &&
+             !cacheable) // Check cacheability only if we are reusing intermediate tensors
+            || computes_result(node.get()) || possibly_overwritten(node.get());
 
         vector<reference_wrapper<bool>> in_stale, out_stale;
         for (const auto& name : in_names)
@@ -1354,7 +1371,14 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         }
         for (const auto& name : out_names)
         {
-            out_stale.emplace_back(tensor_stale[name]);
+            if (tensor_alias.count(name))
+            {
+                out_stale.emplace_back(tensor_stale[tensor_alias[name]]);
+            }
+            else
+            {
+                out_stale.emplace_back(tensor_stale[name]);
+            }
         }
 
         function<bool(CPURuntimeContext*)> enable;

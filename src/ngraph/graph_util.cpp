@@ -65,17 +65,16 @@ void ngraph::traverse_nodes(const Function* p,
     traverse_nodes(nodes, f, include_control_deps);
 }
 
-// This version of traverses directly from input/output nodes to perform functions on
-// graphs that are not wrapped by functions. Most useful for finding parameters of a graph
-// directly from the result nodes, not from function parameters.
-void ngraph::traverse_nodes(const NodeVector& io_nodes,
+void ngraph::traverse_nodes(const NodeVector& subgraph_results,
                             std::function<void(std::shared_ptr<Node>)> f,
-                            bool include_control_deps)
+                            bool include_control_deps,
+                            const NodeVector& subgraph_params)
 {
-    std::unordered_set<std::shared_ptr<Node>> instances_seen;
+    std::unordered_set<std::shared_ptr<Node>> instances_seen{subgraph_params.begin(),
+                                                             subgraph_params.end()};
     std::deque<std::shared_ptr<Node>> stack;
 
-    for (auto r : io_nodes)
+    for (auto r : subgraph_results)
     {
         stack.push_front(r);
     }
@@ -165,6 +164,7 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
             input->replace_output(replacement->get_outputs().at(i));
         }
     }
+    replacement->merge_provenance_tags_from(target);
 }
 
 // Check if all paths from X to a result go through Y
@@ -185,7 +185,7 @@ bool ngraph::is_post_dominated(Node* X, Node* Y)
         stack.pop_front();
         if (curr != Y)
         {
-            for (auto next : curr->get_users())
+            for (const auto& next : curr->get_users())
             {
                 if (visited.count(next.get()) == 0)
                 {
@@ -458,7 +458,7 @@ NodeVector ngraph::get_subgraph_outputs(const NodeVector& nodes,
             continue;
         }
 
-        for (auto u : n->get_users())
+        for (const auto& u : n->get_users())
         {
             if (nodes_set.count(u) == 0 && (!ignore_unused || is_used(u.get())))
             {
@@ -467,6 +467,13 @@ NodeVector ngraph::get_subgraph_outputs(const NodeVector& nodes,
         }
     }
     return outputs;
+}
+
+NodeVector ngraph::extract_subgraph(const NodeVector& results, const NodeVector& args)
+{
+    NodeVector subgraph;
+    traverse_nodes(results, [&](std::shared_ptr<Node> n) { subgraph.push_back(n); }, true, args);
+    return subgraph;
 }
 
 bool ngraph::is_used(Node* node)
@@ -487,7 +494,7 @@ bool ngraph::is_used(Node* node)
             instances_seen.insert(n);
         }
         stack.pop_front();
-        for (auto arg : n->get_users())
+        for (const auto& arg : n->get_users())
         {
             if (instances_seen.count(arg.get()) == 0)
             {
@@ -501,7 +508,7 @@ bool ngraph::is_used(Node* node)
 size_t ngraph::get_user_count(Node* node)
 {
     size_t count = 0;
-    for (auto node_user : node->get_users())
+    for (const auto& node_user : node->get_users())
     {
         count += is_used(node_user.get());
     }

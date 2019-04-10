@@ -16,11 +16,10 @@ MXNet\*, where `Intel has contributed efforts showing`_ how to work with our
 nGraph Compiler stack as an `experimental backend`_. Our approach provides 
 **more opportunities** to start working with different kinds of graph 
 optimizations **than would be available to the MXNet framework alone**, for 
-reasons outlined in our `introduction`_ documentation.
+reasons outlined in our `introduction`_ documentation.  Note that the 
+MXNet bridge requires trained models only; it does not support distributed 
+training.  
 
-.. TODO : Link to latest on mxnet when/if they do this instead of linking to PR;
-   keep in mind this tutorial will still work  regardless of the merge status of 
-   the experimental backend if you already use the ngraph-mxnet Github repo 
 
 
 .. figure:: ../../graphics/ngraph-mxnet-models.png
@@ -98,7 +97,7 @@ To load the model into nGraph, we simply bind the symbol into an Executor.
 
 At binding, the MXNet Subgraph API finds nGraph, determines how to partition 
 the graph, and in the case of Resnet, sends the entire graph to nGraph for 
-compilation. This produces a single call to an NNVM ``NGraphSubgraphOp`` embedded 
+compilation. This produces a single call to an `NNVM`_ ``NGraphSubgraphOp`` embedded 
 with the compiled model. At this point, we can test the model's performance.
 
 .. literalinclude:: ../../../../examples/subgraph_snippets/mxnet-gluon-example.py
@@ -111,4 +110,5 @@ with the compiled model. At this point, we can test the model's performance.
 .. _introduction: http://ngraph.nervanasys.com/docs/latest/project/introduction.html
 .. _gluon model zoo: https://github.com/apache/incubator-mxnet/blob/master/python/mxnet/gluon/model_zoo/vision/resnet.py#L499
 .. _subgraph acceleration API: https://cwiki.apache.org/confluence/display/MXNET/Unified+integration+with+external+backend+libraries
+.. _NNVM: https://github.com/dmlc/nnvm
 .. _nGraph-MXNet: https://github.com/NervanaSystems/ngraph-mxnet/blob/master/README.md

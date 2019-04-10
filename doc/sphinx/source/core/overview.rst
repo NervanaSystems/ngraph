@@ -62,8 +62,8 @@ descriptions:
    :escape: ~
 
    ``ngraph``, The Intel nGraph C++ API, `ngraph`_, Implicit namespace omitted from most API documentation
-   ``builder``, "Convenience functions that create additional graph nodes to implement commonly-used recipes; for example, auto-broadcast", `builder`_, " "
-   ``descriptor``, Descriptors are compile-time representations of objects that will appear at run-time, `descriptor`_, " "
+   ``builder``, "Convenience functions that create additional graph nodes to implement commonly-used recipes; for example, auto-broadcast", `builder`_, Coming Soon
+   ``descriptor``, Descriptors are compile-time representations of objects that will appear at run-time, `descriptor`_, Coming Soon
    ``op``, Ops used in graph construction, `op`_, :doc:`../ops/index`
    ``runtime``, The objects and methods used for executing the graph, `runtime`_, :doc:`../backend-support/cpp-api`
 
