@@ -43,6 +43,10 @@ public:
             construct_reshape_broadcast();
             construct_reshape_softmax_reshape();
         }
+        // Patterns under FOP_FUSIONS create ops (FusedOps) that might not
+        // be all supported by certain backends. In such a case, backends
+        // can register a FusedOpDecomposition pass after CoreFusion that will
+        // selectively decompose the unsupported ops back to the Core opset
         if (fusions & ngraph::pass::FOP_FUSIONS)
         {
             construct_conv_bias();
