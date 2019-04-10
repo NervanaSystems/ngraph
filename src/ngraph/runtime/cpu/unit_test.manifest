@@ -7,14 +7,7 @@ shape_of_5d
 sum_stable_acc_double
 
 # failing in CI build but passing on local machine
-#max_3d_to_scalar_int32
-
-#argmin_trivial_in_i32
-#argmax_4D_axis_3_i64_in_i32
-
-# Even after AnyAllReplacement, these trigger an "Unsupported Reduce" error.
-#any_2x2x3_eliminate_dims_0_1_2
-#all_2x2x3_eliminate_dims_0_1_2
+max_3d_to_scalar_int32
 
 # Not implemented
 erf
