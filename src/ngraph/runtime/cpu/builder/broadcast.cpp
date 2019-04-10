@@ -193,10 +193,8 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                auto& arg_tensor_index =
-                    external_function->get_tensor_data_index(args[0].get_name());
-                auto& out_tensor_index =
-                    external_function->get_tensor_data_index(out[0].get_name());
+                auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                 std::function<decltype(runtime::cpu::kernel::broadcast<float, 2>)> kernel;
                 Shape expanded_input_shape, out_shape;
@@ -206,10 +204,15 @@ namespace ngraph
                 CPUKernelFunctor functor;
                 if (kernel)
                 {
-                    functor = [&, kernel, expanded_input_shape, out_shape](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        kernel(ctx->buffer_data[arg_tensor_index],
-                               ctx->buffer_data[out_tensor_index],
+                    functor = [&,
+                               kernel,
+                               expanded_input_shape,
+                               out_shape,
+                               arg_buffer_index,
+                               out_buffer_index](CPURuntimeContext* ctx,
+                                                 CPUExecutionContext* ectx) {
+                        kernel(ctx->buffer_data[arg_buffer_index],
+                               ctx->buffer_data[out_buffer_index],
                                expanded_input_shape,
                                out_shape,
                                ectx->arena);
@@ -218,9 +221,10 @@ namespace ngraph
                 }
                 else
                 {
-                    functor = [&, size](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        memcpy(ctx->buffer_data[out_tensor_index],
-                               ctx->buffer_data[arg_tensor_index],
+                    functor = [&, size, arg_buffer_index, out_buffer_index](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        memcpy(ctx->buffer_data[out_buffer_index],
+                               ctx->buffer_data[arg_buffer_index],
                                size);
                     };
                     functors.emplace_back(functor);

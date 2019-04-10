@@ -35,19 +35,18 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& functors = external_function->get_functors();
-                    vector<size_t> arg_tensor_indexs;
+                    vector<size_t> arg_buffer_indices;
                     for (auto& arg : args)
                     {
                         if (shape_size(arg.get_shape()))
                         {
-                            arg_tensor_indexs.emplace_back(
-                                external_function->get_tensor_data_index(arg.get_name()));
+                            arg_buffer_indices.emplace_back(
+                                external_function->get_buffer_index(arg.get_name()));
                         }
                     }
                     auto nargs = args.size();
 
-                    auto& out_tensor_index =
-                        external_function->get_tensor_data_index(out[0].get_name());
+                    auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto concat_pd =
@@ -62,26 +61,31 @@ namespace ngraph
                     auto concat_index = mkldnn_emitter->reserve_primitive_space(nargs + 2);
                     auto& deps = mkldnn_emitter->get_primitive_deps(concat_index);
 
-                    auto functor =
-                        [&, concat_pd, inputs_data_desc, arg_tensor_indexs, nargs, concat_index](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                            if (ctx->first_iteration)
-                            {
-                                mkldnn_emitter->build_concat(ctx->mkldnn_primitives,
-                                                             concat_pd,
-                                                             inputs_data_desc,
-                                                             deps,
-                                                             concat_index);
-                            }
-                            for (size_t i = 0; i < nargs; i++)
-                            {
-                                cpu::mkldnn_utils::set_memory_ptr(
-                                    ctx, deps[i], ctx->buffer_data[arg_tensor_indexs[i]]);
-                            }
+                    auto functor = [&,
+                                    concat_pd,
+                                    inputs_data_desc,
+                                    arg_buffer_indices,
+                                    nargs,
+                                    concat_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* ectx) {
+                        if (ctx->first_iteration)
+                        {
+                            mkldnn_emitter->build_concat(ctx->mkldnn_primitives,
+                                                         concat_pd,
+                                                         inputs_data_desc,
+                                                         deps,
+                                                         concat_index);
+                        }
+                        for (size_t i = 0; i < nargs; i++)
+                        {
                             cpu::mkldnn_utils::set_memory_ptr(
-                                ctx, deps[nargs], ctx->buffer_data[out_tensor_index]);
-                            cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, concat_index);
-                        };
+                                ctx, deps[i], ctx->buffer_data[arg_buffer_indices[i]]);
+                        }
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[nargs], ctx->buffer_data[out_buffer_index]);
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, concat_index);
+                    };
 
                     functors.emplace_back(functor);
                 }

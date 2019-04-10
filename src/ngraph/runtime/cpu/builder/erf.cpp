@@ -32,10 +32,8 @@ namespace ngraph
             {
                 auto element_type = args[0].get_element_type();
                 auto element_count = out[0].get_size();
-                auto& arg0_tensor_index =
-                    external_function->get_tensor_data_index(args[0].get_name());
-                auto& out0_tensor_index =
-                    external_function->get_tensor_data_index(out[0].get_name());
+                auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
                 auto& functors = external_function->get_functors();
 
                 if (element_type == element::f32 || element_type == element::f64)
@@ -49,10 +47,10 @@ namespace ngraph
                     {
                         kernel = runtime::cpu::kernel::erf<double>;
                     }
-                    auto functor = [&, kernel, element_count](CPURuntimeContext* ctx,
-                                                              CPUExecutionContext* ectx) {
-                        kernel(ctx->buffer_data[arg0_tensor_index],
-                               ctx->buffer_data[out0_tensor_index],
+                    auto functor = [&, kernel, element_count, arg0_buffer_index, out0_buffer_index](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        kernel(ctx->buffer_data[arg0_buffer_index],
+                               ctx->buffer_data[out0_buffer_index],
                                element_count,
                                ectx->arena);
                     };
@@ -63,10 +61,10 @@ namespace ngraph
                     std::function<decltype(runtime::cpu::kernel::reference_erf<float>)> kernel;
                     SELECT_KERNEL(
                         kernel, args[0].get_element_type(), runtime::cpu::kernel::reference_erf);
-                    auto functor = [&, kernel, element_count](CPURuntimeContext* ctx,
-                                                              CPUExecutionContext* ectx) {
-                        kernel(ctx->buffer_data[arg0_tensor_index],
-                               ctx->buffer_data[out0_tensor_index],
+                    auto functor = [&, kernel, element_count, arg0_buffer_index, out0_buffer_index](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        kernel(ctx->buffer_data[arg0_buffer_index],
+                               ctx->buffer_data[out0_buffer_index],
                                element_count);
                     };
 

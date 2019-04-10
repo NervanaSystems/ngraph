@@ -1232,6 +1232,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
     }
 
     // Build executor
+    size_t buffer_index = 0;
     // Temporaries
     if (m_function->get_temporary_pool_size())
     {
@@ -1242,11 +1243,11 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             {
                 for (auto& ele_t : ele.second.second)
                 {
-                    tensor_data[ele_t->get_name()] = buffer_data_size;
-                    intermediates_offsets.emplace_back(tensor_data[ele_t->get_name()],
+                    m_buffer_indices[ele_t->get_name()] = buffer_index;
+                    intermediates_offsets.emplace_back(m_buffer_indices[ele_t->get_name()],
                                                        ele_t->get_pool_offset());
                     m_tensor_roles[ele_t->get_name()] = CPUTensorRole::INTERMEDIATE;
-                    buffer_data_size++;
+                    buffer_index++;
                 }
             }
         }
@@ -1258,9 +1259,9 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         if (node->is_constant())
         {
             auto output_tensor = &node->get_output_tensor();
-            tensor_data[output_tensor->get_name()] = buffer_data_size;
+            m_buffer_indices[output_tensor->get_name()] = buffer_index;
             constant_tensor_data.emplace_back(
-                buffer_data_size,
+                buffer_index,
                 const_cast<void*>(static_pointer_cast<ngraph::op::Constant>(node)->get_data_ptr()));
             auto tensor_set = get_tensor_set(output_tensor);
             // process all tensors in the set containing the output tensor of the constant
@@ -1273,7 +1274,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
                     tensor_alias[ele_t->get_name()] = output_tensor->get_name();
                 }
             }
-            buffer_data_size++;
+            buffer_index++;
         }
     }
 
@@ -1291,10 +1292,12 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             for (auto& ele_t : tensor_set)
             {
                 m_tensor_roles[ele_t->get_name()] = CPUTensorRole::INPUT;
-                tensor_data[ele_t->get_name()] = buffer_data_size;
-                function_input_index_offset.emplace_back(
-                    tensor_data[ele_t->get_name()], arg_index, ele_t->get_pool_offset(), stale);
-                buffer_data_size++;
+                m_buffer_indices[ele_t->get_name()] = buffer_index;
+                function_input_index_offset.emplace_back(m_buffer_indices[ele_t->get_name()],
+                                                         arg_index,
+                                                         ele_t->get_pool_offset(),
+                                                         stale);
+                buffer_index++;
             }
         }
         arg_index++;
@@ -1311,12 +1314,15 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         for (auto& ele_t : tensor_set)
         {
             m_tensor_roles[ele_t->get_name()] = CPUTensorRole::OUTPUT;
-            tensor_data[ele_t->get_name()] = buffer_data_size;
+            m_buffer_indices[ele_t->get_name()] = buffer_index;
             function_output_index_offset.emplace_back(
-                tensor_data[ele_t->get_name()], i, ele_t->get_pool_offset());
-            buffer_data_size++;
+                m_buffer_indices[ele_t->get_name()], i, ele_t->get_pool_offset());
+            buffer_index++;
         }
     }
+
+    // After processing inputs, outputs, constants, and intermediates, set the buffer size.
+    m_buffer_size = buffer_index;
 
     for (shared_ptr<Node> node : m_function->get_ordered_ops())
     {
@@ -1364,12 +1370,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             cacheable = op_annotations->is_cacheable();
         }
 
-        // When there are multiple threads making call, do not do caching.
-        const auto envConcurrency = std::getenv("NGRAPH_CONCURRENCY");
-        auto concurrency = envConcurrency == nullptr ? 1 : std::atoi(envConcurrency);
-
         bool disable_caching =
-            (concurrency > 1) ||
             (reuse_memory &&
              !cacheable) // Check cacheability only if we are reusing intermediate tensors
             || computes_result(node.get()) || possibly_overwritten(node.get());
@@ -1474,7 +1475,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             {
                 const descriptor::Output& output = input.get_output();
                 shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-                temp << &tensor_data[tv->get_name()];
+                temp << &m_buffer_indices[tv->get_name()];
                 node_inputs.push_back(tv->get_name() + "(" + temp.str() + ")");
                 temp.str("");
             }
@@ -1482,7 +1483,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             for (const descriptor::Output& output : node->get_outputs())
             {
                 shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-                temp << &tensor_data[tv->get_name()];
+                temp << &m_buffer_indices[tv->get_name()];
                 node_outputs.push_back(tv->get_name() + "(" + temp.str() + ")");
                 temp.str("");
             }
@@ -1651,13 +1652,13 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
                         for (auto& is : this->m_op_attrs.at(i).Inputs)
                         {
                             ss << "\t" << is << " = "
-                               << ctx->buffer_data[this->get_tensor_data_index(is)] << std::endl;
+                               << ctx->buffer_data[this->get_buffer_index(is)] << std::endl;
                         }
                         ss << "and outputs :\n";
                         for (auto& os : this->m_op_attrs.at(i).Outputs)
                         {
                             ss << "\t" << os << " = "
-                               << ctx->buffer_data[this->get_tensor_data_index(os)] << std::endl;
+                               << ctx->buffer_data[this->get_buffer_index(os)] << std::endl;
                         }
                     }
                     write_to_file(ss.str(), s_debug_dir, filename);
@@ -1732,15 +1733,17 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
     }
 }
 
-size_t& runtime::cpu::CPU_ExternalFunction::get_tensor_data_index(const std::string& name)
+size_t runtime::cpu::CPU_ExternalFunction::get_buffer_index(const std::string& name)
 {
     if (tensor_alias.count(name))
     {
-        return tensor_data[tensor_alias[name]];
+        NGRAPH_ASSERT(m_buffer_indices.count(tensor_alias[name]));
+        return m_buffer_indices[tensor_alias[name]];
     }
     else
     {
-        return tensor_data[name];
+        NGRAPH_ASSERT(m_buffer_indices.count(name));
+        return m_buffer_indices[name];
     }
 }
 

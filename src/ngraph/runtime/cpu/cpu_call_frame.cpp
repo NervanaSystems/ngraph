@@ -73,7 +73,15 @@ void runtime::cpu::CPU_CallFrame::inner_call(
     {
         shared_ptr<runtime::cpu::CPUTensorView> tv =
             static_pointer_cast<runtime::cpu::CPUTensorView>(input_tvs[i]);
-        ctx_vec[index]->p_en[i] = tv->get_stale();
+        if (m_concurrency == 1)
+        {
+            m_ctx_vec[index]->p_en[i] = tv->get_stale();
+        }
+        else
+        {
+            m_ctx_vec[index]->p_en[i] = true;
+        }
+
         inputs.push_back(tv->get_data_ptr());
     }
     for (size_t i = 0; i < output_tvs.size(); i++)
@@ -86,22 +94,22 @@ void runtime::cpu::CPU_CallFrame::inner_call(
     // Invoke compiled computation
     if (!m_external_function->is_direct_execution())
     {
-        m_compiled_function(inputs.data(), outputs.data(), ctx_vec[index], cg_ctx);
+        m_compiled_function(inputs.data(), outputs.data(), m_ctx_vec[index], cg_ctx);
     }
     else
     {
-        m_external_function->get_executor()(ctx_vec[index], inputs, outputs);
+        m_external_function->get_executor()(m_ctx_vec[index], inputs, outputs);
     }
 
     if (runtime::cpu::IsTracingEnabled())
     {
         GenerateTimeline(m_external_function->get_op_attrs(),
-                         ctx_vec[index]->op_durations,
+                         m_ctx_vec[index]->op_durations,
                          m_external_function->get_function_name() + ".timeline.json");
     }
     std::unique_lock<std::mutex> lck(m_mutex);
-    index_pool[index] = true;
-    num_ctx_available++;
+    m_id_pool[index] = true;
+    m_num_ctx_available++;
     m_cv.notify_all();
 }
 
@@ -110,7 +118,7 @@ void runtime::cpu::CPU_CallFrame::call(
     const std::vector<std::shared_ptr<runtime::Tensor>>& input_tvs)
 {
     std::unique_lock<std::mutex> lck(m_mutex);
-    while (num_ctx_available == 0)
+    while (m_num_ctx_available == 0)
     {
         m_cv.wait(lck);
     }
@@ -118,18 +126,18 @@ void runtime::cpu::CPU_CallFrame::call(
     auto index = 0;
     for (auto i = 0; i < m_concurrency; i++)
     {
-        if (index_pool[i])
+        if (m_id_pool[i])
         {
             index = i;
             break;
         }
     }
     NGRAPH_ASSERT(index != m_concurrency);
-    index_pool[index] = false;
-    num_ctx_available--;
+    m_id_pool[index] = false;
+    m_num_ctx_available--;
     m_mutex.unlock();
 
-    ctx_vec[index]->pc = 0;
+    m_ctx_vec[index]->pc = 0;
     propagate_layouts(output_tvs, m_external_function->get_result_layout_descriptors());
     inner_call(output_tvs, input_tvs, index);
 }
@@ -158,9 +166,9 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
 {
     for (auto i = 0; i < m_concurrency; i++)
     {
-        index_pool[i] = true;
+        m_id_pool[i] = true;
         auto ctx = new CPURuntimeContext;
-        ctx_vec.push_back(ctx);
+        m_ctx_vec.push_back(ctx);
 
         ctx->pc = 0;
         ctx->op_durations = nullptr;
@@ -172,7 +180,7 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
 
         ctx->first_iteration = true;
 
-        ctx->buffer_data = std::vector<void*>(m_external_function->get_buffer_data_size());
+        ctx->buffer_data = std::vector<void*>(m_external_function->get_buffer_size());
 
         // Create temporary buffer pools
         size_t alignment = runtime::cpu::CPU_ExternalFunction::s_memory_pool_alignment;
@@ -218,15 +226,15 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
         }
 #endif
     }
-    num_ctx_available = m_concurrency;
+    m_num_ctx_available = m_concurrency;
 }
 
 void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
 {
     for (auto i = 0; i < m_concurrency; i++)
     {
-        auto ctx = ctx_vec.back();
-        ctx_vec.pop_back();
+        auto ctx = m_ctx_vec.back();
+        m_ctx_vec.pop_back();
 
         delete[] ctx->op_durations;
         delete[] ctx->p_en;
@@ -260,12 +268,12 @@ void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
         }
 
 #ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
-        if (MLSL::Environment::GetEnv().IsInitialized() && ctx_vec[i]->mlsl_dist != nullptr)
+        if (MLSL::Environment::GetEnv().IsInitialized() && m_ctx_vec[i]->mlsl_dist != nullptr)
         {
             ctx->mlsl_env->DeleteDistribution(ctx->mlsl_dist);
         }
 #endif
         delete ctx;
     }
-    num_ctx_available = 0;
+    m_num_ctx_available = 0;
 }

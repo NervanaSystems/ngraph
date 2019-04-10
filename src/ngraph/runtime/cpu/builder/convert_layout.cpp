@@ -35,10 +35,8 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                auto& arg_tensor_index =
-                    external_function->get_tensor_data_index(args[0].get_name());
-                auto& out_tensor_index =
-                    external_function->get_tensor_data_index(out[0].get_name());
+                auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
 
@@ -86,19 +84,23 @@ namespace ngraph
                 // ConvertLayout needs 3 primitives: input, result, and reorder.
                 size_t reorder_index = mkldnn_emitter->reserve_primitive_space(3);
                 auto& deps = mkldnn_emitter->get_primitive_deps(reorder_index);
-                auto functor = [&, input_desc, result_desc, reorder_index](
-                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                    if (ctx->first_iteration)
-                    {
-                        mkldnn_emitter->build_reorder(
-                            ctx->mkldnn_primitives, input_desc, result_desc, deps, reorder_index);
-                    }
-                    cpu::mkldnn_utils::set_memory_ptr(
-                        ctx, deps[0], ctx->buffer_data[arg_tensor_index]);
-                    cpu::mkldnn_utils::set_memory_ptr(
-                        ctx, deps[1], ctx->buffer_data[out_tensor_index]);
-                    cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, reorder_index);
-                };
+                auto functor =
+                    [&, input_desc, result_desc, reorder_index, arg_buffer_index, out_buffer_index](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        if (ctx->first_iteration)
+                        {
+                            mkldnn_emitter->build_reorder(ctx->mkldnn_primitives,
+                                                          input_desc,
+                                                          result_desc,
+                                                          deps,
+                                                          reorder_index);
+                        }
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[0], ctx->buffer_data[arg_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[1], ctx->buffer_data[out_buffer_index]);
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, reorder_index);
+                    };
                 functors.emplace_back(functor);
             }
             REGISTER_CPU_OP_BUILDER(ConvertLayout);

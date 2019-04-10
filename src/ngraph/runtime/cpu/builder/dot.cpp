@@ -42,12 +42,9 @@ namespace ngraph
                 auto arg1_shape = args[1].get_shape();
                 auto result_shape = out[0].get_shape();
 
-                auto& arg0_tensor_index =
-                    external_function->get_tensor_data_index(args[0].get_name());
-                auto& arg1_tensor_index =
-                    external_function->get_tensor_data_index(args[1].get_name());
-                auto& out_tensor_index =
-                    external_function->get_tensor_data_index(out[0].get_name());
+                auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                 auto reduction_axes_count = dot->get_reduction_axes_count();
 
@@ -61,8 +58,9 @@ namespace ngraph
                 if (!shape_size(arg0_shape) || !shape_size(arg1_shape))
                 {
                     auto size = shape_size(result_shape) * out[0].get_element_type().size();
-                    auto functor = [&, size](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        memset(ctx->buffer_data[out_tensor_index], 0, size);
+                    auto functor = [&, size, out_buffer_index](CPURuntimeContext* ctx,
+                                                               CPUExecutionContext* ectx) {
+                        memset(ctx->buffer_data[out_buffer_index], 0, size);
                     };
                     functors.emplace_back(functor);
                     return;
@@ -73,10 +71,9 @@ namespace ngraph
                     auto first = (arg0_shape.empty() ? args[0] : args[1]);
                     auto second = (arg0_shape.empty() ? args[1] : args[0]);
 
-                    auto& first_tensor_index =
-                        external_function->get_tensor_data_index(first.get_name());
-                    auto& second_tensor_index =
-                        external_function->get_tensor_data_index(second.get_name());
+                    auto first_buffer_index = external_function->get_buffer_index(first.get_name());
+                    auto second_buffer_index =
+                        external_function->get_buffer_index(second.get_name());
 
                     std::function<decltype(runtime::cpu::kernel::dot_scalar<float>)> kernel;
 
@@ -85,11 +82,16 @@ namespace ngraph
 
                     auto element_count = shape_size(second.get_shape());
 
-                    auto functor = [&, kernel, element_count](CPURuntimeContext* ctx,
-                                                              CPUExecutionContext* ectx) {
-                        kernel(ctx->buffer_data[first_tensor_index],
-                               ctx->buffer_data[second_tensor_index],
-                               ctx->buffer_data[out_tensor_index],
+                    auto functor = [&,
+                                    kernel,
+                                    element_count,
+                                    first_buffer_index,
+                                    second_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* ectx) {
+                        kernel(ctx->buffer_data[first_buffer_index],
+                               ctx->buffer_data[second_buffer_index],
+                               ctx->buffer_data[out_buffer_index],
                                element_count,
                                ectx->arena);
                     };
@@ -105,11 +107,18 @@ namespace ngraph
                     SELECT_KERNEL(
                         kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_1d_1d_1rd);
 
-                    auto functor = [&, kernel, arg0_shape, arg1_shape, result_shape](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        kernel(ctx->buffer_data[arg0_tensor_index],
-                               ctx->buffer_data[arg1_tensor_index],
-                               ctx->buffer_data[out_tensor_index],
+                    auto functor = [&,
+                                    kernel,
+                                    arg0_shape,
+                                    arg1_shape,
+                                    result_shape,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* ectx) {
+                        kernel(ctx->buffer_data[arg0_buffer_index],
+                               ctx->buffer_data[arg1_buffer_index],
+                               ctx->buffer_data[out_buffer_index],
                                arg0_shape,
                                arg1_shape,
                                result_shape,
@@ -127,11 +136,18 @@ namespace ngraph
                     SELECT_KERNEL(
                         kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_2d_1d_1rd);
 
-                    auto functor = [&, kernel, arg0_shape, arg1_shape, result_shape](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        kernel(ctx->buffer_data[arg0_tensor_index],
-                               ctx->buffer_data[arg1_tensor_index],
-                               ctx->buffer_data[out_tensor_index],
+                    auto functor = [&,
+                                    kernel,
+                                    arg0_shape,
+                                    arg1_shape,
+                                    result_shape,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* ectx) {
+                        kernel(ctx->buffer_data[arg0_buffer_index],
+                               ctx->buffer_data[arg1_buffer_index],
+                               ctx->buffer_data[out_buffer_index],
                                arg0_shape,
                                arg1_shape,
                                result_shape,
@@ -149,11 +165,18 @@ namespace ngraph
                     SELECT_KERNEL(
                         kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_1d_2d_1rd);
 
-                    auto functor = [&, kernel, arg0_shape, arg1_shape, result_shape](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        kernel(ctx->buffer_data[arg0_tensor_index],
-                               ctx->buffer_data[arg1_tensor_index],
-                               ctx->buffer_data[out_tensor_index],
+                    auto functor = [&,
+                                    kernel,
+                                    arg0_shape,
+                                    arg1_shape,
+                                    result_shape,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* ectx) {
+                        kernel(ctx->buffer_data[arg0_buffer_index],
+                               ctx->buffer_data[arg1_buffer_index],
+                               ctx->buffer_data[out_buffer_index],
                                arg0_shape,
                                arg1_shape,
                                result_shape,
@@ -173,25 +196,36 @@ namespace ngraph
                     auto lda = arg0_shape[1];
                     auto ldb = arg1_shape[1];
                     const float beta = 0.0f;
-                    auto functor =
-                        [&, transpose_A, transpose_B, m, n, k, lda, ldb, beta, result_shape](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                            cblas::cblas_sgemm(
-                                cblas::Layout::RowMajor,
-                                transpose_A ? cblas::Transpose::Transpose : cblas::Transpose::None,
-                                transpose_B ? cblas::Transpose::Transpose : cblas::Transpose::None,
-                                m,
-                                n,
-                                k,
-                                1.0f,
-                                static_cast<float*>(ctx->buffer_data[arg0_tensor_index]),
-                                max<size_t>(1UL, lda),
-                                static_cast<float*>(ctx->buffer_data[arg1_tensor_index]),
-                                max<size_t>(1UL, ldb),
-                                beta,
-                                static_cast<float*>(ctx->buffer_data[out_tensor_index]),
-                                max<size_t>(1UL, result_shape[1]));
-                        };
+                    auto functor = [&,
+                                    transpose_A,
+                                    transpose_B,
+                                    m,
+                                    n,
+                                    k,
+                                    lda,
+                                    ldb,
+                                    beta,
+                                    result_shape,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* ectx) {
+                        cblas::cblas_sgemm(
+                            cblas::Layout::RowMajor,
+                            transpose_A ? cblas::Transpose::Transpose : cblas::Transpose::None,
+                            transpose_B ? cblas::Transpose::Transpose : cblas::Transpose::None,
+                            m,
+                            n,
+                            k,
+                            1.0f,
+                            static_cast<float*>(ctx->buffer_data[arg0_buffer_index]),
+                            max<size_t>(1UL, lda),
+                            static_cast<float*>(ctx->buffer_data[arg1_buffer_index]),
+                            max<size_t>(1UL, ldb),
+                            beta,
+                            static_cast<float*>(ctx->buffer_data[out_buffer_index]),
+                            max<size_t>(1UL, result_shape[1]));
+                    };
                     functors.emplace_back(functor);
                     return;
                 }
@@ -200,17 +234,24 @@ namespace ngraph
 
                 SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_ref);
 
-                auto functor =
-                    [&, kernel, arg0_shape, arg1_shape, result_shape, reduction_axes_count](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        kernel(ctx->buffer_data[arg0_tensor_index],
-                               ctx->buffer_data[arg1_tensor_index],
-                               ctx->buffer_data[out_tensor_index],
-                               arg0_shape,
-                               arg1_shape,
-                               result_shape,
-                               reduction_axes_count);
-                    };
+                auto functor = [&,
+                                kernel,
+                                arg0_shape,
+                                arg1_shape,
+                                result_shape,
+                                reduction_axes_count,
+                                arg0_buffer_index,
+                                arg1_buffer_index,
+                                out_buffer_index](CPURuntimeContext* ctx,
+                                                  CPUExecutionContext* ectx) {
+                    kernel(ctx->buffer_data[arg0_buffer_index],
+                           ctx->buffer_data[arg1_buffer_index],
+                           ctx->buffer_data[out_buffer_index],
+                           arg0_shape,
+                           arg1_shape,
+                           result_shape,
+                           reduction_axes_count);
+                };
                 functors.emplace_back(functor);
             }
 

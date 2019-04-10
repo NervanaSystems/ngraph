@@ -40,10 +40,8 @@ namespace ngraph
                 static int call_seq = 0;
 
                 auto& functors = external_function->get_functors();
-                auto& arg_tensor_index =
-                    external_function->get_tensor_data_index(args[0].get_name());
-                auto& out_tensor_index =
-                    external_function->get_tensor_data_index(out[0].get_name());
+                auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
                 auto count = static_cast<int>(out[0].get_size());
 
                 auto external_function_name = external_function->get_function_name();
@@ -68,11 +66,11 @@ namespace ngraph
                     data_type = MLSL::DT_DOUBLE;
                 }
 
-                auto functor = [&, count, data_type](CPURuntimeContext* ctx,
-                                                     CPUExecutionContext* ectx) {
+                auto functor = [&, count, data_type, arg_buffer_index, out_buffer_index](
+                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                     MLSL::CommReq* req =
-                        ctx->mlsl_dist->AllReduce(ctx->buffer_data[arg_tensor_index],
-                                                  ctx->buffer_data[out_tensor_index],
+                        ctx->mlsl_dist->AllReduce(ctx->buffer_data[arg_buffer_index],
+                                                  ctx->buffer_data[out_buffer_index],
                                                   count,
                                                   data_type,
                                                   MLSL::RT_SUM,
@@ -97,16 +95,24 @@ namespace ngraph
                 int id = call_seq;
                 call_seq++;
 
-                auto functor = [&, id, count, data_type, func_name, node_friendly_name, node_name](
-                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                auto functor = [&,
+                                id,
+                                count,
+                                data_type,
+                                func_name,
+                                node_friendly_name,
+                                node_name,
+                                arg_buffer_index,
+                                out_buffer_index](CPURuntimeContext* ctx,
+                                                  CPUExecutionContext* ectx) {
                     NGRAPH_DEBUG_PRINT("AllReduce Execute[%d]: Function: %s  Node: %s %s Size: %d",
                                        id,
                                        func_name.c_str(),
                                        node_name.c_str(),
                                        node_friendly_name.c_str(),
                                        count);
-                    MPI_Allreduce(ctx->buffer_data[arg_tensor_index],
-                                  ctx->buffer_data[out_tensor_index],
+                    MPI_Allreduce(ctx->buffer_data[arg_buffer_index],
+                                  ctx->buffer_data[out_buffer_index],
                                   count,
                                   data_type,
                                   MPI_SUM,

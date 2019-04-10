@@ -38,8 +38,7 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                auto& arg_tensor_index =
-                    external_function->get_tensor_data_index(args[0].get_name());
+                auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
                 auto count = static_cast<int>(args[0].get_size());
 
 #ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
@@ -54,10 +53,10 @@ namespace ngraph
                     data_type = MLSL::DT_DOUBLE;
                 }
 
-                auto functor = [&, count, data_type](CPURuntimeContext* ctx,
-                                                     CPUExecutionContext* ectx) {
+                auto functor = [&, count, data_type, arg_buffer_index](CPURuntimeContext* ctx,
+                                                                       CPUExecutionContext* ectx) {
                     MLSL::CommReq* req = ctx->mlsl_dist->Bcast(
-                        ctx->buffer_data[arg_tensor_index], count, data_type, 0, MLSL::GT_DATA);
+                        ctx->buffer_data[arg_buffer_index], count, data_type, 0, MLSL::GT_DATA);
                     ctx->mlsl_env->Wait(req);
                 };
 #elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
@@ -72,10 +71,10 @@ namespace ngraph
                     data_type = MPI_DOUBLE;
                 }
 
-                auto functor = [&, count, data_type](CPURuntimeContext* ctx,
-                                                     CPUExecutionContext* ectx) {
+                auto functor = [&, count, data_type, arg_buffer_index](CPURuntimeContext* ctx,
+                                                                       CPUExecutionContext* ectx) {
                     MPI_Bcast(
-                        ctx->buffer_data[arg_tensor_index], count, data_type, 0, MPI_COMM_WORLD);
+                        ctx->buffer_data[arg_buffer_index], count, data_type, 0, MPI_COMM_WORLD);
                 };
 #else
                 throw ngraph_error("Distributed Library not supported/mentioned");

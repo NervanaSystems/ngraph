@@ -33,12 +33,9 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                auto& arg0_tensor_index =
-                    external_function->get_tensor_data_index(args[0].get_name());
-                auto& arg1_tensor_index =
-                    external_function->get_tensor_data_index(args[1].get_name());
-                auto& out0_tensor_index =
-                    external_function->get_tensor_data_index(out[0].get_name());
+                auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
+                auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                 const ngraph::op::MatmulBias* mm = static_cast<const ngraph::op::MatmulBias*>(node);
 
@@ -69,33 +66,44 @@ namespace ngraph
 
                 const float beta = 0.0f;
 
-                auto mm_functor =
-                    [&, transpose_A, transpose_B, m, n, k, lda, ldb, beta, arg2_shape](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        cblas::cblas_sgemm(
-                            cblas::Layout::RowMajor,
-                            transpose_A ? cblas::Transpose::Transpose : cblas::Transpose::None,
-                            transpose_B ? cblas::Transpose::Transpose : cblas::Transpose::None,
-                            m,
-                            n,
-                            k,
-                            1.0f,
-                            static_cast<float*>(ctx->buffer_data[arg0_tensor_index]),
-                            max<size_t>(1, lda),
-                            static_cast<float*>(ctx->buffer_data[arg1_tensor_index]),
-                            max<size_t>(1, ldb),
-                            beta,
-                            static_cast<float*>(ctx->buffer_data[out0_tensor_index]),
-                            max<size_t>(1, arg2_shape[1]));
-                    };
+                auto mm_functor = [&,
+                                   transpose_A,
+                                   transpose_B,
+                                   m,
+                                   n,
+                                   k,
+                                   lda,
+                                   ldb,
+                                   beta,
+                                   arg2_shape,
+                                   arg0_buffer_index,
+                                   arg1_buffer_index,
+                                   out0_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* ectx) {
+                    cblas::cblas_sgemm(
+                        cblas::Layout::RowMajor,
+                        transpose_A ? cblas::Transpose::Transpose : cblas::Transpose::None,
+                        transpose_B ? cblas::Transpose::Transpose : cblas::Transpose::None,
+                        m,
+                        n,
+                        k,
+                        1.0f,
+                        static_cast<float*>(ctx->buffer_data[arg0_buffer_index]),
+                        max<size_t>(1, lda),
+                        static_cast<float*>(ctx->buffer_data[arg1_buffer_index]),
+                        max<size_t>(1, ldb),
+                        beta,
+                        static_cast<float*>(ctx->buffer_data[out0_buffer_index]),
+                        max<size_t>(1, arg2_shape[1]));
+                };
 
                 CPUKernelFunctor bias_functor = [](CPURuntimeContext* ctx,
                                                    CPUExecutionContext* ectx) {};
 
                 if (args.size() > 2)
                 {
-                    auto& arg2_tensor_index =
-                        external_function->get_tensor_data_index(args[2].get_name());
+                    auto arg2_buffer_index =
+                        external_function->get_buffer_index(args[2].get_name());
 
                     auto axes = mm->get_broadcast_axes();
                     if (axes.size() == 1)
@@ -103,46 +111,48 @@ namespace ngraph
                         if (*(axes.begin()) == 0)
                         {
                             vector<float> ones_row(arg2_shape[0], 1.0f);
-                            bias_functor = [&, ones_row, arg2_shape](CPURuntimeContext* ctx,
-                                                                     CPUExecutionContext* ectx) {
-                                cblas::cblas_sgemm(
-                                    cblas::Layout::RowMajor,
-                                    cblas::Transpose::None,
-                                    cblas::Transpose::None,
-                                    arg2_shape[0],
-                                    arg2_shape[1],
-                                    1,
-                                    1.0f,
-                                    ones_row.data(),
-                                    1UL,
-                                    static_cast<float*>(ctx->buffer_data[arg2_tensor_index]),
-                                    max<size_t>(1, arg2_shape[1]),
-                                    1.0f,
-                                    static_cast<float*>(ctx->buffer_data[out0_tensor_index]),
-                                    max<size_t>(1, arg2_shape[1]));
-                            };
+                            bias_functor =
+                                [&, ones_row, arg2_shape, arg2_buffer_index, out0_buffer_index](
+                                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                                    cblas::cblas_sgemm(
+                                        cblas::Layout::RowMajor,
+                                        cblas::Transpose::None,
+                                        cblas::Transpose::None,
+                                        arg2_shape[0],
+                                        arg2_shape[1],
+                                        1,
+                                        1.0f,
+                                        ones_row.data(),
+                                        1UL,
+                                        static_cast<float*>(ctx->buffer_data[arg2_buffer_index]),
+                                        max<size_t>(1, arg2_shape[1]),
+                                        1.0f,
+                                        static_cast<float*>(ctx->buffer_data[out0_buffer_index]),
+                                        max<size_t>(1, arg2_shape[1]));
+                                };
                         }
                         else
                         {
                             vector<float> ones_col(arg2_shape[1], 1.0f);
-                            bias_functor = [&, ones_col, arg2_shape](CPURuntimeContext* ctx,
-                                                                     CPUExecutionContext* ectx) {
-                                cblas::cblas_sgemm(
-                                    cblas::Layout::RowMajor,
-                                    cblas::Transpose::None,
-                                    cblas::Transpose::None,
-                                    arg2_shape[0],
-                                    arg2_shape[1],
-                                    1,
-                                    1.0f,
-                                    static_cast<float*>(ctx->buffer_data[arg2_tensor_index]),
-                                    1UL,
-                                    ones_col.data(),
-                                    max<size_t>(1, arg2_shape[1]),
-                                    1.0f,
-                                    static_cast<float*>(ctx->buffer_data[out0_tensor_index]),
-                                    max<size_t>(1, arg2_shape[1]));
-                            };
+                            bias_functor =
+                                [&, ones_col, arg2_shape, arg2_buffer_index, out0_buffer_index](
+                                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                                    cblas::cblas_sgemm(
+                                        cblas::Layout::RowMajor,
+                                        cblas::Transpose::None,
+                                        cblas::Transpose::None,
+                                        arg2_shape[0],
+                                        arg2_shape[1],
+                                        1,
+                                        1.0f,
+                                        static_cast<float*>(ctx->buffer_data[arg2_buffer_index]),
+                                        1UL,
+                                        ones_col.data(),
+                                        max<size_t>(1, arg2_shape[1]),
+                                        1.0f,
+                                        static_cast<float*>(ctx->buffer_data[out0_buffer_index]),
+                                        max<size_t>(1, arg2_shape[1]));
+                                };
                         }
                     }
                     else
@@ -154,27 +164,28 @@ namespace ngraph
 
                         vector<float> ones_scalar(arg2_shape[0], 1.0f);
 
-                        bias_functor = [&, ones_scalar, arg2_shape](CPURuntimeContext* ctx,
-                                                                    CPUExecutionContext* ectx) {
-                            vector<float> bias(
-                                arg2_shape[1],
-                                *static_cast<float*>(ctx->buffer_data[arg2_tensor_index]));
-                            cblas::cblas_sgemm(
-                                cblas::Layout::RowMajor,
-                                cblas::Transpose::None,
-                                cblas::Transpose::None,
-                                arg2_shape[0],
-                                arg2_shape[1],
-                                1,
-                                1.0f,
-                                ones_scalar.data(),
-                                1UL,
-                                bias.data(),
-                                max<size_t>(1, arg2_shape[1]),
-                                1.0f,
-                                static_cast<float*>(ctx->buffer_data[out0_tensor_index]),
-                                max<size_t>(1, arg2_shape[1]));
-                        };
+                        bias_functor =
+                            [&, ones_scalar, arg2_shape, arg2_buffer_index, out0_buffer_index](
+                                CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                                vector<float> bias(
+                                    arg2_shape[1],
+                                    *static_cast<float*>(ctx->buffer_data[arg2_buffer_index]));
+                                cblas::cblas_sgemm(
+                                    cblas::Layout::RowMajor,
+                                    cblas::Transpose::None,
+                                    cblas::Transpose::None,
+                                    arg2_shape[0],
+                                    arg2_shape[1],
+                                    1,
+                                    1.0f,
+                                    ones_scalar.data(),
+                                    1UL,
+                                    bias.data(),
+                                    max<size_t>(1, arg2_shape[1]),
+                                    1.0f,
+                                    static_cast<float*>(ctx->buffer_data[out0_buffer_index]),
+                                    max<size_t>(1, arg2_shape[1]));
+                            };
                     }
                 }
 
@@ -335,9 +346,9 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                auto& mat_a_index = external_function->get_tensor_data_index(args[0].get_name());
-                auto& mat_b_index = external_function->get_tensor_data_index(args[1].get_name());
-                auto& mat_c_index = external_function->get_tensor_data_index(out[0].get_name());
+                auto mat_a_index = external_function->get_buffer_index(args[0].get_name());
+                auto mat_b_index = external_function->get_buffer_index(args[1].get_name());
+                auto mat_c_index = external_function->get_buffer_index(out[0].get_name());
 
                 const auto* cg = static_cast<const ngraph::op::BatchDot*>(node);
 

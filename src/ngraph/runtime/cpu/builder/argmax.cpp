@@ -37,10 +37,8 @@ namespace ngraph
                 const ngraph::op::ArgMax* argmax = static_cast<const ngraph::op::ArgMax*>(node);
                 CPUKernelFunctor functor;
 
-                auto& arg_tensor_index =
-                    external_function->get_tensor_data_index(args[0].get_name());
-                auto& out_tensor_index =
-                    external_function->get_tensor_data_index(out[0].get_name());
+                auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
                 if (out[0].get_element_type() != element::i64 &&
                     out[0].get_element_type() != element::i32)
                 {
@@ -62,10 +60,16 @@ namespace ngraph
                         SELECT_RANK2(
                             kernel, float, int64_t, in_shape.size(), runtime::cpu::kernel::argmax);
 
-                        functor = [&, kernel, in_shape, out_shape, axis](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                            kernel(ctx->buffer_data[arg_tensor_index],
-                                   ctx->buffer_data[out_tensor_index],
+                        functor = [&,
+                                   kernel,
+                                   in_shape,
+                                   out_shape,
+                                   axis,
+                                   arg_buffer_index,
+                                   out_buffer_index](CPURuntimeContext* ctx,
+                                                     CPUExecutionContext* ectx) {
+                            kernel(ctx->buffer_data[arg_buffer_index],
+                                   ctx->buffer_data[out_buffer_index],
                                    in_shape,
                                    out_shape,
                                    axis,
@@ -79,10 +83,16 @@ namespace ngraph
                         SELECT_RANK2(
                             kernel, float, int, in_shape.size(), runtime::cpu::kernel::argmax);
 
-                        functor = [&, kernel, in_shape, out_shape, axis](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                            kernel(ctx->buffer_data[arg_tensor_index],
-                                   ctx->buffer_data[out_tensor_index],
+                        functor = [&,
+                                   kernel,
+                                   in_shape,
+                                   out_shape,
+                                   axis,
+                                   arg_buffer_index,
+                                   out_buffer_index](CPURuntimeContext* ctx,
+                                                     CPUExecutionContext* ectx) {
+                            kernel(ctx->buffer_data[arg_buffer_index],
+                                   ctx->buffer_data[out_buffer_index],
                                    in_shape,
                                    out_shape,
                                    axis,
@@ -100,10 +110,16 @@ namespace ngraph
                         SELECT_RANK2(
                             kernel, double, int64_t, in_shape.size(), runtime::cpu::kernel::argmax);
 
-                        functor = [&, kernel, in_shape, out_shape, axis](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                            kernel(ctx->buffer_data[arg_tensor_index],
-                                   ctx->buffer_data[out_tensor_index],
+                        functor = [&,
+                                   kernel,
+                                   in_shape,
+                                   out_shape,
+                                   axis,
+                                   arg_buffer_index,
+                                   out_buffer_index](CPURuntimeContext* ctx,
+                                                     CPUExecutionContext* ectx) {
+                            kernel(ctx->buffer_data[arg_buffer_index],
+                                   ctx->buffer_data[out_buffer_index],
                                    in_shape,
                                    out_shape,
                                    axis,
@@ -118,10 +134,16 @@ namespace ngraph
                         SELECT_RANK2(
                             kernel, double, int, in_shape.size(), runtime::cpu::kernel::argmax);
 
-                        functor = [&, kernel, in_shape, out_shape, axis](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                            kernel(ctx->buffer_data[arg_tensor_index],
-                                   ctx->buffer_data[out_tensor_index],
+                        functor = [&,
+                                   kernel,
+                                   in_shape,
+                                   out_shape,
+                                   axis,
+                                   arg_buffer_index,
+                                   out_buffer_index](CPURuntimeContext* ctx,
+                                                     CPUExecutionContext* ectx) {
+                            kernel(ctx->buffer_data[arg_buffer_index],
+                                   ctx->buffer_data[out_buffer_index],
                                    in_shape,
                                    out_shape,
                                    axis,
@@ -139,10 +161,16 @@ namespace ngraph
                         SELECT_RANK2(
                             kernel, int, int64_t, in_shape.size(), runtime::cpu::kernel::argmax);
 
-                        functor = [&, kernel, in_shape, out_shape, axis](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                            kernel(ctx->buffer_data[arg_tensor_index],
-                                   ctx->buffer_data[out_tensor_index],
+                        functor = [&,
+                                   kernel,
+                                   in_shape,
+                                   out_shape,
+                                   axis,
+                                   arg_buffer_index,
+                                   out_buffer_index](CPURuntimeContext* ctx,
+                                                     CPUExecutionContext* ectx) {
+                            kernel(ctx->buffer_data[arg_buffer_index],
+                                   ctx->buffer_data[out_buffer_index],
                                    in_shape,
                                    out_shape,
                                    axis,
@@ -156,10 +184,16 @@ namespace ngraph
                         SELECT_RANK2(
                             kernel, int, int, in_shape.size(), runtime::cpu::kernel::argmax);
 
-                        functor = [&, kernel, in_shape, out_shape, axis](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                            kernel(ctx->buffer_data[arg_tensor_index],
-                                   ctx->buffer_data[out_tensor_index],
+                        functor = [&,
+                                   kernel,
+                                   in_shape,
+                                   out_shape,
+                                   axis,
+                                   arg_buffer_index,
+                                   out_buffer_index](CPURuntimeContext* ctx,
+                                                     CPUExecutionContext* ectx) {
+                            kernel(ctx->buffer_data[arg_buffer_index],
+                                   ctx->buffer_data[out_buffer_index],
                                    in_shape,
                                    out_shape,
                                    axis,

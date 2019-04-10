@@ -50,7 +50,7 @@ runtime::cpu::CPU_Debugger::~CPU_Debugger()
 
 bool runtime::cpu::CPU_Debugger::step()
 {
-    auto ctx = m_callframe.ctx_vec[0];
+    auto ctx = m_callframe.m_ctx_vec[0];
     if (ctx->pc >= m_callframe.m_external_function->op_names.size())
     {
         return false;
@@ -68,7 +68,7 @@ bool runtime::cpu::CPU_Debugger::step()
 
 void runtime::cpu::CPU_Debugger::resume()
 {
-    auto ctx = m_callframe.ctx_vec[0];
+    auto ctx = m_callframe.m_ctx_vec[0];
     if (ctx->pc >= m_callframe.m_external_function->op_names.size())
     {
         return;
@@ -83,7 +83,7 @@ void runtime::cpu::CPU_Debugger::call(const std::vector<std::shared_ptr<runtime:
 {
     m_outputs.assign(outputs.begin(), outputs.end());
     m_inputs.assign(inputs.begin(), inputs.end());
-    m_callframe.ctx_vec[0]->pc = 0;
+    m_callframe.m_ctx_vec[0]->pc = 0;
     m_callframe.inner_call(m_outputs, m_inputs, 0);
 }
 
@@ -108,7 +108,7 @@ bool runtime::cpu::CPU_Debugger::add_breakpoint(std::shared_ptr<Node> op)
     std::tie(found, pc) = find_pc_for_node(op);
     if (found)
     {
-        m_callframe.ctx_vec[0]->breakpoints.insert(pc);
+        m_callframe.m_ctx_vec[0]->breakpoints.insert(pc);
         return true;
     }
     return false;
@@ -121,7 +121,7 @@ bool runtime::cpu::CPU_Debugger::delete_breakpoint(std::shared_ptr<Node> op)
     std::tie(found, pc) = find_pc_for_node(op);
     if (found)
     {
-        m_callframe.ctx_vec[0]->breakpoints.erase(pc);
+        m_callframe.m_ctx_vec[0]->breakpoints.erase(pc);
         return true;
     }
     return false;
@@ -131,15 +131,15 @@ void* runtime::cpu::CPU_Debugger::inspect(std::shared_ptr<Node> op, size_t outpu
 {
     if (m_callframe.m_external_function->is_direct_execution())
     {
-        auto index = m_callframe.m_external_function->get_tensor_data_index(
-            op->get_name() + "_" + to_string(output_index));
-        return m_callframe.ctx_vec[0]->buffer_data[index];
+        auto index = m_callframe.m_external_function->get_buffer_index(op->get_name() + "_" +
+                                                                       to_string(output_index));
+        return m_callframe.m_ctx_vec[0]->buffer_data[index];
     }
     else
     {
-        auto index = m_callframe.m_external_function->tensor_data.at(op->get_name() + "_" +
-                                                                     to_string(output_index));
-        return m_callframe.ctx_vec[0]->buffer_data[index];
+        auto index = m_callframe.m_external_function->m_buffer_indices.at(op->get_name() + "_" +
+                                                                          to_string(output_index));
+        return m_callframe.m_ctx_vec[0]->buffer_data[index];
     }
 }
 
@@ -158,11 +158,10 @@ bool runtime::cpu::CPU_Debugger::add_tracepoint(
         }
 
         auto op_name = op->get_name();
-        std::vector<size_t*> poutputs;
+        std::vector<size_t> poutputs;
         for (size_t i = 0; i < op->get_outputs().size(); i++)
         {
-            poutputs.push_back(
-                &external_function->get_tensor_data_index(op_name + "_" + to_string(i)));
+            poutputs.push_back(external_function->get_buffer_index(op_name + "_" + to_string(i)));
         }
 
         auto original_functor = external_function->functors.at(pc);
@@ -175,7 +174,7 @@ bool runtime::cpu::CPU_Debugger::add_tracepoint(
             std::vector<void*> outputs;
             for (auto pout : poutputs)
             {
-                outputs.push_back(ctx->buffer_data[*pout]);
+                outputs.push_back(ctx->buffer_data[pout]);
             }
 
             callback(outputs.data(), op_name);

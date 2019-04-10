@@ -979,6 +979,8 @@ TEST(cpu_test, thread_safe_calls_convolution_2d_2items)
         return;
     }
 
+    set_environment("NGRAPH_CONCURRENCY", "2", 1);
+
     Shape shape_a{2, 1, 3, 5};
     Shape shape_b{2, 1, 2, 2};
     Shape shape_r{2, 2, 2, 4};
@@ -1043,6 +1045,8 @@ TEST(cpu_test, thread_safe_calls_convolution_2d_2items)
     call1.join();
     call2.join();
     call3.join();
+
+    unset_environment("NGRAPH_CONCURRENCY");
 }
 
 TEST(cpu_test, constant_reshape)

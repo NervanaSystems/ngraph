@@ -88,9 +88,9 @@ namespace ngraph
 
                 std::mutex m_mutex;
                 std::condition_variable m_cv;
-                size_t num_ctx_available = 0;
-                std::unordered_map<size_t, bool> index_pool;
-                std::vector<CPURuntimeContext*> ctx_vec;
+                size_t m_num_ctx_available = 0;
+                std::unordered_map<size_t, bool> m_id_pool;
+                std::vector<CPURuntimeContext*> m_ctx_vec;
                 size_t m_concurrency = 1;
 
                 /* Codegen specific */

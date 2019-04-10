@@ -127,8 +127,8 @@ namespace ngraph
 
                 std::vector<CPUKernelFunctor>& get_functors() { return functors; }
                 // return an index into the cpu_runtime_context's buffer_data vector to get the tensor
-                size_t& get_tensor_data_index(const std::string& name);
-                size_t get_buffer_data_size() const { return buffer_data_size; }
+                size_t get_buffer_index(const std::string& name);
+                size_t get_buffer_size() const { return m_buffer_size; }
                 std::function<void(CPURuntimeContext*, std::vector<void*>&, std::vector<void*>&)>&
                     get_executor()
                 {
@@ -159,10 +159,9 @@ namespace ngraph
                 {
                     return subgraph_param_sizes;
                 }
-                std::unordered_map<std::string, std::reference_wrapper<void*>>&
-                    get_subgraph_param_ptrs()
+                std::unordered_map<std::string, size_t>> &get_subgraph_param_indices()
                 {
-                    return subgraph_param_ptrs;
+                    return subgraph_param_indices;
                 }
 #endif
 
@@ -260,7 +259,7 @@ namespace ngraph
                 std::function<void(CPURuntimeContext*, std::vector<void*>&, std::vector<void*>&)>
                     executor;
                 // name of a tensor and index into the cpu_runtime_context's buffer_data vector to get the tensor
-                std::unordered_map<std::string, size_t> tensor_data;
+                std::unordered_map<std::string, size_t> m_buffer_indices;
                 std::unordered_map<std::string, bool> tensor_stale;
                 // Each tensor is put into one buffer set.
                 // All the tensors in the same buffer set share the same memory buffer.
@@ -293,7 +292,7 @@ namespace ngraph
                 // used to calculate the correct address at runtime
                 std::list<std::tuple<size_t, size_t, size_t>> function_output_index_offset;
                 //size of the cpu_runtime_context's buffer_data vector.
-                size_t buffer_data_size = 0;
+                size_t m_buffer_size = 0;
                 std::unordered_map<std::string, std::shared_ptr<CPU_ExternalFunction>> callees;
                 bool m_is_built;
                 std::vector<runtime::PerformanceCounter> m_perf_counters;
@@ -302,7 +301,7 @@ namespace ngraph
                 std::unordered_map<std::string, Halide::Func> halide_functions;
                 std::unordered_map<std::string, Halide::ImageParam> subgraph_params;
                 std::unordered_map<std::string, int> subgraph_param_sizes;
-                std::unordered_map<std::string, size_t> subgraph_param_ptrs;
+                std::unordered_map<std::string, size_t> subgraph_param_indices;
 #endif
             };
         }

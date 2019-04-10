@@ -34,10 +34,8 @@ namespace ngraph
 
                 auto& functors = external_function->get_functors();
 
-                auto& arg_tensor_index =
-                    external_function->get_tensor_data_index(args[0].get_name());
-                auto& out_tensor_index =
-                    external_function->get_tensor_data_index(out[0].get_name());
+                auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                 auto arg_shape = args[0].get_shape();
                 auto result_shape = out[0].get_shape();
@@ -47,10 +45,16 @@ namespace ngraph
 
                 SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::reverse);
 
-                auto functor = [&, kernel, arg_shape, result_shape, reversed_axes](
-                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                    kernel(ctx->buffer_data[arg_tensor_index],
-                           ctx->buffer_data[out_tensor_index],
+                auto functor = [&,
+                                kernel,
+                                arg_shape,
+                                result_shape,
+                                reversed_axes,
+                                arg_buffer_index,
+                                out_buffer_index](CPURuntimeContext* ctx,
+                                                  CPUExecutionContext* ectx) {
+                    kernel(ctx->buffer_data[arg_buffer_index],
+                           ctx->buffer_data[out_buffer_index],
                            arg_shape,
                            result_shape,
                            reversed_axes);
