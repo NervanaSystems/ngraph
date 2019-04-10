@@ -2168,6 +2168,283 @@ void runtime::intelgpu::do_dequantize_operation(cldnn::topology& topology,
     topology.add(op_dequantize);
 }
 
+void runtime::intelgpu::do_topk_operation_indices(cldnn::topology& topology,
+                                                  const std::string& input_name,
+                                                  const Shape& input_shape,
+                                                  const element::Type& input_type,
+                                                  const std::string& output_name,
+                                                  const Shape& output_shape,
+                                                  const element::Type& output_type,
+                                                  const size_t top_k_axis,
+                                                  const size_t k,
+                                                  const bool compute_max)
+{
+    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const string entry_point_name = "topk_" + output_name;
+    CodeWriter writer;
+    vector<size_t> gws;
+    const string operation_sign = compute_max ? " > " : " < ";
+    const string prev_operation_sign = !compute_max ? ">" : "<";
+    const size_t shape_size = input_shape.size();
+
+    gen_func_def(writer,
+                 entry_point_name,
+                 {get_opencl_type_name(input_type)},
+                 {input_shape},
+                 get_opencl_type_name(output_type),
+                 output_shape);
+
+    writer.block_begin();
+    {
+        writer << get_opencl_type_name(input_type)
+               << " prev_min_max = " << get_opencl_type_min_max_value(input_type, !compute_max)
+               << ";\n";
+        writer << get_opencl_type_name(output_type) << " prev_index = -2;\n";
+        writer << get_opencl_type_name(input_type)
+               << " current_min_max = " << get_opencl_type_min_max_value(input_type, compute_max)
+               << ";\n";
+        writer << get_opencl_type_name(output_type) << " current_index = -1;\n";
+
+        size_t current_output = 0;
+        for (auto const& i : output_shape)
+        {
+            if (current_output != top_k_axis)
+            {
+                writer << "for (uint i" << current_output << " = 0; i" << current_output << " < "
+                       << i << "; ++i" << current_output << ")\n";
+                writer.block_begin();
+            }
+            ++current_output;
+        }
+
+        writer << "prev_min_max = " << get_opencl_type_min_max_value(input_type, !compute_max)
+               << ";\n";
+        writer << "prev_index = -2;\n";
+
+        writer << "for (uint i = 0; i < " << output_shape.at(top_k_axis) << "; ++i)\n";
+        writer.block_begin();
+
+        writer << "current_min_max = " << get_opencl_type_min_max_value(input_type, compute_max)
+               << ";\n";
+        writer << "current_index = -1;\n";
+
+        writer << "for (uint j = 0; j < " << input_shape.at(top_k_axis) << "; ++j)\n";
+        writer.block_begin();
+
+        size_t current = 0;
+        string buffer;
+        for (uint j = 0; j < shape_size; ++j)
+        {
+            if (j == top_k_axis)
+            {
+                buffer += "[j]";
+            }
+            else
+            {
+                buffer += "[i" + to_string(current) + "]";
+            }
+            ++current;
+        }
+
+        writer << "if (input0" << buffer << operation_sign << "current_min_max)\n";
+        writer.block_begin();
+        {
+            writer << "if (input0" << buffer << " " << prev_operation_sign
+                   << " prev_min_max || (input0" << buffer
+                   << " == prev_min_max && j > prev_index))\n";
+            writer.block_begin();
+            {
+                writer << "current_min_max = input0" << buffer << ";\n";
+                writer << "current_index = j;\n";
+            }
+            writer.block_end();
+        }
+        writer.block_end();
+
+        writer.block_end();
+
+        current = 0;
+        string outbuffer;
+        for (uint j = 0; j < shape_size; ++j)
+        {
+            if (j == top_k_axis)
+            {
+                outbuffer += "[i]";
+            }
+            else
+            {
+                outbuffer += "[i" + to_string(current) + "]";
+            }
+            ++current;
+        }
+
+        writer << "output" << outbuffer << " = current_index;\n";
+        writer << "prev_min_max = current_min_max;\n";
+        writer << "prev_index = current_index;\n";
+
+        writer.block_end();
+        current_output = 0;
+        for (auto const& i : output_shape)
+        {
+            if (current_output != top_k_axis)
+            {
+                writer.block_end();
+            }
+            ++current_output;
+        }
+    }
+    writer.block_end();
+
+    const cldnn::custom_gpu_primitive op_topk(output_name,
+                                              {input_name},
+                                              {writer.get_code()},
+                                              entry_point_name,
+                                              get_kernel_args(1, 1),
+                                              "",
+                                              layout,
+                                              gws);
+    topology.add(op_topk);
+}
+
+void runtime::intelgpu::do_topk_operation_values(cldnn::topology& topology,
+                                                 const std::string& input_name,
+                                                 const Shape& input_shape,
+                                                 const element::Type& input_type,
+                                                 const std::string& output_name,
+                                                 const Shape& output_shape,
+                                                 const element::Type& output_type,
+                                                 const size_t top_k_axis,
+                                                 const element::Type& index_elem_type,
+                                                 const size_t k,
+                                                 const bool compute_max)
+{
+    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const string entry_point_name = "topk_" + output_name;
+    CodeWriter writer;
+    vector<size_t> gws;
+    const string operation_sign = compute_max ? " > " : " < ";
+    const string prev_operation_sign = !compute_max ? ">" : "<";
+    const size_t shape_size = input_shape.size();
+
+    gen_func_def(writer,
+                 entry_point_name,
+                 {get_opencl_type_name(input_type)},
+                 {input_shape},
+                 get_opencl_type_name(output_type),
+                 output_shape);
+
+    writer.block_begin();
+    {
+        writer << get_opencl_type_name(input_type)
+               << " prev_min_max = " << get_opencl_type_min_max_value(input_type, !compute_max)
+               << ";\n";
+        writer << get_opencl_type_name(index_elem_type) << " prev_index = -2;\n";
+        writer << get_opencl_type_name(input_type)
+               << " current_min_max = " << get_opencl_type_min_max_value(input_type, compute_max)
+               << ";\n";
+        writer << get_opencl_type_name(index_elem_type) << " current_index = -1;\n";
+
+        size_t current_output = 0;
+        for (auto const& i : output_shape)
+        {
+            if (current_output != top_k_axis)
+            {
+                writer << "for (uint i" << current_output << " = 0; i" << current_output << " < "
+                       << i << "; ++i" << current_output << ")\n";
+                writer.block_begin();
+            }
+            ++current_output;
+        }
+
+        writer << "prev_min_max = " << get_opencl_type_min_max_value(input_type, !compute_max)
+               << ";\n";
+        writer << "prev_index = -2;\n";
+
+        writer << "for (uint i = 0; i < " << output_shape.at(top_k_axis) << "; ++i)\n";
+        writer.block_begin();
+
+        writer << "current_min_max = " << get_opencl_type_min_max_value(input_type, compute_max)
+               << ";\n";
+        writer << "current_index = -1;\n";
+
+        writer << "for (uint j = 0; j < " << input_shape.at(top_k_axis) << "; ++j)\n";
+        writer.block_begin();
+
+        size_t current = 0;
+        string buffer;
+        for (uint j = 0; j < shape_size; ++j)
+        {
+            if (j == top_k_axis)
+            {
+                buffer += "[j]";
+            }
+            else
+            {
+                buffer += "[i" + to_string(current) + "]";
+            }
+            ++current;
+        }
+
+        writer << "if (input0" << buffer << operation_sign << "current_min_max)\n";
+        writer.block_begin();
+        {
+            writer << "if (input0" << buffer << " " << prev_operation_sign
+                   << " prev_min_max || (input0" << buffer
+                   << " == prev_min_max && j > prev_index))\n";
+            writer.block_begin();
+            {
+                writer << "current_min_max = input0" << buffer << ";\n";
+                writer << "current_index = j;\n";
+            }
+            writer.block_end();
+        }
+        writer.block_end();
+
+        writer.block_end();
+
+        current = 0;
+        string outbuffer;
+        for (uint j = 0; j < shape_size; ++j)
+        {
+            if (j == top_k_axis)
+            {
+                outbuffer += "[i]";
+            }
+            else
+            {
+                outbuffer += "[i" + to_string(current) + "]";
+            }
+            ++current;
+        }
+
+        writer << "output" << outbuffer << " = current_min_max;\n";
+        writer << "prev_min_max = current_min_max;\n";
+        writer << "prev_index = current_index;\n";
+
+        writer.block_end();
+        current_output = 0;
+        for (auto const& i : output_shape)
+        {
+            if (current_output != top_k_axis)
+            {
+                writer.block_end();
+            }
+            ++current_output;
+        }
+    }
+    writer.block_end();
+
+    const cldnn::custom_gpu_primitive op_topk(output_name,
+                                              {input_name},
+                                              {writer.get_code()},
+                                              entry_point_name,
+                                              get_kernel_args(1, 1),
+                                              "",
+                                              layout,
+                                              gws);
+    topology.add(op_topk);
+}
+
 size_t runtime::intelgpu::get_max_memory_rss()
 {
     size_t result = 0;
