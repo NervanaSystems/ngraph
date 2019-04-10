@@ -17,6 +17,7 @@
 #pragma once
 
 #include "core/node.hpp"
+#include "ngraph/frontend/onnx_import/op/matmul.hpp"
 #include "ngraph/node_vector.hpp"
 
 namespace ngraph
@@ -27,8 +28,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector make_matmul_op(const Node& node, bool quantized);
-                NodeVector matmul(const Node& node);
+                NodeVector quantized_matmul(const Node& node) { return make_matmul_op(node, true); }
             } // namespace set_1
 
         } //namespace op
