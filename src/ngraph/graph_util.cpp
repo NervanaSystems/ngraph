@@ -364,12 +364,15 @@ pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
                                               "one output between the source and destination nodes";
     auto& src_output = src_outputs[0];
 
-    src_output.remove_target_input(dst_input); // Remove [0]
-    dst_input.replace_source_output(
-        par_node->output(0)); // Remove [0] (again), add [8], remove [1], add [9]
+    // Remove [0]
+    src_output.remove_target_input(dst_input);
+
+    // Remove [0] (again), add [8], remove [1], add [9]
+    dst_input.replace_source_output(par_node->output(0));
 
     // Add res node
-    shared_ptr<op::Result> res_node = make_shared<op::Result>(src_node); // Add [4], [5], [6], [7]
+    // Add [4], [5], [6], [7]
+    shared_ptr<op::Result> res_node = make_shared<op::Result>(src_node);
     res_node->set_placement(src_node->get_placement());
 
     return make_pair(res_node, par_node);

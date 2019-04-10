@@ -432,10 +432,7 @@ namespace ngraph
         {
             return m_node == other.m_node && m_index == other.m_index;
         }
-        bool operator!=(const Input& other) const
-        {
-            return m_node != other.m_node || m_index != other.m_index;
-        }
+        bool operator!=(const Input& other) const { return !(*this == other); }
         bool operator<(const Input& other) const
         {
             return m_node < other.m_node || (m_node == other.m_node && m_index < other.m_index);
@@ -444,15 +441,8 @@ namespace ngraph
         {
             return m_node > other.m_node || (m_node == other.m_node && m_index > other.m_index);
         }
-        bool operator<=(const Input& other) const
-        {
-            return m_node <= other.m_node || (m_node == other.m_node && m_index <= other.m_index);
-        }
-        bool operator>=(const Input& other) const
-        {
-            return m_node >= other.m_node || (m_node == other.m_node && m_index >= other.m_index);
-        }
-
+        bool operator<=(const Input& other) const { return !(*this > other); }
+        bool operator>=(const Input& other) const { return !(*this < other); }
     private:
         NodeType* const m_node;
         const size_t m_index;
@@ -531,10 +521,7 @@ namespace ngraph
         {
             return m_node == other.m_node && m_index == other.m_index;
         }
-        bool operator!=(const Output& other) const
-        {
-            return m_node != other.m_node || m_index != other.m_index;
-        }
+        bool operator!=(const Output& other) const { return !(*this == other); }
         bool operator<(const Output& other) const
         {
             return m_node < other.m_node || (m_node == other.m_node && m_index < other.m_index);
@@ -543,15 +530,8 @@ namespace ngraph
         {
             return m_node > other.m_node || (m_node == other.m_node && m_index > other.m_index);
         }
-        bool operator<=(const Output& other) const
-        {
-            return m_node <= other.m_node || (m_node == other.m_node && m_index <= other.m_index);
-        }
-        bool operator>=(const Output& other) const
-        {
-            return m_node >= other.m_node || (m_node == other.m_node && m_index >= other.m_index);
-        }
-
+        bool operator<=(const Output& other) const { return !(*this > other); }
+        bool operator>=(const Output& other) const { return !(*this < other); }
     private:
         NodeType* const m_node;
         const size_t m_index;
