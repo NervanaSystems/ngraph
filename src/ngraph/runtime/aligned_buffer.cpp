@@ -33,8 +33,8 @@ runtime::AlignedBuffer::AlignedBuffer()
 }
 
 runtime::AlignedBuffer::AlignedBuffer(size_t byte_size, size_t alignment, Allocator* allocator)
-    : m_byte_size(byte_size)
-    , m_allocator(allocator)
+    : m_allocator(allocator)
+    , m_byte_size(byte_size)
 {
     if (m_byte_size > 0)
     {
