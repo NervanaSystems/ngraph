@@ -13084,3 +13084,12 @@ TEST(type_prop, prelu)
     ASSERT_EQ(prelu->get_element_type(), element::f32);
     ASSERT_EQ(prelu->get_shape(), prelu_shape);
 }
+
+TEST(type_prop, gather)
+{
+}
+
+TEST(type_prop, gather_nd)
+{
+}
+
