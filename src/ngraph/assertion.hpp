@@ -30,6 +30,11 @@
 // the macros/classes here require construction of the error message string even if the assertion
 // does not fail.
 //
+// * If you have code that is calling NGRAPH_ASSERT, please replace it with NGRAPH_CHECK.
+// * If you are defining a custom exception macro, please convert it to use NGRAPH_CHECK_HELPER
+//   from check.hpp. See check.hpp for details on the new interface. In particular, note that the
+//   expected signatures for the exception class constructor is slightly different.
+//
 // TODO: remove this.
 
 namespace ngraph
