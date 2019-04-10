@@ -129,6 +129,7 @@ add_library(onnx_import STATIC
         op/quant_conv.hpp
         op/quantize_linear.cpp
         op/quantize_linear.hpp
+        op/quantized_matmul.hpp
         op/reciprocal.cpp
         op/reciprocal.hpp
         op/reduce.cpp
