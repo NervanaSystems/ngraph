@@ -58,7 +58,6 @@ set(SRC
     pass_memory_layout.cpp
     pass_shape_specialization.cpp
     pattern.cpp
-    provenance.cpp
     reshape_elimination.cpp
     reshape_sinking.cpp
     serialize.cpp
