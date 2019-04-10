@@ -256,6 +256,8 @@ set (SRC
     op/tanh.hpp
     op/topk.cpp
     op/topk.hpp
+    op/fused/conv_fused.cpp
+    op/fused/conv_fused.hpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
     op/util/arithmetic_reduction.cpp

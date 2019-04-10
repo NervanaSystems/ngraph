@@ -90,7 +90,6 @@ set(SRC
     op/batch_norm_relu.cpp
     op/bounded_relu.cpp
     op/conv_add.cpp
-    op/conv_bias.cpp
     op/conv_relu.cpp
     op/convert_layout.cpp
     op/group_conv.cpp
