@@ -95,7 +95,7 @@ namespace ngraph
 // MyFailure), which must have a constructor of the form:
 //
 //      MyFailure(const CheckLocInfo& check_loc_info,
-//                T context_info, // "T" can be any time; you'll supply a function to convert "T"
+//                T context_info, // "T" can be any type; you'll supply a function to convert "T"
 //                                // to std::string
 //                const std::string& explanation)
 //
@@ -152,5 +152,6 @@ namespace ngraph
 /// \param ... Additional error message info to be added to the error message via the `<<`
 ///            stream-insertion operator. Note that the expressions here will be evaluated lazily,
 ///            i.e., only if the `cond` evalutes to `false`.
+/// \throws ::ngraph::CheckFailure if `cond` is false.
 #define NGRAPH_CHECK(cond, ...)                                                                    \
     NGRAPH_CHECK_HELPER(::ngraph::CheckFailure, "", (cond), ##__VA_ARGS__)
