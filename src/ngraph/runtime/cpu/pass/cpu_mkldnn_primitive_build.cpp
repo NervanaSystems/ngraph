@@ -792,7 +792,7 @@ bool MKLDNNPrimitiveBuildPass::run_on_call_graph(const std::list<std::shared_ptr
                 << "Unsupported node '" << node->description() << "' in MKLDNNPrimitiveBuildPass";
 
             size_t primitive_idx = handler->second(m_mkldnn_emitter, node);
-            m_mkldnn_emitter.set_primitive_index(node, primitive_idx);
+            m_node_primitive_idx_map[node] = primitive_idx;
         }
     }
 

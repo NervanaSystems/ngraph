@@ -55,9 +55,16 @@ namespace ngraph
                 private:
                     ngraph::runtime::cpu::MKLDNNEmitter& m_mkldnn_emitter;
 
+                    /// External map to store each node with mkldnn implementation and its mkldnn
+                    /// associated primitive index.
+                    std::unordered_map<const Node*, size_t>& m_node_primitive_idx_map;
+
                 public:
-                    MKLDNNPrimitiveBuildPass(ngraph::runtime::cpu::MKLDNNEmitter& mkldnn_emitter)
+                    MKLDNNPrimitiveBuildPass(
+                        ngraph::runtime::cpu::MKLDNNEmitter& mkldnn_emitter,
+                        std::unordered_map<const Node*, size_t>& node_primitive_idx_map)
                         : m_mkldnn_emitter(mkldnn_emitter)
+                        , m_node_primitive_idx_map(node_primitive_idx_map)
                     {
                     }
 

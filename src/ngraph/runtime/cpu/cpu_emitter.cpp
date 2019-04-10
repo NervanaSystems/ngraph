@@ -167,7 +167,7 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    size_t add_index = mkldnn_emitter->get_primitive_index(node);
+                    size_t add_index = external_function->get_primitive_index(node);
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(add_index);
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
@@ -570,7 +570,7 @@ namespace ngraph
                         "Lstm op doesnt have the required number of inputs to emit MKLDNN kernel");
                 }
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                auto lstm_index = mkldnn_emitter->get_primitive_index(node);
+                auto lstm_index = external_function->get_primitive_index(node);
                 auto& deps = mkldnn_emitter->get_primitive_deps(lstm_index);
 
                 writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0]) << ", "
@@ -598,7 +598,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Rnn)
             {
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                auto rnn_index = mkldnn_emitter->get_primitive_index(node);
+                auto rnn_index = external_function->get_primitive_index(node);
                 auto& deps = mkldnn_emitter->get_primitive_deps(rnn_index);
 
                 writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0]) << ", "
@@ -652,7 +652,7 @@ namespace ngraph
                 }
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                auto batchnorm_index = mkldnn_emitter->get_primitive_index(node);
+                auto batchnorm_index = external_function->get_primitive_index(node);
                 auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
 
                 if (training && args.size() == 3)
@@ -794,7 +794,7 @@ namespace ngraph
                        << args[1].get_size() * args[1].get_element_type().size() << ");\n";
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                auto batchnorm_index = mkldnn_emitter->get_primitive_index(node);
+                auto batchnorm_index = external_function->get_primitive_index(node);
                 auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
 
                 writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
@@ -1035,7 +1035,7 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    size_t concat_index = mkldnn_emitter->get_primitive_index(node);
+                    size_t concat_index = external_function->get_primitive_index(node);
                     auto& deps = mkldnn_emitter->get_primitive_deps(concat_index);
 
                     size_t i;
@@ -1203,7 +1203,7 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto lrn_index = mkldnn_emitter->get_primitive_index(node);
+                    auto lrn_index = external_function->get_primitive_index(node);
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(lrn_index);
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
@@ -1486,7 +1486,7 @@ namespace ngraph
                     auto lower_bounds = slice->get_lower_bounds();
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto slice_index = mkldnn_emitter->get_primitive_index(node);
+                    auto slice_index = external_function->get_primitive_index(node);
                     auto& deps = mkldnn_emitter->get_primitive_deps(slice_index);
 
                     writer.block_begin();
@@ -1993,7 +1993,7 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto conv_index = mkldnn_emitter->get_primitive_index(node);
+                    auto conv_index = external_function->get_primitive_index(node);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
@@ -2013,7 +2013,7 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto conv_index = mkldnn_emitter->get_primitive_index(node);
+                    auto conv_index = external_function->get_primitive_index(node);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
@@ -2037,7 +2037,7 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto conv_index = mkldnn_emitter->get_primitive_index(node);
+                    auto conv_index = external_function->get_primitive_index(node);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
@@ -2066,7 +2066,7 @@ namespace ngraph
                 {
                     // invoke group convolution
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    size_t conv_index = mkldnn_emitter->get_primitive_index(node);
+                    size_t conv_index = external_function->get_primitive_index(node);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
@@ -2096,7 +2096,7 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    size_t conv_index = mkldnn_emitter->get_primitive_index(node);
+                    size_t conv_index = external_function->get_primitive_index(node);
 
                     // invoke group convolution bias
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
@@ -2130,7 +2130,7 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto conv_index = mkldnn_emitter->get_primitive_index(node);
+                    auto conv_index = external_function->get_primitive_index(node);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
@@ -2177,7 +2177,7 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto conv_index = mkldnn_emitter->get_primitive_index(node);
+                    auto conv_index = external_function->get_primitive_index(node);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
@@ -2224,7 +2224,7 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto conv_index = mkldnn_emitter->get_primitive_index(node);
+                    auto conv_index = external_function->get_primitive_index(node);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
@@ -2266,7 +2266,7 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto qconv_index = mkldnn_emitter->get_primitive_index(node);
+                    auto qconv_index = external_function->get_primitive_index(node);
                     auto& deps = mkldnn_emitter->get_primitive_deps(qconv_index);
 
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
@@ -2294,7 +2294,7 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto qconv_index = mkldnn_emitter->get_primitive_index(node);
+                    auto qconv_index = external_function->get_primitive_index(node);
                     auto& deps = mkldnn_emitter->get_primitive_deps(qconv_index);
 
                     writer << "if (" << out[0].get_name() << " != " << args[3].get_name() << ")\n";
@@ -2327,7 +2327,7 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto qconv_index = mkldnn_emitter->get_primitive_index(node);
+                    auto qconv_index = external_function->get_primitive_index(node);
                     auto& deps = mkldnn_emitter->get_primitive_deps(qconv_index);
 
                     writer << "if (" << out[0].get_name() << " != " << args[3].get_name() << ")\n";
@@ -2414,7 +2414,7 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto conv_index = mkldnn_emitter->get_primitive_index(node);
+                    auto conv_index = external_function->get_primitive_index(node);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
@@ -2441,7 +2441,7 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto conv_index = mkldnn_emitter->get_primitive_index(node);
+                    auto conv_index = external_function->get_primitive_index(node);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
                     writer << "if (" << out[0].get_name() << " != " << args[3].get_name() << ")\n";
@@ -2472,7 +2472,7 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto conv_index = mkldnn_emitter->get_primitive_index(node);
+                    auto conv_index = external_function->get_primitive_index(node);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
                     writer << "if (" << out[0].get_name() << " != " << args[2].get_name() << ")\n";
@@ -2501,7 +2501,7 @@ namespace ngraph
                 if (mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto conv_index = mkldnn_emitter->get_primitive_index(node);
+                    auto conv_index = external_function->get_primitive_index(node);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
@@ -2541,7 +2541,7 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    size_t max_pool_index = mkldnn_emitter->get_primitive_index(node);
+                    size_t max_pool_index = external_function->get_primitive_index(node);
                     auto& deps = mkldnn_emitter->get_primitive_deps(max_pool_index);
 
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
@@ -2574,7 +2574,7 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    size_t qmax_pool_index = mkldnn_emitter->get_primitive_index(node);
+                    size_t qmax_pool_index = external_function->get_primitive_index(node);
                     auto& deps = mkldnn_emitter->get_primitive_deps(qmax_pool_index);
 
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
@@ -2596,7 +2596,7 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    size_t qavg_pool_index = mkldnn_emitter->get_primitive_index(node);
+                    size_t qavg_pool_index = external_function->get_primitive_index(node);
                     auto& deps = mkldnn_emitter->get_primitive_deps(qavg_pool_index);
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
                            << ", " << args[0].get_name() << ");\n";
@@ -2617,7 +2617,7 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    size_t max_pool_index = mkldnn_emitter->get_primitive_index(node);
+                    size_t max_pool_index = external_function->get_primitive_index(node);
                     auto& deps = mkldnn_emitter->get_primitive_deps(max_pool_index);
 
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
@@ -2739,7 +2739,7 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    size_t avg_pool_index = mkldnn_emitter->get_primitive_index(node);
+                    size_t avg_pool_index = external_function->get_primitive_index(node);
                     auto& deps = mkldnn_emitter->get_primitive_deps(avg_pool_index);
 
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
@@ -2829,7 +2829,7 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    size_t avg_pool_index = mkldnn_emitter->get_primitive_index(node);
+                    size_t avg_pool_index = external_function->get_primitive_index(node);
                     auto& deps = mkldnn_emitter->get_primitive_deps(avg_pool_index);
 
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
@@ -2871,7 +2871,7 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    size_t max_pool_index = mkldnn_emitter->get_primitive_index(node);
+                    size_t max_pool_index = external_function->get_primitive_index(node);
                     auto& fdeps = mkldnn_emitter->get_primitive_deps(max_pool_index - 1);
 
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(fdeps[0])
@@ -2917,7 +2917,7 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    size_t max_pool_index = mkldnn_emitter->get_primitive_index(node);
+                    size_t max_pool_index = external_function->get_primitive_index(node);
                     auto& bdeps = mkldnn_emitter->get_primitive_deps(max_pool_index);
 
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(bdeps[0])
@@ -3060,7 +3060,7 @@ namespace ngraph
                         mkldnn::memory::format::goihw);
                 }
 
-                size_t reorder_index = mkldnn_emitter->get_primitive_index(node);
+                size_t reorder_index = external_function->get_primitive_index(node);
                 auto& deps = mkldnn_emitter->get_primitive_deps(reorder_index);
 
                 writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0]) << ", "
@@ -3078,7 +3078,7 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    size_t relu_index = mkldnn_emitter->get_primitive_index(node);
+                    size_t relu_index = external_function->get_primitive_index(node);
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(relu_index);
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
@@ -3108,7 +3108,7 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    size_t relu_index = mkldnn_emitter->get_primitive_index(node);
+                    size_t relu_index = external_function->get_primitive_index(node);
                     auto& deps = mkldnn_emitter->get_primitive_deps(relu_index);
 
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
@@ -3138,7 +3138,7 @@ namespace ngraph
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto leaky_relu_index = mkldnn_emitter->get_primitive_index(node);
+                    auto leaky_relu_index = external_function->get_primitive_index(node);
                     auto& deps = mkldnn_emitter->get_primitive_deps(leaky_relu_index);
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
                            << ", " << args[0].get_name() << ");\n";
@@ -3168,7 +3168,7 @@ namespace ngraph
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto bounded_relu_index = mkldnn_emitter->get_primitive_index(node);
+                    auto bounded_relu_index = external_function->get_primitive_index(node);
                     auto& deps = mkldnn_emitter->get_primitive_deps(bounded_relu_index);
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
                            << ", " << args[0].get_name() << ");\n";
@@ -3198,7 +3198,7 @@ namespace ngraph
                 auto result_shape = out[0].get_shape();
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                size_t sigmoid_index = mkldnn_emitter->get_primitive_index(node);
+                size_t sigmoid_index = external_function->get_primitive_index(node);
                 auto& deps = mkldnn_emitter->get_primitive_deps(sigmoid_index);
 
                 writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0]) << ", "
@@ -3218,7 +3218,7 @@ namespace ngraph
                 auto result_shape = out[0].get_shape();
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                size_t sigmoid_index = mkldnn_emitter->get_primitive_index(node);
+                size_t sigmoid_index = external_function->get_primitive_index(node);
                 auto& deps = mkldnn_emitter->get_primitive_deps(sigmoid_index);
 
                 writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0]) << ", "
@@ -3391,7 +3391,7 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    size_t softmax_index = mkldnn_emitter->get_primitive_index(node);
+                    size_t softmax_index = external_function->get_primitive_index(node);
                     auto& deps = mkldnn_emitter->get_primitive_deps(softmax_index);
 
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
@@ -3800,7 +3800,7 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    size_t dequantize_index = mkldnn_emitter->get_primitive_index(node);
+                    size_t dequantize_index = external_function->get_primitive_index(node);
                     auto& deps = mkldnn_emitter->get_primitive_deps(dequantize_index);
 
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
@@ -3831,7 +3831,7 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    size_t quantize_index = mkldnn_emitter->get_primitive_index(node);
+                    size_t quantize_index = external_function->get_primitive_index(node);
                     auto& deps = mkldnn_emitter->get_primitive_deps(quantize_index);
 
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
@@ -3862,7 +3862,7 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    size_t concat_index = mkldnn_emitter->get_primitive_index(node);
+                    size_t concat_index = external_function->get_primitive_index(node);
                     auto& deps = mkldnn_emitter->get_primitive_deps(concat_index);
 
                     size_t i;

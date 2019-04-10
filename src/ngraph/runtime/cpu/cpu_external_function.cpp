@@ -467,7 +467,8 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
     register_common_passes(pass_manager, pass_config);
 
     // Build mkldnn primitives for codegen.
-    pass_manager.register_pass<runtime::cpu::pass::MKLDNNPrimitiveBuildPass>(*m_mkldnn_emitter);
+    pass_manager.register_pass<runtime::cpu::pass::MKLDNNPrimitiveBuildPass>(
+        *m_mkldnn_emitter, m_node_primitive_idx_map);
 
     unordered_map<Node*, Node*> node_function_map;
     string common_function_string;

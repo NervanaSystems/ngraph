@@ -136,24 +136,6 @@ namespace ngraph
                 size_t insert_workspace(std::unique_ptr<MKLDNNWorkspace>& workspace);
                 const std::vector<size_t>& get_primitive_deps(size_t index) const;
 
-                /// Returns the index of the primited previously created for \p node.
-                size_t get_primitive_index(const Node* node) const
-                {
-                    auto it = m_node_primitive_idx_map.find(node);
-                    NGRAPH_ASSERT(it != m_node_primitive_idx_map.end())
-                        << "Primitive not found for node " << node->description();
-
-                    return it->second;
-                }
-
-                /// Sets \p primitive_idx as index of \p node.
-                void set_primitive_index(const Node* node, size_t primitive_idx)
-                {
-                    auto insert_res = m_node_primitive_idx_map.insert({node, primitive_idx});
-                    NGRAPH_ASSERT(insert_res.second) << "Primitive was already created for node "
-                                                     << node->description();
-                }
-
                 // TODO(jmenon): Get rid of TensorViewWrappers at some point
                 mkldnn::memory::desc build_memory_descriptor(const TensorViewWrapper& tvw,
                                                              mkldnn::memory::format fmt) const;
@@ -1683,10 +1665,6 @@ namespace ngraph
                 std::unordered_map<size_t, std::vector<size_t>> m_primitive_deps;
                 std::vector<std::unique_ptr<MKLDNNWorkspace>> m_workspaces;
                 std::vector<char*> m_workspace_bufs;
-
-                /// Map each node with mkldnn implementation to its mkldnn primitive index. This
-                /// index can be used to retrieve the primitive from m_mkldnn_primitives.
-                std::unordered_map<const Node*, size_t> m_node_primitive_idx_map;
             };
         }
     }
