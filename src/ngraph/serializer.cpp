@@ -981,10 +981,10 @@ static shared_ptr<ngraph::Function>
                 // This is a legacy field whose functionality is no longer supported. The new
                 // behavior is equivalent to interior padding of 0, so we will accept it under
                 // those conditions.
-                auto it = node_js.find("padding_interior");
-                if (it != node_js.end())
+                auto padding_interior_maybe = node_js.find("padding_interior");
+                if (padding_interior_maybe != node_js.end())
                 {
-                    auto padding_interior = it->get<vector<size_t>>();
+                    auto padding_interior = padding_interior_maybe->get<vector<size_t>>();
                     NGRAPH_ASSERT(std::all_of(padding_interior.begin(),
                                               padding_interior.end(),
                                               [](size_t s) { return s == 0; }))
