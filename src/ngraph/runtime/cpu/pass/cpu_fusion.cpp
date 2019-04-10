@@ -2273,8 +2273,10 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qavg_pool()
                      << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
-        if (ngraph::validate_for_dynamic_shapes(
-                {pattern_map[input], pattern_map[dq_scale], pattern_map[dq_zp], m.get_match_root()}))
+        if (ngraph::validate_for_dynamic_shapes({pattern_map[input],
+                                                 pattern_map[dq_scale],
+                                                 pattern_map[dq_zp],
+                                                 m.get_match_root()}))
         {
             return false;
         }
@@ -2316,8 +2318,10 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qmax_pool()
         NGRAPH_DEBUG << "In a callback for construct_qmax_pool against "
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
-        if (ngraph::validate_for_dynamic_shapes(
-                {pattern_map[input], pattern_map[dq_scale], pattern_map[dq_zp], m.get_match_root()}))
+        if (ngraph::validate_for_dynamic_shapes({pattern_map[input],
+                                                 pattern_map[dq_scale],
+                                                 pattern_map[dq_zp],
+                                                 m.get_match_root()}))
         {
             return false;
         }
