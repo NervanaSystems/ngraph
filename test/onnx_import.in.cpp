@@ -2684,3 +2684,147 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_quant_conv_linear)
         execute<std::uint8_t, std::int8_t>(function, inputs, "${BACKEND_NAME}")};
     EXPECT_TRUE(test::all_close(expected_output.front(), outputs.front()));
 }
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_quant_conv_linear_2d)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/qlinear_conv_2d.prototxt"));
+
+    auto x =
+        read_binary_file<uint8_t>(file_util::path_join(TEST_FILES, "onnx/qlinearconv2d/x.bin"));
+    auto x_scale =
+        read_binary_file<float>(file_util::path_join(TEST_FILES, "onnx/qlinearconv2d/x_scale.bin"));
+    auto x_zero_point = read_binary_file<uint8_t>(
+        file_util::path_join(TEST_FILES, "onnx/qlinearconv2d/x_zero_point.bin"));
+
+    auto w =
+        read_binary_file<uint8_t>(file_util::path_join(TEST_FILES, "onnx/qlinearconv2d/w.bin"));
+    auto w_scale =
+        read_binary_file<float>(file_util::path_join(TEST_FILES, "onnx/qlinearconv2d/w_scale.bin"));
+    auto w_zero_point = read_binary_file<uint8_t>(
+        file_util::path_join(TEST_FILES, "onnx/qlinearconv2d/w_zero_point.bin"));
+
+    auto y_scale =
+        read_binary_file<float>(file_util::path_join(TEST_FILES, "onnx/qlinearconv2d/y_scale.bin"));
+    auto y_zero_point = read_binary_file<uint8_t>(
+        file_util::path_join(TEST_FILES, "onnx/qlinearconv2d/y_zero_point.bin"));
+
+    auto backend = ngraph::runtime::Backend::create("${BACKEND_NAME}");
+
+    auto params = function->get_parameters();
+    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> input_tensors;
+    input_tensors.push_back(
+        backend->create_tensor(params.at(0)->get_element_type(), params.at(0)->get_shape()));
+    input_tensors.push_back(
+        backend->create_tensor(params.at(1)->get_element_type(), params.at(1)->get_shape()));
+    input_tensors.push_back(
+        backend->create_tensor(params.at(2)->get_element_type(), params.at(2)->get_shape()));
+    input_tensors.push_back(
+        backend->create_tensor(params.at(3)->get_element_type(), params.at(3)->get_shape()));
+    input_tensors.push_back(
+        backend->create_tensor(params.at(4)->get_element_type(), params.at(4)->get_shape()));
+    input_tensors.push_back(
+        backend->create_tensor(params.at(5)->get_element_type(), params.at(5)->get_shape()));
+    input_tensors.push_back(
+        backend->create_tensor(params.at(6)->get_element_type(), params.at(6)->get_shape()));
+    input_tensors.push_back(
+        backend->create_tensor(params.at(7)->get_element_type(), params.at(7)->get_shape()));
+
+    copy_data(input_tensors[0], x);
+    copy_data(input_tensors[1], x_scale);
+    copy_data(input_tensors[2], x_zero_point);
+    copy_data(input_tensors[3], w);
+    copy_data(input_tensors[4], w_scale);
+    copy_data(input_tensors[5], w_zero_point);
+    copy_data(input_tensors[6], y_scale);
+    copy_data(input_tensors[7], y_zero_point);
+
+    auto results = function->get_results();
+    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> result_tensors;
+    result_tensors.push_back(
+        backend->create_tensor(results.at(0)->get_element_type(), results.at(0)->get_shape()));
+
+    auto handle = backend->compile(function);
+    handle->call_with_validate(result_tensors, input_tensors);
+
+    std::vector<std::vector<uint8_t>> outputs;
+    outputs.push_back(read_vector<uint8_t>(result_tensors[0]));
+
+    std::vector<std::vector<uint8_t>> expected_output;
+    expected_output.push_back(
+        read_binary_file<uint8_t>(file_util::path_join(TEST_FILES, "onnx/qlinearconv2d/y.bin")));
+
+    EXPECT_EQ(expected_output.front(), outputs.front());
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_quant_conv_linear_3d)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/qlinear_conv_3d.prototxt"));
+
+    auto x =
+        read_binary_file<uint8_t>(file_util::path_join(TEST_FILES, "onnx/qlinearconv3d/x.bin"));
+    auto x_scale =
+        read_binary_file<float>(file_util::path_join(TEST_FILES, "onnx/qlinearconv3d/x_scale.bin"));
+    auto x_zero_point = read_binary_file<uint8_t>(
+        file_util::path_join(TEST_FILES, "onnx/qlinearconv3d/x_zero_point.bin"));
+
+    auto w =
+        read_binary_file<uint8_t>(file_util::path_join(TEST_FILES, "onnx/qlinearconv3d/w.bin"));
+    auto w_scale =
+        read_binary_file<float>(file_util::path_join(TEST_FILES, "onnx/qlinearconv3d/w_scale.bin"));
+    auto w_zero_point = read_binary_file<uint8_t>(
+        file_util::path_join(TEST_FILES, "onnx/qlinearconv3d/w_zero_point.bin"));
+
+    auto y_scale =
+        read_binary_file<float>(file_util::path_join(TEST_FILES, "onnx/qlinearconv3d/y_scale.bin"));
+    auto y_zero_point = read_binary_file<uint8_t>(
+        file_util::path_join(TEST_FILES, "onnx/qlinearconv3d/y_zero_point.bin"));
+
+    auto backend = ngraph::runtime::Backend::create("${BACKEND_NAME}");
+
+    auto params = function->get_parameters();
+    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> input_tensors;
+    input_tensors.push_back(
+        backend->create_tensor(params.at(0)->get_element_type(), params.at(0)->get_shape()));
+    input_tensors.push_back(
+        backend->create_tensor(params.at(1)->get_element_type(), params.at(1)->get_shape()));
+    input_tensors.push_back(
+        backend->create_tensor(params.at(2)->get_element_type(), params.at(2)->get_shape()));
+    input_tensors.push_back(
+        backend->create_tensor(params.at(3)->get_element_type(), params.at(3)->get_shape()));
+    input_tensors.push_back(
+        backend->create_tensor(params.at(4)->get_element_type(), params.at(4)->get_shape()));
+    input_tensors.push_back(
+        backend->create_tensor(params.at(5)->get_element_type(), params.at(5)->get_shape()));
+    input_tensors.push_back(
+        backend->create_tensor(params.at(6)->get_element_type(), params.at(6)->get_shape()));
+    input_tensors.push_back(
+        backend->create_tensor(params.at(7)->get_element_type(), params.at(7)->get_shape()));
+
+    copy_data(input_tensors[0], x);
+    copy_data(input_tensors[1], x_scale);
+    copy_data(input_tensors[2], x_zero_point);
+    copy_data(input_tensors[3], w);
+    copy_data(input_tensors[4], w_scale);
+    copy_data(input_tensors[5], w_zero_point);
+    copy_data(input_tensors[6], y_scale);
+    copy_data(input_tensors[7], y_zero_point);
+
+    auto results = function->get_results();
+    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> result_tensors;
+    result_tensors.push_back(
+        backend->create_tensor(results.at(0)->get_element_type(), results.at(0)->get_shape()));
+
+    auto handle = backend->compile(function);
+    handle->call_with_validate(result_tensors, input_tensors);
+
+    std::vector<std::vector<uint8_t>> outputs;
+    outputs.push_back(read_vector<uint8_t>(result_tensors[0]));
+
+    std::vector<std::vector<uint8_t>> expected_output;
+    expected_output.push_back(
+        read_binary_file<uint8_t>(file_util::path_join(TEST_FILES, "onnx/qlinearconv3d/y.bin")));
+
+    EXPECT_EQ(expected_output.front(), outputs.front());
+}
