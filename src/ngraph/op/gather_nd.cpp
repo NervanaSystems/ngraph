@@ -46,24 +46,27 @@ void op::GatherND::validate_and_infer_types()
                               static_cast<size_t>(params_shape.rank()) >= 2,
                           "params rank is expected to be at least 2");
 
-    NODE_VALIDATION_CHECK(this,
-                          params_shape.rank().is_dynamic() || indices.shape.rank().is_dynamic() ||
-                              static_cast<size_t>(indices_shape[indices_shape.rank() - 1]) <=
-                                  params_shape.rank(),
-                          "last dimension of indices can be at most the rank of params");
+    NODE_VALIDATION_CHECK(
+        this,
+        params_shape.rank().is_dynamic() || indices_shape.rank().is_dynamic() ||
+            static_cast<size_t>(indices_shape[static_cast<size_t>(indices_shape.rank()) - 1]) <=
+                static_cast<size_t>(params_shape.rank()),
+        "last dimension of indices can be at most the rank of params");
 
     PartialShape result_shape;
     if (params_shape.rank().is_static() && indices_shape.rank().is_static())
     {
-        std::vector<Dimension> result_dims(static_cast<size_t>(indices_shape.rank()) - 1 +
-                                           params_shape.rank() -
-                                           indices_shape[indices_shape.rank() - 1]);
+        std::vector<Dimension> result_dims(
+            static_cast<size_t>(indices_shape.rank()) - 1 +
+            static_cast<size_t>(params_shape.rank()) -
+            static_cast<size_t>(indices_shape[static_cast<size_t>(indices_shape.rank()) - 1]));
         size_t i = 0;
-        for (; i < static_cast<size_t>(indices_shape.rank() - 1); i++)
+        for (; i < static_cast<size_t>(indices_shape.rank()) - 1; i++)
         {
             result_dims[i] = indices_shape[i];
         }
-        for (size_t j = static_cast<size_t>(indices_shape[indices_shape.rank() - 1]);
+        for (size_t j = static_cast<size_t>(
+                        indices_shape[static_cast<size_t>(indices_shape.rank()) - 1]);
              j < static_cast<size_t>(params_shape.rank());
              i++, j++)
         {

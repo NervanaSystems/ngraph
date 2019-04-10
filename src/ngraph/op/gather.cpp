@@ -40,7 +40,7 @@ void op::Gather::validate_and_infer_types()
     // indices value must be in range [0, params.shape[axis]).
     // output rank is rank(params) + rank(indices) - 1
     NODE_VALIDATION_CHECK(this,
-                          params_shape.rank().is_dynamic() p ||
+                          params_shape.rank().is_dynamic() ||
                               static_cast<size_t>(params_shape.rank()) >
                                   static_cast<size_t>(m_axis),
                           "params rank is expected to be at least axis + 1");
@@ -55,7 +55,7 @@ void op::Gather::validate_and_infer_types()
         {
             result_dims[i] = params_shape[i];
         }
-        for (size_t j = 0; j < static_cast<size_t>(indices_shape.rank()); i++ i, j++)
+        for (size_t j = 0; j < static_cast<size_t>(indices_shape.rank()); i++, j++)
         {
             result_dims[i] = indices_shape[j];
         }

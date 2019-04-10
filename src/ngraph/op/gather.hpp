@@ -28,7 +28,8 @@ namespace ngraph
             Gather(const std::shared_ptr<Node>& params,
                    const std::shared_ptr<Node>& indices,
                    size_t axis = 0)
-                : Op("Gather", check_single_output_args({params, indices}), m_axis(axis))
+                : Op("Gather", check_single_output_args({params, indices}))
+                , m_axis(axis)
             {
                 constructor_validate_and_infer_types();
             }
