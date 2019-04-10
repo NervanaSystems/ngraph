@@ -33,9 +33,9 @@ runtime::AlignedBuffer::AlignedBuffer()
 }
 
 runtime::AlignedBuffer::AlignedBuffer(size_t byte_size, size_t alignment, Allocator* allocator)
+    : m_byte_size(byte_size)
+    , m_allocator(allocator)
 {
-    m_byte_size = byte_size;
-    m_allocator = allocator;
     if (m_byte_size > 0)
     {
         m_allocated_buffer = static_cast<char*>(m_allocator->Malloc(m_byte_size, alignment));
