@@ -2008,28 +2008,31 @@ shared_ptr<runtime::Executable>
             const size_t k = topk_op->get_k();
             const bool compute_max = topk_op->get_compute_max();
 
-            do_topk_operation_indices(topology,
-                                      get_input_name(op, 0),
-                                      get_input_shape(op, 0),
-                                      get_input_type(op, 0),
-                                      get_output_name(op, 0),
-                                      get_output_shape(op, 0),
-                                      get_output_type(op, 0),
-                                      top_k_axis,
-                                      k,
-                                      compute_max);
+            do_topk_operation(topology,
+                              get_input_name(op, 0),
+                              get_input_shape(op, 0),
+                              get_input_type(op, 0),
+                              get_output_name(op, 0),
+                              get_output_shape(op, 0),
+                              get_output_type(op, 0),
+                              index_elem_type,
+                              top_k_axis,
+                              k,
+                              compute_max,
+                              true);
 
-            do_topk_operation_values(topology,
-                                     get_input_name(op, 0),
-                                     get_input_shape(op, 0),
-                                     get_input_type(op, 0),
-                                     get_output_name(op, 1),
-                                     get_output_shape(op, 1),
-                                     get_output_type(op, 1),
-                                     top_k_axis,
-                                     index_elem_type,
-                                     k,
-                                     compute_max);
+            do_topk_operation(topology,
+                              get_input_name(op, 0),
+                              get_input_shape(op, 0),
+                              get_input_type(op, 0),
+                              get_output_name(op, 1),
+                              get_output_shape(op, 1),
+                              get_output_type(op, 1),
+                              index_elem_type,
+                              top_k_axis,
+                              k,
+                              compute_max,
+                              false);
             break;
         }
         case OP_TYPEID::AllReduce:
