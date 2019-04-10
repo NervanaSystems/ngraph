@@ -1424,7 +1424,22 @@ shared_ptr<runtime::Executable>
 
             arguments_check(op, 5, 1);
 
-            if ((get_input_shape(op, 2).size() != 4) ||
+            // Workaround for #2729 bug.
+            // Should be removed after fix in clDNN.
+            // Drop 14.0 of clDNN contains this bug.
+            bool proceed_with_custom_kernel = false;
+            const string& gamma = get_input_name(op, 0);
+            const string& beta = get_input_name(op, 1);
+            const string& mean = get_input_name(op, 3);
+            const string& variance = get_input_name(op, 4);
+
+            if ((gamma == beta) || (gamma == mean) || (gamma == variance) || (beta == mean) ||
+                (beta == variance) || (mean == variance))
+            {
+                proceed_with_custom_kernel = true;
+            }
+
+            if (proceed_with_custom_kernel || (get_input_shape(op, 2).size() != 4) ||
                 (get_input_type(op) != ngraph::element::f32))
             {
                 do_batch_norm_operation(topology,
