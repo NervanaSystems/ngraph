@@ -236,6 +236,9 @@ namespace ngraph
         /// Returns the tensor for output i
         descriptor::Tensor& get_output_tensor(size_t i) const;
 
+        /// Returns the tensor name for output i
+        const std::string& get_output_tensor_name(size_t i) const;
+
         /// Checks that there is exactly one output and returns its tensor.
         descriptor::Tensor& get_output_tensor() const;
 
@@ -259,6 +262,9 @@ namespace ngraph
 
         /// Returns the partial shape of input i
         const PartialShape& get_input_partial_shape(size_t i) const;
+
+        /// Returns the tensor name for input i
+        const std::string& get_input_tensor_name(size_t i) const;
 
         std::unordered_set<descriptor::Tensor*> liveness_new_list;
         std::unordered_set<descriptor::Tensor*> liveness_free_list;
