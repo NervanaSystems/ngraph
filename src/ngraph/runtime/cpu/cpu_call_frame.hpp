@@ -82,7 +82,7 @@ namespace ngraph
 
                 void inner_call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                                 const std::vector<std::shared_ptr<runtime::Tensor>>& inputs,
-                                const size_t index);
+                                const size_t id);
 
                 std::shared_ptr<CPU_ExternalFunction> m_external_function;
 

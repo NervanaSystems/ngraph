@@ -64,7 +64,7 @@ runtime::cpu::CPU_CallFrame::~CPU_CallFrame()
 void runtime::cpu::CPU_CallFrame::inner_call(
     const std::vector<std::shared_ptr<runtime::Tensor>>& output_tvs,
     const std::vector<std::shared_ptr<runtime::Tensor>>& input_tvs,
-    const size_t index)
+    const size_t id)
 {
     vector<void*> inputs;
     vector<void*> outputs;
@@ -75,11 +75,11 @@ void runtime::cpu::CPU_CallFrame::inner_call(
             static_pointer_cast<runtime::cpu::CPUTensorView>(input_tvs[i]);
         if (m_concurrency == 1)
         {
-            m_ctx_vec[index]->p_en[i] = tv->get_stale();
+            m_ctx_vec[id]->p_en[i] = tv->get_stale();
         }
         else
         {
-            m_ctx_vec[index]->p_en[i] = true;
+            m_ctx_vec[id]->p_en[i] = true;
         }
 
         inputs.push_back(tv->get_data_ptr());
@@ -94,21 +94,21 @@ void runtime::cpu::CPU_CallFrame::inner_call(
     // Invoke compiled computation
     if (!m_external_function->is_direct_execution())
     {
-        m_compiled_function(inputs.data(), outputs.data(), m_ctx_vec[index], cg_ctx);
+        m_compiled_function(inputs.data(), outputs.data(), m_ctx_vec[id], cg_ctx);
     }
     else
     {
-        m_external_function->get_executor()(m_ctx_vec[index], inputs, outputs);
+        m_external_function->get_executor()(m_ctx_vec[id], inputs, outputs);
     }
 
     if (runtime::cpu::IsTracingEnabled())
     {
         GenerateTimeline(m_external_function->get_op_attrs(),
-                         m_ctx_vec[index]->op_durations,
+                         m_ctx_vec[id]->op_durations,
                          m_external_function->get_function_name() + ".timeline.json");
     }
     std::unique_lock<std::mutex> lck(m_mutex);
-    m_id_pool[index] = true;
+    m_id_pool[id] = true;
     m_num_ctx_available++;
     m_cv.notify_all();
 }
@@ -123,23 +123,23 @@ void runtime::cpu::CPU_CallFrame::call(
         m_cv.wait(lck);
     }
 
-    auto index = 0;
+    auto id = 0;
     for (auto i = 0; i < m_concurrency; i++)
     {
         if (m_id_pool[i])
         {
-            index = i;
+            id = i;
             break;
         }
     }
-    NGRAPH_ASSERT(index != m_concurrency);
-    m_id_pool[index] = false;
+    NGRAPH_ASSERT(id != m_concurrency);
+    m_id_pool[id] = false;
     m_num_ctx_available--;
     m_mutex.unlock();
 
-    m_ctx_vec[index]->pc = 0;
+    m_ctx_vec[id]->pc = 0;
     propagate_layouts(output_tvs, m_external_function->get_result_layout_descriptors());
-    inner_call(output_tvs, input_tvs, index);
+    inner_call(output_tvs, input_tvs, id);
 }
 
 void runtime::cpu::CPU_CallFrame::propagate_layouts(
