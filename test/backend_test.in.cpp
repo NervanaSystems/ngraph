@@ -5755,6 +5755,51 @@ NGRAPH_TEST(${BACKEND_NAME}, logical_or)
     EXPECT_EQ((vector<char>{1, 0, 1, 1, 1, 1, 1, 0}), read_vector<char>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, batch_norm_inference_parameters_duplication)
+{
+    auto input_shape = Shape{2, 2, 2, 1};
+    auto input = make_shared<op::Parameter>(element::f32, input_shape);
+
+    auto mvgb_shape = Shape{2};
+    auto mvgb = make_shared<op::Parameter>(element::f32, mvgb_shape);
+
+    double eps = 0.001;
+    auto shape_r = Shape{2, 2, 2, 1};
+    auto bn = make_shared<op::BatchNormInference>(input, mvgb, mvgb, mvgb, mvgb, eps);
+
+    auto f = make_shared<Function>(bn, ParameterVector{input, mvgb, mvgb, mvgb, mvgb});
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    // Create some tensors for input/output
+    auto _input = backend->create_tensor(element::f32, input_shape);
+    copy_data(_input,
+              vector<float>{0.54881352f,
+                            0.71518934f,
+                            0.60276335f,
+                            0.54488319f,
+                            0.42365479f,
+                            0.64589411f,
+                            0.4375872f,
+                            0.89177299f});
+
+    auto _mvgb = backend->create_tensor(element::f32, mvgb_shape);
+    copy_data(_mvgb, vector<float>{1.0f, 1.0f});
+    auto bn_output = backend->create_tensor(element::f32, shape_r);
+
+    vector<float> expected_result{0.54903894f,
+                                  0.71533161f,
+                                  0.60296183f,
+                                  0.54511058f,
+                                  0.42394274f,
+                                  0.64607101f,
+                                  0.43786817f,
+                                  0.89182704f};
+    auto handle = backend->compile(f);
+    handle->call_with_validate({bn_output}, {_input, _mvgb, _mvgb, _mvgb, _mvgb});
+
+    ASSERT_TRUE(
+        ngraph::test::all_close(expected_result, read_vector<float>(bn_output), 1e-3f, 1e-4f));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, batch_norm_fprop_b1c2h2w2)
 {
     auto input_shape = Shape{1, 2, 2, 2};
