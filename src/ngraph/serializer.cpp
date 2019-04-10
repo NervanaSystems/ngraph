@@ -65,6 +65,8 @@
 #include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/fused/prelu.hpp"
+#include "ngraph/op/gather.hpp"
+#include "ngraph/op/gather_nd.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
@@ -804,6 +806,17 @@ static shared_ptr<ngraph::Function>
             case OP_TYPEID::Floor:
             {
                 node = make_shared<op::Floor>(args[0]);
+                break;
+            }
+            case OP_TYPEID::Gather:
+            {
+                auto axis = node_js.at("axis").get<size_t>();
+                node = make_shared<op::Gather>(args[0], args[1], axis);
+                break;
+            }
+            case OP_TYPEID::GatherND:
+            {
+                node = make_shared<op::GatherND>(args[0], args[1]);
                 break;
             }
             case OP_TYPEID::GenerateMask:
@@ -1563,6 +1576,13 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Exp: { break;
     }
     case OP_TYPEID::Floor: { break;
+    }
+    case OP_TYPEID::Gather: { break;
+        auto tmp = dynamic_cast<const op::Gather*>(&n);
+        node["axis"] = tmp->get_axis();
+        break;
+    }
+    case OP_TYPEID::GatherND: { break;
     }
     case OP_TYPEID::GetOutputElement:
     {
