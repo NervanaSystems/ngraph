@@ -77,6 +77,8 @@
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/floor.hpp"
+#include "ngraph/op/gather.hpp"
+#include "ngraph/op/gather_nd.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
@@ -308,6 +310,8 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Divide), &runtime::cpu::CPU_Emitter::emit<op::Divide>},
     {TI(ngraph::op::Equal), &runtime::cpu::CPU_Emitter::emit<op::Equal>},
     {TI(ngraph::op::Erf), &runtime::cpu::CPU_Emitter::emit<op::Erf>},
+    {TI(ngraph::op::Gather), &runtime::cpu::CPU_Emitter::emit<op::Gather>},
+    {TI(ngraph::op::GatherND), &runtime::cpu::CPU_Emitter::emit<op::GatherND>},
     {TI(ngraph::op::GetOutputElement), &runtime::cpu::CPU_Emitter::emit<op::GetOutputElement>},
     {TI(ngraph::op::Greater), &runtime::cpu::CPU_Emitter::emit<op::Greater>},
     {TI(ngraph::op::GreaterEq), &runtime::cpu::CPU_Emitter::emit<op::GreaterEq>},

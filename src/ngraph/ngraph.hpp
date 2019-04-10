@@ -97,6 +97,8 @@
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/fused/prelu.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/gather.hpp"
+#include "ngraph/op/gather_nd.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
 #include "ngraph/op/less.hpp"
