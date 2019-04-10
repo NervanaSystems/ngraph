@@ -26,7 +26,7 @@ namespace ngraph
         {
         public:
             using op_query_t = std::function<bool(const Node& node)>;
-            ;
+
             FusedOpDecomposition(op_query_t callback = nullptr);
             bool run_on_node(std::shared_ptr<ngraph::Node> node) override;
 
