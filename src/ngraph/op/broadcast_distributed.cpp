@@ -30,7 +30,9 @@ void op::BroadcastDistributed::validate_and_infer_types()
     NODE_VALIDATION_CHECK(this,
                           get_input_element_type(0).is_dynamic() ||
                               get_input_element_type(0) == element::f32 ||
-                              get_input_element_type(0) == element::f64,
+                              get_input_element_type(0) == element::f64 ||
+                              get_input_element_type(0) == element::i32 ||
+                              get_input_element_type(0) == element::i64,
                           "Only element types f32 and f64 are supported (argument element type: ",
                           get_input_element_type(0),
                           ").");
