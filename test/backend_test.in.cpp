@@ -7379,7 +7379,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_dynamic_offset)
 
 #if defined(BACKEND_TEST_CPU) || defined(BACKEND_TEST_INTERPRETER)
 // XXX lfeng: remove backend check once all backends support this
-TEST(${BACKEND_NAME}, batch_dot_forward)
+TEST(${BACKEND_NAME}, batch_mat_mul_forward)
 {
     auto make_dot = [](ParameterVector& a_params, ParameterVector& b_params) {
         Shape shape_a{2, 3};

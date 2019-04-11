@@ -97,26 +97,6 @@ void op::BatchMatMulTranspose::generate_adjoints(autodiff::Adjoints& adjoints,
     auto arg0 = get_inputs().at(0).get_output().get_node(); // NxIxJ (maybe transposed)
     auto arg1 = get_inputs().at(1).get_output().get_node(); // NxJxK (maybe transposed)
 
-    auto batch_transpose = [](const shared_ptr<Node>& node) -> shared_ptr<Node> {
-        const auto& node_shape = node->get_output_partial_shape(0);
-        // index 0 is the batch, only transposing the others.
-        if (node_shape.is_static())
-        {
-            // Applies static shape transpose
-            Shape static_shape = node_shape.to_shape();
-            std::swap(static_shape[1], static_shape[2]);
-            return make_shared<op::Reshape>(node, AxisVector{0, 2, 1}, static_shape);
-        }
-        else
-        {
-            // Applies dynamic transpose
-            // XXX lfeng: to be implemented using reshape that supports PartialShape
-            throw ngraph_error(
-                "generate_adjoints not implemented for BatchMatMulTranspose with dynamic input "
-                "shapes");
-        }
-    };
-
     // If arg1 is already transposed, it does not need to be transposed again
     auto delta_dot_arg1 =
         make_shared<op::BatchMatMulTranspose>(delta, arg1, false, !m_transpose_arg1); // IK.KJ->IJ
