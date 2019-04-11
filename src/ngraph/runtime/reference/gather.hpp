@@ -65,7 +65,7 @@ namespace ngraph
                 size_t out_ndim = static_cast<size_t>(out_shape.size());
                 Coordinate out_outer_start_corner(out_ndim, 0);
                 Coordinate out_outer_end_corner(out_shape);
-                for (size_t i = axis - 1; i < out_ndim; i++)
+                for (size_t i = axis; i < out_ndim; i++)
                 {
                     out_outer_end_corner[i] = 1;
                 }
@@ -82,7 +82,7 @@ namespace ngraph
                 size_t params_ndim = static_cast<size_t>(params_shape.size());
                 Coordinate params_outer_start_corner(params_ndim, 0);
                 Coordinate params_outer_end_corner(params_shape);
-                for (size_t i = axis - 1; i < params_ndim; i++)
+                for (size_t i = axis; i < params_ndim; i++)
                 {
                     params_outer_end_corner[i] = 1;
                 }
@@ -132,10 +132,6 @@ namespace ngraph
                 {
                     T* params_prime = &params[params_outer_transform.index(params_outer_coord)];
                     T* out_outer = &out[out_outer_transform.index(*out_outer_coord_iter)];
-                    for (size_t i = axis; i < out_inner_ndim; i++)
-                    {
-                        indices_outer_end_corner[i] = 1;
-                    }
 
                     auto out_inner_coord_iter = out_inner_transform.begin();
                     for (const Coordinate& indices_outer_coord : indices_outer_transform)
