@@ -1,7 +1,7 @@
 // Set LABEL variable if empty or not declared
 try{ if(LABEL.trim() == "") {throw new Exception();} }catch(Exception e){LABEL="onnx && ci"}; echo "${LABEL}"
 try{ if(BRANCH.trim() == "") {throw new Exception();} }catch(Exception e){BRANCH="master"}; echo "${BRANCH}"
-try{ if(DOCKER_REGISTRY.trim() == "") {throw new Exception("No Docker registry specified!");} }
+if(DOCKER_REGISTRY.trim() == "") {throw new Exception("No Docker registry specified!");}
 // CI settings and constants
 PROJECT_NAME = "ngraph_cpp"
 CI_ROOT = ".ci/onnx/jenkins"
