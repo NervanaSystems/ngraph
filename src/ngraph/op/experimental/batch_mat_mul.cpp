@@ -24,8 +24,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::BatchMatMul::BatchMatMul(const shared_ptr<Node>& arg0,
-                       const shared_ptr<Node>& arg1)
+op::BatchMatMul::BatchMatMul(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
     : Op("BatchMatMul", check_single_output_args({arg0, arg1}))
 {
     constructor_validate_and_infer_types();
@@ -65,7 +64,6 @@ void op::BatchMatMul::validate_and_infer_types()
     // Construct output shape with more information if avalible.
     if (arg0_shape.rank().same_scheme(3) && arg1_shape.rank().same_scheme(3))
     {
-        std::cout << vector_to_string(arg0_shape.to_shape()) << " " << vector_to_string(arg1_shape.to_shape()) << std::endl;
         NODE_VALIDATION_CHECK(this,
                               arg0_shape[0].compatible(arg1_shape[0]),
                               "Batch size dimensions are not equal while creating BatchMatMul.");
@@ -73,8 +71,7 @@ void op::BatchMatMul::validate_and_infer_types()
                               arg0_shape[2].compatible(arg1_shape[1]),
                               "Product dimensions are not equal while creating BatchMatMul.");
         auto batch_size = arg0_shape[0].is_static() ? arg0_shape[0] : arg1_shape[0];
-        output_shape =
-            PartialShape{batch_size, arg0_shape[1], arg1_shape[2]};
+        output_shape = PartialShape{batch_size, arg0_shape[1], arg1_shape[2]};
     }
     auto output_et = arg0_et.is_dynamic() ? arg1_et : arg0_et;
     set_output_type(0, output_et, output_shape);
@@ -87,9 +84,31 @@ void op::BatchMatMul::generate_adjoints(autodiff::Adjoints& adjoints, const Node
     auto arg0 = get_inputs().at(0).get_output().get_node(); // NxIxJ
     auto arg1 = get_inputs().at(1).get_output().get_node(); // NxJxK
 
-    auto delta_dot_arg1 = make_shared<op::BatchMatMul>(delta, arg1); // IK.KJ->IJ
+    auto delta_dot_arg1 =
+        make_shared<op::BatchMatMul>(delta, util::batch_mat_transpose(arg1)); // IK.KJ->IJ
     adjoints.add_delta(arg0, delta_dot_arg1);
 
-    auto arg0_dot_delta = make_shared<BatchMatMul>(arg0, delta); // JI.IK->JK
+    auto arg0_dot_delta =
+        make_shared<BatchMatMul>(util::batch_mat_transpose(arg0), delta); // JI.IK->JK
     adjoints.add_delta(arg1, arg0_dot_delta);
+}
+
+shared_ptr<Node> op::util::batch_mat_transpose(const shared_ptr<Node>& node)
+{
+    const auto& node_shape = node->get_output_partial_shape(0);
+    // index 0 is the batch, only transposing the others.
+    if (node_shape.is_static())
+    {
+        // Applies static shape transpose
+        Shape static_shape = node_shape.to_shape();
+        std::swap(static_shape[1], static_shape[2]);
+        return make_shared<op::Reshape>(node, AxisVector{0, 2, 1}, static_shape);
+    }
+    else
+    {
+        // Applies dynamic transpose
+        // XXX lfeng: to be implemented using reshape that supports PartialShape
+        throw ngraph_error(
+            "generate_adjoints not implemented for BatchMatMulTranspose with dynamic input shapes");
+    }
 }

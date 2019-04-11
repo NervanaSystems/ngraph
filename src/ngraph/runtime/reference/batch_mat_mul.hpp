@@ -31,11 +31,11 @@ namespace ngraph
         {
             template <typename T>
             void batch_mat_mul(const T* arg0,
-                           const T* arg1,
-                           T* out,
-                           const Shape& arg0_shape,
-                           const Shape& arg1_shape,
-                           const Shape& out_shape)
+                               const T* arg1,
+                               T* out,
+                               const Shape& arg0_shape,
+                               const Shape& arg1_shape,
+                               const Shape& out_shape)
             {
                 // Call dot for each pair of tensors in the batch
                 const size_t batch_size = arg0_shape[0];

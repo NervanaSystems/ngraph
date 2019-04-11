@@ -41,9 +41,9 @@ namespace ngraph
             /// \param transpose_0 Apply transpose to arg0.
             /// \param transpose_1 Apply transpose to arg1.
             BatchMatMulTranspose(const std::shared_ptr<Node>& arg0,
-                     const std::shared_ptr<Node>& arg1,
-                     bool transpose_0 = false,
-                     bool transpose_1 = false);
+                                 const std::shared_ptr<Node>& arg1,
+                                 bool transpose_0 = false,
+                                 bool transpose_1 = false);
 
             bool get_transpose_arg0() const { return m_transpose_arg0; }
             bool get_transpose_arg1() const { return m_transpose_arg1; }

@@ -36,8 +36,7 @@ namespace ngraph
             ///
             /// \param arg0 The node producing the first argument.
             /// \param arg1 The node producing the second argument.
-            BatchMatMul(const std::shared_ptr<Node>& arg0,
-                     const std::shared_ptr<Node>& arg1);
+            BatchMatMul(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
 
             virtual void validate_and_infer_types() override;
 
@@ -48,5 +47,10 @@ namespace ngraph
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
         };
+
+        namespace util
+        {
+            std::shared_ptr<Node> batch_mat_transpose(const std::shared_ptr<Node>& node);
+        }
     }
 }

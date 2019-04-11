@@ -377,14 +377,14 @@ namespace ngraph
 
             template <typename T>
             static void emitBatchMatMul(const ngraph::Node* node,
-                                     const Shape& shape_a,
-                                     const Shape& shape_b,
-                                     const Shape& shape_c,
-                                     const std::vector<TensorViewWrapper>& args,
-                                     const std::vector<TensorViewWrapper>& out,
-                                     const bool transpose_a,
-                                     const bool transpose_b,
-                                     CodeWriter& writer)
+                                        const Shape& shape_a,
+                                        const Shape& shape_b,
+                                        const Shape& shape_c,
+                                        const std::vector<TensorViewWrapper>& args,
+                                        const std::vector<TensorViewWrapper>& out,
+                                        const bool transpose_a,
+                                        const bool transpose_b,
+                                        CodeWriter& writer)
             {
                 writer.block_begin();
 
@@ -451,14 +451,14 @@ namespace ngraph
                 const Shape& padded_result_shape = pad_with(node->get_shape(), 1, 3);
                 // Step 1: dot(A,B)
                 emitBatchMatMul<ngraph::op::MatmulBias>(node,
-                                                     arg0_shape,
-                                                     arg1_shape,
-                                                     padded_result_shape,
-                                                     args,
-                                                     out,
-                                                     cg->get_is_a_transposed(),
-                                                     cg->get_is_b_transposed(),
-                                                     writer);
+                                                        arg0_shape,
+                                                        arg1_shape,
+                                                        padded_result_shape,
+                                                        args,
+                                                        out,
+                                                        cg->get_is_a_transposed(),
+                                                        cg->get_is_b_transposed(),
+                                                        writer);
 
                 // Step 2: add bias
                 if (args.size() < 3)
@@ -573,14 +573,29 @@ namespace ngraph
             {
                 const auto* cg = static_cast<const ngraph::op::BatchMatMul*>(node);
                 emitBatchMatMul<ngraph::op::BatchMatMul>(node,
-                                                   cg->get_input_shape(0),
-                                                   cg->get_input_shape(1),
-                                                   out[0].get_shape(),
-                                                   args,
-                                                   out,
-                                                   cg->get_transpose_arg0(),
-                                                   cg->get_transpose_arg1(),
-                                                   writer);
+                                                         cg->get_input_shape(0),
+                                                         cg->get_input_shape(1),
+                                                         out[0].get_shape(),
+                                                         args,
+                                                         out,
+                                                         false,
+                                                         false,
+                                                         writer);
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchMatMulTranspose)
+            {
+                const auto* cg = static_cast<const ngraph::op::BatchMatMulTranspose*>(node);
+                emitBatchMatMul<ngraph::op::BatchMatMul>(node,
+                                                         cg->get_input_shape(0),
+                                                         cg->get_input_shape(1),
+                                                         out[0].get_shape(),
+                                                         args,
+                                                         out,
+                                                         cg->get_transpose_arg0(),
+                                                         cg->get_transpose_arg1(),
+                                                         writer);
             }
 
             template <>

@@ -876,61 +876,26 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_batchmatmul_tensor2_tensor2)
 #endif
 
 #if defined(AUTODIFF_BACKEND_CPU)
-NGRAPH_TEST(${BACKEND_NAME}, backwards_batchmatmul_tensor2_tensor2_transpose0)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_batchmatmultranspose_tensor2_tensor2)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    std::string backend_name = "${BACKEND_NAME}";
+
+    const std::string file_name("mxnet/batch_dot_3.json");
+    auto f = make_function_from_file(file_name);
+
     test::Uniform<float> rng(-1.0f, 1.0f);
-    Shape shape0{3, 5, 4};
-    Shape shape1{3, 5, 6};
-    auto x0 = rng.initialize(backend->create_tensor<float>(shape0));
-    auto x1 = rng.initialize(backend->create_tensor<float>(shape1));
+    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> args;
+    for (shared_ptr<op::Parameter> param : f->get_parameters())
+    {
+        args.push_back(rng.initialize(backend->create_tensor<float>(param->get_shape())));
+    }
 
-    auto make_graph = [shape0, shape1]() {
-        auto X0 = make_shared<op::Parameter>(element::f32, shape0);
-        auto X1 = make_shared<op::Parameter>(element::f32, shape1);
-        return make_shared<Function>(make_shared<op::BatchMatMulTranspose>(X0, X1, true, false),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
-    };
-
-    EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1}, .01f, .01f));
-}
-
-NGRAPH_TEST(${BACKEND_NAME}, backwards_batchmatmul_tensor2_tensor2_transpose1)
-{
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-    test::Uniform<float> rng(-1.0f, 1.0f);
-    Shape shape0{3, 5, 4};
-    Shape shape1{3, 6, 4};
-    auto x0 = rng.initialize(backend->create_tensor<float>(shape0));
-    auto x1 = rng.initialize(backend->create_tensor<float>(shape1));
-
-    auto make_graph = [shape0, shape1]() {
-        auto X0 = make_shared<op::Parameter>(element::f32, shape0);
-        auto X1 = make_shared<op::Parameter>(element::f32, shape1);
-        return make_shared<Function>(make_shared<op::BatchMatMulTranspose>(X0, X1, false, true),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
-    };
-
-    EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1}, .01f, .01f));
-}
-
-NGRAPH_TEST(${BACKEND_NAME}, backwards_batchmatmul_tensor2_tensor2_transpose_all)
-{
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-    test::Uniform<float> rng(-1.0f, 1.0f);
-    Shape shape0{3, 4, 5};
-    Shape shape1{3, 6, 4};
-    auto x0 = rng.initialize(backend->create_tensor<float>(shape0));
-    auto x1 = rng.initialize(backend->create_tensor<float>(shape1));
-
-    auto make_graph = [shape0, shape1]() {
-        auto X0 = make_shared<op::Parameter>(element::f32, shape0);
-        auto X1 = make_shared<op::Parameter>(element::f32, shape1);
-        return make_shared<Function>(make_shared<op::BatchMatMulTranspose>(X0, X1, true, true),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
-    };
-
-    EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1}, .01f, .01f));
+    auto g = make_function_from_file(file_name);
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
+    pass_manager.run_passes(g);
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), f, g, args, .01f, .01f));
 }
 #endif
 
