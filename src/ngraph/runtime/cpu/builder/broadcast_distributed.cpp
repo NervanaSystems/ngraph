@@ -21,6 +21,7 @@
 #include <mpi.h>
 #endif
 
+#include "ngraph/log.hpp"
 #include "ngraph/op/broadcast_distributed.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 
