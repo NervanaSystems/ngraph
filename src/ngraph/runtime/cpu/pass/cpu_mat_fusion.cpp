@@ -32,7 +32,7 @@
 #include "ngraph/op/slice.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
-#include "ngraph/runtime/cpu/op/batch_dot.hpp"
+#include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/util.hpp"
 
@@ -506,7 +506,7 @@ std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
     return new_conv;
 }
 
-std::shared_ptr<Node> fuse_batch_dot(const std::shared_ptr<Node>& n)
+std::shared_ptr<Node> fuse_batch_mat_mul_transpose(const std::shared_ptr<Node>& n)
 {
     const int num_op_branches = 2;
     std::shared_ptr<pattern::op::Label> input[num_op_branches];
@@ -575,7 +575,7 @@ std::shared_ptr<Node> fuse_batch_dot(const std::shared_ptr<Node>& n)
     }
     if (fuse_input[0] && fuse_input[1])
     {
-        return std::make_shared<op::BatchDot>(
+        return std::make_shared<op::BatchMatMulTranspose>(
             fuse_input[0], fuse_input[1], transpose[0], transpose[1]);
     }
     return {nullptr};
@@ -592,7 +592,7 @@ bool runtime::cpu::pass::CPUBatchFusion::run_on_function(std::shared_ptr<Functio
         {
             if (m_fusion_type & ngraph::pass::DIFFERENTIABLE_FUSIONS)
             {
-                if (auto fused_node = fuse_batch_dot(n))
+                if (auto fused_node = fuse_batch_mat_mul_transpose(n))
                 {
                     func->replace_node(n, fused_node);
                     modified = true;
