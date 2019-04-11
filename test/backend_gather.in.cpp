@@ -76,7 +76,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gather)
     auto p = backend->create_tensor(element::f32, params_shape);
     copy_data(p, vector<float>{1.0, 1.2, 1.9, 2.3, 3.4, 3.9, 4.5, 5.7, 5.9});
     auto i = backend->create_tensor(element::i32, indices_shape);
-    copy_data(p, vector<int32_t>{0, 2});
+    copy_data(i, vector<int32_t>{0, 2});
     auto result = backend->create_tensor(element::f32, out_shape);
 
     auto c = backend->compile(f);

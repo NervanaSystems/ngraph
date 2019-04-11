@@ -57,6 +57,11 @@ namespace ngraph
                 Shape params_prime_shape(params_shape);
                 params_prime_shape.erase(params_prime_shape.begin(),
                                          params_prime_shape.begin() + axis);
+                // params_prime needs to be at least 2D
+                if(static_cast<size_t>(params_prime_shape.size()) == 1)
+                {
+                    params_prime_shape.emplace_back(1);
+                }
                 // prepare shape of out_prime (same as params_prime except for first dim)
                 Shape out_prime_shape(params_prime_shape);
                 out_prime_shape[0] = indices_shape[indices_ndim - 1];
@@ -138,12 +143,12 @@ namespace ngraph
                     {
                         U* indices_prime = &indices[indices_outer_transform.index(indices_outer_coord)];
                         T* out_prime = &out_outer[out_inner_transform.index(*out_inner_coord_iter)];
-                        gather_nd(params_prime,
-                                  indices_prime,
-                                  out_prime,
-                                  params_prime_shape,
-                                  indices_prime_shape,
-                                  out_prime_shape);
+                        gather_nd<T, U>(params_prime,
+                                        indices_prime,
+                                        out_prime,
+                                        params_prime_shape,
+                                        indices_prime_shape,
+                                        out_prime_shape);
                         out_inner_coord_iter++;
                     }
                     out_outer_coord_iter++;
