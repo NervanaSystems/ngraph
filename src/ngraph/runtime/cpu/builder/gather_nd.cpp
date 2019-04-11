@@ -33,8 +33,6 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::GatherND)
             {
                 auto& functors = external_function->get_functors();
-                const ngraph::op::GatherND* gather_nd =
-                    static_cast<const ngraph::op::GatherND*>(node);
                 CPUKernelFunctor functor;
 
                 auto& params_tensor = external_function->get_tensor_data(args[0].get_name());
