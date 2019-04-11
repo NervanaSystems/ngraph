@@ -92,6 +92,7 @@
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/op/topk.hpp"
 #include "ngraph/parameter_vector.hpp"
 #include "ngraph/util.hpp"
 
@@ -2021,6 +2022,44 @@ shared_ptr<runtime::Executable>
             topology.add(lrn);
             break;
         }
+        case OP_TYPEID::TopK:
+        {
+            arguments_check(op, 1, 2);
+
+            const shared_ptr<op::TopK> topk_op = static_pointer_cast<op::TopK>(op);
+
+            const size_t top_k_axis = topk_op->get_top_k_axis();
+            const element::Type& index_elem_type = topk_op->get_index_element_type();
+            const size_t k = topk_op->get_k();
+            const bool compute_max = topk_op->get_compute_max();
+
+            do_topk_operation(topology,
+                              op->get_input_tensor_name(0),
+                              op->get_input_shape(0),
+                              op->get_input_element_type(0),
+                              op->get_output_tensor_name(0),
+                              op->get_output_shape(0),
+                              op->get_output_element_type(0),
+                              index_elem_type,
+                              top_k_axis,
+                              k,
+                              compute_max,
+                              true);
+
+            do_topk_operation(topology,
+                              op->get_input_tensor_name(0),
+                              op->get_input_shape(0),
+                              op->get_input_element_type(0),
+                              op->get_output_tensor_name(1),
+                              op->get_output_shape(1),
+                              op->get_output_element_type(1),
+                              index_elem_type,
+                              top_k_axis,
+                              k,
+                              compute_max,
+                              false);
+            break;
+        }
         case OP_TYPEID::AllReduce:
         case OP_TYPEID::BroadcastDistributed:
         case OP_TYPEID::BroadcastLike:
@@ -2041,7 +2080,6 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::ScalarConstantLike:
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::StopGradient:
-        case OP_TYPEID::TopK:
         case OP_TYPEID::Transpose:
         case OP_TYPEID::EmbeddingLookup:
         case OP_TYPEID::DynBroadcast:
