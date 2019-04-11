@@ -19,17 +19,22 @@
 #include <string>
 #include <vector>
 
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
+#include "mock_provenance_config.hpp"
 #include "ngraph/ngraph.hpp"
 
 using namespace std;
 using namespace ngraph;
+using ::testing::Return;
 
 using ProvSet = std::unordered_set<std::string>;
 
 TEST(provenance, provenance)
 {
+    auto provenance_config = std::make_shared<MockProvenanceConfig>();
+    EXPECT_CALL(*provenance_config, is_enabled()).WillRepeatedly(Return(true));
     //
     // Before:
     //
@@ -68,7 +73,7 @@ TEST(provenance, provenance)
         auto f = make_shared<Function>(c, ParameterVector{x, y});
 
         auto new_c = make_shared<op::Subtract>(a, b);
-        replace_node(c, new_c);
+        replace_node(c, new_c, provenance_config);
 
         EXPECT_EQ(new_c->get_provenance_tags(), ProvSet{"tag_c"});
     }
@@ -114,7 +119,7 @@ TEST(provenance, provenance)
 
         auto d = make_shared<op::Subtract>(a, b);
         d->add_provenance_tag("tag_d");
-        replace_node(c, d);
+        replace_node(c, d, provenance_config);
 
         EXPECT_EQ(d->get_provenance_tags(), (ProvSet{"tag_c", "tag_d"}));
     }
@@ -152,7 +157,7 @@ TEST(provenance, provenance)
 
         auto d = make_zero(element::i32, Shape{2, 3, 4});
         d->add_provenance_tag("tag_d");
-        replace_node(c, d);
+        replace_node(c, d, provenance_config);
 
         EXPECT_EQ(d->get_provenance_tags(), (ProvSet{"tag_a", "tag_b", "tag_c", "tag_d"}));
     }
@@ -189,7 +194,7 @@ TEST(provenance, provenance)
         auto f = make_shared<Function>(c, ParameterVector{x, y});
 
         auto d = make_zero(element::i32, Shape{2, 3, 4});
-        replace_node(c, d);
+        replace_node(c, d, provenance_config);
 
         EXPECT_EQ(d->get_provenance_tags(), (ProvSet{"tag_a", "tag_b", "tag_c"}));
     }
@@ -232,7 +237,7 @@ TEST(provenance, provenance)
 
         auto d = make_zero(element::i32, Shape{2, 3, 4});
         auto e = make_shared<op::Negative>(d);
-        replace_node(c, e);
+        replace_node(c, e, provenance_config);
 
         EXPECT_EQ(d->get_provenance_tags(), (ProvSet{"tag_a", "tag_b", "tag_c"}));
         EXPECT_EQ(e->get_provenance_tags(), (ProvSet{"tag_a", "tag_b", "tag_c"}));

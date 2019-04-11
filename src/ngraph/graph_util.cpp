@@ -65,18 +65,16 @@ void ngraph::traverse_nodes(const Function* p,
     traverse_nodes(nodes, f, include_control_deps);
 }
 
-// This version of traverses directly from input/output nodes to perform functions on
-// graphs that are not wrapped by functions. Most useful for finding parameters of a graph
-// directly from the result nodes, not from function parameters.
-void ngraph::traverse_nodes(const NodeVector& io_nodes,
+void ngraph::traverse_nodes(const NodeVector& subgraph_results,
                             std::function<void(std::shared_ptr<Node>)> f,
                             bool include_control_deps,
-                            NodeVector stop_nodes)
+                            const NodeVector& subgraph_params)
 {
-    std::unordered_set<std::shared_ptr<Node>> instances_seen(stop_nodes.begin(), stop_nodes.end());
+    std::unordered_set<std::shared_ptr<Node>> instances_seen{subgraph_params.begin(),
+                                                             subgraph_params.end()};
     std::deque<std::shared_ptr<Node>> stack;
 
-    for (auto r : io_nodes)
+    for (auto r : subgraph_results)
     {
         stack.push_front(r);
     }
@@ -138,7 +136,9 @@ void ngraph::traverse_functions(std::shared_ptr<ngraph::Function> p,
     }
 }
 
-void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement)
+void ngraph::replace_node(std::shared_ptr<Node> target,
+                          std::shared_ptr<Node> replacement,
+                          std::shared_ptr<ProvenanceConfig> provenance_config)
 {
     if (target->is_output())
     {
@@ -153,19 +153,23 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
     // Fix input/output descriptors
     assert(target->get_outputs().size() == replacement->get_outputs().size());
 
-    auto set_replacement_prov = [replacement](std::shared_ptr<Node> node) {
-        replacement->merge_provenance_tags_from(node);
-    };
-    traverse_nodes({target}, set_replacement_prov, false, replacement->get_arguments());
+    if (provenance_config->is_enabled())
+    {
+        auto set_replacement_prov = [replacement](std::shared_ptr<Node> node) {
+            replacement->merge_provenance_tags_from(node);
+        };
 
-    auto propagate_replacement_prov = [replacement](std::shared_ptr<Node> node) {
-        if (is_post_dominated(node.get(), replacement.get()))
-        {
-            node->merge_provenance_tags_from(replacement);
-        }
-    };
+        traverse_nodes({target}, set_replacement_prov, false, replacement->get_arguments());
 
-    traverse_nodes({replacement}, propagate_replacement_prov, false);
+        auto propagate_replacement_prov = [replacement](std::shared_ptr<Node> node) {
+            if (is_post_dominated(node.get(), replacement.get()))
+            {
+                node->merge_provenance_tags_from(replacement);
+            }
+        };
+
+        traverse_nodes({replacement}, propagate_replacement_prov, false);
+    }
 
     // For each of target's output O with replacement output O_rep:
     //     For each O's connected downstream input I:
@@ -482,6 +486,13 @@ NodeVector ngraph::get_subgraph_outputs(const NodeVector& nodes,
         }
     }
     return outputs;
+}
+
+NodeVector ngraph::extract_subgraph(const NodeVector& results, const NodeVector& args)
+{
+    NodeVector subgraph;
+    traverse_nodes(results, [&](std::shared_ptr<Node> n) { subgraph.push_back(n); }, true, args);
+    return subgraph;
 }
 
 bool ngraph::is_used(Node* node)
