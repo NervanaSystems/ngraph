@@ -405,12 +405,12 @@ namespace ngraph
         /// \return true if this input is relevant to its node's output shapes; else false.
         bool get_is_relevant_to_shapes() const
         {
-            return m_node->m_inputs[m_index].get_is_relevant_to_shape();
+            return m_node->m_inputs.at(m_index).get_is_relevant_to_shape();
         }
         /// \return true if this input is relevant to its node's output values; else false.
         bool get_is_relevant_to_values() const
         {
-            return m_node->m_inputs[m_index].get_is_relevant_to_value();
+            return m_node->m_inputs.at(m_index).get_is_relevant_to_value();
         }
 
         /// \brief Replaces the source output of this input.
@@ -585,7 +585,7 @@ namespace ngraph
     {
         std::set<Input<Node>> result;
 
-        for (auto& input : m_node->m_outputs[m_index].get_inputs())
+        for (auto& input : m_node->m_outputs.at(m_index).get_inputs())
         {
             result.emplace(input->get_raw_pointer_node(), input->get_index());
         }
