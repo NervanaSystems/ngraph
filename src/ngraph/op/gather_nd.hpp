@@ -22,9 +22,12 @@ namespace ngraph
 {
     namespace op
     {
+        /// \brief Gather slices from params with shapes given by indices
         class GatherND : public Op
         {
         public:
+            // \param params The tensor from which slices are gathered
+            // \param indices Index tensor: Data type be int32_t or int64_t
             GatherND(const std::shared_ptr<Node>& params, const std::shared_ptr<Node>& indices)
                 : Op("GatherND", check_single_output_args({params, indices}))
             {

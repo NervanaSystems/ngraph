@@ -22,9 +22,13 @@ namespace ngraph
 {
     namespace op
     {
+        /// \brief Gather slices from axis of params according to indices
         class Gather : public Op
         {
         public:
+            // \param params The tensor from which slices are gathered
+            // \param indices Index tensor: Data type be int32_t or int64_t
+            // \param axis Axis in params to gather
             Gather(const std::shared_ptr<Node>& params,
                    const std::shared_ptr<Node>& indices,
                    size_t axis = 0)
