@@ -28,6 +28,7 @@
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/placement.hpp"
+#include "ngraph/provenance_config.hpp"
 
 namespace ngraph
 {
@@ -72,7 +73,10 @@ namespace ngraph
     void traverse_functions(std::shared_ptr<Function> p,
                             std::function<void(std::shared_ptr<Function>)> f);
 
-    void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
+    void replace_node(
+        std::shared_ptr<Node> target,
+        std::shared_ptr<Node> replacement,
+        std::shared_ptr<ProvenanceConfig> provenance_config = std::make_shared<ProvenanceConfig>());
 
     template <typename T>
     std::list<std::shared_ptr<Node>> topological_sort(const T& nodes,
