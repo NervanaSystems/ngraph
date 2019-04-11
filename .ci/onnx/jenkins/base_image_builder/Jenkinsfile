@@ -1,6 +1,6 @@
 // Set LABEL variable if empty or not declared
 try{ if(LABEL.trim() == "") {throw new Exception();} }catch(Exception e){LABEL="onnx && ci"}; echo "${LABEL}"
-try{ if(DOCKER_REGISTRY.trim() == "") {throw new Exception();} }catch(Exception e){DOCKER_REGISTRY="amr-registry.caas.intel.com"}; echo "${DOCKER_REGISTRY}"
+try{ if(DOCKER_REGISTRY.trim() == "") {throw new Exception("No Docker registry specified!");} }
 // CI settings and constants
 PROJECT_NAME = "ngraph_cpp"
 CI_ROOT = ".ci/onnx/jenkins"
@@ -22,6 +22,7 @@ def buildImage(configurationMaps) {
     Closure buildMethod = { configMap ->
         sh """
             ${CI_ROOT}/utils/docker.sh build \
+                                --docker_registry=${DOCKER_REGISTRY}
                                 --name=${configMap["projectName"]} \
                                 --version=${configMap["name"]} \
                                 --dockerfile_path=${configMap["dockerfilePath"]} || return 1

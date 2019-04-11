@@ -18,10 +18,11 @@
 readonly PARAMETERS=( 'name' 'version' 'container_name' 'volumes' 'env' 'ports' 'dockerfile_path' 'directory' 'docker_registry'
                       'options' 'tag' 'engine' 'frontend' 'new_tag' 'image_name' 'repository_type' 'build_cores_number')
 readonly WORKDIR="$(git rev-parse --show-toplevel)"
-DOCKER_REGISTRY="amr-registry.caas.intel.com"
 
-#Example of usage: login
+#Example of usage: login ${docker_registry}
 docker.login() {
+    local registry="${1}"
+
     local i
     local parameters
 
@@ -29,17 +30,18 @@ docker.login() {
     do
         parameters+=" --${i}"
     done
-    docker login ${parameters} ${DOCKER_REGISTRY}
+    docker login ${parameters} ${registry}
 }
 
-#Example of usage: get_image_name ${name} ${version} ${tag} ${engine} ${repository_type} ${frontend}
+#Example of usage: get_image_name ${docker_registry} ${name} ${version} ${tag} ${engine} ${repository_type} ${frontend}
 docker.get_image_name() {
-    local name="${1}"
-    local version="${2}"
-    local tag="${3}"
-    local engine="${4}"
-    local repository_type="${5}"
-    local frontend="${6}"
+    local registry="${1}"
+    local name="${2}"
+    local version="${3}"
+    local tag="${4}"
+    local engine="${5}"
+    local repository_type="${6}"
+    local frontend="${7}"
 
     if [ "${repository_type,,}" == "private" ]; then
         repository_type="${repository_type,,}/"
@@ -55,8 +57,7 @@ docker.get_image_name() {
         frontend="/${frontend}"
     fi
 
-    # amr-registry.caas.intel.com/aibt/aibt/ngraph_cpp/ubuntu_16_04/base:ci
-    echo "${DOCKER_REGISTRY}/aibt/aibt/${name,,}/${repository_type,,}${version,,}${engine,,}${frontend,,}:${tag}"
+    echo "${registry,,}/aibt/aibt/${name,,}/${repository_type,,}${version,,}${engine,,}${frontend,,}:${tag}"
 }
 
 docker.get_git_token() {
@@ -268,11 +269,8 @@ main() {
             fi
         done
     done
-    if [ -z ${DOCKER_REGISTRY} ]; then
-        DOCKER_REGISTRY="${DOCKER_REGISTRY}"
-    fi
     if [ -z ${image_name} ]; then
-        local image_name="$(docker.get_image_name ${name} ${version} ${tag:-"ci"} ${engine:-"base"} ${repository_type:-"public"} ${frontend})"
+        local image_name="$(docker.get_image_name ${docker_registry} ${name} ${version} ${tag:-"ci"} ${engine:-"base"} ${repository_type:-"public"} ${frontend})"
     fi
     case "${action}" in
         build)
@@ -302,7 +300,7 @@ main() {
         clean_up)
             docker.clean_up;;
         login)
-            docker.login;;
+            docker.login "${docker_registry}";;
         release)
             docker.release "${image_name}";;
         *)
