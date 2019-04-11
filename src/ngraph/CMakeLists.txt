@@ -46,6 +46,7 @@ set (SRC
     coordinate_transform.cpp
     cpio.cpp
     cpio.hpp
+    deprecated.hpp
     descriptor/input.cpp
     descriptor/input.hpp
     descriptor/layout/dense_tensor_layout.cpp

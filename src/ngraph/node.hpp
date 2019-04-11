@@ -31,22 +31,12 @@
 #include "ngraph/assertion.hpp"
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/check.hpp"
+#include "ngraph/deprecated.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/node_vector.hpp"
 #include "ngraph/placement.hpp"
-
-// There is work in progress on deprecating some old APIs here, and for development purposes it is
-// nice to have a compile-time option to turn on actual deprecation.
-//
-// Enable the deprecation with -DNGRAPH_DEPRECATE_OLD_NODE_APIS=ON at cmake time.
-#ifdef NGRAPH_DEPRECATE_OLD_NODE_APIS
-#define OLD_NODE_APIS_DEPRECATED(msg) __attribute__((deprecated((msg))))
-#undef NGRAPH_DEPRECATE_OLD_NODE_APIS
-#else
-#define OLD_NODE_APIS_DEPRECATED(msg)
-#endif
 
 namespace ngraph
 {
@@ -197,19 +187,18 @@ namespace ngraph
         virtual std::ostream& write_short_description(std::ostream&) const;
         virtual std::ostream& write_long_description(std::ostream&) const;
 
-        std::deque<descriptor::Input>& get_inputs() OLD_NODE_APIS_DEPRECATED("use inputs() instead")
+        std::deque<descriptor::Input>& get_inputs() NGRAPH_DEPRECATED("use inputs() instead")
         {
             return m_inputs;
         }
         const std::deque<descriptor::Input>& get_inputs() const
-            OLD_NODE_APIS_DEPRECATED("use inputs() instead")
+            NGRAPH_DEPRECATED("use inputs() instead")
         {
             return m_inputs;
         }
-        std::deque<descriptor::Output>& get_outputs()
-            OLD_NODE_APIS_DEPRECATED("use outputs() instead");
+        std::deque<descriptor::Output>& get_outputs() NGRAPH_DEPRECATED("use outputs() instead");
         const std::deque<descriptor::Output>& get_outputs() const
-            OLD_NODE_APIS_DEPRECATED("use outputs() instead");
+            NGRAPH_DEPRECATED("use outputs() instead");
 
         /// Get control dependencies registered on the node
         const std::set<std::shared_ptr<Node>>& get_control_dependencies() const;
@@ -249,10 +238,10 @@ namespace ngraph
 
         /// Returns the tensor for output i
         descriptor::Tensor& get_output_tensor(size_t i) const
-            OLD_NODE_APIS_DEPRECATED("use node->output(i).get_tensor() instead");
+            NGRAPH_DEPRECATED("use node->output(i).get_tensor() instead");
 
         /// Checks that there is exactly one output and returns its tensor.
-        descriptor::Tensor& get_output_tensor() const OLD_NODE_APIS_DEPRECATED(
+        descriptor::Tensor& get_output_tensor() const NGRAPH_DEPRECATED(
             "use node->output(0).get_tensor() instead; insert a check that the node has only one "
             "output, or update calling code not to assume only one output");
 
@@ -260,16 +249,16 @@ namespace ngraph
         // TODO: Investigate whether this really needs to be shared_ptr. If so, we'll need a
         // replacement in Output.
         std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr(size_t i) const
-            OLD_NODE_APIS_DEPRECATED("use &node->output(i).get_tensor() instead");
+            NGRAPH_DEPRECATED("use &node->output(i).get_tensor() instead");
 
         /// Checks that there is exactly one output and returns its tensor.
-        std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr() const OLD_NODE_APIS_DEPRECATED(
+        std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr() const NGRAPH_DEPRECATED(
             "use &node->output(i).get_tensor() instead; insert a check that the node has only one "
             "output, or update calling code not to assume only one output");
 
         /// Returns the set of inputs using output i
         const std::set<descriptor::Input*>& get_output_inputs(size_t i) const
-            OLD_NODE_APIS_DEPRECATED("use node->output(i).get_target_inputs() instead");
+            NGRAPH_DEPRECATED("use node->output(i).get_target_inputs() instead");
 
         /// Returns the number of inputs for the op
         size_t get_input_size() const;
