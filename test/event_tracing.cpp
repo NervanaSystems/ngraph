@@ -43,7 +43,7 @@ TEST(event_tracing, duration)
             oss << "Event: " << id;
             event::Duration event(oss.str(), "Dummy");
             this_thread::sleep_for(chrono::milliseconds(2));
-            event.stop();
+            event.write();
         });
         this_thread::sleep_for(chrono::milliseconds(2));
         threads.push_back(move(next_thread));
@@ -117,9 +117,9 @@ TEST(benchmark, event_tracing)
             for (size_t inner = 0; inner < inner_size; ++inner)
             {
                 event::Duration inner_event("inner", "Dummy");
-                inner_event.stop();
+                inner_event.write();
             }
-            outer_event.stop();
+            outer_event.write();
         }
         timer.stop();
         NGRAPH_INFO << "enabled time " << timer.get_milliseconds() << "ms";
@@ -139,9 +139,9 @@ TEST(benchmark, event_tracing)
             for (size_t inner = 0; inner < inner_size; ++inner)
             {
                 event::Duration inner_event("inner", "Dummy");
-                inner_event.stop();
+                inner_event.write();
             }
-            outer_event.stop();
+            outer_event.write();
         }
         timer.stop();
         NGRAPH_INFO << "disabled time " << timer.get_milliseconds() << "ms";

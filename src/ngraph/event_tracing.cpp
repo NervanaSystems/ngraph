@@ -40,6 +40,7 @@ event::Duration::Duration(const string& name, const string& category, nlohmann::
     if (Manager::is_tracing_enabled())
     {
         m_start = Manager::get_current_microseconds().count();
+        m_stop = 0;
         m_name = name;
         m_category = category;
         m_args = args;
@@ -50,7 +51,15 @@ void event::Duration::stop()
 {
     if (Manager::is_tracing_enabled())
     {
-        size_t stop_time = Manager::get_current_microseconds().count();
+        m_stop = Manager::get_current_microseconds().count();
+    }
+}
+
+void event::Duration::write()
+{
+    if (Manager::is_tracing_enabled())
+    {
+        size_t stop_time = (m_stop != 0 ? m_stop : Manager::get_current_microseconds().count());
 
         lock_guard<mutex> lock(Manager::get_mutex());
 
@@ -197,8 +206,9 @@ string event::Manager::get_thread_id()
     string rc;
     if (it == tid_map.end())
     {
-        hash<thread::id> tid_hash;
-        rc = to_string(tid_hash(tid));
+        stringstream ss;
+        ss << tid;
+        rc = "\"" + ss.str() + "\"";
         tid_map.insert({tid, rc});
     }
     else

@@ -108,7 +108,14 @@ public:
                       const std::string& category,
                       nlohmann::json args = nullptr);
 
+    /// \brief stop the timer without writing the data to the log file. To write the data
+    /// call the `write` method
+    /// Calls to stop() are optional
     void stop();
+
+    /// \brief write the log data to the log file for this event
+    /// This funtion has an implicit stop() if stop() has not been previously called
+    void write();
 
     Duration(const Duration&) = delete;
     Duration& operator=(Duration const&) = delete;
@@ -116,6 +123,7 @@ public:
 private:
     std::string to_json() const;
     size_t m_start;
+    size_t m_stop;
     std::string m_name;
     std::string m_category;
     nlohmann::json m_args;
