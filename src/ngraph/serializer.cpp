@@ -49,6 +49,7 @@
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/erf.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/batch_mat_mul.hpp"
 #include "ngraph/op/experimental/dyn_broadcast.hpp"
 #include "ngraph/op/experimental/dyn_pad.hpp"
 #include "ngraph/op/experimental/dyn_reshape.hpp"
@@ -563,6 +564,12 @@ static shared_ptr<ngraph::Function>
                                                         include_padding_in_avg_computation);
                 break;
             }
+            case OP_TYPEID::BatchMatMul:
+            {
+                node = make_shared<op::BatchMatMul>(args[0], args[1]);
+                break;
+            }
+
             case OP_TYPEID::BatchNormTraining:
             {
                 auto epsilon = node_js.at("eps").get<double>();
@@ -1440,6 +1447,8 @@ static json write(const Node& n, bool binary_constant_data)
         node["padding_above"] = tmp->get_padding_above();
         node["include_padding_in_avg_computation"] = tmp->get_include_padding_in_avg_computation();
         break;
+    }
+    case OP_TYPEID::BatchMatMul: { break;
     }
     case OP_TYPEID::BatchNormTraining:
     {

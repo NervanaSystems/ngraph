@@ -67,6 +67,7 @@
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/erf.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/batch_mat_mul.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_concat.hpp"
@@ -149,7 +150,7 @@
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
 #include "ngraph/runtime/cpu/cpu_visualize_tree.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
-#include "ngraph/runtime/cpu/op/batch_dot.hpp"
+#include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
@@ -304,7 +305,9 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Abs), &runtime::cpu::CPU_Emitter::emit<op::Abs>},
     {TI(ngraph::op::Any), &runtime::cpu::CPU_Emitter::emit<op::Any>},
     {TI(ngraph::op::All), &runtime::cpu::CPU_Emitter::emit<op::All>},
-    {TI(ngraph::op::BatchDot), &runtime::cpu::CPU_Emitter::emit<op::BatchDot>},
+    {TI(ngraph::op::BatchMatMul), &runtime::cpu::CPU_Emitter::emit<op::BatchMatMul>},
+    {TI(ngraph::op::BatchMatMulTranspose),
+     &runtime::cpu::CPU_Emitter::emit<op::BatchMatMulTranspose>},
     {TI(ngraph::op::Concat), &runtime::cpu::CPU_Emitter::emit<op::Concat>},
     {TI(ngraph::op::Divide), &runtime::cpu::CPU_Emitter::emit<op::Divide>},
     {TI(ngraph::op::Equal), &runtime::cpu::CPU_Emitter::emit<op::Equal>},

@@ -27,6 +27,7 @@
 
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_mat_fusion.hpp"
 #include "ngraph/runtime/reference/avg_pool.hpp"
 #include "util/autodiff/backprop_function.hpp"
@@ -852,8 +853,30 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_dot_tensor3_tensor3)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1}, .01f, .01f));
 }
 
-#ifdef AUTODIFF_BACKEND_CPU
-NGRAPH_TEST(${BACKEND_NAME}, backwards_batchdot_tensor2_tensor2)
+#if defined(AUTODIFF_BACKEND_CPU) || defined(AUTODIFF_BACKEND_INTERPRETER)
+// XXX lfeng: remove backend check once all backends support this
+NGRAPH_TEST(${BACKEND_NAME}, backwards_batchmatmul_tensor2_tensor2)
+{
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    test::Uniform<float> rng(-1.0f, 1.0f);
+    Shape shape0{3, 4, 5};
+    Shape shape1{3, 5, 6};
+    auto x0 = rng.initialize(backend->create_tensor<float>(shape0));
+    auto x1 = rng.initialize(backend->create_tensor<float>(shape1));
+
+    auto make_graph = [shape0, shape1]() {
+        auto X0 = make_shared<op::Parameter>(element::f32, shape0);
+        auto X1 = make_shared<op::Parameter>(element::f32, shape1);
+        return make_shared<Function>(make_shared<op::BatchMatMul>(X0, X1),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
+    };
+
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1}, .01f, .01f));
+}
+#endif
+
+#if defined(AUTODIFF_BACKEND_CPU)
+NGRAPH_TEST(${BACKEND_NAME}, backwards_batchmatmultranspose_tensor2_tensor2)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     std::string backend_name = "${BACKEND_NAME}";
