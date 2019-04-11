@@ -25,6 +25,9 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <typeindex>
+#include <typeinfo>
+#include <unordered_map>
 #include <vector>
 
 #include "ngraph/axis_vector.hpp"
@@ -214,11 +217,20 @@ namespace ngraph
     * This utility takes forward-propogation and back-propagation functions
     * and turns them into clone functions where the intermediate values of
     * the forward prop are added to the output of fprop and the input of the bprop
-    * to avoid repeat calcualtions.
+    * to avoid repeat calculations.
     * The last argument is the adjoints coming into the bprop function, the output
     * bprop function will have these nodes as the first N input parameters
     **/
     FpropCache cache_fprop(std::shared_ptr<Function> fprop, std::shared_ptr<Function> bprop);
+
+    // NodeExecutors are used in compiler optimization passes like ConstantFolding to execute a node
+    // using the supplied input and output memory locations.
+    // A BuildNodeExecutor returns a backend-specific NodeExecutor for a given Node type
+    using NodeExecutorTy =
+        std::function<void(const std::vector<void*>& inputs, std::vector<void*>& outputs)>;
+    using BuildNodeExecutor = std::function<NodeExecutorTy(const ngraph::Node*)>;
+
+    using BuildNodeExecutorMap = std::unordered_map<std::type_index, BuildNodeExecutor>;
 
     enum class CPUTensorRole
     {

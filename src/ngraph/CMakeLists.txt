@@ -31,6 +31,8 @@ set (SRC
     builder/quantization.hpp
     builder/quantization/quantized_linear_convolution.cpp
     builder/quantization/quantized_linear_convolution.hpp
+    builder/quantization/quantized_linear_dot.cpp
+    builder/quantization/quantized_linear_dot.hpp
     builder/quantization_util.hpp
     builder/reduce_ops.cpp
     builder/reduce_ops.hpp
@@ -256,6 +258,8 @@ set (SRC
     op/tanh.hpp
     op/topk.cpp
     op/topk.hpp
+    op/fused/prelu.cpp
+    op/fused/prelu.hpp
     op/util/arithmetic_reduction.cpp
     op/util/arithmetic_reduction.hpp
     op/util/binary_elementwise_arithmetic.cpp
@@ -264,6 +268,10 @@ set (SRC
     op/util/binary_elementwise_comparison.hpp
     op/util/binary_elementwise_logical.cpp
     op/util/binary_elementwise_logical.hpp
+    op/util/broadcasting.cpp
+    op/util/broadcasting.hpp
+    op/util/fused_op.cpp
+    op/util/fused_op.hpp
     op/util/index_reduction.cpp
     op/util/index_reduction.hpp
     op/util/logical_reduction.cpp
@@ -286,6 +294,8 @@ set (SRC
     pass/cse.hpp
     pass/dump_sorted.cpp
     pass/dump_sorted.hpp
+    pass/fused_op_decomposition.cpp
+    pass/fused_op_decomposition.hpp
     pass/get_output_element_elimination.cpp
     pass/get_output_element_elimination.hpp
     pass/graph_rewrite.cpp
@@ -330,6 +340,8 @@ set (SRC
     pass/zero_dim_tensor_elimination.hpp
     pass/concat_fusion.hpp
     pass/concat_fusion.cpp
+    pass/pass_util.hpp
+    pass/pass_util.cpp
     pattern/matcher.cpp
     pattern/matcher.hpp
     pattern/op/any.hpp
