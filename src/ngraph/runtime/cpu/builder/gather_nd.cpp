@@ -37,14 +37,14 @@ namespace ngraph
                 CPUKernelFunctor functor;
 
                 auto& params_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& indices_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& indices_tensor = external_function->get_tensor_data(args[1].get_name());
                 auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
-                if (out[0].get_element_type() != element::i64 &&
-                    out[0].get_element_type() != element::i32)
+                if (args[1].get_element_type() != element::i64 &&
+                    args[1].get_element_type() != element::i32)
                 {
                     throw ngraph_error("Unsupported index element type");
                 }
-                bool is_int64 = out[0].get_element_type() == element::i64;
+                bool is_int64 = args[1].get_element_type() == element::i64;
                 auto params_shape = args[0].get_shape();
                 auto indices_shape = args[1].get_shape();
                 auto out_shape = out[0].get_shape();
