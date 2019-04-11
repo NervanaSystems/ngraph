@@ -54,7 +54,7 @@
 #include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
-#include "ngraph/runtime/cpu/op/batch_dot.hpp"
+#include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
@@ -3048,7 +3048,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_backward)
     }
 }
 
-TEST(cpu_fusion, fuse_batch_dot)
+TEST(cpu_fusion, fuse_batch_mat_mul_transpose)
 {
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
@@ -3057,11 +3057,11 @@ TEST(cpu_fusion, fuse_batch_dot)
     stringstream ss(json_string);
     shared_ptr<Function> func = ngraph::deserialize(ss);
     pass_manager.run_passes(func);
-    size_t ccg = count_ops_of_type<op::BatchDot>(func);
+    size_t ccg = count_ops_of_type<op::BatchMatMulTranspose>(func);
     ASSERT_EQ(ccg, 1);
 }
 
-TEST(cpu_fusion, fuse_batch_dot_forward)
+TEST(cpu_fusion, fuse_batch_mat_mul_transpose_forward)
 {
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
