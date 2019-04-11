@@ -2280,9 +2280,13 @@ void runtime::intelgpu::do_topk_operation(cldnn::topology& topology,
         }
 
         if (find_indices == true)
+        {
             writer << "output" << outbuffer << " = current_index;\n";
+        }
         else
+        {
             writer << "output" << outbuffer << " = current_min_max;\n";
+        }
         writer << "prev_min_max = current_min_max;\n";
         writer << "prev_index = current_index;\n";
 
