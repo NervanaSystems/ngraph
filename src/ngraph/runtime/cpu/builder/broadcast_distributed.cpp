@@ -36,8 +36,9 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::BroadcastDistributed)
             {
-                auto& functors = external_function->get_functors();
+                static int call_seq = 0;
 
+                auto& functors = external_function->get_functors();
                 auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
                 auto count = static_cast<int>(args[0].get_size());
                 
@@ -78,6 +79,14 @@ namespace ngraph
                 else if (args[0].get_element_type() == element::f64)
                 {
                     data_type = MPI_DOUBLE;
+                }
+                else if (args[0].get_element_type() == element::i32)
+                {
+                    data_type = MPI_INT;
+                }
+                else if (args[0].get_element_type() == element::i64)
+                {
+                    data_type = MPI_LONG;
                 }
 
                 auto functor = [&, count, data_type](CPURuntimeContext* ctx,
