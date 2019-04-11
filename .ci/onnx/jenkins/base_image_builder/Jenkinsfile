@@ -23,7 +23,7 @@ def buildImage(configurationMaps) {
     Closure buildMethod = { configMap ->
         sh """
             ${CI_ROOT}/utils/docker.sh build \
-                                --docker_registry=${DOCKER_REGISTRY}
+                                --docker_registry=${DOCKER_REGISTRY} \
                                 --name=${configMap["projectName"]} \
                                 --version=${configMap["name"]} \
                                 --dockerfile_path=${configMap["dockerfilePath"]} || return 1
