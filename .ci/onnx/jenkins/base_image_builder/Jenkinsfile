@@ -12,7 +12,7 @@ JENKINS_GITHUB_CREDENTIAL_ID = "7157091e-bc04-42f0-99fd-dc4da2922a55"
 def cloneRepository(String jenkins_github_credential_id, String ngraph_git_address) {
     stage('Clone Repo') {
         checkout([$class: 'GitSCM',
-            branches: [[name: "master"]],
+            branches: [[name: "${BRANCH}"]],
             doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'CloneOption', timeout: 30]], submoduleCfg: [],
             userRemoteConfigs: [[credentialsId: "${jenkins_github_credential_id}",
             url: "${ngraph_git_address}"]]])
