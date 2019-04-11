@@ -378,7 +378,7 @@ if(NGRAPH_DEBUG_ENABLE)
 endif()
 
 #-----------------------------------------------------------------------------------------------
-# enable or disable deprecation of old ngraph::Node APIs
+# enable or disable deprecation warnings for old APIs
 #-----------------------------------------------------------------------------------------------
 if(NGRAPH_DEPRECATED_ENABLE)
     add_definitions(-DNGRAPH_DEPRECATED_ENABLE)
