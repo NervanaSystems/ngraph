@@ -352,6 +352,11 @@ descriptor::Tensor& Node::get_output_tensor(size_t i) const
     return m_outputs.at(i).get_tensor();
 }
 
+const string& Node::get_output_tensor_name(size_t i) const
+{
+    return m_outputs.at(i).get_tensor().get_name();
+}
+
 descriptor::Tensor& Node::get_output_tensor() const
 {
     if (get_output_size() != 1)
@@ -379,6 +384,11 @@ const Shape& Node::get_input_shape(size_t i) const
 const PartialShape& Node::get_input_partial_shape(size_t i) const
 {
     return m_inputs.at(i).get_partial_shape();
+}
+
+const string& Node::get_input_tensor_name(size_t i) const
+{
+    return m_inputs.at(i).get_tensor().get_name();
 }
 
 bool Node::has_same_type(std::shared_ptr<const Node> node) const
