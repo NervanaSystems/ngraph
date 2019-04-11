@@ -18,19 +18,12 @@
 
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        /// \brief Modes for the `Pad` operator.
-        enum class PadMode
-        {
-            CONSTANT = 0,
-            EDGE,
-            REFLECT
-        };
-
         /// \brief Generic padding operation.
         class Pad : public Op
         {

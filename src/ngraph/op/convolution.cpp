@@ -33,13 +33,15 @@ op::Convolution::Convolution(const shared_ptr<Node>& data_batch,
                              const Strides& window_dilation_strides,
                              const CoordinateDiff& padding_below,
                              const CoordinateDiff& padding_above,
-                             const Strides& data_dilation_strides)
+                             const Strides& data_dilation_strides,
+                             const PadType& pad_type)
     : Op("Convolution", check_single_output_args({data_batch, filters}))
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
     , m_padding_below(padding_below)
     , m_padding_above(padding_above)
     , m_data_dilation_strides(data_dilation_strides)
+    , m_pad_type(pad_type)
 {
     constructor_validate_and_infer_types();
 }
@@ -74,6 +76,32 @@ void op::Convolution::validate_and_infer_types()
     if (m_padding_above.size() == 0)
     {
         m_padding_above = default_padding(this, data_batch_shape, filters_shape);
+    }
+
+    if (m_pad_type == PadType::SAME_UPPER || m_pad_type == PadType::SAME_LOWER)
+    {
+        if (data_batch_shape.is_static() && filters_shape.is_static())
+        {
+            CoordinateDiff padding_below, padding_above;
+            for (size_t i = 2; i < static_cast<size_t>(data_batch_shape.rank()); i++)
+            {
+                auto image_shape = static_cast<size_t>(data_batch_shape[i]);
+                auto filter_shape = static_cast<size_t>(filters_shape[i]);
+                auto filter_stride = m_window_movement_strides[i - 2];
+                auto padding_needed = ((image_shape % filter_stride) == 0)
+                                          ? filter_shape - filter_stride
+                                          : filter_shape - (image_shape % filter_stride);
+                padding_needed = (padding_needed < 0) ? 0 : padding_needed;
+                auto padding_lhs = padding_needed / 2;
+                auto padding_rhs = padding_needed - padding_lhs;
+                padding_below.push_back(m_pad_type == PadType::SAME_UPPER ? padding_lhs
+                                                                          : padding_rhs);
+                padding_above.push_back(m_pad_type == PadType::SAME_UPPER ? padding_rhs
+                                                                          : padding_lhs);
+            }
+            m_padding_below = padding_below;
+            m_padding_above = padding_above;
+        }
     }
 
     element::Type result_et;

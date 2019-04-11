@@ -5395,6 +5395,73 @@ TEST(type_prop, conv_2d_deduce_padded_neg)
     EXPECT_EQ(conv->get_padding_above(), (CoordinateDiff{3, -4}));
 }
 
+struct DeduceAutoPadTest
+    : ::testing::TestWithParam<
+          std::tuple<Shape, Shape, Strides, Strides, CoordinateDiff, CoordinateDiff>>
+{
+};
+
+TEST_P(DeduceAutoPadTest, conv_2d_same_upper)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, std::get<0>(GetParam()));
+    auto param1 = make_shared<op::Parameter>(element::f32, std::get<1>(GetParam()));
+
+    auto conv = make_shared<op::Convolution>(param0,
+                                             param1,
+                                             std::get<2>(GetParam()),
+                                             std::get<3>(GetParam()),
+                                             CoordinateDiff(),
+                                             CoordinateDiff(),
+                                             Strides(),
+                                             op::PadType::SAME_UPPER);
+    EXPECT_EQ(conv->get_padding_below(), std::get<4>(GetParam()));
+    EXPECT_EQ(conv->get_padding_above(), std::get<5>(GetParam()));
+}
+
+TEST_P(DeduceAutoPadTest, conv_2d_same_lower)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, std::get<0>(GetParam()));
+    auto param1 = make_shared<op::Parameter>(element::f32, std::get<1>(GetParam()));
+
+    auto conv = make_shared<op::Convolution>(param0,
+                                             param1,
+                                             std::get<2>(GetParam()),
+                                             std::get<3>(GetParam()),
+                                             CoordinateDiff(),
+                                             CoordinateDiff(),
+                                             Strides(),
+                                             op::PadType::SAME_LOWER);
+    EXPECT_EQ(conv->get_padding_above(), std::get<4>(GetParam()));
+    EXPECT_EQ(conv->get_padding_below(), std::get<5>(GetParam()));
+}
+
+INSTANTIATE_TEST_CASE_P(type_prop,
+                        DeduceAutoPadTest,
+                        ::testing::Values(std::make_tuple(Shape{1, 1, 5, 6},
+                                                          Shape{1, 1, 3, 4},
+                                                          Strides{2, 1},
+                                                          Strides{1, 1},
+                                                          CoordinateDiff{1, 1},
+                                                          CoordinateDiff{1, 2}),
+                                          std::make_tuple(Shape{1, 1, 3, 3},
+                                                          Shape{1, 1, 2, 2},
+                                                          Strides{1, 1},
+                                                          Strides{1, 1},
+                                                          CoordinateDiff{0, 0},
+                                                          CoordinateDiff{1, 1}),
+                                          std::make_tuple(Shape{1, 1, 28, 28},
+                                                          Shape{1, 1, 3, 3},
+                                                          Strides{2, 2},
+                                                          Strides{1, 1},
+                                                          CoordinateDiff{0, 0},
+                                                          CoordinateDiff{1, 1}),
+                                          std::make_tuple(Shape{64, 3, 100, 150},
+                                                          Shape{128, 3, 10, 20},
+                                                          Strides{1, 1},
+                                                          Strides{1, 1},
+                                                          CoordinateDiff{4, 9},
+                                                          CoordinateDiff{5, 10})));
+
 TEST(type_prop, conv_2d_deduce_strided)
 {
     // Deduce type
