@@ -13228,4 +13228,3 @@ TEST(type_prop, gather_nd_batch_2d_from_3d)
     ASSERT_EQ(G->get_element_type(), element::f32);
     ASSERT_EQ(G->get_shape(), out_shape);
 }
-

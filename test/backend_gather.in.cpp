@@ -56,8 +56,9 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_no_axis)
 
     auto c = backend->compile(f);
     c->call_with_validate({result}, {p, i});
-    EXPECT_TRUE(test::all_close_f(
-        (vector<float>{1.0, 1.1, 2.0, 2.1, 2.0, 2.1, 3.0, 3.1}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1.0, 1.1, 2.0, 2.1, 2.0, 2.1, 3.0, 3.1}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, gather)
@@ -81,10 +82,10 @@ NGRAPH_TEST(${BACKEND_NAME}, gather)
 
     auto c = backend->compile(f);
     c->call_with_validate({result}, {p, i});
-    EXPECT_TRUE(test::all_close_f(
-        (vector<float>{1.0, 1.2, 2.0, 2.2, 3.0, 3.2}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1.0, 1.2, 2.0, 2.2, 3.0, 3.2}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
-
 
 NGRAPH_TEST(${BACKEND_NAME}, gather_nd_scalar_from_2d)
 {
@@ -307,8 +308,9 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_nd_batch_1d_from_3d)
 
     auto c = backend->compile(f);
     c->call_with_validate({result}, {p, i});
-    EXPECT_TRUE(test::all_close_f(
-        (vector<float>{1.2, 1.3, 2.0, 2.1, 1.0, 1.1, 2.2, 2.3}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1.2, 1.3, 2.0, 2.1, 1.0, 1.1, 2.2, 2.3}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, gather_nd_batch_2d_from_3d)
@@ -332,7 +334,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_nd_batch_2d_from_3d)
 
     auto c = backend->compile(f);
     c->call_with_validate({result}, {p, i});
-    EXPECT_TRUE(test::all_close_f(
-        (vector<float>{2.0, 2.1 ,2.2, 2.3, 1.0, 1.1, 1.2, 1.3}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+    EXPECT_TRUE(test::all_close_f((vector<float>{2.0, 2.1, 2.2, 2.3, 1.0, 1.1, 1.2, 1.3}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
-
