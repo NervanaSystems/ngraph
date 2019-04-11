@@ -2184,7 +2184,6 @@ void runtime::intelgpu::do_topk_operation(cldnn::topology& topology,
     const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
     const string entry_point_name = "topk_" + output_name;
     CodeWriter writer;
-    vector<size_t> gws;
     const string operation_sign = compute_max ? " > " : " < ";
     const string prev_operation_sign = !compute_max ? ">" : "<";
     const size_t shape_size = input_shape.size();
@@ -2307,7 +2306,7 @@ void runtime::intelgpu::do_topk_operation(cldnn::topology& topology,
                                               get_kernel_args(1, 1),
                                               "",
                                               layout,
-                                              gws);
+                                              {1});
     topology.add(op_topk);
 }
 
