@@ -1583,7 +1583,6 @@ static json write(const Node& n, bool binary_constant_data)
     }
     case OP_TYPEID::Gather:
     {
-        break;
         auto tmp = dynamic_cast<const op::Gather*>(&n);
         node["axis"] = tmp->get_axis();
         break;
