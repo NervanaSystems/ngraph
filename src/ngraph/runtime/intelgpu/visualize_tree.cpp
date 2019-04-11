@@ -372,7 +372,7 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
 	const shared_ptr<op::TopK> topk_op = static_pointer_cast<op::TopK>(node);
 
 	writer << print_table_row_value("top_k_axis", topk_op->get_top_k_axis())
-	       //<< print_table_row_value("index_element_type", topk_op->get_index_element_type())
+	       << print_table_row_value("index_element_type", topk_op->get_index_element_type())
 	       << print_table_row_value("k", topk_op->get_k())
 	       << print_table_row_value("compute_max",topk_op->get_compute_max());
 
