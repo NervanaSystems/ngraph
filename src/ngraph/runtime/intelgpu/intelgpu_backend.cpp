@@ -2027,6 +2027,8 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::DynReshape:
         case OP_TYPEID::DynSlice:
         case OP_TYPEID::Erf:
+        case OP_TYPEID::Gather:
+        case OP_TYPEID::GatherND:
         case OP_TYPEID::QuantizedAvgPool:
         case OP_TYPEID::QuantizedConvolutionBias:
         case OP_TYPEID::QuantizedConvolutionBiasAdd:
