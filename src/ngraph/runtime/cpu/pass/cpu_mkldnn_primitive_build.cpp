@@ -201,19 +201,21 @@ namespace ngraph
                 template <>
                 size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(ConvolutionRelu)
                 {
-                    return mkldnn_emitter.build_convolution<ConvolutionRelu>(node);
+                    return mkldnn_emitter.build_conv_primitive<ngraph::op::ConvolutionRelu>(node);
                 }
 
                 template <>
                 size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(QuantizedConvolutionRelu)
                 {
-                    return mkldnn_emitter.build_convolution<QuantizedConvolutionRelu>(node);
+                    return mkldnn_emitter
+                        .build_conv_primitive<ngraph::op::QuantizedConvolutionRelu>(node);
                 }
 
                 template <>
                 size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(QuantizedConvolution)
                 {
-                    return mkldnn_emitter.build_convolution<QuantizedConvolution>(node);
+                    return mkldnn_emitter.build_conv_primitive<ngraph::op::QuantizedConvolution>(
+                        node);
                 }
 
                 template <>
@@ -287,7 +289,7 @@ namespace ngraph
                 template <>
                 size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Convolution)
                 {
-                    return mkldnn_emitter.build_convolution<Convolution>(node);
+                    return mkldnn_emitter.build_conv_primitive<ngraph::op::Convolution>(node);
                 }
 
                 template <typename OpTy>
@@ -373,39 +375,42 @@ namespace ngraph
                 template <>
                 size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(QuantizedConvolutionBias)
                 {
-                    return mkldnn_emitter.build_convolution<QuantizedConvolutionBias>(node);
+                    return mkldnn_emitter
+                        .build_conv_primitive<ngraph::op::QuantizedConvolutionBias>(node);
                 }
 
                 template <>
                 size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(QuantizedConvolutionBiasAdd)
                 {
-                    return mkldnn_emitter.build_convolution<QuantizedConvolutionBiasAdd>(node);
+                    return mkldnn_emitter
+                        .build_conv_primitive<ngraph::op::QuantizedConvolutionBiasAdd>(node);
                 }
 
                 template <>
                 size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(
                     QuantizedConvolutionBiasSignedAdd)
                 {
-                    return mkldnn_emitter.build_convolution<QuantizedConvolutionBiasSignedAdd>(
-                        node);
+                    return mkldnn_emitter
+                        .build_conv_primitive<ngraph::op::QuantizedConvolutionBiasSignedAdd>(node);
                 }
 
                 template <>
                 size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(ConvolutionBias)
                 {
-                    return mkldnn_emitter.build_convolution<ConvolutionBias>(node);
+                    return mkldnn_emitter.build_conv_primitive<ngraph::op::ConvolutionBias>(node);
                 }
 
                 template <>
                 size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(ConvolutionBiasAdd)
                 {
-                    return mkldnn_emitter.build_convolution<ConvolutionBiasAdd>(node);
+                    return mkldnn_emitter.build_conv_primitive<ngraph::op::ConvolutionBiasAdd>(
+                        node);
                 }
 
                 template <>
                 size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(ConvolutionAdd)
                 {
-                    return mkldnn_emitter.build_convolution<ConvolutionAdd>(node);
+                    return mkldnn_emitter.build_conv_primitive<ngraph::op::ConvolutionAdd>(node);
                 }
 
                 template <>
