@@ -140,7 +140,7 @@ TEST(specialize_shapes, et_dynamic_shape_static_validation_fails)
 // rank.
 //
 // (Note that we are testing for a different exception class here because the failure is in
-// specialize_shape's pre-checks, which use NGRAPH_ASSERT, rather than inside validation as we
+// specialize_shape's pre-checks, which use NGRAPH_CHECK, rather than inside validation as we
 // reconstruct the graph.)
 TEST(specialize_shapes, et_static_shape_rank_static_dynamic_rank_mismatch)
 {
@@ -164,7 +164,7 @@ TEST(specialize_shapes, et_static_shape_rank_static_dynamic_rank_mismatch)
 // dimensions.
 //
 // (Note that we are testing for a different exception class here because the failure is in
-// specialize_shape's pre-checks, which use NGRAPH_ASSERT, rather than inside validation as we
+// specialize_shape's pre-checks, which use NGRAPH_CHECK, rather than inside validation as we
 // reconstruct the graph.)
 TEST(specialize_shapes, et_static_shape_rank_static_dynamic_dim_mismatch)
 {
