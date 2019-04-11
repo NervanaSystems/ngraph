@@ -68,3 +68,15 @@ pad_reflect_2d_with_neg
 # Not implemented
 erf
 zero_sized_erf
+gather_no_axis
+gather
+gather_nd_scalar_from_2d
+gather_nd_1d_from_2d
+gather_nd_scalar_from_3d
+gather_nd_1d_from_3d
+gather_nd_2d_from_3d
+gather_nd_batch_scalar_from_2d
+gather_nd_batch_1d_from_2d
+gather_nd_batch_scalar_from_3d
+gather_nd_batch_1d_from_3d
+gather_nd_batch_2d_from_3d
