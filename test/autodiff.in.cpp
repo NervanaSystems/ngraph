@@ -27,6 +27,7 @@
 
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_mat_fusion.hpp"
 #include "ngraph/runtime/reference/avg_pool.hpp"
 #include "util/autodiff/backprop_function.hpp"
@@ -872,7 +873,9 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_batchmatmul_tensor2_tensor2)
 
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1}, .01f, .01f));
 }
+#endif
 
+#if defined(AUTODIFF_BACKEND_CPU)
 NGRAPH_TEST(${BACKEND_NAME}, backwards_batchmatmul_tensor2_tensor2_transpose0)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -885,7 +888,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_batchmatmul_tensor2_tensor2_transpose0)
     auto make_graph = [shape0, shape1]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape0);
         auto X1 = make_shared<op::Parameter>(element::f32, shape1);
-        return make_shared<Function>(make_shared<op::BatchMatMul>(X0, X1, true, false),
+        return make_shared<Function>(make_shared<op::BatchMatMulTranspose>(X0, X1, true, false),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
 
@@ -904,7 +907,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_batchmatmul_tensor2_tensor2_transpose1)
     auto make_graph = [shape0, shape1]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape0);
         auto X1 = make_shared<op::Parameter>(element::f32, shape1);
-        return make_shared<Function>(make_shared<op::BatchMatMul>(X0, X1, false, true),
+        return make_shared<Function>(make_shared<op::BatchMatMulTranspose>(X0, X1, false, true),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
 
@@ -923,7 +926,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_batchmatmul_tensor2_tensor2_transpose_all
     auto make_graph = [shape0, shape1]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape0);
         auto X1 = make_shared<op::Parameter>(element::f32, shape1);
-        return make_shared<Function>(make_shared<op::BatchMatMul>(X0, X1, true, true),
+        return make_shared<Function>(make_shared<op::BatchMatMulTranspose>(X0, X1, true, true),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
 

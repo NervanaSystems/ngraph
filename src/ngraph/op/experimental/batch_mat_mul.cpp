@@ -25,12 +25,8 @@ using namespace std;
 using namespace ngraph;
 
 op::BatchMatMul::BatchMatMul(const shared_ptr<Node>& arg0,
-                       const shared_ptr<Node>& arg1,
-                       bool transpose_arg0,
-                       bool transpose_arg1)
+                       const shared_ptr<Node>& arg1)
     : Op("BatchMatMul", check_single_output_args({arg0, arg1}))
-    , m_transpose_arg0(transpose_arg0)
-    , m_transpose_arg1(transpose_arg1)
 {
     constructor_validate_and_infer_types();
 }
@@ -38,8 +34,7 @@ op::BatchMatMul::BatchMatMul(const shared_ptr<Node>& arg0,
 shared_ptr<Node> op::BatchMatMul::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<BatchMatMul>(
-        new_args.at(0), new_args.at(1), m_transpose_arg0, m_transpose_arg1);
+    return make_shared<BatchMatMul>(new_args.at(0), new_args.at(1));
 }
 
 void op::BatchMatMul::validate_and_infer_types()
@@ -64,23 +59,22 @@ void op::BatchMatMul::validate_and_infer_types()
                           arg1_shape.rank(),
                           ".");
 
-    size_t dot_dim_arg0 = (m_transpose_arg0) ? 1 : 2;
-    size_t dot_dim_arg1 = (m_transpose_arg1) ? 2 : 1;
     // We expect output shape always have rank 3
     PartialShape output_shape(PartialShape::dynamic(3));
 
     // Construct output shape with more information if avalible.
     if (arg0_shape.rank().same_scheme(3) && arg1_shape.rank().same_scheme(3))
     {
+        std::cout << vector_to_string(arg0_shape.to_shape()) << " " << vector_to_string(arg1_shape.to_shape()) << std::endl;
         NODE_VALIDATION_CHECK(this,
                               arg0_shape[0].compatible(arg1_shape[0]),
                               "Batch size dimensions are not equal while creating BatchMatMul.");
         NODE_VALIDATION_CHECK(this,
-                              arg0_shape[dot_dim_arg0].compatible(arg1_shape[dot_dim_arg1]),
+                              arg0_shape[2].compatible(arg1_shape[1]),
                               "Product dimensions are not equal while creating BatchMatMul.");
         auto batch_size = arg0_shape[0].is_static() ? arg0_shape[0] : arg1_shape[0];
         output_shape =
-            PartialShape{batch_size, arg0_shape[3 - dot_dim_arg0], arg1_shape[3 - dot_dim_arg1]};
+            PartialShape{batch_size, arg0_shape[1], arg1_shape[2]};
     }
     auto output_et = arg0_et.is_dynamic() ? arg1_et : arg0_et;
     set_output_type(0, output_et, output_shape);
@@ -90,48 +84,12 @@ void op::BatchMatMul::generate_adjoints(autodiff::Adjoints& adjoints, const Node
 {
     auto delta = deltas.at(0); // NxIxK
 
-    auto arg0 = get_inputs().at(0).get_output().get_node(); // NxIxJ (maybe transposed)
-    auto arg1 = get_inputs().at(1).get_output().get_node(); // NxJxK (maybe transposed)
+    auto arg0 = get_inputs().at(0).get_output().get_node(); // NxIxJ
+    auto arg1 = get_inputs().at(1).get_output().get_node(); // NxJxK
 
-    auto batch_transpose = [](const shared_ptr<Node>& node) -> shared_ptr<Node> {
-        const auto& node_shape = node->get_output_partial_shape(0);
-        // index 0 is the batch, only transposing the others.
-        if (node_shape.is_static())
-        {
-            // Applies static shape transpose
-            Shape static_shape = node_shape.to_shape();
-            std::swap(static_shape[1], static_shape[2]);
-            return make_shared<op::Reshape>(node, AxisVector{0, 2, 1}, static_shape);
-        }
-        else
-        {
-            // Applies dynamic transpose
-            // XXX lfeng: to be implemented using reshape that supports PartialShape
-            throw ngraph_error(
-                "generate_adjoints not implemented for BatchMatMul with dynamic input shapes");
-        }
-    };
+    auto delta_dot_arg1 = make_shared<op::BatchMatMul>(delta, arg1); // IK.KJ->IJ
+    adjoints.add_delta(arg0, delta_dot_arg1);
 
-    // If arg1 is already transposed, it does not need to be transposed again
-    auto delta_dot_arg1 =
-        make_shared<op::BatchMatMul>(delta, arg1, false, !m_transpose_arg1); // IK.KJ->IJ
-    // If arg0 is transposed, the result need to be transposed to match original arg0 shape.
-    if (m_transpose_arg0)
-    {
-        adjoints.add_delta(arg0, batch_transpose(delta_dot_arg1));
-    }
-    else
-    {
-        adjoints.add_delta(arg0, delta_dot_arg1);
-    }
-
-    auto arg0_dot_delta = make_shared<BatchMatMul>(arg0, delta, !m_transpose_arg0, false); // JI.IK->JK
-    if (m_transpose_arg1)
-    {
-        adjoints.add_delta(arg1, batch_transpose(arg0_dot_delta));
-    }
-    else
-    {
-        adjoints.add_delta(arg1, arg0_dot_delta);
-    }
+    auto arg0_dot_delta = make_shared<BatchMatMul>(arg0, delta); // JI.IK->JK
+    adjoints.add_delta(arg1, arg0_dot_delta);
 }

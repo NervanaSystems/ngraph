@@ -14,8 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
-#include "ngraph/op/experimental/batch_mat_mul.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
 
@@ -319,7 +319,7 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::BatchMatMul)
+            void Builder::BUILDER_DECL(ngraph::op::BatchMatMulTranspose)
             {
                 auto& functors = external_function->get_functors();
 
@@ -327,7 +327,7 @@ namespace ngraph
                 auto& mat_b = external_function->get_tensor_data(args[1].get_name());
                 auto& mat_c = external_function->get_tensor_data(out[0].get_name());
 
-                const auto* cg = static_cast<const ngraph::op::BatchMatMul*>(node);
+                const auto* cg = static_cast<const ngraph::op::BatchMatMulTranspose*>(node);
 
                 const auto& shape_a = cg->get_input_shape(0);
                 const auto& shape_b = cg->get_input_shape(1);
@@ -350,7 +350,7 @@ namespace ngraph
             }
 
             REGISTER_OP_BUILDER(MatmulBias);
-            REGISTER_OP_BUILDER(BatchMatMul);
+            REGISTER_OP_BUILDER(BatchMatMulTranspose);
         }
     }
 }

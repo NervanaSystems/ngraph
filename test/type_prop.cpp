@@ -13107,33 +13107,6 @@ TEST(type_prop, batchmatmul_deduce_right_rank_wrong)
     }
 }
 
-TEST(type_prop, batchmatmul_deduce_rank_transpose0)
-{
-    // Type deduction fails due to element type mismatch
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{3, 5, 4});
-    auto param2 = make_shared<op::Parameter>(element::f32, Shape{3, 5, 2});
-    auto bc = make_shared<op::BatchMatMul>(param1, param2, true, false);
-    ASSERT_EQ(bc->get_shape(), (Shape{3, 4, 2}));
-}
-
-TEST(type_prop, batchmatmul_deduce_rank_transpose1)
-{
-    // Type deduction fails due to element type mismatch
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{3, 2, 4});
-    auto param2 = make_shared<op::Parameter>(element::f32, Shape{3, 5, 4});
-    auto bc = make_shared<op::BatchMatMul>(param1, param2, false, true);
-    ASSERT_EQ(bc->get_shape(), (Shape{3, 2, 5}));
-}
-
-TEST(type_prop, batchmatmul_deduce_rank_transpose_both)
-{
-    // Type deduction fails due to element type mismatch
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{3, 4, 2});
-    auto param2 = make_shared<op::Parameter>(element::f32, Shape{3, 5, 4});
-    auto bc = make_shared<op::BatchMatMul>(param1, param2, true, true);
-    ASSERT_EQ(bc->get_shape(), (Shape{3, 2, 5}));
-}
-
 TEST(type_prop, batchmatmul_deduce_element_type_mismatch)
 {
     // Type deduction fails due to element type mismatch

@@ -22,23 +22,31 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Matrix multiply for a batch of Rank 2 tensors.
+        /// \brief Matrix multiply for a batch of Rank 2 tensors each with potential
+        /// transpose.
+        ///
         /// The inputs are expected to be Rank 3, where the first dim is the
         /// batch size and must be the same for both inputs. The last two dims
         /// are the shape of matrices, i.e. `(batch_size, :, :)`.
         /// For example, for `a` with shape `(batch_size, n, k)`, and `b` with
         /// shape `(batch_size, k, m)`, the result of BatchMatMul will have shape
-        /// `(batch_size, n, m)`, and `BatchMatMul(a, b)[i] = Dot(a[i], b[i])`.
-        class BatchMatMul : public Op
+        /// `(batch_size, n, m)`, and `BatchMatMulTranspose(a, b)[i] = Dot(a[i], b[i])`.
+        class BatchMatMulTranspose : public Op
         {
         public:
             /// \brief Constructs a batch of matmul product operation.
             ///
             /// \param arg0 The node producing the first argument.
             /// \param arg1 The node producing the second argument.
-            BatchMatMul(const std::shared_ptr<Node>& arg0,
-                     const std::shared_ptr<Node>& arg1);
+            /// \param transpose_0 Apply transpose to arg0.
+            /// \param transpose_1 Apply transpose to arg1.
+            BatchMatMulTranspose(const std::shared_ptr<Node>& arg0,
+                     const std::shared_ptr<Node>& arg1,
+                     bool transpose_0 = false,
+                     bool transpose_1 = false);
 
+            bool get_transpose_arg0() const { return m_transpose_arg0; }
+            bool get_transpose_arg1() const { return m_transpose_arg1; }
             virtual void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
@@ -47,6 +55,10 @@ namespace ngraph
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
+
+        private:
+            bool m_transpose_arg0;
+            bool m_transpose_arg1;
         };
     }
 }

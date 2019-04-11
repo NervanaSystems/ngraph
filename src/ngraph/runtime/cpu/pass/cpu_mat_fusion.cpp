@@ -28,11 +28,11 @@
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/dot.hpp"
-#include "ngraph/op/experimental/batch_mat_mul.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
+#include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/util.hpp"
 
@@ -575,7 +575,7 @@ std::shared_ptr<Node> fuse_batch_dot(const std::shared_ptr<Node>& n)
     }
     if (fuse_input[0] && fuse_input[1])
     {
-        return std::make_shared<op::BatchMatMul>(
+        return std::make_shared<op::BatchMatMulTranspose>(
             fuse_input[0], fuse_input[1], transpose[0], transpose[1]);
     }
     return {nullptr};

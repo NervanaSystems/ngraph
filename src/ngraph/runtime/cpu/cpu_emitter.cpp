@@ -108,6 +108,7 @@
 #include "ngraph/runtime/cpu/cpu_kernel_emitters.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
@@ -375,7 +376,7 @@ namespace ngraph
             }
 
             template <typename T>
-            static void emitBatchMatMiul(const ngraph::Node* node,
+            static void emitBatchMatMul(const ngraph::Node* node,
                                      const Shape& shape_a,
                                      const Shape& shape_b,
                                      const Shape& shape_c,
@@ -449,7 +450,7 @@ namespace ngraph
                 const Shape& arg2_shape = node->get_shape();                 // bias (C)
                 const Shape& padded_result_shape = pad_with(node->get_shape(), 1, 3);
                 // Step 1: dot(A,B)
-                emitBatchMatMiul<ngraph::op::MatmulBias>(node,
+                emitBatchMatMul<ngraph::op::MatmulBias>(node,
                                                      arg0_shape,
                                                      arg1_shape,
                                                      padded_result_shape,
@@ -571,7 +572,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchMatMul)
             {
                 const auto* cg = static_cast<const ngraph::op::BatchMatMul*>(node);
-                emitBatchMatMiul<ngraph::op::BatchMatMul>(node,
+                emitBatchMatMul<ngraph::op::BatchMatMul>(node,
                                                    cg->get_input_shape(0),
                                                    cg->get_input_shape(1),
                                                    out[0].get_shape(),

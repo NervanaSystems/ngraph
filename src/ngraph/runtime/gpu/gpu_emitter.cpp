@@ -331,7 +331,7 @@ std::string runtime::gpu::GPU_Emitter::emit_AvgPoolBackprop(EMIT_ARGS)
     }
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_BatchMatMiul(EMIT_ARGS)
+std::string runtime::gpu::GPU_Emitter::emit_BatchMatMul(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }

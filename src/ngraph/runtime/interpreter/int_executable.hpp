@@ -372,16 +372,12 @@ private:
         }
         case OP_TYPEID::BatchMatMul:
         {
-            const op::BatchMatMul* batch_mat_mul = static_cast<const op::BatchMatMul*>(&node);
-
             reference::batch_mat_mul(args[0]->get_data_ptr<const T>(),
                                  args[1]->get_data_ptr<const T>(),
                                  out[0]->get_data_ptr<T>(),
                                  node.get_input_shape(0),
                                  node.get_input_shape(1),
-                                 node.get_output_shape(0),
-                                 batch_mat_mul->get_transpose_arg0(),
-                                 batch_mat_mul->get_transpose_arg1());
+                                 node.get_output_shape(0));
             break;
         }
 
