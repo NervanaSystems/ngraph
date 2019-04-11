@@ -40,6 +40,15 @@ namespace ngraph
 
                 auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
                 auto count = static_cast<int>(args[0].get_size());
+                
+                auto external_function_name = external_function->get_function_name();
+                NGRAPH_DEBUG_PRINT(
+                    "BroadcastDistributed Queued[%d]: Function: %s Node: %s %s Size: " "%d",
+                    call_seq,
+                    external_function_name.c_str(),
+                    node->get_name().c_str(),
+                    node->get_friendly_name().c_str(),
+                    count); 
 
 #ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
                 auto data_type = MLSL::DT_FLOAT;
