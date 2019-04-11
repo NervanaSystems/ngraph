@@ -25,6 +25,7 @@
 #include "ngraph/ngraph.hpp"
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
+#include "util/float_util.hpp"
 #include "util/ndarray.hpp"
 #include "util/test_control.hpp"
 #include "util/test_tools.hpp"
@@ -34,8 +35,41 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
+namespace
+{
+    template <typename T>
+    vector<T> make_tensor_data(T min_value, T max_value, size_t count)
+    {
+        if (min_value >= max_value)
+        {
+            throw invalid_argument("make_tensor_data max must be > min");
+        }
+        vector<T> data;
+        T step = (max_value - min_value) / static_cast<T>(count);
+        data.push_back(0);
+        for (int32_t e = 0; e < 255; e++)
+        {
+            uint32_t x = e;
+            x <<= 23;
+            test::FloatUnion u;
+            u.i = x | 0x488888;
+            // NGRAPH_INFO << test::float_to_bits(u.f) << ", " << u.f;
+            data.push_back(u.f);
+            data.push_back(-u.f);
+        }
+        sort(data.begin(), data.end());
+        return data;
+    }
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, add)
 {
+    auto data =
+        make_tensor_data<float>(numeric_limits<float>::min(), numeric_limits<float>::max(), 1001);
+    for (float f : data)
+    {
+        NGRAPH_INFO << f;
+    }
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
