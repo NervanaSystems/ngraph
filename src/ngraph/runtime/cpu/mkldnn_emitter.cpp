@@ -368,10 +368,9 @@ size_t
     conv_attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);
     /* Specify the scales array and corresponding mask */
     conv_attr.set_output_scales(0, output_scale);
-    mkldnn::algorithm convolution_algo = mkldnn_utils::get_conv_algo();
     size_t conv_index = insert_primitive(new mkldnn::convolution_forward(
         {{mkldnn::prop_kind::forward,
-          convolution_algo,
+          mkldnn::algorithm::convolution_direct,
           input_data_desc,
           weights_desc,
           result_desc,
@@ -417,10 +416,9 @@ size_t
     conv_attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);
     /* Specify the scales array and corresponding mask */
     conv_attr.set_output_scales(0, output_scale);
-    mkldnn::algorithm convolution_algo = mkldnn_utils::get_conv_algo();
     size_t conv_index = insert_primitive(new mkldnn::convolution_forward(
         {{mkldnn::prop_kind::forward,
-          convolution_algo,
+          mkldnn::algorithm::convolution_direct,
           input_data_desc,
           weights_desc,
           bias_desc,
