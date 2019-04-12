@@ -59,7 +59,7 @@ def download(target_name, repo, version):
 
 # Get me the current sha for this commit
 current_sha = check_output(['git', 'rev-parse', 'HEAD']).strip().decode("utf-8")
-print("SHA: ", current_sha)
+print("nGraph SHA: ", current_sha)
 
 # Download ngraph-tf 
 download('ngraph-tf', 'https://github.com/NervanaSystems/ngraph-tf.git', 'master')
