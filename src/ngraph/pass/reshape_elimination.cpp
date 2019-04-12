@@ -24,7 +24,6 @@
 #include "ngraph/log.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/broadcast.hpp"
-#include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -190,5 +189,107 @@ void pass::ReshapeElimination::construct_dot_transpose_pattern()
     };
 
     auto m = make_shared<pattern::Matcher>(preshape, callback);
+    this->add_matcher(m);
+}
+
+void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
+{
+    Shape shape_op{3};
+    Shape shape_r{1, 3};
+
+    auto op = make_shared<pattern::op::Label>(element::f32, shape_op);
+    auto reshape = make_shared<op::Reshape>(op, AxisVector{0}, shape_r);
+    auto reshape_label =
+        make_shared<pattern::op::Label>(reshape, get_no_fan_out_function(), NodeVector{reshape});
+
+    auto callback = [op, reshape_label](pattern::RecurrentMatcher& m) {
+        NGRAPH_DEBUG << "In callback for construct_recurrent_reshape against node = "
+                     << reshape_label->get_argument(0)->get_name();
+        auto reshape_node_vector = m.get_bound_nodes_for_pattern(reshape_label);
+
+        // The bound node vector is in reverse order. It is convenient to have the
+        // bound node vector in the correct order
+        std::reverse(std::begin(reshape_node_vector), std::end(reshape_node_vector));
+
+        auto first_bound_reshape_op = reshape_node_vector.front();
+        auto driver_op = first_bound_reshape_op->get_argument(0);
+        auto last_bound_reshape_op = reshape_node_vector.back();
+
+        // Need to check if the user of the last bound op is a reshape since the last reshape is allowed
+        // to have fan-out but the matcher will discard any reshape if it has fan-out
+        auto user_of_last_bound_reshape_op = last_bound_reshape_op->get_users(true)[0];
+        if (std::dynamic_pointer_cast<op::Reshape>(user_of_last_bound_reshape_op))
+        {
+            reshape_node_vector.push_back(user_of_last_bound_reshape_op);
+            last_bound_reshape_op = reshape_node_vector.back();
+        }
+
+        // Return if the recurrent matcher matches only one reshape
+        if (reshape_node_vector.size() == 1)
+        {
+            return false;
+        }
+
+        // The complete reshape node vector may not contain contiguous reshapes that can be
+        // fused. Only the subset of reshapes with a reshape(any axis order) followed by reshapes
+        // with default axis order can be fused. Creating such subpatterns here:
+        std::vector<NodeVector> sub_patterns{NodeVector{first_bound_reshape_op}};
+        for (auto it = std::next(reshape_node_vector.begin()); it != reshape_node_vector.end();
+             it++)
+        {
+            auto r = std::dynamic_pointer_cast<op::Reshape>(*it);
+
+            // Check that the input to r is the last reshape stored in the
+            // subpattern vector
+            if (!r)
+            {
+                NGRAPH_DEBUG
+                    << "Incorrect match. Something went wrong. Non-reshape op has been matched";
+                return false;
+            }
+
+            auto default_order_r = get_default_order(r->get_input_shape(0));
+            if (r->get_input_order() == default_order_r)
+            {
+                sub_patterns.back().push_back(r);
+            }
+            else
+            {
+                NGRAPH_DEBUG << r->get_name() << "does not have default axis order. "
+                             << "It might be part of a different subpattern";
+                sub_patterns.push_back(NodeVector{r});
+            }
+        }
+
+        bool modify_graph = false;
+
+        // Replace the patterns
+        for (auto sub_pattern : sub_patterns)
+        {
+            // Do not consider subpatterns with just one reshape in them
+            if (sub_pattern.size() == 1)
+            {
+                continue;
+            }
+
+            auto first_reshape = std::dynamic_pointer_cast<op::Reshape>(sub_pattern.front());
+            auto input_to_first_reshape = first_reshape->get_argument(0);
+            auto last_reshape = std::dynamic_pointer_cast<op::Reshape>(sub_pattern.back());
+
+            auto new_input_order = first_reshape->get_input_order();
+            auto new_out_shape = last_reshape->get_shape();
+
+            auto new_reshape = std::make_shared<op::Reshape>(
+                input_to_first_reshape, new_input_order, new_out_shape);
+
+            replace_node(last_reshape, new_reshape);
+            modify_graph = true;
+        }
+
+        return modify_graph;
+    };
+    std::set<std::shared_ptr<pattern::op::Label>> empty_correlated_matches;
+    auto m = std::make_shared<pattern::RecurrentMatcher>(
+        reshape_label, op, empty_correlated_matches, callback);
     this->add_matcher(m);
 }

@@ -61,11 +61,11 @@ TEST(reshape_sinking, edge_splitting)
     auto func = make_shared<Function>(NodeVector{absn2, sum}, ParameterVector{a});
     pass::Manager pass_manager;
     //size_t before_count = count_ops_of_type<op::Reshape>(func);
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("before.png");
     pass_manager.register_pass<pass::ReshapeSinking>();
     pass_manager.register_pass<pass::ReshapeElimination>();
     pass_manager.register_pass<pass::CommonSubexpressionElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("after.png");
     pass_manager.run_passes(func);
     ASSERT_EQ(func->get_results().at(1)->get_argument(0), sum);
     auto new_reshape =
@@ -119,13 +119,13 @@ TEST(reshape_sinking, mnist_conv)
     shared_ptr<Function> func = ngraph::deserialize(ss);
     pass::Manager pass_manager;
     size_t before_count = count_ops_of_type<op::Reshape>(func);
-    //pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
+    //pass_manager.register_pass<pass::VisualizeTree>("before.png");
     pass_manager.register_pass<pass::ReshapeSinking>();
     pass_manager.register_pass<pass::ReshapeElimination>();
     pass_manager.register_pass<pass::CommonSubexpressionElimination>();
     //pass_manager.register_pass<pass::CoreFusion>();
     //pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    //pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+    //pass_manager.register_pass<pass::VisualizeTree>("after.png");
     pass_manager.run_passes(func);
     size_t before_after = count_ops_of_type<op::Reshape>(func);
     ASSERT_LE(before_after, before_count);
@@ -154,11 +154,11 @@ TEST(reshape_sinking, nasnet_pooladd)
 
     pass::Manager pass_manager;
     size_t before_count = count_ops_of_type<op::Reshape>(func);
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("before.png");
     pass_manager.register_pass<pass::ReshapeSinking>();
     pass_manager.register_pass<pass::ReshapeElimination>();
     pass_manager.register_pass<pass::CommonSubexpressionElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("after.png");
     pass_manager.run_passes(func);
     size_t before_after = count_ops_of_type<op::Reshape>(func);
     ASSERT_LE(before_after, before_count);
@@ -174,16 +174,14 @@ TEST(reshape_sinking, slice_pad)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto pad_value = op::Constant::create<float>(element::f32, Shape{}, std::vector<float>{0.0f});
 
-    Shape padding_below{0, 0, 0, 0};
-    Shape padding_above{0, 1, 1, 0};
-    Shape padding_interior{0, 0, 0, 0};
+    CoordinateDiff padding_below{0, 0, 0, 0};
+    CoordinateDiff padding_above{0, 1, 1, 0};
 
     auto reshape1 = make_shared<op::Reshape>(A, to_nchw, Shape{100, 1, 8, 8});
     auto maxpool =
         make_shared<op::MaxPool>(reshape1, Shape{1, 1}, Strides{2, 2}, Shape{0, 0}, Shape{0, 0});
     auto reshape2 = make_shared<op::Reshape>(maxpool, to_nhwc, Shape{100, 4, 4, 1});
-    auto pad =
-        make_shared<op::Pad>(reshape2, pad_value, padding_below, padding_above, padding_interior);
+    auto pad = make_shared<op::Pad>(reshape2, pad_value, padding_below, padding_above);
     auto slice = make_shared<op::Slice>(
         pad, Coordinate{0, 1, 1, 0}, Coordinate{100, 5, 5, 1}, Strides{1, 1, 1, 1});
 
@@ -194,11 +192,11 @@ TEST(reshape_sinking, slice_pad)
 
     pass::Manager pass_manager;
     size_t before_count = count_ops_of_type<op::Reshape>(f);
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("before.png");
     pass_manager.register_pass<pass::ReshapeSinking>();
     pass_manager.register_pass<pass::ReshapeElimination>();
     pass_manager.register_pass<pass::CommonSubexpressionElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("after.png");
     pass_manager.run_passes(f);
     size_t before_after = count_ops_of_type<op::Reshape>(f);
     ASSERT_LE(before_after, before_count);
@@ -267,11 +265,11 @@ TEST(reshape_sinking, concat)
     auto f = make_shared<Function>(reshape_conv2, ParameterVector{A_, A1_});
     pass::Manager pass_manager;
     size_t before_count = count_ops_of_type<op::Reshape>(f);
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("before.png");
     pass_manager.register_pass<pass::ReshapeSinking>();
     pass_manager.register_pass<pass::ReshapeElimination>();
     pass_manager.register_pass<pass::CommonSubexpressionElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("after.png");
     pass_manager.run_passes(f);
     size_t before_after = count_ops_of_type<op::Reshape>(f);
     ASSERT_LE(before_after, before_count);

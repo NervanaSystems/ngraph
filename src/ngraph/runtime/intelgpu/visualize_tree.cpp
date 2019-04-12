@@ -45,6 +45,7 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/op/topk.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
@@ -306,8 +307,7 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
         const shared_ptr<op::Pad> pad = static_pointer_cast<op::Pad>(node);
 
         writer << print_table_row_dims("pad_above", pad->get_padding_above())
-               << print_table_row_dims("pad_below", pad->get_padding_below())
-               << print_table_row_dims("pad_interior", pad->get_padding_interior());
+               << print_table_row_dims("pad_below", pad->get_padding_below());
         break;
     }
     case OP_TYPEID::Slice:
@@ -365,6 +365,17 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
                                        conv_op_data->get_padding_above_forward())
                << print_table_row_dims("pad_below_forward",
                                        conv_op_data->get_padding_below_forward());
+        break;
+    }
+    case OP_TYPEID::TopK:
+    {
+        const shared_ptr<op::TopK> topk_op = static_pointer_cast<op::TopK>(node);
+
+        writer << print_table_row_value("top_k_axis", topk_op->get_top_k_axis())
+               << print_table_row_value("index_element_type", topk_op->get_index_element_type())
+               << print_table_row_value("k", topk_op->get_k())
+               << print_table_row_value("compute_max", topk_op->get_compute_max());
+
         break;
     }
     case OP_TYPEID::UNDEFINED_OP:

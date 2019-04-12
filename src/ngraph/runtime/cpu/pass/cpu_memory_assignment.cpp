@@ -107,7 +107,6 @@ void runtime::cpu::pass::CPUMemoryAssignment::process_in_place_concat(
                                 NGRAPH_DEBUG
                                     << "cpu_memory_assignment: change offset, old offset is "
                                     << old_offset << ", new offset is " << offset << std::endl;
-                                offset += input_tensor->size();
 
                                 // check if need to propagate backward
                                 if (arg->is_op())
@@ -129,6 +128,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::process_in_place_concat(
                                     }
                                 }
                             }
+                            offset += input_tensor->size();
                             arg_index++;
                         }
                     }
@@ -159,7 +159,6 @@ void runtime::cpu::pass::CPUMemoryAssignment::propagate_in_place_concat(
                 input_tensor->set_pool_offset(offset);
                 NGRAPH_DEBUG << "cpu_memory_assignment: change offset, old offset is " << old_offset
                              << ", new offset is " << offset;
-                offset += input_tensor->size();
 
                 // check if need to propagate backward
                 if (arg->is_op())
@@ -180,6 +179,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::propagate_in_place_concat(
                     }
                 }
             }
+            offset += input_tensor->size();
             arg_index++;
         }
     }
@@ -518,10 +518,21 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(list<shared
                                 }
                                 if (!no_in_place)
                                 {
+                                    auto bufferID = get_bufferID(input_tensor);
+                                    auto input_buffer_it = m_bufferID_to_tensorSets.find(bufferID);
+                                    NGRAPH_ASSERT(input_buffer_it !=
+                                                  m_bufferID_to_tensorSets.end());
+
                                     if (node->description() == "Slice")
                                     {
-                                        // build in place slice chain
-                                        in_place_slice_chain.insert(output_tensor);
+                                        if (input_buffer_it->second.first !=
+                                            CPUTensorRole::CONSTANT)
+                                        {
+                                            // build in place slice chain
+                                            in_place_slice_chain.insert(output_tensor);
+                                            input_buffer_it->second.second.insert(output_tensor);
+                                            m_tensor_to_bufferID[output_tensor] = bufferID;
+                                        }
                                     }
                                     else
                                     {
@@ -531,13 +542,9 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(list<shared
                                         {
                                             in_place_slice_chain.insert(output_tensor);
                                         }
+                                        input_buffer_it->second.second.insert(output_tensor);
+                                        m_tensor_to_bufferID[output_tensor] = bufferID;
                                     }
-                                    auto bufferID = get_bufferID(input_tensor);
-                                    auto input_buffer_it = m_bufferID_to_tensorSets.find(bufferID);
-                                    NGRAPH_ASSERT(input_buffer_it !=
-                                                  m_bufferID_to_tensorSets.end());
-                                    input_buffer_it->second.second.insert(output_tensor);
-                                    m_tensor_to_bufferID[output_tensor] = bufferID;
                                 }
                             }
                         }
@@ -705,21 +712,16 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                             auto input_op = std::static_pointer_cast<op::Op>(input_node);
                             if (auto input_op_annotations = input_op->get_op_annotations())
                             {
-                                // when input is cacheable, do not allow destructive oi
-                                if (input_op_annotations->is_cacheable())
-                                {
-                                    NGRAPH_DEBUG << "cpu_memory_assignment: cacheable input, no "
-                                                    "destructive oi";
-                                    continue;
-                                }
                                 // when reusing memory, ops with different cacheabilities are using different memory manager
                                 // and should not share the same buffer.
-                                else if (!m_disable_memory_sharing &&
-                                         op_annotations->is_cacheable())
+                                if (!m_disable_memory_sharing &&
+                                    input_op_annotations->is_cacheable() !=
+                                        op_annotations->is_cacheable())
                                 {
-                                    NGRAPH_DEBUG << "cpu_memory_assignment: reusing memory with "
-                                                    "non-cacheable input and cacheable output, no "
-                                                    "destructive oi";
+                                    NGRAPH_DEBUG
+                                        << "cpu_memory_assignment: reusing memory with "
+                                           "input and output have different cacheabilities, no "
+                                           "destructive oi";
                                     continue;
                                 }
                             }

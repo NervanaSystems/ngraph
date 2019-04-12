@@ -23,6 +23,7 @@
 #include "ngraph/axis_set.hpp"
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/coordinate.hpp"
+#include "ngraph/coordinate_diff.hpp"
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
@@ -43,8 +44,7 @@ namespace ngraph
                                   const std::string& output_name,
                                   const Shape& output_shape,
                                   const element::Type& output_type,
-                                  const Shape& pad_below,
-                                  const Shape& pad_interior);
+                                  const CoordinateDiff& pad_below);
 
             void do_max_pool_backprop_operation(cldnn::topology& topology,
                                                 const std::string& input_name,
@@ -143,6 +143,16 @@ namespace ngraph
                                    const element::Type& output_type,
                                    const std::string& operation,
                                    bool function_operation);
+
+            void do_relu_backprop(cldnn::topology& topology,
+                                  const std::string& input0_name,
+                                  const Shape& input0_shape,
+                                  const element::Type& input0_type,
+                                  const std::string& input1_name,
+                                  const Shape& input1_shape,
+                                  const std::string& output_name,
+                                  const Shape& output_shape,
+                                  const element::Type& output_type);
 
             void do_reverse_operation(cldnn::topology& topology,
                                       const std::string& input_name,
@@ -255,6 +265,19 @@ namespace ngraph
                                          const Shape& output_shape,
                                          const element::Type& output_type,
                                          const AxisSet& axis);
+
+            void do_topk_operation(cldnn::topology& topology,
+                                   const std::string& input_name,
+                                   const Shape& input_shape,
+                                   const element::Type& input_type,
+                                   const std::string& output_name,
+                                   const Shape& output_shape,
+                                   const element::Type& output_type,
+                                   const element::Type& index_elem_type,
+                                   const size_t top_k_axis,
+                                   const size_t k,
+                                   const bool compute_max,
+                                   const bool find_indices);
 
             // Helper functions used in cldnn::custom_gpu_primitive kernels
             std::string get_opencl_type_name(const element::Type& ngraph_type);

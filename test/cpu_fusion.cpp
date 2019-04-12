@@ -54,7 +54,7 @@
 #include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
-#include "ngraph/runtime/cpu/op/batch_dot.hpp"
+#include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
@@ -81,6 +81,7 @@
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
 #include "util/all_close.hpp"
+#include "util/all_close_f.hpp"
 #include "util/autodiff/backprop_function.hpp"
 #include "util/autodiff/numeric_compare.hpp"
 #include "util/matcher.hpp"
@@ -167,7 +168,7 @@ TEST(cpu_fusion, gemm_cpu_broadcast_row)
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
     vector<float> expected{11, 30, 38, 111};
-    EXPECT_EQ(read_vector<float>(result), expected);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected, MIN_FLOAT_TOLERANCE_BITS));
 }
 
 TEST(cpu_fusion, gemm_cpu_broadcast_column)
@@ -199,7 +200,7 @@ TEST(cpu_fusion, gemm_cpu_broadcast_column)
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
     vector<float> expected{11, 29, 39, 111};
-    EXPECT_EQ(read_vector<float>(result), expected);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected, MIN_FLOAT_TOLERANCE_BITS));
 }
 
 TEST(cpu_fusion, gemm_cpu_broadcast_matrix)
@@ -235,7 +236,7 @@ TEST(cpu_fusion, gemm_cpu_broadcast_matrix)
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
     vector<float> expected{10, 28, 37, 109};
-    ASSERT_TRUE(read_vector<float>(result) == expected);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected, MIN_FLOAT_TOLERANCE_BITS));
 }
 
 TEST(cpu_fusion, gemm_cpu_no_bias)
@@ -268,7 +269,7 @@ TEST(cpu_fusion, gemm_cpu_no_bias)
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
     vector<float> expected{9, 27, 36, 108};
-    ASSERT_TRUE(read_vector<float>(result) == expected);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected, MIN_FLOAT_TOLERANCE_BITS));
 }
 
 TEST(cpu_fusion, cpu_fusion_pass_basic)
@@ -394,7 +395,7 @@ TEST(cpu_fusion, zero_padded_reshaped_conv)
     auto pad_value = op::Constant::create<float>(element::f32, Shape{}, std::vector<float>{0.0f});
 
     auto pad =
-        make_shared<op::Pad>(X, pad_value, Shape{0, 1, 0, 0}, Shape{0, 0, 1, 0}, Shape{0, 0, 0, 0});
+        make_shared<op::Pad>(X, pad_value, CoordinateDiff{0, 1, 0, 0}, CoordinateDiff{0, 0, 1, 0});
 
     auto reshape = make_shared<op::Reshape>(pad, AxisVector{0, 3, 1, 2}, Shape{1, 1, 3, 3});
 
@@ -424,7 +425,7 @@ TEST(cpu_fusion, zero_padded_conv)
     auto pad_value = op::Constant::create<float>(element::f32, Shape{}, std::vector<float>{0.0f});
 
     auto pad =
-        make_shared<op::Pad>(X, pad_value, Shape{0, 0, 0, 1}, Shape{0, 0, 1, 0}, Shape{0, 0, 0, 0});
+        make_shared<op::Pad>(X, pad_value, CoordinateDiff{0, 0, 0, 1}, CoordinateDiff{0, 0, 1, 0});
 
     auto conv = make_shared<op::Convolution>(pad,
                                              F,
@@ -452,7 +453,7 @@ TEST(cpu_fusion, non_zero_padded_conv)
     auto pad_value = op::Constant::create<float>(element::f32, Shape{}, std::vector<float>{1.0f});
 
     auto pad =
-        make_shared<op::Pad>(X, pad_value, Shape{0, 0, 0, 1}, Shape{0, 0, 1, 0}, Shape{0, 0, 0, 0});
+        make_shared<op::Pad>(X, pad_value, CoordinateDiff{0, 0, 0, 1}, CoordinateDiff{0, 0, 1, 0});
 
     auto conv = make_shared<op::Convolution>(pad,
                                              F,
@@ -480,7 +481,7 @@ TEST(cpu_fusion, zero_padded_conv_backprop_filters)
     auto pad_value = op::Constant::create<float>(element::f32, Shape{}, std::vector<float>{0.0f});
 
     auto pad =
-        make_shared<op::Pad>(X, pad_value, Shape{0, 0, 0, 1}, Shape{0, 0, 1, 0}, Shape{0, 0, 0, 0});
+        make_shared<op::Pad>(X, pad_value, CoordinateDiff{0, 0, 0, 1}, CoordinateDiff{0, 0, 1, 0});
 
     auto conv = make_shared<op::ConvolutionBackpropFilters>(pad,
                                                             Shape{1, 1, 2, 2},
@@ -1422,22 +1423,22 @@ TEST(cpu_fusion, max_pool_with_indices)
 
     {
         pass::Manager pass_manager;
-        pass_manager.register_pass<pass::VisualizeTree>("max_pool_fprop_before.pdf");
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_fprop_before.png");
         pass_manager.run_passes(f);
     }
 
     {
         NodeVector nv_cwi;
         pass::Manager pass_manager;
-        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_before.pdf");
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_before.png");
         pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
-        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_after.pdf");
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_after.png");
         pass_manager.run_passes(df);
     }
 
     {
         pass::Manager pass_manager;
-        pass_manager.register_pass<pass::VisualizeTree>("max_pool_fprop_after.pdf");
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_fprop_after.png");
         pass_manager.run_passes(f);
     }
 
@@ -1492,15 +1493,15 @@ TEST(cpu_fusion, backwards_maxpool_with_indices_n4_c1_hw4_2x2_max)
     {
         NodeVector nv_cwi;
         pass::Manager pass_manager;
-        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_before2.pdf");
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_before2.png");
         pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
-        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_after2.pdf");
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_after2.png");
         pass_manager.run_passes(df);
     }
 
     auto handle = backend->compile(df);
     handle->call_with_validate({output}, {input, ep});
-    ASSERT_TRUE(read_vector<float>(output) == expected);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(output), expected, MIN_FLOAT_TOLERANCE_BITS));
 }
 
 #if defined(NGRAPH_HALIDE)
@@ -1587,7 +1588,7 @@ TEST(cpu_fusion, loop_kernel_embedded_graph_halide)
     vector<float> expected{-2, -6, -4, -8};
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ(read_vector<float>(result), expected);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected, MIN_FLOAT_TOLERANCE_BITS));
 }
 
 TEST(cpu_fusion, loop_kernel_two_inputs_one_output_halide)
@@ -1614,7 +1615,7 @@ TEST(cpu_fusion, loop_kernel_two_inputs_one_output_halide)
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
 
-    EXPECT_EQ(read_vector<float>(result), expected);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected, MIN_FLOAT_TOLERANCE_BITS));
 }
 
 TEST(cpu_fusion, loop_kernel_multiple_outputs_halide)
@@ -1670,9 +1671,9 @@ TEST(cpu_fusion, loop_kernel_multiple_outputs_halide)
     vector<float> expected1{5, 11, 5, 17};
     vector<float> expected2{2, 7, 5, 14};
     vector<float> expected3{-3, -3, -3, -9};
-    EXPECT_EQ(read_vector<float>(r1), expected1);
-    EXPECT_EQ(read_vector<float>(r2), expected2);
-    EXPECT_EQ(read_vector<float>(r3), expected3);
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(r1), expected1, MIN_FLOAT_TOLERANCE_BITS));
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(r2), expected2, MIN_FLOAT_TOLERANCE_BITS));
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(r3), expected3, MIN_FLOAT_TOLERANCE_BITS));
 }
 
 TEST(cpu_fusion, loop_kernel_copy_with_new_args)
@@ -1793,7 +1794,7 @@ void optimize_graph(std::shared_ptr<ngraph::Function>& f, std::shared_ptr<ngraph
     pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
     pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
     pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
-    pass_manager.register_pass<pass::VisualizeTree>("before.fprop_cache.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("before.fprop_cache.png");
 
     pass_manager.run_passes(f);
     pass_manager.run_passes(bf);
@@ -2008,7 +2009,7 @@ TEST(cpu_fusion, conv_affine_folding)
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
 }
 
-TEST(cpu_fusion, convbias_affine_folding)
+TEST(cpu_fusion, convbias_affine_folding1)
 {
     Shape shape_input{1, 6, 3, 3};
     Shape shape_weights{3, 6, 1, 1};
@@ -2032,6 +2033,60 @@ TEST(cpu_fusion, convbias_affine_folding)
             make_shared<Function>(NodeVector{out}, ParameterVector{input, weights, bias, a, b});
         return f;
     };
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    auto func = make_function();
+    pass_manager.run_passes(func);
+    ASSERT_EQ(count_ops_of_type<op::ConvolutionBiasAdd>(func), 1);
+
+    auto int_f = make_function();
+    auto cpu_f = make_function();
+
+    test::Uniform<float> rng(20.0f, 300.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
+}
+
+TEST(cpu_fusion, convbias_affine_folding2)
+{
+    Shape shape_input{1, 6, 3, 3};
+    Shape shape_weights{3, 6, 1, 1};
+    Shape shape_norm{1};
+
+    auto make_function = [shape_input, shape_weights, shape_norm]() {
+        auto input = std::make_shared<op::Parameter>(element::f32, shape_input);
+        auto weights = std::make_shared<op::Parameter>(element::f32, shape_weights);
+        auto bias = std::make_shared<op::Parameter>(element::f32, Shape{3});
+
+        auto a = std::make_shared<op::Parameter>(element::f32, shape_norm);
+        auto b = std::make_shared<op::Parameter>(element::f32, shape_norm);
+        auto conv = std::make_shared<op::Convolution>(input, weights, Strides{1, 1}, Strides{1, 1});
+        auto convbias =
+            conv + std::make_shared<op::Broadcast>(bias, conv->get_shape(), AxisSet{0, 2, 3});
+        auto out = std::make_shared<op::Add>(
+            std::make_shared<op::Multiply>(
+                convbias, std::make_shared<op::Broadcast>(a, conv->get_shape(), AxisSet{1, 2, 3})),
+            std::make_shared<op::Broadcast>(b, conv->get_shape(), AxisSet{1, 2, 3}));
+        auto f =
+            make_shared<Function>(NodeVector{out}, ParameterVector{input, weights, bias, a, b});
+        return f;
+    };
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    auto func = make_function();
+    pass_manager.run_passes(func);
+    ASSERT_EQ(count_ops_of_type<op::ConvolutionBiasAdd>(func), 1);
 
     auto int_f = make_function();
     auto cpu_f = make_function();
@@ -2085,9 +2140,9 @@ TEST(cpu_fusion, group_convolution_fusion)
 
     auto f = make_shared<Function>(NodeVector{concat}, ParameterVector{A, B});
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before_group.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("before_group.png");
     pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
-    pass_manager.register_pass<pass::VisualizeTree>("after_group.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("after_group.png");
     pass_manager.run_passes(f);
     auto gc =
         std::dynamic_pointer_cast<op::GroupConvolution>(f->get_results().at(0)->get_argument(0));
@@ -2167,7 +2222,7 @@ TEST(cpu_fusion, group_convolution)
     auto handle = backend->compile(f);
     handle->call_with_validate({group_result, lower_result, upper_result},
                                {a_, b_, c_, d_, e_, f_});
-    ASSERT_EQ(rv, erv);
+    EXPECT_TRUE(test::all_close_f(rv, erv));
 }
 
 TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
@@ -2440,9 +2495,9 @@ TEST(cpu_fusion, loop_kernel_fusion_bounded_relu)
     };
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before_relu_fusion.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("before_relu_fusion.png");
     pass_manager.register_pass<runtime::cpu::pass::CPULoopKernelFusion>(3);
-    pass_manager.register_pass<pass::VisualizeTree>("after_relu_fusion.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("after_relu_fusion.png");
     auto cpu_f = make_function();
     auto int_f = make_function();
     pass_manager.run_passes(cpu_f);
@@ -2992,7 +3047,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_backward)
     }
 }
 
-TEST(cpu_fusion, fuse_batch_dot)
+TEST(cpu_fusion, fuse_batch_mat_mul_transpose)
 {
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
@@ -3001,11 +3056,11 @@ TEST(cpu_fusion, fuse_batch_dot)
     stringstream ss(json_string);
     shared_ptr<Function> func = ngraph::deserialize(ss);
     pass_manager.run_passes(func);
-    size_t ccg = count_ops_of_type<op::BatchDot>(func);
+    size_t ccg = count_ops_of_type<op::BatchMatMulTranspose>(func);
     ASSERT_EQ(ccg, 1);
 }
 
-TEST(cpu_fusion, fuse_batch_dot_forward)
+TEST(cpu_fusion, fuse_batch_mat_mul_transpose_forward)
 {
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();

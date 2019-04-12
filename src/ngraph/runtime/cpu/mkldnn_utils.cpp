@@ -41,6 +41,20 @@ using namespace mkldnn;
 using namespace ngraph;
 using namespace std;
 
+#if defined(MKLDNN_VERSION_MAJOR) && defined(MKLDNN_VERSION_MINOR) && defined(MKLDNN_VERSION_PATCH)
+/** Intel(R) MKL-DNN Version type */
+/* typedef struct {
+    int    major;
+    int    minor;
+    int    patch;
+    const char *hash;
+} mkldnn_version_t; */
+static const mkldnn_version_t* get_mkldnn_version()
+{
+    return mkldnn_version();
+}
+#endif
+
 std::map<element::Type, const mkldnn::memory::data_type>&
     runtime::cpu::mkldnn_utils::get_mkldnn_data_type_map()
 {
@@ -678,15 +692,20 @@ bool runtime::cpu::mkldnn_utils::is_mkldnn_padded_layout(const mkldnn::memory::d
 
 bool runtime::cpu::mkldnn_utils::use_mkldnn_kernel(const ngraph::Node* node)
 {
-    auto op_annotations = static_cast<const ngraph::op::Op*>(node)->get_op_annotations();
-    return (op_annotations &&
-            static_pointer_cast<ngraph::runtime::cpu::CPUOpAnnotations>(op_annotations)
-                ->is_mkldnn_op());
+    if (auto* op_node = dynamic_cast<const ngraph::op::Op*>(node))
+    {
+        auto op_annotations = op_node->get_op_annotations();
+        return (op_annotations &&
+                static_pointer_cast<ngraph::runtime::cpu::CPUOpAnnotations>(op_annotations)
+                    ->is_mkldnn_op());
+    }
+
+    return false;
 }
 
 void runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(Node* node)
 {
-    auto ngraph_op = static_cast<op::Op*>(node);
+    auto ngraph_op = static_cast<ngraph::op::Op*>(node);
     auto op_annotations = std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
     op_annotations->set_mkldnn_op(true);
     ngraph_op->set_op_annotations(op_annotations);
@@ -705,6 +724,18 @@ bool runtime::cpu::mkldnn_utils::can_use_mkldnn_batchnorm_fprop(const ngraph::No
     {
         return false;
     }
+}
+
+mkldnn::algorithm runtime::cpu::mkldnn_utils::get_conv_algo()
+{
+#if defined(MKLDNN_VERSION_MAJOR) && defined(MKLDNN_VERSION_MINOR) && defined(MKLDNN_VERSION_PATCH)
+    auto mkldnn_version = get_mkldnn_version();
+    if (mkldnn_version->major >= 0 && mkldnn_version->minor >= 18 && mkldnn_version->patch >= 0)
+    {
+        return mkldnn::algorithm::convolution_auto;
+    }
+#endif
+    return mkldnn::algorithm::convolution_direct;
 }
 
 bool runtime::cpu::mkldnn_utils::can_use_mkldnn_batchnorm_bprop(const ngraph::Node* node)

@@ -22,7 +22,7 @@ include(ExternalProject)
 #------------------------------------------------------------------------------
 
 set(CLDNN_GIT_REPO_URL https://github.com/intel/clDNN.git)
-set(CLDNN_GIT_LABEL e0efde85b3cfdd776b53447500ce0bb2aa8bca54)
+set(CLDNN_GIT_LABEL a9197ba89553ad1f55ffda617cfc772b60af5bc2)
 set(BOOST_VERSION 1.64.0)
 set(OUT_DIR ${EXTERNAL_PROJECTS_ROOT}/cldnn/out)
 
@@ -64,7 +64,22 @@ if (CLDNN_ROOT_DIR)
     target_link_libraries(libcldnn INTERFACE ${CLDNN_LIBRARIES})
 else()
     ExternalProject_Get_Property(ext_cldnn SOURCE_DIR BINARY_DIR)
+    set(CLDNN_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}clDNN64${CMAKE_SHARED_LIBRARY_SUFFIX})
+    ExternalProject_Add_Step(
+        ext_cldnn
+        CopyCLDNN
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SOURCE_DIR}/build/out/Linux64/${CMAKE_BUILD_TYPE}/${CLDNN_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${CLDNN_LIB}
+        COMMENT "Copy cldnn runtime libraries to ngraph build directory."
+        DEPENDEES install
+        )
     add_dependencies(libcldnn ext_cldnn)
     target_include_directories(libcldnn SYSTEM INTERFACE ${SOURCE_DIR}/api)
-    target_link_libraries(libcldnn INTERFACE ${SOURCE_DIR}/build/out/Linux64/${CMAKE_BUILD_TYPE}/${CMAKE_SHARED_LIBRARY_PREFIX}clDNN64${CMAKE_SHARED_LIBRARY_SUFFIX})
+    target_link_libraries(libcldnn INTERFACE ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${CLDNN_LIB})
+    install(
+        FILES
+            ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${CLDNN_LIB}
+        DESTINATION
+            ${NGRAPH_INSTALL_LIB}
+        OPTIONAL
+        )
 endif()

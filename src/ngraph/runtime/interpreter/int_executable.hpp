@@ -35,6 +35,9 @@
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
+#include "ngraph/op/experimental/batch_mat_mul.hpp"
+#include "ngraph/op/experimental/dyn_broadcast.hpp"
+#include "ngraph/op/experimental/dyn_pad.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -72,6 +75,7 @@
 #include "ngraph/runtime/reference/asin.hpp"
 #include "ngraph/runtime/reference/atan.hpp"
 #include "ngraph/runtime/reference/avg_pool.hpp"
+#include "ngraph/runtime/reference/batch_mat_mul.hpp"
 #include "ngraph/runtime/reference/batch_norm.hpp"
 #include "ngraph/runtime/reference/broadcast.hpp"
 #include "ngraph/runtime/reference/ceiling.hpp"
@@ -87,6 +91,7 @@
 #include "ngraph/runtime/reference/dot.hpp"
 #include "ngraph/runtime/reference/embedding_lookup.hpp"
 #include "ngraph/runtime/reference/equal.hpp"
+#include "ngraph/runtime/reference/erf.hpp"
 #include "ngraph/runtime/reference/exp.hpp"
 #include "ngraph/runtime/reference/floor.hpp"
 #include "ngraph/runtime/reference/generate_mask.hpp"
@@ -136,6 +141,7 @@
 
 #ifdef NGRAPH_DISTRIBUTED_ENABLE
 #include "ngraph/runtime/reference/allreduce.hpp"
+#include "ngraph/runtime/reference/broadcast_distributed.hpp"
 #endif
 
 namespace ngraph
@@ -364,6 +370,17 @@ private:
             std::memcpy(out[0]->get_data_ptr<T>(), args[n]->get_data_ptr<T>(), num_bytes);
             break;
         }
+        case OP_TYPEID::BatchMatMul:
+        {
+            reference::batch_mat_mul(args[0]->get_data_ptr<const T>(),
+                                     args[1]->get_data_ptr<const T>(),
+                                     out[0]->get_data_ptr<T>(),
+                                     node.get_input_shape(0),
+                                     node.get_input_shape(1),
+                                     node.get_output_shape(0));
+            break;
+        }
+
         case OP_TYPEID::BatchNormTraining:
         {
             const ngraph::op::BatchNormTraining* bn =
@@ -434,6 +451,32 @@ private:
                                     in_shape,
                                     out_shape,
                                     broadcast_axes);
+            break;
+        }
+        case OP_TYPEID::BroadcastDistributed: {
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
+            Distributed dist;
+            int Rank_ID;
+            Rank_ID = dist.get_rank();
+            if (Rank_ID == 0)
+            {
+                reference::broadcastdistributed<T>(
+                    args[0]->get_data_ptr<T>(),
+                    node.get_input_element_type(0),
+                    static_cast<int>(shape_size(node.get_input_shape(0))));
+                auto memSize = static_cast<int>(shape_size(node.get_input_shape(0))) *
+                               sizeof(node.get_input_element_type(0));
+                memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), memSize);
+            }
+            else
+            {
+                reference::broadcastdistributed<T>(
+                    out[0]->get_data_ptr<T>(),
+                    node.get_input_element_type(0),
+                    static_cast<int>(shape_size(node.get_input_shape(0))));
+            }
+            break;
+#endif
             break;
         }
         case OP_TYPEID::BroadcastLike: break;
@@ -661,6 +704,16 @@ private:
                            dot->get_reduction_axes_count());
             break;
         }
+        case OP_TYPEID::DynReshape:
+        {
+            throw unsupported_op("Unsupported op '" + node.description() + "'");
+            break;
+        }
+        case OP_TYPEID::DynSlice:
+        {
+            throw unsupported_op("Unsupported op '" + node.description() + "'");
+            break;
+        }
         case OP_TYPEID::EmbeddingLookup:
         {
             const op::EmbeddingLookup* embed = static_cast<const op::EmbeddingLookup*>(&node);
@@ -713,6 +766,13 @@ private:
                                 args[1]->get_data_ptr<const T>(),
                                 out[0]->get_data_ptr<char>(),
                                 element_count);
+            break;
+        }
+        case OP_TYPEID::Erf:
+        {
+            size_t element_count = shape_size(node.get_output_shape(0));
+            reference::erf<T>(
+                args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::Exp:
@@ -943,7 +1003,7 @@ private:
                            node.get_output_shape(0),
                            pad->get_padding_below(),
                            pad->get_padding_above(),
-                           pad->get_padding_interior());
+                           pad->get_pad_mode());
             break;
         }
         case OP_TYPEID::Power:
@@ -1019,6 +1079,8 @@ private:
         case OP_TYPEID::QuantizedConvolutionRelu:
         case OP_TYPEID::QuantizedConvolution:
         case OP_TYPEID::QuantizedMaxPool:
+        case OP_TYPEID::QuantizedDotBias:
+        case OP_TYPEID::QuantizedDot:
         {
             throw unsupported_op("Unsupported op '" + node.description() +
                                  "' in Interpreter back end.");
@@ -1245,6 +1307,9 @@ private:
             }
             break;
         }
+        case OP_TYPEID::DynBroadcast:
+        case OP_TYPEID::Transpose:
+        case OP_TYPEID::DynPad:
         default: throw unsupported_op("Unsupported op '" + node.description() + "'");
 #pragma GCC diagnostic pop
         }

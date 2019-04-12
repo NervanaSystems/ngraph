@@ -38,15 +38,15 @@ set(SRC
     builder/argmax.cpp
     builder/batch_norm.cpp
     builder/broadcast.cpp
+    builder/broadcast_distributed.cpp
     builder/bounded_relu.cpp
     builder/concat.cpp
     builder/convert.cpp
     builder/convert_layout.cpp
-    builder/quantized_conv.cpp
-    builder/quantized_concat.cpp
     builder/convolution.cpp
     builder/dot.cpp
     builder/embedding_lookup.cpp
+    builder/erf.cpp
     builder/leaky_relu.cpp
     builder/lstm.cpp
     builder/lrn.cpp
@@ -63,6 +63,8 @@ set(SRC
     builder/quantization.cpp
     builder/quantized_avg_pool.cpp
     builder/quantized_conv.cpp
+    builder/quantized_concat.cpp
+    builder/quantized_dot.cpp
     builder/quantized_max_pool.cpp
     builder/reshape.cpp
     builder/reverse.cpp
@@ -84,7 +86,7 @@ set(SRC
     mkldnn_emitter.cpp
     mkldnn_invoke.cpp
     mkldnn_utils.cpp
-    op/batch_dot.cpp
+    op/batch_mat_mul_transpose.cpp
     op/batch_norm_relu.cpp
     op/bounded_relu.cpp
     op/conv_add.cpp
@@ -111,6 +113,7 @@ set(SRC
     pass/cpu_mat_fusion.cpp
     pass/cpu_memory_assignment.cpp
     pass/cpu_memory_optimization.cpp
+    pass/cpu_mkldnn_primitive_build.cpp
     pass/cpu_post_layout_optimizations.cpp
     pass/cpu_rnn_fusion.cpp
     pass/cpu_workspace_insertion.cpp

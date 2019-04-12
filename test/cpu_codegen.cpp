@@ -16,7 +16,7 @@
 
 #include "gtest/gtest.h"
 #include "ngraph/ngraph.hpp"
-#include "util/all_close.hpp"
+#include "util/all_close_f.hpp"
 #include "util/ndarray.hpp"
 
 using namespace ngraph;
@@ -45,14 +45,17 @@ TEST(cpu_codegen, abc)
     ngraph::pass::PassConfig pass_config{ngraph::pass::CompilationMode::CODEGEN};
     auto handle = backend->compile(f, pass_config);
     handle->call_with_validate({result}, {a, b, c});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
+                                  (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector(),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 
     handle->call_with_validate({result}, {b, a, c});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
+                                  (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector(),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 
     handle->call_with_validate({result}, {a, c, b});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
+                                  (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector(),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }

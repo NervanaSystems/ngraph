@@ -1,8 +1,12 @@
 .. buildlb.rst:
 
-######################
-Build the C++ Library 
-######################
+###############
+Build and Test 
+###############
+
+This section details how to build the C++ version of the nGraph Library, which 
+is targeted toward developers working on kernel-specific operations, 
+optimizations, or on deep learning solutions that leverage custom backends. 
 
 * :ref:`ubuntu`
 * :ref:`centos`
@@ -19,7 +23,7 @@ packages and prerequisites:
    :widths: 25, 15, 25, 20, 25
    :escape: ~
 
-   CentOS 7.4 64-bit, GCC 4.8, CMake 3.4.3, supported, ``wget zlib-devel ncurses-libs ncurses-devel patch diffutils gcc-c++ make git perl-Data-Dumper`` 
+   CentOS 7.4 64-bit, GCC 4.8, CMake 3.5.0, supported, ``wget zlib-devel ncurses-libs ncurses-devel patch diffutils gcc-c++ make git perl-Data-Dumper`` 
    Ubuntu 16.04 or 18.04 (LTS) 64-bit, Clang 3.9, CMake 3.5.1 + GNU Make, supported, ``build-essential cmake clang-3.9 clang-format-3.9 git curl zlib1g zlib1g-dev libtinfo-dev unzip autoconf automake libtool``
    Clear Linux\* OS for Intel Architecture, Clang 5.0.1, CMake 3.10.2, experimental, bundles ``machine-learning-basic dev-utils python3-basic python-basic-dev``
 
@@ -132,7 +136,7 @@ The process documented here will work on Ubuntu\* 16.04 (LTS) or on Ubuntu
    
    .. code-block:: console
 
-      $ cmake .. [-DNGRAPH_USE_PREBUILT_LLVM=TRUE] [-DNGRAPH_TARGET_ARCH=skylake-avx512]   
+      $ cmake .. [-DNGRAPH_USE_PREBUILT_LLVM=OFF] [-DNGRAPH_TARGET_ARCH=skylake-avx512]   
 
 #. Run ``$ make`` and ``make install`` to install ``libngraph.so`` and the 
    header files to ``~/ngraph_dist``:
@@ -181,13 +185,13 @@ The process documented here will work on CentOS 7.4.
 
    .. code-block:: console
     
-      $ wget https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz      
-      $ tar -xzvf cmake-3.4.3.tar.gz
-      $ cd cmake-3.4.3
+      $ wget https://cmake.org/files/v3.4/cmake-3.5.0.tar.gz      
+      $ tar -xzvf cmake-3.5.0.tar.gz
+      $ cd cmake-3.5.0
       $ ./bootstrap --system-curl --prefix=~/cmake
       $ make && make install     
 
-#. Clone the `NervanaSystems` ``ngraph`` repo via HTTPS and use Cmake 3.4.3 to 
+#. Clone the `NervanaSystems` ``ngraph`` repo via HTTPS and use Cmake 3.5.0 to 
    build nGraph Libraries to ``~/ngraph_dist``. This command enables ONNX 
    support in the library (optional). 
 
@@ -223,10 +227,16 @@ according to those conventions. These scripts require the command
 Testing the build 
 =================
 
-We use the `googletest framework`_ from Google for unit tests. The 
-``NGRAPH_UNIT_TEST_ENABLE`` build flag is enabled by default when building
-with cmake, so to perform unit tests, simply enter the build directory and 
-run ``make check``:
+We use the `googletest framework`_ from Google for unit tests. The ``cmake`` 
+command automatically downloaded a copy of the needed ``gtest`` files when 
+it configured the build directory.
+
+To perform unit tests on the install:
+
+#. Create and configure the build directory as described in our 
+   :doc:`buildlb` guide.
+
+#. Enter the build directory and run ``make check``:
    
    .. code-block:: console
 
@@ -238,8 +248,8 @@ Adding framework support
 ========================
 
 After building and installing nGraph on your system, there are two likely 
-paths for what you'll want to do next: either compile a framework to run a 
-DL model, or load an import of an "already-trained" model for inference 
+paths for what you'll want to do next: either compile a framework to run a DL 
+training model, or load an import of an "already-trained" model for inference 
 on an Intel nGraph-enabled backend.
 
 For the former case, this early |version|, :doc:`frameworks/index`, 
