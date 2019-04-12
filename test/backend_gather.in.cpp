@@ -82,9 +82,8 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_scalar_indices_no_axis)
 
     auto c = backend->compile(f);
     c->call_with_validate({result}, {p, i});
-    EXPECT_TRUE(test::all_close_f((vector<float>{2.0, 2.1}),
-                                  read_vector<float>(result),
-                                  MIN_FLOAT_TOLERANCE_BITS));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{2.0, 2.1}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, gather)
@@ -134,9 +133,8 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_scalar_indices)
 
     auto c = backend->compile(f);
     c->call_with_validate({result}, {p, i});
-    EXPECT_TRUE(test::all_close_f((vector<float>{1.0, 2.0, 3.0}),
-                                  read_vector<float>(result),
-                                  MIN_FLOAT_TOLERANCE_BITS));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{1.0, 2.0, 3.0}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, gather_nd_single_indices)

@@ -59,11 +59,12 @@ namespace ngraph
                 Shape indices_prime_shape;
                 // prepare shape of out_prime (same as params_prime except for first dim)
                 Shape out_prime_shape(params_prime_shape);
-                if(indices_ndim > 0)
+                if (indices_ndim > 0)
                 {
                     out_prime_shape[0] = indices_shape[indices_ndim - 1];
                     indices_prime_shape.emplace_back(indices_shape[indices_ndim - 1]);
-                } else
+                }
+                else
                 {
                     out_prime_shape[0] = 1;
                 }
@@ -106,7 +107,7 @@ namespace ngraph
                 // Create a CoordinateTransform for "indices" that visits only the first element along inner most axis
                 Coordinate indices_outer_start_corner(indices_ndim, 0);
                 Coordinate indices_outer_end_corner(indices_shape);
-                if(indices_ndim > 0)
+                if (indices_ndim > 0)
                 {
                     indices_outer_end_corner[indices_ndim - 1] = 1;
                 }
@@ -125,7 +126,7 @@ namespace ngraph
                 out_inner_shape.erase(out_inner_shape.begin(), out_inner_shape.begin() + axis);
                 Coordinate out_inner_start_corner(out_inner_ndim, 0);
                 Coordinate out_inner_end_corner(out_inner_shape);
-                if(indices_ndim > 0)
+                if (indices_ndim > 0)
                 {
                     out_inner_end_corner[indices_ndim - 1] = 1;
                 }
