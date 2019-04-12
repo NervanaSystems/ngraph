@@ -87,6 +87,31 @@ NGRAPH_TEST(${BACKEND_NAME}, gather)
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, gather_nd_single_indice)
+{
+    Shape params_shape{3, 3};
+    Shape indices_shape{2};
+    Shape out_shape{};
+    auto P = make_shared<op::Parameter>(element::f32, params_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto G = make_shared<op::GatherND>(P, I);
+    auto f = make_shared<Function>(make_shared<op::GetOutputElement>(G, 0), ParameterVector{P, I});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto p = backend->create_tensor(element::f32, params_shape);
+    copy_data(p, vector<float>{1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8});
+    auto i = backend->create_tensor(element::i32, indices_shape);
+    copy_data(i, vector<int32_t>{1, 2});
+    auto result = backend->create_tensor(element::f32, out_shape);
+
+    auto c = backend->compile(f);
+    c->call_with_validate({result}, {p, i});
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{1.5}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, gather_nd_scalar_from_2d)
 {
     Shape params_shape{2, 2};

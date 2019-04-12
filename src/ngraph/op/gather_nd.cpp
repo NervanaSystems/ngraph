@@ -38,13 +38,13 @@ void op::GatherND::validate_and_infer_types()
 
     NODE_VALIDATION_CHECK(this,
                           indices_shape.rank().is_dynamic() ||
-                              static_cast<size_t>(indices_shape.rank()) >= 2,
-                          "indices rank is expected to be at least 2");
+                              static_cast<size_t>(indices_shape.rank()) >= 1,
+                          "indices rank is expected to be at least 1");
 
     NODE_VALIDATION_CHECK(this,
                           params_shape.rank().is_dynamic() ||
-                              static_cast<size_t>(params_shape.rank()) >= 2,
-                          "params rank is expected to be at least 2");
+                              static_cast<size_t>(params_shape.rank()) >= 1,
+                          "params rank is expected to be at least 1");
 
     NODE_VALIDATION_CHECK(
         this,
