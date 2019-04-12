@@ -50,21 +50,24 @@ namespace ngraph
                         size_t axis)
             {
                 using namespace std;
-                // prepare shape of indices_prime (2-D)
-                size_t indices_ndim = static_cast<size_t>(indices_shape.size());
-                Shape indices_prime_shape({indices_shape[indices_ndim - 1], 1});
                 // prepare shape of params_prime (remove first "axis" dimensions)
                 Shape params_prime_shape(params_shape);
                 params_prime_shape.erase(params_prime_shape.begin(),
                                          params_prime_shape.begin() + axis);
-                // params_prime needs to be at least 2D
-                if (static_cast<size_t>(params_prime_shape.size()) == 1)
-                {
-                    params_prime_shape.emplace_back(1);
-                }
+                // prepare shape of indices_prime
+                size_t indices_ndim = static_cast<size_t>(indices_shape.size());
+                Shape indices_prime_shape;
                 // prepare shape of out_prime (same as params_prime except for first dim)
                 Shape out_prime_shape(params_prime_shape);
-                out_prime_shape[0] = indices_shape[indices_ndim - 1];
+                if(indices_ndim > 0)
+                {
+                    out_prime_shape[0] = indices_shape[indices_ndim - 1];
+                    indices_prime_shape.emplace_back(indices_shape[indices_ndim - 1]);
+                } else
+                {
+                    out_prime_shape[0] = 1;
+                }
+                indices_prime_shape.emplace_back(1);
 
                 // Create a CoordinateTransform for "out" that visits the outer "axis" dimensions
                 size_t out_ndim = static_cast<size_t>(out_shape.size());
@@ -103,7 +106,10 @@ namespace ngraph
                 // Create a CoordinateTransform for "indices" that visits only the first element along inner most axis
                 Coordinate indices_outer_start_corner(indices_ndim, 0);
                 Coordinate indices_outer_end_corner(indices_shape);
-                indices_outer_end_corner[indices_ndim - 1] = 1;
+                if(indices_ndim > 0)
+                {
+                    indices_outer_end_corner[indices_ndim - 1] = 1;
+                }
                 Strides indices_outer_strides(indices_ndim, 1);
                 AxisVector indices_outer_axis_order(indices_ndim);
                 iota(indices_outer_axis_order.begin(), indices_outer_axis_order.end(), 0);
@@ -119,7 +125,11 @@ namespace ngraph
                 out_inner_shape.erase(out_inner_shape.begin(), out_inner_shape.begin() + axis);
                 Coordinate out_inner_start_corner(out_inner_ndim, 0);
                 Coordinate out_inner_end_corner(out_inner_shape);
-                for (size_t i = indices_ndim - 1; i < out_inner_ndim; i++)
+                if(indices_ndim > 0)
+                {
+                    out_inner_end_corner[indices_ndim - 1] = 1;
+                }
+                for (size_t i = indices_ndim; i < out_inner_ndim; i++)
                 {
                     out_inner_end_corner[i] = 1;
                 }
