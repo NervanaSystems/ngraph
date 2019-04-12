@@ -44,8 +44,8 @@ namespace ngraph
                 : Node("Constant", {})
                 , m_element_type(type)
                 , m_shape(shape)
-                , m_data(
-                      new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(), 64))
+                , m_data(new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(),
+                                                    s_host_alignment))
             {
                 NODE_VALIDATION_CHECK(
                     this,
@@ -80,8 +80,8 @@ namespace ngraph
                 : Node("Constant", {})
                 , m_element_type(type)
                 , m_shape(shape)
-                , m_data(
-                      new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(), 64))
+                , m_data(new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(),
+                                                    s_host_alignment))
             {
                 NODE_VALIDATION_CHECK(
                     this,
@@ -112,8 +112,8 @@ namespace ngraph
                 , m_data(nullptr)
             {
                 size_t size = shape_size(m_shape) * m_element_type.size();
-                m_data.reset(
-                    new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(), 64));
+                m_data.reset(new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(),
+                                                        s_host_alignment));
                 std::memcpy(m_data->get_ptr(), data, size);
                 constructor_validate_and_infer_types();
             }
@@ -281,6 +281,7 @@ namespace ngraph
             std::unique_ptr<runtime::AlignedBuffer> m_data;
             Constant(const Constant&) = delete;
             Constant operator=(const Constant&) = delete;
+            const static size_t s_host_alignment;
         };
 
         class ScalarConstantLikeBase : public Constant

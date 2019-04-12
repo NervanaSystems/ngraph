@@ -24,6 +24,8 @@
 using namespace ngraph;
 using namespace std;
 
+const size_t op::Constant::s_host_alignment = 64;
+
 template <typename T>
 string to_cpp_string(T value)
 {
