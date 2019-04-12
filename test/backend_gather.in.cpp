@@ -139,7 +139,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_scalar_indices)
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, gather_nd_single_indice)
+NGRAPH_TEST(${BACKEND_NAME}, gather_nd_single_indices)
 {
     Shape params_shape{3, 3};
     Shape indices_shape{2};
