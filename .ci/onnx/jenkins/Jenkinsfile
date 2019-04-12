@@ -100,6 +100,7 @@ def runDockerContainers(configurationMaps) {
         sh """
             mkdir -p ${HOME}/ONNX_CI
             ${CI_ROOT}/utils/docker.sh start \
+                                --docker_registry=${DOCKER_REGISTRY} \
                                 --name=${configMap["projectName"]} \
                                 --version=${configMap["name"]} \
                                 --container_name=${configMap["dockerContainerName"]} \
