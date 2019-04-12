@@ -324,7 +324,7 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
     {
         // Don't include op::Results otherwise Function c-tor will complain
         if (!n->is_output() && !n->is_parameter() && !n->is_constant() &&
-            !(n->get_outputs().size() > 1))
+            !(n->get_output_size() > 1))
         {
             // place conditionals here if you want to only make certain ops an output/result node
             new_results.push_back(n);
@@ -340,13 +340,13 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
     {
         // Don't include op::Results otherwise Function c-tor will complain
         if (!n->is_output() && !n->is_parameter() && !n->is_constant() &&
-            !(n->get_outputs().size() > 1))
+            !(n->get_output_size() > 1))
         {
             NodeVector isolated_op_args;
             for (auto arg : n->get_arguments())
             {
                 if (!arg->is_output() && !arg->is_parameter() && !arg->is_constant() &&
-                    !(arg->get_outputs().size() > 1))
+                    !(arg->get_output_size() > 1))
                 {
                     // Create new isolated arg which we'll fill in with reference results
                     auto isolated_param =
