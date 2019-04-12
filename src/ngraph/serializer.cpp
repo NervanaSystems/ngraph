@@ -1353,17 +1353,17 @@ static json write(const Node& n, bool binary_constant_data)
     json control_deps = json::array();
     json outputs = json::array();
 
-    for (const descriptor::Input& input : n.get_inputs())
+    for (auto& input : n.inputs())
     {
-        inputs.push_back(input.get_output().get_node()->get_name());
+        inputs.push_back(input.get_source_output().get_node()->get_name());
     }
     for (auto cdep : n.get_control_dependencies())
     {
         control_deps.push_back(cdep->get_name());
     }
-    for (size_t i = 0; i < n.get_output_size(); ++i)
+    for (auto& output : n.outputs())
     {
-        outputs.push_back(n.get_output_tensor(i).get_name());
+        outputs.push_back(output.get_tensor().get_name());
     }
 
     node["inputs"] = inputs;
