@@ -34,6 +34,7 @@
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/broadcast_distributed.hpp"
 #include "ngraph/op/ceiling.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
@@ -48,6 +49,7 @@
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/erf.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/batch_mat_mul.hpp"
 #include "ngraph/op/experimental/dyn_broadcast.hpp"
 #include "ngraph/op/experimental/dyn_pad.hpp"
 #include "ngraph/op/experimental/dyn_reshape.hpp"
@@ -63,6 +65,7 @@
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/floor.hpp"
+#include "ngraph/op/fused/prelu.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
@@ -123,6 +126,7 @@ using const_data_callback_t = shared_ptr<Node>(const string&, const element::Typ
 #define NGRAPH_OP(a, b) a,
 enum class OP_TYPEID
 {
+#include "ngraph/op/fused_op_tbl.hpp"
 #include "ngraph/op/op_tbl.hpp"
     UnknownOp
 };
@@ -136,6 +140,7 @@ static OP_TYPEID get_typeid(const string& s)
 // ...
 #define NGRAPH_OP(a, b) {#a, OP_TYPEID::a},
     static const unordered_map<string, OP_TYPEID> typeid_map{
+#include "ngraph/op/fused_op_tbl.hpp"
 #include "ngraph/op/op_tbl.hpp"
     };
 #undef NGRAPH_OP
@@ -559,6 +564,12 @@ static shared_ptr<ngraph::Function>
                                                         include_padding_in_avg_computation);
                 break;
             }
+            case OP_TYPEID::BatchMatMul:
+            {
+                node = make_shared<op::BatchMatMul>(args[0], args[1]);
+                break;
+            }
+
             case OP_TYPEID::BatchNormTraining:
             {
                 auto epsilon = node_js.at("eps").get<double>();
@@ -587,6 +598,11 @@ static shared_ptr<ngraph::Function>
                 auto shape = node_js.at("shape").get<vector<size_t>>();
                 auto axes = node_js.at("axes").get<set<size_t>>();
                 node = make_shared<op::Broadcast>(args[0], shape, axes);
+                break;
+            }
+            case OP_TYPEID::BroadcastDistributed:
+            {
+                node = make_shared<op::BroadcastDistributed>(args[0]);
                 break;
             }
             case OP_TYPEID::BroadcastLike:
@@ -972,11 +988,15 @@ static shared_ptr<ngraph::Function>
                 // This is a legacy field whose functionality is no longer supported. The new
                 // behavior is equivalent to interior padding of 0, so we will accept it under
                 // those conditions.
-                auto padding_interior = node_js.at("padding_interior").get<vector<size_t>>();
-                NGRAPH_ASSERT(std::all_of(padding_interior.begin(),
-                                          padding_interior.end(),
-                                          [](size_t s) { return s == 0; }))
-                    << "Legacy padding_interior field must be zero everywhere.";
+                auto padding_interior_maybe = node_js.find("padding_interior");
+                if (padding_interior_maybe != node_js.end())
+                {
+                    auto padding_interior = padding_interior_maybe->get<vector<size_t>>();
+                    NGRAPH_ASSERT(std::all_of(padding_interior.begin(),
+                                              padding_interior.end(),
+                                              [](size_t s) { return s == 0; }))
+                        << "Legacy padding_interior field must be zero everywhere.";
+                }
 
                 auto pad_mode = node_js.count("pad_mode") == 0
                                     ? op::PadMode::CONSTANT
@@ -1016,6 +1036,11 @@ static shared_ptr<ngraph::Function>
             case OP_TYPEID::Power:
             {
                 node = make_shared<op::Power>(args[0], args[1]);
+                break;
+            }
+            case OP_TYPEID::PRelu:
+            {
+                node = make_shared<op::PRelu>(args[0], args[1]);
                 break;
             }
             case OP_TYPEID::Product:
@@ -1423,6 +1448,8 @@ static json write(const Node& n, bool binary_constant_data)
         node["include_padding_in_avg_computation"] = tmp->get_include_padding_in_avg_computation();
         break;
     }
+    case OP_TYPEID::BatchMatMul: { break;
+    }
     case OP_TYPEID::BatchNormTraining:
     {
         auto tmp = dynamic_cast<const op::BatchNormTraining*>(&n);
@@ -1447,6 +1474,8 @@ static json write(const Node& n, bool binary_constant_data)
         node["axes"] = tmp->get_broadcast_axes();
         node["shape"] = tmp->get_broadcast_shape();
         break;
+    }
+    case OP_TYPEID::BroadcastDistributed: { break;
     }
     case OP_TYPEID::BroadcastLike:
     {
@@ -1665,6 +1694,8 @@ static json write(const Node& n, bool binary_constant_data)
         }
         node["output_shapes"] = std::move(outputs_js);
         break;
+    }
+    case OP_TYPEID::PRelu: { break;
     }
     case OP_TYPEID::Product:
     {

@@ -14,27 +14,42 @@
 // limitations under the License.
 //*****************************************************************************
 
-//================================================================================================
-// bfloat16 type
-//================================================================================================
-
 #pragma once
 
+#include <cmath>
 #include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
+
+#define ROUND_MODE_TO_NEAREST_EVEN
 
 namespace ngraph
 {
     class bfloat16
     {
     public:
-        bfloat16() {}
-        bfloat16(float value, bool rounding = false);
-        bfloat16(const bfloat16&) = default;
-        bfloat16& operator=(const bfloat16&) = default;
-        virtual ~bfloat16() {}
+        bfloat16()
+            : m_value{0}
+        {
+        }
+        bfloat16(float value)
+            : m_value
+        {
+#if defined ROUND_MODE_TO_NEAREST
+            round_to_nearest(value)
+#elif defined ROUND_MODE_TO_NEAREST_EVEN
+            round_to_nearest_even(value)
+#elif defined ROUND_MODE_TRUNCATE
+            truncate(value)
+#else
+#error                                                                                             \
+    "ROUNDING_MODE must be one of ROUND_MODE_TO_NEAREST, ROUND_MODE_TO_NEAREST_EVEN, or ROUND_MODE_TRUNCATE"
+#endif
+        }
+        {
+        }
+
         std::string to_string() const;
         size_t size() const;
         bool operator==(const bfloat16& other) const;
@@ -48,10 +63,49 @@ namespace ngraph
 
         static std::vector<float> to_float_vector(const std::vector<bfloat16>&);
         static std::vector<bfloat16> from_float_vector(const std::vector<float>&);
+        static bfloat16 from_bits(uint16_t bits) { return bfloat16(bits, false); }
+        uint16_t to_bits() const;
+        friend std::ostream& operator<<(std::ostream& out, const bfloat16& obj)
+        {
+            out << static_cast<float>(obj);
+            return out;
+        }
 
-        friend std::ostream& operator<<(std::ostream&, const bfloat16&);
+#define cu32(x) (F32(x).i)
 
+        static uint16_t round_to_nearest_even(float x)
+        {
+            return static_cast<uint16_t>((cu32(x) + ((cu32(x) & 0x00010000) >> 1)) >> 16);
+        }
+
+        static uint16_t round_to_nearest(float x)
+        {
+            return static_cast<uint16_t>((cu32(x) + 0x8000) >> 16);
+        }
+
+        static uint16_t truncate(float x) { return static_cast<uint16_t>((cu32(x)) >> 16); }
     private:
-        uint16_t m_value{0};
+        union F32 {
+            F32(float val)
+                : f{val}
+            {
+            }
+            F32(uint32_t val)
+                : i{val}
+            {
+            }
+            float f;
+            uint32_t i;
+        };
+        // This should be private since it is ugly. Need the bool so the signature can't match
+        // the float version of the ctor.
+        bfloat16(uint16_t value, bool)
+            : m_value{value}
+        {
+        }
+
+        uint16_t m_value;
+
+        static uint16_t BF16_NAN_VALUE;
     };
 }

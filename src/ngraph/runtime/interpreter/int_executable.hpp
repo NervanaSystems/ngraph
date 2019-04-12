@@ -35,7 +35,7 @@
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
-#include "ngraph/op/experimental/dyn_broadcast.hpp"
+#include "ngraph/op/experimental/batch_mat_mul.hpp"
 #include "ngraph/op/experimental/dyn_broadcast.hpp"
 #include "ngraph/op/experimental/dyn_pad.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
@@ -75,6 +75,7 @@
 #include "ngraph/runtime/reference/asin.hpp"
 #include "ngraph/runtime/reference/atan.hpp"
 #include "ngraph/runtime/reference/avg_pool.hpp"
+#include "ngraph/runtime/reference/batch_mat_mul.hpp"
 #include "ngraph/runtime/reference/batch_norm.hpp"
 #include "ngraph/runtime/reference/broadcast.hpp"
 #include "ngraph/runtime/reference/ceiling.hpp"
@@ -140,6 +141,7 @@
 
 #ifdef NGRAPH_DISTRIBUTED_ENABLE
 #include "ngraph/runtime/reference/allreduce.hpp"
+#include "ngraph/runtime/reference/broadcast_distributed.hpp"
 #endif
 
 namespace ngraph
@@ -368,6 +370,17 @@ private:
             std::memcpy(out[0]->get_data_ptr<T>(), args[n]->get_data_ptr<T>(), num_bytes);
             break;
         }
+        case OP_TYPEID::BatchMatMul:
+        {
+            reference::batch_mat_mul(args[0]->get_data_ptr<const T>(),
+                                     args[1]->get_data_ptr<const T>(),
+                                     out[0]->get_data_ptr<T>(),
+                                     node.get_input_shape(0),
+                                     node.get_input_shape(1),
+                                     node.get_output_shape(0));
+            break;
+        }
+
         case OP_TYPEID::BatchNormTraining:
         {
             const ngraph::op::BatchNormTraining* bn =
@@ -438,6 +451,32 @@ private:
                                     in_shape,
                                     out_shape,
                                     broadcast_axes);
+            break;
+        }
+        case OP_TYPEID::BroadcastDistributed: {
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
+            Distributed dist;
+            int Rank_ID;
+            Rank_ID = dist.get_rank();
+            if (Rank_ID == 0)
+            {
+                reference::broadcastdistributed<T>(
+                    args[0]->get_data_ptr<T>(),
+                    node.get_input_element_type(0),
+                    static_cast<int>(shape_size(node.get_input_shape(0))));
+                auto memSize = static_cast<int>(shape_size(node.get_input_shape(0))) *
+                               sizeof(node.get_input_element_type(0));
+                memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), memSize);
+            }
+            else
+            {
+                reference::broadcastdistributed<T>(
+                    out[0]->get_data_ptr<T>(),
+                    node.get_input_element_type(0),
+                    static_cast<int>(shape_size(node.get_input_shape(0))));
+            }
+            break;
+#endif
             break;
         }
         case OP_TYPEID::BroadcastLike: break;

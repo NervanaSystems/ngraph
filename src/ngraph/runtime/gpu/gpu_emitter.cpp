@@ -44,6 +44,7 @@
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/broadcast_distributed.hpp"
 #include "ngraph/op/ceiling.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
@@ -58,6 +59,7 @@
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/erf.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/batch_mat_mul.hpp"
 #include "ngraph/op/experimental/dyn_broadcast.hpp"
 #include "ngraph/op/experimental/dyn_pad.hpp"
 #include "ngraph/op/experimental/dyn_reshape.hpp"
@@ -329,6 +331,11 @@ std::string runtime::gpu::GPU_Emitter::emit_AvgPoolBackprop(EMIT_ARGS)
     }
 }
 
+std::string runtime::gpu::GPU_Emitter::emit_BatchMatMul(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
 template <typename T>
 std::string emit_BatchNorm(EMIT_ARGS, runtime::gpu::CUDNNEmitter::Prop direction, bool save_stats)
 {
@@ -546,6 +553,11 @@ std::string runtime::gpu::GPU_Emitter::emit_Cos(EMIT_ARGS)
 std::string runtime::gpu::GPU_Emitter::emit_Cosh(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Cosh>(compiled_function, function_name, node, args, out);
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_BroadcastDistributed(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_Divide(EMIT_ARGS)
