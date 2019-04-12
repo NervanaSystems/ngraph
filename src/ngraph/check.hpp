@@ -56,15 +56,16 @@ namespace ngraph
         {
             std::stringstream ss;
             ss << "Check '" << check_loc_info.check_string << "' failed at " << check_loc_info.file
-               << ":" << check_loc_info.line << ":" << std::endl;
+               << ":" << check_loc_info.line;
             if (!context_info.empty())
             {
-                ss << context_info << ":" << std::endl;
+                ss << ":" << std::endl << context_info;
             }
             if (!explanation.empty())
             {
-                ss << explanation << std::endl;
+                ss << ":" << std::endl << explanation;
             }
+            ss << std::endl;
             return ss.str();
         }
     };
