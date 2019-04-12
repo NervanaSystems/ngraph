@@ -119,7 +119,8 @@ namespace ngraph
                 {
                     auto it = m_node_primitive_idx_map.find(node);
                     NGRAPH_CHECK(it != m_node_primitive_idx_map.end(),
-                                 "Primitive not found for node " << node->description());
+                                 "Primitive not found for node ",
+                                 node->description());
 
                     return it->second;
                 }
