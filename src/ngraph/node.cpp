@@ -545,3 +545,11 @@ void Node::validate_and_infer_elementwise_logical()
 
     set_output_type(0, element::boolean, args_pshape);
 }
+
+// default implementation for the node to check if it contains partial shape
+// we will override this method, for the Op's which depends on additional shape
+// attribute to determine if node contains partial shape or not
+bool Node::is_dynamic()
+{
+    return this->get_output_partial_shape(0).is_dynamic();
+}

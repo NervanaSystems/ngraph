@@ -583,3 +583,17 @@ void ngraph::plot_graph(
     pass_manager.register_pass<ngraph::pass::VisualizeTree>(filename, attributes);
     pass_manager.run_passes(f);
 }
+
+bool ngraph::is_function_dynamic(const ngraph::Function* func)
+{
+    auto list_of_nodes = func->get_ops();
+    for (auto& node : list_of_nodes)
+    {
+        if (node->get_output_partial_shape(0).is_dynamic())
+        {
+            return true;
+        }
+    }
+
+    return false;
+}

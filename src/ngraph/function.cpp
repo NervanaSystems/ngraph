@@ -224,3 +224,8 @@ void Function::set_placement(size_t placement)
 {
     m_placement = placement;
 }
+
+bool Function::is_dynamic()
+{
+    return ngraph::is_function_dynamic(this);
+}

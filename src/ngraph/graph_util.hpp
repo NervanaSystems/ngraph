@@ -334,6 +334,7 @@ namespace ngraph
     bool is_strided(const Strides& strides);
 
     bool is_valid_rank(const std::shared_ptr<Node>& node, std::vector<size_t> valid_ranks);
+    bool is_function_dynamic(const ngraph::Function* func);
 
     void plot_graph(
         std::shared_ptr<Function> f,
