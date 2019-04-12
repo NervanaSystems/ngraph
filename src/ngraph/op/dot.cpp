@@ -180,8 +180,8 @@ void op::Dot::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& 
 {
     auto delta = deltas.at(0);
 
-    auto x = get_inputs().at(0).get_output().get_node();
-    auto y = get_inputs().at(1).get_output().get_node();
+    auto x = get_argument(0);
+    auto y = get_argument(1);
 
     auto x_shape = x->get_shape();         // shape IJ
     auto y_shape = y->get_shape();         // shape JK

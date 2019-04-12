@@ -22,7 +22,7 @@
 using namespace ngraph;
 using namespace descriptor;
 
-Input::Input(Node* node, size_t index, Output& output)
+descriptor::Input::Input(Node* node, size_t index, Output& output)
     : m_node(node)
     , m_index(index)
     , m_output(&output)
@@ -33,7 +33,7 @@ Input::Input(Node* node, size_t index, Output& output)
     output.add_input(this);
 }
 
-void Input::replace_output(Output& new_output)
+void descriptor::Input::replace_output(Output& new_output)
 {
     m_output->remove_input(this);
     new_output.add_input(this);
@@ -51,47 +51,47 @@ void Input::replace_output(Output& new_output)
     }
 }
 
-void Input::replace_output(std::shared_ptr<Node> node, size_t i)
+void descriptor::Input::replace_output(std::shared_ptr<Node> node, size_t i)
 {
     replace_output(node->m_outputs.at(i));
 }
 
-std::shared_ptr<Node> Input::get_node() const
+std::shared_ptr<Node> descriptor::Input::get_node() const
 {
     return m_node->shared_from_this();
 }
 
-const Tensor& Input::get_tensor() const
+const Tensor& descriptor::Input::get_tensor() const
 {
     return m_output->get_tensor();
 }
 
-Tensor& Input::get_tensor()
+Tensor& descriptor::Input::get_tensor()
 {
     return m_output->get_tensor();
 }
 
-std::shared_ptr<const Tensor> Input::get_tensor_ptr() const
+std::shared_ptr<const Tensor> descriptor::Input::get_tensor_ptr() const
 {
     return m_output->get_tensor_ptr();
 }
 
-std::shared_ptr<Tensor> Input::get_tensor_ptr()
+std::shared_ptr<Tensor> descriptor::Input::get_tensor_ptr()
 {
     return m_output->get_tensor_ptr();
 }
 
-const Shape& Input::get_shape() const
+const Shape& descriptor::Input::get_shape() const
 {
     return m_output->get_shape();
 }
 
-const PartialShape& Input::get_partial_shape() const
+const PartialShape& descriptor::Input::get_partial_shape() const
 {
     return m_output->get_partial_shape();
 }
 
-const element::Type& Input::get_element_type() const
+const element::Type& descriptor::Input::get_element_type() const
 {
     return m_output->get_element_type();
 }
