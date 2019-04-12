@@ -79,7 +79,7 @@ def createStage(String stageName, Closure method, configurationMaps) {
                 status = "FAILURE"
                 throw e
             } finally {
-                UTILS.setConfigurationStatus(configMap["stageName"], configMap["name"], status)
+                setConfigurationStatus(configMap["stageName"], configMap["name"], status)
             }
         }
 
