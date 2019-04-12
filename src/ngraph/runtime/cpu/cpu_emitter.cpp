@@ -52,6 +52,7 @@
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/erf.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/batch_mat_mul.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_concat.hpp"
@@ -107,7 +108,7 @@
 #include "ngraph/runtime/cpu/cpu_kernel_emitters.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
-#include "ngraph/runtime/cpu/op/batch_dot.hpp"
+#include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
@@ -363,17 +364,17 @@ namespace ngraph
             }
 
             template <typename T>
-            static void emitBatchDot(const ngraph::Node* node,
-                                     const Shape& shape_a,
-                                     const Shape& shape_b,
-                                     const Shape& shape_c,
-                                     const std::vector<TensorViewWrapper>& args,
-                                     const std::vector<TensorViewWrapper>& out,
-                                     CodeWriter& writer)
+            static void emitBatchMatMul(const ngraph::Node* node,
+                                        const Shape& shape_a,
+                                        const Shape& shape_b,
+                                        const Shape& shape_c,
+                                        const std::vector<TensorViewWrapper>& args,
+                                        const std::vector<TensorViewWrapper>& out,
+                                        const bool transpose_a,
+                                        const bool transpose_b,
+                                        CodeWriter& writer)
             {
                 writer.block_begin();
-
-                const T* batch_dot = static_cast<const T*>(node);
 
                 auto mat_a = args[0];
                 auto mat_b = args[1];
@@ -387,8 +388,8 @@ namespace ngraph
                                     shape_a,
                                     shape_b,
                                     shape_c,
-                                    batch_dot->get_is_a_transposed(),
-                                    batch_dot->get_is_b_transposed(),
+                                    transpose_a,
+                                    transpose_b,
                                     mat_a.get_name(),
                                     mat_b.get_name(),
                                     mat_c.get_name(),
@@ -437,8 +438,15 @@ namespace ngraph
                 const Shape& arg2_shape = node->get_shape();                 // bias (C)
                 const Shape& padded_result_shape = pad_with(node->get_shape(), 1, 3);
                 // Step 1: dot(A,B)
-                emitBatchDot<ngraph::op::MatmulBias>(
-                    node, arg0_shape, arg1_shape, padded_result_shape, args, out, writer);
+                emitBatchMatMul<ngraph::op::MatmulBias>(node,
+                                                        arg0_shape,
+                                                        arg1_shape,
+                                                        padded_result_shape,
+                                                        args,
+                                                        out,
+                                                        cg->get_is_a_transposed(),
+                                                        cg->get_is_b_transposed(),
+                                                        writer);
 
                 // Step 2: add bias
                 if (args.size() < 3)
@@ -549,16 +557,33 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchDot)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchMatMul)
             {
-                const auto* cg = static_cast<const ngraph::op::BatchDot*>(node);
-                emitBatchDot<ngraph::op::BatchDot>(node,
-                                                   cg->get_a_shape(),
-                                                   cg->get_b_shape(),
-                                                   out[0].get_shape(),
-                                                   args,
-                                                   out,
-                                                   writer);
+                const auto* cg = static_cast<const ngraph::op::BatchMatMul*>(node);
+                emitBatchMatMul<ngraph::op::BatchMatMul>(node,
+                                                         cg->get_input_shape(0),
+                                                         cg->get_input_shape(1),
+                                                         out[0].get_shape(),
+                                                         args,
+                                                         out,
+                                                         false,
+                                                         false,
+                                                         writer);
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchMatMulTranspose)
+            {
+                const auto* cg = static_cast<const ngraph::op::BatchMatMulTranspose*>(node);
+                emitBatchMatMul<ngraph::op::BatchMatMul>(node,
+                                                         cg->get_input_shape(0),
+                                                         cg->get_input_shape(1),
+                                                         out[0].get_shape(),
+                                                         args,
+                                                         out,
+                                                         cg->get_transpose_arg0(),
+                                                         cg->get_transpose_arg1(),
+                                                         writer);
             }
 
             template <>

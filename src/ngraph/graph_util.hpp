@@ -98,7 +98,7 @@ namespace ngraph
             }
 
             node_map[node.get()] = node;
-            size_t deps_count = node->get_inputs().size() + control_deps_count;
+            size_t deps_count = node->get_input_size() + control_deps_count;
             node_dependency_count[node.get()] = deps_count;
             if (deps_count == 0)
             {
@@ -340,4 +340,11 @@ namespace ngraph
         std::shared_ptr<Function> f,
         const std::string& filename,
         std::function<void(const Node& node, std::vector<std::string>& attributes)> = nullptr);
+
+    /// \return A vector containing handles for each input of dst that is connected to an output
+    ///         of `src`.
+    std::vector<Input<Node>> get_inputs_from(Node& src, Node& dst);
+    /// \return A vector containing a handle for each output of src that is connected to an input
+    ///         of `dst`.
+    std::vector<Output<Node>> get_outputs_to(Node& src, Node& dst);
 }
