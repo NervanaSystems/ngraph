@@ -23,8 +23,8 @@ namespace ngraph
     class ProvenanceConfig
     {
     public:
-        ProvenanceConfig(){};
-        virtual ~ProvenanceConfig(){};
+        ProvenanceConfig(){}
+        virtual ~ProvenanceConfig(){}
 
         virtual bool is_enabled() const;
     };
