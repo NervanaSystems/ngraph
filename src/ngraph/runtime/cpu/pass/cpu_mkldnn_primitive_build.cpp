@@ -32,6 +32,8 @@
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
+#include "ngraph/op/experimental/quantized_dot.hpp"
+#include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -370,6 +372,18 @@ namespace ngraph
                 {
                     return build_convolution_backward<ConvolutionBackpropData>(mkldnn_emitter,
                                                                                node);
+                }
+
+                template <>
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(QuantizedDot)
+                {
+                    return mkldnn_emitter.build_ip_primitive<ngraph::op::QuantizedDot>(node);
+                }
+
+                template <>
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(QuantizedDotBias)
+                {
+                    return mkldnn_emitter.build_ip_primitive<ngraph::op::QuantizedDotBias>(node);
                 }
 
                 template <>
@@ -777,6 +791,8 @@ static const PrimitiveBuildOpMap prim_build_dispatcher{
      &MKLDNNPrimitiveBuildPass::build_primitive<QuantizedConvolutionBiasAdd>},
     {TI(QuantizedConvolutionBiasSignedAdd),
      &MKLDNNPrimitiveBuildPass::build_primitive<QuantizedConvolutionBiasSignedAdd>},
+    {TI(QuantizedDot), &MKLDNNPrimitiveBuildPass::build_primitive<QuantizedDot>},
+    {TI(QuantizedDotBias), &MKLDNNPrimitiveBuildPass::build_primitive<QuantizedDotBias>},
     {TI(GroupConvolutionBias), &MKLDNNPrimitiveBuildPass::build_primitive<GroupConvolutionBias>},
     {TI(Quantize), &MKLDNNPrimitiveBuildPass::build_primitive<Quantize>},
     {TI(Dequantize), &MKLDNNPrimitiveBuildPass::build_primitive<Dequantize>},

@@ -155,96 +155,6 @@ namespace ngraph
                                                  const ngraph::CoordinateDiff& padding_above,
                                                  const mkldnn::post_ops& pops = mkldnn::post_ops());
 
-                size_t build_quantized_inner_product_forward(
-                    const mkldnn::memory::desc& input_data_desc,
-                    const mkldnn::memory::desc& weights_desc,
-                    const mkldnn::memory::desc& result_desc,
-                    const float scale,
-                    const mkldnn::post_ops& pops = mkldnn::post_ops());
-
-                size_t build_quantized_inner_product_forward(
-                    const mkldnn::memory::desc& input_data_desc,
-                    const mkldnn::memory::desc& weights_desc,
-                    const mkldnn::memory::desc& bias_desc,
-                    const mkldnn::memory::desc& result_desc,
-                    const float scale,
-                    const mkldnn::post_ops& pops = mkldnn::post_ops());
-
-                template <typename OP>
-                size_t build_inner_product(const ngraph::Node* node,
-                                           const std::vector<TensorViewWrapper>& args,
-                                           const std::vector<TensorViewWrapper>& out)
-                {
-                    auto data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                    auto weights_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
-
-                    // MKLDNN relies on named formats for kernel selection
-                    if (weights_desc.data.format == mkldnn_nchw)
-                    {
-                        weights_desc.data.format = mkldnn_oihw;
-                    }
-                    if (weights_desc.data.format == mkldnn_ncdhw)
-                    {
-                        weights_desc.data.format = mkldnn_oidhw;
-                    }
-
-                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-
-                    mkldnn::post_ops ops;
-
-                    if (has_relu<OP>(node))
-                    {
-                        const float ops_scale = 1.f;
-                        const float ops_alpha = -0.f; // relu negative slope
-                        const float ops_beta = 0.f;
-                        ops.append_eltwise(
-                            ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, ops_beta);
-                    }
-
-                    if (std::is_same<OP, ngraph::op::QuantizedDot>())
-                    {
-                        auto scale_val = get_output_scale<OP, float, false>(node);
-                        return build_quantized_inner_product_forward(
-                            data_desc, weights_desc, result_desc, scale_val[0], ops);
-                    }
-                    else if (std::is_same<OP, ngraph::op::QuantizedDotBias>())
-                    {
-                        auto scale_val = get_output_scale<OP, float, false>(node);
-                        auto bias_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
-                        return build_quantized_inner_product_forward(
-                            data_desc, weights_desc, bias_desc, result_desc, scale_val[0], ops);
-                    }
-                    else
-                    {
-                        throw ngraph_error("unsupported inner_product");
-                    }
-                }
-
-                void build_quantized_convolution_forward(
-                    const mkldnn::memory::desc& input_data_desc,
-                    const mkldnn::memory::desc& weights_desc,
-                    const mkldnn::memory::desc& result_desc,
-                    const ngraph::Strides& strides,
-                    const ngraph::Strides& dilation_strides,
-                    const ngraph::CoordinateDiff& padding_below,
-                    const ngraph::CoordinateDiff& padding_above,
-                    const float scale,
-                    const Node* node,
-                    const mkldnn::post_ops& pops = mkldnn::post_ops());
-
-                void build_quantized_convolution_forward(
-                    const mkldnn::memory::desc& input_data_desc,
-                    const mkldnn::memory::desc& weights_desc,
-                    const mkldnn::memory::desc& bias_desc,
-                    const mkldnn::memory::desc& result_desc,
-                    const ngraph::Strides& strides,
-                    const ngraph::Strides& dilation_strides,
-                    const ngraph::CoordinateDiff& padding_below,
-                    const ngraph::CoordinateDiff& padding_above,
-                    const float scale,
-                    const Node* node,
-                    const mkldnn::post_ops& pops = mkldnn::post_ops());
-
                 mkldnn::memory::format query_convolution_forward_weight_format(
                     const mkldnn::memory::desc& input_data_desc,
                     const mkldnn::memory::desc& weights_desc_any,
@@ -1218,6 +1128,28 @@ namespace ngraph
                             conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
                     }
                     return conv_index;
+                }
+
+                template <typename OP>
+                size_t build_ip_primitive(const ngraph::Node* node)
+                {
+                    auto ip_desc = get_inner_product_forward_desc<OP>(node);
+                    auto ip_attr = get_inner_product_forward_attr<OP>(node);
+                    size_t ip_index = 0;
+
+                    if (std::is_same<OP, ngraph::op::QuantizedDotBias>())
+                    {
+                        ip_index = inner_product_forward_init(true);
+                        build_inner_product_forward<true>(
+                            ip_desc, ip_attr, executor::global_cpu_engine, ip_index);
+                    }
+                    else
+                    {
+                        ip_index = inner_product_forward_init();
+                        build_inner_product_forward<false>(
+                            ip_desc, ip_attr, executor::global_cpu_engine, ip_index);
+                    }
+                    return ip_index;
                 }
 
                 template <bool with_bias>

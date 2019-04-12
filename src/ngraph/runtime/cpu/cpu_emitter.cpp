@@ -2385,9 +2385,7 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto qip_index =
-                        mkldnn_emitter->build_inner_product<ngraph::op::QuantizedDotBias>(
-                            node, args, out);
+                    auto qip_index = external_function->get_primitive_index(node);
                     auto& deps = mkldnn_emitter->get_primitive_deps(qip_index);
 
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
@@ -2414,8 +2412,7 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto qip_index = mkldnn_emitter->build_inner_product<ngraph::op::QuantizedDot>(
-                        node, args, out);
+                    auto qip_index = external_function->get_primitive_index(node);
                     auto& deps = mkldnn_emitter->get_primitive_deps(qip_index);
 
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
