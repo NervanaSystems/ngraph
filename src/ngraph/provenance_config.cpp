@@ -15,7 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/provenance_config.hpp"
-#include <stdlib.h>
+#include <cstdlib>
 
 using namespace ngraph;
 
