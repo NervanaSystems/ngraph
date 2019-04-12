@@ -196,6 +196,45 @@ if (NGRAPH_CPU_ENABLE)
         target_link_libraries(cpu_backend PUBLIC codegen)
     endif()
     target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)
+
+    # Link LLVM and MLIR
+    find_package(LLVM REQUIRED CONFIG)
+    message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
+    message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
+    
+    add_definitions(${LLVM_DEFINITIONS})
+
+    target_include_directories(cpu_backend PRIVATE ${LLVM_INCLUDE_DIRS})
+    
+    string(REPLACE ":" ";" MLIR_INCLUDE_PATH $ENV{MLIR_INCLUDE_PATH})
+    message(STATUS "MLIR Headers at : ${MLIR_INCLUDE_PATH}")
+    target_include_directories(cpu_backend PRIVATE ${MLIR_INCLUDE_PATH}) 
+
+    llvm_map_components_to_libnames(llvm_libs support core irreader)
+
+    # Link MLIR libs
+    target_link_libraries(
+      cpu_backend PRIVATE 
+      MLIRAnalysis
+      MLIREDSC
+      MLIRExecutionEngine
+      MLIRIR
+      MLIRLLVMIR
+      MLIRParser
+      MLIRPass
+      MLIRTargetLLVMIR
+      MLIRTransforms
+      MLIRSupport
+      MLIRAffineOps
+      MLIRStandardOps
+    )
+
+    # Link LLVM libs
+    target_link_libraries(
+      cpu_backend PRIVATE 
+      ${llvm_libs}
+    )
+
     if (NOT APPLE AND NOT MSVS)
         # CPU backend uses third-party libraries like Eigen that might be linked in and
         # exported by other DSOs as well. In the absence of versioning, this could lead to the
