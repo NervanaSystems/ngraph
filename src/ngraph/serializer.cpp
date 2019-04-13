@@ -276,6 +276,12 @@ void ngraph::serialize(const string& path, shared_ptr<ngraph::Function> func, si
 
 void ngraph::serialize(ostream& out, shared_ptr<ngraph::Function> func, size_t indent)
 {
+    out << ::serialize(func, indent, false);
+}
+
+#if defined ENABLE_CPIO_FILE
+static void serialize_to_cpio(ostream& out, shared_ptr<ngraph::Function> func, size_t indent)
+{
     string j = ::serialize(func, indent, true);
     cpio::Writer writer(out);
     writer.write(func->get_name(), j.c_str(), static_cast<uint32_t>(j.size()));
@@ -294,6 +300,7 @@ void ngraph::serialize(ostream& out, shared_ptr<ngraph::Function> func, size_t i
                        true);
     });
 }
+#endif
 
 static string serialize(shared_ptr<ngraph::Function> func, size_t indent, bool binary_constant_data)
 {

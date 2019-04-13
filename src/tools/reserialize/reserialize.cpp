@@ -24,6 +24,8 @@
 #include <iostream>
 #include <string>
 
+#include "ngraph/pass/constant_to_broadcast.hpp"
+#include "ngraph/pass/manager.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 
@@ -41,6 +43,7 @@ SYNOPSIS
 OPTIONS
         -i or --input  input serialized model
         -o or --output output serialized model
+        -c or --constant_to_broacast Convert large constant constants to broadcast
 )###";
 }
 
@@ -48,6 +51,7 @@ int main(int argc, char** argv)
 {
     string input;
     string output;
+    bool c2b = false;
     for (size_t i = 1; i < argc; i++)
     {
         string arg = argv[i];
@@ -59,11 +63,29 @@ int main(int argc, char** argv)
         {
             input = argv[++i];
         }
+        else if (arg == "-c" || arg == "--constant_to_broadcast")
+        {
+            c2b = true;
+        }
         else if (arg == "-h" || arg == "--help")
         {
             help();
             return 0;
         }
+    }
+
+    if (input.empty())
+    {
+        cout << "input file missing\n";
+        help();
+        return 1;
+    }
+
+    if (output.empty())
+    {
+        cout << "output file missing\n";
+        help();
+        return 1;
     }
 
     ifstream f(input);
@@ -74,6 +96,13 @@ int main(int argc, char** argv)
         shared_ptr<ngraph::Function> function = ngraph::deserialize(f);
         timer.stop();
         cout << "deserialize took " << timer.get_milliseconds() << "ms\n";
+
+        if (c2b)
+        {
+            ngraph::pass::Manager pass_manager;
+            pass_manager.register_pass<ngraph::pass::ConstantToBroadcast>();
+            pass_manager.run_passes(function);
+        }
 
         timer.start();
         ngraph::serialize(output, function, 2);

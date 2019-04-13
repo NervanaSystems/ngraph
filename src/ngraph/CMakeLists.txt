@@ -285,6 +285,7 @@ set (SRC
     pass/common_function_collection.hpp
     pass/constant_folding.cpp
     pass/constant_folding.hpp
+    pass/constant_to_broadcast.cpp
     pass/core_fusion.cpp
     pass/core_fusion.hpp
     pass/cse.cpp
