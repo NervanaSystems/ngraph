@@ -219,6 +219,14 @@ namespace ngraph
     }
 
     template <typename T>
+    bool is_dynamic(const T& dimensions)
+    {
+        return std::any_of(dimensions.begin(), dimensions.end(), [](int dim) {
+            return dim == Dimension::s_dynamic_val;
+        });
+    }
+
+    template <typename T>
     void validate_nodes_and_infer_types(const T& nodes)
     {
         for (auto node : subgraph_topological_sort(nodes))

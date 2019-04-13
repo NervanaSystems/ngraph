@@ -81,6 +81,8 @@ namespace ngraph
             /// \return The shape of the output tensor.
             const Shape& get_output_shape() const { return m_output_shape; }
             bool get_is_transpose() const { return m_is_transpose; }
+            bool is_dynamic() override;
+
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
