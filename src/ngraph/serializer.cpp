@@ -430,6 +430,18 @@ static json write(const Function& f, bool binary_constant_data)
     return function;
 }
 
+template <typename T>
+T get_value(nlohmann::json js, const string& key)
+{
+    T rc;
+    auto it = js.find(key);
+    if (it != js.end())
+    {
+        rc = it->get<T>();
+    }
+    return rc;
+}
+
 static shared_ptr<ngraph::Function>
     read_function(const json& func_js,
                   unordered_map<string, shared_ptr<Function>>& function_map,
@@ -446,20 +458,14 @@ static shared_ptr<ngraph::Function>
         try
         {
             string node_name = node_js.at("name").get<string>();
-            string friendly_name;
-            auto it = node_js.find("friendly_name");
-            if (it != node_js.end())
-            {
-                friendly_name = it->get<string>();
-            }
             string node_op = node_js.at("op").get<string>();
-            vector<string> node_inputs = node_js.at("inputs").get<vector<string>>();
-            vector<string> control_deps_inputs =
-                get_or_default<vector<string>>(node_js, "control_deps", vector<string>{});
-            vector<string> node_outputs = node_js.at("outputs").get<vector<string>>();
+            string friendly_name = get_value<string>(node_js, "friendly_name");
+            vector<string> node_inputs = get_value<vector<string>>(node_js, "inputs");
+            vector<string> control_deps_inputs = get_value<vector<string>>(node_js, "control_deps");
+            vector<string> node_outputs = get_value<vector<string>>(node_js, "outputs");
             shared_ptr<Node> node;
             vector<shared_ptr<Node>> args;
-            vector<shared_ptr<Node>> control_deps;
+            // vector<shared_ptr<Node>> control_deps;
             for (const string& name : node_inputs)
             {
                 args.push_back(node_map.at(name));
@@ -1449,9 +1455,18 @@ static json write(const Node& n, bool binary_constant_data)
         outputs.push_back(output.get_tensor().get_name());
     }
 
-    node["inputs"] = inputs;
-    node["control_deps"] = control_deps;
-    node["outputs"] = outputs;
+    if (!inputs.empty())
+    {
+        node["inputs"] = inputs;
+    }
+    if (!control_deps.empty())
+    {
+        node["control_deps"] = control_deps;
+    }
+    if (!outputs.empty())
+    {
+        node["outputs"] = outputs;
+    }
 
     if (std::getenv("NGRAPH_SERIALIZER_OUTPUT_SHAPES") != nullptr)
     {
