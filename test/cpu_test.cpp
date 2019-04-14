@@ -104,8 +104,8 @@ TEST(cpu_test, trivial_in_place_relu)
     auto f = make_shared<Function>(relu, ParameterVector{A, B});
     auto backend = runtime::Backend::create("CPU");
     (backend->compile(f));
-    ASSERT_EQ(relu->get_outputs().at(0).get_tensor().get_pool_offset(),
-              add->get_outputs().at(0).get_tensor().get_pool_offset());
+    ASSERT_EQ(relu->output(0).get_tensor().get_pool_offset(),
+              add->output(0).get_tensor().get_pool_offset());
 }
 
 #ifndef NGRAPH_HALIDE
@@ -119,8 +119,8 @@ TEST(cpu_test, trivial_in_place_relu_fail)
     auto f = make_shared<Function>(add2, ParameterVector{A, B});
     auto backend = runtime::Backend::create("CPU");
     (backend->compile(f));
-    ASSERT_NE(relu->get_outputs().at(0).get_tensor().get_pool_offset(),
-              add->get_outputs().at(0).get_tensor().get_pool_offset());
+    ASSERT_NE(relu->output(0).get_tensor().get_pool_offset(),
+              add->output(0).get_tensor().get_pool_offset());
 }
 #endif
 
