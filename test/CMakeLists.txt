@@ -65,7 +65,6 @@ set(SRC
     tensor.cpp
     type_prop.cpp
     util.cpp
-    uuid.cpp
     zero_dim_tensor_elimination.cpp
 )
 
