@@ -122,6 +122,14 @@ using namespace std;
 using json = nlohmann::json;
 using const_data_callback_t = shared_ptr<Node>(const string&, const element::Type&, const Shape&);
 
+static bool s_serialize_output_shapes_enabled =
+    (std::getenv("NGRAPH_SERIALIZER_OUTPUT_SHAPES") != nullptr);
+
+void ngraph::set_serialize_output_shapes(bool enable)
+{
+    s_serialize_output_shapes_enabled = enable;
+}
+
 // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
 // Abs,
 // Acos,
@@ -465,7 +473,6 @@ static shared_ptr<ngraph::Function>
             vector<string> node_outputs = get_value<vector<string>>(node_js, "outputs");
             shared_ptr<Node> node;
             vector<shared_ptr<Node>> args;
-            // vector<shared_ptr<Node>> control_deps;
             for (const string& name : node_inputs)
             {
                 args.push_back(node_map.at(name));
@@ -1468,7 +1475,7 @@ static json write(const Node& n, bool binary_constant_data)
         node["outputs"] = outputs;
     }
 
-    if (std::getenv("NGRAPH_SERIALIZER_OUTPUT_SHAPES") != nullptr)
+    if (s_serialize_output_shapes_enabled)
     {
         json output_shapes = json::array();
         for (size_t i = 0; i < n.get_output_size(); ++i)
