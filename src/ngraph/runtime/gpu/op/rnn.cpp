@@ -23,7 +23,7 @@ using namespace ngraph;
 
 shared_ptr<Node> op::gpu::Rnn::copy_with_new_args(const NodeVector& new_args) const
 {
-    NGRAPH_ASSERT(new_args.size() == 4) << "Incorrect number of new arguments";
+    NGRAPH_CHECK(new_args.size() == 4, "Incorrect number of new arguments");
 
     return make_shared<Rnn>(new_args[0],
                             new_args[1],
@@ -58,13 +58,13 @@ op::gpu::Rnn::Rnn(std::shared_ptr<Node> src_layer,
     , m_direction(direction)
     , m_num_fused_layers(num_fused_layers)
 {
-    NGRAPH_ASSERT(src_layer->get_shape().size() == 2) << "src_layer doesnt have a rank 2";
+    NGRAPH_CHECK(src_layer->get_shape().size() == 2, "src_layer doesnt have a rank 2");
 
     m_batch_size = static_cast<int>(src_layer->get_shape()[0] / num_timesteps);
 
-    NGRAPH_ASSERT(shape_size(src_layer->get_shape()) ==
-                  m_src_sequence_length * m_batch_size * m_src_layer_feature_size)
-        << "src_layer size is not equal t*n*c";
+    NGRAPH_CHECK(shape_size(src_layer->get_shape()) ==
+                     m_src_sequence_length * m_batch_size * m_src_layer_feature_size,
+                 "src_layer size is not equal t*n*c");
 
     auto et = src_layer->get_element_type();
     for (auto& rnn_input : get_arguments())

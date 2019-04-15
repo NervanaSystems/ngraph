@@ -19,16 +19,7 @@
 set -x
 set -e
 
-NGRAPH_CACHE_DIR="/home"
-
-function check_cached_ngraph() {
-    set -x
-    # if no ngraph in /home - clone
-    if [ ! -e "${NGRAPH_CACHE_DIR}/ngraph" ]; then
-        cd /home/
-        git clone --single-branch https://github.com/NervanaSystems/ngraph -b master
-    fi
-}
+NGRAPH_CACHE_DIR="/cache"
 
 function build_ngraph() {
     set -x
@@ -43,21 +34,8 @@ function build_ngraph() {
                 rm -rf "${ngraph_directory}/ngraph/build"
                 rm -rf "${ngraph_directory}/ngraph_dist"
             ;;
-            UPDATE)
-                git checkout master
-                git pull origin master
-            ;;
             USE_CACHED)
-                check_cached_ngraph
-                if [[ -n $(ls /home/ngraph/build 2> /dev/null) ]]; then
-                    cp -Rf "${NGRAPH_CACHE_DIR}/ngraph/build" "${ngraph_directory}/ngraph/" || return 1
-                else
-                    return 1
-                fi
-                for f in $(find ${ngraph_directory}/ngraph/build/ -name 'CMakeCache.txt');
-                do
-                    sed -i "s\\${NGRAPH_CACHE_DIR}\\${ngraph_directory}\\g" $f
-                done
+                cp -Rf "${NGRAPH_CACHE_DIR}/build" "${ngraph_directory}/ngraph/" || return 1
             ;;
         esac
     done
@@ -76,7 +54,7 @@ function build_ngraph() {
     export PYBIND_HEADERS_PATH="${ngraph_directory}/ngraph/python/pybind11"
     export NGRAPH_CPP_BUILD_PATH="${ngraph_directory}/ngraph_dist"
     export NGRAPH_ONNX_IMPORT_ENABLE="TRUE"
-    python3 setup.py bdist_wheel
+    python3 setup.py bdist_wheel || return 1
     # Clean build artifacts
     rm -rf "${ngraph_directory}/ngraph_dist"
     return 0
@@ -87,7 +65,4 @@ mkdir -p /home/onnx_models/.onnx
 ln -s /home/onnx_models/.onnx /root/.onnx
 
 # Copy stored nGraph master and use it to build PR branch
-if ! build_ngraph "/root" "USE_CACHED"; then
-    build_ngraph "${NGRAPH_CACHE_DIR}" "UPDATE REBUILD"
-    build_ngraph "/root" "REBUILD USE_CACHED"
-fi
+build_ngraph "/root" "USE_CACHED" || build_ngraph "/root" "REBUILD"
