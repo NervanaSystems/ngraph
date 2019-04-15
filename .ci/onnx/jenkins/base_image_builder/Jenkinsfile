@@ -39,7 +39,7 @@ def pushImage(configurationMaps) {
                                           usernameVariable: 'DOCKER_USERNAME',
                                           passwordVariable: 'DOCKER_PASSWORD')]) {
             sh """
-                docker login ${DOCKER_REGISTRY} --username ${DOCKER_USERNAME} --password-stdin <<< ${DOCKER_PASSWORD}
+                docker login ${DOCKER_REGISTRY} --username ${DOCKER_USERNAME} --password-stdin <<< \${DOCKER_PASSWORD}
                 ${CI_ROOT}/utils/docker.sh push \
                                     --docker_registry=${DOCKER_REGISTRY} \
                                     --name=${configMap["projectName"]} \
