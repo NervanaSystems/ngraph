@@ -23,7 +23,6 @@
 #pragma once
 
 #include <algorithm>
-#include <cassert>
 #include <cstring>
 #include <memory>
 #include <type_traits>
@@ -77,7 +76,10 @@ namespace ngraph
             typename std::enable_if<(N == 0), void>::type
                 check_shape(const Shape& shape, const NestedInitializerList<T, N>& inits)
             {
-                assert(shape.size() == 0);
+                if (shape.size() != 0)
+                {
+                    throw std::invalid_argument("Initializers do not match shape");
+                }
             }
 
             // For a plain initializer list, the shape is the length of the list.
@@ -92,7 +94,10 @@ namespace ngraph
             typename std::enable_if<(N == 1)>::type
                 check_shape(const Shape& shape, const NestedInitializerList<T, N>& inits)
             {
-                assert(shape.at(shape.size() - N) == inits.size());
+                if (shape.at(shape.size() - N) != inits.size())
+                {
+                    throw std::invalid_argument("Initializers do not match shape");
+                }
             }
 
             // In the general case, we append our level's length and recurse.
@@ -108,7 +113,10 @@ namespace ngraph
             typename std::enable_if<(N > 1), void>::type
                 check_shape(const Shape& shape, const NestedInitializerList<T, N>& inits)
             {
-                assert(shape.at(shape.size() - N) == inits.size());
+                if (shape.at(shape.size() - N) != inits.size())
+                {
+                    throw std::invalid_argument("Initializers do not match shape");
+                }
                 for (auto it : inits)
                 {
                     check_shape<T, N - 1>(shape, it);
@@ -129,7 +137,10 @@ namespace ngraph
             typename std::enable_if<(N == 1), IT>::type
                 flatten(IT it, const Shape& shape, const NestedInitializerList<T, N>& inits)
             {
-                assert(inits.size() == shape.at(shape.size() - N));
+                if (inits.size() != shape.at(shape.size() - N))
+                {
+                    throw std::invalid_argument("Initializers do not match shape");
+                }
                 for (auto it1 : inits)
                 {
                     *(it++) = it1;
@@ -141,7 +152,10 @@ namespace ngraph
             typename std::enable_if<(N > 1), IT>::type
                 flatten(IT it, const Shape& shape, const NestedInitializerList<T, N>& inits)
             {
-                assert(inits.size() == shape.at(shape.size() - N));
+                if (inits.size() != shape.at(shape.size() - N))
+                {
+                    throw std::invalid_argument("Initializers do not match shape");
+                }
                 for (auto it1 : inits)
                 {
                     it = flatten<IT, T, N - 1>(it, shape, it1);
@@ -153,7 +167,10 @@ namespace ngraph
             typename std::enable_if<(N == 0), IT>::type
                 flatten(IT it, const Shape& shape, const NestedInitializerList<T, 0>& init)
             {
-                assert(shape.size() == 0);
+                if (shape.size() != 0)
+                {
+                    throw std::invalid_argument("Initializers do not match shape");
+                }
                 *(it++) = init;
                 return it;
             }

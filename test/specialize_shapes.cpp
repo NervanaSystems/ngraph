@@ -140,7 +140,7 @@ TEST(specialize_shapes, et_dynamic_shape_static_validation_fails)
 // rank.
 //
 // (Note that we are testing for a different exception class here because the failure is in
-// specialize_shape's pre-checks, which use NGRAPH_ASSERT, rather than inside validation as we
+// specialize_shape's pre-checks, which use NGRAPH_CHECK, rather than inside validation as we
 // reconstruct the graph.)
 TEST(specialize_shapes, et_static_shape_rank_static_dynamic_rank_mismatch)
 {
@@ -157,14 +157,14 @@ TEST(specialize_shapes, et_static_shape_rank_static_dynamic_rank_mismatch)
             specialize_shapes(
                 f, {element::f32, element::i32}, {PartialShape{1, 2, 3}, PartialShape{1, 2, 3, 4}});
         },
-        AssertionFailure);
+        CheckFailure);
 }
 
 // Test specialization of rank-static dynamic shapes, where the replacement shapes have wrong
 // dimensions.
 //
 // (Note that we are testing for a different exception class here because the failure is in
-// specialize_shape's pre-checks, which use NGRAPH_ASSERT, rather than inside validation as we
+// specialize_shape's pre-checks, which use NGRAPH_CHECK, rather than inside validation as we
 // reconstruct the graph.)
 TEST(specialize_shapes, et_static_shape_rank_static_dynamic_dim_mismatch)
 {
@@ -182,7 +182,7 @@ TEST(specialize_shapes, et_static_shape_rank_static_dynamic_dim_mismatch)
             specialize_shapes(
                 f, {element::f32, element::i32}, {PartialShape{1, 2, 3}, PartialShape{1, 9, 4}});
         },
-        AssertionFailure);
+        CheckFailure);
 }
 
 // Test for failure when we supply the wrong number of replacement element types.
@@ -202,7 +202,7 @@ TEST(specialize_shapes, et_count_wrong)
                               {element::f32, element::i32, element::u32},
                               {PartialShape{1, 2, 3}, PartialShape{1, 2, 3}});
         },
-        AssertionFailure);
+        CheckFailure);
 }
 
 // Test for failure when we supply the wrong number of replacement shapes.
@@ -223,5 +223,5 @@ TEST(specialize_shapes, shape_count_wrong)
                 {element::f32, element::i32},
                 {PartialShape{1, 2, 3}, PartialShape{1, 2, 3}, PartialShape{4, 5, 6}});
         },
-        AssertionFailure);
+        CheckFailure);
 }

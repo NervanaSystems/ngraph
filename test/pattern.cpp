@@ -93,7 +93,7 @@ public:
         ngraph::pattern::graph_rewrite_callback callback = [pattern](pattern::Matcher& m) {
             NGRAPH_DEBUG << "In a callback for construct_multiply_by_one against "
                          << m.get_match_root()->get_name();
-            assert(m.get_match_root()->get_arguments().size() == 2);
+            NGRAPH_CHECK(m.get_match_root()->get_arguments().size() == 2);
 
             auto pattern_map = m.get_pattern_map();
 
@@ -139,7 +139,7 @@ public:
         auto callback = [pattern](pattern::Matcher& m) {
             NGRAPH_DEBUG << "In a callback for construct_add_zero against "
                          << m.get_match_root()->get_name();
-            assert(m.get_match_root()->get_arguments().size() == 2);
+            NGRAPH_CHECK(m.get_match_root()->get_arguments().size() == 2);
 
             auto pattern_map = m.get_pattern_map();
 
