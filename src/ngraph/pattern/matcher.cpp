@@ -190,6 +190,16 @@ namespace ngraph
             add_node(graph_node);
             size_t watermark = m_matched_list.size() - 1;
 
+            // we will abort the match if any of graph_node or the pattern_node contains
+            // dynamic shape
+            if (m_strict_mode && graph_node->get_outputs().size() == 1)
+            {
+                if (pattern_node->is_dynamic() || graph_node->is_dynamic())
+                {
+                    return abort_match(watermark, false);
+                }
+            }
+
             // we can skip multi-output nodes since their shapes will be compared
             // when their individual GOE are matched
             // this also gives a bit more flexibility since we don't have to worry
