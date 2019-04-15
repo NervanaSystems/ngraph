@@ -528,5 +528,12 @@ void Node::validate_and_infer_elementwise_logical()
 // attribute to determine if node contains partial shape or not
 bool Node::is_dynamic()
 {
-    return this->get_output_partial_shape(0).is_dynamic();
+    for (size_t i = 0; i < get_input_size(); i++)
+    {
+        if (get_input_partial_shape(i).is_dynamic())
+        {
+            return true;
+        }
+    }
+    return false;
 }

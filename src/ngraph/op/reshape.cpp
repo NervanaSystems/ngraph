@@ -144,13 +144,3 @@ void op::Reshape::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVect
 
     adjoints.add_delta(get_argument(0), reshape);
 }
-
-bool op::Reshape::is_dynamic()
-{
-    if (get_output_partial_shape(0).is_dynamic() || ngraph::is_dynamic<Shape>(m_output_shape) ||
-        ngraph::is_dynamic<AxisVector>(m_input_order))
-    {
-        return true;
-    }
-    return false;
-}
