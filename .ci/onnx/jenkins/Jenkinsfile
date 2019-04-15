@@ -17,7 +17,7 @@
 
 // Set LABEL variable if empty or not declared
 try{ if(LABEL.trim() == "") {throw new Exception();} }catch(Exception e){LABEL="onnx && ci"}; echo "${LABEL}"
-try{ if(DOCKER_REGISTRY.trim() == "") {throw new Exception();} }catch(Exception e){DOCKER_REGISTRY="amr-registry.caas.intel.com"}; echo "${DOCKER_REGISTRY}"
+if(DOCKER_REGISTRY.trim() == "") {throw new Exception("Missing Docker registry url!");} }
 // CI settings and constants
 PROJECT_NAME = "ngraph_cpp"
 CI_ROOT = "ngraph/.ci/onnx/jenkins"
