@@ -82,6 +82,7 @@ namespace ngraph
                     std::unordered_map<const Node*, size_t>& m_node_primitive_idx_map;
 
                     /// External map to store each node with mkldnn implementation and its mkldnn
+
                     /// creation string, deps, and mkldnn primitive index.
                     std::map<const Node*, std::tuple<std::string, std::vector<size_t>, size_t>>&
                         m_node_primitive_string_deps_index_map;
