@@ -27,7 +27,7 @@ namespace ngraph
         {
         public:
             // \param params The tensor from which slices are gathered
-            // \param indices Index tensor: Data type be int32_t or int64_t
+            // \param indices Index tensor: Data type must be `element::i32` or `element::i64`
             GatherND(const std::shared_ptr<Node>& params, const std::shared_ptr<Node>& indices)
                 : Op("GatherND", check_single_output_args({params, indices}))
             {
