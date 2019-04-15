@@ -545,3 +545,27 @@ std::tuple<element::Type, PartialShape, PartialShape>
         input_shape,
         {{gamma_element_type, gamma_shape, "gamma"}, {beta_element_type, beta_shape, "beta"}});
 }
+
+void ngraph::infer_auto_padding(const Shape& image_shape,
+                                const Shape& filter_shape,
+                                const Strides& filter_strides,
+                                const Strides& filter_dilations,
+                                const op::PadType pad_type,
+                                CoordinateDiff& padding_above,
+                                CoordinateDiff& padding_below)
+{
+    for (size_t i = 0; i < static_cast<size_t>(filter_shape.size()); i++)
+    {
+        int64_t image_size = static_cast<int64_t>(image_shape[i + 2]);
+        int64_t filter_size = (static_cast<int64_t>(filter_shape[i]) - 1) * filter_dilations[i] + 1;
+        int64_t filter_stride = static_cast<int64_t>(filter_strides[i]);
+        auto output_size = (image_size + filter_stride - 1) / filter_stride;
+
+        auto padding_needed =
+            std::max(int64_t(0), (output_size - 1) * filter_stride + filter_size - image_size);
+        auto padding_lhs = padding_needed / 2;
+        auto padding_rhs = padding_needed - padding_lhs;
+        padding_below.push_back(pad_type == op::PadType::SAME_UPPER ? padding_lhs : padding_rhs);
+        padding_above.push_back(pad_type == op::PadType::SAME_UPPER ? padding_rhs : padding_lhs);
+    }
+}

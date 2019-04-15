@@ -5401,10 +5401,14 @@ struct DeduceAutoPadTest
 {
 };
 
-TEST_P(DeduceAutoPadTest, conv_2d_same_upper)
+TEST_P(DeduceAutoPadTest, same_upper)
 {
-    auto param0 = make_shared<op::Parameter>(element::f32, std::get<0>(GetParam()));
-    auto param1 = make_shared<op::Parameter>(element::f32, std::get<1>(GetParam()));
+    auto image_shape = std::get<0>(GetParam());
+    image_shape.insert(image_shape.begin(), {1, 1}); // Add {N, C}
+    auto filter_shape = std::get<1>(GetParam());
+    filter_shape.insert(filter_shape.begin(), {1, 1}); // Add {O, I}
+    auto param0 = make_shared<op::Parameter>(element::f32, image_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filter_shape);
 
     auto conv = make_shared<op::Convolution>(param0,
                                              param1,
@@ -5416,12 +5420,49 @@ TEST_P(DeduceAutoPadTest, conv_2d_same_upper)
                                              op::PadType::SAME_UPPER);
     EXPECT_EQ(conv->get_padding_below(), std::get<4>(GetParam()));
     EXPECT_EQ(conv->get_padding_above(), std::get<5>(GetParam()));
+
+    auto no_dilation = std::all_of(std::get<3>(GetParam()).begin(),
+                                   std::get<3>(GetParam()).end(),
+                                   [](size_t i) { return i <= 1; });
+    if (no_dilation)
+    {
+        auto max_pool = make_shared<op::MaxPool>(param0,
+                                                 std::get<1>(GetParam()),
+                                                 std::get<2>(GetParam()),
+                                                 Shape(),
+                                                 Shape(),
+                                                 op::PadType::SAME_UPPER);
+        CoordinateDiff padding_below(max_pool->get_padding_below().begin(),
+                                     max_pool->get_padding_below().end());
+        CoordinateDiff padding_above(max_pool->get_padding_above().begin(),
+                                     max_pool->get_padding_above().end());
+        EXPECT_EQ(padding_below, std::get<4>(GetParam()));
+        EXPECT_EQ(padding_above, std::get<5>(GetParam()));
+
+        auto avg_pool = make_shared<op::AvgPool>(param0,
+                                                 std::get<1>(GetParam()),
+                                                 std::get<2>(GetParam()),
+                                                 Shape(),
+                                                 Shape(),
+                                                 false,
+                                                 op::PadType::SAME_UPPER);
+        CoordinateDiff pad_below(avg_pool->get_padding_below().begin(),
+                                 avg_pool->get_padding_below().end());
+        CoordinateDiff pad_above(avg_pool->get_padding_above().begin(),
+                                 avg_pool->get_padding_above().end());
+        EXPECT_EQ(pad_below, std::get<4>(GetParam()));
+        EXPECT_EQ(pad_above, std::get<5>(GetParam()));
+    }
 }
 
-TEST_P(DeduceAutoPadTest, conv_2d_same_lower)
+TEST_P(DeduceAutoPadTest, same_lower)
 {
-    auto param0 = make_shared<op::Parameter>(element::f32, std::get<0>(GetParam()));
-    auto param1 = make_shared<op::Parameter>(element::f32, std::get<1>(GetParam()));
+    auto image_shape = std::get<0>(GetParam());
+    image_shape.insert(image_shape.begin(), {1, 1}); // Add {N, C}
+    auto filter_shape = std::get<1>(GetParam());
+    filter_shape.insert(filter_shape.begin(), {1, 1}); // Add {O, I}
+    auto param0 = make_shared<op::Parameter>(element::f32, image_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filter_shape);
 
     auto conv = make_shared<op::Convolution>(param0,
                                              param1,
@@ -5437,30 +5478,48 @@ TEST_P(DeduceAutoPadTest, conv_2d_same_lower)
 
 INSTANTIATE_TEST_CASE_P(type_prop,
                         DeduceAutoPadTest,
-                        ::testing::Values(std::make_tuple(Shape{1, 1, 5, 6},
-                                                          Shape{1, 1, 3, 4},
+                        ::testing::Values(std::make_tuple(Shape{5, 6},
+                                                          Shape{3, 4},
                                                           Strides{2, 1},
                                                           Strides{1, 1},
                                                           CoordinateDiff{1, 1},
                                                           CoordinateDiff{1, 2}),
-                                          std::make_tuple(Shape{1, 1, 3, 3},
-                                                          Shape{1, 1, 2, 2},
+                                          std::make_tuple(Shape{3, 3},
+                                                          Shape{2, 2},
                                                           Strides{1, 1},
                                                           Strides{1, 1},
                                                           CoordinateDiff{0, 0},
                                                           CoordinateDiff{1, 1}),
-                                          std::make_tuple(Shape{1, 1, 28, 28},
-                                                          Shape{1, 1, 3, 3},
+                                          std::make_tuple(Shape{28, 28},
+                                                          Shape{3, 3},
                                                           Strides{2, 2},
                                                           Strides{1, 1},
                                                           CoordinateDiff{0, 0},
                                                           CoordinateDiff{1, 1}),
-                                          std::make_tuple(Shape{64, 3, 100, 150},
-                                                          Shape{128, 3, 10, 20},
+                                          std::make_tuple(Shape{100, 150},
+                                                          Shape{10, 20},
                                                           Strides{1, 1},
                                                           Strides{1, 1},
                                                           CoordinateDiff{4, 9},
-                                                          CoordinateDiff{5, 10})));
+                                                          CoordinateDiff{5, 10}),
+                                          std::make_tuple(Shape{2},
+                                                          Shape{1},
+                                                          Strides{3},
+                                                          Strides{1},
+                                                          CoordinateDiff{0},
+                                                          CoordinateDiff{0}),
+                                          std::make_tuple(Shape{10, 1},
+                                                          Shape{4, 1},
+                                                          Strides{1, 1},
+                                                          Strides{2, 1},
+                                                          CoordinateDiff{3, 0},
+                                                          CoordinateDiff{3, 0}),
+                                          std::make_tuple(Shape{10, 5, 6},
+                                                          Shape{3, 3, 4},
+                                                          Strides{1, 2, 1},
+                                                          Strides{2, 1, 1},
+                                                          CoordinateDiff{2, 1, 1},
+                                                          CoordinateDiff{2, 1, 2})));
 
 TEST(type_prop, conv_2d_deduce_strided)
 {

@@ -82,25 +82,18 @@ void op::Convolution::validate_and_infer_types()
     {
         if (data_batch_shape.is_static() && filters_shape.is_static())
         {
-            CoordinateDiff padding_below, padding_above;
-            for (size_t i = 2; i < static_cast<size_t>(data_batch_shape.rank()); i++)
-            {
-                auto image_shape = static_cast<size_t>(data_batch_shape[i]);
-                auto filter_shape = static_cast<size_t>(filters_shape[i]);
-                auto filter_stride = m_window_movement_strides[i - 2];
-                auto padding_needed = ((image_shape % filter_stride) == 0)
-                                          ? filter_shape - filter_stride
-                                          : filter_shape - (image_shape % filter_stride);
-                padding_needed = (padding_needed < 0) ? 0 : padding_needed;
-                auto padding_lhs = padding_needed / 2;
-                auto padding_rhs = padding_needed - padding_lhs;
-                padding_below.push_back(m_pad_type == PadType::SAME_UPPER ? padding_lhs
-                                                                          : padding_rhs);
-                padding_above.push_back(m_pad_type == PadType::SAME_UPPER ? padding_rhs
-                                                                          : padding_lhs);
-            }
-            m_padding_below = padding_below;
-            m_padding_above = padding_above;
+            // TODO: data dilation
+            m_padding_below.clear();
+            m_padding_above.clear();
+            auto filter_shape = filters_shape.to_shape();
+            filter_shape.erase(filter_shape.begin(), filter_shape.begin() + 2); // Remove {O,I}
+            infer_auto_padding(data_batch_shape.to_shape(),
+                               filter_shape,
+                               m_window_movement_strides,
+                               m_window_dilation_strides,
+                               m_pad_type,
+                               m_padding_above,
+                               m_padding_below);
         }
     }
 

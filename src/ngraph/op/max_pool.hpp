@@ -18,6 +18,7 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 
 namespace ngraph
 {
@@ -34,11 +35,13 @@ namespace ngraph
             /// \param window_movement_strides The window movement strides.
             /// \param padding_below The below-padding shape.
             /// \param padding_above The above-padding shape.
+            /// \param pad_type The pad type for automatically computing padding sizes
             MaxPool(const std::shared_ptr<Node>& arg,
                     const Shape& window_shape,
                     const Strides& window_movement_strides,
                     const Shape& padding_below,
-                    const Shape& padding_above);
+                    const Shape& padding_above,
+                    const PadType& pad_type = PadType::EXPLICIT);
 
             void validate_and_infer_types() override;
 
@@ -68,6 +71,8 @@ namespace ngraph
             const Shape& get_padding_below() const { return m_padding_below; }
             /// \return The above-padding shape.
             const Shape& get_padding_above() const { return m_padding_above; }
+            /// \return The pad type for pooling.
+            const PadType& get_pad_type() const { return m_pad_type; }
             /// \return The default value for MaxPool.
             virtual std::shared_ptr<Node> get_default_value() const override
             {
@@ -82,6 +87,7 @@ namespace ngraph
             Strides m_window_movement_strides;
             Shape m_padding_below;
             Shape m_padding_above;
+            PadType m_pad_type;
         };
 
         class MaxPoolBackprop : public Op

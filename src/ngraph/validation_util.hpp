@@ -20,6 +20,7 @@
 
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 
 namespace ngraph
 {
@@ -74,4 +75,12 @@ namespace ngraph
                                  const PartialShape& input_shape,
                                  const PartialShape& gamma_shape,
                                  const PartialShape& beta_shape);
+
+    void infer_auto_padding(const Shape& image_shape,
+                            const Shape& filter_shape,
+                            const Strides& filter_strides,
+                            const Strides& filter_dilations,
+                            const op::PadType pad_type,
+                            CoordinateDiff& padding_above,
+                            CoordinateDiff& padding_below);
 }

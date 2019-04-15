@@ -18,6 +18,7 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 
 namespace ngraph
 {
@@ -48,7 +49,8 @@ namespace ngraph
                     const Strides& window_movement_strides,
                     const Shape& padding_below,
                     const Shape& padding_above,
-                    bool include_padding_in_avg_computation = false);
+                    bool include_padding_in_avg_computation = false,
+                    const PadType& pad_type = PadType::EXPLICIT);
 
             /// \brief Constructs a batched, unpadded average pooling operation (i.e., all padding shapes are set to 0).
             ///
@@ -90,6 +92,8 @@ namespace ngraph
             {
                 return m_include_padding_in_avg_computation;
             }
+            /// \return The pad type for pooling.
+            const PadType& get_pad_type() const { return m_pad_type; }
             /// \return The default value for AvgPool.
             virtual std::shared_ptr<Node> get_default_value() const override
             {
@@ -102,6 +106,7 @@ namespace ngraph
             Shape m_padding_below;
             Shape m_padding_above;
             bool m_include_padding_in_avg_computation;
+            PadType m_pad_type;
         };
 
         class AvgPoolBackprop : public Op
