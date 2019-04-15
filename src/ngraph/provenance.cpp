@@ -14,12 +14,20 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/provenance_config.hpp"
 #include <cstdlib>
 
-using namespace ngraph;
+#include "provenance.hpp"
 
-bool ProvenanceConfig::is_enabled() const
+namespace ngraph
 {
-    return std::getenv("NGRAPH_PROVENANCE_ENABLE");
+    bool set_provenance_enable(bool enabled)
+    {
+        provenance_enabled = enabled;
+    }
+
+    bool get_provenance_enable()
+    {
+        return provenance_enabled; 
+    }
+
 }

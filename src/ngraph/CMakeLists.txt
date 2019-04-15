@@ -348,8 +348,8 @@ set (SRC
     pattern/op/skip.hpp
     placement.cpp
     placement.hpp
-    provenance_config.cpp
-    provenance_config.hpp
+    provenance.cpp
+    provenance.hpp
     rank.hpp
     result_vector.hpp
     runtime/aligned_buffer.cpp
