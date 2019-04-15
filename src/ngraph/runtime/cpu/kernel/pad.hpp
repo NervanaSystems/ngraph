@@ -86,7 +86,7 @@ namespace ngraph
 
                         if (padding_below[i] < 0)
                         {
-                            NGRAPH_ASSERT(padding_below[i] > INT_MIN);
+                            NGRAPH_CHECK(padding_below[i] > INT_MIN);
                             indices[i] = -padding_below[i];
                         }
                         else

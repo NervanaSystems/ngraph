@@ -1070,7 +1070,7 @@ namespace ngraph
                     {
                         index = 4;
                     }
-                    NGRAPH_ASSERT(index != 0);
+                    NGRAPH_CHECK(index != 0);
                     return index;
                 }
 
