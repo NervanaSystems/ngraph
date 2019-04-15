@@ -15,9 +15,10 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
+#include "ngraph/op/experimental/batch_mat_mul.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
-#include "ngraph/runtime/cpu/op/batch_dot.hpp"
+#include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -318,8 +319,12 @@ namespace ngraph
                 return cblas_func;
             }
 
-            template <>
-            void Builder::BUILDER_DECL(ngraph::op::BatchDot)
+            static void batchMatMul(CPU_ExternalFunction* external_function,
+                                    const ngraph::Node* node,
+                                    const std::vector<TensorViewWrapper>& args,
+                                    const std::vector<TensorViewWrapper>& out,
+                                    bool transpose0,
+                                    bool transpose1)
             {
                 auto& functors = external_function->get_functors();
 
@@ -327,18 +332,16 @@ namespace ngraph
                 auto& mat_b = external_function->get_tensor_data(args[1].get_name());
                 auto& mat_c = external_function->get_tensor_data(out[0].get_name());
 
-                const auto* cg = static_cast<const ngraph::op::BatchDot*>(node);
-
-                const auto& shape_a = cg->get_a_shape();
-                const auto& shape_b = cg->get_b_shape();
+                const auto& shape_a = node->get_input_shape(0);
+                const auto& shape_b = node->get_input_shape(1);
                 const auto& shape_c = out[0].get_shape();
 
                 const size_t group_size = shape_a.at(0);
                 auto func = emitCblasSgemmBatch(shape_a,
                                                 shape_b,
                                                 shape_c,
-                                                cg->get_is_a_transposed(),
-                                                cg->get_is_b_transposed(),
+                                                transpose0,
+                                                transpose1,
                                                 mat_a,
                                                 mat_b,
                                                 mat_c,
@@ -349,8 +352,27 @@ namespace ngraph
                 functors.emplace_back(func);
             }
 
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::BatchMatMul)
+            {
+                batchMatMul(external_function, node, args, out, false, false);
+            }
+
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::BatchMatMulTranspose)
+            {
+                const auto* cg = static_cast<const ngraph::op::BatchMatMulTranspose*>(node);
+                batchMatMul(external_function,
+                            node,
+                            args,
+                            out,
+                            cg->get_transpose_arg0(),
+                            cg->get_transpose_arg1());
+            }
+
             REGISTER_OP_BUILDER(MatmulBias);
-            REGISTER_OP_BUILDER(BatchDot);
+            REGISTER_OP_BUILDER(BatchMatMul);
+            REGISTER_OP_BUILDER(BatchMatMulTranspose);
         }
     }
 }

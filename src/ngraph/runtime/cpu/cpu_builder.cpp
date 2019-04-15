@@ -26,6 +26,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"
+#include "ngraph/op/add.hpp"
 #include "ngraph/op/and.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
@@ -53,6 +54,7 @@
 #include "ngraph/op/or.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/power.hpp"
+#include "ngraph/op/relu.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/op/sign.hpp"
 #include "ngraph/op/sin.hpp"
@@ -65,6 +67,7 @@
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/kernel/abs.hpp"
 #include "ngraph/runtime/cpu/kernel/acos.hpp"
+#include "ngraph/runtime/cpu/kernel/add.hpp"
 #include "ngraph/runtime/cpu/kernel/and.hpp"
 #include "ngraph/runtime/cpu/kernel/asin.hpp"
 #include "ngraph/runtime/cpu/kernel/atan.hpp"
@@ -89,6 +92,7 @@
 #include "ngraph/runtime/cpu/kernel/not.hpp"
 #include "ngraph/runtime/cpu/kernel/not_equal.hpp"
 #include "ngraph/runtime/cpu/kernel/or.hpp"
+#include "ngraph/runtime/cpu/kernel/relu.hpp"
 #include "ngraph/runtime/cpu/kernel/result.hpp"
 #include "ngraph/runtime/cpu/kernel/sign.hpp"
 #include "ngraph/runtime/cpu/kernel/sin.hpp"
@@ -365,6 +369,66 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Add)
+            {
+                BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::add);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Subtract)
+            {
+                BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::subtract);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Multiply)
+            {
+                BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::multiply);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Divide)
+            {
+                BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::divide);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Minimum)
+            {
+                BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::minimum);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Maximum)
+            {
+                BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::maximum);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Abs)
+            {
+                BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::abs);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Negative)
+            {
+                BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::negative);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Relu)
+            {
+                BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::relu);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Sqrt)
+            {
+                BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::sqrt);
+            }
+
 #define TI(x) type_index(typeid(x))
 
             BuildOpMap& GetGlobalBuildDispatcher()
@@ -377,6 +441,12 @@ namespace ngraph
                      &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::HalideOp>}};
 
                 return build_dispatcher;
+            }
+
+            BuildNodeExecutorMap& GetGlobalCFDispatcherCPU()
+            {
+                static BuildNodeExecutorMap build_cf_dispatcher_cpu{};
+                return build_cf_dispatcher_cpu;
             }
 
             REGISTER_OP_BUILDER(Constant);
@@ -414,6 +484,17 @@ namespace ngraph
             REGISTER_OP_BUILDER(Minimum);
             REGISTER_OP_BUILDER(And);
             REGISTER_OP_BUILDER(Or);
+
+            REGISTER_CF_BUILDER(Add);
+            REGISTER_CF_BUILDER(Subtract);
+            REGISTER_CF_BUILDER(Multiply);
+            REGISTER_CF_BUILDER(Divide);
+            REGISTER_CF_BUILDER(Minimum);
+            REGISTER_CF_BUILDER(Maximum);
+            REGISTER_CF_BUILDER(Abs);
+            REGISTER_CF_BUILDER(Negative);
+            REGISTER_CF_BUILDER(Relu);
+            REGISTER_CF_BUILDER(Sqrt);
         }
     }
 }

@@ -266,6 +266,19 @@ namespace ngraph
                                          const element::Type& output_type,
                                          const AxisSet& axis);
 
+            void do_topk_operation(cldnn::topology& topology,
+                                   const std::string& input_name,
+                                   const Shape& input_shape,
+                                   const element::Type& input_type,
+                                   const std::string& output_name,
+                                   const Shape& output_shape,
+                                   const element::Type& output_type,
+                                   const element::Type& index_elem_type,
+                                   const size_t top_k_axis,
+                                   const size_t k,
+                                   const bool compute_max,
+                                   const bool find_indices);
+
             // Helper functions used in cldnn::custom_gpu_primitive kernels
             std::string get_opencl_type_name(const element::Type& ngraph_type);
             std::string get_opencl_type_min_max_value(const element::Type& ngraph_type,

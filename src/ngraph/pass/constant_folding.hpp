@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -40,9 +41,10 @@ public:
         QUANTIZE
     };
 
-    ConstantFolding()
+    ConstantFolding(const ngraph::BuildNodeExecutorMap& cfmap = ngraph::BuildNodeExecutorMap())
         : GraphRewrite()
     {
+        m_cfmap = cfmap;
         construct_constant_reshape();
         construct_constant_broadcast();
         construct_constant_pad();
@@ -54,9 +56,11 @@ public:
 
     //this allows to specify the order in which matchers will be run
     //and also allows to register the same matcher more than once
-    ConstantFolding(const std::vector<CFTransformations>& transformations)
+    ConstantFolding(const std::vector<CFTransformations>& transformations,
+                    const ngraph::BuildNodeExecutorMap& cfmap = ngraph::BuildNodeExecutorMap())
         : GraphRewrite()
     {
+        m_cfmap = cfmap;
         for (auto cft : transformations)
         {
             switch (cft)
@@ -80,4 +84,6 @@ private:
     void construct_constant_binary();
     void construct_constant_quantize();
     void construct_constant_dequantize();
+
+    ngraph::BuildNodeExecutorMap m_cfmap;
 };

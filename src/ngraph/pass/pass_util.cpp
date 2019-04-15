@@ -14,13 +14,27 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/node_input.hpp"
-#include "ngraph/node_output.hpp"
+#include "ngraph/pass/pass_util.hpp"
 
+using namespace std;
 using namespace ngraph;
 
-NodeOutput NodeInput::get_source_output() const
+std::function<bool(std::shared_ptr<Node>)> ngraph::pass::get_no_fan_out_function()
 {
-    auto& output_descriptor = m_node->get_inputs().at(m_index).get_output();
-    return NodeOutput(output_descriptor.get_node(), output_descriptor.get_index());
+    auto ret_fun = [](std::shared_ptr<Node> n) {
+        auto users = n->get_users(true);
+        std::set<std::shared_ptr<Node>> user_set(users.begin(), users.end());
+        size_t num_unique_users = user_set.size();
+        if (num_unique_users == 1)
+        {
+            return true;
+        }
+        else
+        {
+            NGRAPH_DEBUG << n->get_name() << " has fan out\n";
+            return false;
+        }
+    };
+
+    return ret_fun;
 }

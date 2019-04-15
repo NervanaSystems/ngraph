@@ -33,13 +33,13 @@ op::Concat::Concat(const NodeVector& args, size_t concatenation_axis)
 
 void op::Concat::validate_and_infer_types()
 {
-    NODE_VALIDATION_CHECK(this, m_inputs.size() >= 1, "At least one argument required.");
+    NODE_VALIDATION_CHECK(this, get_input_size() >= 1, "At least one argument required.");
 
     PartialShape inputs_shape_scheme{PartialShape::dynamic()};
     element::Type inputs_et{element::dynamic};
     Dimension concatenation_axis_output_dim{0};
 
-    for (auto i = 0; i < get_inputs().size(); i++)
+    for (auto i = 0; i < get_input_size(); i++)
     {
         PartialShape this_input_shape = get_input_partial_shape(i);
         Dimension this_input_rank = this_input_shape.rank();
@@ -150,7 +150,7 @@ void op::Concat::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVecto
 {
     auto delta = deltas.at(0);
 
-    auto concat_result_shape = get_outputs().at(0).get_shape();
+    auto concat_result_shape = output(0).get_shape();
 
     Coordinate arg_delta_slice_lower = Coordinate(concat_result_shape.size(), 0);
     Coordinate arg_delta_slice_upper = concat_result_shape;
