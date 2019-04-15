@@ -185,15 +185,17 @@ void runtime::hybrid::rewrite_function(const shared_ptr<Function>& f,
                             // node
                             std::vector<Output<Node>> source_outputs =
                                 get_outputs_to(*input, *node);
-                            NGRAPH_ASSERT(source_outputs.size() == 1)
-                                << "rewrite_function encountered more than "
-                                   "one output between a cluster node and one of its arguments";
+                            NGRAPH_CHECK(
+                                source_outputs.size() == 1,
+                                "rewrite_function encountered more than "
+                                "one output between a cluster node and one of its arguments");
                             auto& source_output = source_outputs[0];
 
                             std::vector<Input<Node>> target_inputs = get_inputs_from(*input, *node);
-                            NGRAPH_ASSERT(target_inputs.size() == 1)
-                                << "rewrite_function encountered more than "
-                                   "one input between a cluster node and one of its arguments";
+                            NGRAPH_CHECK(
+                                target_inputs.size() == 1,
+                                "rewrite_function encountered more than "
+                                "one input between a cluster node and one of its arguments");
                             auto& target_input = target_inputs[0];
 
                             auto new_parameter = make_shared<ngraph::op::Parameter>(
@@ -237,9 +239,9 @@ void runtime::hybrid::rewrite_function(const shared_ptr<Function>& f,
                     auto target = function_call_outputs[i];
 
                     std::vector<Input<Node>> target_inputs = get_inputs_from(*old_source, *target);
-                    NGRAPH_ASSERT(target_inputs.size() == 1)
-                        << "rewrite_function encountered more than "
-                           "one input between the old source node and the target node";
+                    NGRAPH_CHECK(target_inputs.size() == 1,
+                                 "rewrite_function encountered more than "
+                                 "one input between the old source node and the target node");
                     auto& target_input = target_inputs[0];
 
                     target_input.replace_source_output(goe->output(0));

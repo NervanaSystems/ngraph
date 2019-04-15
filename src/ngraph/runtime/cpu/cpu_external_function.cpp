@@ -485,8 +485,8 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
 
     unordered_map<shared_ptr<Function>, list<shared_ptr<Node>>> function_ordered_ops;
     // only one function is allowed
-    NGRAPH_ASSERT(pass_manager.get_state().get_functions().size() == 1)
-        << "only one function is allowed";
+    NGRAPH_CHECK(pass_manager.get_state().get_functions().size() == 1,
+                 "only one function is allowed");
     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
     {
         function_ordered_ops.insert({current_function, current_function->get_ordered_ops()});
@@ -651,7 +651,7 @@ using namespace ngraph::runtime;
                 // process all tensors in the set containing the output tensor of the constant
                 for (auto& ele_t : tensor_set)
                 {
-                    NGRAPH_ASSERT(ele_t->get_pool_offset() == 0) << "no offset set for constants";
+                    NGRAPH_CHECK(ele_t->get_pool_offset() == 0, "no offset set for constants");
                     m_tensor_roles[ele_t->get_name()] = CPUTensorRole::CONSTANT;
                     m_variable_name_map[ele_t->get_name()] = output_tensor->get_name();
                 }
@@ -1293,7 +1293,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             // process all tensors in the set containing the output tensor of the constant
             for (auto& ele_t : tensor_set)
             {
-                NGRAPH_ASSERT(ele_t->get_pool_offset() == 0) << "no offset set for constants";
+                NGRAPH_CHECK(ele_t->get_pool_offset() == 0, "no offset set for constants");
                 m_tensor_roles[ele_t->get_name()] = CPUTensorRole::CONSTANT;
                 tensor_alias[ele_t->get_name()] = output_tensor->get_name();
             }
@@ -1510,7 +1510,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         }
     }
     //This check ensures we have exactly one functor for Op.
-    assert(m_op_attrs.size() == functors.size());
+    NGRAPH_CHECK(m_op_attrs.size() == functors.size());
 
     executor = [&](CPURuntimeContext* ctx, vector<void*>& inputs, vector<void*>& outputs) {
         cpu::Timestamp start_ts, end_ts;
@@ -1725,7 +1725,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         ctx->first_iteration = false;
         if (runtime::cpu::IsTracingEnabled())
         {
-            assert(m_op_attrs.size() == profiler_count);
+            NGRAPH_CHECK(m_op_attrs.size() == profiler_count);
         }
 
     };
@@ -1986,9 +1986,9 @@ std::unordered_set<descriptor::Tensor*>&
     runtime::cpu::CPU_ExternalFunction::get_tensor_set(descriptor::Tensor* output_tensor)
 {
     auto output_tensor_it = tensor_to_bufferID.find(output_tensor);
-    NGRAPH_ASSERT(output_tensor_it != tensor_to_bufferID.end());
+    NGRAPH_CHECK(output_tensor_it != tensor_to_bufferID.end());
     auto bufferID = output_tensor_it->second;
     auto output_buffer_it = bufferID_to_tensorSets.find(bufferID);
-    NGRAPH_ASSERT(output_buffer_it != bufferID_to_tensorSets.end());
+    NGRAPH_CHECK(output_buffer_it != bufferID_to_tensorSets.end());
     return output_buffer_it->second.second;
 }

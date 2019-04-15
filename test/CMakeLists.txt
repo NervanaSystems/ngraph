@@ -33,6 +33,7 @@ set(SRC
     bfloat16.cpp
     build_graph.cpp
     builder_autobroadcast.cpp
+    check.cpp
     constant_folding.cpp
     concat_fusion.cpp
     control_dependencies.cpp

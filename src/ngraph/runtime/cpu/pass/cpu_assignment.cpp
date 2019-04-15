@@ -16,7 +16,6 @@
 
 #include "ngraph/runtime/cpu/pass/cpu_assignment.hpp"
 #include <algorithm>
-#include <cassert>
 #include <memory>
 #include <typeindex>
 #include <typeinfo>
