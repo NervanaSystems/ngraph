@@ -562,9 +562,12 @@ bool ngraph::pass::ReshapeSinking::run_on_function(shared_ptr<ngraph::Function> 
     //make sure shapes are always materialized before results
     for (auto r : results)
     {
-        NGRAPH_ASSERT(r->get_shape() == r->get_argument(0)->get_shape() &&
-                      r->get_element_type() == r->get_argument(0)->get_element_type())
-            << " op::Result = " << *r << ", Arg = " << *r->get_argument(0);
+        NGRAPH_CHECK(r->get_shape() == r->get_argument(0)->get_shape() &&
+                         r->get_element_type() == r->get_argument(0)->get_element_type(),
+                     " op::Result = ",
+                     *r,
+                     ", Arg = ",
+                     *r->get_argument(0));
     }
 
     //STEP 3: fix wrong shape info wholesale
