@@ -210,7 +210,7 @@ namespace ngraph
                     const float scale,
                     const mkldnn::post_ops& pops = mkldnn::post_ops());
 
-template <typename OpTy>
+                template <typename OpTy>
                 size_t build_convolution(const ngraph::Node* node)
                 {
                     // For dilation, MKLDNN wants to know how many elements to insert between, not
