@@ -73,9 +73,7 @@ namespace ngraph
     void traverse_functions(std::shared_ptr<Function> p,
                             std::function<void(std::shared_ptr<Function>)> f);
 
-    void replace_node(
-        std::shared_ptr<Node> target,
-        std::shared_ptr<Node> replacement);
+    void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
 
     template <typename T>
     std::list<std::shared_ptr<Node>> topological_sort(const T& nodes,

@@ -136,8 +136,7 @@ void ngraph::traverse_functions(std::shared_ptr<ngraph::Function> p,
     }
 }
 
-void ngraph::replace_node(std::shared_ptr<Node> target,
-                          std::shared_ptr<Node> replacement)
+void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement)
 {
     if (target->is_output())
     {
@@ -151,7 +150,7 @@ void ngraph::replace_node(std::shared_ptr<Node> target,
 
     // Fix input/output descriptors
     NGRAPH_CHECK(target->get_output_size() == replacement->get_output_size());
-    
+
     if (ngraph::get_provenance_enable())
     {
         auto set_replacement_prov = [replacement](std::shared_ptr<Node> node) {

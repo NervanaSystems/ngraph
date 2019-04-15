@@ -241,5 +241,4 @@ TEST(provenance, provenance)
         EXPECT_EQ(d->get_provenance_tags(), (ProvSet{"tag_a", "tag_b", "tag_c"}));
         EXPECT_EQ(e->get_provenance_tags(), (ProvSet{"tag_a", "tag_b", "tag_c"}));
     }
-
-   }
+}
