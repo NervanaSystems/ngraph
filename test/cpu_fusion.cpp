@@ -1148,26 +1148,6 @@ shared_ptr<Function> gen_deconv(const bool add_goe)
                                  ParameterVector{filters, out_delta, gamma, beta, mean, var});
 }
 
-/*void enable_deconv()
-{
-    // Force deconv fusion, set NGRAPH_DECONV_FUSE=1
-    // This has no effect on other backends
-    bool use_deconv_fuse = (getenv("NGRAPH_DECONV_FUSE") != nullptr);
-    if (!use_deconv_fuse)
-    {
-        set_environment("NGRAPH_DECONV_FUSE", "1", 1);
-    }
-}
-
-void disable_deconv()
-{
-    if (!use_deconv_fuse)
-    {
-        unset_environment("NGRAPH_DECONV_FUSE");
-    }
-}*/
-
-// Note: enable deconv tests, when the deconv perf is better than convbackpropdata
 TEST(cpu_fusion, fuse_deconv)
 {
     bool use_deconv_fuse = (getenv("NGRAPH_DECONV_FUSE") != nullptr);
@@ -1216,27 +1196,6 @@ TEST(cpu_fusion, fuse_deconv)
         unset_environment("NGRAPH_DECONV_FUSE");
     }
 }
-
-/*TEST(cpu_fusion, DISABLED_deconv_vals)
-{
-    auto fuse_func = gen_deconv(false);
-
-    auto nofuse_func = gen_deconv(true);
-
-    test::Uniform<float> rng(1.0f, 100.0f);
-    vector<vector<float>> args;
-    for (shared_ptr<op::Parameter> param : fuse_func->get_parameters())
-    {
-        auto name = param->get_name();
-        vector<float> tensor_val(shape_size(param->get_shape()));
-        rng.initialize(tensor_val);
-        args.push_back(tensor_val);
-    }
-    auto nofuse_results = execute(nofuse_func, args, "CPU");
-    auto fuse_results = execute(fuse_func, args, "CPU");
-
-    EXPECT_TRUE(test::all_close(fuse_results.at(0), nofuse_results.at(0)));
-}*/
 
 shared_ptr<Function> gen_groupconv_batchnorm(const bool add_goe,
                                              const bool with_relu,
