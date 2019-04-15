@@ -26,7 +26,7 @@ namespace ngraph
     /// \param parameter_element_types The new parameter element types to substitute.
     /// \param parameter_shapes The new parameter shapes to substitute.
     /// \return A clone of f, with the parameter element types and shapes specialized.
-    /// \throws AssertionFailure if parameter_element_types or parameter_shapes is not valid
+    /// \throws CheckFailure if parameter_element_types or parameter_shapes is not valid
     ///         (see details).
     /// \throws NodeValidationError if node validation fails as the clone is being constructed.
     ///

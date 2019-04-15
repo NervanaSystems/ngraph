@@ -135,6 +135,7 @@ option(NGRAPH_NOP_ENABLE "Control the building of the NOP backend" TRUE)
 option(NGRAPH_GPUH_ENABLE "Control the building of the Hybrid GPU backend" FALSE)
 option(NGRAPH_GENERIC_CPU_ENABLE "Enable build nGraph for generic CPU backend" FALSE)
 option(NGRAPH_DEBUG_ENABLE "Enable output for NGRAPH_DEBUG statements" FALSE)
+option(NGRAPH_DEPRECATED_ENABLE "Enable compiler deprecation pragmas for deprecated APIs (recommended only for development use)" FALSE)
 option(NGRAPH_ONNX_IMPORT_ENABLE "Enable ONNX importer" FALSE)
 option(NGRAPH_DEX_ONLY "Build CPU DEX without codegen" FALSE)
 option(NGRAPH_CODE_COVERAGE_ENABLE "Enable code coverage data collection" FALSE)
@@ -196,6 +197,7 @@ NORMALIZE_BOOL(NGRAPH_NOP_ENABLE)
 NORMALIZE_BOOL(NGRAPH_GPUH_ENABLE)
 NORMALIZE_BOOL(NGRAPH_GENERIC_CPU_ENABLE)
 NORMALIZE_BOOL(NGRAPH_DEBUG_ENABLE)
+NORMALIZE_BOOL(NGRAPH_DEPRECATED_ENABLE)
 NORMALIZE_BOOL(NGRAPH_ONNX_IMPORT_ENABLE)
 NORMALIZE_BOOL(NGRAPH_DEX_ONLY)
 NORMALIZE_BOOL(NGRAPH_CODE_COVERAGE_ENABLE)
@@ -214,6 +216,7 @@ message(STATUS "NGRAPH_NOP_ENABLE:              ${NGRAPH_NOP_ENABLE}")
 message(STATUS "NGRAPH_GPUH_ENABLE:             ${NGRAPH_GPUH_ENABLE}")
 message(STATUS "NGRAPH_GENERIC_CPU_ENABLE:      ${NGRAPH_GENERIC_CPU_ENABLE}")
 message(STATUS "NGRAPH_DEBUG_ENABLE:            ${NGRAPH_DEBUG_ENABLE}")
+message(STATUS "NGRAPH_DEPRECATED_ENABLE:       ${NGRAPH_DEPRECATED_ENABLE}")
 message(STATUS "NGRAPH_ONNX_IMPORT_ENABLE:      ${NGRAPH_ONNX_IMPORT_ENABLE}")
 message(STATUS "NGRAPH_DEX_ONLY:                ${NGRAPH_DEX_ONLY}")
 message(STATUS "NGRAPH_CODE_COVERAGE_ENABLE:    ${NGRAPH_CODE_COVERAGE_ENABLE}")
@@ -372,6 +375,13 @@ add_custom_target(fix-mode
 #-----------------------------------------------------------------------------------------------
 if(NGRAPH_DEBUG_ENABLE)
     add_definitions(-DNGRAPH_DEBUG_ENABLE)
+endif()
+
+#-----------------------------------------------------------------------------------------------
+# enable or disable deprecation warnings for old APIs
+#-----------------------------------------------------------------------------------------------
+if(NGRAPH_DEPRECATED_ENABLE)
+    add_definitions(-DNGRAPH_DEPRECATED_ENABLE)
 endif()
 
 #-----------------------------------------------------------------------------------------------
