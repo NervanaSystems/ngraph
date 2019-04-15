@@ -4343,12 +4343,32 @@ TEST(type_prop, one_hot_deduce_matrix_2)
     ASSERT_EQ(oh->get_shape(), (Shape{12, 24, 2}));
 }
 
+TEST(type_prop, one_hot_deduce_et_dynamic)
+{
+    auto param = make_shared<op::Parameter>(element::dynamic, Shape{12, 24});
+    auto oh = make_shared<op::OneHot>(param, Shape{12, 24, 2}, 2);
+    ASSERT_EQ(oh->get_element_type(), element::dynamic);
+    ASSERT_EQ(oh->get_shape(), (Shape{12, 24, 2}));
+}
+
 TEST(type_prop, one_hot_deduce_floating_point)
 {
     auto param = make_shared<op::Parameter>(element::f32, Shape{12, 24});
-    auto oh = make_shared<op::OneHot>(param, Shape{12, 24, 8}, 2);
-    ASSERT_EQ(oh->get_element_type(), element::f32);
-    ASSERT_EQ(oh->get_shape(), (Shape{12, 24, 8}));
+    try
+    {
+        auto oh = make_shared<op::OneHot>(param, Shape{12, 24, 8}, 3);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid floating-point element type not detected.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Argument does not have integral element type."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
 }
 
 TEST(type_prop, one_hot_deduce_axis_oob)
@@ -4396,7 +4416,7 @@ TEST(type_prop, one_hot_partial_rank_dynamic_rank_dynamic)
     PartialShape requested_shape{PartialShape::dynamic()};
     size_t one_hot_axis{3000};
 
-    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param = make_shared<op::Parameter>(element::i32, input_shape);
     try
     {
         auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
@@ -4419,10 +4439,10 @@ TEST(type_prop, one_hot_partial_rank_dynamic_rank_static_dynamic_ok)
     PartialShape requested_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic()};
     size_t one_hot_axis{2};
 
-    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param = make_shared<op::Parameter>(element::i32, input_shape);
     auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
 
-    ASSERT_EQ(oh->get_output_element_type(0), element::f32);
+    ASSERT_EQ(oh->get_output_element_type(0), element::i32);
     ASSERT_TRUE(oh->get_output_partial_shape(0).same_scheme(
         PartialShape{Dimension::dynamic(), 2, 3, Dimension::dynamic()}));
 }
@@ -4433,7 +4453,7 @@ TEST(type_prop, one_hot_partial_rank_dynamic_rank_static_dynamic_one_hot_dim_dyn
     PartialShape requested_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic()};
     size_t one_hot_axis{3};
 
-    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param = make_shared<op::Parameter>(element::i32, input_shape);
     try
     {
         auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
@@ -4458,7 +4478,7 @@ TEST(type_prop, one_hot_partial_rank_dynamic_rank_static_dynamic_one_hot_axis_oo
     PartialShape requested_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic()};
     size_t one_hot_axis{4};
 
-    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param = make_shared<op::Parameter>(element::i32, input_shape);
     try
     {
         auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
@@ -4484,10 +4504,10 @@ TEST(type_prop, one_hot_partial_rank_static_dynamic_rank_static_dynamic_ok)
     PartialShape requested_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic(), 4};
     size_t one_hot_axis{2};
 
-    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param = make_shared<op::Parameter>(element::i32, input_shape);
     auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
 
-    ASSERT_EQ(oh->get_output_element_type(0), element::f32);
+    ASSERT_EQ(oh->get_output_element_type(0), element::i32);
     ASSERT_TRUE(oh->get_output_partial_shape(0).same_scheme(
         PartialShape{3, 2, 3, Dimension::dynamic(), 4}));
 }
@@ -4499,7 +4519,7 @@ TEST(type_prop,
     PartialShape requested_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic(), 4};
     size_t one_hot_axis{2};
 
-    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param = make_shared<op::Parameter>(element::i32, input_shape);
     try
     {
         auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
@@ -4526,7 +4546,7 @@ TEST(type_prop,
     PartialShape requested_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic(), 4};
     size_t one_hot_axis{2};
 
-    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param = make_shared<op::Parameter>(element::i32, input_shape);
     try
     {
         auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
@@ -4553,7 +4573,7 @@ TEST(type_prop, one_hot_partial_rank_static_dynamic_rank_static_dynamic_incompat
     PartialShape requested_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic(), 4};
     size_t one_hot_axis{2};
 
-    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param = make_shared<op::Parameter>(element::i32, input_shape);
     try
     {
         auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
@@ -4580,7 +4600,7 @@ TEST(type_prop, one_hot_partial_rank_static_dynamic_rank_static_dynamic_one_hot_
         Dimension::dynamic(), 2, Dimension::dynamic(), Dimension::dynamic(), 4};
     size_t one_hot_axis{2};
 
-    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param = make_shared<op::Parameter>(element::i32, input_shape);
     try
     {
         auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
@@ -4607,7 +4627,7 @@ TEST(type_prop, one_hot_partial_rank_static_dynamic_rank_static_dynamic_one_hot_
         Dimension::dynamic(), 2, Dimension::dynamic(), Dimension::dynamic(), 4};
     size_t one_hot_axis{2};
 
-    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param = make_shared<op::Parameter>(element::i32, input_shape);
     try
     {
         auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
@@ -11895,7 +11915,7 @@ TEST(type_prop, shape_of)
     auto a = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
     auto so = make_shared<op::ShapeOf>(a);
 
-    ASSERT_EQ(so->get_output_element_type(0), element::u64);
+    ASSERT_EQ(so->get_output_element_type(0), element::i64);
     ASSERT_EQ(so->get_shape(), Shape{4});
 }
 
@@ -11904,7 +11924,7 @@ TEST(type_prop, shape_of_partial_et_dynamic)
     auto a = make_shared<op::Parameter>(element::dynamic, Shape{1, 2, 3, 4});
     auto so = make_shared<op::ShapeOf>(a);
 
-    ASSERT_EQ(so->get_output_element_type(0), element::u64);
+    ASSERT_EQ(so->get_output_element_type(0), element::i64);
     ASSERT_EQ(so->get_shape(), Shape{4});
 }
 
@@ -11914,7 +11934,7 @@ TEST(type_prop, shape_of_partial_rank_static_dynamic)
         element::f32, PartialShape{1, Dimension::dynamic(), Dimension::dynamic(), 4});
     auto so = make_shared<op::ShapeOf>(a);
 
-    ASSERT_EQ(so->get_output_element_type(0), element::u64);
+    ASSERT_EQ(so->get_output_element_type(0), element::i64);
     ASSERT_EQ(so->get_shape(), Shape{4});
 }
 
@@ -11923,7 +11943,7 @@ TEST(type_prop, shape_of_partial_rank_dynamic)
     auto a = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     auto so = make_shared<op::ShapeOf>(a);
 
-    ASSERT_EQ(so->get_output_element_type(0), element::u64);
+    ASSERT_EQ(so->get_output_element_type(0), element::i64);
     ASSERT_TRUE(so->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(1)));
 }
 
@@ -13053,4 +13073,174 @@ TEST(type_prop, dynslice_params_et_wrong)
         strides = make_shared<op::Parameter>(element::boolean, Shape{4});
         DynSlice_Test_Type_Except(arg, lower_bounds, upper_bounds, strides);
     }
+}
+
+TEST(type_prop, batchmatmul_deduce_3d)
+{
+    // Deduce type for matrix/matrix arguments
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{5, 4, 2});
+    auto param2 = make_shared<op::Parameter>(element::f32, Shape{5, 2, 3});
+    auto bc = make_shared<op::BatchMatMul>(param1, param2);
+    ASSERT_EQ(bc->get_element_type(), element::f32);
+    ASSERT_EQ(bc->get_shape(), (Shape{5, 4, 3}));
+}
+
+TEST(type_prop, batchmatmul_deduce_left_rank_wrong)
+{
+    // Type deduction fails due to element type mismatch
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{2, 5, 4, 2});
+    auto param2 = make_shared<op::Parameter>(element::f32, Shape{5, 2, 5});
+    try
+    {
+        auto bc = make_shared<op::BatchMatMul>(param1, param2);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Element type mismatch not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("shape must have rank 3"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, batchmatmul_deduce_right_rank_wrong)
+{
+    // Type deduction fails due to element type mismatch
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{5, 4, 2});
+    auto param2 = make_shared<op::Parameter>(element::f32, Shape{2, 5, 2, 5});
+    try
+    {
+        auto bc = make_shared<op::BatchMatMul>(param1, param2);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Element type mismatch not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("shape must have rank 3"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, batchmatmul_deduce_element_type_mismatch)
+{
+    // Type deduction fails due to element type mismatch
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{5, 4, 2});
+    auto param2 = make_shared<op::Parameter>(element::i32, Shape{5, 2, 5});
+    try
+    {
+        auto bc = make_shared<op::BatchMatMul>(param1, param2);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Element type mismatch not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("compatible element type"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, batchmatmul_deduce_reduction_axes_size_mismatch)
+{
+    // Type deduction fails due to reduction axes size mismatch
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{6, 4, 2});
+    auto param2 = make_shared<op::Parameter>(element::f32, Shape{6, 3, 5});
+    try
+    {
+        auto bc = make_shared<op::BatchMatMul>(param1, param2);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "BatchMatMul reduction axes size mismatch not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Product dimensions are not equal"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, batchmatmul_partial_both_rank_dynamic_implicit)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto d = make_shared<op::BatchMatMul>(param0, param1);
+
+    ASSERT_TRUE(d->get_output_partial_shape(0).rank().same_scheme(3));
+}
+
+TEST(type_prop, batchmatmul_partial_left_rank_dynamic_right_rank_static_dynamic)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto param1 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3});
+    auto d = make_shared<op::BatchMatMul>(param0, param1);
+
+    ASSERT_TRUE(d->get_output_partial_shape(0).rank().same_scheme(3));
+}
+
+TEST(type_prop, batchmatmul_partial_left_rank_static_dynamic_right_rank_dynamic)
+{
+    auto param0 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3});
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto d = make_shared<op::BatchMatMul>(param0, param1);
+
+    ASSERT_TRUE(d->get_output_partial_shape(0).rank().same_scheme(3));
+}
+
+TEST(type_prop, batchmatmul_partial_left_rank_static_dynamic_right_rank_static)
+{
+    auto param0 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 4});
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape{3, 4, 5});
+    auto d = make_shared<op::BatchMatMul>(param0, param1);
+
+    ASSERT_TRUE(d->get_output_partial_shape(0).same_scheme(PartialShape{3, 2, 5}));
+}
+
+TEST(type_prop, batchmatmul_partial_left_et_dynamic)
+{
+    auto param0 = make_shared<op::Parameter>(element::dynamic, PartialShape::dynamic());
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto d = make_shared<op::BatchMatMul>(param0, param1);
+
+    ASSERT_EQ(d->get_output_element_type(0), element::f32);
+}
+
+TEST(type_prop, batchmatmul_partial_right_et_dynamic)
+{
+    auto param0 = make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
+    auto param1 = make_shared<op::Parameter>(element::dynamic, PartialShape::dynamic());
+    auto d = make_shared<op::BatchMatMul>(param0, param1);
+
+    ASSERT_EQ(d->get_output_element_type(0), element::i32);
+}
+
+TEST(type_prop, batchmatmul_partial_both_et_dynamic)
+{
+    auto param0 = make_shared<op::Parameter>(element::dynamic, PartialShape::dynamic());
+    auto param1 = make_shared<op::Parameter>(element::dynamic, PartialShape::dynamic());
+    auto d = make_shared<op::BatchMatMul>(param0, param1);
+
+    ASSERT_EQ(d->get_output_element_type(0), element::dynamic);
+}
+
+TEST(type_prop, prelu)
+{
+    auto param = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto slope = make_shared<op::Parameter>(element::f32, Shape{2});
+    Shape prelu_shape{2, 4};
+    auto prelu = make_shared<op::PRelu>(param, slope);
+    ASSERT_EQ(prelu->get_element_type(), element::f32);
+    ASSERT_EQ(prelu->get_shape(), prelu_shape);
 }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2017-2018 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,4 +14,25 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/node_output.hpp"
+#pragma once
+
+#include <memory>
+
+#include "ngraph/op/op.hpp"
+
+namespace ngraph
+{
+    namespace op
+    {
+        class BroadcastDistributed : public Op
+        {
+        public:
+            BroadcastDistributed(const std::shared_ptr<Node>& arg);
+
+            void validate_and_infer_types() override;
+
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+        };
+    }
+}

@@ -14,13 +14,22 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/node_input.hpp"
-#include "ngraph/node_output.hpp"
+#pragma once
 
-using namespace ngraph;
+#include <cmath>
+#include <cstdlib> // llvm 8.1 gets confused about `malloc` otherwise
+#include <functional>
+#include <iostream>
+#include <set>
+#include <sstream>
+#include <string>
 
-NodeOutput NodeInput::get_source_output() const
+#include "ngraph/node.hpp"
+
+namespace ngraph
 {
-    auto& output_descriptor = m_node->get_inputs().at(m_index).get_output();
-    return NodeOutput(output_descriptor.get_node(), output_descriptor.get_index());
+    namespace pass
+    {
+        std::function<bool(std::shared_ptr<Node>)> get_no_fan_out_function();
+    }
 }

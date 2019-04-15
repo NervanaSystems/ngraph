@@ -20,6 +20,7 @@
 #include <typeinfo>
 
 #include "ngraph/autodiff/adjoints.hpp"
+#include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
@@ -41,7 +42,7 @@ Node::Node(const std::string& node_type, const NodeVector& arguments, size_t out
     size_t i = 0;
     for (auto arg : arguments)
     {
-        for (descriptor::Output& output : arg->get_outputs())
+        for (descriptor::Output& output : arg->m_outputs)
         {
             m_inputs.emplace_back(this, i++, output);
         }
@@ -82,6 +83,16 @@ void Node::set_output_size(size_t n)
 
 void Node::validate_and_infer_types()
 {
+}
+
+void Node::set_input_is_relevant_to_shape(size_t i, bool relevant)
+{
+    m_inputs.at(i).m_is_relevant_to_shape = relevant;
+}
+
+void Node::set_input_is_relevant_to_value(size_t i, bool relevant)
+{
+    m_inputs.at(i).m_is_relevant_to_value = relevant;
 }
 
 void Node::set_output_type(size_t i, const element::Type& element_type, const PartialShape& pshape)
@@ -183,9 +194,9 @@ void Node::merge_provenance_tags_from(const std::shared_ptr<const Node>& source)
 
 std::shared_ptr<Node> Node::get_argument(size_t index) const
 {
-    for (auto& i : get_inputs())
+    for (auto& i : m_inputs)
     {
-        NGRAPH_ASSERT(i.get_output().get_node()->get_outputs().size() == 1)
+        NGRAPH_ASSERT(i.get_output().get_node()->get_output_size() == 1)
             << "child " << i.get_output().get_node()->get_name() << " has multiple outputs";
     }
     return m_inputs.at(index).get_output().get_node();
@@ -202,7 +213,7 @@ Node::~Node()
 NodeVector Node::get_arguments() const
 {
     NodeVector result;
-    for (auto& i : get_inputs())
+    for (auto& i : m_inputs)
     {
         {
             result.push_back(i.get_output().get_node());
@@ -264,9 +275,10 @@ std::ostream& Node::write_long_description(std::ostream& out) const
     }
     out << ") -> (";
     sep = "";
-    for (const auto& o : get_outputs())
+    for (size_t i = 0; i < get_output_size(); i++)
     {
-        out << sep << pretty_element_type(o.get_element_type()) << o.get_partial_shape();
+        out << sep << pretty_element_type(get_output_element_type(i))
+            << get_output_partial_shape(i);
         sep = ", ";
     }
     out << ")";
@@ -327,7 +339,7 @@ shared_ptr<descriptor::Tensor> Node::get_output_tensor_ptr() const
         throw ngraph_error(
             "get_output_tensor_ptr() must be called on a node with exactly one output.");
     }
-    return get_output_tensor_ptr(0);
+    return m_outputs.at(0).get_tensor_ptr();
 }
 
 const std::set<descriptor::Input*>& Node::get_output_inputs(size_t i) const
@@ -338,6 +350,11 @@ const std::set<descriptor::Input*>& Node::get_output_inputs(size_t i) const
 descriptor::Tensor& Node::get_output_tensor(size_t i) const
 {
     return m_outputs.at(i).get_tensor();
+}
+
+const string& Node::get_output_tensor_name(size_t i) const
+{
+    return m_outputs.at(i).get_tensor().get_name();
 }
 
 descriptor::Tensor& Node::get_output_tensor() const
@@ -369,6 +386,11 @@ const PartialShape& Node::get_input_partial_shape(size_t i) const
     return m_inputs.at(i).get_partial_shape();
 }
 
+const string& Node::get_input_tensor_name(size_t i) const
+{
+    return m_inputs.at(i).get_tensor().get_name();
+}
+
 bool Node::has_same_type(std::shared_ptr<const Node> node) const
 {
     if (get_output_size() != node->get_output_size())
@@ -386,37 +408,13 @@ bool Node::has_same_type(std::shared_ptr<const Node> node) const
     return true;
 }
 
-descriptor::Input* Node::get_input_from(const shared_ptr<Node>& src)
-{
-    for (size_t i = 0; i < this->get_input_size(); ++i)
-    {
-        if (this->get_argument(i) == src)
-        {
-            return &(this->get_inputs().at(i));
-        }
-    }
-    throw ngraph_error("Error: src is not one of self's input Node");
-}
-
-descriptor::Output* Node::get_output_to(const shared_ptr<Node>& dst)
-{
-    for (size_t i = 0; i < dst->get_input_size(); ++i)
-    {
-        if (dst->get_argument(i).get() == this)
-        {
-            return &(dst->get_inputs().at(i).get_output());
-        }
-    }
-    throw ngraph_error("Error: dst is not one of self's output Node");
-}
-
 NodeVector Node::get_users(bool check_is_used) const
 {
     NodeVector result;
 
     for (size_t i = 0; i < get_output_size(); ++i)
     {
-        for (auto input : get_output_inputs(i))
+        for (auto input : m_outputs.at(i).get_inputs())
         {
             if (check_is_used)
             {

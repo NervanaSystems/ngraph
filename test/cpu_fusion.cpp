@@ -54,7 +54,7 @@
 #include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
-#include "ngraph/runtime/cpu/op/batch_dot.hpp"
+#include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
@@ -1365,7 +1365,7 @@ TEST(cpu_fusion, weight_fusion)
     auto reshape_conv =
         std::make_shared<ngraph::op::Reshape>(param, AxisVector{0}, Shape{16, 4, 1, 1});
     auto data_conv = std::make_shared<op::Parameter>(element::f32, Shape{16, 4, 7, 7});
-    auto tvt = reshape_conv->get_outputs().at(0).get_tensor_ptr().get();
+    auto tvt = &reshape_conv->output(0).get_tensor();
     auto lt_desc = std::make_shared<runtime::cpu::LayoutDescriptor>(*tvt);
     auto cvt_lt_conv = std::make_shared<runtime::cpu::op::ConvertLayout>(reshape_conv, lt_desc);
     auto conv = std::make_shared<ngraph::op::Convolution>(
@@ -1374,7 +1374,7 @@ TEST(cpu_fusion, weight_fusion)
     auto reshape_conv_bprop =
         std::make_shared<op::Reshape>(param, AxisVector{0}, Shape{16, 4, 1, 1});
     auto dummy_arg_conv_bprop = std::make_shared<op::Parameter>(element::f32, Shape{1, 16, 7, 7});
-    auto tvt_bprop = reshape_conv_bprop->get_outputs().at(0).get_tensor_ptr().get();
+    auto tvt_bprop = &reshape_conv_bprop->output(0).get_tensor();
     auto lt_desc_bprop = std::make_shared<runtime::cpu::LayoutDescriptor>(*tvt_bprop);
     auto cvt_lt_conv_bprop =
         std::make_shared<runtime::cpu::op::ConvertLayout>(reshape_conv_bprop, lt_desc_bprop);
@@ -1423,22 +1423,22 @@ TEST(cpu_fusion, max_pool_with_indices)
 
     {
         pass::Manager pass_manager;
-        pass_manager.register_pass<pass::VisualizeTree>("max_pool_fprop_before.pdf");
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_fprop_before.png");
         pass_manager.run_passes(f);
     }
 
     {
         NodeVector nv_cwi;
         pass::Manager pass_manager;
-        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_before.pdf");
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_before.png");
         pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
-        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_after.pdf");
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_after.png");
         pass_manager.run_passes(df);
     }
 
     {
         pass::Manager pass_manager;
-        pass_manager.register_pass<pass::VisualizeTree>("max_pool_fprop_after.pdf");
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_fprop_after.png");
         pass_manager.run_passes(f);
     }
 
@@ -1493,9 +1493,9 @@ TEST(cpu_fusion, backwards_maxpool_with_indices_n4_c1_hw4_2x2_max)
     {
         NodeVector nv_cwi;
         pass::Manager pass_manager;
-        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_before2.pdf");
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_before2.png");
         pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
-        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_after2.pdf");
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_after2.png");
         pass_manager.run_passes(df);
     }
 
@@ -1794,7 +1794,7 @@ void optimize_graph(std::shared_ptr<ngraph::Function>& f, std::shared_ptr<ngraph
     pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
     pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
     pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
-    pass_manager.register_pass<pass::VisualizeTree>("before.fprop_cache.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("before.fprop_cache.png");
 
     pass_manager.run_passes(f);
     pass_manager.run_passes(bf);
@@ -2009,7 +2009,7 @@ TEST(cpu_fusion, conv_affine_folding)
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
 }
 
-TEST(cpu_fusion, convbias_affine_folding)
+TEST(cpu_fusion, convbias_affine_folding1)
 {
     Shape shape_input{1, 6, 3, 3};
     Shape shape_weights{3, 6, 1, 1};
@@ -2033,6 +2033,60 @@ TEST(cpu_fusion, convbias_affine_folding)
             make_shared<Function>(NodeVector{out}, ParameterVector{input, weights, bias, a, b});
         return f;
     };
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    auto func = make_function();
+    pass_manager.run_passes(func);
+    ASSERT_EQ(count_ops_of_type<op::ConvolutionBiasAdd>(func), 1);
+
+    auto int_f = make_function();
+    auto cpu_f = make_function();
+
+    test::Uniform<float> rng(20.0f, 300.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
+}
+
+TEST(cpu_fusion, convbias_affine_folding2)
+{
+    Shape shape_input{1, 6, 3, 3};
+    Shape shape_weights{3, 6, 1, 1};
+    Shape shape_norm{1};
+
+    auto make_function = [shape_input, shape_weights, shape_norm]() {
+        auto input = std::make_shared<op::Parameter>(element::f32, shape_input);
+        auto weights = std::make_shared<op::Parameter>(element::f32, shape_weights);
+        auto bias = std::make_shared<op::Parameter>(element::f32, Shape{3});
+
+        auto a = std::make_shared<op::Parameter>(element::f32, shape_norm);
+        auto b = std::make_shared<op::Parameter>(element::f32, shape_norm);
+        auto conv = std::make_shared<op::Convolution>(input, weights, Strides{1, 1}, Strides{1, 1});
+        auto convbias =
+            conv + std::make_shared<op::Broadcast>(bias, conv->get_shape(), AxisSet{0, 2, 3});
+        auto out = std::make_shared<op::Add>(
+            std::make_shared<op::Multiply>(
+                convbias, std::make_shared<op::Broadcast>(a, conv->get_shape(), AxisSet{1, 2, 3})),
+            std::make_shared<op::Broadcast>(b, conv->get_shape(), AxisSet{1, 2, 3}));
+        auto f =
+            make_shared<Function>(NodeVector{out}, ParameterVector{input, weights, bias, a, b});
+        return f;
+    };
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    auto func = make_function();
+    pass_manager.run_passes(func);
+    ASSERT_EQ(count_ops_of_type<op::ConvolutionBiasAdd>(func), 1);
 
     auto int_f = make_function();
     auto cpu_f = make_function();
@@ -2086,9 +2140,9 @@ TEST(cpu_fusion, group_convolution_fusion)
 
     auto f = make_shared<Function>(NodeVector{concat}, ParameterVector{A, B});
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before_group.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("before_group.png");
     pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
-    pass_manager.register_pass<pass::VisualizeTree>("after_group.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("after_group.png");
     pass_manager.run_passes(f);
     auto gc =
         std::dynamic_pointer_cast<op::GroupConvolution>(f->get_results().at(0)->get_argument(0));
@@ -2441,9 +2495,9 @@ TEST(cpu_fusion, loop_kernel_fusion_bounded_relu)
     };
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before_relu_fusion.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("before_relu_fusion.png");
     pass_manager.register_pass<runtime::cpu::pass::CPULoopKernelFusion>(3);
-    pass_manager.register_pass<pass::VisualizeTree>("after_relu_fusion.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("after_relu_fusion.png");
     auto cpu_f = make_function();
     auto int_f = make_function();
     pass_manager.run_passes(cpu_f);
@@ -2993,7 +3047,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_backward)
     }
 }
 
-TEST(cpu_fusion, fuse_batch_dot)
+TEST(cpu_fusion, fuse_batch_mat_mul_transpose)
 {
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
@@ -3002,11 +3056,11 @@ TEST(cpu_fusion, fuse_batch_dot)
     stringstream ss(json_string);
     shared_ptr<Function> func = ngraph::deserialize(ss);
     pass_manager.run_passes(func);
-    size_t ccg = count_ops_of_type<op::BatchDot>(func);
+    size_t ccg = count_ops_of_type<op::BatchMatMulTranspose>(func);
     ASSERT_EQ(ccg, 1);
 }
 
-TEST(cpu_fusion, fuse_batch_dot_forward)
+TEST(cpu_fusion, fuse_batch_mat_mul_transpose_forward)
 {
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
