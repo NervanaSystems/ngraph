@@ -32,9 +32,14 @@ shared_ptr<Node> op::Gather::copy_with_new_args(const NodeVector& new_args) cons
 void op::Gather::validate_and_infer_types()
 {
     element::Type result_et = get_input_element_type(PARAMS);
+    element::Type indices_et = get_input_element_type(INDICES);
 
     const PartialShape& params_shape = get_input_partial_shape(PARAMS);
     const PartialShape& indices_shape = get_input_partial_shape(INDICES);
+
+    NODE_VALIDATION_CHECK(this,
+                          indices_et == element::i32 || indices_et == element::i64,
+                          "Indices element type must be i64 or i32");
 
     // params rank must be at least (axis + 1)
     // indices value must be in range [0, params.shape[axis]).
