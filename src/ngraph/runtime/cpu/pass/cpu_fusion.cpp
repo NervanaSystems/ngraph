@@ -823,7 +823,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
         for (auto bn_in : m_bn->get_output_inputs(0))
         {
             auto mgoe = std::dynamic_pointer_cast<ngraph::op::GetOutputElement>(bn_in->get_node());
-            NGRAPH_ASSERT(mgoe);
+            NGRAPH_CHECK(mgoe);
             mgoes[mgoe->get_n()] = mgoe;
         }
 
