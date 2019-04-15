@@ -28,7 +28,6 @@
 #include <unordered_set>
 #include <vector>
 
-#include "ngraph/assertion.hpp"
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/check.hpp"
 #include "ngraph/deprecated.hpp"
@@ -51,7 +50,7 @@ namespace ngraph
         class Constant;
     } // namespace op
 
-    std::string node_validation_assertion_string(const Node* node);
+    std::string node_validation_failure_loc_string(const Node* node);
 
     const std::shared_ptr<Node>& check_single_output_arg(const std::shared_ptr<Node>& node,
                                                          size_t i);
@@ -660,7 +659,7 @@ namespace ngraph
         NodeValidationFailure(const CheckLocInfo& check_loc_info,
                               const Node* node,
                               const std::string& explanation)
-            : CheckFailure(check_loc_info, node_validation_assertion_string(node), explanation)
+            : CheckFailure(check_loc_info, node_validation_failure_loc_string(node), explanation)
         {
         }
     };
@@ -688,4 +687,4 @@ namespace ngraph
 } // namespace ngraph
 
 #define NODE_VALIDATION_CHECK(node, cond, ...)                                                     \
-    NGRAPH_CHECK(::ngraph::NodeValidationFailure, (node), (cond), __VA_ARGS__)
+    NGRAPH_CHECK_HELPER(::ngraph::NodeValidationFailure, (node), (cond), ##__VA_ARGS__)

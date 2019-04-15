@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include <algorithm>
-#include <cassert>
 #include <deque>
 #include <forward_list>
 #include <iomanip>
