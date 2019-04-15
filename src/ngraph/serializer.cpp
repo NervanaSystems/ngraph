@@ -49,6 +49,7 @@
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/erf.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/batch_mat_mul.hpp"
 #include "ngraph/op/experimental/dyn_broadcast.hpp"
 #include "ngraph/op/experimental/dyn_pad.hpp"
 #include "ngraph/op/experimental/dyn_reshape.hpp"
@@ -564,6 +565,12 @@ static shared_ptr<ngraph::Function>
                                                         include_padding_in_avg_computation);
                 break;
             }
+            case OP_TYPEID::BatchMatMul:
+            {
+                node = make_shared<op::BatchMatMul>(args[0], args[1]);
+                break;
+            }
+
             case OP_TYPEID::BatchNormTraining:
             {
                 auto epsilon = node_js.at("eps").get<double>();
@@ -1051,11 +1058,15 @@ static shared_ptr<ngraph::Function>
                 // This is a legacy field whose functionality is no longer supported. The new
                 // behavior is equivalent to interior padding of 0, so we will accept it under
                 // those conditions.
-                auto padding_interior = node_js.at("padding_interior").get<vector<size_t>>();
-                NGRAPH_ASSERT(std::all_of(padding_interior.begin(),
-                                          padding_interior.end(),
-                                          [](size_t s) { return s == 0; }))
-                    << "Legacy padding_interior field must be zero everywhere.";
+                auto padding_interior_maybe = node_js.find("padding_interior");
+                if (padding_interior_maybe != node_js.end())
+                {
+                    auto padding_interior = padding_interior_maybe->get<vector<size_t>>();
+                    NGRAPH_ASSERT(std::all_of(padding_interior.begin(),
+                                              padding_interior.end(),
+                                              [](size_t s) { return s == 0; }))
+                        << "Legacy padding_interior field must be zero everywhere.";
+                }
 
                 auto pad_mode = node_js.count("pad_mode") == 0
                                     ? op::PadMode::CONSTANT
@@ -1412,17 +1423,17 @@ static json write(const Node& n, bool binary_constant_data)
     json control_deps = json::array();
     json outputs = json::array();
 
-    for (const descriptor::Input& input : n.get_inputs())
+    for (auto& input : n.inputs())
     {
-        inputs.push_back(input.get_output().get_node()->get_name());
+        inputs.push_back(input.get_source_output().get_node()->get_name());
     }
     for (auto cdep : n.get_control_dependencies())
     {
         control_deps.push_back(cdep->get_name());
     }
-    for (size_t i = 0; i < n.get_output_size(); ++i)
+    for (auto& output : n.outputs())
     {
-        outputs.push_back(n.get_output_tensor(i).get_name());
+        outputs.push_back(output.get_tensor().get_name());
     }
 
     node["inputs"] = inputs;
@@ -1506,6 +1517,8 @@ static json write(const Node& n, bool binary_constant_data)
         node["padding_above"] = tmp->get_padding_above();
         node["include_padding_in_avg_computation"] = tmp->get_include_padding_in_avg_computation();
         break;
+    }
+    case OP_TYPEID::BatchMatMul: { break;
     }
     case OP_TYPEID::BatchNormTraining:
     {
