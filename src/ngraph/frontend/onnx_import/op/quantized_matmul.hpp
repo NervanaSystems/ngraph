@@ -14,4 +14,25 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/node_output.hpp"
+#pragma once
+
+#include "core/node.hpp"
+#include "ngraph/frontend/onnx_import/op/matmul.hpp"
+#include "ngraph/node_vector.hpp"
+
+namespace ngraph
+{
+    namespace onnx_import
+    {
+        namespace op
+        {
+            namespace set_1
+            {
+                NodeVector quantized_matmul(const Node& node) { return make_matmul_op(node, true); }
+            } // namespace set_1
+
+        } //namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

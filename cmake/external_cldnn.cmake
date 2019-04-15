@@ -62,6 +62,13 @@ if (CLDNN_ROOT_DIR)
     find_package(CLDNN REQUIRED)
     target_include_directories(libcldnn SYSTEM INTERFACE ${CLDNN_INCLUDE_DIRS})
     target_link_libraries(libcldnn INTERFACE ${CLDNN_LIBRARIES})
+    install(
+	FILES 
+	    ${CLDNN_LIBRARIES}
+	DESTINATION 
+	    ${NGRAPH_INSTALL_LIB}
+	OPTIONAL
+        )
 else()
     ExternalProject_Get_Property(ext_cldnn SOURCE_DIR BINARY_DIR)
     set(CLDNN_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}clDNN64${CMAKE_SHARED_LIBRARY_SUFFIX})
