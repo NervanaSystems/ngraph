@@ -65,7 +65,9 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/equal.hpp"
+#include "ngraph/op/erf.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/batch_mat_mul.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_concat.hpp"
@@ -124,6 +126,7 @@
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/cse.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
+#include "ngraph/pass/fused_op_decomposition.hpp"
 #include "ngraph/pass/get_output_element_elimination.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/liveness.hpp"
@@ -147,7 +150,7 @@
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
 #include "ngraph/runtime/cpu/cpu_visualize_tree.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
-#include "ngraph/runtime/cpu/op/batch_dot.hpp"
+#include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
@@ -174,6 +177,7 @@
 #include "ngraph/runtime/cpu/pass/cpu_mat_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_memory_assignment.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_memory_optimization.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_mkldnn_primitive_build.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_workspace_insertion.hpp"
@@ -302,10 +306,13 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Abs), &runtime::cpu::CPU_Emitter::emit<op::Abs>},
     {TI(ngraph::op::Any), &runtime::cpu::CPU_Emitter::emit<op::Any>},
     {TI(ngraph::op::All), &runtime::cpu::CPU_Emitter::emit<op::All>},
-    {TI(ngraph::op::BatchDot), &runtime::cpu::CPU_Emitter::emit<op::BatchDot>},
+    {TI(ngraph::op::BatchMatMul), &runtime::cpu::CPU_Emitter::emit<op::BatchMatMul>},
+    {TI(ngraph::op::BatchMatMulTranspose),
+     &runtime::cpu::CPU_Emitter::emit<op::BatchMatMulTranspose>},
     {TI(ngraph::op::Concat), &runtime::cpu::CPU_Emitter::emit<op::Concat>},
     {TI(ngraph::op::Divide), &runtime::cpu::CPU_Emitter::emit<op::Divide>},
     {TI(ngraph::op::Equal), &runtime::cpu::CPU_Emitter::emit<op::Equal>},
+    {TI(ngraph::op::Erf), &runtime::cpu::CPU_Emitter::emit<op::Erf>},
     {TI(ngraph::op::GetOutputElement), &runtime::cpu::CPU_Emitter::emit<op::GetOutputElement>},
     {TI(ngraph::op::Greater), &runtime::cpu::CPU_Emitter::emit<op::Greater>},
     {TI(ngraph::op::GreaterEq), &runtime::cpu::CPU_Emitter::emit<op::GreaterEq>},
@@ -464,6 +471,11 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
 
     ngraph::pass::Manager pass_manager;
     register_common_passes(pass_manager, pass_config);
+
+    // Build mkldnn primitives for codegen.
+    pass_manager.register_pass<runtime::cpu::pass::MKLDNNPrimitiveBuildPass>(
+        *m_mkldnn_emitter, m_node_primitive_idx_map);
+
     unordered_map<Node*, Node*> node_function_map;
     string common_function_string;
     auto femitter = bind(&ngraph::runtime::cpu::CPU_ExternalFunction::emit_op_as_function,
@@ -1118,6 +1130,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     auto pass_map = pass_config.get_enables();
 
     REGISTER_KNOBBED_PASS(LikeReplacement, true, ngraph::pass);
+    REGISTER_KNOBBED_PASS(FusedOpDecomposition, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(NopElimination, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(ZeroDimTensorElimination, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(LSTMFusion, true, runtime::cpu::pass);
@@ -1141,7 +1154,8 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     NodeVector nv_cwi; // We dont need CPUWorkspaceInsertion to return list of indices
     REGISTER_KNOBBED_PASS_WITH_ARGS(CPUWorkspaceInsertion, true, runtime::cpu::pass, nv_cwi, false);
     REGISTER_KNOBBED_PASS_WITH_ARGS(CPUAssignment, true, runtime::cpu::pass, this);
-    REGISTER_KNOBBED_PASS(ConstantFolding, false, ngraph::pass);
+    REGISTER_KNOBBED_PASS_WITH_ARGS(
+        ConstantFolding, true, ngraph::pass, GetGlobalCFDispatcherCPU());
     REGISTER_KNOBBED_PASS_WITH_ARGS(CPULayout, true, runtime::cpu::pass, this);
     REGISTER_KNOBBED_PASS_WITH_ARGS(
         CommonSubexpressionElimination, true, ngraph::pass, runtime::cpu::get_cse_handlers_map());
@@ -1154,6 +1168,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
                         pass_config.get_pass_attribute("ReuseMemory");
     pass_manager.register_pass<runtime::cpu::pass::CPUMemoryAssignment>(
         bufferID_to_tensorSets, tensor_to_bufferID, size_t(s_memory_pool_alignment), !reuse_memory);
+
     pass_manager.get_state().set_visualize_tree_ops_map(runtime::cpu::get_visualize_tree_ops_map());
 }
 

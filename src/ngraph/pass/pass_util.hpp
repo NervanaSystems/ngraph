@@ -14,4 +14,22 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/node_output.hpp"
+#pragma once
+
+#include <cmath>
+#include <cstdlib> // llvm 8.1 gets confused about `malloc` otherwise
+#include <functional>
+#include <iostream>
+#include <set>
+#include <sstream>
+#include <string>
+
+#include "ngraph/node.hpp"
+
+namespace ngraph
+{
+    namespace pass
+    {
+        std::function<bool(std::shared_ptr<Node>)> get_no_fan_out_function();
+    }
+}

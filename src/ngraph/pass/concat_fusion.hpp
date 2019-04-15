@@ -18,6 +18,7 @@
 
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/pass.hpp"
+#include "ngraph/pass/pass_util.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
 

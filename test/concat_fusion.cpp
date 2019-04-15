@@ -50,7 +50,7 @@ using namespace std;
 
 TEST(concat_fusion, single_branch)
 {
-    Shape shape_a{128, 2048, 1, 1};
+    Shape shape_a{12, 8, 1, 1};
     auto generate_func = [shape_a]() {
         auto A = make_shared<op::Parameter>(element::f32, shape_a);
 
@@ -69,10 +69,10 @@ TEST(concat_fusion, single_branch)
     auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before_single_branch.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("before_single_branch.png");
     pass_manager.register_pass<pass::ConcatElimination>();
     pass_manager.register_pass<pass::SelfConcatFusion>();
-    pass_manager.register_pass<pass::VisualizeTree>("after_single_branch.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("after_single_branch.png");
     pass_manager.run_passes(optimized_f);
 
     test::Uniform<float> rng(0.0f, 100.0f);
@@ -94,7 +94,7 @@ TEST(concat_fusion, single_branch)
 
 TEST(concat_fusion, multiple_branches_1)
 {
-    Shape shape_a{128, 2048, 1, 1};
+    Shape shape_a{16, 8, 1, 1};
     auto generate_func = [shape_a]() {
         auto A = make_shared<op::Parameter>(element::f32, shape_a);
 
@@ -116,10 +116,10 @@ TEST(concat_fusion, multiple_branches_1)
     auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before_multiple_branches_1.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("before_multiple_branches_1.png");
     pass_manager.register_pass<pass::ConcatElimination>();
     pass_manager.register_pass<pass::SelfConcatFusion>();
-    pass_manager.register_pass<pass::VisualizeTree>("after_multiple_branches_1.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("after_multiple_branches_1.png");
     pass_manager.run_passes(optimized_f);
 
     test::Uniform<float> rng(0.0f, 100.0f);
@@ -142,7 +142,7 @@ TEST(concat_fusion, multiple_branches_1)
 
 TEST(concat_fusion, multiple_branches_2)
 {
-    Shape shape_a{128, 2048, 1, 1};
+    Shape shape_a{16, 8, 1, 1};
     auto generate_func = [shape_a]() {
         auto A = make_shared<op::Parameter>(element::f32, shape_a);
         auto concat_3 = make_shared<op::Concat>(NodeVector{A, A, A, A, A, A, A}, 2);
@@ -159,10 +159,10 @@ TEST(concat_fusion, multiple_branches_2)
     auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before_multiple_branches_2.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("before_multiple_branches_2.png");
     pass_manager.register_pass<pass::ConcatElimination>();
     pass_manager.register_pass<pass::SelfConcatFusion>();
-    pass_manager.register_pass<pass::VisualizeTree>("after_multiple_branches_2.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("after_multiple_branches_2.png");
     pass_manager.run_passes(optimized_f);
 
     test::Uniform<float> rng(0.0f, 100.0f);
@@ -185,8 +185,8 @@ TEST(concat_fusion, multiple_branches_2)
 
 TEST(concat_fusion, non_fusable_self_concat)
 {
-    Shape shape_a{128, 1, 1, 1};
-    Shape shape_b{128, 1, 1};
+    Shape shape_a{32, 1, 1, 1};
+    Shape shape_b{32, 1, 1};
     auto generate_func = [shape_a, shape_b]() {
         auto A = make_shared<op::Parameter>(element::f32, shape_a);
         auto B = make_shared<op::Parameter>(element::f32, shape_b);
@@ -199,7 +199,7 @@ TEST(concat_fusion, non_fusable_self_concat)
 
         auto concat_5 = make_shared<op::Concat>(NodeVector{B, B, B, B, B, B, B}, 1);
         auto concat_6 = make_shared<op::Concat>(NodeVector{concat_5, concat_5, concat_5}, 2);
-        auto broadcast = make_shared<op::Broadcast>(concat_6, Shape{128, 8, 7, 3}, AxisSet{1});
+        auto broadcast = make_shared<op::Broadcast>(concat_6, Shape{32, 8, 7, 3}, AxisSet{1});
         auto add = make_shared<op::Add>(concat_4, broadcast);
         auto f_concat_1 = make_shared<Function>(NodeVector{add}, ParameterVector{A, B});
         return f_concat_1;
@@ -211,10 +211,10 @@ TEST(concat_fusion, non_fusable_self_concat)
     auto baseline_input_shape_2 = baseline_f->get_parameters().at(1)->get_shape();
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before_non_fusable_self_concat.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("before_non_fusable_self_concat.png");
     pass_manager.register_pass<pass::ConcatElimination>();
     pass_manager.register_pass<pass::SelfConcatFusion>();
-    pass_manager.register_pass<pass::VisualizeTree>("after_non_fusable_self_concat.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("after_non_fusable_self_concat.png");
     pass_manager.run_passes(optimized_f);
 
     test::Uniform<float> rng(0.0f, 100.0f);
@@ -266,10 +266,10 @@ TEST(concat_fusion, self_concat_with_fan_out)
     auto baseline_input_shape_2 = baseline_f->get_parameters().at(1)->get_shape();
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before_self_concat_with_fan_out.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("before_self_concat_with_fan_out.png");
     pass_manager.register_pass<pass::ConcatElimination>();
     pass_manager.register_pass<pass::SelfConcatFusion>();
-    pass_manager.register_pass<pass::VisualizeTree>("after_self_concat_with_fan_out.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("after_self_concat_with_fan_out.png");
     pass_manager.run_passes(optimized_f);
 
     test::Uniform<float> rng(0.0f, 100.0f);

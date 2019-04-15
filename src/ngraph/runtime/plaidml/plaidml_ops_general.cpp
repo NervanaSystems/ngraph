@@ -214,7 +214,7 @@ void ngraph::runtime::plaidml::ImplPad::Apply()
 
     // FIXME: Compatibility hack inserted by amprocte, now that nGraph's Pad op no longer supports
     // interior padding.
-    Shape padding_interior(op.get_padding_below().size(), 0);
+    Shape padding_interior(op().get_padding_below().size(), 0);
 
     auto dim_limit = op().get_shape().size();
 
