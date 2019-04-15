@@ -26,8 +26,13 @@ struct CPURuntimeContextCG
     std::unique_ptr<tbb::flow::graph> tbb_graph;
     std::unique_ptr<tbb::global_control> tbb_gcontrol;
 
-    CPURuntimeContextCG() { init_tbb(); }
-    ~CPURuntimeContextCG() { cleanup_tbb(); }
+    CPURuntimeContextCG() { init_tbb(); init_mkldnn_primitives();}
+    ~CPURuntimeContextCG() { cleanup_tbb(); cleanup_mkldnn_primitives();}
+
+    std::vector<mkldnn::primitive*> mkldnn_primitives;
+    std::vector<char*> mkldnn_workspaces;
+
+    mkldnn::engine global_cpu_engine = mkldnn::engine(mkldnn::engine::cpu, 0);
 
 private:
     inline void init_tbb()
@@ -59,6 +64,27 @@ private:
             }
         }
     }
+
+    void init_mkldnn_primitives();
+
+	inline void cleanup_mkldnn_primitives()
+	{
+		for (auto p : mkldnn_primitives)
+		{
+			delete p;
+		}
+#ifndef _WIN32
+		//To avoid memory leak in mkldnn, release any buffers that are not free'd yet.
+		//https://software.intel.com/en-us/mkl-linux-developer-guide-avoiding-memory-leaks-in-intel-mkl
+		//mkl_free_buffers() is not exposed at this point, hence using mkl_serv_free_buffers()
+		ngraph::runtime::cpu::mkldnn_utils::mkl_serv_free_buffers();
+#endif
+
+		for (auto w : mkldnn_workspaces)
+		{
+			free(w);
+		}
+	}
 };
 
 extern "C" CPURuntimeContextCG* init_cg_ctx()
@@ -69,5 +95,27 @@ extern "C" CPURuntimeContextCG* init_cg_ctx()
 extern "C" void destroy_cg_ctx(CPURuntimeContextCG* cg_ctx)
 {
     delete cg_ctx;
+}
+
+extern "C" void set_memory_ptr_cg(CPURuntimeContextCG* cg_ctx,
+                               size_t primitive_index,
+                               void* ptr)
+{
+    auto primitive = static_cast<mkldnn::memory*>(cg_ctx->mkldnn_primitives[primitive_index]);
+    primitive->set_data_handle(ptr);
+}
+
+extern "C" void mkldnn_invoke_primitive_cg(CPURuntimeContextCG* cg_ctx,
+                                        size_t primitive_index)
+{
+    mkldnn::stream s(mkldnn::stream::kind::eager);
+    try
+    {
+        s.submit({*cg_ctx->mkldnn_primitives[primitive_index]}).wait();
+    }
+    catch (const mkldnn::error& e)
+    {
+        throw std::runtime_error("Could not run mkldnn primitive " + e.message);
+    }
 }
 )"

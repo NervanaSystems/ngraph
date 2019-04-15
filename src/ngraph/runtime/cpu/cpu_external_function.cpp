@@ -148,6 +148,7 @@
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
 #include "ngraph/runtime/cpu/cpu_visualize_tree.hpp"
+#include "ngraph/runtime/cpu/mkldnn_emitter.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/batch_dot.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
@@ -468,7 +469,10 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
 
     // Build mkldnn primitives for codegen.
     pass_manager.register_pass<runtime::cpu::pass::MKLDNNPrimitiveBuildPass>(
-        *m_mkldnn_emitter, m_node_primitive_idx_map);
+        m_desc_filename,
+        *m_mkldnn_emitter,
+        m_node_primitive_idx_map,
+        m_node_primitive_string_deps_index_map);
 
     unordered_map<Node*, Node*> node_function_map;
     string common_function_string;
@@ -517,12 +521,16 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
     writer +=
         R"(
 #include <cmath>
+#include <fstream>
+#include <mkldnn.hpp>
 #include "ngraph/except.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_eigen_utils.hpp"
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
 #include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
+#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/reference/all.hpp"
 #include "ngraph/runtime/reference/and.hpp"
 #include "ngraph/runtime/reference/any.hpp"
@@ -672,6 +680,14 @@ using namespace ngraph::runtime;
 
     writer << common_function_string << "\n";
 
+    //initiate mkldnn_primitives for CPURuntimeContextCG
+    writer << "void inline CPURuntimeContextCG::init_mkldnn_primitives()\n";
+    writer.block_begin();
+    writer << "mkldnn_primitives = std::vector<mkldnn::primitive*>("
+           << to_string(m_mkldnn_emitter->get_mkldnn_primitives().size()) << ");\n";
+    writer.block_end();
+    writer << "\n";
+
     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
     {
         auto ordered_ops = function_ordered_ops.at(current_function);
@@ -726,6 +742,7 @@ using namespace ngraph::runtime;
         writer << "extern \"C\" void " << current_function->get_name() << func_params << "\n";
         writer << "{\n";
         writer.indent++;
+        writer << "std::ifstream desc_file (\"" << m_desc_filename << "\", std::ios::binary);\n";
 
         // Execution tracing support
         if (runtime::cpu::IsTracingEnabled() && current_function->get_name() == m_function_name)

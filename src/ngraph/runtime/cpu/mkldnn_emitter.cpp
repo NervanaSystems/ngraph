@@ -97,6 +97,12 @@ size_t MKLDNNEmitter::insert_workspace(std::unique_ptr<MKLDNNWorkspace>& workspa
     return (m_workspaces.size() - 1);
 }
 
+size_t MKLDNNEmitter::reserve_workspace()
+{
+    m_workspaces_size++;
+    return m_workspaces_size - 1;
+};
+
 const std::vector<size_t>& MKLDNNEmitter::get_primitive_deps(size_t index) const
 {
     return m_primitive_deps.at(index);

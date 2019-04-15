@@ -135,6 +135,7 @@ namespace ngraph
                 size_t insert_primitive(mkldnn::primitive* primitive);
                 size_t insert_workspace(std::unique_ptr<MKLDNNWorkspace>& workspace);
                 const std::vector<size_t>& get_primitive_deps(size_t index) const;
+                size_t reserve_workspace();
 
                 // TODO(jmenon): Get rid of TensorViewWrappers at some point
                 mkldnn::memory::desc build_memory_descriptor(const TensorViewWrapper& tvw,
@@ -1665,6 +1666,7 @@ namespace ngraph
                 std::unordered_map<size_t, std::vector<size_t>> m_primitive_deps;
                 std::vector<std::unique_ptr<MKLDNNWorkspace>> m_workspaces;
                 std::vector<char*> m_workspace_bufs;
+                size_t m_workspaces_size = 0;
             };
         }
     }

@@ -14,8 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <string>
+
 #include "cpu_mkldnn_primitive_build.hpp"
 
+#include "ngraph/code_writer.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
@@ -65,6 +68,41 @@ namespace ngraph
         {
             namespace pass
             {
+                // serialize memory descriptor and emit the code to deserialize memeory descriptors
+                static void
+                    serialize_and_deserialize_memory_descs(std::ofstream& desc_file,
+                                                           CodeWriter& writer,
+                                                           std::vector<mkldnn::memory::desc>& descs,
+                                                           std::vector<std::string>& desc_names)
+                {
+                    NGRAPH_ASSERT(descs.size() == desc_names.size());
+                    for (auto i = 0; i < descs.size(); i++)
+                    {
+                        desc_file.write(reinterpret_cast<char*>(&descs[i]),
+                                        sizeof(mkldnn::memory::desc));
+                        writer << "char " << desc_names[i] << "[sizeof(mkldnn::memory::desc)];\n";
+                        writer << "desc_file.read(" << desc_names[i]
+                               << ", sizeof(mkldnn::memory::desc));\n";
+                    }
+                }
+
+                // emit the code to build memory primitives
+                static void emit_memory_primitive_build(CodeWriter& writer,
+                                                        std::vector<std::string>& desc_names,
+                                                        std::vector<size_t>& deps,
+                                                        bool new_workspace = false)
+                {
+                    NGRAPH_ASSERT(desc_names.size() == new_workspace ? deps.size()
+                                                                     : deps.size() - 1);
+                    for (auto i = 0; i < desc_names.size(); i++)
+                    {
+                        writer << "cg_ctx->mkldnn_primitives[" << std::to_string(deps[i])
+                               << "] = new "
+                                  "mkldnn::memory({*reinterpret_cast<mkldnn::memory::desc*>("
+                               << desc_names[i] << "), cg_ctx->global_cpu_engine}, nullptr);\n";
+                    }
+                }
+
                 // The following functions build the MKLDNN primitive for each type of nGraph Node.
 
                 template <>
@@ -86,15 +124,277 @@ namespace ngraph
                 }
 
                 template <>
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(Add)
+                {
+                    auto input0_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto input1_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+
+                    // Add needs 4 primitives: input0, input1, result, and sum.
+                    index = mkldnn_emitter.reserve_primitive_space(4);
+                    deps = mkldnn_emitter.get_primitive_deps(index);
+
+                    CodeWriter writer;
+
+                    writer << "// read in memory descriptors\n";
+                    std::vector<mkldnn::memory::desc> descs = {
+                        input0_data_desc, input1_data_desc, result_desc};
+                    std::vector<std::string> desc_names = {
+                        "input0_data_desc", "input1_data_desc", "result_desc"};
+                    serialize_and_deserialize_memory_descs(desc_file, writer, descs, desc_names);
+
+                    writer << "\n// build sum primitive descriptor\n";
+                    writer << "std::vector<float> scale_vector(2, 1);\n";
+                    writer << "std::vector<mkldnn::memory::primitive_desc> inputs_pd;\n";
+                    writer << "inputs_pd.push_back(mkldnn::memory::primitive_desc(*reinterpret_"
+                              "cast<mkldnn::memory::desc*>(input0_data_desc), "
+                              "cg_ctx->global_cpu_engine));\n";
+                    writer << "inputs_pd.push_back(mkldnn::memory::primitive_desc(*reinterpret_"
+                              "cast<mkldnn::memory::desc*>(input1_data_desc), "
+                              "cg_ctx->global_cpu_engine));\n";
+
+                    // elementwise sum primitive descriptor
+                    writer << "mkldnn::sum::primitive_desc sum_pd = "
+                              "mkldnn::sum::primitive_desc(*reinterpret_cast<mkldnn::memory::desc*>"
+                              "(result_desc), scale_vector, inputs_pd);\n";
+
+                    writer << "\n// build sum primitive\n";
+                    writer << "std::vector<mkldnn::memory::primitive::at> inputs_primitive;\n";
+                    emit_memory_primitive_build(writer, desc_names, deps);
+                    writer << "inputs_primitive.push_back(*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[0]) << "]);\n";
+                    writer << "inputs_primitive.push_back(*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[1]) << "]);\n";
+
+                    // sum primitive
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = new mkldnn::sum(sum_pd, inputs_primitive, "
+                              "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[2]) << "]);\n";
+
+                    construct_string = writer.get_code();
+                }
+
+                template <typename OP>
+                void construct_primitive_build_string_rnn(
+                    ngraph::runtime::cpu::MKLDNNEmitter& mkldnn_emitter,
+                    ngraph::Node* node,
+                    std::string& construct_string,
+                    std::vector<size_t>& deps,
+                    size_t& index,
+                    std::ofstream& desc_file)
+                {
+                    const auto& out = node->get_outputs();
+                    const auto& args = node->get_inputs();
+                    auto rnn_node = static_cast<const OP*>(node);
+                    auto src_sequence_length_max =
+                        static_cast<unsigned long>(rnn_node->get_src_sequence_length());
+                    auto direction = static_cast<unsigned long>(rnn_node->get_direction());
+                    auto num_fused_layers =
+                        static_cast<unsigned long>(rnn_node->get_num_fused_layers());
+                    auto feature_size =
+                        static_cast<unsigned long>(rnn_node->get_src_iter_feature_size());
+                    auto batch = static_cast<unsigned long>(rnn_node->get_batch_size());
+                    auto rnn_cell_n_gates =
+                        static_cast<unsigned long>(rnn_node->get_gates_per_cell());
+                    auto rnn_cell_n_states =
+                        static_cast<unsigned long>(rnn_node->get_num_cell_states());
+
+                    auto get_mkldnn_rnn_cell_type = [&]() {
+                        switch (rnn_node->get_rnn_type())
+                        {
+                        case rnn_utils::rnntype::vanilla_rnn: return mkldnn::algorithm::vanilla_rnn;
+                        case rnn_utils::rnntype::vanilla_gru: return mkldnn::algorithm::vanilla_gru;
+                        case rnn_utils::rnntype::vanilla_lstm:
+                            return mkldnn::algorithm::vanilla_lstm;
+                        default: throw ngraph_error("unsupported mkldnn rnn algorithm");
+                        }
+                    };
+
+                    auto get_mkldnn_rnn_direction = [&]() {
+                        switch (direction)
+                        {
+                        case 1: return mkldnn::rnn_direction::unidirectional_left2right;
+                        case 2: return mkldnn::rnn_direction::bidirectional_concat;
+                        default: throw ngraph_error("unsupported mkldnn rnn direction");
+                        }
+                    };
+
+                    if (out[0].get_shape().size() == 2 &&
+                        (out[0].get_shape()[1] != direction * feature_size))
+                    {
+                        throw ngraph_error(
+                            "input slc{ht} feature size is not equal to output dlc{ht} feature "
+                            "size ");
+                    }
+
+                    if (out[1].get_shape().size() == 2 && (out[1].get_shape()[1] != feature_size) &&
+                        rnn_node->get_num_timesteps() != 1)
+                    {
+                        throw ngraph_error(
+                            "input sic{ht_1|ct_1} feature size is not equal to output "
+                            "dlc{ht_1|ct_1} "
+                            "feature size ");
+                    }
+
+                    Shape src_layer_tz{
+                        src_sequence_length_max,
+                        batch,
+                        static_cast<unsigned long>(rnn_node->get_src_layer_feature_size())};
+                    Shape src_iter_tz{
+                        num_fused_layers, direction, rnn_cell_n_states, batch, feature_size};
+                    Shape wei_layer_tz{
+                        num_fused_layers,
+                        direction,
+                        static_cast<unsigned long>(rnn_node->get_src_layer_feature_size()),
+                        rnn_cell_n_gates,
+                        feature_size};
+                    Shape wei_iter_tz{
+                        num_fused_layers, direction, feature_size, rnn_cell_n_gates, feature_size};
+                    Shape bias_tz{num_fused_layers, direction, rnn_cell_n_gates, feature_size};
+                    Shape dst_layer_tz{src_sequence_length_max, batch, direction * feature_size};
+                    Shape dst_iter_tz{
+                        num_fused_layers, direction, rnn_cell_n_states, batch, feature_size};
+
+                    // We create the memory descriptors used by the user
+                    auto src_layer_md = mkldnn_emitter.build_memory_descriptor(
+                        src_layer_tz, args[0].get_element_type(), mkldnn::memory::format::tnc);
+                    auto src_iter_md = mkldnn_emitter.build_memory_descriptor(
+                        src_iter_tz, args[1].get_element_type(), mkldnn::memory::format::ldsnc);
+                    auto wei_layer_md = mkldnn_emitter.build_memory_descriptor(
+                        wei_layer_tz, args[2].get_element_type(), mkldnn::memory::format::ldigo);
+                    auto wei_iter_md = mkldnn_emitter.build_memory_descriptor(
+                        wei_iter_tz, args[3].get_element_type(), mkldnn::memory::format::ldigo);
+                    auto bias_md = mkldnn_emitter.build_memory_descriptor(
+                        bias_tz, args[4].get_element_type(), mkldnn::memory::format::ldgo);
+                    auto dst_layer_md = mkldnn_emitter.build_memory_descriptor(
+                        dst_layer_tz, out[0].get_element_type(), mkldnn::memory::format::tnc);
+                    auto dst_iter_md = mkldnn_emitter.build_memory_descriptor(
+                        dst_iter_tz, out[1].get_element_type(), mkldnn::memory::format::ldsnc);
+
+                    // Lstm/Rnn needs 9 primitives: src_layer, src_iter, weights_layer, weights_iter, bias,
+                    // dst_layer, dst_iter, and rnn_forward.
+                    // It needs a new workspace.
+                    index = mkldnn_emitter.reserve_primitive_space(9, true /* new workspace */);
+                    deps = mkldnn_emitter.get_primitive_deps(index);
+
+                    CodeWriter writer;
+
+                    writer << "// read in memory descriptors\n";
+                    std::vector<mkldnn::memory::desc> descs = {src_layer_md,
+                                                               src_iter_md,
+                                                               wei_layer_md,
+                                                               wei_iter_md,
+                                                               bias_md,
+                                                               dst_layer_md,
+                                                               dst_iter_md};
+                    std::vector<std::string> desc_names = {"src_layer_desc",
+                                                           "src_iter_desc",
+                                                           "weights_layer_desc",
+                                                           "weights_iter_desc",
+                                                           "bias_desc",
+                                                           "dst_layer_desc",
+                                                           "dst_iter_desc"};
+                    serialize_and_deserialize_memory_descs(desc_file, writer, descs, desc_names);
+
+                    mkldnn::rnn_cell::desc rnn_cell_desc(get_mkldnn_rnn_cell_type());
+                    desc_file.write(reinterpret_cast<char*>(&rnn_cell_desc),
+                                    sizeof(mkldnn::rnn_cell::desc));
+                    writer << "char rnn_cell_desc[sizeof(mkldnn::rnn_cell::desc)];\n";
+                    writer << "desc_file.read(rnn_cell_desc, sizeof(mkldnn::rnn_cell::desc));\n";
+
+                    auto rnn_direction = get_mkldnn_rnn_direction();
+                    desc_file.write(reinterpret_cast<char*>(&rnn_direction),
+                                    sizeof(mkldnn::rnn_direction));
+                    writer << "char rnn_direction[sizeof(mkldnn::rnn_direction)];\n";
+                    writer << "desc_file.read(rnn_direction, sizeof(mkldnn::rnn_direction));\n";
+
+                    writer << "\n// build lstm/rnn primitive descriptor\n";
+                    writer << "auto rnn_desc = "
+                              "mkldnn::rnn_forward::desc(mkldnn::prop_kind::forward_training, "
+                              "*reinterpret_cast<mkldnn::rnn_cell::desc*>(rnn_cell_desc), "
+                              "*reinterpret_cast<mkldnn::rnn_direction*>(rnn_direction), "
+                              "*reinterpret_cast<mkldnn::memory::desc*>(src_layer_desc), "
+                              "*reinterpret_cast<mkldnn::memory::desc*>(src_iter_desc), "
+                              "*reinterpret_cast<mkldnn::memory::desc*>(weights_layer_desc),"
+                              "*reinterpret_cast<mkldnn::memory::desc*>(weights_iter_desc), "
+                              "*reinterpret_cast<mkldnn::memory::desc*>(bias_desc), "
+                              "*reinterpret_cast<mkldnn::memory::desc*>(dst_layer_desc), "
+                              "*reinterpret_cast<mkldnn::memory::desc*>(dst_iter_desc));\n";
+                    writer << "auto rnn_prim_desc = mkldnn::rnn_forward::primitive_desc(rnn_desc, "
+                              "cg_ctx->global_cpu_engine);\n";
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(deps[7])
+                           << "] = new "
+                              "mkldnn::memory({rnn_prim_desc.workspace_primitive_desc().desc(), "
+                              "cg_ctx->global_cpu_engine}, nullptr);\n";
+                    writer << "auto workspace = "
+                              "(char*)malloc(rnn_prim_desc.workspace_primitive_desc().get_size());"
+                              "\n";
+                    writer << "if (!workspace)\n";
+                    writer.block_begin();
+                    writer << "throw std::bad_alloc();\n";
+                    writer.block_end();
+                    writer << "cg_ctx->mkldnn_workspaces.push_back(workspace);\n";
+
+                    deps[8] = mkldnn_emitter.reserve_workspace();
+
+                    writer << "\n// build lstm/rnn primitive\n";
+                    emit_memory_primitive_build(writer, desc_names, deps, true);
+
+                    // lstm/rnn primitive
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = new mkldnn::rnn_forward(rnn_prim_desc, "
+                              "mkldnn::primitive::at(*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[0])
+                           << "]), "
+                              "mkldnn::primitive::at(*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[1])
+                           << "]), "
+                              "mkldnn::primitive::at(*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[2])
+                           << "]), "
+                              "mkldnn::primitive::at(*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[3])
+                           << "]), "
+                              "mkldnn::primitive::at(*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[4])
+                           << "]), "
+                              "static_cast<mkldnn::memory>(*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[5])
+                           << "]), "
+                              "static_cast<mkldnn::memory>(*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[6])
+                           << "]), "
+                              "static_cast<mkldnn::memory>(*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[7]) << "]));\n";
+
+                    construct_string = writer.get_code();
+                }
+
+                template <>
                 size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Lstm)
                 {
                     return mkldnn_emitter.build_rnn<Lstm>(node);
                 }
 
                 template <>
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(Lstm)
+                {
+                    construct_primitive_build_string_rnn<Lstm>(
+                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
+                }
+
+                template <>
                 size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Rnn)
                 {
                     return mkldnn_emitter.build_rnn<Rnn>(node);
+                }
+
+                template <>
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(Rnn)
+                {
+                    construct_primitive_build_string_rnn<Rnn>(
+                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
                 }
 
                 template <>
@@ -779,8 +1079,15 @@ static const PrimitiveBuildOpMap prim_build_dispatcher{
     {TI(GetOutputElement), &MKLDNNPrimitiveBuildPass::build_primitive<GetOutputElement>},
 };
 
+static const PrimitiveBuildStringConstructOpMap prim_build_string_construct_dispatcher{
+    {TI(Add), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Add>},
+    {TI(Lstm), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Lstm>},
+    {TI(Rnn), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Rnn>},
+};
+
 bool MKLDNNPrimitiveBuildPass::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)
 {
+#if 0
     for (const auto& shp_node : nodes)
     {
         Node* node = shp_node.get();
@@ -793,6 +1100,27 @@ bool MKLDNNPrimitiveBuildPass::run_on_call_graph(const std::list<std::shared_ptr
 
             size_t primitive_idx = handler->second(m_mkldnn_emitter, node);
             m_node_primitive_idx_map[node] = primitive_idx;
+        }
+    }
+#endif
+
+    std::ofstream desc_file = std::ofstream(m_desc_filename, std::ios::out | std::ios::binary);
+    for (const auto& shp_node : nodes)
+    {
+        Node* node = shp_node.get();
+
+        if (mkldnn_utils::use_mkldnn_kernel(node))
+        {
+            auto handler = prim_build_string_construct_dispatcher.find(TI(*node));
+            NGRAPH_ASSERT(handler != prim_build_string_construct_dispatcher.end())
+                << "Unsupported node '" << node->description() << "' in MKLDNNPrimitiveBuildPass";
+
+            std::string construct_string;
+            std::vector<size_t> deps;
+            size_t index;
+            handler->second(m_mkldnn_emitter, node, construct_string, deps, index, desc_file);
+            m_node_primitive_string_deps_index_map[node] =
+                std::tuple<std::string, std::vector<size_t>, size_t>(construct_string, deps, index);
         }
     }
 
