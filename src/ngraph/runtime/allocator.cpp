@@ -20,7 +20,7 @@ ngraph::runtime::Allocator::~Allocator()
 {
 }
 
-class DefaultNgraphAllocator : public ngraph::runtime::Allocator
+class ngraph::runtime::DefaultAllocator : public ngraph::runtime::Allocator
 {
 public:
     void* Malloc(size_t size, size_t alignment)
@@ -47,6 +47,7 @@ public:
 
 ngraph::runtime::Allocator* ngraph::runtime::get_ngraph_allocator()
 {
-    static std::unique_ptr<DefaultNgraphAllocator> allocator(new DefaultNgraphAllocator());
+    static std::unique_ptr<ngraph::runtime::DefaultAllocator> allocator(
+        new ngraph::runtime::DefaultAllocator());
     return allocator.get();
 }
