@@ -225,7 +225,18 @@ void Function::set_placement(size_t placement)
     m_placement = placement;
 }
 
+// TODO(pthoreho) this will be expensive, since we will be traversing all the nodes in
+// the graph, figure out if their is a way to cache the result and invalidate/update
+// the result if the function is modified
 bool Function::is_dynamic()
 {
-    return ngraph::is_function_dynamic(this);
+    auto list_of_nodes = this->get_ops();
+    for (auto& node : list_of_nodes)
+    {
+        if (node->get_output_partial_shape(0).is_dynamic())
+        {
+            return true;
+        }
+    }
+    return false;
 }
