@@ -1148,29 +1148,76 @@ shared_ptr<Function> gen_deconv(const bool add_goe)
                                  ParameterVector{filters, out_delta, gamma, beta, mean, var});
 }
 
-// Note: enable deconv tests, when the deconv perf is better than convbackpropdata
-TEST(cpu_fusion, DISABLED_fuse_deconv)
+/*void enable_deconv()
 {
-    auto func_fuse1 = gen_deconv(false);
-    auto func_fuse2 = gen_deconv(true);
-
+    // Force deconv fusion, set NGRAPH_DECONV_FUSE=1
+    // This has no effect on other backends
+    bool use_deconv_fuse = (getenv("NGRAPH_DECONV_FUSE") != nullptr);
+    if (!use_deconv_fuse)
     {
-        pass::Manager pass_manager;
-        pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-        pass_manager.run_passes(func_fuse1);
-        ASSERT_EQ(count_ops_of_type<op::DeconvolutionBias>(func_fuse1), 1);
-    }
-
-    {
-        pass::Manager pass_manager;
-        pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-        pass_manager.run_passes(func_fuse2);
-        ASSERT_EQ(count_ops_of_type<op::DeconvolutionBias>(func_fuse2), 0);
-        ASSERT_EQ(count_ops_of_type<op::Relu>(func_fuse2), 0);
+        set_environment("NGRAPH_DECONV_FUSE", "1", 1);
     }
 }
 
-TEST(cpu_fusion, DISABLED_deconv_vals)
+void disable_deconv()
+{
+    if (!use_deconv_fuse)
+    {
+        unset_environment("NGRAPH_DECONV_FUSE");
+    }
+}*/
+
+// Note: enable deconv tests, when the deconv perf is better than convbackpropdata
+TEST(cpu_fusion, fuse_deconv)
+{
+    bool use_deconv_fuse = (getenv("NGRAPH_DECONV_FUSE") != nullptr);
+    if (!use_deconv_fuse)
+    {
+        set_environment("NGRAPH_DECONV_FUSE", "1", 1);
+    }
+
+    auto fuse_func = gen_deconv(false);
+    auto nofuse_func = gen_deconv(true);
+
+    {
+        pass::Manager pass_manager;
+        pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+        pass_manager.run_passes(fuse_func);
+        ASSERT_EQ(count_ops_of_type<op::DeconvolutionBias>(fuse_func), 1);
+    }
+
+    {
+        pass::Manager pass_manager;
+        pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+        pass_manager.run_passes(nofuse_func);
+        ASSERT_EQ(count_ops_of_type<op::DeconvolutionBias>(nofuse_func), 0);
+        ASSERT_EQ(count_ops_of_type<op::Relu>(nofuse_func), 0);
+    }
+
+    // Test values
+    {
+        test::Uniform<float> rng(1.0f, 100.0f);
+        vector<vector<float>> args;
+        for (shared_ptr<op::Parameter> param : fuse_func->get_parameters())
+        {
+            auto name = param->get_name();
+            vector<float> tensor_val(shape_size(param->get_shape()));
+            rng.initialize(tensor_val);
+            args.push_back(tensor_val);
+        }
+        auto nofuse_results = execute(nofuse_func, args, "CPU");
+        auto fuse_results = execute(fuse_func, args, "CPU");
+
+        EXPECT_TRUE(test::all_close(fuse_results.at(0), nofuse_results.at(0)));
+    }
+
+    if (!use_deconv_fuse)
+    {
+        unset_environment("NGRAPH_DECONV_FUSE");
+    }
+}
+
+/*TEST(cpu_fusion, DISABLED_deconv_vals)
 {
     auto fuse_func = gen_deconv(false);
 
@@ -1189,7 +1236,7 @@ TEST(cpu_fusion, DISABLED_deconv_vals)
     auto fuse_results = execute(fuse_func, args, "CPU");
 
     EXPECT_TRUE(test::all_close(fuse_results.at(0), nofuse_results.at(0)));
-}
+}*/
 
 shared_ptr<Function> gen_groupconv_batchnorm(const bool add_goe,
                                              const bool with_relu,

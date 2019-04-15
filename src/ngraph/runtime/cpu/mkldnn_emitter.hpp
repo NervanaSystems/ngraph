@@ -1592,6 +1592,9 @@ namespace ngraph
                     {
                         weights_desc.data.format = mkldnn_oidhw;
                     }
+                    // MKLDNN deconvolution primivtive needs weights format to be any
+                    // with any other format it picks reference kernel which is very slow
+                    // TODO: check if there's change in MKLDNN primitive format req.
                     weights_desc.data.format = mkldnn_any;
 
                     auto delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
