@@ -125,10 +125,5 @@ namespace ngraph
                 new_shape,
                 calculate_broadcast_axes(new_shape, node->get_shape(), start_match_axis));
         }
-
-        inline std::size_t get_default_axis(std::vector<std::shared_ptr<ngraph::Node>> inputs)
-        {
-            return inputs.at(0)->get_shape().size() - inputs.at(1)->get_shape().size();
-        }
     } // namespace  onnx_import
 } // namespace  ngraph
