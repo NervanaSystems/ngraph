@@ -51,3 +51,5 @@ topk_3d_single_output
 topk_5d_max_partial
 topk_int64
 floor_int32
+convert_int32_bool
+convert_float32_bool
