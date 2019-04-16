@@ -1,7 +1,5 @@
 # need to check
 computation_reuse
-# cuda does not support throw
-divide_by_zero_int32
 # int64 is not supprted by cuDNN
 dot_matrix_vector_int64
 generate_mask
@@ -16,6 +14,7 @@ backwards_avgpool_n2_c2_hw4x4
 embedding_lookup_4x5_reverse
 embedding_lookup_10x1_arbitrary
 embedding_lookup_10x1_arbitrary_index_type_int
+embedding_lookup_10x1_arbitrary_index_type_int64
 batch_norm_inference_0eps_f64
 batch_norm_inference_0eps_f32
 batch_norm_inference_f64
@@ -92,6 +91,48 @@ all_2x2x3_eliminate_dims_0_2
 all_2x2x3_eliminate_dims_1_2
 all_2x2x3_eliminate_dims_0_1_2
 
-# GPU backend uses floats to implement these ops for int32 
+# GPU backend uses floats to implement these ops for int32
 floor_int32
 divide_int32
+one_hot_scalar_oob_in_3
+
+# Unsupported extra pading modes
+pad_edge_1d
+pad_edge_1d_top_neg
+pad_edge_1d_top_neg_bigger_than_tensor
+pad_edge_1d_bottom_neg
+pad_edge_1d_bottom_neg_bigger_than_tensor
+pad_edge_2d
+pad_edge_2d_with_neg
+pad_reflect_1d
+pad_reflect_1d_top_neg
+pad_reflect_1d_top_neg_bigger_than_tensor
+pad_reflect_1d_bottom_neg
+pad_reflect_1d_bottom_neg_bigger_than_tensor
+pad_reflect_1d_multi_reflect
+pad_reflect_2d
+pad_reflect_2d_with_neg
+
+# Quantized operators are not supported on gpu backend
+model_dequantize_linear
+model_dequantize_linear_scalar_zero_scale_uint8
+model_dequantize_linear_scalar_zero_scale_int8
+model_dequantize_linear_1d_zero_scale_uint8
+model_dequantize_linear_1d_zero_scale_int8
+model_dequantize_linear_1d_zero_scale_int8_4d
+model_dequantize_linear_1d_zero_scale_uint8_negative_axis
+model_quantize_linear
+model_quantize_linear_zero_point
+quantize_linear_axis_zero
+model_quantize_linear_axis_negative
+model_quant_conv_linear
+model_quant_conv_linear_2d
+model_quant_conv_linear_3d
+
+# This should be implemented
+create_tensor_2_input
+create_tensor_2_output
+
+# Not implemented
+erf
+zero_sized_erf

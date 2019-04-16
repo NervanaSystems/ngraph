@@ -35,6 +35,9 @@
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
+#include "ngraph/op/experimental/batch_mat_mul.hpp"
+#include "ngraph/op/experimental/dyn_broadcast.hpp"
+#include "ngraph/op/experimental/dyn_pad.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -72,6 +75,7 @@
 #include "ngraph/runtime/reference/asin.hpp"
 #include "ngraph/runtime/reference/atan.hpp"
 #include "ngraph/runtime/reference/avg_pool.hpp"
+#include "ngraph/runtime/reference/batch_mat_mul.hpp"
 #include "ngraph/runtime/reference/batch_norm.hpp"
 #include "ngraph/runtime/reference/broadcast.hpp"
 #include "ngraph/runtime/reference/ceiling.hpp"
@@ -87,6 +91,7 @@
 #include "ngraph/runtime/reference/dot.hpp"
 #include "ngraph/runtime/reference/embedding_lookup.hpp"
 #include "ngraph/runtime/reference/equal.hpp"
+#include "ngraph/runtime/reference/erf.hpp"
 #include "ngraph/runtime/reference/exp.hpp"
 #include "ngraph/runtime/reference/floor.hpp"
 #include "ngraph/runtime/reference/generate_mask.hpp"
@@ -136,6 +141,7 @@
 
 #ifdef NGRAPH_DISTRIBUTED_ENABLE
 #include "ngraph/runtime/reference/allreduce.hpp"
+#include "ngraph/runtime/reference/broadcast_distributed.hpp"
 #endif
 
 namespace ngraph
@@ -146,9 +152,9 @@ namespace ngraph
         {
             class INTBackend;
             class INTExecutable;
-        }
-    }
-}
+        } // namespace interpreter
+    }     // namespace runtime
+} // namespace ngraph
 
 class ngraph::runtime::interpreter::INTExecutable : public Executable
 {
@@ -364,6 +370,17 @@ private:
             std::memcpy(out[0]->get_data_ptr<T>(), args[n]->get_data_ptr<T>(), num_bytes);
             break;
         }
+        case OP_TYPEID::BatchMatMul:
+        {
+            reference::batch_mat_mul(args[0]->get_data_ptr<const T>(),
+                                     args[1]->get_data_ptr<const T>(),
+                                     out[0]->get_data_ptr<T>(),
+                                     node.get_input_shape(0),
+                                     node.get_input_shape(1),
+                                     node.get_output_shape(0));
+            break;
+        }
+
         case OP_TYPEID::BatchNormTraining:
         {
             const ngraph::op::BatchNormTraining* bn =
@@ -434,6 +451,32 @@ private:
                                     in_shape,
                                     out_shape,
                                     broadcast_axes);
+            break;
+        }
+        case OP_TYPEID::BroadcastDistributed: {
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
+            Distributed dist;
+            int Rank_ID;
+            Rank_ID = dist.get_rank();
+            if (Rank_ID == 0)
+            {
+                reference::broadcastdistributed<T>(
+                    args[0]->get_data_ptr<T>(),
+                    node.get_input_element_type(0),
+                    static_cast<int>(shape_size(node.get_input_shape(0))));
+                auto memSize = static_cast<int>(shape_size(node.get_input_shape(0))) *
+                               sizeof(node.get_input_element_type(0));
+                memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), memSize);
+            }
+            else
+            {
+                reference::broadcastdistributed<T>(
+                    out[0]->get_data_ptr<T>(),
+                    node.get_input_element_type(0),
+                    static_cast<int>(shape_size(node.get_input_shape(0))));
+            }
+            break;
+#endif
             break;
         }
         case OP_TYPEID::BroadcastLike: break;
@@ -551,38 +594,26 @@ private:
                                       c->get_window_dilation_strides(),
                                       c->get_padding_below(),
                                       c->get_padding_above(),
-                                      c->get_data_dilation_strides(),
-                                      0,
-                                      1,
-                                      1,
-                                      0,
-                                      0,
-                                      1,
-                                      false);
+                                      c->get_data_dilation_strides());
+
             break;
         }
         case OP_TYPEID::ConvolutionBackpropFilters:
         {
             const op::ConvolutionBackpropFilters* c =
                 static_cast<const op::ConvolutionBackpropFilters*>(&node);
-            reference::convolution<T>(args[0]->get_data_ptr<const T>(),
-                                      args[1]->get_data_ptr<const T>(),
-                                      out[0]->get_data_ptr<T>(),
-                                      node.get_input_shape(0),
-                                      node.get_input_shape(1),
-                                      node.get_output_shape(0),
-                                      c->get_window_movement_strides_backward(),
-                                      c->get_window_dilation_strides_backward(),
-                                      c->get_padding_below_backward(),
-                                      c->get_padding_above_backward(),
-                                      c->get_data_dilation_strides_backward(),
-                                      1,
-                                      0,
-                                      0,
-                                      1,
-                                      1,
-                                      0,
-                                      false);
+            reference::convolution_backprop_filter<T>(
+                args[0]->get_data_ptr<const T>(), // input
+                args[1]->get_data_ptr<const T>(), // delta_convolution_output
+                out[0]->get_data_ptr<T>(),        // delta_filter
+                c->get_input_shape(0),            // input_shape
+                c->get_input_shape(1),            // convolution_output_shape
+                c->get_filters_shape(),           // filter_shape
+                c->get_window_dilation_strides_forward(),
+                c->get_window_movement_strides_forward(),
+                c->get_padding_below_forward(),
+                c->compute_backward_in_pad_above(),
+                c->get_data_dilation_strides_forward());
             break;
         }
         case OP_TYPEID::ConvolutionBackpropData:
@@ -590,24 +621,17 @@ private:
             // Note that args[1] and args[0] are switched here from the usual order.
             const op::ConvolutionBackpropData* c =
                 static_cast<const op::ConvolutionBackpropData*>(&node);
-            reference::convolution<T>(args[1]->get_data_ptr<const T>(),
-                                      args[0]->get_data_ptr<const T>(),
-                                      out[0]->get_data_ptr<T>(),
-                                      node.get_input_shape(1),
-                                      node.get_input_shape(0),
-                                      node.get_output_shape(0),
-                                      c->get_window_movement_strides_backward(),
-                                      c->get_window_dilation_strides_backward(),
-                                      c->get_padding_below_backward(),
-                                      c->get_padding_above_backward(),
-                                      c->get_data_dilation_strides_backward(),
-                                      0,
-                                      1,
-                                      0,
-                                      1,
-                                      0,
-                                      1,
-                                      true);
+            reference::convolution_backprop_in<T>(args[1]->get_data_ptr<const T>(),
+                                                  args[0]->get_data_ptr<const T>(),
+                                                  out[0]->get_data_ptr<T>(),
+                                                  c->get_input_shape(1),
+                                                  c->get_input_shape(0),
+                                                  c->get_data_batch_shape(),
+                                                  c->get_data_dilation_strides_forward(),
+                                                  c->get_window_dilation_strides_forward(),
+                                                  c->compute_backward_delta_out_pad_below(),
+                                                  c->compute_backward_delta_out_pad_above(),
+                                                  c->get_window_movement_strides_forward());
             break;
         }
         case OP_TYPEID::Cos:
@@ -680,6 +704,16 @@ private:
                            dot->get_reduction_axes_count());
             break;
         }
+        case OP_TYPEID::DynReshape:
+        {
+            throw unsupported_op("Unsupported op '" + node.description() + "'");
+            break;
+        }
+        case OP_TYPEID::DynSlice:
+        {
+            throw unsupported_op("Unsupported op '" + node.description() + "'");
+            break;
+        }
         case OP_TYPEID::EmbeddingLookup:
         {
             const op::EmbeddingLookup* embed = static_cast<const op::EmbeddingLookup*>(&node);
@@ -732,6 +766,13 @@ private:
                                 args[1]->get_data_ptr<const T>(),
                                 out[0]->get_data_ptr<char>(),
                                 element_count);
+            break;
+        }
+        case OP_TYPEID::Erf:
+        {
+            size_t element_count = shape_size(node.get_output_shape(0));
+            reference::erf<T>(
+                args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::Exp:
@@ -958,11 +999,11 @@ private:
             reference::pad(args[0]->get_data_ptr<const T>(),
                            args[1]->get_data_ptr<const T>(),
                            out[0]->get_data_ptr<T>(),
-                           node.get_inputs().at(0).get_shape(),
-                           node.get_output_shape(0),
+                           node.input(0).get_shape(),
+                           node.output(0).get_shape(),
                            pad->get_padding_below(),
                            pad->get_padding_above(),
-                           pad->get_padding_interior());
+                           pad->get_pad_mode());
             break;
         }
         case OP_TYPEID::Power:
@@ -1038,6 +1079,8 @@ private:
         case OP_TYPEID::QuantizedConvolutionRelu:
         case OP_TYPEID::QuantizedConvolution:
         case OP_TYPEID::QuantizedMaxPool:
+        case OP_TYPEID::QuantizedDotBias:
+        case OP_TYPEID::QuantizedDot:
         {
             throw unsupported_op("Unsupported op '" + node.description() +
                                  "' in Interpreter back end.");
@@ -1264,6 +1307,9 @@ private:
             }
             break;
         }
+        case OP_TYPEID::DynBroadcast:
+        case OP_TYPEID::Transpose:
+        case OP_TYPEID::DynPad:
         default: throw unsupported_op("Unsupported op '" + node.description() + "'");
 #pragma GCC diagnostic pop
         }

@@ -36,24 +36,28 @@ op::Select::Select(const shared_ptr<Node>& arg0,
 
 void op::Select::validate_and_infer_types()
 {
-    NODE_VALIDATION_ASSERT(this,
-                           get_input_element_type(0).is_dynamic() ||
-                               get_input_element_type(0) == element::boolean)
-        << "Argument 0 does not have boolean element type (element type: "
-        << get_input_element_type(0) << ").";
+    NODE_VALIDATION_CHECK(this,
+                          get_input_element_type(0).is_dynamic() ||
+                              get_input_element_type(0) == element::boolean,
+                          "Argument 0 does not have boolean element type (element type: ",
+                          get_input_element_type(0),
+                          ").");
 
     PartialShape result_shape = get_input_partial_shape(0);
 
-    NODE_VALIDATION_ASSERT(this, PartialShape::merge_into(result_shape, get_input_partial_shape(1)))
-        << "Argument shapes are inconsistent.";
-    NODE_VALIDATION_ASSERT(this, PartialShape::merge_into(result_shape, get_input_partial_shape(2)))
-        << "Argument shapes are inconsistent.";
+    NODE_VALIDATION_CHECK(this,
+                          PartialShape::merge_into(result_shape, get_input_partial_shape(1)),
+                          "Argument shapes are inconsistent.");
+    NODE_VALIDATION_CHECK(this,
+                          PartialShape::merge_into(result_shape, get_input_partial_shape(2)),
+                          "Argument shapes are inconsistent.");
 
     element::Type result_et;
 
-    NODE_VALIDATION_ASSERT(
-        this, element::Type::merge(result_et, get_input_element_type(1), get_input_element_type(2)))
-        << "Argument 1 and 2 element types are inconsistent.";
+    NODE_VALIDATION_CHECK(
+        this,
+        element::Type::merge(result_et, get_input_element_type(1), get_input_element_type(2)),
+        "Argument 1 and 2 element types are inconsistent.");
 
     set_output_type(0, result_et, result_shape);
 }
@@ -68,9 +72,9 @@ void op::Select::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVecto
 {
     auto delta = deltas.at(0);
 
-    auto p = get_inputs().at(0).get_output().get_node();
-    auto x = get_inputs().at(1).get_output().get_node();
-    auto y = get_inputs().at(2).get_output().get_node();
+    auto p = get_argument(0);
+    auto x = get_argument(1);
+    auto y = get_argument(2);
 
     auto p_as_x_type = make_shared<op::Convert>(p, x->get_element_type());
     auto not_p_as_y_type = make_shared<op::Convert>(make_shared<op::Not>(p), y->get_element_type());

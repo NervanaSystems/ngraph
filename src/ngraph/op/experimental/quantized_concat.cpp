@@ -14,7 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cassert>
 #include <memory>
 
 #include "ngraph/op/concat.hpp"
@@ -33,35 +32,44 @@ op::QuantizedConcat::QuantizedConcat(const NodeVector& args, size_t concatenatio
 
 void op::QuantizedConcat::validate_and_infer_types()
 {
-    NODE_VALIDATION_ASSERT(this, m_inputs.size() >= 1) << "At least one argument required.";
+    NODE_VALIDATION_CHECK(this, get_input_size() >= 1, "At least one argument required.");
 
     PartialShape inputs_shape_scheme{PartialShape::dynamic()};
     element::Type inputs_et{element::dynamic};
     Dimension concatenation_axis_output_dim{0};
 
-    for (auto i = 0; i < get_inputs().size(); i++)
+    for (auto i = 0; i < get_input_size(); i++)
     {
         PartialShape this_input_shape = get_input_partial_shape(i);
         Dimension this_input_rank = this_input_shape.rank();
         if (this_input_rank.is_static())
         {
-            NODE_VALIDATION_ASSERT(this, m_concatenation_axis < size_t(this_input_rank))
-                << "QuantizedConcatenation axis (" << m_concatenation_axis
-                << ") is out of bounds for "
-                << "argument " << i << ", which has shape " << this_input_shape << ".";
+            NODE_VALIDATION_CHECK(this,
+                                  m_concatenation_axis < size_t(this_input_rank),
+                                  "QuantizedConcatenation axis (",
+                                  m_concatenation_axis,
+                                  ") is out of bounds for ",
+                                  "argument ",
+                                  i,
+                                  ", which has shape ",
+                                  this_input_shape,
+                                  ".");
 
             concatenation_axis_output_dim += this_input_shape[m_concatenation_axis];
             this_input_shape[m_concatenation_axis] = Dimension::dynamic();
 
-            NODE_VALIDATION_ASSERT(this,
-                                   PartialShape::merge_into(inputs_shape_scheme, this_input_shape))
-                << "Argument shapes are inconsistent; they must have the same rank, and must have "
-                << "equal dimension everywhere except on the concatenation axis (axis "
-                << m_concatenation_axis << ").";
+            NODE_VALIDATION_CHECK(
+                this,
+                PartialShape::merge_into(inputs_shape_scheme, this_input_shape),
+                "Argument shapes are inconsistent; they must have the same rank, and must have ",
+                "equal dimension everywhere except on the concatenation axis (axis ",
+                m_concatenation_axis,
+                ").");
 
-            NODE_VALIDATION_ASSERT(
-                this, element::Type::merge(inputs_et, inputs_et, get_input_element_type(i)))
-                << "Argument element types are inconsistent.";
+            NODE_VALIDATION_CHECK(
+                this,
+                element::Type::merge(inputs_et, inputs_et, get_input_element_type(i)),
+                "Argument element types are inconsistent.");
         }
         else
         {

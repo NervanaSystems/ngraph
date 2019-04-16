@@ -31,7 +31,9 @@ add_library(codegen SHARED ${SRC})
 # LLVM binary builds are typically built without RTTI
 # The built-in headers are in a version-specific directory
 # This must be kept in sync with the LLVM + Clang version in use
-set_source_files_properties(compiler.cpp PROPERTIES COMPILE_FLAGS "-fno-rtti")
+if(NOT WIN32)
+   set_source_files_properties(compiler.cpp PROPERTIES COMPILE_FLAGS "-fno-rtti")
+endif()
 
 get_target_property(LLVM_INCLUDE_DIR libllvm INTERFACE_INCLUDE_DIRECTORIES)
 
@@ -54,7 +56,10 @@ if(NGRAPH_DISTRIBUTED_ENABLE)
         list(APPEND HEADER_SEARCH_DEFINES MLSL_HEADER_PATH="${MLSL_INCLUDE_DIR}")
     elseif(NGRAPH_DISTRIBUTED_OMPI_ENABLE)
         find_package(MPI REQUIRED)
-        add_definitions(-DMPI_HEADER_PATH="${MPI_PATH}")
+        # MPI_C_INCLUDE_PATH might have a list of directories separated by a semicolon
+        # Escape the semicolon to prevent cmake from interpreting the string as a list
+        string(REPLACE ";" "\\\;" MPI_C_INCLUDE_PATH_ESCAPED "${MPI_C_INCLUDE_PATH}")
+        list(APPEND HEADER_SEARCH_DEFINES MPI_HEADER_PATH="${MPI_C_INCLUDE_PATH_ESCAPED}")
     else()
         message(FATAL_ERROR "Distributed Library not supported/mentioned")
     endif()
@@ -68,7 +73,8 @@ if(NGRAPH_GPU_ENABLE)
 endif()
 
 if(NGRAPH_TBB_ENABLE)
-    list(APPEND HEADER_SEARCH_DEFINES TBB_HEADERS_PATH="${TBB_ROOT}/include")
+    get_target_property(TBB_INCLUDE_DIR libtbb INTERFACE_INCLUDE_DIRECTORIES)
+    list(APPEND HEADER_SEARCH_DEFINES TBB_HEADERS_PATH="${TBB_INCLUDE_DIR}")
 endif()
 
 set_source_files_properties(compiler.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES}")
@@ -80,7 +86,7 @@ add_custom_target(header_resource
     BYPRODUCTS
 )
 if (NGRAPH_CPU_ENABLE)
-    add_dependencies(header_resource ext_eigen ext_mkldnn)
+    add_dependencies(header_resource ext_eigen libmkldnn)
 endif()
 
 if(NGRAPH_LIB_VERSIONING_ENABLE)

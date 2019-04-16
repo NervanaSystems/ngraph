@@ -65,15 +65,20 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/equal.hpp"
+#include "ngraph/op/erf.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/batch_mat_mul.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
+#include "ngraph/op/experimental/quantized_dot.hpp"
+#include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/floor.hpp"
+#include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
@@ -122,6 +127,7 @@
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/cse.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
+#include "ngraph/pass/fused_op_decomposition.hpp"
 #include "ngraph/pass/get_output_element_elimination.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/liveness.hpp"
@@ -145,11 +151,10 @@
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
 #include "ngraph/runtime/cpu/cpu_visualize_tree.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
-#include "ngraph/runtime/cpu/op/batch_dot.hpp"
+#include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
-#include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
@@ -171,6 +176,7 @@
 #include "ngraph/runtime/cpu/pass/cpu_mat_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_memory_assignment.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_memory_optimization.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_mkldnn_primitive_build.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_workspace_insertion.hpp"
@@ -178,6 +184,7 @@
 
 #ifdef NGRAPH_DISTRIBUTED_ENABLE
 #include "ngraph/op/allreduce.hpp"
+#include "ngraph/op/broadcast_distributed.hpp"
 #endif
 
 using namespace std;
@@ -219,7 +226,8 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     , m_use_tbb(std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
 #if !defined(NGRAPH_DEX_ONLY)
     , m_is_compiled(false)
-    , m_direct_execution(!std::getenv("NGRAPH_CODEGEN"))
+    , m_direct_execution((std::getenv("NGRAPH_CODEGEN") == nullptr) ||
+                         (std::string(std::getenv("NGRAPH_CODEGEN")) == "0"))
 #else
     , m_direct_execution(true)
 #endif
@@ -287,6 +295,8 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Add), &runtime::cpu::CPU_Emitter::emit<op::Add>},
 #ifdef NGRAPH_DISTRIBUTED_ENABLE
     {TI(ngraph::op::AllReduce), &runtime::cpu::CPU_Emitter::emit<op::AllReduce>},
+    {TI(ngraph::op::BroadcastDistributed),
+     &runtime::cpu::CPU_Emitter::emit<op::BroadcastDistributed>},
 #endif
     {TI(ngraph::op::MatmulBias), &runtime::cpu::CPU_Emitter::emit<op::MatmulBias>},
     {TI(ngraph::op::Dot), &runtime::cpu::CPU_Emitter::emit<op::Dot>},
@@ -295,10 +305,13 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Abs), &runtime::cpu::CPU_Emitter::emit<op::Abs>},
     {TI(ngraph::op::Any), &runtime::cpu::CPU_Emitter::emit<op::Any>},
     {TI(ngraph::op::All), &runtime::cpu::CPU_Emitter::emit<op::All>},
-    {TI(ngraph::op::BatchDot), &runtime::cpu::CPU_Emitter::emit<op::BatchDot>},
+    {TI(ngraph::op::BatchMatMul), &runtime::cpu::CPU_Emitter::emit<op::BatchMatMul>},
+    {TI(ngraph::op::BatchMatMulTranspose),
+     &runtime::cpu::CPU_Emitter::emit<op::BatchMatMulTranspose>},
     {TI(ngraph::op::Concat), &runtime::cpu::CPU_Emitter::emit<op::Concat>},
     {TI(ngraph::op::Divide), &runtime::cpu::CPU_Emitter::emit<op::Divide>},
     {TI(ngraph::op::Equal), &runtime::cpu::CPU_Emitter::emit<op::Equal>},
+    {TI(ngraph::op::Erf), &runtime::cpu::CPU_Emitter::emit<op::Erf>},
     {TI(ngraph::op::GetOutputElement), &runtime::cpu::CPU_Emitter::emit<op::GetOutputElement>},
     {TI(ngraph::op::Greater), &runtime::cpu::CPU_Emitter::emit<op::Greater>},
     {TI(ngraph::op::GreaterEq), &runtime::cpu::CPU_Emitter::emit<op::GreaterEq>},
@@ -352,6 +365,8 @@ static const runtime::cpu::OpMap dispatcher{
      &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolutionBiasAdd>},
     {TI(ngraph::op::QuantizedConvolutionBiasSignedAdd),
      &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolutionBiasSignedAdd>},
+    {TI(ngraph::op::QuantizedDotBias), &runtime::cpu::CPU_Emitter::emit<op::QuantizedDotBias>},
+    {TI(ngraph::op::QuantizedDot), &runtime::cpu::CPU_Emitter::emit<op::QuantizedDot>},
     {TI(ngraph::op::ConvolutionRelu), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionRelu>},
     {TI(ngraph::op::QuantizedConvolution),
      &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolution>},
@@ -453,6 +468,11 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
 
     ngraph::pass::Manager pass_manager;
     register_common_passes(pass_manager, pass_config);
+
+    // Build mkldnn primitives for codegen.
+    pass_manager.register_pass<runtime::cpu::pass::MKLDNNPrimitiveBuildPass>(
+        *m_mkldnn_emitter, m_node_primitive_idx_map);
+
     unordered_map<Node*, Node*> node_function_map;
     string common_function_string;
     auto femitter = bind(&ngraph::runtime::cpu::CPU_ExternalFunction::emit_op_as_function,
@@ -465,8 +485,8 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
 
     unordered_map<shared_ptr<Function>, list<shared_ptr<Node>>> function_ordered_ops;
     // only one function is allowed
-    NGRAPH_ASSERT(pass_manager.get_state().get_functions().size() == 1)
-        << "only one function is allowed";
+    NGRAPH_CHECK(pass_manager.get_state().get_functions().size() == 1,
+                 "only one function is allowed");
     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
     {
         function_ordered_ops.insert({current_function, current_function->get_ordered_ops()});
@@ -631,7 +651,7 @@ using namespace ngraph::runtime;
                 // process all tensors in the set containing the output tensor of the constant
                 for (auto& ele_t : tensor_set)
                 {
-                    NGRAPH_ASSERT(ele_t->get_pool_offset() == 0) << "no offset set for constants";
+                    NGRAPH_CHECK(ele_t->get_pool_offset() == 0, "no offset set for constants");
                     m_tensor_roles[ele_t->get_name()] = CPUTensorRole::CONSTANT;
                     m_variable_name_map[ele_t->get_name()] = output_tensor->get_name();
                 }
@@ -675,16 +695,11 @@ using namespace ngraph::runtime;
         }
 
         bool temporaries_used = false;
-        size_t worst_case_tmp_size = 0;
         for (shared_ptr<Node> node : ordered_ops)
         {
             if (node->liveness_new_list.size() > 0)
             {
                 temporaries_used = true;
-                for (descriptor::Tensor* tensor : node->liveness_new_list)
-                {
-                    worst_case_tmp_size += tensor->size();
-                }
             }
         }
         if (temporaries_used)
@@ -894,6 +909,7 @@ using namespace ngraph::runtime;
 
                 // Always enable nodes computing output tensors or nodes whose outputs might get
                 // overwritten due to inplace kernels
+                // TODO (jbobba) - Do we need to handle cacheability
                 if (computes_result(node.get()) || possibly_overwritten(node.get()))
                 {
                     writer << " || 1";
@@ -1110,7 +1126,33 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
 {
     auto pass_map = pass_config.get_enables();
 
+    auto dex = is_direct_execution();
+    auto is_supported = [dex](const Node& node) {
+        if (dex)
+        {
+            auto handler = GetGlobalBuildDispatcher().find(type_index(typeid(node)));
+            if (handler == GetGlobalBuildDispatcher().end())
+            {
+                return false;
+            }
+        }
+        else
+        {
+#if !defined(NGRAPH_DEX_ONLY)
+            auto handler = dispatcher.find(type_index(typeid(node)));
+            if (handler == dispatcher.end())
+            {
+                return false;
+            }
+#else
+            return false;
+#endif
+        }
+        return true;
+    };
+
     REGISTER_KNOBBED_PASS(LikeReplacement, true, ngraph::pass);
+    REGISTER_KNOBBED_PASS_WITH_ARGS(FusedOpDecomposition, true, ngraph::pass, is_supported);
     REGISTER_KNOBBED_PASS(NopElimination, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(ZeroDimTensorElimination, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(LSTMFusion, true, runtime::cpu::pass);
@@ -1134,7 +1176,8 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     NodeVector nv_cwi; // We dont need CPUWorkspaceInsertion to return list of indices
     REGISTER_KNOBBED_PASS_WITH_ARGS(CPUWorkspaceInsertion, true, runtime::cpu::pass, nv_cwi, false);
     REGISTER_KNOBBED_PASS_WITH_ARGS(CPUAssignment, true, runtime::cpu::pass, this);
-    REGISTER_KNOBBED_PASS(ConstantFolding, false, ngraph::pass);
+    REGISTER_KNOBBED_PASS_WITH_ARGS(
+        ConstantFolding, true, ngraph::pass, GetGlobalCFDispatcherCPU());
     REGISTER_KNOBBED_PASS_WITH_ARGS(CPULayout, true, runtime::cpu::pass, this);
     REGISTER_KNOBBED_PASS_WITH_ARGS(
         CommonSubexpressionElimination, true, ngraph::pass, runtime::cpu::get_cse_handlers_map());
@@ -1147,6 +1190,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
                         pass_config.get_pass_attribute("ReuseMemory");
     pass_manager.register_pass<runtime::cpu::pass::CPUMemoryAssignment>(
         bufferID_to_tensorSets, tensor_to_bufferID, size_t(s_memory_pool_alignment), !reuse_memory);
+
     pass_manager.get_state().set_visualize_tree_ops_map(runtime::cpu::get_visualize_tree_ops_map());
 }
 
@@ -1253,7 +1297,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             // process all tensors in the set containing the output tensor of the constant
             for (auto& ele_t : tensor_set)
             {
-                NGRAPH_ASSERT(ele_t->get_pool_offset() == 0) << "no offset set for constants";
+                NGRAPH_CHECK(ele_t->get_pool_offset() == 0, "no offset set for constants");
                 m_tensor_roles[ele_t->get_name()] = CPUTensorRole::CONSTANT;
                 tensor_alias[ele_t->get_name()] = output_tensor->get_name();
             }
@@ -1269,7 +1313,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             auto output_tensor = &param->get_outputs().at(i).get_tensor();
             auto tensor_set = get_tensor_set(output_tensor);
 
-            auto stale = tensor_stale[output_tensor->get_name()];
+            auto& stale = tensor_stale[output_tensor->get_name()];
             // process all tensors in the set containing the output tensor of the parameter
             for (auto& ele_t : tensor_set)
             {
@@ -1334,6 +1378,8 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         handler->second(this, node.get(), in, out);
 
         auto cacheable = true;
+        auto reuse_memory = pass_config.get_pass_attribute("CPUMemoryAssignment::ReuseMemory") ||
+                            pass_config.get_pass_attribute("ReuseMemory");
         if (node->is_op())
         {
             auto op = std::static_pointer_cast<ngraph::op::Op>(node);
@@ -1342,7 +1388,9 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         }
 
         bool disable_caching =
-            !cacheable || computes_result(node.get()) || possibly_overwritten(node.get());
+            (reuse_memory &&
+             !cacheable) // Check cacheability only if we are reusing intermediate tensors
+            || computes_result(node.get()) || possibly_overwritten(node.get());
 
         vector<reference_wrapper<bool>> in_stale, out_stale;
         for (const auto& name : in_names)
@@ -1358,7 +1406,14 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         }
         for (const auto& name : out_names)
         {
-            out_stale.emplace_back(tensor_stale[name]);
+            if (tensor_alias.count(name))
+            {
+                out_stale.emplace_back(tensor_stale[tensor_alias[name]]);
+            }
+            else
+            {
+                out_stale.emplace_back(tensor_stale[name]);
+            }
         }
 
         function<bool(CPURuntimeContext*)> enable;
@@ -1459,7 +1514,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         }
     }
     //This check ensures we have exactly one functor for Op.
-    assert(m_op_attrs.size() == functors.size());
+    NGRAPH_CHECK(m_op_attrs.size() == functors.size());
 
     executor = [&](CPURuntimeContext* ctx, vector<void*>& inputs, vector<void*>& outputs) {
         cpu::Timestamp start_ts, end_ts;
@@ -1674,7 +1729,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         ctx->first_iteration = false;
         if (runtime::cpu::IsTracingEnabled())
         {
-            assert(m_op_attrs.size() == profiler_count);
+            NGRAPH_CHECK(m_op_attrs.size() == profiler_count);
         }
 
     };
@@ -1702,7 +1757,18 @@ void*& runtime::cpu::CPU_ExternalFunction::get_tensor_data(const std::string& na
 shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
     runtime::cpu::CPU_ExternalFunction::make_call_frame(ngraph::pass::PassConfig& pass_config)
 {
-#if !defined(NGRAPH_DEX_ONLY)
+#if defined(NGRAPH_DEX_ONLY)
+    if (pass_config.get_compilation_mode() == ngraph::pass::CompilationMode::CODEGEN)
+    {
+        NGRAPH_WARN << "CPU Backend: Requested unsupported compilation mode (CODEGEN). Falling "
+                       "back to DEX instead";
+    }
+#else
+    // Override DEX if pass_config requests CODEGEN
+    if (pass_config.get_compilation_mode() == ngraph::pass::CompilationMode::CODEGEN)
+    {
+        m_direct_execution = false;
+    }
     if (!m_is_compiled && !m_direct_execution)
     {
         compile(pass_config);
@@ -1924,9 +1990,9 @@ std::unordered_set<descriptor::Tensor*>&
     runtime::cpu::CPU_ExternalFunction::get_tensor_set(descriptor::Tensor* output_tensor)
 {
     auto output_tensor_it = tensor_to_bufferID.find(output_tensor);
-    NGRAPH_ASSERT(output_tensor_it != tensor_to_bufferID.end());
+    NGRAPH_CHECK(output_tensor_it != tensor_to_bufferID.end());
     auto bufferID = output_tensor_it->second;
     auto output_buffer_it = bufferID_to_tensorSets.find(bufferID);
-    NGRAPH_ASSERT(output_buffer_it != bufferID_to_tensorSets.end());
+    NGRAPH_CHECK(output_buffer_it != bufferID_to_tensorSets.end());
     return output_buffer_it->second.second;
 }

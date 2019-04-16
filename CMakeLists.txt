@@ -14,7 +14,7 @@
 # limitations under the License.
 # ******************************************************************************
 
-cmake_minimum_required (VERSION 3.1)
+cmake_minimum_required (VERSION 3.4)
 
 # set directory where the custom finders live
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
@@ -58,12 +58,10 @@ set(NGRAPH_INCLUDE_PATH
 )
 
 if (APPLE)
-    # Suppress an OS X-specific warning.
-    if (POLICY CMP0042)
-        cmake_policy(SET CMP0042 NEW)
-    else()
-        set(MACOS_RPATH ON)
-    endif()
+    # Enable MACOS_RPATH by default.
+    cmake_policy(SET CMP0042 NEW)
+    # Enable CMAKE_<LANG>_COMPILER_ID AppleClang
+    cmake_policy(SET CMP0025 NEW)
 endif()
 
 project (ngraph)
@@ -137,28 +135,43 @@ option(NGRAPH_NOP_ENABLE "Control the building of the NOP backend" TRUE)
 option(NGRAPH_GPUH_ENABLE "Control the building of the Hybrid GPU backend" FALSE)
 option(NGRAPH_GENERIC_CPU_ENABLE "Enable build nGraph for generic CPU backend" FALSE)
 option(NGRAPH_DEBUG_ENABLE "Enable output for NGRAPH_DEBUG statements" FALSE)
+option(NGRAPH_DEPRECATED_ENABLE "Enable compiler deprecation pragmas for deprecated APIs (recommended only for development use)" FALSE)
 option(NGRAPH_ONNX_IMPORT_ENABLE "Enable ONNX importer" FALSE)
 option(NGRAPH_DEX_ONLY "Build CPU DEX without codegen" FALSE)
 option(NGRAPH_CODE_COVERAGE_ENABLE "Enable code coverage data collection" FALSE)
 option(NGRAPH_LIB_VERSIONING_ENABLE "Enable shared library versioning" FALSE)
 option(NGRAPH_PYTHON_BUILD_ENABLE "Enable build nGraph python package wheel" FALSE)
-option(NGRAPH_DISTRIBUTED_MLSL_ENABLE "Add distributed MLSL mode for CPU only backend" FALSE)
-option(NGRAPH_DISTRIBUTED_OMPI_ENABLE "Add distributed Open-MPI mode for all backend" FALSE)
 option(NGRAPH_PLAIDML_ENABLE "Enable the PlaidML backend" ${PLAIDML_FOUND})
+option(NGRAPH_DISTRIBUTED_ENABLE "Enable distributed training using MLSL/OpenMPI" OFF)
+
+if (NGRAPH_CPU_ENABLE
+        AND
+    ((NOT NGRAPH_GPU_ENABLE) AND (NOT NGRAPH_GPUH_ENABLE)
+        AND (NOT NGRAPH_GENERIC_CPU_ENABLE) AND (NOT NGRAPH_INTELGPU_ENABLE))
+   )
+    set(NGRAPH_INTEL_CPU_ONLY_ENABLE ON)
+endif()
+
+if (NGRAPH_DISTRIBUTED_ENABLE)
+    if ("${NGRAPH_DISTRIBUTED_ENABLE}" STREQUAL "MLSL")
+        if (NGRAPH_INTEL_CPU_ONLY_ENABLE)
+            set(NGRAPH_DISTRIBUTED_MLSL_ENABLE TRUE)
+        else()
+            message(FATAL_ERROR
+                    "-DNGRAPH_DISTRIBUTED_ENABLE=MLSL to be used, if Intel CPU is the only backend enabled.\n"
+                    "Use -DNGRAPH_DISTRIBUTED_ENABLE=OMPI for all other situations.\n")
+        endif()
+    elseif("${NGRAPH_DISTRIBUTED_ENABLE}" STREQUAL  "OMPI")
+        set(NGRAPH_DISTRIBUTED_OMPI_ENABLE TRUE)
+    else()
+        message(FATAL_ERROR
+                    "Invalid arguments passed to NGRAPH_DISTRIBUTED_ENABLE, must select  one of  MLSL, OMPI or OFF.\n"
+                    "If using Intel CPU only backend, recommend Intel MLSL by setting -DNGRAPH_DISTRIBUTED_ENABLE=MLSL .\n")
+    endif()
+endif()
 
 if (NGRAPH_GPUH_ENABLE)
     set(NGRAPH_GPU_ENABLE TRUE)
-endif()
-
-if (NGRAPH_DISTRIBUTED_MLSL_ENABLE AND NGRAPH_DISTRIBUTED_OMPI_ENABLE)
-    message(FATAL_ERROR
-                "Does not support the use of two distributed libraries simultaneously.\n"
-                "If CPU only backend recommend Intel MLSL by setting NGRAPH_DISTRIBUTED_MLSL_ENABLE flag to true.\n"
-                "For all other backends use OpenMPI by setting NGRAPH_DISTRIBUTED_OMPI_ENABLE flag to true.\n")
-elseif(NGRAPH_DISTRIBUTED_MLSL_ENABLE  OR NGRAPH_DISTRIBUTED_OMPI_ENABLE)
-    set(NGRAPH_DISTRIBUTED_ENABLE TRUE)
-else()
-    set(NGRAPH_DISTRIBUTED_ENABLE FALSE)
 endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
@@ -183,9 +196,8 @@ NORMALIZE_BOOL(NGRAPH_INTERPRETER_ENABLE)
 NORMALIZE_BOOL(NGRAPH_NOP_ENABLE)
 NORMALIZE_BOOL(NGRAPH_GPUH_ENABLE)
 NORMALIZE_BOOL(NGRAPH_GENERIC_CPU_ENABLE)
-NORMALIZE_BOOL(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
-NORMALIZE_BOOL(NGRAPH_DISTRIBUTED_OMPI_ENABLE)
 NORMALIZE_BOOL(NGRAPH_DEBUG_ENABLE)
+NORMALIZE_BOOL(NGRAPH_DEPRECATED_ENABLE)
 NORMALIZE_BOOL(NGRAPH_ONNX_IMPORT_ENABLE)
 NORMALIZE_BOOL(NGRAPH_DEX_ONLY)
 NORMALIZE_BOOL(NGRAPH_CODE_COVERAGE_ENABLE)
@@ -203,9 +215,8 @@ message(STATUS "NGRAPH_INTERPRETER_ENABLE:      ${NGRAPH_INTERPRETER_ENABLE}")
 message(STATUS "NGRAPH_NOP_ENABLE:              ${NGRAPH_NOP_ENABLE}")
 message(STATUS "NGRAPH_GPUH_ENABLE:             ${NGRAPH_GPUH_ENABLE}")
 message(STATUS "NGRAPH_GENERIC_CPU_ENABLE:      ${NGRAPH_GENERIC_CPU_ENABLE}")
-message(STATUS "NGRAPH_DISTRIBUTED_MLSL_ENABLE: ${NGRAPH_DISTRIBUTED_MLSL_ENABLE}")
-message(STATUS "NGRAPH_DISTRIBUTED_OMPI_ENABLE: ${NGRAPH_DISTRIBUTED_OMPI_ENABLE}")
 message(STATUS "NGRAPH_DEBUG_ENABLE:            ${NGRAPH_DEBUG_ENABLE}")
+message(STATUS "NGRAPH_DEPRECATED_ENABLE:       ${NGRAPH_DEPRECATED_ENABLE}")
 message(STATUS "NGRAPH_ONNX_IMPORT_ENABLE:      ${NGRAPH_ONNX_IMPORT_ENABLE}")
 message(STATUS "NGRAPH_DEX_ONLY:                ${NGRAPH_DEX_ONLY}")
 message(STATUS "NGRAPH_CODE_COVERAGE_ENABLE:    ${NGRAPH_CODE_COVERAGE_ENABLE}")
@@ -213,6 +224,7 @@ message(STATUS "NGRAPH_LIB_VERSIONING_ENABLE:   ${NGRAPH_LIB_VERSIONING_ENABLE}"
 message(STATUS "NGRAPH_PYTHON_BUILD_ENABLE:     ${NGRAPH_PYTHON_BUILD_ENABLE}")
 message(STATUS "NGRAPH_USE_PREBUILT_LLVM:       ${NGRAPH_USE_PREBUILT_LLVM}")
 message(STATUS "NGRAPH_PLAIDML_ENABLE:          ${NGRAPH_PLAIDML_ENABLE}")
+message(STATUS "NGRAPH_DISTRIBUTED_ENABLE:      ${NGRAPH_DISTRIBUTED_ENABLE}")
 
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
@@ -243,6 +255,7 @@ if (LINUX)
     else()
         set(CMAKE_INSTALL_RPATH "$ORIGIN")
     endif()
+    set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 endif()
 
 #-----------------------------------------------------------------------------------------------
@@ -257,7 +270,7 @@ endif()
 
 if (WIN32)
     set (CMAKE_CXX_STANDARD 11)
-    set(CMAKE_CXX_FLAGS "/W0 /EHsc")
+    set(CMAKE_CXX_FLAGS "/W0 /EHsc /MP")
 else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g")
@@ -365,6 +378,13 @@ if(NGRAPH_DEBUG_ENABLE)
 endif()
 
 #-----------------------------------------------------------------------------------------------
+# enable or disable deprecation warnings for old APIs
+#-----------------------------------------------------------------------------------------------
+if(NGRAPH_DEPRECATED_ENABLE)
+    add_definitions(-DNGRAPH_DEPRECATED_ENABLE)
+endif()
+
+#-----------------------------------------------------------------------------------------------
 # External projects install directory
 #-----------------------------------------------------------------------------------------------
 
@@ -385,6 +405,13 @@ if(NOT DEFINED EXTERNAL_PROJECTS_ROOT)
 endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
+    if (MSVS)
+        # When we build dll libraries. These flags make sure onnx and protobuf build with /MD, not /MT.
+        # These two options can't be mixed, because they requires link two imcompatiable runtime.
+        set(ONNX_USE_MSVC_STATIC_RUNTIME OFF)
+        set(protobuf_WITH_ZLIB  OFF CACHE BOOL "" FORCE)
+        set(protobuf_MSVC_STATIC_RUNTIME OFF CACHE BOOL "Link protobuf to static runtime libraries" FORCE)
+    endif(MSVS)
     if (NOT NGRAPH_USE_SYSTEM_PROTOBUF)
         include(cmake/external_protobuf.cmake)
     else()

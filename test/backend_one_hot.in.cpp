@@ -94,36 +94,6 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_scalar_0_in_3)
     EXPECT_EQ((vector<int32_t>{1, 0, 0}), read_vector<int32_t>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, one_hot_scalar_fp_nonint_in_3)
-{
-    Shape shape_a{};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    Shape shape_r{3};
-    auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
-    auto f = make_shared<Function>(r, ParameterVector{A});
-
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::f32, shape_a);
-    copy_data(a, vector<float>{1.1f});
-    auto result = backend->create_tensor(element::f32, shape_r);
-
-    try
-    {
-        auto handle = backend->compile(f);
-        handle->call_with_validate({result}, {a});
-    }
-    catch (const std::exception& e)
-    {
-        EXPECT_EQ(e.what(), std::string("One-hot: non-integral value in input"));
-    }
-    catch (...)
-    {
-        FAIL() << "Expected a std::out_of_range exception";
-    }
-}
-
 NGRAPH_TEST(${BACKEND_NAME}, one_hot_scalar_oob_in_3)
 {
     Shape shape_a{};
@@ -136,22 +106,13 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_scalar_oob_in_3)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::i32, shape_a);
-    copy_data(a, vector<int32_t>{3000000});
-    auto result = backend->create_tensor(element::i32, shape_r);
+    copy_data(a, vector<int32_t>{3});
+    vector<int32_t> r_data(4);
+    auto result = backend->create_tensor(element::i32, shape_r, r_data.data());
 
-    try
-    {
-        auto handle = backend->compile(f);
-        handle->call_with_validate({result}, {a});
-    }
-    catch (const std::exception& e)
-    {
-        EXPECT_EQ(e.what(), std::string("One-hot: value is out of category range"));
-    }
-    catch (...)
-    {
-        FAIL() << "Expected a std::out_of_range exception";
-    }
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_EQ(r_data[3], 0);
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_0)
@@ -213,49 +174,42 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_1_barely_oob)
     copy_data(a, vector<int32_t>{2, 1, 0, 0, 3, 2, 1, 0});
     auto result = backend->create_tensor(element::i32, shape_r);
 
-    try
-    {
-        auto handle = backend->compile(f);
-        handle->call_with_validate({result}, {a});
-    }
-    catch (const std::exception& e)
-    {
-        EXPECT_EQ(e.what(), std::string("One-hot: value is out of category range"));
-    }
-    catch (...)
-    {
-        FAIL() << "Expected a std::out_of_range exception";
-    }
-}
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    vector<int32_t> rv = read_vector<int32_t>(result);
 
-NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_1_far_oob)
-{
-    Shape shape_a{8};
-    auto A = make_shared<op::Parameter>(element::i32, shape_a);
-    Shape shape_r{8, 3};
-    auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
-    auto f = make_shared<Function>(r, ParameterVector{A});
+    EXPECT_EQ(rv[0], 0);
+    EXPECT_EQ(rv[1], 0);
+    EXPECT_EQ(rv[2], 1);
 
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    EXPECT_EQ(rv[3], 0);
+    EXPECT_EQ(rv[4], 1);
+    EXPECT_EQ(rv[5], 0);
 
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::i32, shape_a);
-    copy_data(a, vector<int32_t>{2, 1, 0, 0, 3000000, 2, 1, 0});
-    auto result = backend->create_tensor(element::i32, shape_r);
+    EXPECT_EQ(rv[6], 1);
+    EXPECT_EQ(rv[7], 0);
+    EXPECT_EQ(rv[8], 0);
 
-    try
-    {
-        auto handle = backend->compile(f);
-        handle->call_with_validate({result}, {a});
-    }
-    catch (const std::exception& e)
-    {
-        EXPECT_EQ(e.what(), std::string("One-hot: value is out of category range"));
-    }
-    catch (...)
-    {
-        FAIL() << "Expected a std::out_of_range exception";
-    }
+    EXPECT_EQ(rv[9], 1);
+    EXPECT_EQ(rv[10], 0);
+    EXPECT_EQ(rv[11], 0);
+
+    // These are undefined since value is out of bounds
+    // EXPECT_EQ(rv[12], 0);
+    // EXPECT_EQ(rv[13], 0);
+    // EXPECT_EQ(rv[14], 0);
+
+    EXPECT_EQ(rv[15], 0);
+    EXPECT_EQ(rv[16], 0);
+    EXPECT_EQ(rv[17], 1);
+
+    EXPECT_EQ(rv[18], 0);
+    EXPECT_EQ(rv[19], 1);
+    EXPECT_EQ(rv[20], 0);
+
+    EXPECT_EQ(rv[21], 1);
+    EXPECT_EQ(rv[22], 0);
+    EXPECT_EQ(rv[23], 0);
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, one_hot_matrix_0)
@@ -286,54 +240,35 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_matrix_0)
               read_vector<int32_t>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_1_fp)
+NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_many_categories)
 {
-    Shape shape_a{8};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    Shape shape_r{8, 3};
-    auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
+    // Imagenet has roughly 20,000 categories
+    uint32_t category_count = 20000;
+    Shape shape_a{6};
+    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    Shape shape_r{6, category_count};
+    auto r = make_shared<op::OneHot>(A, Shape{6, category_count}, 1);
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->create_tensor(element::f32, shape_a);
-    copy_data(a, vector<float>{2, 1, 0, 0, 2, 2, 1, 0});
-    auto result = backend->create_tensor(element::f32, shape_r);
+    auto a = backend->create_tensor(element::i32, shape_a);
+    vector<int32_t> input_data{0, 11, 101, 1001, 10001, static_cast<int32_t>(category_count - 1)};
+    copy_data(a, input_data);
+    auto result = backend->create_tensor(element::i32, shape_r);
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ(
-        (vector<float>{0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0}),
-        read_vector<float>(result));
-}
+    vector<int32_t> data = read_vector<int32_t>(result);
 
-NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_1_fp_nonint)
-{
-    Shape shape_a{8};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    Shape shape_r{8, 3};
-    auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
-    auto f = make_shared<Function>(r, ParameterVector{A});
-
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::f32, shape_a);
-    copy_data(a, vector<float>{2, 1, 0, 0, 2, 2, 1.01f, 0});
-    auto result = backend->create_tensor(element::f32, shape_r);
-
-    try
+    vector<int32_t> bit_positions;
+    for (size_t i = 0; i < shape_size(shape_r); ++i)
     {
-        auto handle = backend->compile(f);
-        handle->call_with_validate({result}, {a});
+        if (data[i] == 1)
+        {
+            bit_positions.push_back(i % category_count);
+        }
     }
-    catch (const std::exception& e)
-    {
-        EXPECT_EQ(e.what(), std::string("One-hot: non-integral value in input"));
-    }
-    catch (...)
-    {
-        FAIL() << "Expected a std::out_of_range exception";
-    }
+    EXPECT_EQ(bit_positions, input_data);
 }

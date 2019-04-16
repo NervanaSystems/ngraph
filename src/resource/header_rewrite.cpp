@@ -29,79 +29,71 @@ using namespace std;
 // Eigen has a lot of .. in their header files.
 const string rewrite_header(const string& s, const string& path)
 {
-    stringstream ss(s);
-    stringstream out;
-    for (string line; ss; getline(ss, line))
+    string line = s;
+    // only interested in lines starging with '#include' so 8 chars minimum
+    if (line.size() > 8)
     {
-        string original_line = line;
-        // only interested in lines starging with '#include' so 8 chars minimum
-        if (line.size() > 8)
+        // skip whitespace
+        size_t pos = line.find_first_not_of(" \t");
+        if (pos != string::npos && line[pos] == '#' && pos < line.size() - 7)
         {
-            // skip whitespace
-            size_t pos = line.find_first_not_of(" \t");
-            if (pos != string::npos && line[pos] == '#' && pos < line.size() - 7)
+            string directive = line;
+            pos = directive.find_first_not_of(" \t", pos + 1);
+            if (pos != string::npos)
             {
-                string directive = line;
-                pos = directive.find_first_not_of(" \t", pos + 1);
-                if (pos != string::npos)
+                directive = directive.substr(pos);
+            }
+            pos = directive.find_first_of(" \t", pos + 1);
+            directive = directive.substr(0, pos);
+            if (directive == "include")
+            {
+                auto line_offset = line.find_first_of("\"<");
+                if (line_offset != string::npos)
                 {
-                    directive = directive.substr(pos);
-                }
-                pos = directive.find_first_of(" \t", pos + 1);
-                directive = directive.substr(0, pos);
-                if (directive == "include")
-                {
-                    auto line_offset = line.find_first_of("\"<");
-                    if (line_offset != string::npos)
+                    string include = line.substr(line_offset);
+                    string contents = include.substr(1, include.size() - 2);
+                    if (include[1] == '.')
                     {
-                        string include = line.substr(line_offset);
-                        string contents = include.substr(1, include.size() - 2);
-                        if (include[1] == '.')
+                        if (include[2] == '/')
                         {
-                            if (include[2] == '/')
+                            // include starts with './'
+                            // rewrite "./blah.h" to "blah.h"
+                            contents = contents.substr(2);
+                        }
+                        else
+                        {
+                            // include starts with '../'
+                            // count number of '../' in string
+                            size_t offset = 0;
+                            size_t depth = 0;
+                            while (contents.substr(offset, 3) == "../")
                             {
-                                // include starts with './'
-                                // rewrite "./blah.h" to "blah.h"
-                                contents = contents.substr(2);
+                                depth++;
+                                offset += 3;
                             }
-                            else
+                            string trimmed = contents.substr(offset);
+                            vector<string> parts = split(path, '/');
+                            parts.pop_back();
+                            size_t result_depth = parts.size() - depth;
+                            string added_path;
+                            for (size_t i = 0; i < result_depth; i++)
                             {
-                                // include starts with '../'
-                                // count number of '../' in string
-                                size_t offset = 0;
-                                size_t depth = 0;
-                                while (contents.substr(offset, 3) == "../")
-                                {
-                                    depth++;
-                                    offset += 3;
-                                }
-                                string trimmed = contents.substr(offset);
-                                vector<string> parts = split(path, '/');
-                                parts.pop_back();
-                                size_t result_depth = parts.size() - depth;
-                                string added_path;
-                                for (size_t i = 0; i < result_depth; i++)
-                                {
-                                    added_path += parts[i] + "/";
-                                }
-                                contents = added_path + trimmed;
+                                added_path += parts[i] + "/";
                             }
-                            if (include[0] == '<')
-                            {
-                                line = "#include <" + contents + ">";
-                            }
-                            else
-                            {
-                                line = "#include \"" + contents + "\"";
-                            }
-                            // cout << "line '" << original_line << "'\n";
-                            // cout << "rewrite to '" << line << "'\n\n";
+                            contents = added_path + trimmed;
+                        }
+                        if (include[0] == '<')
+                        {
+                            line = "#include <" + contents + ">";
+                        }
+                        else
+                        {
+                            line = "#include \"" + contents + "\"";
                         }
                     }
                 }
             }
         }
-        out << line << "\n";
     }
-    return out.str();
+    return line + "\n";
 }

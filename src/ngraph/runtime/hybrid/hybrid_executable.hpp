@@ -21,7 +21,7 @@
 #include <string>
 #include <vector>
 
-#include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/executable.hpp"
 
 namespace ngraph
 {
@@ -31,8 +31,8 @@ namespace ngraph
         {
             class HybridExecutable;
         }
-    }
-}
+    } // namespace runtime
+} // namespace ngraph
 
 class ngraph::runtime::hybrid::HybridExecutable : public runtime::Executable
 {
@@ -44,6 +44,12 @@ public:
 
     bool call(const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& outputs,
               const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& inputs) override;
+
+    template <typename T>
+    std::shared_ptr<T> get_as() const
+    {
+        return std::dynamic_pointer_cast<T>(m_executable);
+    }
 
 private:
     std::shared_ptr<ngraph::Function> m_function;

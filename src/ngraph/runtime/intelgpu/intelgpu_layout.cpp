@@ -107,7 +107,7 @@ cldnn::tensor runtime::intelgpu::IntelGPULayout::create_cldnn_offset(const Shape
         offset.at(ridx - 1) = -(*i);
     }
 
-    const cldnn::tensor input_offset(offset.at(0), offset.at(1), offset.at(3), offset.at(2));
+    const cldnn::tensor input_offset(offset.at(0), offset.at(1), offset.at(3), offset.at(2), 0);
     return input_offset;
 }
 

@@ -16,10 +16,12 @@
 
 include(ExternalProject)
 
-# Includes blas 3.8.0 in mkldnn 
-set(NGRAPH_MKLDNN_VERSION "v0.18-rc")
-set(NGRAPH_MKLDNN_SUB_VERSION "2019.0.3.20190125")
-set(NGRAPH_MKLDNN_GIT_TAG "08bd90c")
+# Includes blas 3.8.0 in mkldnn
+set(NGRAPH_MKLDNN_SHORT_VERSION 0)
+set(NGRAPH_MKLDNN_FULL_VERSION 0.18.0.0)
+set(NGRAPH_MKLDNN_VERSION "v0.18")
+set(NGRAPH_MKLDNN_SUB_VERSION "2019.0.3.20190220")
+set(NGRAPH_MKLDNN_GIT_TAG "v0.18")
 
 #------------------------------------------------------------------------------
 # Fetch and install MKL-DNN
@@ -29,9 +31,13 @@ set(MKLDNN_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}mkldnn${CMAKE_SHARED_LIBRARY_SUFFIX
 if (LINUX)
     set(MKLML_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}mklml_intel${CMAKE_SHARED_LIBRARY_SUFFIX})
     set(OMP_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}iomp5${CMAKE_SHARED_LIBRARY_SUFFIX})
+    set(MKLDNN_SHORT_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}mkldnn${CMAKE_SHARED_LIBRARY_SUFFIX}.${NGRAPH_MKLDNN_SHORT_VERSION})
+    set(MKLDNN_FULL_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}mkldnn${CMAKE_SHARED_LIBRARY_SUFFIX}.${NGRAPH_MKLDNN_FULL_VERSION})
 elseif (APPLE)
     set(MKLML_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}mklml${CMAKE_SHARED_LIBRARY_SUFFIX})
     set(OMP_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}iomp5${CMAKE_SHARED_LIBRARY_SUFFIX})
+    set(MKLDNN_SHORT_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}mkldnn.${NGRAPH_MKLDNN_SHORT_VERSION}${CMAKE_SHARED_LIBRARY_SUFFIX})
+    set(MKLDNN_FULL_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}mkldnn.${NGRAPH_MKLDNN_FULL_VERSION}${CMAKE_SHARED_LIBRARY_SUFFIX})
 elseif (WIN32)
     set(MKLDNN_IMPLIB mkldnn${CMAKE_STATIC_LIBRARY_SUFFIX})
     set(MKLML_LIB mklml${CMAKE_SHARED_LIBRARY_SUFFIX})
@@ -41,16 +47,37 @@ elseif (WIN32)
 endif()
 
 if(MKLDNN_INCLUDE_DIR AND MKLDNN_LIB_DIR)
-    if(NOT LINUX)
+    if(NOT LINUX AND NOT WIN32)
         message(FATAL_ERROR "Unsupported platform for prebuilt mkl-dnn!")
     endif()
     if(NOT MKLML_LIB_DIR)
         set(MKLML_LIB_DIR ${MKLDNN_LIB_DIR})
     endif()
 
-    add_library(libmkldnn SHARED IMPORTED)
-    set_property(TARGET libmkldnn PROPERTY IMPORTED_LOCATION ${MKLDNN_LIB_DIR}/${MKLDNN_LIB})
-    target_include_directories(libmkldnn SYSTEM INTERFACE ${MKLDNN_INCLUDE_DIR})
+    if(WIN32)
+        add_library(libmkl STATIC IMPORTED)
+        set_property(TARGET libmkl PROPERTY IMPORTED_LOCATION ${MKLML_LIB_DIR}/${MKLML_IMPLIB})
+        set_target_properties(libmkl PROPERTIES
+            IMPORTED_LINK_INTERFACE_LIBRARIES ${MKLML_LIB_DIR}/${OMP_IMPLIB})
+    else()
+        add_library(libmkl SHARED IMPORTED)
+        set_property(TARGET libmkl PROPERTY IMPORTED_LOCATION ${MKLML_LIB_DIR}/${MKLML_LIB})
+        set_target_properties(libmkl PROPERTIES
+            IMPORTED_LINK_INTERFACE_LIBRARIES ${MKLML_LIB_DIR}/${OMP_LIB})
+    endif()
+
+    if(WIN32)
+        add_library(libmkldnn STATIC IMPORTED)
+        set_property(TARGET libmkldnn PROPERTY IMPORTED_LOCATION ${MKLDNN_LIB_DIR}/${MKLDNN_IMPLIB})
+        set_target_properties(libmkldnn PROPERTIES
+            IMPORTED_LINK_INTERFACE_LIBRARIES "${MKLML_LIB_DIR}/${MKLML_IMPLIB};${MKLML_LIB_DIR}/${OMP_IMPLIB}")
+    else()
+        add_library(libmkldnn SHARED IMPORTED)
+        set_property(TARGET libmkldnn PROPERTY IMPORTED_LOCATION ${MKLDNN_LIB_DIR}/${MKLDNN_LIB})
+        set_target_properties(libmkldnn PROPERTIES
+            IMPORTED_LINK_INTERFACE_LIBRARIES "${MKLML_LIB_DIR}/${MKLML_LIB};${MKLML_LIB_DIR}/${OMP_LIB}")
+    endif()
+    set_target_properties(libmkldnn PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${MKLDNN_INCLUDE_DIR})
 
     install(FILES ${MKLDNN_LIB_DIR}/${MKLDNN_LIB} ${MKLML_LIB_DIR}/${MKLML_LIB} ${MKLML_LIB_DIR}/${OMP_LIB}  DESTINATION ${NGRAPH_INSTALL_LIB})
     return()
@@ -62,13 +89,13 @@ set(MKLURLROOT "https://github.com/intel/mkl-dnn/releases/download/${NGRAPH_MKLD
 set(MKLVERSION ${NGRAPH_MKLDNN_SUB_VERSION})
 if (LINUX)
     set(MKLPACKAGE "mklml_lnx_${MKLVERSION}.tgz")
-    set(MKL_SHA1_HASH 968318286897da5ffd225f0851aec18f02b347f8)
+    set(MKL_SHA1_HASH b536cd3929ab9ff26a9adc903c92d006d142107b)
 elseif (APPLE)
     set(MKLPACKAGE "mklml_mac_${MKLVERSION}.tgz")
-    set(MKL_SHA1_HASH 8ef2f39b65f23d322af7400d261c3ec883b087c6)
+    set(MKL_SHA1_HASH cb7ccbf73275d5bee19b4d5691c834bf894d1761)
 elseif (WIN32)
     set(MKLPACKAGE "mklml_win_${MKLVERSION}.zip")
-    set(MKL_SHA1_HASH 8383d11b47960e3cd826e2af4b2a7daa9fbd8b68)
+    set(MKL_SHA1_HASH 2f8ae6ef07452c3229bfb7c2aafbae71933d04e3)
 endif()
 set(MKL_LIBS ${MKLML_LIB} ${OMP_LIB})
 set(MKLURL ${MKLURLROOT}${MKLPACKAGE})
@@ -105,7 +132,7 @@ set(MKL_SOURCE_DIR ${source_dir})
 ExternalProject_Add_Step(
     ext_mkl
     CopyMKL
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${MKL_SOURCE_DIR}/lib/${MKLML_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${MKL_SOURCE_DIR}/lib/${MKLML_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLML_LIB}
     COMMENT "Copy mklml runtime libraries to ngraph build directory."
     DEPENDEES download
     )
@@ -113,7 +140,7 @@ ExternalProject_Add_Step(
 ExternalProject_Add_Step(
     ext_mkl
     CopyOMP
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${MKL_SOURCE_DIR}/lib/${OMP_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${MKL_SOURCE_DIR}/lib/${OMP_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${OMP_LIB}
     COMMENT "Copy OpenMP runtime libraries to ngraph build directory."
     DEPENDEES download
     )
@@ -122,7 +149,7 @@ if(WIN32)
     ExternalProject_Add_Step(
         ext_mkl
         CopyMKLIMP
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${MKL_SOURCE_DIR}/lib/${MKLML_IMPLIB} ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${MKL_SOURCE_DIR}/lib/${MKLML_IMPLIB} ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${MKLML_IMPLIB}
         COMMENT "Copy mklml runtime libraries to ngraph build directory."
         DEPENDEES download
         )
@@ -130,7 +157,7 @@ if(WIN32)
     ExternalProject_Add_Step(
         ext_mkl
         CopyOMPIMP
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${MKL_SOURCE_DIR}/lib/${OMP_IMPLIB} ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${MKL_SOURCE_DIR}/lib/${OMP_IMPLIB} ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${OMP_IMPLIB}
         COMMENT "Copy OpenMP runtime libraries to ngraph build directory."
         DEPENDEES download
         )
@@ -153,6 +180,9 @@ set(MKLDNN_GIT_TAG ${NGRAPH_MKLDNN_GIT_TAG})
 set(MKLDNN_PATCH_FILE mkldnn.patch)
 set(MKLDNN_LIBS ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${MKLDNN_LIB})
 
+# Revert prior changes to make incremental build work.
+set(MKLDNN_PATCH_REVERT_COMMAND cd ${EXTERNAL_PROJECTS_ROOT}/mkldnn/src && git reset HEAD --hard)
+
 if (WIN32)
     ExternalProject_Add(
         ext_mkldnn
@@ -162,14 +192,8 @@ if (WIN32)
         GIT_TAG ${MKLDNN_GIT_TAG}
         UPDATE_COMMAND ""
         CONFIGURE_COMMAND
-        # Patch gets mad if it applied for a second time so:
-        #    --forward tells patch to ignore if it has already been applied
-        #    --reject-file tells patch to not right a reject file
-        #    || exit 0 changes the exit code for the PATCH_COMMAND to zero so it is not an error
-        # I don't like it, but it works
-        PATCH_COMMAND patch -p1 --forward --reject-file=- -i ${CMAKE_SOURCE_DIR}/cmake/${MKLDNN_PATCH_FILE} || exit 0
-        # Uncomment below with any in-flight MKL-DNN patches
-        # PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
+        PATCH_COMMAND ${MKLDNN_PATCH_REVERT_COMMAND}
+        COMMAND git apply --ignore-space-change --ignore-whitespace ${CMAKE_SOURCE_DIR}/cmake/${MKLDNN_PATCH_FILE}
         CMAKE_GENERATOR ${CMAKE_GENERATOR}
         CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
         CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
@@ -190,6 +214,9 @@ if (WIN32)
         EXCLUDE_FROM_ALL TRUE
         )
 else()
+    if(LINUX)
+        set(MKLDNN_RPATH "-DCMAKE_INSTALL_RPATH=${CMAKE_INSTALL_RPATH}")
+    endif()
     ExternalProject_Add(
         ext_mkldnn
         PREFIX mkldnn
@@ -198,14 +225,8 @@ else()
         GIT_TAG ${MKLDNN_GIT_TAG}
         UPDATE_COMMAND ""
         CONFIGURE_COMMAND
-        # Patch gets mad if it applied for a second time so:
-        #    --forward tells patch to ignore if it has already been applied
-        #    --reject-file tells patch to not right a reject file
-        #    || exit 0 changes the exit code for the PATCH_COMMAND to zero so it is not an error
-        # I don't like it, but it works
-        PATCH_COMMAND patch -p1 --forward --reject-file=- -i ${CMAKE_SOURCE_DIR}/cmake/${MKLDNN_PATCH_FILE} || exit 0
-        # Uncomment below with any in-flight MKL-DNN patches
-        # PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
+        PATCH_COMMAND ${MKLDNN_PATCH_REVERT_COMMAND}
+        COMMAND git apply ${CMAKE_SOURCE_DIR}/cmake/${MKLDNN_PATCH_FILE}
         CMAKE_GENERATOR ${CMAKE_GENERATOR}
         CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
         CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
@@ -214,6 +235,7 @@ else()
             -DWITH_TEST=FALSE
             -DWITH_EXAMPLE=FALSE
             -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/mkldnn
+            ${MKLDNN_RPATH}
             -DMKLDNN_ENABLE_CONCURRENT_EXEC=ON
             -DMKLROOT=${MKL_ROOT}
             -DMKLDNN_LIB_VERSIONING_ENABLE=${NGRAPH_LIB_VERSIONING_ENABLE}
@@ -228,22 +250,40 @@ else()
         )
 endif()
 
-ExternalProject_Add_Step(
-    ext_mkldnn
-    CopyMKLDNN
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/mkldnn/${CMAKE_INSTALL_LIBDIR}/${MKLDNN_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}
-    COMMENT "Copy mkldnn runtime libraries to ngraph build directory."
-    DEPENDEES install
-    )
-
 if(WIN32)
     ExternalProject_Add_Step(
         ext_mkldnn
-        CopyMKLDNNIMP
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/mkldnn/${CMAKE_INSTALL_LIBDIR}/${MKLDNN_IMPLIB} ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}
+        CopyMKLDNN
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/mkldnn/bin/${MKLDNN_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}
         COMMENT "Copy mkldnn runtime libraries to ngraph build directory."
         DEPENDEES install
         )
+
+    ExternalProject_Add_Step(
+        ext_mkldnn
+        CopyMKLDNNIMP
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${MKLDNN_IMPLIB} ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${MKLDNN_IMPLIB}
+        COMMENT "Copy mkldnn runtime libraries to ngraph build directory."
+        DEPENDEES install
+        )
+else()
+    ExternalProject_Add_Step(
+        ext_mkldnn
+        CopyMKLDNN
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/mkldnn/${CMAKE_INSTALL_LIBDIR}/${MKLDNN_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}
+        COMMENT "Copy mkldnn runtime libraries to ngraph build directory."
+        DEPENDEES install
+        )
+    if(NGRAPH_LIB_VERSIONING_ENABLE)
+        ExternalProject_Add_Step(
+            ext_mkldnn
+            CopyMKLDNNEXTRA
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/mkldnn/${CMAKE_INSTALL_LIBDIR}/${MKLDNN_SHORT_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_SHORT_LIB}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/mkldnn/${CMAKE_INSTALL_LIBDIR}/${MKLDNN_FULL_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_FULL_LIB}
+            COMMENT "Copy extra mkldnn runtime libraries to ngraph build directory."
+            DEPENDEES install
+           )
+    endif()
 endif()
 
 ExternalProject_Add_Step(
@@ -292,4 +332,14 @@ else()
             ${NGRAPH_INSTALL_LIB}
         OPTIONAL
         )
+    if(NGRAPH_LIB_VERSIONING_ENABLE)
+        install(
+            FILES
+            ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_SHORT_LIB}
+            ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_FULL_LIB}
+            DESTINATION
+                ${NGRAPH_INSTALL_LIB}
+            OPTIONAL
+            )
+    endif()
 endif()

@@ -19,6 +19,8 @@
 #include <memory>
 
 #include "ngraph/function.hpp"
+#include "ngraph/pass/pass_config.hpp"
+#include "ngraph/runtime/executable.hpp"
 #include "ngraph/runtime/performance_counter.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -27,10 +29,8 @@ namespace ngraph
 {
     namespace runtime
     {
-        class ExternalFunction;
         class Tensor;
         class Backend;
-        class Executable;
     }
 }
 
@@ -84,6 +84,14 @@ public:
     virtual std::shared_ptr<Executable> compile(std::shared_ptr<Function> func,
                                                 bool enable_performance_data = false) = 0;
 
+    /// \brief Compiles a Function.
+    /// \param func The function to compile
+    /// \param pass_config Configuration object for defining compilation options
+    /// \returns compiled function or nullptr on failure
+    virtual std::shared_ptr<Executable> compile(std::shared_ptr<Function> func,
+                                                ngraph::pass::PassConfig& pass_config,
+                                                bool enable_performance_data = false);
+
     /// \brief Test if a backend is capable of supporting an op
     /// \param node is the op to test.
     /// \returns true if the op is supported, false otherwise.
@@ -101,52 +109,12 @@ public:
     virtual bool is_supported_property(const Property prop) const;
 
     virtual void remove_compiled_function(std::shared_ptr<Executable> exec);
-};
 
-class ngraph::runtime::Executable
-{
-public:
-    Executable();
-    virtual ~Executable();
-
-    /// \param outputs vector of runtime::Tensor used as outputs
-    /// \param inputs vector of runtime::Tensor used as inputs
-    /// \returns true if iteration is successful, false otherwise
-    virtual bool call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                      const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) = 0;
-
-    /// \brief Executes a single iteration of a Function.
-    /// \param outputs vector of runtime::Tensor used as outputs
-    /// \param inputs vector of runtime::Tensor used as inputs
-    /// \returns true if iteration is successful, false otherwise
-    bool call_with_validate(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                            const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
-
-    /// \brief Collect performance information gathered on a Function.
-    /// \returns Vector of PerformanceCounter information.
-    virtual std::vector<PerformanceCounter> get_performance_data() const;
-
-    /// \brief Validates a Function.
-    /// \param outputs vector of runtime::Tensor used as outputs
-    /// \param inputs vector of runtime::Tensor used as inputs
-    void validate(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                  const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
-
-    /// \brief Query the input Parameters
-    /// \returns an ngraph::op::ParameterVector of all input parameters
-    const ngraph::ParameterVector& get_parameters() const;
-
-    /// \brief Query the output Results
-    /// \returns an ngraph::ResultVector of all input parameters
-    const ngraph::ResultVector& get_results() const;
-
-protected:
-    /// \brief Called at the end of compile to the values to be returned by get_parameters
-    ///     and get_results
-    /// \param func The function with Results fully resolved.
-    void set_parameters_and_results(const Function& func);
-
-private:
-    ngraph::ParameterVector m_parameters;
-    ngraph::ResultVector m_results;
+    // \brief Return a backend specific op (that is not a core ngraph op).
+    //     The string op_name is the requested op, which a backend may or may not implement.
+    //     If unsupported, nullptr is returned, else a backend op is returned.
+    //     The variadic input is used to pass inputs that the op constructor might take
+    // \param op_name is the name of the backend specific op
+    // \returns a shared pointer to the op if found, else nullptr
+    virtual std::shared_ptr<ngraph::Node> get_backend_op(const std::string& op_name, ...);
 };

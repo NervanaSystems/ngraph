@@ -44,6 +44,7 @@
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/pad.hpp"
+#include "ngraph/op/passthrough.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/replace_slice.hpp"
@@ -126,7 +127,6 @@
 #include "ngraph/runtime/reference/softmax.hpp"
 #include "ngraph/runtime/reference/sqrt.hpp"
 #include "ngraph/runtime/reference/subtract.hpp"
-#include "ngraph/runtime/reference/sum.hpp"
 #include "ngraph/runtime/reference/tan.hpp"
 #include "ngraph/runtime/reference/tanh.hpp"
 #include "ngraph/runtime/reference/topk.hpp"
@@ -135,6 +135,7 @@
 
 #ifdef NGRAPH_DISTRIBUTED_ENABLE
 #include "ngraph/runtime/reference/allreduce.hpp"
+#include "ngraph/runtime/reference/broadcast_distributed.hpp"
 #endif
 
 namespace ngraph
@@ -435,6 +436,32 @@ private:
                                        in_shape,
                                        out_shape,
                                        broadcast_axes);
+            break;
+        }
+        case OP_TYPEID::BroadcastDistributed: {
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
+            Distributed dist;
+            int Rank_ID;
+            Rank_ID = dist.get_rank();
+            if (Rank_ID == 0)
+            {
+                reference::broadcastdistributed<T>(
+                    static_cast<T*>(args[0]),
+                    node.get_input_element_type(0),
+                    static_cast<int>(shape_size(node.get_input_shape(0))));
+                auto memSize = static_cast<int>(shape_size(node.get_input_shape(0))) *
+                               sizeof(node.get_input_element_type(0));
+                memcpy(out[0], args[0], memSize);
+            }
+            else
+            {
+                reference::broadcastdistributed<T>(
+                    static_cast<T*>(out[0]),
+                    node.get_input_element_type(0),
+                    static_cast<int>(shape_size(node.get_input_shape(0))));
+            }
+            break;
+#endif
             break;
         }
         case OP_TYPEID::BroadcastLike: break;
@@ -929,6 +956,11 @@ private:
                            pad->get_padding_interior());
             break;
         }
+        case OP_TYPEID::Passthrough:
+        {
+            const op::Passthrough* passthrough = static_cast<const op::Passthrough*>(&node);
+            throw unsupported_op{"Unsupported operation language: " + passthrough->language()};
+        }
         case OP_TYPEID::Power:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -1002,9 +1034,10 @@ private:
         case OP_TYPEID::QuantizedConvolutionRelu:
         case OP_TYPEID::QuantizedConvolution:
         case OP_TYPEID::QuantizedMaxPool:
+        case OP_TYPEID::QuantizedDotBias:
+        case OP_TYPEID::QuantizedDot:
         {
-            throw unsupported_op("Unsupported op '" + node.description() +
-                                 "' in Interpreter back end.");
+            throw unsupported_op("Unsupported op '" + node.description() + "'.");
         }
         case OP_TYPEID::Relu:
         {

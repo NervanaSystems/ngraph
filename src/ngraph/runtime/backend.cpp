@@ -29,6 +29,12 @@ runtime::Backend::~Backend()
 {
 }
 
+std::shared_ptr<ngraph::Node> runtime::Backend::get_backend_op(const std::string& op_name, ...)
+{
+    std::shared_ptr<ngraph::Node> dummy_node(nullptr);
+    return dummy_node;
+}
+
 unique_ptr<runtime::Backend> runtime::Backend::create(const string& type)
 {
     return BackendManager::create_backend(type);
@@ -39,104 +45,19 @@ vector<string> runtime::Backend::get_registered_devices()
     return BackendManager::get_registered_backends();
 }
 
+std::shared_ptr<runtime::Executable>
+    runtime::Backend::compile(std::shared_ptr<Function> func,
+                              ngraph::pass::PassConfig& pass_config,
+                              bool enable_performance_data)
+{
+    return compile(func, enable_performance_data);
+}
+
 bool runtime::Backend::is_supported(const Node& node) const
 {
     // The default behavior is that a backend does not support any ops. If this is not the case
     // then override this method and enhance.
     return false;
-}
-
-runtime::Executable::Executable()
-{
-}
-
-runtime::Executable::~Executable()
-{
-}
-
-bool runtime::Executable::call_with_validate(const vector<shared_ptr<runtime::Tensor>>& outputs,
-                                             const vector<shared_ptr<runtime::Tensor>>& inputs)
-{
-    validate(outputs, inputs);
-    return call(outputs, inputs);
-}
-
-void runtime::Executable::validate(const vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                                   const vector<std::shared_ptr<runtime::Tensor>>& inputs)
-{
-    const ParameterVector& parameters = get_parameters();
-    const ResultVector& results = get_results();
-    if (parameters.size() != inputs.size())
-    {
-        stringstream ss;
-        ss << "Call input count " << inputs.size() << " does not match Function's Parameter count "
-           << parameters.size();
-        throw runtime_error(ss.str());
-    }
-    if (results.size() != outputs.size())
-    {
-        stringstream ss;
-        ss << "Call output count " << outputs.size() << " does not match Function's Result count "
-           << results.size();
-        throw runtime_error(ss.str());
-    }
-
-    for (size_t i = 0; i < parameters.size(); i++)
-    {
-        if (parameters[i]->get_element_type() != inputs[i]->get_element_type())
-        {
-            stringstream ss;
-            ss << "Input " << i << " type '" << inputs[i]->get_element_type()
-               << "' does not match Parameter type '" << parameters[i]->get_element_type() << "'";
-            throw runtime_error(ss.str());
-        }
-        if (parameters[i]->get_shape() != inputs[i]->get_shape())
-        {
-            stringstream ss;
-            ss << "Input " << i << " shape {" << join(inputs[i]->get_shape())
-               << "} does not match Parameter shape {" << join(parameters[i]->get_shape()) << "}";
-            throw runtime_error(ss.str());
-        }
-    }
-
-    for (size_t i = 0; i < results.size(); i++)
-    {
-        if (results[i]->get_element_type() != outputs[i]->get_element_type())
-        {
-            stringstream ss;
-            ss << "Output " << i << " type '" << outputs[i]->get_element_type()
-               << "' does not match Result type '" << results[i]->get_element_type() << "'";
-            throw runtime_error(ss.str());
-        }
-        if (results[i]->get_shape() != outputs[i]->get_shape())
-        {
-            stringstream ss;
-            ss << "Output " << i << " shape {" << join(outputs[i]->get_shape())
-               << "} does not match Result shape {" << join(results[i]->get_shape()) << "}";
-            throw runtime_error(ss.str());
-        }
-    }
-}
-
-const ngraph::ParameterVector& runtime::Executable::get_parameters() const
-{
-    return m_parameters;
-}
-
-const ngraph::ResultVector& runtime::Executable::get_results() const
-{
-    return m_results;
-}
-
-void runtime::Executable::set_parameters_and_results(const Function& func)
-{
-    m_parameters = func.get_parameters();
-    m_results = func.get_results();
-}
-
-vector<runtime::PerformanceCounter> runtime::Executable::get_performance_data() const
-{
-    return vector<PerformanceCounter>();
 }
 
 bool runtime::Backend::is_supported_property(const Property prop) const

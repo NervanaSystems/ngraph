@@ -62,6 +62,7 @@ string runtime::intelgpu::get_opencl_type_min_max_value(const element::Type& ngr
     case element::Type_t::u16: return is_min ? "0" : "USHRT_MAX";
     case element::Type_t::i8: return is_min ? "CHAR_MIN" : "CHAR_MAX";
     case element::Type_t::u8: return is_min ? "0" : "UCHAR_MAX";
+    case element::Type_t::boolean: return is_min ? "0" : "1";
     }
 
     throw ngraph_error("Unsupported type '" + ngraph_type.c_type_string() +
@@ -322,13 +323,16 @@ void runtime::intelgpu::do_pad_operation(cldnn::topology& topology,
                                          const string& output_name,
                                          const Shape& output_shape,
                                          const element::Type& output_type,
-                                         const Shape& pad_below,
-                                         const Shape& pad_interior)
+                                         const CoordinateDiff& pad_below)
 {
     const string entry_point_name = "op_pad_" + output_name;
     const size_t cldnn_gws_lim = 3;
     CodeWriter writer;
     vector<size_t> gws;
+
+    // FIXME: Compatibility hack added by amprocte now that interior padding has been removed
+    // from nGraph's Pad op.
+    Shape pad_interior(pad_below.size(), 0);
 
     // The kernel name and parameters
     gen_func_def(writer, entry_point_name, {2, "float"}, {input_shape, {1}}, "float", output_shape);
@@ -1079,6 +1083,149 @@ void runtime::intelgpu::do_slice_operation(cldnn::topology& topology,
     topology.add(op_slice);
 }
 
+void runtime::intelgpu::do_concat_operation(cldnn::topology& topology,
+                                            const vector<string>& input_names,
+                                            const vector<Shape>& input_shapes,
+                                            const string& output_name,
+                                            const Shape& output_shape,
+                                            const element::Type& output_type,
+                                            size_t concat_axis)
+{
+    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const string kernel_type_name = get_opencl_type_name(output_type);
+    string entry_point_name = "concat_" + output_name;
+
+    size_t bound_below = 0;
+    size_t idx = 0;
+    vector<string>::const_iterator input_name = input_names.cbegin();
+    string aux_output_name;
+
+    // this is quite non optimal because cldnn::custom_gpu_primitive
+    // does not provide an ability to run kernels simultaneously with the same output
+    // Also, need to make a chain of kernels to put kernel0::output0 as kernel1::input1
+    // with output name kernel1::output2
+    for (auto const& input_shape : input_shapes)
+    {
+        string name_suffix = to_string(idx);
+        const string entry_point_name_suffix = entry_point_name + "_" + name_suffix;
+        CodeWriter writer;
+        vector<size_t> gws;
+
+        if (idx == 0)
+        {
+            gen_func_def(writer,
+                         entry_point_name_suffix,
+                         {kernel_type_name},
+                         {input_shape},
+                         kernel_type_name,
+                         output_shape);
+        }
+        else
+        {
+            gen_func_def(writer,
+                         entry_point_name_suffix,
+                         {2, kernel_type_name},
+                         {input_shape, output_shape},
+                         kernel_type_name,
+                         output_shape);
+        }
+
+        writer.block_begin();
+        {
+            // Main loops
+            gws = generate_loops(writer, output_shape, true);
+
+            writer << kernel_type_name << " input_element;\n";
+
+            size_t bound_upper = input_shape.at(concat_axis);
+
+            // copy corresponding elements of input0 into output
+            writer << "if (((" << bound_below << " + 0) <= i" << concat_axis << ") && (i"
+                   << concat_axis << " < (" << bound_below << " + " << bound_upper << ")))\n";
+            writer.block_begin();
+            {
+                writer << "input_element = input0";
+
+                if (input_shape.empty())
+                {
+                    // it means scalar
+                    writer << "[0]";
+                }
+                else
+                {
+                    size_t var_idx = 0;
+                    for (auto const i : input_shape)
+                    {
+                        if (var_idx == concat_axis)
+                        {
+                            writer << "[i" << var_idx << " - " << bound_below << "]";
+                        }
+                        else
+                        {
+                            writer << "[i" << var_idx << "]";
+                        }
+                        ++var_idx;
+                    }
+                }
+                writer << ";\n";
+            }
+            writer.block_end();
+
+            // if not a first kernel, copy input1 into output
+            if (idx != 0)
+            {
+                writer << "else\n";
+                writer.block_begin();
+                {
+                    writer << "input_element = input1" << access_dims(output_shape) << ";\n";
+                }
+                writer.block_end();
+            }
+            bound_below += bound_upper;
+
+            writer << "output" << access_dims(output_shape) << " = input_element;\n";
+
+            // Closing brackets for main loops
+            generate_loops(writer, output_shape, false);
+        }
+        writer.block_end();
+
+        vector<cldnn::primitive_id> kernel_input;
+        vector<cldnn_arg> kernel_arguments;
+
+        kernel_input.push_back(*input_name);
+        if (idx == 0)
+        {
+            kernel_arguments = get_kernel_args(1, 1);
+        }
+        else
+        {
+            kernel_input.push_back(aux_output_name);
+            kernel_arguments = get_kernel_args(2, 1);
+        }
+
+        // last kernel should produce the output name as overall node required
+        if (idx == input_shapes.size() - 1)
+        {
+            name_suffix = "";
+        }
+
+        const cldnn::custom_gpu_primitive op_concat(output_name + name_suffix,
+                                                    kernel_input,
+                                                    {writer.get_code()},
+                                                    entry_point_name_suffix,
+                                                    kernel_arguments,
+                                                    "",
+                                                    layout,
+                                                    gws);
+        topology.add(op_concat);
+
+        ++input_name;
+        ++idx;
+        aux_output_name = output_name + name_suffix;
+    }
+}
+
 void runtime::intelgpu::do_select_operation(cldnn::topology& topology,
                                             const string& input0_name,
                                             const Shape& input0_shape,
@@ -1241,9 +1388,62 @@ void runtime::intelgpu::do_eltwise_kernel(cldnn::topology& topology,
     topology.add(op_eltwise);
 }
 
+void runtime::intelgpu::do_relu_backprop(cldnn::topology& topology,
+                                         const string& input0_name,
+                                         const Shape& input0_shape,
+                                         const element::Type& input0_type,
+                                         const string& input1_name,
+                                         const Shape& input1_shape,
+                                         const string& output_name,
+                                         const Shape& output_shape,
+                                         const element::Type& output_type)
+{
+    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const string entry_point_name = "relubackprop_" + output_name;
+    const string input0_type_name = get_opencl_type_name(input0_type);
+    const string output_type_name = get_opencl_type_name(output_type);
+    const string zero_input0_const = "convert_" + input0_type_name + "(0)";
+    const string zero_output_const = "convert_" + output_type_name + "(0)";
+
+    CodeWriter writer;
+    vector<size_t> gws;
+
+    gen_func_def(writer,
+                 entry_point_name,
+                 {2, input0_type_name},
+                 {input0_shape, input1_shape},
+                 output_type_name,
+                 output_shape);
+
+    writer.block_begin();
+    {
+        // Main loops
+        gws = generate_loops(writer, output_shape, true);
+
+        writer << "output" << access_dims(output_shape) << " = (input0" << access_dims(input0_shape)
+               << " > " << zero_input0_const << ") ? input1" << access_dims(input1_shape) << " : "
+               << zero_output_const << ";\n";
+
+        // Closing brackets for main loops
+        generate_loops(writer, output_shape, false);
+    }
+    writer.block_end();
+
+    const cldnn::custom_gpu_primitive op_reluback(output_name,
+                                                  {input0_name, input1_name},
+                                                  {writer.get_code()},
+                                                  entry_point_name,
+                                                  get_kernel_args(2, 1),
+                                                  "",
+                                                  layout,
+                                                  gws);
+    topology.add(op_reluback);
+}
+
 void runtime::intelgpu::do_reverse_operation(cldnn::topology& topology,
                                              const string& input_name,
                                              const Shape& input_shape,
+                                             const element::Type& input_type,
                                              const string& output_name,
                                              const Shape& output_shape,
                                              const element::Type& output_type,
@@ -1254,7 +1454,12 @@ void runtime::intelgpu::do_reverse_operation(cldnn::topology& topology,
     CodeWriter writer;
     vector<size_t> gws;
 
-    gen_func_def(writer, entry_point_name, {"float"}, {input_shape}, "float", output_shape);
+    gen_func_def(writer,
+                 entry_point_name,
+                 {get_opencl_type_name(input_type)},
+                 {input_shape},
+                 get_opencl_type_name(output_type),
+                 output_shape);
 
     writer.block_begin();
     {
@@ -1276,6 +1481,100 @@ void runtime::intelgpu::do_reverse_operation(cldnn::topology& topology,
                                                  layout,
                                                  gws);
     topology.add(op_reverse);
+}
+
+void runtime::intelgpu::do_reverse_sequence_operation(cldnn::topology& topology,
+                                                      const string& input0_name,
+                                                      const Shape& input0_shape,
+                                                      const element::Type& input0_type,
+                                                      const string& input1_name,
+                                                      const Shape& input1_shape,
+                                                      const element::Type& input1_type,
+                                                      const string& output_name,
+                                                      const Shape& output_shape,
+                                                      const element::Type& output_type,
+                                                      const size_t reversed_axis,
+                                                      const size_t batch_axis)
+{
+    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const string entry_point_name = "reverse_sequence_" + output_name;
+    CodeWriter writer;
+    vector<size_t> gws;
+
+    gen_func_def(writer,
+                 entry_point_name,
+                 {get_opencl_type_name(input0_type), get_opencl_type_name(input1_type)},
+                 {input0_shape, input1_shape},
+                 get_opencl_type_name(output_type),
+                 output_shape);
+
+    writer.block_begin();
+    {
+        writer << "//reversed_axis:" << reversed_axis << "\n";
+        writer << "//batch_axis:" << batch_axis << "\n\n";
+
+        gws = generate_loops(writer, output_shape, true);
+
+        writer << get_opencl_type_name(input1_type) << " orig_seq_index = "
+               << "input1[i" << batch_axis << "];\n";
+        writer << "if (orig_seq_index == 0)\n";
+        writer.block_begin();
+        {
+            writer << "orig_seq_index = 1;\n";
+        }
+        writer.block_end();
+
+        writer << get_opencl_type_name(input1_type) << " sequence_index;\n";
+        writer << "if (i" << reversed_axis << " < orig_seq_index)\n";
+        writer.block_begin();
+        {
+            writer << "sequence_index = orig_seq_index - i" << reversed_axis << " - 1;\n";
+        }
+        writer.block_end();
+        writer << "else\n";
+        writer.block_begin();
+        {
+            writer << "sequence_index = i" << reversed_axis << ";\n";
+        }
+        writer.block_end();
+
+        writer << "output" << access_dims(output_shape) << " = input0";
+
+        if (output_shape.empty())
+        {
+            writer << "[0]";
+        }
+        else
+        {
+            size_t var_idx = 0;
+            for (auto const& i : output_shape)
+            {
+                if (var_idx == reversed_axis)
+                {
+                    writer << "[sequence_index]";
+                }
+                else
+                {
+                    writer << "[i" << var_idx << "]";
+                }
+                ++var_idx;
+            }
+        }
+        writer << ";\n";
+
+        generate_loops(writer, output_shape, false);
+    }
+    writer.block_end();
+
+    const cldnn::custom_gpu_primitive op_reverse_seq(output_name,
+                                                     {input0_name, input1_name},
+                                                     {writer.get_code()},
+                                                     entry_point_name,
+                                                     get_kernel_args(2, 1),
+                                                     "",
+                                                     layout,
+                                                     gws);
+    topology.add(op_reverse_seq);
 }
 
 void runtime::intelgpu::do_not_operation(cldnn::topology& topology,
@@ -1400,8 +1699,42 @@ void runtime::intelgpu::do_convert_operation(cldnn::topology& topology,
     {
         gws = generate_loops(writer, output_shape, true);
 
-        writer << "output" << access_dims(output_shape) << " = convert_" << output_type_name
-               << "(input0" << access_dims(output_shape) << ");\n";
+        if (((input_type.get_type_enum() == element::Type_t::f64) ||
+             (input_type.get_type_enum() == element::Type_t::f32)) &&
+            (output_type.get_type_enum() != element::Type_t::boolean))
+        {
+            // this is the workaround for OpenCL to be same as with CPU floating point operations
+            writer << input_type_name << " input_var = input0" << access_dims(output_shape) << ";\n"
+                   << output_type_name << " output_var = 0;\n";
+
+            writer << "if (input_var > " << get_opencl_type_min_max_value(output_type, false);
+            if (!output_type.is_real())
+            {
+                writer << " || isnan(input_var)";
+            }
+            writer << ")\n";
+            writer.block_begin();
+            {
+                writer << "output_var = " << get_opencl_type_min_max_value(output_type, true)
+                       << ";\n";
+            }
+            writer.block_end();
+
+            writer << "else\n";
+
+            writer.block_begin();
+            {
+                writer << "output_var = convert_" << output_type_name << "(input_var);\n";
+            }
+            writer.block_end();
+
+            writer << "output" << access_dims(output_shape) << " = output_var;\n";
+        }
+        else
+        {
+            writer << "output" << access_dims(output_shape) << " = convert_" << output_type_name
+                   << "(input0" << access_dims(output_shape) << ");\n";
+        }
 
         generate_loops(writer, output_shape, false);
     }
@@ -1834,6 +2167,152 @@ void runtime::intelgpu::do_dequantize_operation(cldnn::topology& topology,
                                                     layout,
                                                     gws);
     topology.add(op_dequantize);
+}
+
+void runtime::intelgpu::do_topk_operation(cldnn::topology& topology,
+                                          const std::string& input_name,
+                                          const Shape& input_shape,
+                                          const element::Type& input_type,
+                                          const std::string& output_name,
+                                          const Shape& output_shape,
+                                          const element::Type& output_type,
+                                          const element::Type& index_elem_type,
+                                          const size_t top_k_axis,
+                                          const size_t k,
+                                          const bool compute_max,
+                                          const bool find_indices)
+{
+    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const string entry_point_name = "topk_" + output_name;
+    CodeWriter writer;
+    const string operation_sign = compute_max ? " > " : " < ";
+    const string prev_operation_sign = !compute_max ? ">" : "<";
+    const size_t shape_size = input_shape.size();
+
+    gen_func_def(writer,
+                 entry_point_name,
+                 {get_opencl_type_name(input_type)},
+                 {input_shape},
+                 get_opencl_type_name(output_type),
+                 output_shape);
+
+    writer.block_begin();
+    {
+        writer << get_opencl_type_name(input_type)
+               << " prev_min_max = " << get_opencl_type_min_max_value(input_type, !compute_max)
+               << ";\n";
+        writer << get_opencl_type_name(index_elem_type) << " prev_index = -2;\n";
+        writer << get_opencl_type_name(input_type)
+               << " current_min_max = " << get_opencl_type_min_max_value(input_type, compute_max)
+               << ";\n";
+        writer << get_opencl_type_name(index_elem_type) << " current_index = -1;\n";
+
+        size_t current_output = 0;
+        for (auto const& i : output_shape)
+        {
+            if (current_output != top_k_axis)
+            {
+                writer << "for (uint i" << current_output << " = 0; i" << current_output << " < "
+                       << i << "; ++i" << current_output << ")\n";
+                writer.block_begin();
+            }
+            ++current_output;
+        }
+
+        writer << "prev_min_max = " << get_opencl_type_min_max_value(input_type, !compute_max)
+               << ";\n";
+        writer << "prev_index = -2;\n";
+
+        writer << "for (uint i = 0; i < " << output_shape.at(top_k_axis) << "; ++i)\n";
+        writer.block_begin();
+
+        writer << "current_min_max = " << get_opencl_type_min_max_value(input_type, compute_max)
+               << ";\n";
+        writer << "current_index = -1;\n";
+
+        writer << "for (uint j = 0; j < " << input_shape.at(top_k_axis) << "; ++j)\n";
+        writer.block_begin();
+
+        size_t current = 0;
+        string buffer;
+        for (uint j = 0; j < shape_size; ++j)
+        {
+            if (j == top_k_axis)
+            {
+                buffer += "[j]";
+            }
+            else
+            {
+                buffer += "[i" + to_string(current) + "]";
+            }
+            ++current;
+        }
+
+        writer << "if (input0" << buffer << operation_sign << "current_min_max)\n";
+        writer.block_begin();
+        {
+            writer << "if (input0" << buffer << " " << prev_operation_sign
+                   << " prev_min_max || (input0" << buffer
+                   << " == prev_min_max && j > prev_index))\n";
+            writer.block_begin();
+            {
+                writer << "current_min_max = input0" << buffer << ";\n";
+                writer << "current_index = j;\n";
+            }
+            writer.block_end();
+        }
+        writer.block_end();
+
+        writer.block_end();
+
+        current = 0;
+        string outbuffer;
+        for (uint j = 0; j < shape_size; ++j)
+        {
+            if (j == top_k_axis)
+            {
+                outbuffer += "[i]";
+            }
+            else
+            {
+                outbuffer += "[i" + to_string(current) + "]";
+            }
+            ++current;
+        }
+
+        if (find_indices == true)
+        {
+            writer << "output" << outbuffer << " = current_index;\n";
+        }
+        else
+        {
+            writer << "output" << outbuffer << " = current_min_max;\n";
+        }
+        writer << "prev_min_max = current_min_max;\n";
+        writer << "prev_index = current_index;\n";
+
+        writer.block_end();
+        current_output = 0;
+        for (auto const& i : output_shape)
+        {
+            if (current_output != top_k_axis)
+            {
+                writer.block_end();
+            }
+            ++current_output;
+        }
+    }
+    writer.block_end();
+
+    const cldnn::custom_gpu_primitive op_topk(output_name,
+                                              {input_name},
+                                              {writer.get_code()},
+                                              entry_point_name,
+                                              get_kernel_args(1, 1),
+                                              "",
+                                              layout,
+                                              {1});
+    topology.add(op_topk);
 }
 
 size_t runtime::intelgpu::get_max_memory_rss()

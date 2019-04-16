@@ -21,6 +21,8 @@
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/util/binary_elementwise_comparison.hpp"
 #include "ngraph/pass/assign_layout.hpp"
+#include "ngraph/pass/core_fusion.hpp"
+#include "ngraph/pass/fused_op_decomposition.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -39,6 +41,7 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
     m_is_compiled = true;
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::LikeReplacement>();
+    pass_manager.register_pass<pass::FusedOpDecomposition>();
     pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
     pass_manager.register_pass<pass::Liveness>();
     pass_manager.run_passes(function);
@@ -80,7 +83,7 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
     {
         for (size_t i = 0; i < param->get_output_size(); ++i)
         {
-            descriptor::Tensor* tensor = param->get_output_tensor_ptr(i).get();
+            descriptor::Tensor* tensor = &param->output(i).get_tensor();
             tensor_map.insert({tensor, func_inputs[input_count++]});
         }
     }
@@ -93,7 +96,7 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
         {
             throw ngraph_error("One of function's outputs isn't op::Result");
         }
-        descriptor::Tensor* tensor = output->get_output_tensor_ptr(0).get();
+        descriptor::Tensor* tensor = &output->output(0).get_tensor();
         tensor_map.insert({tensor, func_outputs[output_count]});
     }
 
@@ -109,9 +112,9 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
 
         // get op inputs from map
         vector<shared_ptr<HostTensor>> op_inputs;
-        for (const descriptor::Input& input : op->get_inputs())
+        for (auto input : op->inputs())
         {
-            descriptor::Tensor* tensor = input.get_output().get_tensor_ptr().get();
+            descriptor::Tensor* tensor = &input.get_tensor();
             op_inputs.push_back(tensor_map.at(tensor));
         }
 
@@ -119,14 +122,14 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
         vector<shared_ptr<HostTensor>> op_outputs;
         for (size_t i = 0; i < op->get_output_size(); ++i)
         {
-            descriptor::Tensor* tensor = op->get_output_tensor_ptr(i).get();
+            descriptor::Tensor* tensor = &op->output(i).get_tensor();
             shared_ptr<HostTensor> host_tensor;
             auto it = tensor_map.find(tensor);
             if (it == tensor_map.end())
             {
                 const Shape& shape = op->get_output_shape(i);
                 const element::Type& type = op->get_output_element_type(i);
-                string name = op->get_output_tensor(i).get_name();
+                string name = op->output(i).get_tensor().get_name();
                 host_tensor = make_shared<runtime::HostTensor>(type, shape, name);
                 tensor_map.insert({tensor, host_tensor});
             }

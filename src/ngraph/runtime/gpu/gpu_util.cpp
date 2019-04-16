@@ -14,7 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cassert>
 #include <cstdlib>
 #include <cuda.h>
 #include <cuda_runtime.h>
@@ -23,6 +22,7 @@
 #include <stdio.h>
 #include <string>
 
+#include "ngraph/check.hpp"
 #include "ngraph/runtime/gpu/cuda_error_check.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
 #include "ngraph/util.hpp"
@@ -40,7 +40,7 @@ void runtime::gpu::print_gpu_f32_tensor(const void* p, size_t element_count, siz
 
 void runtime::gpu::check_cuda_errors(CUresult err)
 {
-    assert(err == CUDA_SUCCESS);
+    NGRAPH_CHECK(err == CUDA_SUCCESS);
 }
 
 void* runtime::gpu::create_gpu_buffer(size_t buffer_size, const void* data)
@@ -60,6 +60,17 @@ void runtime::gpu::free_gpu_buffer(void* buffer)
     {
         CUDA_RT_SAFE_CALL(cudaFree(buffer));
     }
+}
+
+bool runtime::gpu::is_device_pointer(const void* ptr)
+{
+    cudaPointerAttributes attributes;
+    CUDA_RT_SAFE_CALL_NO_THROW(cudaPointerGetAttributes(&attributes, ptr));
+    if (attributes.devicePointer != nullptr)
+    {
+        return true;
+    }
+    return false;
 }
 
 void runtime::gpu::cuda_memcpyDtD(void* dst, const void* src, size_t buffer_size)
