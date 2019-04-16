@@ -43,6 +43,7 @@
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
+#include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/maximum.hpp"
@@ -68,7 +69,6 @@
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
-#include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
@@ -672,16 +672,36 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias()
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
-        auto conv =
-            std::static_pointer_cast<ngraph::op::Convolution>(m.get_match_root()->get_argument(0));
+        auto conv_m =
+            std::dynamic_pointer_cast<ngraph::op::Convolution>(m.get_match_root()->get_argument(0));
+        auto bcast_m =
+            std::dynamic_pointer_cast<op::Broadcast>(m.get_match_root()->get_argument(1));
 
-        if (!runtime::cpu::mkldnn_utils::can_use_mkldnn_conv<ngraph::op::Convolution>(conv.get()))
+        if (conv_m == nullptr)
+        {
+            conv_m = std::dynamic_pointer_cast<ngraph::op::Convolution>(
+                m.get_match_root()->get_argument(1));
+            bcast_m = std::dynamic_pointer_cast<op::Broadcast>(m.get_match_root()->get_argument(0));
+        }
+
+        if (!runtime::cpu::mkldnn_utils::can_use_mkldnn_conv<ngraph::op::Convolution>(conv_m.get()))
         {
             NGRAPH_DEBUG << "Convolution not supported by MKLDNN";
             return false;
         }
 
-        auto bias = m.get_match_root()->get_argument(1)->get_argument(0);
+        // Except for the 2nd axis (channel dimension), we should either be broadcasting
+        // to it or the dimension size should be 1.
+        auto bcast_axes = bcast_m->get_broadcast_axes();
+        for (size_t i = 0; i < bcast_m->get_shape().size(); i++)
+        {
+            if (i != 1 && bcast_axes.find(i) == bcast_axes.end() && bcast_m->get_shape()[i] != 1)
+            {
+                return false;
+            }
+        }
+
+        auto bias = bcast_m->get_argument(0);
         auto bias_shape = bias->get_shape();
         if (bias_shape.size() > 1)
         {
@@ -689,14 +709,14 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias()
                          << "conv_bias bias shape != 1, requires reshape to match filter count.";
             auto order = ngraph::get_default_order(bias_shape);
             auto bias_reshape = std::make_shared<ngraph::op::Reshape>(
-                bias, order, Shape{conv->get_input_shape(1)[0]});
+                bias, order, Shape{conv_m->get_input_shape(1)[0]});
             auto conv_bias =
-                std::shared_ptr<Node>(new ngraph::op::ConvolutionBias(conv, bias_reshape));
+                std::shared_ptr<Node>(new ngraph::op::ConvolutionBias(conv_m, bias_reshape));
             ngraph::replace_node(m.get_match_root(), conv_bias);
         }
         else
         {
-            auto conv_bias = std::shared_ptr<Node>(new ngraph::op::ConvolutionBias(conv, bias));
+            auto conv_bias = std::shared_ptr<Node>(new ngraph::op::ConvolutionBias(conv_m, bias));
             ngraph::replace_node(m.get_match_root(), conv_bias);
         }
         return true;
@@ -823,7 +843,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
         for (auto bn_in : m_bn->get_output_inputs(0))
         {
             auto mgoe = std::dynamic_pointer_cast<ngraph::op::GetOutputElement>(bn_in->get_node());
-            NGRAPH_ASSERT(mgoe);
+            NGRAPH_CHECK(mgoe);
             mgoes[mgoe->get_n()] = mgoe;
         }
 
@@ -1057,17 +1077,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_add()
             return false;
         }
 
-        if (!is_post_dominated(inplace_input.get(), add_m.get()))
-        {
-            NGRAPH_DEBUG << "Unsafe to use in-place kernel since add's in-place input has "
-                            "potential live users";
-            return false;
-        }
-
         if (inplace_input->is_parameter())
         {
-            NGRAPH_DEBUG
-                << "Unsafe to use in-place kernel since add's in-place input is a parameter";
+            NGRAPH_DEBUG << "Skipping Convolution Add fusion due to parameter input";
             return false;
         }
 
@@ -1178,17 +1190,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
             return false;
         }
 
-        if (!is_post_dominated(inplace_input.get(), add_m.get()))
-        {
-            NGRAPH_DEBUG << "Unsafe to use in-place kernel since add's in-place input has "
-                            "potential live users";
-            return false;
-        }
-
         if (inplace_input->is_parameter())
         {
-            NGRAPH_DEBUG
-                << "Unsafe to use in-place kernel since add's in-place input is a parameter";
+            NGRAPH_DEBUG << "Skipping Convolution Add fusion due to parameter input";
             return false;
         }
 

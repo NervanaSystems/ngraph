@@ -33,6 +33,7 @@
 #include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
+#include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/negative.hpp"
@@ -58,7 +59,6 @@
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
-#include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
@@ -506,7 +506,7 @@ TEST(cpu_fusion, fuse_conv_bias)
 {
     pass::Manager pass_manager;
     pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::DIFFERENTIABLE_FUSIONS);
+    pass_manager.register_pass<ngraph::runtime::cpu::pass::CPUFusion>();
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "conv_bias.json");
     const string json_string = file_util::read_file_to_string(json_path);
     stringstream ss(json_string);
@@ -1365,7 +1365,7 @@ TEST(cpu_fusion, weight_fusion)
     auto reshape_conv =
         std::make_shared<ngraph::op::Reshape>(param, AxisVector{0}, Shape{16, 4, 1, 1});
     auto data_conv = std::make_shared<op::Parameter>(element::f32, Shape{16, 4, 7, 7});
-    auto tvt = reshape_conv->get_outputs().at(0).get_tensor_ptr().get();
+    auto tvt = &reshape_conv->output(0).get_tensor();
     auto lt_desc = std::make_shared<runtime::cpu::LayoutDescriptor>(*tvt);
     auto cvt_lt_conv = std::make_shared<runtime::cpu::op::ConvertLayout>(reshape_conv, lt_desc);
     auto conv = std::make_shared<ngraph::op::Convolution>(
@@ -1374,7 +1374,7 @@ TEST(cpu_fusion, weight_fusion)
     auto reshape_conv_bprop =
         std::make_shared<op::Reshape>(param, AxisVector{0}, Shape{16, 4, 1, 1});
     auto dummy_arg_conv_bprop = std::make_shared<op::Parameter>(element::f32, Shape{1, 16, 7, 7});
-    auto tvt_bprop = reshape_conv_bprop->get_outputs().at(0).get_tensor_ptr().get();
+    auto tvt_bprop = &reshape_conv_bprop->output(0).get_tensor();
     auto lt_desc_bprop = std::make_shared<runtime::cpu::LayoutDescriptor>(*tvt_bprop);
     auto cvt_lt_conv_bprop =
         std::make_shared<runtime::cpu::op::ConvertLayout>(reshape_conv_bprop, lt_desc_bprop);

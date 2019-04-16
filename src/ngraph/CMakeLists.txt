@@ -46,6 +46,7 @@ set (SRC
     coordinate_transform.cpp
     cpio.cpp
     cpio.hpp
+    deprecated.hpp
     descriptor/input.cpp
     descriptor/input.hpp
     descriptor/layout/dense_tensor_layout.cpp
@@ -73,10 +74,6 @@ set (SRC
     ngraph_visibility.hpp
     node.cpp
     node.hpp
-    node_input.cpp
-    node_input.hpp
-    node_output.cpp
-    node_output.hpp
     node_vector.hpp
     op/abs.cpp
     op/abs.hpp
@@ -258,6 +255,8 @@ set (SRC
     op/tanh.hpp
     op/topk.cpp
     op/topk.hpp
+    op/fused/conv_fused.cpp
+    op/fused/conv_fused.hpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
     op/util/arithmetic_reduction.cpp
