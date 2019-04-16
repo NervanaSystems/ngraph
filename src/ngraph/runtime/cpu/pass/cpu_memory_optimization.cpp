@@ -105,7 +105,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
             for (descriptor::Input& input : concat->get_inputs())
             {
                 // no tensors with zero-sized dimensions after zero_dim_tensor_elimination
-                NGRAPH_ASSERT(shape_size(input.get_shape()) != 0);
+                NGRAPH_CHECK(shape_size(input.get_shape()) != 0);
 
                 // check if input layout is padded
                 auto input_md = mkldnn_utils::get_input_mkldnn_md(n.get(), index);
@@ -128,7 +128,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                     break;
                 }
 
-                NGRAPH_ASSERT(arg->get_output_size() == 1);
+                NGRAPH_CHECK(arg->get_output_size() == 1);
 
                 if (arg->description() != "Concat")
                 {
