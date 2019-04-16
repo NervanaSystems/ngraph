@@ -184,9 +184,6 @@ namespace ngraph
     void check_fp_values_isnan(const char* name, const float* array, size_t n);
     void check_fp_values_isnan(const char* name, const double* array, size_t n);
 
-    void* aligned_alloc(size_t alignment, size_t size);
-    void aligned_free(void*);
-
     void* ngraph_malloc(size_t size);
     void ngraph_free(void*);
 
