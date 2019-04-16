@@ -135,16 +135,17 @@ def runToxTests(configurationMaps) {
 def cleanup(configurationMaps) {
     Closure cleanupMethod = { configMap ->
         sh """
+            docker exec ${configMap["dockerContainerName"]} bash -c 'rm -rf ~/*' || true
             cd ${HOME}/ONNX_CI
             ./docker.sh chmod --container_name=${configMap["dockerContainerName"]} --directory="/logs" --options="-R 777" || true
             ./docker.sh stop --container_name=${configMap["dockerContainerName"]} || true
             ./docker.sh remove --container_name=${configMap["dockerContainerName"]} || true
             ./docker.sh clean_up || true
-            rm ${HOME}/ONNX_CI/docker.sh
+            rm -rf ${HOME}/ONNX_CI/docker.sh
             rm -rf ${WORKSPACE}/${BUILD_NUMBER}
         """
     }
-    UTILS.createStage("Cleanup", cleanupMethod, configurationMaps)
+    UTILS.createStage("Cleanup", cleanupMethod, configurationMaps, true)
 }
 
 def notifyByEmail() {
@@ -173,7 +174,7 @@ def notifyByEmail() {
             )
         }
     }
-    UTILS.createStage("Notify", notifyMethod, configurationMaps)
+    UTILS.createStage("Notify", notifyMethod, configurationMaps, true)
 }
 
 def main(String label, String projectName, String projectRoot, String dockerContainerName, String jenkins_github_credential_id, String ngraph_git_address, String onnx_git_address) {
@@ -197,9 +198,9 @@ def main(String label, String projectName, String projectRoot, String dockerCont
                     runToxTests(configurationMaps)
                 }
             }
-            catch(e) {
+            catch(Exception e) {
                 // Set result to ABORTED if exception contains exit code of a process interrupted by SIGTERM
-                if ("$e".contains("143")) {
+                if (e.toString().contains("FlowInterruptedException")) {
                     currentBuild.result = "ABORTED"
                 } else {
                     currentBuild.result = "FAILURE"
