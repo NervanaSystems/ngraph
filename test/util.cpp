@@ -406,3 +406,53 @@ TEST(pass, visualize_tree)
     pm.register_pass<pass::VisualizeTree>("test_viz.png");
     pm.run_passes(f);
 }
+
+TEST(util, enum_mask_construction)
+{
+  enum class Type: uint32_t { a = 0x1, 
+                              b = 1 << 1, 
+                              c = 1 << 2, 
+                              d = 1 << 3 
+                            };
+  {
+      EnumMask<Type> m;
+      EXPECT_EQ(0, m.value());
+  }
+  {
+      EnumMask<Type> m{12345};
+      EXPECT_EQ(12345, m.value());
+  }
+  {
+      EnumMask<Type> m{Type::c};
+      EXPECT_EQ(m.value(), static_cast<uint32_t>(Type::c));
+  }
+  {
+      EnumMask<Type> a{Type::c};
+      EnumMask<Type> b{a};
+      EXPECT_EQ(a.value(), b.value());
+  }
+}
+
+TEST(util, enum_mask_set_clear)
+{
+  enum class Type: uint32_t { a = 0x1, 
+                              b = 1 << 1, 
+                              c = 1 << 2, 
+                              d = 1 << 3 
+                            };
+  EnumMask<Type> m;
+  m.set(Type::b);
+  EXPECT_EQ(static_cast<uint32_t>(Type::b), m.value());
+}
+
+TEST(util, enum_mask_operators)
+{
+  enum class Type: uint32_t { a = 0x1, 
+                              b = 1 << 1, 
+                              c = 1 << 2, 
+                              d = 1 << 3 
+                            };
+  EnumMask<Type> m;
+  m.set(Type::b);
+  EXPECT_EQ(static_cast<uint32_t>(Type::b), m.value());
+}
