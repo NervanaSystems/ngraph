@@ -537,12 +537,16 @@ static shared_ptr<ngraph::Function>
                 auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
                 auto include_padding_in_avg_computation =
                     node_js.at("include_padding_in_avg_computation").get<bool>();
+                op::PadType pad_type = node_js["pad_type"].empty()
+                                           ? op::PadType::EXPLICIT
+                                           : static_cast<op::PadType>(node_js.at("pad_type"));
                 node = make_shared<op::AvgPool>(args[0],
                                                 window_shape,
                                                 window_movement_strides,
                                                 padding_below,
                                                 padding_above,
-                                                include_padding_in_avg_computation);
+                                                include_padding_in_avg_computation,
+                                                pad_type);
                 break;
             }
             case OP_TYPEID::AvgPoolBackprop:
@@ -663,6 +667,10 @@ static shared_ptr<ngraph::Function>
                     data_dilation_strides_maybe = node_js["image_dilation_strides"];
                 }
 
+                op::PadType pad_type = node_js["pad_type"].empty()
+                                           ? op::PadType::EXPLICIT
+                                           : static_cast<op::PadType>(node_js.at("pad_type"));
+
                 if (data_dilation_strides_maybe.empty())
                 {
                     node = make_shared<op::Convolution>(args[0],
@@ -681,7 +689,8 @@ static shared_ptr<ngraph::Function>
                         window_dilation_strides,
                         padding_below,
                         padding_above,
-                        data_dilation_strides_maybe.get<std::vector<size_t>>());
+                        data_dilation_strides_maybe.get<std::vector<size_t>>(),
+                        pad_type);
                 }
                 break;
             }
@@ -878,6 +887,9 @@ static shared_ptr<ngraph::Function>
                 // omitted.
                 auto padding_below_maybe = node_js["padding_below"];
                 auto padding_above_maybe = node_js["padding_above"];
+                op::PadType pad_type = node_js["pad_type"].empty()
+                                           ? op::PadType::EXPLICIT
+                                           : static_cast<op::PadType>(node_js.at("pad_type"));
                 if (padding_below_maybe.empty() && !padding_above_maybe.empty())
                 {
                     throw runtime_error(
@@ -896,7 +908,8 @@ static shared_ptr<ngraph::Function>
                                                     window_shape,
                                                     window_movement_strides,
                                                     padding_below,
-                                                    padding_above);
+                                                    padding_above,
+                                                    pad_type);
                 }
                 else
                 {
@@ -1435,6 +1448,7 @@ static json write(const Node& n, bool binary_constant_data)
         node["padding_below"] = tmp->get_padding_below();
         node["padding_above"] = tmp->get_padding_above();
         node["include_padding_in_avg_computation"] = tmp->get_include_padding_in_avg_computation();
+        node["pad_type"] = tmp->get_pad_type();
         break;
     }
     case OP_TYPEID::AvgPoolBackprop:
@@ -1516,6 +1530,7 @@ static json write(const Node& n, bool binary_constant_data)
         node["padding_below"] = tmp->get_padding_below();
         node["padding_above"] = tmp->get_padding_above();
         node["data_dilation_strides"] = tmp->get_data_dilation_strides();
+        node["pad_type"] = tmp->get_pad_type();
         break;
     }
     case OP_TYPEID::ConvolutionBackpropData:
@@ -1624,6 +1639,7 @@ static json write(const Node& n, bool binary_constant_data)
         node["window_movement_strides"] = tmp->get_window_movement_strides();
         node["padding_below"] = tmp->get_padding_below();
         node["padding_above"] = tmp->get_padding_above();
+        node["pad_type"] = tmp->get_pad_type();
         break;
     }
     case OP_TYPEID::MaxPoolBackprop:

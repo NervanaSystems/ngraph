@@ -5519,7 +5519,7 @@ INSTANTIATE_TEST_CASE_P(type_prop,
                                                           Strides{1, 2, 1},
                                                           Strides{2, 1, 1},
                                                           CoordinateDiff{2, 1, 1},
-                                                          CoordinateDiff{2, 1, 2})));
+                                                          CoordinateDiff{2, 1, 2})), );
 
 TEST(type_prop, conv_2d_deduce_strided)
 {
