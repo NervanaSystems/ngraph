@@ -113,10 +113,13 @@ namespace ngraph
             void do_select_operation(cldnn::topology& topology,
                                      const std::string& input0_name,
                                      const Shape& input0_shape,
+                                     const element::Type& input0_type,
                                      const std::string& input1_name,
                                      const Shape& input1_shape,
+                                     const element::Type& input1_type,
                                      const std::string& input2_name,
                                      const Shape& input2_shape,
+                                     const element::Type& input2_type,
                                      const std::string& output_name,
                                      const Shape& output_shape,
                                      const element::Type& output_type);

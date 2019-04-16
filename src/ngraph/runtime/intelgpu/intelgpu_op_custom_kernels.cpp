@@ -1228,10 +1228,13 @@ void runtime::intelgpu::do_concat_operation(cldnn::topology& topology,
 void runtime::intelgpu::do_select_operation(cldnn::topology& topology,
                                             const string& input0_name,
                                             const Shape& input0_shape,
+                                            const element::Type& input0_type,
                                             const string& input1_name,
                                             const Shape& input1_shape,
+                                            const element::Type& input1_type,
                                             const string& input2_name,
                                             const Shape& input2_shape,
+                                            const element::Type& input2_type,
                                             const string& output_name,
                                             const Shape& output_shape,
                                             const element::Type& output_type)
@@ -1243,9 +1246,11 @@ void runtime::intelgpu::do_select_operation(cldnn::topology& topology,
 
     gen_func_def(writer,
                  entry_point_name,
-                 {"char", "float", "float"},
+                 {get_opencl_type_name(input0_type),
+                  get_opencl_type_name(input1_type),
+                  get_opencl_type_name(input2_type)},
                  {input0_shape, input1_shape, input2_shape},
-                 "float",
+                 get_opencl_type_name(output_type),
                  output_shape);
 
     writer.block_begin();

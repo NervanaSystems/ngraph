@@ -508,10 +508,13 @@ shared_ptr<runtime::Executable>
                 do_select_operation(topology,
                                     op->get_input_tensor_name(0),
                                     op->get_input_shape(0),
+                                    op->get_input_element_type(0),
                                     op->get_input_tensor_name(1),
                                     op->get_input_shape(1),
+                                    op->get_input_element_type(1),
                                     op->get_input_tensor_name(2),
                                     op->get_input_shape(2),
+                                    op->get_input_element_type(2),
                                     op->get_output_tensor_name(0),
                                     op->get_output_shape(0),
                                     op->get_output_element_type(0));
