@@ -38,32 +38,30 @@ bool ngraph::pass::FusedOpDecomposition::run_on_node(std::shared_ptr<ngraph::Nod
         size_t i = 0;
         for (auto output_node : subgraph_outputs)
         {
-            for (size_t j = 0; j < output_node->get_outputs().size(); j++, i++)
+            for (size_t j = 0; j < output_node->get_output_size(); j++, i++)
             {
                 // TODO: Provenance
-                std::set<ngraph::descriptor::Input*> fop_users{
-                    begin(fused_op->get_outputs().at(i).get_inputs()),
-                    end(fused_op->get_outputs().at(i).get_inputs())};
+                auto target_inputs = fused_op->output(i).get_target_inputs();
+                std::set<ngraph::Input<Node>> fop_users{begin(target_inputs), end(target_inputs)};
                 for (auto fop_user : fop_users)
                 {
-                    if (auto goe =
-                            dynamic_cast<op::GetOutputElement*>(fop_user->get_raw_pointer_node()))
+                    if (auto goe = dynamic_cast<op::GetOutputElement*>(fop_user.get_node()))
                     {
-                        if (goe->get_n() == i && !goe->get_output_inputs(0).empty())
+                        if (goe->get_n() == i && !goe->output(0).get_target_inputs().empty())
                         {
                             // Replace GOE users
-                            std::set<ngraph::descriptor::Input*> goe_users{
-                                begin(goe->get_outputs().at(0).get_inputs()),
-                                end(goe->get_outputs().at(0).get_inputs())};
+                            auto goe_target_inputs = goe->output(0).get_target_inputs();
+                            std::set<ngraph::Input<Node>> goe_users{begin(goe_target_inputs),
+                                                                    end(goe_target_inputs)};
                             for (auto goe_user : goe_users)
                             {
-                                goe_user->replace_output(output_node->get_outputs().at(j));
+                                goe_user.replace_source_output(output_node->output(j));
                             }
                         }
                     }
                     else
                     {
-                        fop_user->replace_output(output_node->get_outputs().at(j));
+                        fop_user.replace_source_output(output_node->output(j));
                     }
                 }
             }
