@@ -40,6 +40,7 @@
 #include "ngraph/op/experimental/quantized_dot.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
+#include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/softmax.hpp"
@@ -48,7 +49,6 @@
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
-#include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/deconv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
@@ -1154,7 +1154,7 @@ namespace ngraph
                     {
                         index = 4;
                     }
-                    NGRAPH_ASSERT(index != 0);
+                    NGRAPH_CHECK(index != 0);
                     return index;
                 }
 
@@ -1339,6 +1339,13 @@ namespace ngraph
                     Strides window_dilation_strides_adjusted;
 
                     mkldnn::algorithm convolution_algo = mkldnn_utils::get_conv_algo();
+
+                    if (node->get_input_element_type(0) != element::f32 &&
+                        convolution_algo != mkldnn::algorithm::convolution_direct)
+                    {
+                        convolution_algo = mkldnn::algorithm::convolution_direct;
+                    }
+
                     for (size_t s : convolution->get_window_dilation_strides())
                     {
                         window_dilation_strides_adjusted.push_back(s - 1);

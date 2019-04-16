@@ -42,7 +42,7 @@ public:
     {
         if (fusions & ngraph::pass::DIFFERENTIABLE_FUSIONS)
         {
-            construct_conv_bias();
+            construct_conv_bias(); // DEPRECATED - Use CoreFusion
             construct_sigmoid_multiply();
         }
 
@@ -63,7 +63,7 @@ public:
             construct_batch_norm_relu_global_stats();
             construct_conv_relu();
             construct_conv_bias_relu();
-            construct_conv_bias_add();
+            construct_conv_bias_add(); // DEPRECATED - Use CoreFusion
             construct_conv_bias_add_relu();
             construct_leaky_relu();
             construct_bounded_relu();

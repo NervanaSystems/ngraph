@@ -181,8 +181,8 @@ size_t MKLDNNEmitter::build_quantize_reorder(const mkldnn::memory::desc& input_d
     size_t primitive_index = insert_primitive(new mkldnn::reorder(
         reorder_desc, *m_mkldnn_primitives[input_index], *m_mkldnn_primitives[result_index]));
 
-    NGRAPH_ASSERT(m_primitive_deps.find(primitive_index) == m_primitive_deps.end())
-        << "Dependencies already created for node";
+    NGRAPH_CHECK(m_primitive_deps.find(primitive_index) == m_primitive_deps.end(),
+                 "Dependencies already created for node");
 
     m_primitive_deps[primitive_index] = {input_index, result_index};
     return primitive_index;
@@ -416,8 +416,8 @@ size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& inpu
 
         conv_index = insert_primitive(conv_prim);
 
-        NGRAPH_ASSERT(m_primitive_deps.find(conv_index) == m_primitive_deps.end())
-            << "Dependencies already created for node";
+        NGRAPH_CHECK(m_primitive_deps.find(conv_index) == m_primitive_deps.end(),
+                     "Dependencies already created for node");
 
         m_primitive_deps[conv_index] = {input_data_index, weights_index, result_index};
     }
@@ -450,10 +450,9 @@ size_t
     conv_attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);
     /* Specify the scales array and corresponding mask */
     conv_attr.set_output_scales(0, output_scale);
-    mkldnn::algorithm convolution_algo = mkldnn_utils::get_conv_algo();
     size_t conv_index = insert_primitive(new mkldnn::convolution_forward(
         {{mkldnn::prop_kind::forward,
-          convolution_algo,
+          mkldnn::algorithm::convolution_direct,
           input_data_desc,
           weights_desc,
           result_desc,
@@ -468,8 +467,8 @@ size_t
         *m_mkldnn_primitives[weights_index],
         *m_mkldnn_primitives[result_index]));
 
-    NGRAPH_ASSERT(m_primitive_deps.find(conv_index) == m_primitive_deps.end())
-        << "Dependencies already created for node";
+    NGRAPH_CHECK(m_primitive_deps.find(conv_index) == m_primitive_deps.end(),
+                 "Dependencies already created for node");
 
     m_primitive_deps[conv_index] = {input_data_index, weights_index, result_index};
     return conv_index;
@@ -499,10 +498,9 @@ size_t
     conv_attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);
     /* Specify the scales array and corresponding mask */
     conv_attr.set_output_scales(0, output_scale);
-    mkldnn::algorithm convolution_algo = mkldnn_utils::get_conv_algo();
     size_t conv_index = insert_primitive(new mkldnn::convolution_forward(
         {{mkldnn::prop_kind::forward,
-          convolution_algo,
+          mkldnn::algorithm::convolution_direct,
           input_data_desc,
           weights_desc,
           bias_desc,
@@ -519,8 +517,8 @@ size_t
         *m_mkldnn_primitives[bias_index],
         *m_mkldnn_primitives[result_index]));
 
-    NGRAPH_ASSERT(m_primitive_deps.find(conv_index) == m_primitive_deps.end())
-        << "Dependencies already created for node";
+    NGRAPH_CHECK(m_primitive_deps.find(conv_index) == m_primitive_deps.end(),
+                 "Dependencies already created for node");
 
     m_primitive_deps[conv_index] = {input_data_index, weights_index, bias_index, result_index};
     return conv_index;
@@ -567,8 +565,8 @@ size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& inpu
             *m_mkldnn_primitives[bias_index],
             *m_mkldnn_primitives[result_index]));
 
-        NGRAPH_ASSERT(m_primitive_deps.find(conv_index) == m_primitive_deps.end())
-            << "Dependencies already created for node";
+        NGRAPH_CHECK(m_primitive_deps.find(conv_index) == m_primitive_deps.end(),
+                     "Dependencies already created for node");
 
         m_primitive_deps[conv_index] = {input_data_index, weights_index, bias_index, result_index};
     }
@@ -632,8 +630,8 @@ size_t MKLDNNEmitter::build_convolution_backward_weights_bias(
                                                  *m_mkldnn_primitives[out_weights_delta_index],
                                                  *m_mkldnn_primitives[out_bias_delta_index]));
 
-    NGRAPH_ASSERT(m_primitive_deps.find(conv_index) == m_primitive_deps.end())
-        << "Dependencies already created for node";
+    NGRAPH_CHECK(m_primitive_deps.find(conv_index) == m_primitive_deps.end(),
+                 "Dependencies already created for node");
 
     m_primitive_deps[conv_index] = {
         in_data_index, in_delta_index, out_weights_delta_index, out_bias_delta_index};
@@ -708,8 +706,8 @@ size_t
         *m_mkldnn_primitives[delta_index],
         *m_mkldnn_primitives[result_index]));
 
-    NGRAPH_ASSERT(m_primitive_deps.find(primitive_index) == m_primitive_deps.end())
-        << "Dependencies already created for node";
+    NGRAPH_CHECK(m_primitive_deps.find(primitive_index) == m_primitive_deps.end(),
+                 "Dependencies already created for node");
 
     m_primitive_deps[primitive_index] = {input_index, delta_index, result_index};
     return primitive_index;
@@ -828,8 +826,8 @@ size_t MKLDNNEmitter::build_pooling_forward(mkldnn::algorithm pooling_algorithm,
         *m_mkldnn_primitives[input_index],
         *m_mkldnn_primitives[result_index]));
 
-    NGRAPH_ASSERT(m_primitive_deps.find(primitive_index) == m_primitive_deps.end())
-        << "Dependencies already created for node";
+    NGRAPH_CHECK(m_primitive_deps.find(primitive_index) == m_primitive_deps.end(),
+                 "Dependencies already created for node");
 
     m_primitive_deps[primitive_index] = {input_index, result_index};
     return primitive_index;
@@ -883,8 +881,8 @@ size_t MKLDNNEmitter::build_pooling_backward(mkldnn::algorithm pooling_algorithm
         *m_mkldnn_primitives[input_index],
         *m_mkldnn_primitives[result_index]));
 
-    NGRAPH_ASSERT(m_primitive_deps.find(primitive_index) == m_primitive_deps.end())
-        << "Dependencies already created for node";
+    NGRAPH_CHECK(m_primitive_deps.find(primitive_index) == m_primitive_deps.end(),
+                 "Dependencies already created for node");
 
     m_primitive_deps[primitive_index] = {input_index, result_index};
     return primitive_index;
@@ -962,9 +960,9 @@ size_t MKLDNNEmitter::build_max_pooling_backward(mkldnn::algorithm pooling_algor
         *m_mkldnn_primitives[ws_index],
         *m_mkldnn_primitives[diff_src_index]));
 
-    NGRAPH_ASSERT(m_primitive_deps.find(fwd_primitive_index) == m_primitive_deps.end() &&
-                  m_primitive_deps.find(bwd_primitive_index) == m_primitive_deps.end())
-        << "Dependencies already created for node";
+    NGRAPH_CHECK(m_primitive_deps.find(fwd_primitive_index) == m_primitive_deps.end() &&
+                     m_primitive_deps.find(bwd_primitive_index) == m_primitive_deps.end(),
+                 "Dependencies already created for node");
 
     m_primitive_deps[fwd_primitive_index] = {
         fprop_src_index, diff_src_index, ws_index, ws_buf_index};
@@ -1046,8 +1044,8 @@ size_t MKLDNNEmitter::build_max_pooling_with_indices_forward(mkldnn::algorithm p
                                                      *m_mkldnn_primitives[dst_index],
                                                      *m_mkldnn_primitives[ws_index]));
 
-    NGRAPH_ASSERT(m_primitive_deps.find(fwd_primitive_index) == m_primitive_deps.end())
-        << "Dependencies already created for node";
+    NGRAPH_CHECK(m_primitive_deps.find(fwd_primitive_index) == m_primitive_deps.end(),
+                 "Dependencies already created for node");
 
     m_primitive_deps[fwd_primitive_index] = {src_index, dst_index, ws_index};
     return fwd_primitive_index;
@@ -1114,8 +1112,8 @@ size_t MKLDNNEmitter::build_max_pooling_with_indices_backward(
         *m_mkldnn_primitives[fprop_ws_index],
         *m_mkldnn_primitives[diff_src_index]));
 
-    NGRAPH_ASSERT(m_primitive_deps.find(bwd_primitive_index) == m_primitive_deps.end())
-        << "Dependencies already created for node";
+    NGRAPH_CHECK(m_primitive_deps.find(bwd_primitive_index) == m_primitive_deps.end(),
+                 "Dependencies already created for node");
 
     m_primitive_deps[bwd_primitive_index] = {diff_dst_index, fprop_ws_index, diff_src_index};
     return bwd_primitive_index;
@@ -1155,8 +1153,8 @@ size_t MKLDNNEmitter::build_reorder(const mkldnn::memory::desc& input_desc,
         primitive_index = insert_primitive(new mkldnn::reorder(*m_mkldnn_primitives[input_index],
                                                                *m_mkldnn_primitives[result_index]));
 
-        NGRAPH_ASSERT(m_primitive_deps.find(primitive_index) == m_primitive_deps.end())
-            << "Dependencies already created for node";
+        NGRAPH_CHECK(m_primitive_deps.find(primitive_index) == m_primitive_deps.end(),
+                     "Dependencies already created for node");
 
         m_primitive_deps[primitive_index] = {input_index, result_index};
     }
@@ -1203,8 +1201,8 @@ size_t MKLDNNEmitter::build_lrn_forward(const mkldnn::memory::desc& input_desc,
     size_t primitive_index = insert_primitive(new mkldnn::lrn_forward(
         lrn_prim_desc, *m_mkldnn_primitives[input_index], *m_mkldnn_primitives[result_index]));
 
-    NGRAPH_ASSERT(m_primitive_deps.find(primitive_index) == m_primitive_deps.end())
-        << "Dependencies already created for node";
+    NGRAPH_CHECK(m_primitive_deps.find(primitive_index) == m_primitive_deps.end(),
+                 "Dependencies already created for node");
 
     m_primitive_deps[primitive_index] = {input_index, result_index};
     return primitive_index;
@@ -1257,8 +1255,8 @@ size_t MKLDNNEmitter::build_relu_forward(const mkldnn::memory::desc& input_desc,
     size_t primitive_index = insert_primitive(new mkldnn::eltwise_forward(
         relu_pd, *m_mkldnn_primitives[input_index], *m_mkldnn_primitives[result_index]));
 
-    NGRAPH_ASSERT(m_primitive_deps.find(primitive_index) == m_primitive_deps.end())
-        << "Dependencies already created for node";
+    NGRAPH_CHECK(m_primitive_deps.find(primitive_index) == m_primitive_deps.end(),
+                 "Dependencies already created for node");
 
     m_primitive_deps[primitive_index] = {input_index, result_index};
     return primitive_index;
@@ -1314,8 +1312,8 @@ size_t MKLDNNEmitter::build_relu_backward(const mkldnn::memory::desc& input_desc
                                                       *m_mkldnn_primitives[delta_index],
                                                       *m_mkldnn_primitives[result_index]));
 
-    NGRAPH_ASSERT(m_primitive_deps.find(primitive_index) == m_primitive_deps.end())
-        << "Dependencies already created for node";
+    NGRAPH_CHECK(m_primitive_deps.find(primitive_index) == m_primitive_deps.end(),
+                 "Dependencies already created for node");
 
     m_primitive_deps[primitive_index] = {input_index, delta_index, result_index};
     return primitive_index;
@@ -1372,8 +1370,8 @@ size_t MKLDNNEmitter::build_sigmoid_forward(const mkldnn::memory::desc& input_de
                                                      *m_mkldnn_primitives[input_index],
                                                      *m_mkldnn_primitives[result_index]));
 
-    NGRAPH_ASSERT(m_primitive_deps.find(primitive_index) == m_primitive_deps.end())
-        << "Dependencies already created for node";
+    NGRAPH_CHECK(m_primitive_deps.find(primitive_index) == m_primitive_deps.end(),
+                 "Dependencies already created for node");
 
     m_primitive_deps[primitive_index] = {input_index, result_index};
     return primitive_index;
@@ -1435,8 +1433,8 @@ size_t MKLDNNEmitter::build_sigmoid_backward(const mkldnn::memory::desc& input_d
         *m_mkldnn_primitives[delta_index],
         *m_mkldnn_primitives[result_index]));
 
-    NGRAPH_ASSERT(m_primitive_deps.find(primitive_index) == m_primitive_deps.end())
-        << "Dependencies already created for node";
+    NGRAPH_CHECK(m_primitive_deps.find(primitive_index) == m_primitive_deps.end(),
+                 "Dependencies already created for node");
 
     m_primitive_deps[primitive_index] = {input_index, delta_index, result_index};
     return primitive_index;
@@ -1497,8 +1495,8 @@ size_t MKLDNNEmitter::build_elementwise_add(
     size_t add_index = insert_primitive(
         new mkldnn::sum(sum_pd, inputs_primitive, *m_mkldnn_primitives[result_index]));
 
-    NGRAPH_ASSERT(m_primitive_deps.find(add_index) == m_primitive_deps.end())
-        << "Dependencies already created for node";
+    NGRAPH_CHECK(m_primitive_deps.find(add_index) == m_primitive_deps.end(),
+                 "Dependencies already created for node");
 
     m_primitive_deps[add_index] = {input0_data_index, input1_data_index, result_index};
     return add_index;
@@ -1694,8 +1692,8 @@ size_t MKLDNNEmitter::build_batchnorm_backward(const mkldnn::memory::desc& weigh
         *m_mkldnn_primitives[dinput_index],
         *m_mkldnn_primitives[dweights_index]));
 
-    NGRAPH_ASSERT(m_primitive_deps.find(batchnorm_index) == m_primitive_deps.end())
-        << "Dependencies already created for node";
+    NGRAPH_CHECK(m_primitive_deps.find(batchnorm_index) == m_primitive_deps.end(),
+                 "Dependencies already created for node");
 
     m_primitive_deps[batchnorm_index] = {weights_index,
                                          input_index,
@@ -1813,8 +1811,8 @@ size_t MKLDNNEmitter::build_rnn_forward(const mkldnn::memory::desc& src_layer_de
         static_cast<mkldnn::memory>(*m_mkldnn_primitives[dst_iter_index]),
         static_cast<mkldnn::memory>(*m_mkldnn_primitives[workspace_index])));
 
-    NGRAPH_ASSERT(m_primitive_deps.find(rnn_index) == m_primitive_deps.end())
-        << "Dependencies already created for node";
+    NGRAPH_CHECK(m_primitive_deps.find(rnn_index) == m_primitive_deps.end(),
+                 "Dependencies already created for node");
 
     m_primitive_deps[rnn_index] = {src_layer_index,
                                    src_iter_index,
@@ -1902,8 +1900,8 @@ size_t MKLDNNEmitter::build_concat(const std::vector<mkldnn::memory::desc>& inpu
     }
     in_out_index.push_back(result_index);
 
-    NGRAPH_ASSERT(m_primitive_deps.find(concat_index) == m_primitive_deps.end())
-        << "Dependencies already created for node";
+    NGRAPH_CHECK(m_primitive_deps.find(concat_index) == m_primitive_deps.end(),
+                 "Dependencies already created for node");
 
     m_primitive_deps[concat_index] = in_out_index;
     return concat_index;
@@ -1981,8 +1979,8 @@ size_t MKLDNNEmitter::build_slice(const mkldnn::memory::desc& input_desc,
     size_t reorder_index = insert_primitive(new mkldnn::reorder(
         reorder_pd, *m_mkldnn_primitives[input_index], *m_mkldnn_primitives[result_index]));
 
-    NGRAPH_ASSERT(m_primitive_deps.find(reorder_index) == m_primitive_deps.end())
-        << "Dependencies already created for node";
+    NGRAPH_CHECK(m_primitive_deps.find(reorder_index) == m_primitive_deps.end(),
+                 "Dependencies already created for node");
 
     in_out_index.push_back(input_index);
     in_out_index.push_back(result_index);
@@ -2033,8 +2031,8 @@ size_t MKLDNNEmitter::build_softmax_forward(const mkldnn::memory::desc& input_de
                                     *m_mkldnn_primitives[input_index],
                                     *m_mkldnn_primitives[result_index]));
 
-    NGRAPH_ASSERT(m_primitive_deps.find(primitive_index) == m_primitive_deps.end())
-        << "Dependencies already created for node";
+    NGRAPH_CHECK(m_primitive_deps.find(primitive_index) == m_primitive_deps.end(),
+                 "Dependencies already created for node");
 
     m_primitive_deps[primitive_index] = {input_index, result_index};
     return primitive_index;
@@ -2088,8 +2086,8 @@ size_t MKLDNNEmitter::build_leaky_relu(const mkldnn::memory::desc& input_desc,
                                                      *m_mkldnn_primitives[input_index],
                                                      *m_mkldnn_primitives[result_index]));
 
-    NGRAPH_ASSERT(m_primitive_deps.find(primitive_index) == m_primitive_deps.end())
-        << "Dependencies already created for node";
+    NGRAPH_CHECK(m_primitive_deps.find(primitive_index) == m_primitive_deps.end(),
+                 "Dependencies already created for node");
 
     m_primitive_deps[primitive_index] = {input_index, result_index};
     return primitive_index;

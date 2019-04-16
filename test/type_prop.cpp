@@ -13244,3 +13244,63 @@ TEST(type_prop, prelu)
     ASSERT_EQ(prelu->get_element_type(), element::f32);
     ASSERT_EQ(prelu->get_shape(), prelu_shape);
 }
+
+TEST(type_prop, conv_bias_2d_deduce)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100, 150});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10, 20});
+    auto param2 = make_shared<op::Parameter>(element::f32, Shape{128});
+    auto conv = make_shared<op::ConvolutionBias>(param0, param1, param2);
+    EXPECT_EQ(conv->get_element_type(), element::f32);
+    EXPECT_EQ(conv->get_shape(), (Shape{64, 128, 91, 131}));
+
+    EXPECT_EQ(conv->get_window_movement_strides(), (Strides{1, 1}));
+    EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{1, 1}));
+    EXPECT_EQ(conv->get_data_dilation_strides(), (Strides{1, 1}));
+
+    EXPECT_EQ(conv->get_padding_below(), (CoordinateDiff{0, 0}));
+    EXPECT_EQ(conv->get_padding_above(), (CoordinateDiff{0, 0}));
+}
+
+TEST(type_prop, conv_bias_add_2d_deduce)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100, 150});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10, 20});
+    auto param2 = make_shared<op::Parameter>(element::f32, Shape{128});
+    auto param3 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 91, 131});
+    auto conv = make_shared<op::ConvolutionBiasAdd>(param0,
+                                                    param1,
+                                                    param2,
+                                                    param3,
+                                                    Strides{1, 1},
+                                                    Strides{1, 1},
+                                                    CoordinateDiff{0, 0},
+                                                    CoordinateDiff{0, 0},
+                                                    Strides{1, 1});
+    EXPECT_EQ(conv->get_element_type(), element::f32);
+    EXPECT_EQ(conv->get_shape(), (Shape{64, 128, 91, 131}));
+}
+
+TEST(type_prop, conv_bias_bprop_2d_deduce)
+{
+    // Deduce type
+    auto data = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100, 150});
+    auto filters = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10, 20});
+    auto bias = make_shared<op::Parameter>(element::f32, Shape{128});
+    auto delta = make_shared<op::Parameter>(element::f32, Shape{64, 128, 91, 131});
+    auto conv = make_shared<op::ConvolutionBiasBackpropFiltersBias>(data,
+                                                                    filters->get_shape(),
+                                                                    bias->get_shape(),
+                                                                    delta,
+                                                                    Strides{1, 1},
+                                                                    Strides{1, 1},
+                                                                    CoordinateDiff{0, 0},
+                                                                    CoordinateDiff{0, 0},
+                                                                    Strides{1, 1});
+    EXPECT_EQ(conv->get_output_element_type(0), element::f32);
+    EXPECT_EQ(conv->get_output_element_type(1), element::f32);
+    EXPECT_EQ(conv->get_output_shape(0), filters->get_shape());
+    EXPECT_EQ(conv->get_output_shape(1), bias->get_shape());
+}
