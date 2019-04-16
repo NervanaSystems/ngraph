@@ -160,7 +160,6 @@ namespace ngraph
             CoordinateDiff m_padding_above;
             Strides m_data_dilation_strides;
             PadType m_pad_type;
-
         };
 
         /// \brief Data batch backprop for batched convolution operation.
