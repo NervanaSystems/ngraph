@@ -1138,11 +1138,15 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
         }
         else
         {
+#if !defined(NGRAPH_DEX_ONLY)
             auto handler = dispatcher.find(type_index(typeid(node)));
             if (handler == dispatcher.end())
             {
                 return false;
             }
+#else
+            return false;
+#endif
         }
         return true;
     };

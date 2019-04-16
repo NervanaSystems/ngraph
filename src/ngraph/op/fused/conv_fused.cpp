@@ -284,18 +284,6 @@ op::ConvolutionBiasBackpropFiltersBias::ConvolutionBiasBackpropFiltersBias(
     , m_data_dilation_strides_forward(data_dilation_strides_forward)
 {
     auto& data_batch_shape = get_input_shape(0);
-    auto& data_batch_et = get_input_element_type(0);
-    auto& output_delta_et = get_input_element_type(1);
-
-    //
-    // Make sure data batch and output delta element types match.
-    //
-    if (data_batch_et != output_delta_et)
-    {
-        throw ngraph_error(
-            "ConvolutionBiasBackpropFilterBias data batch and output delta element types do not "
-            "match");
-    }
 
     //                              Forward               Backward
     // Window movement strides      q                     p_f
