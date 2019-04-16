@@ -33,7 +33,19 @@ using ProvSet = std::unordered_set<std::string>;
 
 TEST(provenance, provenance)
 {
-    set_provenance_enable(true);
+    class ProvenanceEnabler
+    {
+    public:
+        ProvenanceEnabler()
+        {
+            saved_enable_state = get_provenance_enable();
+            set_provenance_enable(true);
+        }
+        ~ProvenanceEnabler() { set_provenance_enable(saved_enable_state); }
+    private:
+        bool saved_enable_state;
+    } provenance_enabler;
+
     //
     // Before:
     //
