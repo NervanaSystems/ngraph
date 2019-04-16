@@ -14,7 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cassert>
 #include <deque>
 #include <unordered_map>
 #include <unordered_set>
@@ -149,7 +148,7 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
     }
 
     // Fix input/output descriptors
-    assert(target->get_output_size() == replacement->get_output_size());
+    NGRAPH_CHECK(target->get_output_size() == replacement->get_output_size());
 
     auto set_replacement_prov = [replacement](std::shared_ptr<Node> node) {
         replacement->merge_provenance_tags_from(node);
@@ -175,6 +174,7 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
             input.replace_source_output(replacement->output(i));
         }
     }
+    replacement->merge_provenance_tags_from(target);
 }
 
 // Check if all paths from X to a result go through Y
@@ -355,21 +355,26 @@ pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
 
     // Fix input / output among src, dst and par
     std::vector<Input<Node>> dst_inputs = get_inputs_from(*src_node, *dst_node);
-    NGRAPH_ASSERT(dst_inputs.size() == 1) << "insert_result_parameter_split encountered more than "
-                                             "one input between the source and destination nodes";
+    NGRAPH_CHECK(dst_inputs.size() == 1,
+                 "insert_result_parameter_split encountered more than "
+                 "one input between the source and destination nodes");
     auto& dst_input = dst_inputs[0];
 
     std::vector<Output<Node>> src_outputs = get_outputs_to(*src_node, *dst_node);
-    NGRAPH_ASSERT(src_outputs.size() == 1) << "insert_result_parameter_split encountered more than "
-                                              "one output between the source and destination nodes";
+    NGRAPH_CHECK(src_outputs.size() == 1,
+                 "insert_result_parameter_split encountered more than "
+                 "one output between the source and destination nodes");
     auto& src_output = src_outputs[0];
 
-    src_output.remove_target_input(dst_input); // Remove [0]
-    dst_input.replace_source_output(
-        par_node->output(0)); // Remove [0] (again), add [8], remove [1], add [9]
+    // Remove [0]
+    src_output.remove_target_input(dst_input);
+
+    // Remove [0] (again), add [8], remove [1], add [9]
+    dst_input.replace_source_output(par_node->output(0));
 
     // Add res node
-    shared_ptr<op::Result> res_node = make_shared<op::Result>(src_node); // Add [4], [5], [6], [7]
+    // Add [4], [5], [6], [7]
+    shared_ptr<op::Result> res_node = make_shared<op::Result>(src_node);
     res_node->set_placement(src_node->get_placement());
 
     return make_pair(res_node, par_node);
@@ -421,13 +426,15 @@ void ngraph::insert_new_node_between(const shared_ptr<Node>& src_node,
 {
     // Fix input / output
     std::vector<Input<Node>> dst_inputs = get_inputs_from(*src_node, *dst_node);
-    NGRAPH_ASSERT(dst_inputs.size() == 1) << "insert_new_node_between encountered more than one "
-                                             "input between the source and destination nodes";
+    NGRAPH_CHECK(dst_inputs.size() == 1,
+                 "insert_new_node_between encountered more than one "
+                 "input between the source and destination nodes");
     auto& dst_input = dst_inputs[0];
 
     std::vector<Output<Node>> src_outputs = get_outputs_to(*src_node, *dst_node);
-    NGRAPH_ASSERT(src_outputs.size() == 1) << "insert_new_node_between encountered more than one "
-                                              "output between the source and destination nodes";
+    NGRAPH_CHECK(src_outputs.size() == 1,
+                 "insert_new_node_between encountered more than one "
+                 "output between the source and destination nodes");
     auto& src_output = src_outputs[0];
 
     src_output.remove_target_input(dst_input); // Remove [0]

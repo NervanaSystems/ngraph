@@ -61,6 +61,10 @@ namespace ngraph
                                                              requantization_scale);
             }
 
+            // TODO: this codes is falling back to fp32 convolution
+            //       need to make this the primary builder which means
+            //       1) add support for zero point in QuantizeConvolution op API
+            //       2) add QuantizedConvolution reference kernel, including zero point
             shared_ptr<Node> QuantizedLinearConvolution(shared_ptr<Node> input,
                                                         shared_ptr<Node> filter,
                                                         const Strides& window_movement_strides,

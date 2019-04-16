@@ -46,6 +46,7 @@ set (SRC
     coordinate_transform.cpp
     cpio.cpp
     cpio.hpp
+    deprecated.hpp
     descriptor/input.cpp
     descriptor/input.hpp
     descriptor/layout/dense_tensor_layout.cpp
@@ -130,6 +131,8 @@ set (SRC
     op/erf.hpp
     op/exp.cpp
     op/exp.hpp
+    op/experimental/batch_mat_mul.cpp
+    op/experimental/batch_mat_mul.hpp
     op/experimental/dyn_broadcast.cpp
     op/experimental/dyn_broadcast.hpp
     op/experimental/dyn_pad.cpp
@@ -252,6 +255,8 @@ set (SRC
     op/tanh.hpp
     op/topk.cpp
     op/topk.hpp
+    op/fused/conv_fused.cpp
+    op/fused/conv_fused.hpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
     op/util/arithmetic_reduction.cpp

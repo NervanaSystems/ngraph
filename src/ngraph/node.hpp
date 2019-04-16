@@ -28,9 +28,9 @@
 #include <unordered_set>
 #include <vector>
 
-#include "ngraph/assertion.hpp"
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/check.hpp"
+#include "ngraph/deprecated.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/descriptor/tensor.hpp"
@@ -63,7 +63,7 @@ namespace ngraph
         class Constant;
     } // namespace op
 
-    std::string node_validation_assertion_string(const Node* node);
+    std::string node_validation_failure_loc_string(const Node* node);
 
     const std::shared_ptr<Node>& check_single_output_arg(const std::shared_ptr<Node>& node,
                                                          size_t i);
@@ -202,19 +202,18 @@ namespace ngraph
         virtual std::ostream& write_short_description(std::ostream&) const;
         virtual std::ostream& write_long_description(std::ostream&) const;
 
-        std::deque<descriptor::Input>& get_inputs() OLD_NODE_APIS_DEPRECATED("use inputs() instead")
+        std::deque<descriptor::Input>& get_inputs() NGRAPH_DEPRECATED("use inputs() instead")
         {
             return m_inputs;
         }
         const std::deque<descriptor::Input>& get_inputs() const
-            OLD_NODE_APIS_DEPRECATED("use inputs() instead")
+            NGRAPH_DEPRECATED("use inputs() instead")
         {
             return m_inputs;
         }
-        std::deque<descriptor::Output>& get_outputs()
-            OLD_NODE_APIS_DEPRECATED("use outputs() instead");
+        std::deque<descriptor::Output>& get_outputs() NGRAPH_DEPRECATED("use outputs() instead");
         const std::deque<descriptor::Output>& get_outputs() const
-            OLD_NODE_APIS_DEPRECATED("use outputs() instead");
+            NGRAPH_DEPRECATED("use outputs() instead");
 
         /// Get control dependencies registered on the node
         const std::set<std::shared_ptr<Node>>& get_control_dependencies() const;
@@ -254,10 +253,14 @@ namespace ngraph
 
         /// Returns the tensor for output i
         descriptor::Tensor& get_output_tensor(size_t i) const
-            OLD_NODE_APIS_DEPRECATED("use node->output(i).get_tensor() instead");
+            NGRAPH_DEPRECATED("use node->output(i).get_tensor() instead");
+
+        /// Returns the tensor name for output i
+        // TODO(amprocte): deprecate
+        const std::string& get_output_tensor_name(size_t i) const;
 
         /// Checks that there is exactly one output and returns its tensor.
-        descriptor::Tensor& get_output_tensor() const OLD_NODE_APIS_DEPRECATED(
+        descriptor::Tensor& get_output_tensor() const NGRAPH_DEPRECATED(
             "use node->output(0).get_tensor() instead; insert a check that the node has only one "
             "output, or update calling code not to assume only one output");
 
@@ -265,16 +268,16 @@ namespace ngraph
         // TODO: Investigate whether this really needs to be shared_ptr. If so, we'll need a
         // replacement in Output.
         std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr(size_t i) const
-            OLD_NODE_APIS_DEPRECATED("use &node->output(i).get_tensor() instead");
+            NGRAPH_DEPRECATED("use &node->output(i).get_tensor() instead");
 
         /// Checks that there is exactly one output and returns its tensor.
-        std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr() const OLD_NODE_APIS_DEPRECATED(
+        std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr() const NGRAPH_DEPRECATED(
             "use &node->output(i).get_tensor() instead; insert a check that the node has only one "
             "output, or update calling code not to assume only one output");
 
         /// Returns the set of inputs using output i
         const std::set<descriptor::Input*>& get_output_inputs(size_t i) const
-            OLD_NODE_APIS_DEPRECATED("use node->output(i).get_target_inputs() instead");
+            NGRAPH_DEPRECATED("use node->output(i).get_target_inputs() instead");
 
         /// Returns the number of inputs for the op
         size_t get_input_size() const;
@@ -290,6 +293,9 @@ namespace ngraph
         /// Returns the partial shape of input i
         // TODO: deprecate in favor of node->input(i).get_partial_shape()
         const PartialShape& get_input_partial_shape(size_t i) const;
+
+        /// Returns the tensor name for input i
+        const std::string& get_input_tensor_name(size_t i) const;
 
         std::unordered_set<descriptor::Tensor*> liveness_new_list;
         std::unordered_set<descriptor::Tensor*> liveness_free_list;
@@ -421,12 +427,12 @@ namespace ngraph
         /// \return true if this input is relevant to its node's output shapes; else false.
         bool get_is_relevant_to_shapes() const
         {
-            return m_node->m_inputs[m_index].get_is_relevant_to_shape();
+            return m_node->m_inputs.at(m_index).get_is_relevant_to_shape();
         }
         /// \return true if this input is relevant to its node's output values; else false.
         bool get_is_relevant_to_values() const
         {
-            return m_node->m_inputs[m_index].get_is_relevant_to_value();
+            return m_node->m_inputs.at(m_index).get_is_relevant_to_value();
         }
 
         /// \brief Replaces the source output of this input.
@@ -437,10 +443,7 @@ namespace ngraph
         {
             return m_node == other.m_node && m_index == other.m_index;
         }
-        bool operator!=(const Input& other) const
-        {
-            return m_node != other.m_node || m_index != other.m_index;
-        }
+        bool operator!=(const Input& other) const { return !(*this == other); }
         bool operator<(const Input& other) const
         {
             return m_node < other.m_node || (m_node == other.m_node && m_index < other.m_index);
@@ -449,15 +452,8 @@ namespace ngraph
         {
             return m_node > other.m_node || (m_node == other.m_node && m_index > other.m_index);
         }
-        bool operator<=(const Input& other) const
-        {
-            return m_node <= other.m_node || (m_node == other.m_node && m_index <= other.m_index);
-        }
-        bool operator>=(const Input& other) const
-        {
-            return m_node >= other.m_node || (m_node == other.m_node && m_index >= other.m_index);
-        }
-
+        bool operator<=(const Input& other) const { return !(*this > other); }
+        bool operator>=(const Input& other) const { return !(*this < other); }
     private:
         NodeType* const m_node;
         const size_t m_index;
@@ -543,10 +539,7 @@ namespace ngraph
         {
             return m_node == other.m_node && m_index == other.m_index;
         }
-        bool operator!=(const Output& other) const
-        {
-            return m_node != other.m_node || m_index != other.m_index;
-        }
+        bool operator!=(const Output& other) const { return !(*this == other); }
         bool operator<(const Output& other) const
         {
             return m_node < other.m_node || (m_node == other.m_node && m_index < other.m_index);
@@ -555,15 +548,8 @@ namespace ngraph
         {
             return m_node > other.m_node || (m_node == other.m_node && m_index > other.m_index);
         }
-        bool operator<=(const Output& other) const
-        {
-            return m_node <= other.m_node || (m_node == other.m_node && m_index <= other.m_index);
-        }
-        bool operator>=(const Output& other) const
-        {
-            return m_node >= other.m_node || (m_node == other.m_node && m_index >= other.m_index);
-        }
-
+        bool operator<=(const Output& other) const { return !(*this > other); }
+        bool operator>=(const Output& other) const { return !(*this < other); }
     private:
         NodeType* const m_node;
         const size_t m_index;
@@ -628,7 +614,7 @@ namespace ngraph
     {
         std::set<Input<Node>> result;
 
-        for (auto& input : m_node->m_outputs[m_index].get_inputs())
+        for (auto& input : m_node->m_outputs.at(m_index).get_inputs())
         {
             result.emplace(input->get_raw_pointer_node(), input->get_index());
         }
@@ -697,7 +683,7 @@ namespace ngraph
         NodeValidationFailure(const CheckLocInfo& check_loc_info,
                               const Node* node,
                               const std::string& explanation)
-            : CheckFailure(check_loc_info, node_validation_assertion_string(node), explanation)
+            : CheckFailure(check_loc_info, node_validation_failure_loc_string(node), explanation)
         {
         }
     };
@@ -725,4 +711,4 @@ namespace ngraph
 } // namespace ngraph
 
 #define NODE_VALIDATION_CHECK(node, cond, ...)                                                     \
-    NGRAPH_CHECK(::ngraph::NodeValidationFailure, (node), (cond), __VA_ARGS__)
+    NGRAPH_CHECK_HELPER(::ngraph::NodeValidationFailure, (node), (cond), ##__VA_ARGS__)

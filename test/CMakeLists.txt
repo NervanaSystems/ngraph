@@ -33,6 +33,7 @@ set(SRC
     bfloat16.cpp
     build_graph.cpp
     builder_autobroadcast.cpp
+    check.cpp
     constant_folding.cpp
     concat_fusion.cpp
     control_dependencies.cpp
@@ -57,7 +58,6 @@ set(SRC
     pass_memory_layout.cpp
     pass_shape_specialization.cpp
     pattern.cpp
-    provenance.cpp
     reshape_elimination.cpp
     reshape_sinking.cpp
     serialize.cpp
@@ -66,7 +66,6 @@ set(SRC
     tensor.cpp
     type_prop.cpp
     util.cpp
-    uuid.cpp
     zero_dim_tensor_elimination.cpp
 )
 
@@ -143,7 +142,7 @@ set(MULTI_TEST_SRC
     backend_comparison.in.cpp
     backend_dot.in.cpp
     backend_embedding_lookup.in.cpp
-    backend_fusedop.in.cpp
+    backend_fused_op.in.cpp
     backend_one_hot.in.cpp
     backend_pool.in.cpp
     backend_reshape.in.cpp

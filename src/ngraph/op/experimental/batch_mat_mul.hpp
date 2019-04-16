@@ -22,27 +22,35 @@ namespace ngraph
 {
     namespace op
     {
-        class BatchDot : public Op
+        /// \brief Matrix multiply for a batch of Rank 2 tensors.
+        /// The inputs are expected to be Rank 3, where the first dim is the
+        /// batch size and must be the same for both inputs. The last two dims
+        /// are the shape of matrices, i.e. `(batch_size, :, :)`.
+        /// For example, for `a` with shape `(batch_size, n, k)`, and `b` with
+        /// shape `(batch_size, k, m)`, the result of BatchMatMul will have shape
+        /// `(batch_size, n, m)`, and `BatchMatMul(a, b)[i] = Dot(a[i], b[i])`.
+        class BatchMatMul : public Op
         {
         public:
-            BatchDot(const Output<Node>& a,
-                     const Output<Node>& b,
-                     bool transpose_a,
-                     bool transpose_b);
+            /// \brief Constructs a batch of matmul product operation.
+            ///
+            /// \param arg0 The output producing the first argument.
+            /// \param arg1 The output producing the second argument.
+            BatchMatMul(const Output<Node>& arg0, const Output<Node>& arg1);
 
-            bool get_is_a_transposed() const { return m_transpose_a; }
-            bool get_is_b_transposed() const { return m_transpose_b; }
-            Shape get_a_shape() const { return get_argument(0)->get_shape(); }
-            Shape get_b_shape() const { return get_argument(1)->get_shape(); }
+            virtual void validate_and_infer_types() override;
+
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
+        protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
-
-        private:
-            bool m_transpose_a;
-            bool m_transpose_b;
         };
+
+        namespace util
+        {
+            std::shared_ptr<Node> batch_mat_transpose(const std::shared_ptr<Node>& node);
+        }
     }
 }
