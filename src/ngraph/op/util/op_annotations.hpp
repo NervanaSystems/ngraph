@@ -16,7 +16,9 @@
 
 #pragma once
 
-#include "ngraph/assertion.hpp"
+#include <vector>
+
+#include "ngraph/except.hpp"
 
 namespace ngraph
 {

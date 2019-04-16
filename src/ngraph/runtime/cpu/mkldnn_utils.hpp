@@ -120,7 +120,7 @@ namespace ngraph
                         }
                     }
 
-                    if (arg0_rank != 4 && arg0_rank != 5)
+                    if (arg0_rank != 3 && arg0_rank != 4 && arg0_rank != 5)
                     {
                         return false;
                     }
