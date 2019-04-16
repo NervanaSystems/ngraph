@@ -43,7 +43,10 @@ namespace ngraph
         {
             bool rc = true;
             ::testing::AssertionResult ar_fail = ::testing::AssertionFailure();
-            assert(a.size() == b.size());
+            if (a.size() != b.size())
+            {
+                throw std::invalid_argument("all_close: Argument vectors' sizes do not match");
+            }
             size_t count = 0;
             for (size_t i = 0; i < a.size(); ++i)
             {
@@ -78,7 +81,10 @@ namespace ngraph
         {
             bool rc = true;
             ::testing::AssertionResult ar_fail = ::testing::AssertionFailure();
-            assert(a.size() == b.size());
+            if (a.size() != b.size())
+            {
+                throw std::invalid_argument("all_close: Argument vectors' sizes do not match");
+            }
             for (size_t i = 0; i < a.size(); ++i)
             {
                 T abs_diff = (a[i] > b[i]) ? (a[i] - b[i]) : (b[i] - a[i]);

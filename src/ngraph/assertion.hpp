@@ -22,6 +22,21 @@
 
 #include "ngraph/except.hpp"
 
+// ****************************
+// Do not use this in new code!
+// ****************************
+//
+// The replacement is in ngraph/check.hpp. The system in check.hpp is much more efficient, since
+// the macros/classes here require construction of the error message string even if the assertion
+// does not fail.
+//
+// * If you have code that is calling NGRAPH_ASSERT, please replace it with NGRAPH_CHECK.
+// * If you are defining a custom exception macro, please convert it to use NGRAPH_CHECK_HELPER
+//   from check.hpp. See check.hpp for details on the new interface. In particular, note that the
+//   expected signatures for the exception class constructor is slightly different.
+//
+// TODO: remove this.
+
 namespace ngraph
 {
     /// Base class for ngraph assertion failure exceptions.
@@ -45,6 +60,9 @@ namespace ngraph
         std::string m_what;
     };
 
+    ///
+    /// NOTE: This is a legacy class likely to be retired soon. Documentation here is preserved
+    /// for posterity.
     ///
     /// Helper class for failed assertions. Callers should not instantiate this class directly.
     /// This class is meant to be wrapped with a macro like NGRAPH_ASSERT. This class provides
@@ -165,18 +183,22 @@ namespace ngraph
 }
 
 /// Asserts condition "cond" with an exception class of "T", at location "loc".
-#define NGRAPH_ASSERT_STREAM_WITH_LOC(T, cond, loc)                                                \
+#define NGRAPH_ASSERT_STREAM_WITH_LOC_DO_NOT_USE_IN_NEW_CODE(T, cond, loc)                         \
     ((cond) ? ::ngraph::DummyAssertionHelper().get_stream()                                        \
             : ::ngraph::AssertionHelper<T>(__FILE__, __LINE__, #cond, loc).get_stream())
 /// Asserts condition "cond" with an exception class of "T", and no location specified.
-#define NGRAPH_ASSERT_STREAM(T, cond)                                                              \
+#define NGRAPH_ASSERT_STREAM_DO_NOT_USE_IN_NEW_CODE(T, cond)                                       \
     ((cond) ? ::ngraph::DummyAssertionHelper().get_stream()                                        \
             : ::ngraph::AssertionHelper<T>(__FILE__, __LINE__, #cond).get_stream())
 /// Fails unconditionally with an exception class of "T", at location "loc".
-#define NGRAPH_FAIL_STREAM_WITH_LOC(T, loc)                                                        \
+#define NGRAPH_FAIL_STREAM_WITH_LOC_DO_NOT_USE_IN_NEW_CODE(T, loc)                                 \
     ::ngraph::AssertionHelper<T>(__FILE__, __LINE__, "", loc).get_stream()
 /// Fails unconditionally with an exception class of "T", and no location specified.
-#define NGRAPH_FAIL_STREAM(T) ::ngraph::AssertionHelper<T>(__FILE__, __LINE__).get_stream()
+#define NGRAPH_FAIL_STREAM_DO_NOT_USE_IN_NEW_CODE(T)                                               \
+    ::ngraph::AssertionHelper<T>(__FILE__, __LINE__).get_stream()
 
-#define NGRAPH_ASSERT(cond) NGRAPH_ASSERT_STREAM(::ngraph::AssertionFailure, cond)
-#define NGRAPH_FAIL() NGRAPH_FAIL_STREAM(::ngraph::AssertionFailure)
+/// DEPRECATED. Use NGRAPH_CHECK instead.
+#define NGRAPH_ASSERT(cond)                                                                        \
+    NGRAPH_ASSERT_STREAM_DO_NOT_USE_IN_NEW_CODE(::ngraph::AssertionFailure, cond)
+/// DEPRECATED. Use NGRAPH_CHECK instead, with a condition of `false`.
+#define NGRAPH_FAIL() NGRAPH_FAIL_STREAM_DO_NOT_USE_IN_NEW_CODE(::ngraph::AssertionFailure)
