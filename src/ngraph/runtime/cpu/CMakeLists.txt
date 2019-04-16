@@ -72,6 +72,8 @@ set(SRC
     builder/reverse.cpp
     builder/reverse_sequence.cpp
     builder/rnn.cpp
+    builder/scatter_add.cpp
+    builder/scatter_nd_add.cpp
     builder/select.cpp
     builder/sigmoid.cpp
     builder/slice.cpp

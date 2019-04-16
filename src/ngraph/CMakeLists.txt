@@ -244,6 +244,10 @@ set (SRC
     op/reverse.hpp
     op/reverse_sequence.cpp
     op/reverse_sequence.hpp
+    op/scatter_add.cpp
+    op/scatter_add.hpp
+    op/scatter_nd_add.cpp
+    op/scatter_nd_add.hpp
     op/select.cpp
     op/select.hpp
     op/sigmoid.cpp
