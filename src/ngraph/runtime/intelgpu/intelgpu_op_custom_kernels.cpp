@@ -1229,13 +1229,13 @@ CustomKernels::krnl_info CustomKernels::build_krnl(const shared_ptr<op::Select>&
 {
     const string& input0_name = op->get_input_tensor_name(0);
     const Shape& input0_shape = op->get_input_shape(0);
-    const element::Type& input0_type = op->get_input_type(0);
+    const element::Type& input0_type = op->get_input_element_type(0);
     const string& input1_name = op->get_input_tensor_name(1);
     const Shape& input1_shape = op->get_input_shape(1);
-    const element::Type& input1_type = op->get_input_type(1);
+    const element::Type& input1_type = op->get_input_element_type(1);
     const string& input2_name = op->get_input_tensor_name(2);
     const Shape& input2_shape = op->get_input_shape(2);
-    const element::Type& input2_type = op->get_input_type(2);
+    const element::Type& input2_type = op->get_input_element_type(2);
     const string& output_name = op->get_output_tensor_name(0);
     const Shape& output_shape = op->get_output_shape(0);
     const element::Type& output_type = op->get_output_element_type(0);
