@@ -114,6 +114,6 @@ gather_nd_batch_1d_from_2d
 gather_nd_batch_scalar_from_3d
 gather_nd_batch_1d_from_3d
 gather_nd_batch_2d_from_3d
-gather_single_indices_no_axis
-gather_single_indices
+gather_scalar_indices_no_axis
+gather_scalar_indices
 gather_nd_single_indices
