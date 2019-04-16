@@ -14,7 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cassert>
 #include <deque>
 #include <unordered_map>
 #include <unordered_set>
@@ -149,7 +148,7 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
     }
 
     // Fix input/output descriptors
-    assert(target->get_output_size() == replacement->get_output_size());
+    NGRAPH_CHECK(target->get_output_size() == replacement->get_output_size());
 
     // For each of target's output O with replacement output O_rep:
     //     For each O's connected downstream input I:
@@ -342,13 +341,15 @@ pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
 
     // Fix input / output among src, dst and par
     std::vector<Input<Node>> dst_inputs = get_inputs_from(*src_node, *dst_node);
-    NGRAPH_ASSERT(dst_inputs.size() == 1) << "insert_result_parameter_split encountered more than "
-                                             "one input between the source and destination nodes";
+    NGRAPH_CHECK(dst_inputs.size() == 1,
+                 "insert_result_parameter_split encountered more than "
+                 "one input between the source and destination nodes");
     auto& dst_input = dst_inputs[0];
 
     std::vector<Output<Node>> src_outputs = get_outputs_to(*src_node, *dst_node);
-    NGRAPH_ASSERT(src_outputs.size() == 1) << "insert_result_parameter_split encountered more than "
-                                              "one output between the source and destination nodes";
+    NGRAPH_CHECK(src_outputs.size() == 1,
+                 "insert_result_parameter_split encountered more than "
+                 "one output between the source and destination nodes");
     auto& src_output = src_outputs[0];
 
     // Remove [0]
@@ -411,13 +412,15 @@ void ngraph::insert_new_node_between(const shared_ptr<Node>& src_node,
 {
     // Fix input / output
     std::vector<Input<Node>> dst_inputs = get_inputs_from(*src_node, *dst_node);
-    NGRAPH_ASSERT(dst_inputs.size() == 1) << "insert_new_node_between encountered more than one "
-                                             "input between the source and destination nodes";
+    NGRAPH_CHECK(dst_inputs.size() == 1,
+                 "insert_new_node_between encountered more than one "
+                 "input between the source and destination nodes");
     auto& dst_input = dst_inputs[0];
 
     std::vector<Output<Node>> src_outputs = get_outputs_to(*src_node, *dst_node);
-    NGRAPH_ASSERT(src_outputs.size() == 1) << "insert_new_node_between encountered more than one "
-                                              "output between the source and destination nodes";
+    NGRAPH_CHECK(src_outputs.size() == 1,
+                 "insert_new_node_between encountered more than one "
+                 "output between the source and destination nodes");
     auto& src_output = src_outputs[0];
 
     src_output.remove_target_input(dst_input); // Remove [0]
