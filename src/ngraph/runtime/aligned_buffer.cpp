@@ -38,7 +38,7 @@ runtime::AlignedBuffer::AlignedBuffer(size_t byte_size, size_t alignment, Alloca
 {
     m_byte_size = std::max<size_t>(1, byte_size);
     size_t allocation_size = m_byte_size + alignment;
-    m_allocated_buffer = static_cast<char*>(m_allocator->Malloc(m_byte_size, alignment));
+    m_allocated_buffer = static_cast<char*>(m_allocator->Malloc(allocation_size, alignment));
     m_aligned_buffer = m_allocated_buffer;
     size_t mod = size_t(m_aligned_buffer) % alignment;
 

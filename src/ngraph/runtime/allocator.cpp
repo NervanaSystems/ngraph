@@ -25,7 +25,11 @@ class ngraph::runtime::DefaultAllocator : public ngraph::runtime::Allocator
 public:
     void* Malloc(size_t size, size_t alignment)
     {
-        void* ptr = ngraph::aligned_alloc(alignment, size);
+        // If allocation succeeds, returns a pointer to the lowest (first) byte in the
+        // allocated memory block that is suitably aligned for any scalar type.
+        // TODO(pruthvi): replace std::malloc with custom aligned_alloc implementation
+        // which is portable and work on all alignment requirement.
+        void* ptr = std::malloc(size);
 
         // check for exception
         if (!ptr)
@@ -40,7 +44,7 @@ public:
     {
         if (ptr)
         {
-            ngraph::aligned_free(ptr);
+            std::free(ptr);
         }
     }
 };
