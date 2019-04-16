@@ -21,6 +21,7 @@
 #include <CPP/custom_gpu_primitive.hpp>
 #include <CPP/reshape.hpp>
 
+#include "ngraph/runtime/intelgpu/intelgpu_kernels.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
 
@@ -28,6 +29,7 @@
 
 using namespace std;
 using namespace ngraph;
+using namespace ngraph::runtime::intelgpu;
 
 string runtime::intelgpu::get_opencl_type_name(const element::Type& ngraph_type)
 {
@@ -1036,17 +1038,16 @@ void runtime::intelgpu::do_dot_operation(cldnn::topology& topology,
     topology.add(op_dot);
 }
 
-void runtime::intelgpu::do_slice_operation(cldnn::topology& topology,
-                                           const string& input_name,
-                                           const Shape& input_shape,
-                                           const string& output_name,
-                                           const Shape& output_shape,
-                                           const element::Type& output_type,
-                                           const Coordinate& lower_bounds,
-                                           const Coordinate& uppper_bounds,
-                                           const Strides& strides)
+CustomKernels::krnl_info CustomKernels::build_krnl(const shared_ptr<op::Slice>& op) const
 {
-    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const string& input_name = op->get_input_tensor_name(0);
+    const Shape& input_shape = op->get_input_shape(0);
+    const string& output_name = op->get_output_tensor_name(0);
+    const Shape& output_shape = op->get_output_shape(0);
+    const element::Type& output_type = op->get_output_element_type(0);
+    const Coordinate& lower_bounds = op->get_lower_bounds();
+    const Coordinate& uppper_bounds = op->get_upper_bounds();
+    const Strides& strides = op->get_strides();
     const string entry_point_name = "slice_" + output_name;
     CodeWriter writer;
     vector<size_t> gws;
@@ -1071,15 +1072,14 @@ void runtime::intelgpu::do_slice_operation(cldnn::topology& topology,
     }
     writer.block_end();
 
-    const cldnn::custom_gpu_primitive op_slice(output_name,
-                                               {input_name},
-                                               {writer.get_code()},
-                                               entry_point_name,
-                                               get_kernel_args(1, 1),
-                                               "",
-                                               layout,
-                                               gws);
-    topology.add(op_slice);
+    const CustomKernelInfo krn_ret(output_name,
+                                   output_shape,
+                                   output_type,
+                                   {input_name},
+                                   {writer.get_code()},
+                                   entry_point_name,
+                                   gws);
+    return {krn_ret};
 }
 
 void runtime::intelgpu::do_concat_operation(cldnn::topology& topology,
@@ -1225,18 +1225,17 @@ void runtime::intelgpu::do_concat_operation(cldnn::topology& topology,
     }
 }
 
-void runtime::intelgpu::do_select_operation(cldnn::topology& topology,
-                                            const string& input0_name,
-                                            const Shape& input0_shape,
-                                            const string& input1_name,
-                                            const Shape& input1_shape,
-                                            const string& input2_name,
-                                            const Shape& input2_shape,
-                                            const string& output_name,
-                                            const Shape& output_shape,
-                                            const element::Type& output_type)
+CustomKernels::krnl_info CustomKernels::build_krnl(const shared_ptr<op::Select>& op) const
 {
-    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const string& input0_name = op->get_input_tensor_name(0);
+    const Shape& input0_shape = op->get_input_shape(0);
+    const string& input1_name = op->get_input_tensor_name(1);
+    const Shape& input1_shape = op->get_input_shape(1);
+    const string& input2_name = op->get_input_tensor_name(2);
+    const Shape& input2_shape = op->get_input_shape(2);
+    const string& output_name = op->get_output_tensor_name(0);
+    const Shape& output_shape = op->get_output_shape(0);
+    const element::Type& output_type = op->get_output_element_type(0);
     const string entry_point_name = "select_" + output_name;
     CodeWriter writer;
     vector<size_t> gws;
@@ -1262,15 +1261,14 @@ void runtime::intelgpu::do_select_operation(cldnn::topology& topology,
     }
     writer.block_end();
 
-    const cldnn::custom_gpu_primitive op_select(output_name,
-                                                {input0_name, input1_name, input2_name},
-                                                {writer.get_code()},
-                                                entry_point_name,
-                                                get_kernel_args(3, 1),
-                                                "",
-                                                layout,
-                                                gws);
-    topology.add(op_select);
+    const CustomKernelInfo krn_ret(output_name,
+                                   output_shape,
+                                   output_type,
+                                   {input0_name, input1_name, input2_name},
+                                   {writer.get_code()},
+                                   entry_point_name,
+                                   gws);
+    return {krn_ret};
 }
 
 void runtime::intelgpu::do_logic_kernel(cldnn::topology& topology,
