@@ -72,7 +72,7 @@ void Node::delayed_validate_and_infer_types()
 
 void Node::set_output_size(size_t n)
 {
-    NGRAPH_ASSERT(n >= m_outputs.size()) << "shrinking " << m_outputs.size() << " to " << n;
+    NGRAPH_CHECK(n >= m_outputs.size(), "shrinking ", m_outputs.size(), " to ", n);
     for (size_t i = m_outputs.size(); i < n; ++i)
     {
         auto tensor_descriptor = make_shared<descriptor::Tensor>(
@@ -196,8 +196,10 @@ std::shared_ptr<Node> Node::get_argument(size_t index) const
 {
     for (auto& i : m_inputs)
     {
-        NGRAPH_ASSERT(i.get_output().get_node()->get_output_size() == 1)
-            << "child " << i.get_output().get_node()->get_name() << " has multiple outputs";
+        NGRAPH_CHECK(i.get_output().get_node()->get_output_size() == 1,
+                     "child ",
+                     i.get_output().get_node()->get_name(),
+                     " has multiple outputs");
     }
     return m_inputs.at(index).get_output().get_node();
 }
@@ -433,7 +435,7 @@ NodeVector Node::get_users(bool check_is_used) const
     return result;
 }
 
-std::string ngraph::node_validation_assertion_string(const Node* node)
+std::string ngraph::node_validation_failure_loc_string(const Node* node)
 {
     std::stringstream ss;
     ss << "While validating node '" << *node << "'";
@@ -455,8 +457,8 @@ void ngraph::check_new_args_count(const Node* node, const NodeVector& new_args)
 const std::shared_ptr<Node>& ngraph::check_single_output_arg(const std::shared_ptr<Node>& node,
                                                              size_t i)
 {
-    NGRAPH_ASSERT(node->get_output_size() == 1) << "Argument " << i << node
-                                                << " must produce exactly one value.";
+    NGRAPH_CHECK(
+        node->get_output_size() == 1, "Argument ", i, node, " must produce exactly one value.");
     return node;
 }
 
