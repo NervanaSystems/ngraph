@@ -20,6 +20,6 @@
 
 namespace ngraph
 {
-    bool set_provenance_enable(bool enabled) { provenance_enabled = enabled; }
+    void set_provenance_enable(bool enabled) { provenance_enabled = enabled; }
     bool get_provenance_enable() { return provenance_enabled; }
 }
