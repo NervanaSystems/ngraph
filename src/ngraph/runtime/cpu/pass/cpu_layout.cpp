@@ -393,6 +393,13 @@ namespace ngraph
 
                     std::unique_ptr<convolution_forward::desc> fwd_desc{nullptr};
                     auto convolution_algo = mkldnn_utils::get_conv_algo();
+
+                    if (node->get_input_element_type(0) != element::f32 &&
+                        convolution_algo != mkldnn::algorithm::convolution_direct)
+                    {
+                        convolution_algo = mkldnn::algorithm::convolution_direct;
+                    }
+
                     if (use_bias)
                     {
                         memory::data_type et_bias =
