@@ -381,7 +381,7 @@ with open(os.path.join(PYNGRAPH_ROOT_DIR, 'requirements.txt')) as req:
 
 setup(
     name='ngraph-core',
-    description='nGraph - Intel\'s graph compiler and runtime for Neural Networks',
+    description="nGraph - Intel's graph compiler and runtime for Neural Networks",
     version=__version__,
     author='Intel Corporation',
     author_email='intelnervana@intel.com',
