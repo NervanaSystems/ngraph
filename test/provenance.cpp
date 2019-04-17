@@ -38,10 +38,10 @@ TEST(provenance, provenance)
     public:
         ProvenanceEnabler()
         {
-            saved_enable_state = get_provenance_enable();
-            set_provenance_enable(true);
+            saved_enable_state = get_provenance_enabled();
+            set_provenance_enabled(true);
         }
-        ~ProvenanceEnabler() { set_provenance_enable(saved_enable_state); }
+        ~ProvenanceEnabler() { set_provenance_enabled(saved_enable_state); }
     private:
         bool saved_enable_state;
     } provenance_enabler;
