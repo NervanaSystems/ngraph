@@ -252,7 +252,7 @@ static void broadcast_test_helper(const Shape& shape_a, const Shape& shape_r, co
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
 
     vector<float> inp_data(shape_size<const Shape>(shape_a));
-    iota(inp_data.begin(), inp_data.end(), 1);
+    iota(inp_data.begin(), inp_data.end(), 1.f);
 
     auto f =
         make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, axis), ParameterVector{A});

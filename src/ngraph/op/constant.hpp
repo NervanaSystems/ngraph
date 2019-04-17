@@ -19,8 +19,8 @@
 #include <cstring>
 #include <sstream>
 
-#include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/type/bfloat16.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
@@ -44,8 +44,8 @@ namespace ngraph
                 : Node("Constant", {})
                 , m_element_type(type)
                 , m_shape(shape)
-                , m_data(ngraph::aligned_alloc(m_element_type.size(),
-                                               shape_size(m_shape) * m_element_type.size()))
+                , m_data(new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(),
+                                                    host_alignment()))
             {
                 NODE_VALIDATION_CHECK(
                     this,
@@ -80,8 +80,8 @@ namespace ngraph
                 : Node("Constant", {})
                 , m_element_type(type)
                 , m_shape(shape)
-                , m_data(ngraph::aligned_alloc(m_element_type.size(),
-                                               shape_size(m_shape) * m_element_type.size()))
+                , m_data(new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(),
+                                                    host_alignment()))
             {
                 NODE_VALIDATION_CHECK(
                     this,
@@ -112,8 +112,9 @@ namespace ngraph
                 , m_data(nullptr)
             {
                 size_t size = shape_size(m_shape) * m_element_type.size();
-                m_data = ngraph::aligned_alloc(m_element_type.size(), size);
-                std::memcpy(m_data, data, size);
+                m_data.reset(new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(),
+                                                        host_alignment()));
+                std::memcpy(m_data->get_ptr(), data, size);
                 constructor_validate_and_infer_types();
             }
 
@@ -168,7 +169,7 @@ namespace ngraph
                 }
 
                 std::vector<T> rc;
-                const T* p = reinterpret_cast<const T*>(m_data);
+                const T* p = reinterpret_cast<const T*>(m_data->get_ptr());
                 for (size_t i = 0; i < shape_size(m_shape); i++)
                 {
                     rc.push_back(p[i]);
@@ -176,15 +177,16 @@ namespace ngraph
                 return rc;
             }
 
-            const void* get_data_ptr() const { return m_data; }
+            const void* get_data_ptr() const { return (m_data ? m_data->get_ptr() : nullptr); }
             template <typename T>
             const T* get_data_ptr() const
             {
-                return reinterpret_cast<T*>(m_data);
+                return reinterpret_cast<const T*>(get_data_ptr());
             }
 
             bool is_constant() const override { return true; }
         protected:
+            void* get_data_ptr_nc() { return (m_data ? m_data->get_ptr() : nullptr); }
             Constant(const std::string& name, const NodeVector& args)
                 : Node(name, args)
                 , m_shape({})
@@ -195,7 +197,8 @@ namespace ngraph
             template <typename T>
             void write_values(const std::vector<T>& values)
             {
-                write_to_buffer(m_element_type, m_shape, values, m_data, shape_size(m_shape));
+                write_to_buffer(
+                    m_element_type, m_shape, values, get_data_ptr_nc(), shape_size(m_shape));
             }
 
             template <typename T, typename U>
@@ -273,9 +276,10 @@ namespace ngraph
                 }
             }
 
+            static constexpr size_t host_alignment() { return 64; }
             element::Type m_element_type;
             Shape m_shape{};
-            void* m_data{nullptr};
+            std::unique_ptr<runtime::AlignedBuffer> m_data;
             Constant(const Constant&) = delete;
             Constant operator=(const Constant&) = delete;
         };
