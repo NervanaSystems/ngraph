@@ -47,6 +47,8 @@ set(SRC
     builder/dot.cpp
     builder/embedding_lookup.cpp
     builder/erf.cpp
+    builder/gather.cpp
+    builder/gather_nd.cpp
     builder/leaky_relu.cpp
     builder/lstm.cpp
     builder/lrn.cpp
