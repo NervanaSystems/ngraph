@@ -253,11 +253,14 @@ namespace ngraph
         static_assert(std::is_enum<T>::value, "EnumMask template type must be an enum");
         /// Extract the underlying type of the enum.
         typedef typename std::underlying_type<T>::type value_type;
-        /// Some bit operations are not safe for signed values, we require enum 
+        /// Some bit operations are not safe for signed values, we require enum
         /// type to use unsigned underlying type.
         static_assert(std::is_unsigned<value_type>::value, "EnumMask enum must use unsigned type.");
 
-        EnumMask() : m_value{0} {}
+        EnumMask()
+            : m_value{0}
+        {
+        }
         explicit EnumMask(const value_type& value)
             : m_value{value}
         {
@@ -271,17 +274,18 @@ namespace ngraph
         {
         }
         value_type value() const { return m_value; }
-        EnumMask invert() { return EnumMask(~m_value); }
-        bool operator[](const T& p) const { return is_set(p); }
+        EnumMask invert() const { return EnumMask(~m_value); }
         bool is_set(const T& p) const { return m_value & static_cast<value_type>(p); }
         bool is_clear(const T& p) const { return !is_set(p); }
         void set(const T& p) { m_value |= static_cast<value_type>(p); }
         void clear(const T& p) { m_value &= ~static_cast<value_type>(p); }
         void set_all() { m_value = ~value_type{0}; }
         void clear_all() { m_value = 0; }
+        bool operator[](const T& p) const { return is_set(p); }
         bool operator==(const EnumMask& other) const { return m_value == other.m_value; }
         bool operator!=(const EnumMask& other) const { return m_value != other.m_value; }
-        EnumMask& operator=(const EnumMask& other) {
+        EnumMask& operator=(const EnumMask& other)
+        {
             m_value = other.m_value;
             return *this;
         }
