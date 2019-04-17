@@ -432,6 +432,7 @@ namespace ngraph
                                   "bn_attr, cg_ctx->global_cpu_engine);\n";
 
                         writer << "\n// build batchnorm primitive\n";
+
                         // batchnorm primitive
                         writer
                             << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
@@ -474,6 +475,7 @@ namespace ngraph
                                   "bn_attr, cg_ctx->global_cpu_engine);\n";
 
                         writer << "\n// build batchnorm primitive\n";
+
                         // batchnorm primitive
                         writer
                             << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
