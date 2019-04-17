@@ -3022,7 +3022,7 @@ namespace ngraph
                     writer << "cpu::kernel::reference_erf<"
                            << args[0].get_element_type().c_type_string() << ">("
                            << args[0].get_name() << ", " << out[0].get_name() << ", "
-                           << ", " << element_count << ");\n";
+                           << element_count << ");\n";
                 }
                 writer.block_end();
             }

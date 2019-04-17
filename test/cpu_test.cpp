@@ -1191,7 +1191,7 @@ TEST(cpu_test, conv_negative_padding)
     compare_backends(make_f(), make_f(), "CPU", "INTERPRETER");
 }
 
-TEST(cpu_test, guass_error_function_erf)
+TEST(cpu_test, gauss_error_function_erf_float32)
 {
     auto make_function = []() -> std::shared_ptr<Function> {
         auto A = make_shared<op::Parameter>(element::f32, Shape{1, 4, 10, 6, 10});
@@ -1218,4 +1218,34 @@ TEST(cpu_test, guass_error_function_erf)
     {
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
     }
+}
+
+TEST(cpu_test, gauss_error_function_erf_int32)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::i32, shape);
+    auto make_function = [&]() -> std::shared_ptr<Function> {
+        auto erf = make_shared<op::Erf>(A);
+        return make_shared<Function>(erf, ParameterVector{A});
+    };
+
+    auto backend = runtime::Backend::create("CPU");
+    auto cpu_f = make_function();
+
+    auto input_nd_array = test::NDArray<int, 2>({{45, 2}, {7, 9}});
+    auto expected_result_nd_array =
+        test::NDArray<int, 2>({{std::erf(45), std::erf(2)}, {std::erf(7), std::erf(9)}});
+
+    // Create some tensors for input/output
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shape);
+    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::i32, shape);
+
+    copy_data(a, input_nd_array.get_vector());
+
+    auto handle = backend->compile(cpu_f);
+    handle->call_with_validate({result}, {a});
+
+    auto result_values = read_vector<int>(result);
+    auto expected_values = expected_result_nd_array.get_vector();
+    ASSERT_EQ(result_values, expected_values);
 }
