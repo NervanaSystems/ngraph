@@ -87,8 +87,7 @@ namespace ngraph
                     continue;
                 }
 
-                m_ng_node_cache[input.name()] =
-                    m_inputs.back().get_ng_node(m_parameters, weights);
+                m_ng_node_cache[input.name()] = m_inputs.back().get_ng_node(m_parameters, weights);
             }
 
             // Process all graph outputs

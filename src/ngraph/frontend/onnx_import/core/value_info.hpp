@@ -50,8 +50,8 @@ namespace ngraph
                     {
                     }
                 };
-            }
-        }
+            } // namespace value_info
+        }     // namespace error
 
         class ValueInfo
         {
@@ -103,9 +103,8 @@ namespace ngraph
                 }
             }
 
-            std::shared_ptr<ngraph::Node>
-                get_ng_node(ParameterVector& parameters,
-                            const Weights& weights = {}) const
+            std::shared_ptr<ngraph::Node> get_ng_node(ParameterVector& parameters,
+                                                      const Weights& weights = {}) const
             {
                 const auto pt = weights.find(get_name());
                 if (pt != std::end(weights))
