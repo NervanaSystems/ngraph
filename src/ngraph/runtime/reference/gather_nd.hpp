@@ -16,8 +16,7 @@
 
 #pragma once
 
-//#include <algorithm>
-//#include <numeric>
+#include <numeric>
 
 #include "ngraph/coordinate_transform.hpp"
 
@@ -47,7 +46,7 @@ namespace ngraph
                 indices_outer_end_corner[indices_ndim - 1] = 1;
                 Strides indices_strides(indices_ndim, 1);
                 AxisVector indices_axis_order(indices_ndim);
-                iota(indices_axis_order.begin(), indices_axis_order.end(), 0);
+                std::iota(indices_axis_order.begin(), indices_axis_order.end(), 0);
                 CoordinateTransform indices_outer_transform(indices_shape,
                                                             indices_outer_start_corner,
                                                             indices_outer_end_corner,
@@ -64,13 +63,13 @@ namespace ngraph
                 }
                 Strides out_strides(out_ndim, 1);
                 AxisVector out_axis_order(out_ndim);
-                iota(out_axis_order.begin(), out_axis_order.end(), 0);
+                std::iota(out_axis_order.begin(), out_axis_order.end(), 0);
                 CoordinateTransform out_transform(
                     out_shape, out_start_corner, out_end_corner, out_strides, out_axis_order);
                 size_t params_ndim = static_cast<size_t>(params_shape.size());
                 Strides params_strides(params_ndim, 1);
                 AxisVector params_axis_order(params_ndim);
-                iota(params_axis_order.begin(), params_axis_order.end(), 0);
+                std::iota(params_axis_order.begin(), params_axis_order.end(), 0);
 
                 // Gather slices from "params" and copy to "out"
                 auto out_coord_iter = out_transform.begin();
