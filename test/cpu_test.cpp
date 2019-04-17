@@ -1234,7 +1234,8 @@ TEST(cpu_test, gauss_error_function_erf_int32)
 
     auto input_nd_array = test::NDArray<int, 2>({{45, 2}, {7, 9}});
     auto expected_result_nd_array =
-        test::NDArray<int, 2>({{std::erf(45), std::erf(2)}, {std::erf(7), std::erf(9)}});
+        test::NDArray<int, 2>({{static_cast<int>(std::erf(45)), static_cast<int>(std::erf(2))},
+                               {static_cast<int>(std::erf(7)), static_cast<int>(std::erf(9))}});
 
     // Create some tensors for input/output
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shape);
