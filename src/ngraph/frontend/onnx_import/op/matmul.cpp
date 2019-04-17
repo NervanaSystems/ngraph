@@ -32,8 +32,6 @@
 #include "ngraph/shape.hpp"
 #include "utils/reshape.hpp"
 
-using namespace ngraph::op;
-
 /// \brief      Slice the sub matrix from the input tensor.
 ///
 /// \param[in]  node  The input tensor. Must be at most of rank 3.
@@ -129,7 +127,7 @@ namespace ngraph
                     if (left_rank > 1 && right_rank > 1)
                     {
                         const NodeVector& broadcasted_nodes =
-                            numpy_style_broadcast_for_matmul_operation(left, right);
+                            ngraph::op::numpy_style_broadcast_for_matmul_operation(left, right);
 
                         left = broadcasted_nodes.at(0);
                         right = broadcasted_nodes.at(1);

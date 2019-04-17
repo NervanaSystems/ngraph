@@ -36,8 +36,6 @@
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
 
-using namespace ngraph::op;
-
 namespace ngraph
 {
     namespace onnx_import
@@ -236,7 +234,8 @@ namespace ngraph
                     auto bias = inputs.at(2);
 
                     return {std::make_shared<ngraph::op::Add>(
-                        conv_node, make_broadcast_node(bias, conv_node->get_shape(), 1))};
+                        conv_node,
+                        ngraph::op::make_broadcast_node(bias, conv_node->get_shape(), 1))};
                 }
 
             } // namespace set_1
