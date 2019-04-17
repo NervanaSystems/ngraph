@@ -130,8 +130,8 @@ namespace ngraph
 //
 // Take care to fully qualify the exception class name in the macro body.
 //
-// The "..." may be filled with expressions of any type that has an "operator<<" overload for\
-// insertion into std::ostream.
+// The "..." may be filled with expressions of any type that has an "operator<<" overload<backslash>
+// for insertion into std::ostream.
 //
 // TODO(amprocte): refactor NGRAPH_CHECK_HELPER so we don't have to introduce a locally-scoped
 // variable (ss___) and risk shadowing.
