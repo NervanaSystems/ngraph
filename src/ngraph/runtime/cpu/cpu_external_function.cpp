@@ -78,6 +78,7 @@
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/floor.hpp"
+#include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
@@ -154,7 +155,6 @@
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
-#include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
@@ -1126,8 +1126,33 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
 {
     auto pass_map = pass_config.get_enables();
 
+    auto dex = is_direct_execution();
+    auto is_supported = [dex](const Node& node) {
+        if (dex)
+        {
+            auto handler = GetGlobalBuildDispatcher().find(type_index(typeid(node)));
+            if (handler == GetGlobalBuildDispatcher().end())
+            {
+                return false;
+            }
+        }
+        else
+        {
+#if !defined(NGRAPH_DEX_ONLY)
+            auto handler = dispatcher.find(type_index(typeid(node)));
+            if (handler == dispatcher.end())
+            {
+                return false;
+            }
+#else
+            return false;
+#endif
+        }
+        return true;
+    };
+
     REGISTER_KNOBBED_PASS(LikeReplacement, true, ngraph::pass);
-    REGISTER_KNOBBED_PASS(FusedOpDecomposition, true, ngraph::pass);
+    REGISTER_KNOBBED_PASS_WITH_ARGS(FusedOpDecomposition, true, ngraph::pass, is_supported);
     REGISTER_KNOBBED_PASS(NopElimination, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(ZeroDimTensorElimination, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(LSTMFusion, true, runtime::cpu::pass);
