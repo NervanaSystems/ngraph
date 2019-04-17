@@ -14,15 +14,13 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <CPP/custom_gpu_primitive.hpp>
-
 #include "ngraph/code_writer.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_kernels.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_op_softmax.hpp"
 
 using namespace std;
 using namespace ngraph;
+using namespace ngraph::runtime::intelgpu;
 
 static Shape shape_dims(const Shape& dimentions, const AxisSet& axis = {})
 {
@@ -45,22 +43,20 @@ static Shape shape_dims(const Shape& dimentions, const AxisSet& axis = {})
     return output_shape;
 }
 
-void runtime::intelgpu::do_softmax_operation(cldnn::topology& topology,
-                                             const string& input_name,
-                                             const Shape& input_shape,
-                                             const element::Type& input_type,
-                                             const string& output_name,
-                                             const Shape& output_shape,
-                                             const element::Type& output_type,
-                                             const AxisSet& axes)
+CustomKernels::krnl_info CustomKernels::build_krnl(const shared_ptr<op::Softmax>& op) const
 {
-    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const string& input_name = op->get_input_tensor_name(0);
+    const Shape& input_shape = op->get_input_shape(0);
+    const element::Type& input_type = op->get_input_element_type(0);
+    const string& output_name = op->get_output_tensor_name(0);
+    const Shape& output_shape = op->get_output_shape(0);
+    const element::Type& output_type = op->get_output_element_type(0);
+    const AxisSet& axes = op->get_axes();
     const string entry_point_name = "softmax_" + output_name;
     const string middle_name = entry_point_name + "_middle";
     const string entry_point_middle_name = "softmax_middle_" + output_name;
     const string expression = "output" + access_dims(input_shape, "i", axes) + " = 0.0f;\n";
     const Shape new_shape = shape_dims(output_shape, axes);
-    const cldnn::layout layout_middle = IntelGPULayout::create_cldnn_layout(output_type, new_shape);
     CodeWriter writer0;
     CodeWriter writer1;
     vector<size_t> gws;
@@ -81,15 +77,13 @@ void runtime::intelgpu::do_softmax_operation(cldnn::topology& topology,
     }
     writer0.block_end();
 
-    const cldnn::custom_gpu_primitive op_softmax_middle(middle_name,
-                                                        {input_name},
-                                                        {writer0.get_code()},
-                                                        entry_point_middle_name,
-                                                        get_kernel_args(1, 1),
-                                                        "",
-                                                        layout_middle,
-                                                        gws);
-    topology.add(op_softmax_middle);
+    const CustomKernelInfo op_softmax_middle(middle_name,
+                                             new_shape,
+                                             output_type,
+                                             {input_name},
+                                             {writer0.get_code()},
+                                             entry_point_middle_name,
+                                             gws);
 
     writer1 << "__kernel void " << entry_point_name << "(const __global "
             << get_opencl_type_name(input_type) << " input0" << array_dims(input_shape)
@@ -107,13 +101,12 @@ void runtime::intelgpu::do_softmax_operation(cldnn::topology& topology,
     }
     writer1.block_end();
 
-    const cldnn::custom_gpu_primitive op_softmax(output_name,
-                                                 {input_name, middle_name},
-                                                 {writer1.get_code()},
-                                                 entry_point_name,
-                                                 get_kernel_args(2, 1),
-                                                 "",
-                                                 layout,
-                                                 gws);
-    topology.add(op_softmax);
+    const CustomKernelInfo op_softmax(output_name,
+                                      output_shape,
+                                      output_type,
+                                      {input_name, middle_name},
+                                      {writer1.get_code()},
+                                      entry_point_name,
+                                      gws);
+    return {op_softmax_middle, op_softmax};
 }

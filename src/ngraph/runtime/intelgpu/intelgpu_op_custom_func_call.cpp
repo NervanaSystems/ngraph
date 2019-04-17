@@ -14,26 +14,29 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <CPP/custom_gpu_primitive.hpp>
-
 #include "ngraph/code_writer.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_op_custom_func_call.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_kernels.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
+
+#include "ngraph/op/constant.hpp"
 
 using namespace std;
 using namespace ngraph;
+using namespace ngraph::runtime::intelgpu;
 
-void runtime::intelgpu::do_all_any_op(cldnn::topology& topology,
-                                      const string& input0_name,
-                                      const Shape& input0_shape,
-                                      const string& output_name,
-                                      const Shape& output_shape,
-                                      const element::Type& output_type,
-                                      const AxisSet& axis,
-                                      const std::string& operation,
-                                      const std::string& init_val)
+static CustomKernels::krnl_info do_all_any_op(const shared_ptr<op::util::LogicalReduction>& op,
+                                              const string& operation)
 {
+    const string& input0_name = op->get_input_tensor_name(0);
+    const Shape& input0_shape = op->get_input_shape(0);
+    const string& output_name = op->get_output_tensor_name(0);
+    const Shape& output_shape = op->get_output_shape(0);
+    const element::Type& output_type = op->get_output_element_type(0);
+    const AxisSet& axis = op->get_reduction_axes();
+    const shared_ptr<Node> def_val = op->get_default_value();
+    const shared_ptr<op::Constant> def_const = static_pointer_cast<op::Constant>(def_val);
+    const vector<string>& values = def_const->get_value_strings();
+    const string& init_val = values.at(0);
     const string entry_point_name = "custom_op_all_any_" + output_name;
     const string kernel_type_name = get_opencl_type_name(output_type);
     const size_t input_size = shape_size<Shape>(input0_shape);
@@ -94,14 +97,21 @@ void runtime::intelgpu::do_all_any_op(cldnn::topology& topology,
     } // End of function bracket
     writer.block_end();
 
-    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
-    const cldnn::custom_gpu_primitive op_all_any(output_name,
-                                                 {input0_name},
-                                                 {writer.get_code()},
-                                                 entry_point_name,
-                                                 get_kernel_args(1, 1),
-                                                 "",
-                                                 layout,
-                                                 {1});
-    topology.add(op_all_any);
+    const CustomKernelInfo krn_ret(output_name,
+                                   output_shape,
+                                   output_type,
+                                   {input0_name},
+                                   {writer.get_code()},
+                                   entry_point_name);
+    return {krn_ret};
+}
+
+CustomKernels::krnl_info CustomKernels::build_krnl(const shared_ptr<op::All>& op) const
+{
+    return do_all_any_op(op, "lhs && rhs");
+}
+
+CustomKernels::krnl_info CustomKernels::build_krnl(const shared_ptr<op::Any>& op) const
+{
+    return do_all_any_op(op, "lhs || rhs");
 }

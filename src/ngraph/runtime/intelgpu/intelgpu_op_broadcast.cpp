@@ -14,32 +14,27 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <CPP/concatenation.hpp>
-#include <CPP/custom_gpu_primitive.hpp>
-#include <CPP/reshape.hpp>
-
 #include "ngraph/code_writer.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_op_broadcast.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_kernels.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
 
 #include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
+using namespace ngraph::runtime::intelgpu;
 
-static void do_sum_to_scalar_operation(cldnn::topology& topology,
-                                       const string& input_name,
-                                       const Shape& input_shape,
-                                       const element::Type& input_type,
-                                       const string& output_name,
-                                       const Shape& output_shape,
-                                       const element::Type& output_type,
-                                       const AxisSet& axis)
+static CustomKernels::krnl_info do_sum_to_scalar_operation(const string& input_name,
+                                                           const Shape& input_shape,
+                                                           const element::Type& input_type,
+                                                           const string& output_name,
+                                                           const Shape& output_shape,
+                                                           const element::Type& output_type,
+                                                           const AxisSet& axis)
 {
     const string function_name = "sum_to_scalar_" + output_name;
-    const string input_type_str = runtime::intelgpu::get_opencl_type_name(input_type);
-    const string output_type_str = runtime::intelgpu::get_opencl_type_name(output_type);
+    const string input_type_str = get_opencl_type_name(input_type);
+    const string output_type_str = get_opencl_type_name(output_type);
     const size_t main_loop_count = shape_size(input_shape);
     const size_t vect_channels = 32;
     CodeWriter writer;
@@ -53,10 +48,8 @@ static void do_sum_to_scalar_operation(cldnn::topology& topology,
     writer.block_begin();
     { // Main function body
 
-        writer << "//  input array dims: input0" << runtime::intelgpu::array_dims(input_shape)
-               << "\n"
-               << "// output array dims: output" << runtime::intelgpu::array_dims(output_shape)
-               << "\n"
+        writer << "//  input array dims: input0" << array_dims(input_shape) << "\n"
+               << "// output array dims: output" << array_dims(output_shape) << "\n"
                << output_type_str << " result = 0.0f;\n"
                << "const uint id = get_sub_group_local_id();\n"
                << "uint element_id = id;\n"
@@ -66,82 +59,80 @@ static void do_sum_to_scalar_operation(cldnn::topology& topology,
         {
             writer << "result += input0[element_id];\n"
                    << "element_id += " << vect_channels << ";\n";
-            writer.block_end();
-
-            writer << "if (element_id < " << main_loop_count << ")\n";
-            writer.block_begin();
-            {
-                writer << "result += input0[element_id];\n";
-            }
-            writer.block_end();
-
-            writer << output_type_str << " sub_group_result = sub_group_reduce_add(result);\n";
-
-            writer << "if (id == 0)\n";
-            writer.block_begin();
-            {
-                writer << "*output = sub_group_result;\n";
-            }
-            writer.block_end();
-        } // End of function bracket
+        }
         writer.block_end();
 
-        const cldnn::layout layout =
-            runtime::intelgpu::IntelGPULayout::create_cldnn_layout(output_type, output_shape);
-        const cldnn::custom_gpu_primitive op_bcast_sum(output_name,
-                                                       {input_name},
-                                                       {writer.get_code()},
-                                                       function_name,
-                                                       runtime::intelgpu::get_kernel_args(1, 1),
-                                                       "",
-                                                       layout,
-                                                       gws,
-                                                       lws);
-        topology.add(op_bcast_sum);
-    }
+        writer << "if (element_id < " << main_loop_count << ")\n";
+        writer.block_begin();
+        {
+            writer << "result += input0[element_id];\n";
+        }
+        writer.block_end();
+
+        writer << output_type_str << " sub_group_result = sub_group_reduce_add(result);\n";
+
+        writer << "if (id == 0)\n";
+        writer.block_begin();
+        {
+            writer << "*output = sub_group_result;\n";
+        }
+        writer.block_end();
+    } // End of function bracket
+    writer.block_end();
+
+    const CustomKernelInfo op_bcast_sum(output_name,
+                                        output_shape,
+                                        output_type,
+                                        {input_name},
+                                        {writer.get_code()},
+                                        function_name,
+                                        gws,
+                                        lws);
+    return {op_bcast_sum};
 }
 
-void runtime::intelgpu::do_bcast_sum_operation(cldnn::topology& topology,
-                                               const string& input_name,
-                                               const Shape& input_shape,
-                                               const element::Type& input_type,
-                                               const string& output_name,
-                                               const Shape& output_shape,
-                                               const element::Type& output_type,
-                                               const AxisSet& axis,
-                                               bool is_bcast)
+// This implements Broadcast and Sum nGraph operations.
+// input_shape (bcast) or output_shape (sum) can be empty.
+// If the shape is empty it means scalar
+static CustomKernels::krnl_info
+    do_bcast_sum_operation(const shared_ptr<Node>& op, const AxisSet& axis, bool is_bcast)
 {
+    const string& input_name = op->get_input_tensor_name(0);
+    const Shape& input_shape = op->get_input_shape(0);
+    const element::Type& input_type = op->get_input_element_type(0);
+    const string& output_name = op->get_output_tensor_name(0);
+    const Shape& output_shape = op->get_output_shape(0);
+    const element::Type& output_type = op->get_output_element_type(0);
     string function_name = is_bcast ? "broadcast_" : "sum_";
     function_name += output_name;
     CodeWriter writer;
     vector<size_t> gws;
 
-    runtime::intelgpu::gen_func_def(writer,
-                                    function_name,
-                                    {get_opencl_type_name(input_type)},
-                                    {input_shape},
-                                    get_opencl_type_name(output_type),
-                                    output_shape);
+    gen_func_def(writer,
+                 function_name,
+                 {get_opencl_type_name(input_type)},
+                 {input_shape},
+                 get_opencl_type_name(output_type),
+                 output_shape);
     writer.block_begin();
     {
         if (is_bcast)
         {
             // Broadcast loops
-            gws = runtime::intelgpu::generate_loops(writer, output_shape, true);
+            gws = generate_loops(writer, output_shape, true);
 
             writer << "output" << access_dims(output_shape) << " = input0"
                    << access_dims(output_shape, "i", axis) << ";\n";
 
             // Closing brackets for Broadcast loop
-            runtime::intelgpu::generate_loops(writer, output_shape, false);
+            generate_loops(writer, output_shape, false);
         }
         else
         {
             // corner case with scalar
             if (output_shape.empty() || (!output_shape.empty() && (shape_size(output_shape) == 1)))
             {
-                return do_sum_to_scalar_operation(topology,
-                                                  input_name,
+                return do_sum_to_scalar_operation(input_name,
                                                   input_shape,
                                                   input_type,
                                                   output_name,
@@ -171,39 +162,38 @@ void runtime::intelgpu::do_bcast_sum_operation(cldnn::topology& topology,
     } // End of function bracket
     writer.block_end();
 
-    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
-    const cldnn::custom_gpu_primitive op_bcast_sum(output_name,
-                                                   {input_name},
-                                                   {writer.get_code()},
-                                                   function_name,
-                                                   get_kernel_args(1, 1),
-                                                   "",
-                                                   layout,
-                                                   gws);
-    topology.add(op_bcast_sum);
+    const CustomKernelInfo op_bcast_sum(output_name,
+                                        output_shape,
+                                        output_type,
+                                        {input_name},
+                                        {writer.get_code()},
+                                        function_name,
+                                        gws);
+    return {op_bcast_sum};
 }
 
-void runtime::intelgpu::do_max_min_operation(cldnn::topology& topology,
-                                             const string& input_name,
-                                             const Shape& input_shape,
-                                             const string& output_name,
-                                             const Shape& output_shape,
-                                             const element::Type& output_type,
-                                             const AxisSet& axis,
-                                             bool is_min)
+// This implements Min and Max operations depends on is_min parameter
+static CustomKernels::krnl_info
+    do_max_min_operation(const shared_ptr<op::util::ArithmeticReduction>& op, bool is_min)
 {
+    const string& input_name = op->get_input_tensor_name(0);
+    const Shape& input_shape = op->get_input_shape(0);
+    const string& output_name = op->get_output_tensor_name(0);
+    const Shape& output_shape = op->get_output_shape(0);
+    const element::Type& output_type = op->get_output_element_type(0);
+    const AxisSet& axis = op->get_reduction_axes();
     const string function_name = "min_max_" + output_name;
     const size_t input_size = shape_size<Shape>(input_shape);
     const string& init_value = get_opencl_type_min_max_value(output_type, !is_min);
     const string& operation = is_min ? " < " : " > ";
     CodeWriter writer;
 
-    runtime::intelgpu::gen_func_def(writer,
-                                    function_name,
-                                    {get_opencl_type_name(output_type)},
-                                    {input_shape},
-                                    get_opencl_type_name(output_type),
-                                    output_shape);
+    gen_func_def(writer,
+                 function_name,
+                 {get_opencl_type_name(output_type)},
+                 {input_shape},
+                 get_opencl_type_name(output_type),
+                 output_shape);
 
     writer.block_begin();
     {
@@ -255,36 +245,29 @@ void runtime::intelgpu::do_max_min_operation(cldnn::topology& topology,
     } // End of function bracket
     writer.block_end();
 
-    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
-    const cldnn::custom_gpu_primitive op_min_max(output_name,
-                                                 {input_name},
-                                                 {writer.get_code()},
-                                                 function_name,
-                                                 get_kernel_args(1, 1),
-                                                 "",
-                                                 layout,
-                                                 {1});
-    topology.add(op_min_max);
+    const CustomKernelInfo op_min_max(
+        output_name, output_shape, output_type, {input_name}, {writer.get_code()}, function_name);
+    return {op_min_max};
 }
 
-void runtime::intelgpu::do_product_operation(cldnn::topology& topology,
-                                             const string& input_name,
-                                             const Shape& input_shape,
-                                             const string& output_name,
-                                             const Shape& output_shape,
-                                             const element::Type& output_type,
-                                             const AxisSet& axis)
+CustomKernels::krnl_info CustomKernels::build_krnl(const shared_ptr<op::Product>& op) const
 {
+    const string& input_name = op->get_input_tensor_name(0);
+    const Shape& input_shape = op->get_input_shape(0);
+    const string& output_name = op->get_output_tensor_name(0);
+    const Shape& output_shape = op->get_output_shape(0);
+    const element::Type& output_type = op->get_output_element_type(0);
+    const AxisSet& axis = op->get_reduction_axes();
     const string function_name = "product_" + output_name;
     const size_t input_size = shape_size<Shape>(input_shape);
     CodeWriter writer;
 
-    runtime::intelgpu::gen_func_def(writer,
-                                    function_name,
-                                    {get_opencl_type_name(output_type)},
-                                    {input_shape},
-                                    get_opencl_type_name(output_type),
-                                    output_shape);
+    gen_func_def(writer,
+                 function_name,
+                 {get_opencl_type_name(output_type)},
+                 {input_shape},
+                 get_opencl_type_name(output_type),
+                 output_shape);
 
     writer.block_begin();
     {
@@ -330,14 +313,27 @@ void runtime::intelgpu::do_product_operation(cldnn::topology& topology,
     } // End of function bracket
     writer.block_end();
 
-    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
-    const cldnn::custom_gpu_primitive op_product(output_name,
-                                                 {input_name},
-                                                 {writer.get_code()},
-                                                 function_name,
-                                                 get_kernel_args(1, 1),
-                                                 "",
-                                                 layout,
-                                                 {1});
-    topology.add(op_product);
+    const CustomKernelInfo op_product(
+        output_name, output_shape, output_type, {input_name}, {writer.get_code()}, function_name);
+    return {op_product};
+}
+
+CustomKernels::krnl_info CustomKernels::build_krnl(const shared_ptr<op::Broadcast>& op) const
+{
+    return do_bcast_sum_operation(op, op->get_broadcast_axes(), true);
+}
+
+CustomKernels::krnl_info CustomKernels::build_krnl(const shared_ptr<op::Sum>& op) const
+{
+    return do_bcast_sum_operation(op, op->get_reduction_axes(), false);
+}
+
+CustomKernels::krnl_info CustomKernels::build_krnl(const shared_ptr<op::Max>& op) const
+{
+    return do_max_min_operation(op, false);
+}
+
+CustomKernels::krnl_info CustomKernels::build_krnl(const shared_ptr<op::Min>& op) const
+{
+    return do_max_min_operation(op, true);
 }
