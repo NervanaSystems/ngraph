@@ -24,13 +24,17 @@ set(EIGEN_GIT_URL https://github.com/eigenteam/eigen-git-mirror)
 # Download Eigen
 #------------------------------------------------------------------------------
 
+# Revert prior changes to make incremental build work.
+set(EIGEN_PATCH_REVERT_COMMAND cd ${EXTERNAL_PROJECTS_ROOT}/eigen/src/ext_eigen && git reset HEAD --hard)
+
 ExternalProject_Add(
     ext_eigen
     PREFIX eigen
     GIT_REPOSITORY ${EIGEN_GIT_URL}
     GIT_TAG ${EIGEN_GIT_TAG}
     UPDATE_COMMAND ""
-    PATCH_COMMAND git apply --ignore-space-change --ignore-whitespace ${CMAKE_SOURCE_DIR}/cmake/eigen.patch
+    PATCH_COMMAND ${EIGEN_PATCH_REVERT_COMMAND}
+    COMMAND git apply --ignore-space-change --ignore-whitespace ${CMAKE_SOURCE_DIR}/cmake/eigen.patch
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
