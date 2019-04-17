@@ -50,6 +50,7 @@
 #include "op/dropout.hpp"
 #include "op/elu.hpp"
 #include "op/equal.hpp"
+#include "op/erf.hpp"
 #include "op/exp.hpp"
 #include "op/flatten.hpp"
 #include "op/floor.hpp"
@@ -250,6 +251,7 @@ namespace ngraph
             REGISTER_OPERATOR("Dropout", 1, dropout);
             REGISTER_OPERATOR("Elu", 1, elu);
             REGISTER_OPERATOR("Equal", 1, equal);
+            REGISTER_OPERATOR("Erf", 1, erf);
             REGISTER_OPERATOR("Exp", 1, exp);
             REGISTER_OPERATOR("Flatten", 1, flatten);
             REGISTER_OPERATOR("Floor", 1, floor);

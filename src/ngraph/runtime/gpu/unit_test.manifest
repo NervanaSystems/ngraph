@@ -136,3 +136,4 @@ create_tensor_2_output
 # Not implemented
 erf
 zero_sized_erf
+model_erf

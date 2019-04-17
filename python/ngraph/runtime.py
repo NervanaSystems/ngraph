@@ -43,7 +43,7 @@ class Runtime:
         self.backend = Backend.create(backend_name)
 
     def __repr__(self):  # type: () -> str
-        return '<Runtime: Backend=\'{}\'>'.format(self.backend_name)
+        return "<Runtime: Backend='{}'>".format(self.backend_name)
 
     def computation(self, node_or_function, *inputs):
         # type: (Union[Node, Function], *Node) -> 'Computation'
@@ -120,7 +120,7 @@ class Computation(object):
         # type: (np.ndarray, Tensor) -> None
         tensor_view_dtype = get_dtype(tensor_view.element_type)
         if list(tensor_view.shape) != list(value.shape) and len(value.shape) > 0:
-            raise UserInputError('Provided tensor\'s shape: %s does not match the expected: %s.',
+            raise UserInputError("Provided tensor's shape: %s does not match the expected: %s.",
                                  list(value.shape), list(tensor_view.shape))
         if value.dtype != tensor_view_dtype:
             log.warning(
