@@ -397,11 +397,182 @@ namespace ngraph
                         mkldnn_emitter, node, construct_string, deps, index, desc_file);
                 }
 
+                template <typename OP>
+                void construct_primitive_build_string_batchnorm(
+                    ngraph::runtime::cpu::MKLDNNEmitter& mkldnn_emitter,
+                    ngraph::Node* node,
+                    std::string& construct_string,
+                    std::vector<size_t>& deps,
+                    size_t& index,
+                    std::ofstream& desc_file,
+                    const bool append_relu,
+                    const bool training)
+                {
+                    const auto& args = node->get_inputs();
+
+                    // batchnorm forward needs 6 primitives: input, weights, result, mean,
+                    // variance, and batch_normalization_forward.
+                    index = mkldnn_emitter.reserve_primitive_space(6);
+                    deps = mkldnn_emitter.get_primitive_deps(index);
+
+                    CodeWriter writer;
+
+                    mkldnn::post_ops ops;
+                    if (append_relu)
+                    {
+                        const float ops_scale = 1.f;
+                        const float ops_alpha = -0.f; // relu negative slope
+                        const float ops_beta = 0.f;
+
+                        ops.append_eltwise(
+                            ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, ops_beta);
+
+                        desc_file.write(reinterpret_cast<char*>(&ops), sizeof(mkldnn::post_ops));
+                        writer << "char pops_char[sizeof(mkldnn::post_ops)];\n";
+                        writer << "desc_file.read(pops_char, sizeof(mkldnn::post_ops));\n";
+                        writer << "mkldnn::post_ops pops = "
+                                  "*reinterpret_cast<mkldnn::post_ops*>(pops_char);\n";
+                    }
+                    else
+                    {
+                        writer << "mkldnn::post_ops pops = mkldnn::post_ops();\n";
+                    }
+
+                    auto weights_shape =
+                        Shape{2, args[0].get_tensor().get_tensor_layout()->get_size()};
+                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
+                    auto weights_desc = mkldnn_emitter.build_memory_descriptor(
+                        weights_shape, args[0].get_element_type(), mkldnn::memory::format::nc);
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+
+                    bool use_global_stats;
+                    const mkldnn::memory::desc *mean_desc, *variance_desc;
+                    if (training && args.size() == 3)
+                    {
+                        mean_desc = &mkldnn_utils::get_output_mkldnn_md(node, 1);
+                        variance_desc = &mkldnn_utils::get_output_mkldnn_md(node, 2);
+                        use_global_stats = false;
+                    }
+                    else
+                    {
+                        mean_desc = &mkldnn_utils::get_input_mkldnn_md(node, 3);
+                        variance_desc = &mkldnn_utils::get_input_mkldnn_md(node, 4);
+                        use_global_stats = true;
+                    }
+
+                    auto batchnorm = static_cast<const OP*>(node);
+                    auto eps = batchnorm->get_eps_value();
+
+                    writer << "\n// read in memory descriptors\n";
+                    std::vector<mkldnn::memory::desc> descs = {
+                        input_desc, weights_desc, result_desc, *mean_desc, *variance_desc};
+                    std::vector<std::string> desc_names = {
+                        "input_desc", "weights_desc", "result_desc", "mean_desc", "variance_desc"};
+                    serialize_and_deserialize_memory_descs(desc_file, writer, descs, desc_names);
+
+                    writer << "mkldnn::primitive_attr bn_attr;\n";
+                    writer << "bn_attr.set_post_ops(pops);\n";
+
+                    writer << "\n// build batchnorm primitive descriptor\n";
+                    if (use_global_stats)
+                    {
+                        writer << "auto batchnorm_desc = "
+                                  "mkldnn::batch_normalization_forward::desc(mkldnn::prop_kind::"
+                                  "forward_training, "
+                                  "*reinterpret_cast<mkldnn::memory::desc*>(input_desc), "
+                               << eps << ", "
+                                         "mkldnn::batch_normalization_flag::use_scale_shift | "
+                                         "mkldnn::batch_normalization_flag::use_global_stats);\n";
+
+                        writer << "auto batchnorm_prim_desc = "
+                                  "mkldnn::batch_normalization_forward::primitive_desc(batchnorm_"
+                                  "desc, "
+                                  "bn_attr, cg_ctx->global_cpu_engine);\n";
+
+                        writer << "\n// build batchnorm primitive\n";
+                        desc_names = {"input_desc",
+                                      "mean_desc",
+                                      "variance_desc",
+                                      "weights_desc",
+                                      "result_desc"};
+                        emit_memory_primitive_build(writer, desc_names, deps);
+
+                        // batchnorm primitive
+                        writer
+                            << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                            << "] = new mkldnn::batch_normalization_forward(batchnorm_prim_desc, "
+                               "mkldnn::primitive::at(*cg_ctx->mkldnn_primitives["
+                            << std::to_string(deps[0])
+                            << "]), "
+                               "mkldnn::primitive::at(*cg_ctx->mkldnn_primitives["
+                            << std::to_string(deps[1])
+                            << "]), "
+                               "mkldnn::primitive::at(*cg_ctx->mkldnn_primitives["
+                            << std::to_string(deps[2])
+                            << "]), "
+                               "mkldnn::primitive::at(*cg_ctx->mkldnn_primitives["
+                            << std::to_string(deps[3])
+                            << "]), "
+                               "static_cast<mkldnn::memory>(*cg_ctx->mkldnn_primitives["
+                            << std::to_string(deps[4]) << "]));\n";
+                    }
+                    else
+                    {
+                        writer << "auto batchnorm_desc = "
+                                  "mkldnn::batch_normalization_forward::desc(mkldnn::prop_kind::"
+                                  "forward_training, "
+                                  "*reinterpret_cast<mkldnn::memory::desc*>(input_desc), "
+                               << eps << ", "
+                                         "mkldnn::batch_normalization_flag::use_scale_shift);\n";
+
+                        writer << "auto batchnorm_prim_desc = "
+                                  "mkldnn::batch_normalization_forward::primitive_desc(batchnorm_"
+                                  "desc, "
+                                  "bn_attr, cg_ctx->global_cpu_engine);\n";
+
+                        writer << "\n// build batchnorm primitive\n";
+                        emit_memory_primitive_build(writer, desc_names, deps);
+
+                        // batchnorm primitive
+                        writer
+                            << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                            << "] = new mkldnn::batch_normalization_forward(batchnorm_prim_desc, "
+                               "mkldnn::primitive::at(*cg_ctx->mkldnn_primitives["
+                            << std::to_string(deps[0])
+                            << "]), "
+                               "mkldnn::primitive::at(*cg_ctx->mkldnn_primitives["
+                            << std::to_string(deps[1])
+                            << "]), "
+                               "static_cast<mkldnn::memory>(*cg_ctx->mkldnn_primitives["
+                            << std::to_string(deps[2]) << "]), "
+                                                          "*cg_ctx->mkldnn_primitives["
+                            << std::to_string(deps[3]) << "], "
+                                                          "*cg_ctx->mkldnn_primitives["
+                            << std::to_string(deps[4]) << "]);\n";
+                    }
+                    construct_string = writer.get_code();
+                }
+
                 template <>
                 size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(BatchNormTraining)
                 {
                     return mkldnn_emitter.build_batch_norm_primitive<BatchNormInference>(
                         node, false /*Append relu*/, true /*Training*/);
+                }
+
+                template <>
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
+                    BatchNormTraining)
+                {
+                    construct_primitive_build_string_batchnorm<BatchNormTraining>(
+                        mkldnn_emitter,
+                        node,
+                        construct_string,
+                        deps,
+                        index,
+                        desc_file,
+                        false /*Append relu*/,
+                        true /*Training*/);
                 }
 
                 template <>
@@ -412,10 +583,40 @@ namespace ngraph
                 }
 
                 template <>
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
+                    BatchNormInference)
+                {
+                    construct_primitive_build_string_batchnorm<BatchNormInference>(
+                        mkldnn_emitter,
+                        node,
+                        construct_string,
+                        deps,
+                        index,
+                        desc_file,
+                        false /*Append relu*/,
+                        false /*Training*/);
+                }
+
+                template <>
                 size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(BatchNormTrainingRelu)
                 {
                     return mkldnn_emitter.build_batch_norm_primitive<BatchNormTrainingRelu>(
                         node, true /*Append relu*/, true /*Training*/);
+                }
+
+                template <>
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
+                    BatchNormTrainingRelu)
+                {
+                    construct_primitive_build_string_batchnorm<BatchNormTrainingRelu>(
+                        mkldnn_emitter,
+                        node,
+                        construct_string,
+                        deps,
+                        index,
+                        desc_file,
+                        true /*Append relu*/,
+                        true /*Training*/);
                 }
 
                 template <>
@@ -426,9 +627,26 @@ namespace ngraph
                 }
 
                 template <>
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
+                    BatchNormInferenceRelu)
+                {
+                    construct_primitive_build_string_batchnorm<BatchNormInferenceRelu>(
+                        mkldnn_emitter,
+                        node,
+                        construct_string,
+                        deps,
+                        index,
+                        desc_file,
+                        true /*Append relu*/,
+                        false /*Training*/);
+                }
+
+                template <>
                 size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(BatchNormTrainingBackprop)
                 {
                     const auto& args = node->get_inputs();
+                    const auto* batchnorm = static_cast<const BatchNormTrainingBackprop*>(node);
+
                     auto weights_shape =
                         Shape{2, args[0].get_tensor().get_tensor_layout()->get_size()};
                     auto weights_desc = mkldnn_emitter.build_memory_descriptor(
@@ -441,7 +659,6 @@ namespace ngraph
                     auto dweights_desc = mkldnn_emitter.build_memory_descriptor(
                         weights_shape, args[0].get_element_type(), mkldnn::memory::format::nc);
 
-                    const auto* batchnorm = static_cast<const BatchNormTrainingBackprop*>(node);
                     return mkldnn_emitter.build_batchnorm_backward(weights_desc,
                                                                    input_desc,
                                                                    mean_desc,
@@ -450,6 +667,85 @@ namespace ngraph
                                                                    dinput_desc,
                                                                    dweights_desc,
                                                                    batchnorm->get_eps_value());
+                }
+
+                template <>
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
+                    BatchNormTrainingBackprop)
+                {
+                    const auto& args = node->get_inputs();
+                    const auto* batchnorm = static_cast<const BatchNormTrainingBackprop*>(node);
+                    auto eps = batchnorm->get_eps_value();
+
+                    auto weights_shape =
+                        Shape{2, args[0].get_tensor().get_tensor_layout()->get_size()};
+                    auto weights_desc = mkldnn_emitter.build_memory_descriptor(
+                        weights_shape, args[0].get_element_type(), mkldnn::memory::format::nc);
+                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
+                    auto mean_desc = mkldnn_utils::get_input_mkldnn_md(node, 3);
+                    auto variance_desc = mkldnn_utils::get_input_mkldnn_md(node, 4);
+                    auto delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 5);
+                    auto dinput_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+                    auto dweights_desc = mkldnn_emitter.build_memory_descriptor(
+                        weights_shape, args[0].get_element_type(), mkldnn::memory::format::nc);
+
+                    // batchnorm backward needs 8 primitives: weights, input, mean, variance,
+                    // dinput, dweights, and batch_normalization_backward.
+                    index = mkldnn_emitter.reserve_primitive_space(8);
+                    deps = mkldnn_emitter.get_primitive_deps(index);
+
+                    CodeWriter writer;
+
+                    writer << "\n// read in memory descriptors\n";
+                    std::vector<mkldnn::memory::desc> descs = {weights_desc,
+                                                               input_desc,
+                                                               mean_desc,
+                                                               variance_desc,
+                                                               delta_desc,
+                                                               dinput_desc,
+                                                               dweights_desc};
+                    std::vector<std::string> desc_names = {"weights_desc",
+                                                           "input_desc",
+                                                           "mean_desc",
+                                                           "variance_desc",
+                                                           "delta_desc",
+                                                           "dinput_desc",
+                                                           "dweights_desc"};
+                    serialize_and_deserialize_memory_descs(desc_file, writer, descs, desc_names);
+
+                    writer << "\n// build batchnorm primitives\n";
+                    emit_memory_primitive_build(writer, desc_names, deps);
+
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = new mkldnn::batch_normalization_backward("
+                           << "{{mkldnn::prop_kind::backward, "
+                              "*reinterpret_cast<mkldnn::memory::desc*>(delta_desc), "
+                              "*reinterpret_cast<mkldnn::memory::desc*>(input_desc), "
+                           << eps << ", "
+                                     "mkldnn::batch_normalization_flag::use_scale_shift}, "
+                                     "cg_ctx->global_cpu_engine, "
+                                     "{{mkldnn::prop_kind::forward_training, "
+
+                                     "*reinterpret_cast<mkldnn::memory::desc*>(input_desc), "
+                           << eps << ", "
+                                     "mkldnn::batch_normalization_flag::use_scale_shift}, "
+                                     "cg_ctx->global_cpu_engine}}, "
+                                     "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[1]) << "], "
+                                                         "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[2]) << "], "
+                                                         "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[3]) << "], "
+                                                         "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[4]) << "], "
+                                                         "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[0]) << "], "
+                                                         "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[5]) << "], "
+                                                         "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[6]) << "]);\n";
+
+                    construct_string = writer.get_code();
                 }
 
                 template <>
@@ -1081,6 +1377,16 @@ static const PrimitiveBuildOpMap prim_build_dispatcher{
 
 static const PrimitiveBuildStringConstructOpMap prim_build_string_construct_dispatcher{
     {TI(Add), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Add>},
+    {TI(BatchNormInference),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<BatchNormInference>},
+    {TI(BatchNormTraining),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<BatchNormTraining>},
+    {TI(BatchNormInferenceRelu),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<BatchNormInferenceRelu>},
+    {TI(BatchNormTrainingRelu),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<BatchNormTrainingRelu>},
+    {TI(BatchNormTrainingBackprop),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<BatchNormTrainingBackprop>},
     {TI(Lstm), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Lstm>},
     {TI(Rnn), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Rnn>},
 };
