@@ -34,7 +34,7 @@ void pass::PassBase::set_state(ManagerState& state)
     m_state = &state;
 }
 
-bool pass::PassBase::get_property(const Property& prop)
+bool pass::PassBase::get_property(const Property& prop) const
 {
     return m_property.is_set(prop);
 }
