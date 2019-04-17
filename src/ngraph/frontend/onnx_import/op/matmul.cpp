@@ -28,9 +28,11 @@
 #include "ngraph/op/experimental/quantized_dot.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
-#include "utils/broadcasting.hpp"
 #include "utils/reshape.hpp"
+
+using namespace ngraph::op;
 
 /// \brief      Slice the sub matrix from the input tensor.
 ///

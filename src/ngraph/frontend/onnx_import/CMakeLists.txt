@@ -178,8 +178,6 @@ add_library(onnx_import STATIC
         op/xor.hpp
         ops_bridge.cpp
         ops_bridge.hpp
-        utils/broadcasting.cpp
-        utils/broadcasting.hpp
         utils/common.hpp
         utils/convpool.cpp
         utils/convpool.hpp

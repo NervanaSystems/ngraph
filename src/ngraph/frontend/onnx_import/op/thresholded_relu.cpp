@@ -24,8 +24,8 @@
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/multiply.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 #include "thresholded_relu.hpp"
-#include "utils/broadcasting.hpp"
 
 namespace ngraph
 {
@@ -43,7 +43,7 @@ namespace ngraph
                     std::shared_ptr<ngraph::Node> alpha_node =
                         std::make_shared<ngraph::op::Constant>(
                             data->get_element_type(), ngraph::Shape{}, std::vector<double>{alpha});
-                    alpha_node = make_broadcast_node(alpha_node, data->get_shape());
+                    alpha_node = ngraph::op::make_broadcast_node(alpha_node, data->get_shape());
 
                     auto data_map = std::make_shared<ngraph::op::Convert>(
                         std::make_shared<ngraph::op::Greater>(data, alpha_node),

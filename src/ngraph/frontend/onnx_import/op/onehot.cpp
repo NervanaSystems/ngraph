@@ -26,8 +26,10 @@
 #include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/subtract.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 #include "onehot.hpp"
-#include "utils/broadcasting.hpp"
+
+using namespace ngraph::op;
 
 namespace ngraph
 {

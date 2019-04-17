@@ -29,8 +29,10 @@
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 #include "prelu.hpp"
-#include "utils/broadcasting.hpp"
+
+using namespace ngraph::op;
 
 namespace ngraph
 {

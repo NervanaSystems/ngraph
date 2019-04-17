@@ -23,8 +23,8 @@
 #include "ngraph/node_vector.hpp"
 #include "ngraph/node_vector.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
-#include "utils/broadcasting.hpp"
 
 namespace ngraph
 {
@@ -77,7 +77,7 @@ namespace ngraph
                 // Templated binary operation - Creates Add, Minimum, Maximum, etc.
                 auto binary_operation = [](const std::shared_ptr<ngraph::Node>& arg0,
                                            const std::shared_ptr<ngraph::Node>& arg1) {
-                    NodeVector args{numpy_style_broadcast({arg0, arg1})};
+                    NodeVector args{ngraph::op::numpy_style_broadcast({arg0, arg1})};
                     return std::make_shared<T>(args.at(0), args.at(1));
                 };
 

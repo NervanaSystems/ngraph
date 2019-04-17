@@ -45,13 +45,15 @@
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/tanh.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
-#include "utils/broadcasting.hpp"
 #include "utils/common.hpp"
 #include "utils/reshape.hpp"
 #include "utils/rnn/activation_functions.hpp"
+
+using namespace ngraph::op;
 
 namespace ngraph
 {

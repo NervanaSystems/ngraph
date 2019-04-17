@@ -24,8 +24,8 @@
 #include <vector>
 
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
-#include "utils/broadcasting.hpp"
 
 namespace ngraph
 {
@@ -125,7 +125,7 @@ namespace ngraph
                 if (data.size() == 1)
                 {
                     node = std::make_shared<ngraph::op::Constant>(type, ngraph::Shape{}, data);
-                    node = make_broadcast_node(node, shape);
+                    node = ngraph::op::make_broadcast_node(node, shape);
                 }
                 else
                 {

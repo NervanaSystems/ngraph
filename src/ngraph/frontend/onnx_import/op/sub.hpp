@@ -19,7 +19,7 @@
 #include "core/node.hpp"
 #include "ngraph/node_vector.hpp"
 #include "ngraph/op/subtract.hpp"
-#include "utils/broadcasting.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 
 namespace ngraph
 {
@@ -35,7 +35,7 @@ namespace ngraph
                     auto right_rank = node.get_ng_inputs().at(1)->get_shape().size();
                     auto axis =
                         node.get_attribute_value<std::int64_t>("axis", left_rank - right_rank);
-                    NodeVector ng_inputs{legacy_style_broadcast_for_binary_operation(
+                    NodeVector ng_inputs{ngraph::op::legacy_style_broadcast_for_binary_operation(
                         node.get_ng_inputs().at(0), node.get_ng_inputs().at(1), axis)};
 
                     return {
@@ -48,7 +48,7 @@ namespace ngraph
             {
                 inline NodeVector sub(const Node& node)
                 {
-                    NodeVector ng_inputs{numpy_style_broadcast(node.get_ng_inputs())};
+                    NodeVector ng_inputs{ngraph::op::numpy_style_broadcast(node.get_ng_inputs())};
                     return {
                         std::make_shared<ngraph::op::Subtract>(ng_inputs.at(0), ng_inputs.at(1))};
                 }

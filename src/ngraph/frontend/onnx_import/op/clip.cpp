@@ -23,7 +23,9 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
-#include "utils/broadcasting.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
+
+using namespace ngraph::op;
 
 namespace ngraph
 {

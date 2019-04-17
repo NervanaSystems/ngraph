@@ -23,7 +23,6 @@
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/frontend/onnx_import/exceptions.hpp"
 #include "ngraph/frontend/onnx_import/op/conv_transpose.hpp"
-#include "ngraph/frontend/onnx_import/utils/broadcasting.hpp"
 #include "ngraph/frontend/onnx_import/utils/convpool.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/broadcast.hpp"
@@ -33,8 +32,11 @@
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/subtract.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
+
+using namespace ngraph::op;
 
 namespace ngraph
 {

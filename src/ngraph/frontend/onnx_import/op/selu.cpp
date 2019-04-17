@@ -28,9 +28,11 @@
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/subtract.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
 #include "selu.hpp"
-#include "utils/broadcasting.hpp"
+
+using namespace ngraph::op;
 
 namespace ngraph
 {
