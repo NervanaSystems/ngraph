@@ -85,6 +85,7 @@ add_library(onnx_import STATIC
         op/flatten.cpp
         op/flatten.hpp
         op/floor.hpp
+        op/gather.hpp
         op/gemm.cpp
         op/gemm.hpp
         op/global_average_pool.cpp
