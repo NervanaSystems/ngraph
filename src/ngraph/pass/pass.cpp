@@ -22,7 +22,7 @@ using namespace ngraph;
 
 pass::PassBase::PassBase()
 {
-    set_property(Property::REGULAR_FUSIONS, true);
+    set_property(PassProperty::REGULAR_FUSIONS, true);
 }
 pass::ManagerState& pass::PassBase::get_state()
 {
@@ -34,11 +34,11 @@ void pass::PassBase::set_state(ManagerState& state)
     m_state = &state;
 }
 
-bool pass::PassBase::get_property(const Property& prop) const
+bool pass::PassBase::get_property(const PassProperty& prop) const
 {
     return m_property.is_set(prop);
 }
-void pass::PassBase::set_property(const Property& prop, bool value)
+void pass::PassBase::set_property(const PassProperty& prop, bool value)
 {
     if (value)
     {

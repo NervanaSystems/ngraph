@@ -43,35 +43,36 @@ namespace ngraph
             REGULAR_FUSIONS = 0x2,
             ALL_FUSIONS = 0xFFFFFFFF
         };
+        enum class PassProperty : uint32_t
+        {
+            //`DIFFERENTIABLE_FUSIONS` produce ops that support autodiff
+            // i.e. implement `generate_adjoints`
+            DIFFERENTIABLE_FUSIONS = 0x1,
+            REGULAR_FUSIONS = 1 << 1,
+            ALL_FUSIONS = REGULAR_FUSIONS | DIFFERENTIABLE_FUSIONS,
+            REQUIRE_STATIC_SHAPE = 1 << 2,
+            CHANGE_FUNCTION_STATE = 1 << 3
+        };
+        typedef EnumMask<PassProperty> PassPropertyMask;
     }
 }
 
 class ngraph::pass::PassBase
 {
-    enum class Property : uint32_t
-    {
-        //`DIFFERENTIABLE_FUSIONS` produce ops that support autodiff
-        // i.e. implement `generate_adjoints`
-        DIFFERENTIABLE_FUSIONS = 0x1,
-        REGULAR_FUSIONS = 1 << 1,
-        ALL_FUSIONS = REGULAR_FUSIONS | DIFFERENTIABLE_FUSIONS,
-        REQUIRE_STATIC_SHAPE = 1 << 2,
-        CHANGE_FUNCTION_STATE = 1 << 3
-    };
     friend class Manager;
 
 public:
     PassBase();
     virtual ~PassBase() {}
-    bool get_property(const Property& prop) const;
+    bool get_property(const PassProperty& prop) const;
 
 protected:
     ManagerState& get_state();
     void set_state(ManagerState&);
-    void set_property(const Property& prop, bool value);
+    void set_property(const PassProperty& prop, bool value);
 
 private:
-    EnumMask<Property> m_property;
+    PassPropertyMask m_property;
     ManagerState* m_state;
 };
 
