@@ -239,6 +239,84 @@ namespace ngraph
         OUTPUT,
         INTERMEDIATE
     };
+
+    /**
+     * EnumMask is intended to work with a scoped enum type. It's used to store a combination
+     * of enum values and provides easy access and manipulation of these enum values as
+     * a mask.
+     */
+    template <typename T>
+    class EnumMask
+    {
+    public:
+        /// Make sure the template type is an enum.
+        static_assert(std::is_enum<T>::value, "EnumMask template type must be an enum");
+        /// Extract the underlying type of the enum.
+        typedef typename std::underlying_type<T>::type value_type;
+        /// Some bit operations are not safe for signed values, we require enum 
+        /// type to use unsigned underlying type.
+        static_assert(std::is_unsigned<value_type>::value, "EnumMask enum must use unsigned type.");
+
+        EnumMask() : m_value{0} {}
+        explicit EnumMask(const value_type& value)
+            : m_value{value}
+        {
+        }
+        EnumMask(const T& enum_value)
+            : m_value{static_cast<value_type>(enum_value)}
+        {
+        }
+        EnumMask(const EnumMask& other)
+            : m_value{other.m_value}
+        {
+        }
+        value_type value() const { return m_value; }
+        EnumMask invert() { return EnumMask(~m_value); }
+        bool operator[](const T& p) const { return is_set(p); }
+        bool is_set(const T& p) const { return m_value & static_cast<value_type>(p); }
+        bool is_clear(const T& p) const { return !is_set(p); }
+        void set(const T& p) { m_value |= static_cast<value_type>(p); }
+        void clear(const T& p) { m_value &= ~static_cast<value_type>(p); }
+        void set_all() { m_value = ~value_type{0}; }
+        void clear_all() { m_value = 0; }
+        bool operator==(const EnumMask& other) const { return m_value == other.m_value; }
+        bool operator!=(const EnumMask& other) const { return m_value != other.m_value; }
+        EnumMask& operator=(const EnumMask& other) {
+            m_value = other.m_value;
+            return *this;
+        }
+        EnumMask& operator&=(const EnumMask& other)
+        {
+            m_value &= other.m_value;
+            return *this;
+        }
+
+        EnumMask& operator|=(const EnumMask& other)
+        {
+            m_value |= other.m_value;
+            return *this;
+        }
+
+        EnumMask operator&(const EnumMask& other) const
+        {
+            return EnumMask(m_value & other.m_value);
+        }
+
+        EnumMask operator|(const EnumMask& other) const
+        {
+            return EnumMask(m_value | other.m_value);
+        }
+
+        EnumMask operator~() const { return invert(); }
+        friend std::ostream& operator<<(std::ostream& os, const EnumMask& m)
+        {
+            os << m.m_value;
+            return os;
+        }
+
+    private:
+        value_type m_value;
+    };
 } // end namespace ngraph
 
 std::ostream& operator<<(std::ostream& os, const ngraph::NodeVector& nv);

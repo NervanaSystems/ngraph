@@ -23,6 +23,7 @@
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/pass/manager_state.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -47,15 +48,28 @@ namespace ngraph
 
 class ngraph::pass::PassBase
 {
+    enum class Property : uint32_t 
+    {
+        //`DIFFERENTIABLE_FUSIONS` produce ops that support autodiff
+        // i.e. implement `generate_adjoints`
+        DIFFERENTIABLE_FUSIONS = 0x1,
+        REGULAR_FUSIONS = 1 << 1,
+        ALL_FUSIONS = REGULAR_FUSIONS | DIFFERENTIABLE_FUSIONS, 
+        REQUIRE_STATIC_SHAPE = 1 << 2,
+        CHANGE_FUNCTION_STATE = 1 << 3
+    };
     friend class Manager;
 
 public:
     virtual ~PassBase() {}
+    bool get_property(const Property& prop);
 protected:
     ManagerState& get_state();
     void set_state(ManagerState&);
+    void set_property(const Property& prop, bool value);
 
 private:
+    EnumMask<Property> m_property;
     ManagerState* m_state;
 };
 
