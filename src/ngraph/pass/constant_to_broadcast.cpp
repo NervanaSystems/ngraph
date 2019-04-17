@@ -25,30 +25,33 @@ using namespace ngraph;
 template <typename T>
 static bool is_data_constant(shared_ptr<op::Constant> constant)
 {
-    const T* data = constant->get_data_ptr<T>();
-    const T compare = data[0];
     const size_t size = shape_size(constant->get_shape());
     bool data_is_constant = true;
-    for (size_t i = 1; i < size; i++)
+    if (size > 0)
     {
-        if (data[i] != compare)
+        const T* data = constant->get_data_ptr<T>();
+        const T compare = data[0];
+        for (size_t i = 1; i < size; i++)
         {
-            data_is_constant = false;
-            break;
+            if (data[i] != compare)
+            {
+                data_is_constant = false;
+                break;
+            }
         }
-    }
-    if (data_is_constant)
-    {
-        auto scalar_constant = make_shared<op::Constant>(
-            constant->get_element_type(), Shape{}, constant->get_data_ptr());
-        AxisSet broadcast_axes;
-        for (size_t i = 0; i < constant->get_output_shape(0).size(); i++)
+        if (data_is_constant)
         {
-            broadcast_axes.insert(i);
+            auto scalar_constant = make_shared<op::Constant>(
+                constant->get_element_type(), Shape{}, constant->get_data_ptr());
+            AxisSet broadcast_axes;
+            for (size_t i = 0; i < constant->get_output_shape(0).size(); i++)
+            {
+                broadcast_axes.insert(i);
+            }
+            auto broadcast = make_shared<op::Broadcast>(
+                scalar_constant, constant->get_output_shape(0), broadcast_axes);
+            replace_node(constant, broadcast);
         }
-        auto broadcast = make_shared<op::Broadcast>(
-            scalar_constant, constant->get_output_shape(0), broadcast_axes);
-        replace_node(constant, broadcast);
     }
     return data_is_constant;
 }
