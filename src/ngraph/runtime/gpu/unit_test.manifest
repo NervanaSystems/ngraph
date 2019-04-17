@@ -136,6 +136,7 @@ create_tensor_2_output
 # Not implemented
 erf
 zero_sized_erf
+model_erf
 gather_no_axis
 gather
 gather_nd_scalar_from_2d
@@ -151,3 +152,4 @@ gather_nd_batch_2d_from_3d
 gather_scalar_indices_no_axis
 gather_scalar_indices
 gather_nd_single_indices
+
