@@ -23,9 +23,9 @@ packages and prerequisites:
    :widths: 25, 15, 25, 20, 25
    :escape: ~
 
-   CentOS 7.4 64-bit, GCC 4.8, CMake 3.4.3, supported, ``wget zlib-devel ncurses-libs ncurses-devel patch diffutils gcc-c++ make git perl-Data-Dumper`` 
+   CentOS 7.4 64-bit, GCC 4.8, CMake 3.5.0, supported, ``wget zlib-devel ncurses-libs ncurses-devel patch diffutils gcc-c++ make git perl-Data-Dumper`` 
    Ubuntu 16.04 or 18.04 (LTS) 64-bit, Clang 3.9, CMake 3.5.1 + GNU Make, supported, ``build-essential cmake clang-3.9 clang-format-3.9 git curl zlib1g zlib1g-dev libtinfo-dev unzip autoconf automake libtool``
-   Clear Linux\* OS for Intel Architecture, Clang 5.0.1, CMake 3.10.2, experimental, bundles ``machine-learning-basic dev-utils python3-basic python-basic-dev``
+   Clear Linux\* OS for Intel® Architecture version 28880, Clang 8.0, CMake 3.14.2, experimental, bundles ``machine-learning-basic c-basic python-basic python-basic-dev dev-utils``
 
 Other configurations may work, but should be considered experimental with
 limited support. On Ubuntu 16.04 with gcc-5.4.0 or clang-3.9, for example, we 
@@ -185,13 +185,13 @@ The process documented here will work on CentOS 7.4.
 
    .. code-block:: console
     
-      $ wget https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz      
-      $ tar -xzvf cmake-3.4.3.tar.gz
-      $ cd cmake-3.4.3
+      $ wget https://cmake.org/files/v3.4/cmake-3.5.0.tar.gz      
+      $ tar -xzvf cmake-3.5.0.tar.gz
+      $ cd cmake-3.5.0
       $ ./bootstrap --system-curl --prefix=~/cmake
       $ make && make install     
 
-#. Clone the `NervanaSystems` ``ngraph`` repo via HTTPS and use Cmake 3.4.3 to 
+#. Clone the `NervanaSystems` ``ngraph`` repo via HTTPS and use Cmake 3.5.0 to 
    build nGraph Libraries to ``~/ngraph_dist``. This command enables ONNX 
    support in the library (optional). 
 

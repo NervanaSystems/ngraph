@@ -14,4 +14,30 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/node_output.hpp"
+#pragma once
+
+#include <memory>
+
+#include "core/node.hpp"
+#include "ngraph/node_vector.hpp"
+#include "ngraph/op/erf.hpp"
+
+namespace ngraph
+{
+    namespace onnx_import
+    {
+        namespace op
+        {
+            namespace set_1
+            {
+                inline NodeVector erf(const Node& node)
+                {
+                    return {std::make_shared<ngraph::op::Erf>(node.get_ng_inputs().at(0))};
+                }
+            } // namespace set_1
+
+        } //namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

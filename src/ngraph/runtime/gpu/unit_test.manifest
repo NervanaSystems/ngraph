@@ -126,6 +126,8 @@ model_quantize_linear_zero_point
 quantize_linear_axis_zero
 model_quantize_linear_axis_negative
 model_quant_conv_linear
+model_quant_conv_linear_2d
+model_quant_conv_linear_3d
 
 # This should be implemented
 create_tensor_2_input
@@ -134,3 +136,4 @@ create_tensor_2_output
 # Not implemented
 erf
 zero_sized_erf
+model_erf

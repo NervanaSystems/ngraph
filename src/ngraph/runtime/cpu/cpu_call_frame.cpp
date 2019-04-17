@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include <algorithm>
+#include <thread>
 
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
@@ -39,14 +40,22 @@ runtime::cpu::CPU_CallFrame::CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction>
     , m_compiled_destroy_ctx_func(compiled_destroy_ctx_func)
     , m_compiled_function(compiled_function)
 {
-    const auto envConcurrency = std::getenv("NGRAPH_CONCURRENCY");
-    m_concurrency = envConcurrency == nullptr ? 1 : std::atoi(envConcurrency);
+    const auto envConcurrency = std::getenv("NGRAPH_CPU_CONCURRENCY");
+    m_num_ctx = envConcurrency == nullptr ? 1 : std::atoi(envConcurrency);
+    if (m_num_ctx > std::thread::hardware_concurrency())
+    {
+        throw ngraph_error(
+            "Unexpected value specified for NGRAPH_CPU_CONCURRENCY "
+            "(" +
+            std::string(envConcurrency) + "). Please specify a value in range [1-" +
+            std::to_string(std::thread::hardware_concurrency()) + "]");
+    }
 
     setup_runtime_context();
     if (!m_external_function->is_direct_execution())
     {
         // Invoke codegen runtime context initialization function.
-        NGRAPH_ASSERT(m_compiled_init_ctx_func) << "compiled_init_ctx_func cannot be null.";
+        NGRAPH_CHECK(m_compiled_init_ctx_func, "compiled_init_ctx_func cannot be null.");
         cg_ctx = m_compiled_init_ctx_func();
     }
 }
@@ -56,7 +65,7 @@ runtime::cpu::CPU_CallFrame::~CPU_CallFrame()
     cleanup_runtime_context();
     if (!m_external_function->is_direct_execution())
     {
-        NGRAPH_ASSERT(m_compiled_destroy_ctx_func) << "compiled_destroy_ctx_func cannot be null.";
+        NGRAPH_CHECK(m_compiled_destroy_ctx_func, "compiled_destroy_ctx_func cannot be null.");
         m_compiled_destroy_ctx_func(cg_ctx);
     }
 }
@@ -64,7 +73,8 @@ runtime::cpu::CPU_CallFrame::~CPU_CallFrame()
 void runtime::cpu::CPU_CallFrame::inner_call(
     const std::vector<std::shared_ptr<runtime::Tensor>>& output_tvs,
     const std::vector<std::shared_ptr<runtime::Tensor>>& input_tvs,
-    const size_t id)
+    const size_t id,
+    const bool disable_caching)
 {
     vector<void*> inputs;
     vector<void*> outputs;
@@ -73,13 +83,13 @@ void runtime::cpu::CPU_CallFrame::inner_call(
     {
         shared_ptr<runtime::cpu::CPUTensorView> tv =
             static_pointer_cast<runtime::cpu::CPUTensorView>(input_tvs[i]);
-        if (m_concurrency == 1)
+        if (disable_caching)
         {
-            m_ctx_vec[id]->p_en[i] = tv->get_stale();
+            m_ctx_vec[id]->p_en[i] = true;
         }
         else
         {
-            m_ctx_vec[id]->p_en[i] = true;
+            m_ctx_vec[id]->p_en[i] = tv->get_stale();
         }
 
         inputs.push_back(tv->get_data_ptr());
@@ -124,7 +134,7 @@ void runtime::cpu::CPU_CallFrame::call(
     }
 
     auto id = 0;
-    for (auto i = 0; i < m_concurrency; i++)
+    for (auto i = 0; i < m_num_ctx; i++)
     {
         if (m_id_pool[i])
         {
@@ -132,14 +142,22 @@ void runtime::cpu::CPU_CallFrame::call(
             break;
         }
     }
-    NGRAPH_ASSERT(id != m_concurrency);
+    NGRAPH_CHECK(id != m_num_ctx);
     m_id_pool[id] = false;
+    auto disable_caching = false;
+    if (id != m_prev_ctx)
+    {
+        // Disable caching since staleness hints are no longer
+        // applicable to this context
+        disable_caching = true;
+    }
+    m_prev_ctx = id;
     m_num_ctx_available--;
     m_mutex.unlock();
 
     m_ctx_vec[id]->pc = 0;
     propagate_layouts(output_tvs, m_external_function->get_result_layout_descriptors());
-    inner_call(output_tvs, input_tvs, id);
+    inner_call(output_tvs, input_tvs, id, disable_caching);
 }
 
 void runtime::cpu::CPU_CallFrame::propagate_layouts(
@@ -164,7 +182,7 @@ void runtime::cpu::CPU_CallFrame::propagate_layouts(
 
 void runtime::cpu::CPU_CallFrame::setup_runtime_context()
 {
-    for (auto i = 0; i < m_concurrency; i++)
+    for (auto i = 0; i < m_num_ctx; i++)
     {
         m_id_pool[i] = true;
         auto ctx = new CPURuntimeContext;
@@ -199,7 +217,7 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
         else
         {
             // single thread for codegen
-            NGRAPH_ASSERT(m_concurrency == 1);
+            NGRAPH_CHECK(m_num_ctx == 1);
             ctx->mkldnn_primitives.swap(mkldnn_emitter->get_mkldnn_primitives());
             ctx->mkldnn_workspaces = mkldnn_emitter->get_mkldnn_workspaces();
         }
@@ -226,12 +244,12 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
         }
 #endif
     }
-    m_num_ctx_available = m_concurrency;
+    m_num_ctx_available = m_num_ctx;
 }
 
 void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
 {
-    for (auto i = 0; i < m_concurrency; i++)
+    for (auto i = 0; i < m_num_ctx; i++)
     {
         auto ctx = m_ctx_vec.back();
         m_ctx_vec.pop_back();

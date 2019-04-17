@@ -30,6 +30,7 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/erf.hpp"
+#include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/pass/constant_folding.hpp"
@@ -38,7 +39,6 @@
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
-#include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
@@ -105,8 +105,8 @@ TEST(cpu_test, trivial_in_place_relu)
     auto f = make_shared<Function>(relu, ParameterVector{A, B});
     auto backend = runtime::Backend::create("CPU");
     (backend->compile(f));
-    ASSERT_EQ(relu->get_outputs().at(0).get_tensor().get_pool_offset(),
-              add->get_outputs().at(0).get_tensor().get_pool_offset());
+    ASSERT_EQ(relu->output(0).get_tensor().get_pool_offset(),
+              add->output(0).get_tensor().get_pool_offset());
 }
 
 #ifndef NGRAPH_HALIDE
@@ -120,8 +120,8 @@ TEST(cpu_test, trivial_in_place_relu_fail)
     auto f = make_shared<Function>(add2, ParameterVector{A, B});
     auto backend = runtime::Backend::create("CPU");
     (backend->compile(f));
-    ASSERT_NE(relu->get_outputs().at(0).get_tensor().get_pool_offset(),
-              add->get_outputs().at(0).get_tensor().get_pool_offset());
+    ASSERT_NE(relu->output(0).get_tensor().get_pool_offset(),
+              add->output(0).get_tensor().get_pool_offset());
 }
 #endif
 
@@ -979,7 +979,7 @@ TEST(cpu_test, thread_safe_calls_convolution_2d_2items)
         return;
     }
 
-    set_environment("NGRAPH_CONCURRENCY", "2", 1);
+    set_environment("NGRAPH_CPU_CONCURRENCY", "2", 1);
 
     Shape shape_a{2, 1, 3, 5};
     Shape shape_b{2, 1, 2, 2};
@@ -1046,7 +1046,7 @@ TEST(cpu_test, thread_safe_calls_convolution_2d_2items)
     call2.join();
     call3.join();
 
-    unset_environment("NGRAPH_CONCURRENCY");
+    unset_environment("NGRAPH_CPU_CONCURRENCY");
 }
 
 TEST(cpu_test, constant_reshape)

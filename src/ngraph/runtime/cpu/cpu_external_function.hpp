@@ -114,6 +114,17 @@ namespace ngraph
                     return m_mkldnn_emitter;
                 }
 
+                /// Returns the index of the mkldnn primitive previously created for \p node.
+                size_t get_primitive_index(const Node* node) const
+                {
+                    auto it = m_node_primitive_idx_map.find(node);
+                    NGRAPH_CHECK(it != m_node_primitive_idx_map.end(),
+                                 "Primitive not found for node ",
+                                 node->description());
+
+                    return it->second;
+                }
+
                 size_t add_state(ngraph::State* state)
                 {
                     m_states.push_back(state);
@@ -303,6 +314,9 @@ namespace ngraph
                 std::unordered_map<std::string, int> subgraph_param_sizes;
                 std::unordered_map<std::string, size_t> subgraph_param_indices;
 #endif
+
+                /// Map each node with mkldnn implementation to its mkldnn primitive index.
+                std::unordered_map<const Node*, size_t> m_node_primitive_idx_map;
             };
         }
     }
