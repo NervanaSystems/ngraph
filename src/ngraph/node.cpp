@@ -526,7 +526,7 @@ void Node::validate_and_infer_elementwise_logical()
 // default implementation for the node to check if it contains partial shape
 // we will override this method, for the Op's which depends on additional shape
 // attribute to determine if node contains partial shape or not
-bool Node::is_dynamic()
+bool Node::is_dynamic() const
 {
     for (size_t i = 0; i < get_input_size(); i++)
     {

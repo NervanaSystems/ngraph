@@ -228,7 +228,7 @@ void Function::set_placement(size_t placement)
 // TODO(pthoreho) this will be expensive, since we will be traversing all the nodes in
 // the graph, figure out if their is a way to cache the result and invalidate/update
 // the result if the function is modified
-bool Function::is_dynamic()
+bool Function::is_dynamic() const
 {
     auto list_of_nodes = this->get_ops();
     for (auto& node : list_of_nodes)
