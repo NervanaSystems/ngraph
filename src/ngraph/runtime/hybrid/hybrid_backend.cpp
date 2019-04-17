@@ -42,7 +42,7 @@ shared_ptr<runtime::Tensor>
                                                   const Shape& shape)
 {
     auto it = m_backend_list.begin();
-    NGRAPH_ASSERT(it != m_backend_list.end());
+    NGRAPH_CHECK(it != m_backend_list.end());
     return (*it)->create_tensor(element_type, shape);
 }
 
@@ -50,7 +50,7 @@ shared_ptr<runtime::Tensor> runtime::hybrid::HybridBackend::create_tensor(
     const element::Type& element_type, const Shape& shape, void* memory_pointer)
 {
     auto it = m_backend_list.begin();
-    NGRAPH_ASSERT(it != m_backend_list.end());
+    NGRAPH_CHECK(it != m_backend_list.end());
     return (*it)->create_tensor(element_type, shape, memory_pointer);
 }
 

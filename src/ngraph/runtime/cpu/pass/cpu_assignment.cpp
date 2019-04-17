@@ -16,7 +16,6 @@
 
 #include "ngraph/runtime/cpu/pass/cpu_assignment.hpp"
 #include <algorithm>
-#include <cassert>
 #include <memory>
 #include <typeindex>
 #include <typeinfo>
@@ -41,6 +40,7 @@
 #include "ngraph/op/experimental/quantized_dot.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
+#include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
@@ -54,7 +54,6 @@
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
-#include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"

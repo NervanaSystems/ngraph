@@ -50,10 +50,10 @@
 #include "ngraph/pass/reshape_elimination.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_backend.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_executable.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_kernels.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_batchnorm.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_broadcast.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_op_convolution.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_func_call.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_softmax.hpp"
@@ -89,9 +89,11 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
+#include "ngraph/op/select.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/op/topk.hpp"
 #include "ngraph/parameter_vector.hpp"
 #include "ngraph/util.hpp"
 
@@ -390,6 +392,7 @@ shared_ptr<runtime::Executable>
 
     set<cldnn::primitive_id> func_output_names;
     cldnn::topology topology;
+    CustomKernels kern(topology);
     stopwatch timer_compile;
     double consumed_memory = 0.0;
     double compilation_time = 0.0;
@@ -486,15 +489,7 @@ shared_ptr<runtime::Executable>
             }
             else
             {
-                do_slice_operation(topology,
-                                   op->get_input_tensor_name(0),
-                                   op->get_input_shape(0),
-                                   op->get_output_tensor_name(0),
-                                   op->get_output_shape(0),
-                                   op->get_output_element_type(0),
-                                   lower_bounds,
-                                   upper_bounds,
-                                   strides);
+                kern.emit<op::Slice>(elem);
             }
             break;
         }
@@ -504,16 +499,7 @@ shared_ptr<runtime::Executable>
 
             if (op->get_output_element_type(0) != element::f32)
             {
-                do_select_operation(topology,
-                                    op->get_input_tensor_name(0),
-                                    op->get_input_shape(0),
-                                    op->get_input_tensor_name(1),
-                                    op->get_input_shape(1),
-                                    op->get_input_tensor_name(2),
-                                    op->get_input_shape(2),
-                                    op->get_output_tensor_name(0),
-                                    op->get_output_shape(0),
-                                    op->get_output_element_type(0));
+                kern.emit<op::Select>(static_pointer_cast<op::Select>(op));
             }
             else
             {
@@ -1599,30 +1585,12 @@ shared_ptr<runtime::Executable>
 
             // clDNN has quite limited support for Convolution operation
             // following are the checks to go with workaround
-            if ((win_stride.size() > 2) || (pad_below.size() > 2) || (pad_above.size() > 2) ||
-                (win_dilation.size() > 2) || (data_dilation.size() > 2) ||
+            if ((win_stride.size() != 2) || (pad_below.size() != 2) || (pad_above.size() != 2) ||
+                (win_dilation.size() != 2) || (data_dilation.size() != 2) ||
                 (data_dilation.at(0) != 1) || (data_dilation.at(1) != 1) ||
                 (op->get_output_element_type(0) != element::f32))
             {
-                do_convolution_operation(topology,
-                                         op->get_input_tensor_name(0),
-                                         op->get_input_shape(0),
-                                         op->get_input_tensor_name(1),
-                                         op->get_input_shape(1),
-                                         op->get_output_tensor_name(0),
-                                         op->get_output_shape(0),
-                                         op->get_output_element_type(0),
-                                         conv_op->get_padding_below(),
-                                         conv_op->get_window_movement_strides(),
-                                         conv_op->get_window_dilation_strides(),
-                                         conv_op->get_data_dilation_strides(),
-                                         0,
-                                         1,
-                                         1,
-                                         "input[batch][input_channel]",
-                                         "filter[output_channel][input_channel]",
-                                         "output[batch][output_channel]",
-                                         false);
+                kern.emit<op::Convolution>(conv_op);
             }
             else
             {
@@ -1675,30 +1643,22 @@ shared_ptr<runtime::Executable>
             const Strides& win_dilation = conv_op->get_window_movement_strides_forward();
             const Strides& data_dilation = conv_op->get_data_dilation_strides_forward();
 
-            if ((win_stride.size() > 2) || (win_stride.at(0) != 1) || (win_stride.at(1) != 1) ||
-                (pad_below.size() > 2) || (pad_above.size() > 2) || (data_dilation.size() > 2) ||
-                (data_dilation.at(0) != 1) || (data_dilation.at(1) != 1) ||
-                (win_dilation.size() > 2) || (op->get_output_element_type(0) != element::f32))
+            // workaround to use custom kernel in case of filter output NxCx1x1
+            bool proceed_with_custom_kernel = false;
+            const Shape& output_shape = op->get_output_shape(0);
+            if ((output_shape.size() == 4) && (output_shape.at(2) == 1) &&
+                (output_shape.at(3) == 1))
             {
-                do_convolution_operation(topology,
-                                         op->get_input_tensor_name(0),
-                                         op->get_input_shape(0),
-                                         op->get_input_tensor_name(1),
-                                         op->get_input_shape(1),
-                                         op->get_output_tensor_name(0),
-                                         op->get_output_shape(0),
-                                         op->get_output_element_type(0),
-                                         conv_op->get_padding_below_forward(),
-                                         win_stride,
-                                         win_dilation,
-                                         data_dilation,
-                                         1,
-                                         0,
-                                         0,
-                                         "input[input_channel][batch]",
-                                         "filter[input_channel][output_channel]",
-                                         "output[output_channel][batch]",
-                                         false);
+                proceed_with_custom_kernel = true;
+            }
+
+            if ((win_stride.size() != 2) || (win_stride.at(0) != 1) || (win_stride.at(1) != 1) ||
+                (pad_below.size() != 2) || (pad_above.size() != 2) || (data_dilation.size() != 2) ||
+                (data_dilation.at(0) != 1) || (data_dilation.at(1) != 1) ||
+                (win_dilation.size() != 2) || (op->get_output_element_type(0) != element::f32) ||
+                proceed_with_custom_kernel)
+            {
+                kern.emit<op::ConvolutionBackpropFilters>(conv_op);
             }
             else
             {
@@ -1775,32 +1735,14 @@ shared_ptr<runtime::Executable>
             const Strides& win_dilation = conv_op->get_window_dilation_strides_forward();
             const Strides& data_dilation = conv_op->get_window_movement_strides_forward();
 
-            if ((win_stride.size() > 2) || (win_stride.at(0) != 1) || (win_stride.at(1) != 1) ||
-                (pad_below.size() > 2) || (pad_above.size() > 2) || (data_dilation.size() > 2) ||
+            if ((win_stride.size() != 2) || (win_stride.at(0) != 1) || (win_stride.at(1) != 1) ||
+                (pad_below.size() != 2) || (pad_above.size() != 2) || (data_dilation.size() != 2) ||
                 (data_dilation.at(0) != 1) || (data_dilation.at(1) != 1) ||
-                (win_dilation.size() > 2) || (win_dilation.at(0) != 1) ||
+                (win_dilation.size() != 2) || (win_dilation.at(0) != 1) ||
                 (win_dilation.at(1) != 1) || (op->get_output_element_type(0) != element::f32) ||
                 ((pad_below.at(0) == pad_above.at(0)) && (pad_below.at(1) == pad_above.at(1))))
             {
-                do_convolution_operation(topology,
-                                         op->get_input_tensor_name(1),
-                                         op->get_input_shape(1),
-                                         op->get_input_tensor_name(0),
-                                         op->get_input_shape(0),
-                                         op->get_output_tensor_name(0),
-                                         op->get_output_shape(0),
-                                         op->get_output_element_type(0),
-                                         pad_below,
-                                         win_stride,
-                                         win_dilation,
-                                         data_dilation,
-                                         0,
-                                         1,
-                                         1,
-                                         "input[batch][input_channel]",
-                                         "filter[input_channel][output_channel]",
-                                         "output[batch][output_channel]",
-                                         true);
+                kern.emit<op::ConvolutionBackpropData>(conv_op);
             }
             else
             {
@@ -2021,7 +1963,46 @@ shared_ptr<runtime::Executable>
             topology.add(lrn);
             break;
         }
+        case OP_TYPEID::TopK:
+        {
+            arguments_check(op, 1, 2);
+
+            const shared_ptr<op::TopK> topk_op = static_pointer_cast<op::TopK>(op);
+
+            const size_t top_k_axis = topk_op->get_top_k_axis();
+            const element::Type& index_elem_type = topk_op->get_index_element_type();
+            const size_t k = topk_op->get_k();
+            const bool compute_max = topk_op->get_compute_max();
+
+            do_topk_operation(topology,
+                              op->get_input_tensor_name(0),
+                              op->get_input_shape(0),
+                              op->get_input_element_type(0),
+                              op->get_output_tensor_name(0),
+                              op->get_output_shape(0),
+                              op->get_output_element_type(0),
+                              index_elem_type,
+                              top_k_axis,
+                              k,
+                              compute_max,
+                              true);
+
+            do_topk_operation(topology,
+                              op->get_input_tensor_name(0),
+                              op->get_input_shape(0),
+                              op->get_input_element_type(0),
+                              op->get_output_tensor_name(1),
+                              op->get_output_shape(1),
+                              op->get_output_element_type(1),
+                              index_elem_type,
+                              top_k_axis,
+                              k,
+                              compute_max,
+                              false);
+            break;
+        }
         case OP_TYPEID::AllReduce:
+        case OP_TYPEID::BatchMatMul:
         case OP_TYPEID::BroadcastDistributed:
         case OP_TYPEID::BroadcastLike:
         case OP_TYPEID::DynReshape:
@@ -2041,7 +2022,6 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::ScalarConstantLike:
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::StopGradient:
-        case OP_TYPEID::TopK:
         case OP_TYPEID::Transpose:
         case OP_TYPEID::EmbeddingLookup:
         case OP_TYPEID::DynBroadcast:

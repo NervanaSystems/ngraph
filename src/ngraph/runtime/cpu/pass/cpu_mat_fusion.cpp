@@ -32,7 +32,7 @@
 #include "ngraph/op/slice.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
-#include "ngraph/runtime/cpu/op/batch_dot.hpp"
+#include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/util.hpp"
 
@@ -261,7 +261,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
                     concated_data, data_order, Shape{data_shape[0] * data_shape[1], data_shape[2]});
             }
             auto new_input_node = data_shape.size() == 2 ? concated_data : input_reshape_node;
-            NGRAPH_ASSERT(new_input_node);
+            NGRAPH_CHECK(new_input_node);
             auto w_reshape_node = std::make_shared<op::Reshape>(
                 weights, AxisVector{1, 0}, Shape{w_shape[1], w_shape[0]});
             auto new_dot = std::make_shared<op::Dot>(new_input_node, w_reshape_node);
@@ -281,7 +281,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
 
                 if (matched_root_node->get_shape().size() != 2)
                 {
-                    NGRAPH_ASSERT(matched_root_node->get_shape().size() == 3);
+                    NGRAPH_CHECK(matched_root_node->get_shape().size() == 3);
                     slice_node = std::make_shared<op::Reshape>(
                         slice_node, AxisVector{0, 1}, matched_root_node->get_shape());
                 }
@@ -506,7 +506,7 @@ std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
     return new_conv;
 }
 
-std::shared_ptr<Node> fuse_batch_dot(const std::shared_ptr<Node>& n)
+std::shared_ptr<Node> fuse_batch_mat_mul_transpose(const std::shared_ptr<Node>& n)
 {
     const int num_op_branches = 2;
     std::shared_ptr<pattern::op::Label> input[num_op_branches];
@@ -575,7 +575,7 @@ std::shared_ptr<Node> fuse_batch_dot(const std::shared_ptr<Node>& n)
     }
     if (fuse_input[0] && fuse_input[1])
     {
-        return std::make_shared<op::BatchDot>(
+        return std::make_shared<op::BatchMatMulTranspose>(
             fuse_input[0], fuse_input[1], transpose[0], transpose[1]);
     }
     return {nullptr};
@@ -592,7 +592,7 @@ bool runtime::cpu::pass::CPUBatchFusion::run_on_function(std::shared_ptr<Functio
         {
             if (m_fusion_type & ngraph::pass::DIFFERENTIABLE_FUSIONS)
             {
-                if (auto fused_node = fuse_batch_dot(n))
+                if (auto fused_node = fuse_batch_mat_mul_transpose(n))
                 {
                     func->replace_node(n, fused_node);
                     modified = true;

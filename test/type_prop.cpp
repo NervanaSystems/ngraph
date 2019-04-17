@@ -13075,6 +13075,166 @@ TEST(type_prop, dynslice_params_et_wrong)
     }
 }
 
+TEST(type_prop, batchmatmul_deduce_3d)
+{
+    // Deduce type for matrix/matrix arguments
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{5, 4, 2});
+    auto param2 = make_shared<op::Parameter>(element::f32, Shape{5, 2, 3});
+    auto bc = make_shared<op::BatchMatMul>(param1, param2);
+    ASSERT_EQ(bc->get_element_type(), element::f32);
+    ASSERT_EQ(bc->get_shape(), (Shape{5, 4, 3}));
+}
+
+TEST(type_prop, batchmatmul_deduce_left_rank_wrong)
+{
+    // Type deduction fails due to element type mismatch
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{2, 5, 4, 2});
+    auto param2 = make_shared<op::Parameter>(element::f32, Shape{5, 2, 5});
+    try
+    {
+        auto bc = make_shared<op::BatchMatMul>(param1, param2);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Element type mismatch not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("shape must have rank 3"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, batchmatmul_deduce_right_rank_wrong)
+{
+    // Type deduction fails due to element type mismatch
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{5, 4, 2});
+    auto param2 = make_shared<op::Parameter>(element::f32, Shape{2, 5, 2, 5});
+    try
+    {
+        auto bc = make_shared<op::BatchMatMul>(param1, param2);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Element type mismatch not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("shape must have rank 3"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, batchmatmul_deduce_element_type_mismatch)
+{
+    // Type deduction fails due to element type mismatch
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{5, 4, 2});
+    auto param2 = make_shared<op::Parameter>(element::i32, Shape{5, 2, 5});
+    try
+    {
+        auto bc = make_shared<op::BatchMatMul>(param1, param2);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Element type mismatch not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("compatible element type"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, batchmatmul_deduce_reduction_axes_size_mismatch)
+{
+    // Type deduction fails due to reduction axes size mismatch
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{6, 4, 2});
+    auto param2 = make_shared<op::Parameter>(element::f32, Shape{6, 3, 5});
+    try
+    {
+        auto bc = make_shared<op::BatchMatMul>(param1, param2);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "BatchMatMul reduction axes size mismatch not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Product dimensions are not equal"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, batchmatmul_partial_both_rank_dynamic_implicit)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto d = make_shared<op::BatchMatMul>(param0, param1);
+
+    ASSERT_TRUE(d->get_output_partial_shape(0).rank().same_scheme(3));
+}
+
+TEST(type_prop, batchmatmul_partial_left_rank_dynamic_right_rank_static_dynamic)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto param1 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3});
+    auto d = make_shared<op::BatchMatMul>(param0, param1);
+
+    ASSERT_TRUE(d->get_output_partial_shape(0).rank().same_scheme(3));
+}
+
+TEST(type_prop, batchmatmul_partial_left_rank_static_dynamic_right_rank_dynamic)
+{
+    auto param0 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3});
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto d = make_shared<op::BatchMatMul>(param0, param1);
+
+    ASSERT_TRUE(d->get_output_partial_shape(0).rank().same_scheme(3));
+}
+
+TEST(type_prop, batchmatmul_partial_left_rank_static_dynamic_right_rank_static)
+{
+    auto param0 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 4});
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape{3, 4, 5});
+    auto d = make_shared<op::BatchMatMul>(param0, param1);
+
+    ASSERT_TRUE(d->get_output_partial_shape(0).same_scheme(PartialShape{3, 2, 5}));
+}
+
+TEST(type_prop, batchmatmul_partial_left_et_dynamic)
+{
+    auto param0 = make_shared<op::Parameter>(element::dynamic, PartialShape::dynamic());
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto d = make_shared<op::BatchMatMul>(param0, param1);
+
+    ASSERT_EQ(d->get_output_element_type(0), element::f32);
+}
+
+TEST(type_prop, batchmatmul_partial_right_et_dynamic)
+{
+    auto param0 = make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
+    auto param1 = make_shared<op::Parameter>(element::dynamic, PartialShape::dynamic());
+    auto d = make_shared<op::BatchMatMul>(param0, param1);
+
+    ASSERT_EQ(d->get_output_element_type(0), element::i32);
+}
+
+TEST(type_prop, batchmatmul_partial_both_et_dynamic)
+{
+    auto param0 = make_shared<op::Parameter>(element::dynamic, PartialShape::dynamic());
+    auto param1 = make_shared<op::Parameter>(element::dynamic, PartialShape::dynamic());
+    auto d = make_shared<op::BatchMatMul>(param0, param1);
+
+    ASSERT_EQ(d->get_output_element_type(0), element::dynamic);
+}
+
 TEST(type_prop, prelu)
 {
     auto param = make_shared<op::Parameter>(element::f32, Shape{2, 4});
@@ -13083,4 +13243,64 @@ TEST(type_prop, prelu)
     auto prelu = make_shared<op::PRelu>(param, slope);
     ASSERT_EQ(prelu->get_element_type(), element::f32);
     ASSERT_EQ(prelu->get_shape(), prelu_shape);
+}
+
+TEST(type_prop, conv_bias_2d_deduce)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100, 150});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10, 20});
+    auto param2 = make_shared<op::Parameter>(element::f32, Shape{128});
+    auto conv = make_shared<op::ConvolutionBias>(param0, param1, param2);
+    EXPECT_EQ(conv->get_element_type(), element::f32);
+    EXPECT_EQ(conv->get_shape(), (Shape{64, 128, 91, 131}));
+
+    EXPECT_EQ(conv->get_window_movement_strides(), (Strides{1, 1}));
+    EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{1, 1}));
+    EXPECT_EQ(conv->get_data_dilation_strides(), (Strides{1, 1}));
+
+    EXPECT_EQ(conv->get_padding_below(), (CoordinateDiff{0, 0}));
+    EXPECT_EQ(conv->get_padding_above(), (CoordinateDiff{0, 0}));
+}
+
+TEST(type_prop, conv_bias_add_2d_deduce)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100, 150});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10, 20});
+    auto param2 = make_shared<op::Parameter>(element::f32, Shape{128});
+    auto param3 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 91, 131});
+    auto conv = make_shared<op::ConvolutionBiasAdd>(param0,
+                                                    param1,
+                                                    param2,
+                                                    param3,
+                                                    Strides{1, 1},
+                                                    Strides{1, 1},
+                                                    CoordinateDiff{0, 0},
+                                                    CoordinateDiff{0, 0},
+                                                    Strides{1, 1});
+    EXPECT_EQ(conv->get_element_type(), element::f32);
+    EXPECT_EQ(conv->get_shape(), (Shape{64, 128, 91, 131}));
+}
+
+TEST(type_prop, conv_bias_bprop_2d_deduce)
+{
+    // Deduce type
+    auto data = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100, 150});
+    auto filters = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10, 20});
+    auto bias = make_shared<op::Parameter>(element::f32, Shape{128});
+    auto delta = make_shared<op::Parameter>(element::f32, Shape{64, 128, 91, 131});
+    auto conv = make_shared<op::ConvolutionBiasBackpropFiltersBias>(data,
+                                                                    filters->get_shape(),
+                                                                    bias->get_shape(),
+                                                                    delta,
+                                                                    Strides{1, 1},
+                                                                    Strides{1, 1},
+                                                                    CoordinateDiff{0, 0},
+                                                                    CoordinateDiff{0, 0},
+                                                                    Strides{1, 1});
+    EXPECT_EQ(conv->get_output_element_type(0), element::f32);
+    EXPECT_EQ(conv->get_output_element_type(1), element::f32);
+    EXPECT_EQ(conv->get_output_shape(0), filters->get_shape());
+    EXPECT_EQ(conv->get_output_shape(1), bias->get_shape());
 }
