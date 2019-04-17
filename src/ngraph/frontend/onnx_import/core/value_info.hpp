@@ -105,21 +105,12 @@ namespace ngraph
 
             std::shared_ptr<ngraph::Node>
                 get_ng_node(ParameterVector& parameters,
-                            const std::map<std::string, Tensor>& initializers,
                             const Weights& weights = {}) const
             {
-                const auto it = initializers.find(get_name());
-                if (it != std::end(initializers))
+                const auto pt = weights.find(get_name());
+                if (pt != std::end(weights))
                 {
-                    return get_ng_constant(it->second);
-                }
-                else
-                {
-                    const auto pt = weights.find(get_name());
-                    if (pt != std::end(weights))
-                    {
-                        return get_ng_constant(pt->second);
-                    }
+                    return get_ng_constant(pt->second);
                 }
                 parameters.push_back(get_ng_parameter());
                 return parameters.back();
