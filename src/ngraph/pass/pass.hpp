@@ -63,7 +63,7 @@ class ngraph::pass::PassBase
 public:
     PassBase();
     virtual ~PassBase() {}
-    bool get_property(const Property& prop);
+    bool get_property(const Property& prop) const;
 
 protected:
     ManagerState& get_state();
