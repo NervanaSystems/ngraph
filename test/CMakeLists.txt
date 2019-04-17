@@ -143,6 +143,7 @@ set(MULTI_TEST_SRC
     backend_dot.in.cpp
     backend_embedding_lookup.in.cpp
     backend_fused_op.in.cpp
+    backend_gather.in.cpp
     backend_one_hot.in.cpp
     backend_pool.in.cpp
     backend_reshape.in.cpp
