@@ -49,7 +49,7 @@ timestamps {
         //      contain references to technology which has not yet been released.
         //
         echo "Calling ngraph-ci-premerge.groovy"
-        def ngraphCIPreMerge = load("${JENKINS_DIR}/ngraph-ci-checks.groovy")
+        def ngraphCIPreMerge = load("${JENKINS_DIR}/ngraph-ci-premerge.groovy")
         ngraphCIPreMerge(PR_URL, PR_COMMIT_AUTHOR, JENKINS_BRANCH, TIMEOUTTIME)
         echo "ngraph-ci-premerge.groovy completed"
 
