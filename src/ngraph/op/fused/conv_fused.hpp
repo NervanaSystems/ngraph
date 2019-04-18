@@ -18,29 +18,33 @@
 
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/op.hpp"
-#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
+#include "ngraph/op/util/fused_op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Convolution + bias forward prop for batched convolution operation.
-        class ConvolutionBias : public Op
+        class ConvolutionBias : public ngraph::op::util::FusedOp
         {
         public:
-            CPU_BACKEND_API ConvolutionBias(const std::shared_ptr<op::Convolution>& conv,
-                                            const std::shared_ptr<Node>& bias,
-                                            const bool with_relu = false);
+            ConvolutionBias(const std::shared_ptr<op::Convolution>& conv,
+                            const std::shared_ptr<Node>& bias,
+                            const bool with_relu = false);
 
-            CPU_BACKEND_API ConvolutionBias(const std::shared_ptr<Node>& data_batch,
-                                            const std::shared_ptr<Node>& filters,
-                                            const std::shared_ptr<Node>& bias,
-                                            const Strides& window_movement_strides,
-                                            const Strides& window_dilation_strides,
-                                            const CoordinateDiff& padding_below,
-                                            const CoordinateDiff& padding_above,
-                                            const Strides& data_dilation_strides,
-                                            const bool with_relu = false);
+            ConvolutionBias(const std::shared_ptr<Node>& data_batch,
+                            const std::shared_ptr<Node>& filters,
+                            const std::shared_ptr<Node>& bias,
+                            const Strides& window_movement_strides,
+                            const Strides& window_dilation_strides,
+                            const CoordinateDiff& padding_below,
+                            const CoordinateDiff& padding_above,
+                            const Strides& data_dilation_strides,
+                            const bool with_relu = false);
+
+            ConvolutionBias(const std::shared_ptr<Node>& data_batch,
+                            const std::shared_ptr<Node>& filters,
+                            const std::shared_ptr<Node>& bias);
 
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
             const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }
@@ -53,6 +57,10 @@ namespace ngraph
             bool with_relu() const { return m_with_relu; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+
+            virtual NodeVector decompose_op() const override;
+
+            virtual void validate_and_infer_types() override;
 
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
@@ -68,7 +76,7 @@ namespace ngraph
 
         /// \brief Filters and bias backprop for batched convolution operation. Data backprop is
         /// the same as regular convolution backprop for data.
-        class ConvolutionBiasBackpropFiltersBias : public Op
+        class ConvolutionBiasBackpropFiltersBias : public ngraph::op::util::FusedOp
         {
         public:
             ConvolutionBiasBackpropFiltersBias(const std::shared_ptr<Node>& data_batch,
@@ -140,6 +148,8 @@ namespace ngraph
                 return m_data_dilation_strides_backward;
             }
 
+            virtual NodeVector decompose_op() const override;
+
         protected:
             Shape m_filters_shape;
             Shape m_bias_shape;
@@ -156,12 +166,12 @@ namespace ngraph
             Strides m_data_dilation_strides_backward;
         };
 
-        class ConvolutionBiasAdd : public Op
+        class ConvolutionBiasAdd : public ngraph::op::util::FusedOp
         {
         public:
             ConvolutionBiasAdd(const std::shared_ptr<op::ConvolutionBias>& conv,
                                const std::shared_ptr<Node>& sum_input,
-                               bool with_relu);
+                               bool with_relu = false);
 
             ConvolutionBiasAdd(const std::shared_ptr<Node>& data_batch,
                                const std::shared_ptr<Node>& filters,
@@ -172,7 +182,7 @@ namespace ngraph
                                const CoordinateDiff& padding_below,
                                const CoordinateDiff& padding_above,
                                const Strides& data_dilation_strides,
-                               bool with_relu);
+                               bool with_relu = false);
 
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
             const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }
@@ -185,6 +195,10 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
+            virtual NodeVector decompose_op() const override;
+
+            virtual void validate_and_infer_types() override;
+
         protected:
             Strides m_window_movement_strides;
             Strides m_window_dilation_strides;
@@ -193,12 +207,5 @@ namespace ngraph
             Strides m_data_dilation_strides;
             bool m_with_relu;
         };
-
-        namespace util
-        {
-            void validate_convbias_shapes(const Shape& data_shape,
-                                          const Shape& filters_shape,
-                                          const Shape& bias_shape);
-        }
     }
 }

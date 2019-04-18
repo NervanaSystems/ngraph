@@ -72,9 +72,9 @@ void op::Select::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVecto
 {
     auto delta = deltas.at(0);
 
-    auto p = get_inputs().at(0).get_output().get_node();
-    auto x = get_inputs().at(1).get_output().get_node();
-    auto y = get_inputs().at(2).get_output().get_node();
+    auto p = get_argument(0);
+    auto x = get_argument(1);
+    auto y = get_argument(2);
 
     auto p_as_x_type = make_shared<op::Convert>(p, x->get_element_type());
     auto not_p_as_y_type = make_shared<op::Convert>(make_shared<op::Not>(p), y->get_element_type());

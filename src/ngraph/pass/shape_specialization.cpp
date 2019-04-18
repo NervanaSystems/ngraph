@@ -72,11 +72,11 @@ bool pass::ShapeSpecialization::run_on_function(std::shared_ptr<Function> f)
     // input).
     for (auto& n : f->get_ops())
     {
-        for (auto& output : n->get_outputs())
+        for (auto& output : n->outputs())
         {
-            for (auto& input : output.get_inputs())
+            for (auto& input : output.get_target_inputs())
             {
-                if (input->get_is_relevant_to_shape())
+                if (input.get_is_relevant_to_shapes())
                 {
                     shape_determinants.insert(n.get());
                     break;
@@ -105,13 +105,13 @@ bool pass::ShapeSpecialization::run_on_function(std::shared_ptr<Function> f)
             shape_determinants.insert(node);
             already_visited.insert(node);
 
-            for (auto& input : node->get_inputs())
+            for (size_t i = 0; i < node->get_input_size(); i++)
             {
-                if (!input.get_is_relevant_to_value())
+                if (node->input(i).get_is_relevant_to_values())
                 {
                     continue;
                 }
-                auto source_node = input.get_output().get_node().get();
+                auto source_node = node->input(i).get_source_output().get_node();
                 if (already_visited.count(source_node) == 0)
                 {
                     to_visit.push_front(source_node);
@@ -131,22 +131,19 @@ bool pass::ShapeSpecialization::run_on_function(std::shared_ptr<Function> f)
             std::vector<std::shared_ptr<op::Constant>> replacement_constants = n->as_constants();
             if (replacement_constants.size() > 0)
             {
-                NGRAPH_ASSERT(n->get_output_size() == replacement_constants.size());
+                NGRAPH_CHECK(n->get_output_size() == replacement_constants.size());
 
                 for (size_t i = 0; i < n->get_output_size(); i++)
                 {
-                    NGRAPH_ASSERT(n->get_output_partial_shape(i).relaxes(
+                    NGRAPH_CHECK(n->get_output_partial_shape(i).relaxes(
                         replacement_constants[i]->get_output_partial_shape(0)));
-                    NGRAPH_ASSERT(n->get_output_element_type(i).is_dynamic() ||
-                                  n->get_output_element_type(i) ==
-                                      replacement_constants[i]->get_output_element_type(0));
+                    NGRAPH_CHECK(n->get_output_element_type(i).is_dynamic() ||
+                                 n->get_output_element_type(i) ==
+                                     replacement_constants[i]->get_output_element_type(0));
 
-                    auto& replacement_output = replacement_constants.at(i)->get_outputs().at(0);
-                    auto& output = n->get_outputs().at(i);
-                    auto inputs_copy = output.get_inputs();
-                    for (auto& input : inputs_copy)
+                    for (auto& input : n->output(i).get_target_inputs())
                     {
-                        input->replace_output(replacement_output);
+                        input.replace_source_output(replacement_constants.at(i)->output(0));
                         changes_made = true;
                     }
                 }

@@ -19,6 +19,7 @@ set(SRC
     intelgpu_executable.cpp
     intelgpu_tensor_view.cpp
     intelgpu_layout.cpp
+    intelgpu_kernels.cpp
     intelgpu_op_batchnorm.cpp
     intelgpu_op_broadcast.cpp
     intelgpu_op_custom_kernels.cpp

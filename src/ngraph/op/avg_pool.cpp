@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include "ngraph/op/avg_pool.hpp"
-#include "ngraph/assertion.hpp"
 #include "ngraph/util.hpp"
 #include "ngraph/validation_util.hpp"
 

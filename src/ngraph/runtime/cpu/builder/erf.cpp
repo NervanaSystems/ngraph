@@ -58,8 +58,8 @@ namespace ngraph
                     std::function<decltype(runtime::cpu::kernel::reference_erf<float>)> kernel;
                     SELECT_KERNEL(
                         kernel, args[0].get_element_type(), runtime::cpu::kernel::reference_erf);
-                    auto functor = [&, kernel, arg0_tensor, out0_tensor](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    auto functor = [&, kernel, element_count](CPURuntimeContext* ctx,
+                                                              CPUExecutionContext* ectx) {
                         kernel(arg0_tensor, out0_tensor, element_count);
                     };
 

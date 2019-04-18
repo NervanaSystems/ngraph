@@ -788,8 +788,10 @@ bool MKLDNNPrimitiveBuildPass::run_on_call_graph(const std::list<std::shared_ptr
         if (mkldnn_utils::use_mkldnn_kernel(node))
         {
             auto handler = prim_build_dispatcher.find(TI(*node));
-            NGRAPH_ASSERT(handler != prim_build_dispatcher.end())
-                << "Unsupported node '" << node->description() << "' in MKLDNNPrimitiveBuildPass";
+            NGRAPH_CHECK(handler != prim_build_dispatcher.end(),
+                         "Unsupported node '",
+                         node->description(),
+                         "' in MKLDNNPrimitiveBuildPass");
 
             size_t primitive_idx = handler->second(m_mkldnn_emitter, node);
             m_node_primitive_idx_map[node] = primitive_idx;

@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/tensor.hpp"
-#include "ngraph/assertion.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"

@@ -2828,3 +2828,39 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_quant_conv_linear_3d)
 
     EXPECT_EQ(expected_output.front(), outputs.front());
 }
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_erf)
+{
+    const auto function =
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/erf.prototxt"));
+
+    Inputs inputs;
+    inputs.emplace_back(test::NDArray<float, 2>{
+        {-std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity()},
+        {-3.141592f, 0.0f},
+        {0.5f, 1.0f}}.get_vector());
+
+    const std::vector<float> expected_outputs = test::NDArray<float, 2>{
+        {-1.0f, 1.0f},
+        {-0.99999112f, 0.0f},
+        {0.52049988f, 0.84270079f}}.get_vector();
+
+    const Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+
+    EXPECT_TRUE(test::all_close_f(expected_outputs, outputs.front()));
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_erf_int32)
+{
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/erf_int32.prototxt"));
+
+    const std::vector<std::vector<int32_t>> inputs{
+        {-std::numeric_limits<int32_t>::max(), -1, 0, 1, std::numeric_limits<int32_t>::max()}};
+
+    const std::vector<int32_t> expected_outputs{-1, 0, 0, 0, 1};
+
+    const std::vector<std::vector<int32_t>> outputs{execute(function, inputs, "${BACKEND_NAME}")};
+
+    EXPECT_TRUE(test::all_close(expected_outputs, outputs.front()));
+}

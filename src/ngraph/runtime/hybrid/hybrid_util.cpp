@@ -183,14 +183,25 @@ void runtime::hybrid::rewrite_function(const shared_ptr<Function>& f,
                             // Since this input is from outside the cluster we need to create
                             // a new Parameter node placed in the cluster instead of this external
                             // node
-                            descriptor::Output* source_output = input->get_output_to(node);
-                            descriptor::Input* target_input = node->get_input_from(input);
+                            std::vector<Output<Node>> source_outputs =
+                                get_outputs_to(*input, *node);
+                            NGRAPH_CHECK(
+                                source_outputs.size() == 1,
+                                "rewrite_function encountered more than "
+                                "one output between a cluster node and one of its arguments");
+                            auto& source_output = source_outputs[0];
+
+                            std::vector<Input<Node>> target_inputs = get_inputs_from(*input, *node);
+                            NGRAPH_CHECK(
+                                target_inputs.size() == 1,
+                                "rewrite_function encountered more than "
+                                "one input between a cluster node and one of its arguments");
+                            auto& target_input = target_inputs[0];
 
                             auto new_parameter = make_shared<ngraph::op::Parameter>(
-                                source_output->get_element_type(), source_output->get_shape());
-                            descriptor::Output& new_output = new_parameter->get_outputs()[0];
+                                source_output.get_element_type(), source_output.get_shape());
                             new_parameter->set_placement_index(placement);
-                            target_input->replace_output(new_output);
+                            target_input.replace_source_output(new_parameter->output(0));
                             cluster_inputs.push_back(new_parameter);
                             function_call_inputs.push_back(input);
                         }
@@ -226,9 +237,14 @@ void runtime::hybrid::rewrite_function(const shared_ptr<Function>& f,
 
                     auto old_source = cluster_outputs[i];
                     auto target = function_call_outputs[i];
-                    descriptor::Input* target_input = target->get_input_from(old_source);
-                    descriptor::Output& new_output = goe->get_outputs()[0];
-                    target_input->replace_output(new_output);
+
+                    std::vector<Input<Node>> target_inputs = get_inputs_from(*old_source, *target);
+                    NGRAPH_CHECK(target_inputs.size() == 1,
+                                 "rewrite_function encountered more than "
+                                 "one input between the old source node and the target node");
+                    auto& target_input = target_inputs[0];
+
+                    target_input.replace_source_output(goe->output(0));
                 }
             }
         }

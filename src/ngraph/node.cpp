@@ -42,7 +42,7 @@ Node::Node(const std::string& node_type, const NodeVector& arguments, size_t out
     size_t i = 0;
     for (auto arg : arguments)
     {
-        for (descriptor::Output& output : arg->get_outputs())
+        for (descriptor::Output& output : arg->m_outputs)
         {
             m_inputs.emplace_back(this, i++, output);
         }
@@ -72,7 +72,7 @@ void Node::delayed_validate_and_infer_types()
 
 void Node::set_output_size(size_t n)
 {
-    NGRAPH_ASSERT(n >= m_outputs.size()) << "shrinking " << m_outputs.size() << " to " << n;
+    NGRAPH_CHECK(n >= m_outputs.size(), "shrinking ", m_outputs.size(), " to ", n);
     for (size_t i = m_outputs.size(); i < n; ++i)
     {
         auto tensor_descriptor = make_shared<descriptor::Tensor>(
@@ -194,10 +194,12 @@ void Node::merge_provenance_tags_from(const std::shared_ptr<const Node>& source)
 
 std::shared_ptr<Node> Node::get_argument(size_t index) const
 {
-    for (auto& i : get_inputs())
+    for (auto& i : m_inputs)
     {
-        NGRAPH_ASSERT(i.get_output().get_node()->get_outputs().size() == 1)
-            << "child " << i.get_output().get_node()->get_name() << " has multiple outputs";
+        NGRAPH_CHECK(i.get_output().get_node()->get_output_size() == 1,
+                     "child ",
+                     i.get_output().get_node()->get_name(),
+                     " has multiple outputs");
     }
     return m_inputs.at(index).get_output().get_node();
 }
@@ -213,7 +215,7 @@ Node::~Node()
 NodeVector Node::get_arguments() const
 {
     NodeVector result;
-    for (auto& i : get_inputs())
+    for (auto& i : m_inputs)
     {
         {
             result.push_back(i.get_output().get_node());
@@ -275,9 +277,10 @@ std::ostream& Node::write_long_description(std::ostream& out) const
     }
     out << ") -> (";
     sep = "";
-    for (const auto& o : get_outputs())
+    for (size_t i = 0; i < get_output_size(); i++)
     {
-        out << sep << pretty_element_type(o.get_element_type()) << o.get_partial_shape();
+        out << sep << pretty_element_type(get_output_element_type(i))
+            << get_output_partial_shape(i);
         sep = ", ";
     }
     out << ")";
@@ -338,7 +341,7 @@ shared_ptr<descriptor::Tensor> Node::get_output_tensor_ptr() const
         throw ngraph_error(
             "get_output_tensor_ptr() must be called on a node with exactly one output.");
     }
-    return get_output_tensor_ptr(0);
+    return m_outputs.at(0).get_tensor_ptr();
 }
 
 const std::set<descriptor::Input*>& Node::get_output_inputs(size_t i) const
@@ -407,37 +410,13 @@ bool Node::has_same_type(std::shared_ptr<const Node> node) const
     return true;
 }
 
-descriptor::Input* Node::get_input_from(const shared_ptr<Node>& src)
-{
-    for (size_t i = 0; i < this->get_input_size(); ++i)
-    {
-        if (this->get_argument(i) == src)
-        {
-            return &(this->get_inputs().at(i));
-        }
-    }
-    throw ngraph_error("Error: src is not one of self's input Node");
-}
-
-descriptor::Output* Node::get_output_to(const shared_ptr<Node>& dst)
-{
-    for (size_t i = 0; i < dst->get_input_size(); ++i)
-    {
-        if (dst->get_argument(i).get() == this)
-        {
-            return &(dst->get_inputs().at(i).get_output());
-        }
-    }
-    throw ngraph_error("Error: dst is not one of self's output Node");
-}
-
 NodeVector Node::get_users(bool check_is_used) const
 {
     NodeVector result;
 
     for (size_t i = 0; i < get_output_size(); ++i)
     {
-        for (auto input : get_output_inputs(i))
+        for (auto input : m_outputs.at(i).get_inputs())
         {
             if (check_is_used)
             {
@@ -456,7 +435,7 @@ NodeVector Node::get_users(bool check_is_used) const
     return result;
 }
 
-std::string ngraph::node_validation_assertion_string(const Node* node)
+std::string ngraph::node_validation_failure_loc_string(const Node* node)
 {
     std::stringstream ss;
     ss << "While validating node '" << *node << "'";
@@ -478,8 +457,8 @@ void ngraph::check_new_args_count(const Node* node, const NodeVector& new_args)
 const std::shared_ptr<Node>& ngraph::check_single_output_arg(const std::shared_ptr<Node>& node,
                                                              size_t i)
 {
-    NGRAPH_ASSERT(node->get_output_size() == 1) << "Argument " << i << node
-                                                << " must produce exactly one value.";
+    NGRAPH_CHECK(
+        node->get_output_size() == 1, "Argument ", i, node, " must produce exactly one value.");
     return node;
 }
 

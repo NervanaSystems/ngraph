@@ -20,13 +20,13 @@
 
 #include "ngraph/frontend/onnx_import/exceptions.hpp"
 #include "ngraph/frontend/onnx_import/op/conv.hpp"
-#include "ngraph/frontend/onnx_import/utils/broadcasting.hpp"
 #include "ngraph/frontend/onnx_import/utils/convpool.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/slice.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 #include "op/conv.hpp"
 
 namespace ngraph
@@ -142,7 +142,9 @@ namespace ngraph
                     const Shape& new_shape = conv_node->get_shape();
 
                     auto broadcasted_bias = std::make_shared<ngraph::op::Broadcast>(
-                        bias, new_shape, calculate_broadcast_axes(new_shape, bias->get_shape(), 1));
+                        bias,
+                        new_shape,
+                        ngraph::op::calculate_broadcast_axes(new_shape, bias->get_shape(), 1));
                     return {std::make_shared<ngraph::op::Add>(conv_node, broadcasted_bias)};
                 }
 
