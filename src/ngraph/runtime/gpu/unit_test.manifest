@@ -137,6 +137,7 @@ create_tensor_2_output
 erf
 zero_sized_erf
 model_erf
+model_erf_int32
 gather_no_axis
 gather
 gather_nd_scalar_from_2d

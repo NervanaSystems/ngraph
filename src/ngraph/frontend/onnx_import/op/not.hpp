@@ -19,7 +19,6 @@
 #include "core/node.hpp"
 #include "ngraph/node_vector.hpp"
 #include "ngraph/op/not.hpp"
-#include "utils/broadcasting.hpp"
 
 namespace ngraph
 {

@@ -19,7 +19,7 @@
 #include "core/node.hpp"
 #include "ngraph/node_vector.hpp"
 #include "ngraph/op/or.hpp"
-#include "utils/broadcasting.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 
 namespace ngraph
 {
@@ -31,7 +31,7 @@ namespace ngraph
             {
                 inline NodeVector logical_or(const Node& node)
                 {
-                    NodeVector ng_inputs{numpy_style_broadcast(node.get_ng_inputs())};
+                    NodeVector ng_inputs{ngraph::op::numpy_style_broadcast(node.get_ng_inputs())};
                     return {std::make_shared<ngraph::op::Or>(ng_inputs.at(0), ng_inputs.at(1))};
                 }
 
