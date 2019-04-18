@@ -238,9 +238,13 @@ namespace ngraph
     };
 
     /**
-     * EnumMask is intended to work with a scoped enum type. It's used to store a combination
-     * of enum values and provides easy access and manipulation of these enum values as
-     * a mask.
+     * EnumMask is intended to work with a scoped enum type. It's used to store
+     * a combination of enum values and provides easy access and manipulation
+     * of these enum values as a mask.
+     *
+     * EnumMask does not provide a set_all() or invert() operator because they
+     * could do things unexpected by the user, i.e. for enum with 4 bit values,
+     * invert(001000...) != 110100..., due to the extra bits.
      */
     template <typename T>
     class EnumMask
@@ -258,10 +262,6 @@ namespace ngraph
             : m_value{0}
         {
         }
-        explicit EnumMask(const value_type& value)
-            : m_value{value}
-        {
-        }
         EnumMask(const T& enum_value)
             : m_value{static_cast<value_type>(enum_value)}
         {
@@ -270,15 +270,27 @@ namespace ngraph
             : m_value{other.m_value}
         {
         }
+        EnumMask(std::initializer_list<T> enum_values)
+            : m_value{0}
+        {
+            for (auto& v : enum_values)
+            {
+                m_value |= static_cast<value_type>(v);
+            }
+        }
         value_type value() const { return m_value; }
-        EnumMask invert() const { return EnumMask(~m_value); }
-        bool is_set(const T& p) const { return m_value & static_cast<value_type>(p); }
-        bool is_clear(const T& p) const { return !is_set(p); }
-        void set(const T& p) { m_value |= static_cast<value_type>(p); }
-        void clear(const T& p) { m_value &= ~static_cast<value_type>(p); }
-        void set_all() { m_value = ~value_type{0}; }
+        /// Check if any of the enum bit mask match
+        bool is_any_set(const EnumMask& p) const { return m_value & p.m_value; }
+        /// Check if all of the enum bit mask match
+        bool is_set(const EnumMask& p) const { return (m_value & p.m_value) == p.m_value; }
+        /// Check if any of the enum bit mask does not match
+        bool is_any_clear(const EnumMask& p) const { return !is_set(p); }
+        /// Check if all of the enum bit mask do not match
+        bool is_clear(const EnumMask& p) const { return !is_any_set(p); }
+        void set(const EnumMask& p) { m_value |= p.m_value; }
+        void clear(const EnumMask& p) { m_value &= ~p.m_value; }
         void clear_all() { m_value = 0; }
-        bool operator[](const T& p) const { return is_set(p); }
+        bool operator[](const EnumMask& p) const { return is_set(p); }
         bool operator==(const EnumMask& other) const { return m_value == other.m_value; }
         bool operator!=(const EnumMask& other) const { return m_value != other.m_value; }
         EnumMask& operator=(const EnumMask& other)
@@ -308,7 +320,6 @@ namespace ngraph
             return EnumMask(m_value | other.m_value);
         }
 
-        EnumMask operator~() const { return invert(); }
         friend std::ostream& operator<<(std::ostream& os, const EnumMask& m)
         {
             os << m.m_value;
@@ -316,6 +327,12 @@ namespace ngraph
         }
 
     private:
+        /// Only used internally
+        explicit EnumMask(const value_type& value)
+            : m_value{value}
+        {
+        }
+
         value_type m_value;
     };
 } // end namespace ngraph

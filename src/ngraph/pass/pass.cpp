@@ -34,11 +34,11 @@ void pass::PassBase::set_state(ManagerState& state)
     m_state = &state;
 }
 
-bool pass::PassBase::get_property(const PassProperty& prop) const
+bool pass::PassBase::get_property(const PassPropertyMask& prop) const
 {
     return m_property.is_set(prop);
 }
-void pass::PassBase::set_property(const PassProperty& prop, bool value)
+void pass::PassBase::set_property(const PassPropertyMask& prop, bool value)
 {
     if (value)
     {

@@ -67,12 +67,13 @@ class ngraph::pass::PassBase
 public:
     PassBase();
     virtual ~PassBase() {}
-    bool get_property(const PassProperty& prop) const;
+    /// Check if this pass has all the pass properties.
+    bool get_property(const PassPropertyMask& prop_mask) const;
 
 protected:
     ManagerState& get_state();
     void set_state(ManagerState&);
-    void set_property(const PassProperty& prop, bool value);
+    void set_property(const PassPropertyMask& prop, bool value);
 
 private:
     PassPropertyMask m_property;
