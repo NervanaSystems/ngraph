@@ -1084,7 +1084,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_leaky_relu)
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
 
-NGRAPH_TEST(onnx_${BACKEND_NAME}, prelu)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_prelu)
 {
     auto function =
         onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/prelu.prototxt"));
@@ -2359,7 +2359,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_quantize_linear_zero_point)
     EXPECT_TRUE(test::all_close(expected_output.front(), outputs.front()));
 }
 
-NGRAPH_TEST(onnx_${BACKEND_NAME}, quantize_linear_axis_zero)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_quantize_linear_axis_zero)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/quantize_linear_axis_zero.prototxt"));
