@@ -33,7 +33,7 @@ namespace ngraph
                     NodeVector ng_inputs{node.get_ng_inputs()};
                     auto data = ng_inputs.at(0);
                     auto indices = ng_inputs.at(1);
-                    auto axis = node.get_attribute_value<int64_t>("axis", 1);
+                    auto axis = node.get_attribute_value<int64_t>("axis", 0);
 
                     return {std::make_shared<ngraph::op::Gather>(data, indices, axis)};
                 }
