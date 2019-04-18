@@ -319,27 +319,29 @@ mkldnn::memory::format MKLDNNEmitter::query_convolution_forward_weight_format(
 }
 
 void MKLDNNEmitter::build_deconvolutionbias_forward(
+    std::vector<mkldnn::primitive*>& mkldnn_primitives,
     const mkldnn::deconvolution_forward::desc& deconv_desc,
+    const std::vector<size_t>& deps,
     size_t deconv_index,
     const mkldnn::memory::desc& weights_desc)
 {
-    size_t weights_index = m_primitive_deps[deconv_index][0];
-    build_memory_primitive(weights_desc, weights_index);
-    size_t delta_index = m_primitive_deps[deconv_index][1];
-    build_memory_primitive(deconv_desc.data.src_desc, delta_index);
-    size_t bias_index = m_primitive_deps[deconv_index][2];
-    build_memory_primitive(deconv_desc.data.bias_desc, bias_index);
-    size_t result_index = m_primitive_deps[deconv_index][3];
-    build_memory_primitive(deconv_desc.data.dst_desc, result_index);
+    size_t weights_index = deps[0];
+    build_memory_primitive(mkldnn_primitives, weights_desc, weights_index);
+    size_t delta_index = deps[1];
+    build_memory_primitive(mkldnn_primitives, deconv_desc.data.src_desc, delta_index);
+    size_t bias_index = deps[2];
+    build_memory_primitive(mkldnn_primitives, deconv_desc.data.bias_desc, bias_index);
+    size_t result_index = deps[3];
+    build_memory_primitive(mkldnn_primitives, deconv_desc.data.dst_desc, result_index);
 
     try
     {
-        m_mkldnn_primitives[deconv_index] =
+        mkldnn_primitives[deconv_index] =
             new mkldnn::deconvolution_forward({deconv_desc, executor::global_cpu_engine},
-                                              *m_mkldnn_primitives[delta_index],
-                                              *m_mkldnn_primitives[weights_index],
-                                              *m_mkldnn_primitives[bias_index],
-                                              *m_mkldnn_primitives[result_index]);
+                                              *mkldnn_primitives[delta_index],
+                                              *mkldnn_primitives[weights_index],
+                                              *mkldnn_primitives[bias_index],
+                                              *mkldnn_primitives[result_index]);
     }
     catch (const mkldnn::error& e)
     {

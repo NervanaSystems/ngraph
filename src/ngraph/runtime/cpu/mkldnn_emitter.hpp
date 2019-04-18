@@ -332,7 +332,9 @@ namespace ngraph
                 }
 
                 void build_deconvolutionbias_forward(
+                    std::vector<mkldnn::primitive*>& mkldnn_primitives,
                     const mkldnn::deconvolution_forward::desc& fwd_desc,
+                    const std::vector<size_t>& deps,
                     size_t conv_index,
                     const mkldnn::memory::desc& weights_desc);
 

@@ -760,10 +760,10 @@ namespace ngraph
                 auto arg2_shape = args[2].get_shape();
                 auto result_shape = out[0].get_shape();
 
-                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
+                auto arg2_buffer_index = external_function->get_buffer_index(args[2].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -779,17 +779,31 @@ namespace ngraph
                     auto conv_index = mkldnn_emitter->reserve_primitive_space(5);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                    auto functor = [&, deconvbias_desc, conv_index, weights_desc](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    auto functor = [&,
+                                    deconvbias_desc,
+                                    conv_index,
+                                    weights_desc,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    arg2_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_deconvolutionbias_forward(
-                                deconvbias_desc, conv_index, weights_desc);
+                            mkldnn_emitter->build_deconvolutionbias_forward(ctx->mkldnn_primitives,
+                                                                            deconvbias_desc,
+                                                                            deps,
+                                                                            conv_index,
+                                                                            weights_desc);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], arg2_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], out_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[2], ctx->buffer_data[arg2_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[3], ctx->buffer_data[out_buffer_index]);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
                     };
                     functors.emplace_back(functor);
