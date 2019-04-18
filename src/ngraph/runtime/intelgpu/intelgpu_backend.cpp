@@ -53,10 +53,7 @@
 #include "ngraph/runtime/intelgpu/intelgpu_kernels.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_batchnorm.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_op_broadcast.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_op_custom_func_call.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_op_softmax.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_tensor_view.hpp"
 #include "ngraph/runtime/intelgpu/visualize_tree.hpp"
 
@@ -671,14 +668,7 @@ shared_ptr<runtime::Executable>
             if ((shape_dim_count > 3) || ((shape_dim_count == 3) && (axes_size == 2)) ||
                 (op->get_input_element_type(0) != element::f32))
             {
-                do_softmax_operation(topology,
-                                     op->get_input_tensor_name(0),
-                                     op->get_input_shape(0),
-                                     op->get_input_element_type(0),
-                                     op->get_output_tensor_name(0),
-                                     op->get_output_shape(0),
-                                     op->get_output_element_type(0),
-                                     axes);
+                kern.emit<op::Softmax>(softmax_op);
             }
             else
             {
@@ -979,15 +969,7 @@ shared_ptr<runtime::Executable>
             }
             else
             {
-                do_bcast_sum_operation(topology,
-                                       op->get_input_tensor_name(0),
-                                       op->get_input_shape(0),
-                                       op->get_input_element_type(0),
-                                       op->get_output_tensor_name(0),
-                                       op->get_output_shape(0),
-                                       op->get_output_element_type(0),
-                                       axis,
-                                       true);
+                kern.emit<op::Broadcast>(broadcast);
             }
             break;
         }
@@ -1005,15 +987,7 @@ shared_ptr<runtime::Executable>
             }
             else
             {
-                do_bcast_sum_operation(topology,
-                                       op->get_input_tensor_name(0),
-                                       op->get_input_shape(0),
-                                       op->get_input_element_type(0),
-                                       op->get_output_tensor_name(0),
-                                       op->get_output_shape(0),
-                                       op->get_output_element_type(0),
-                                       axis,
-                                       false);
+                kern.emit<op::Sum>(sum);
             }
             break;
         }
@@ -1031,13 +1005,7 @@ shared_ptr<runtime::Executable>
             }
             else
             {
-                do_product_operation(topology,
-                                     op->get_input_tensor_name(0),
-                                     op->get_input_shape(0),
-                                     op->get_output_tensor_name(0),
-                                     op->get_output_shape(0),
-                                     op->get_output_element_type(0),
-                                     axis);
+                kern.emit<op::Product>(prod);
             }
             break;
         }
@@ -1098,44 +1066,16 @@ shared_ptr<runtime::Executable>
         {
             arguments_check(op, 1, 1);
 
-            const shared_ptr<op::All> all_op = static_pointer_cast<op::All>(op);
-            const AxisSet& axis = all_op->get_reduction_axes();
-            const shared_ptr<Node> def_val = all_op->get_default_value();
-            const shared_ptr<op::Constant> def_const = static_pointer_cast<op::Constant>(def_val);
-            const vector<std::string>& values = def_const->get_value_strings();
-
             // Empty axis is not a case for do_equal_propagation()
-            do_all_any_op(topology,
-                          op->get_input_tensor_name(0),
-                          op->get_input_shape(0),
-                          op->get_output_tensor_name(0),
-                          op->get_output_shape(0),
-                          op->get_output_element_type(0),
-                          axis,
-                          "lhs && rhs",
-                          values.at(0));
+            kern.emit<op::All>(static_pointer_cast<op::All>(op));
             break;
         }
         case OP_TYPEID::Any:
         {
             arguments_check(op, 1, 1);
 
-            const shared_ptr<op::Any> any_op = static_pointer_cast<op::Any>(op);
-            const AxisSet& axis = any_op->get_reduction_axes();
-            const shared_ptr<Node> def_val = any_op->get_default_value();
-            const shared_ptr<op::Constant> def_const = static_pointer_cast<op::Constant>(def_val);
-            const vector<std::string>& values = def_const->get_value_strings();
-
             // Empty axis is not a case for do_equal_propagation()
-            do_all_any_op(topology,
-                          op->get_input_tensor_name(0),
-                          op->get_input_shape(0),
-                          op->get_output_tensor_name(0),
-                          op->get_output_shape(0),
-                          op->get_output_element_type(0),
-                          axis,
-                          "lhs || rhs",
-                          values.at(0));
+            kern.emit<op::Any>(static_pointer_cast<op::Any>(op));
             break;
         }
         case OP_TYPEID::ReluBackprop:
@@ -1788,34 +1728,14 @@ shared_ptr<runtime::Executable>
         {
             arguments_check(op, 1, 1);
 
-            const shared_ptr<op::Min> min_op = static_pointer_cast<op::Min>(op);
-            const AxisSet& axis = min_op->get_reduction_axes();
-
-            do_max_min_operation(topology,
-                                 op->get_input_tensor_name(0),
-                                 op->get_input_shape(0),
-                                 op->get_output_tensor_name(0),
-                                 op->get_output_shape(0),
-                                 op->get_output_element_type(0),
-                                 axis,
-                                 true);
+            kern.emit<op::Min>(static_pointer_cast<op::Min>(op));
             break;
         }
         case OP_TYPEID::Max:
         {
             arguments_check(op, 1, 1);
 
-            const shared_ptr<op::Max> max_op = static_pointer_cast<op::Max>(op);
-            const AxisSet& axis = max_op->get_reduction_axes();
-
-            do_max_min_operation(topology,
-                                 op->get_input_tensor_name(0),
-                                 op->get_input_shape(0),
-                                 op->get_output_tensor_name(0),
-                                 op->get_output_shape(0),
-                                 op->get_output_element_type(0),
-                                 axis,
-                                 false);
+            kern.emit<op::Max>(static_pointer_cast<op::Max>(op));
             break;
         }
         case OP_TYPEID::OneHot:
