@@ -40,6 +40,7 @@ static std::string s_manifest = "${MANIFEST}";
 using Inputs = std::vector<std::vector<float>>;
 using Outputs = std::vector<std::vector<float>>;
 
+// ############################################################################ CORE TESTS
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_output_names_check)
 {
     auto function = onnx_import::import_onnx_model(
@@ -89,6 +90,221 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_add_abc_initializers)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_override_op)
+{
+    onnx_import::register_operator(
+        "FalseAdd", 1, "", [](const onnx_import::Node& node) -> NodeVector {
+            NodeVector ng_inputs{node.get_ng_inputs()};
+            return {std::make_shared<ngraph::op::Add>(ng_inputs.at(0), ng_inputs.at(1))};
+        });
+
+    onnx_import::register_operator(
+        "FalseAdd", 1, "", [](const onnx_import::Node& node) -> NodeVector {
+            NodeVector ng_inputs{node.get_ng_inputs()};
+            return {std::make_shared<ngraph::op::Subtract>(ng_inputs.at(0), ng_inputs.at(1))};
+        });
+
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/override_op.prototxt"));
+
+    Inputs inputs;
+    inputs.emplace_back(std::vector<float>{0.f, 1.f, 2.f, 3.f});
+    inputs.emplace_back(std::vector<float>{3.f, 2.f, 1.f, 0.f});
+
+    Outputs expected_output{std::vector<float>{-3.f, -1.f, 1.f, 3.f}};
+
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, import_non_existing_file)
+{
+    try
+    {
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/i.dont.exist"));
+    }
+    catch (const std::runtime_error& exc)
+    {
+        // asserts that an exception was thrown and that the error message contains the file name
+        std::string msg{exc.what()};
+        EXPECT_TRUE(msg.find("i.dont.exist") != std::string::npos);
+    }
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_unsupported_op)
+{
+    try
+    {
+        onnx_import::import_onnx_model(
+            file_util::path_join(SERIALIZED_ZOO, "onnx/unsupported_op.prototxt"));
+        FAIL() << "Expected ngraph::ngraph_error";
+    }
+    catch (ngraph::ngraph_error const& err)
+    {
+        std::string what{err.what()};
+        EXPECT_NE(what.find("nGraph does not support"), std::string::npos);
+        EXPECT_NE(what.find("FakeOpName"), std::string::npos);
+        EXPECT_NE(what.find("AnotherFakeOpName"), std::string::npos);
+    }
+    catch (...)
+    {
+        FAIL() << "Expected ngraph::ngraph_error";
+    }
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_custom_op)
+{
+    onnx_import::register_operator(
+        "AddQ", 1, "com.intel.ai", [](const onnx_import::Node& node) -> NodeVector {
+            NodeVector ng_inputs{node.get_ng_inputs()};
+            return {std::make_shared<ngraph::op::Add>(ng_inputs.at(0), ng_inputs.at(1))};
+        });
+
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/custom_operator.prototxt"));
+
+    Inputs inputs{{1, 2, 3, 4}};
+    Outputs expected_outputs{{3, 6, 9, 12}};
+
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_custom_op_default_domain)
+{
+    onnx_import::register_operator(
+        "AddQ", 1, "com.intel.ai", [](const onnx_import::Node& node) -> NodeVector {
+            NodeVector ng_inputs{node.get_ng_inputs()};
+            return {std::make_shared<ngraph::op::Add>(ng_inputs.at(0), ng_inputs.at(1))};
+        });
+
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/custom_operator_default_domain.prototxt"));
+
+    Inputs inputs{{1, 2, 3, 4}};
+    Outputs expected_outputs{{3, 6, 9, 12}};
+
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, is_op_supported)
+{
+    // Simple case
+    EXPECT_TRUE(onnx_import::is_operator_supported("Sum", 1, "ai.onnx"));
+    // With fallback
+    EXPECT_TRUE(onnx_import::is_operator_supported("Sum", 100, "ai.onnx"));
+
+    // Different opset versions
+    EXPECT_TRUE(onnx_import::is_operator_supported("Add", 1, "ai.onnx"));
+    EXPECT_TRUE(onnx_import::is_operator_supported("Add", 7, "ai.onnx"));
+
+    // Default domain name
+    EXPECT_TRUE(onnx_import::is_operator_supported("Sum", 1));
+
+    // Unregistered operator
+    EXPECT_FALSE(onnx_import::is_operator_supported("DummyOp", 1));
+    EXPECT_FALSE(onnx_import::is_operator_supported("DummyOp", 1, "ai.onnx"));
+    EXPECT_FALSE(onnx_import::is_operator_supported("DummyOp", 10, "ai.onnx"));
+
+    // Operator with bad domain name
+    EXPECT_FALSE(onnx_import::is_operator_supported("Sum", 1, "bad.domain"));
+
+    // Registered custom operator
+    onnx_import::register_operator(
+        "AddQ", 1, "com.intel.ai", [](const onnx_import::Node& node) -> NodeVector {
+            NodeVector ng_inputs{node.get_ng_inputs()};
+            return {std::make_shared<ngraph::op::Add>(ng_inputs.at(0), ng_inputs.at(1))};
+        });
+    EXPECT_TRUE(onnx_import::is_operator_supported("AddQ", 1, "com.intel.ai"));
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_missing_op_domain)
+{
+    onnx_import::register_operator(
+        "CustomAdd", 1, "custom.op", [](const onnx_import::Node& node) -> NodeVector {
+            NodeVector ng_inputs{node.get_ng_inputs()};
+            return {std::make_shared<ngraph::op::Add>(ng_inputs.at(0), ng_inputs.at(1))};
+        });
+
+    EXPECT_TRUE(onnx_import::is_operator_supported("CustomAdd", 1, "custom.op"));
+
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/missing_op_domain.prototxt"));
+
+    Inputs inputs;
+    inputs.emplace_back(std::vector<float>{0.f, 1.f, 2.f, 3.f});
+    inputs.emplace_back(std::vector<float>{0.f, 1.f, 2.f, 3.f});
+
+    Outputs expected_output{std::vector<float>{0.f, 2.f, 4.f, 6.f}};
+
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_missing_input)
+{
+    onnx_import::register_operator(
+        "TestMissingInOut", 1, "com.intel.ai", [](const onnx_import::Node& node) -> NodeVector {
+            NodeVector ng_inputs{node.get_ng_inputs()};
+            std::shared_ptr<ngraph::Node> A = ng_inputs.at(0);
+            std::shared_ptr<ngraph::Node> B = ng_inputs.at(1);
+            std::shared_ptr<ngraph::Node> C = ng_inputs.at(2);
+
+            A = A * C;
+            if (!B->is_null())
+            {
+                B = B / C;
+            }
+
+            C = C + C;
+            return {A, B, C};
+        });
+
+    onnx_import::register_operator(
+        "TestMissingIn", 1, "com.intel.ai", [](const onnx_import::Node& node) -> NodeVector {
+            NodeVector ng_inputs{node.get_ng_inputs()};
+            std::shared_ptr<ngraph::Node> result = std::make_shared<ngraph::op::Constant>(
+                element::f32, ngraph::Shape{2, 2}, std::vector<float>{1, 1, 1, 1});
+
+            for (const auto& ng_input : ng_inputs)
+            {
+                if (!ng_input->is_null())
+                {
+                    result = ng_input * result;
+                }
+            }
+
+            return {result};
+        });
+
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/missing_input.prototxt"));
+
+    Inputs inputs{{1, 2, 3, 4}, {5, 6, 7, 8}};
+    Outputs expected_outputs{{50, 144, 294, 512}};
+
+    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
+
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_initializer_wo_input)
+{
+    // This test checks a model which has an initializer, but no input with the same name
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/initializer_wo_input.prototxt"));
+
+    Inputs inputs;
+    inputs.emplace_back(std::vector<float>{0, 1, 2, 3, 4, 5});
+
+    std::vector<float> expected_output{0, 2, 6, 12, 20, 30};
+
+    Outputs output{execute(function, inputs, "${BACKEND_NAME}")};
+    EXPECT_TRUE(test::all_close_f(expected_output, output.front()));
+}
+
+// ############################################################################ OPERATOR TESTS
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_addmul_abc)
 {
     auto function = onnx_import::import_onnx_model(
@@ -117,148 +333,6 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_argmin_no_keepdims)
     std::vector<std::vector<int64_t>> result{
         execute<float, int64_t>(function, inputs, "${BACKEND_NAME}")};
     EXPECT_EQ(expected_output, result);
-}
-
-namespace
-{
-    std::vector<std::vector<float>> conv2d_execute(const std::shared_ptr<Function>& function)
-    {
-        std::vector<std::vector<float>> args;
-
-        // data (1, 1, 7, 5) input tensor
-        args.emplace_back(test::NDArray<float, 4>{{{{{0.f, 1.f, 2.f, 3.f, 4.f},
-                                                     {5.f, 6.f, 7.f, 8.f, 9.f},
-                                                     {10.f, 11.f, 12.f, 13.f, 14.f},
-                                                     {15.f, 16.f, 17.f, 18.f, 19.f},
-                                                     {20.f, 21.f, 22.f, 23.f, 24.f},
-                                                     {25.f, 26.f, 27.f, 28.f, 29.f},
-                                                     {30.f, 31.f, 32.f, 33.f, 34.f}}}}}
-                              .get_vector());
-
-        // filters (1, 1, 3, 3) aka convolution weights
-        args.emplace_back(
-            test::NDArray<float, 4>{{{{{1.f, 1.f, 1.f}, {1.f, 1.f, 1.f}, {1.f, 1.f, 1.f}}}}}
-                .get_vector());
-
-        return execute(function, args, "${BACKEND_NAME}");
-    }
-
-} // namespace
-
-NGRAPH_TEST(onnx_${BACKEND_NAME}, model_conv2d_strides_padding)
-{
-    // Convolution with strides=2 and padding=1
-    auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/conv_with_strides_padding.prototxt"));
-
-    // (1, 1, 4, 3)
-    auto expected_output = test::NDArray<float, 4>({{{{12.f, 27.f, 24.f},
-                                                      {63.f, 108.f, 81.f},
-                                                      {123.f, 198.f, 141.f},
-                                                      {112.f, 177.f, 124.f}}}})
-                               .get_vector();
-
-    auto result = conv2d_execute(function);
-    EXPECT_EQ(expected_output, result.front());
-}
-
-NGRAPH_TEST(onnx_${BACKEND_NAME}, model_conv2d_strides_no_padding)
-{
-    // Convolution with strides=2 and padding=1
-    auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/conv_with_strides_no_padding.prototxt"));
-
-    // (1, 1, 3, 2)
-    auto expected_output =
-        test::NDArray<float, 4>({{{{54.f, 72.f}, {144.f, 162.f}, {234.f, 252.f}}}}).get_vector();
-
-    auto result = conv2d_execute(function);
-    EXPECT_EQ(expected_output, result.front());
-}
-
-NGRAPH_TEST(onnx_${BACKEND_NAME}, model_conv2d_strides_assymetric_padding)
-{
-    // Convolution with strides=2 and padding=1
-    auto function = onnx_import::import_onnx_model(file_util::path_join(
-        SERIALIZED_ZOO, "onnx/conv_with_strides_and_asymmetric_padding.prototxt"));
-
-    // (1, 1, 4, 2)
-    auto expected_output =
-        test::NDArray<float, 4>({{{{21.f, 33.f}, {99.f, 117.f}, {189.f, 207.f}, {171.f, 183.f}}}})
-            .get_vector();
-
-    auto result = conv2d_execute(function);
-    EXPECT_EQ(expected_output, result.front());
-}
-
-NGRAPH_TEST(onnx_${BACKEND_NAME}, model_average_pool_2d)
-{
-    // Pooling with strides=2 and no padding
-    auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/average_pool_2d.prototxt"));
-
-    // input data shape (1, 1, 4, 4)
-    Inputs inputs;
-    inputs.push_back(test::NDArray<float, 4>({{{{0.f, 1.f, 2.f, 3.f},
-                                                {4.f, 5.f, 6.f, 7.f},
-                                                {8.f, 9.f, 10.f, 11.f},
-                                                {12.f, 13.f, 14.f, 15.f}}}})
-                         .get_vector());
-
-    // (1, 1, 2, 2)
-    auto expected_output = test::NDArray<float, 4>({{{{2.5f, 4.5f}, {10.5f, 12.5f}}}}).get_vector();
-
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-
-    EXPECT_EQ(expected_output, outputs.front());
-}
-
-NGRAPH_TEST(onnx_${BACKEND_NAME}, model_average_pool_2d_pads)
-{
-    // Pooling with strides=2 and padding=1
-    auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/average_pool_2d_pads.prototxt"));
-
-    // input data shape (1, 1, 4, 4)
-    Inputs inputs;
-    inputs.push_back(test::NDArray<float, 4>({{{{0.f, 1.f, 2.f, 3.f},
-                                                {4.f, 5.f, 6.f, 7.f},
-                                                {8.f, 9.f, 10.f, 11.f},
-                                                {12.f, 13.f, 14.f, 15.f}}}})
-                         .get_vector());
-
-    // (1, 1, 3, 3)
-    auto expected_output =
-        test::NDArray<float, 4>({{{{0.f, 1.5f, 3.f}, {6.f, 7.5f, 9.f}, {12.f, 13.5f, 15.f}}}})
-            .get_vector();
-
-    Outputs outputs = execute(function, inputs, "${BACKEND_NAME}");
-
-    EXPECT_EQ(expected_output, outputs.front());
-}
-
-NGRAPH_TEST(onnx_${BACKEND_NAME}, model_max_pool_2d_pads)
-{
-    // Pooling with strides=2 and padding=1
-    auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/max_pool_2d_pads.prototxt"));
-
-    // input data shape (1, 1, 4, 4)
-    Inputs inputs;
-    inputs.push_back(test::NDArray<float, 4>({{{{0.f, 1.f, 2.f, 3.f},
-                                                {4.f, 5.f, 6.f, 7.f},
-                                                {8.f, 9.f, 10.f, 11.f},
-                                                {12.f, 13.f, 14.f, 15.f}}}})
-                         .get_vector());
-
-    // (1, 1, 3, 3)
-    auto expected_output =
-        test::NDArray<float, 4>({{{{0.f, 2.f, 3.f}, {8.f, 10.f, 11.f}, {12.f, 14.f, 15.f}}}})
-            .get_vector();
-
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-
-    EXPECT_EQ(expected_output, outputs.front());
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_batchnorm_default)
@@ -1055,217 +1129,6 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_thresholded_relu)
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
 
-NGRAPH_TEST(onnx_${BACKEND_NAME}, model_unsupported_op)
-{
-    try
-    {
-        onnx_import::import_onnx_model(
-            file_util::path_join(SERIALIZED_ZOO, "onnx/unsupported_op.prototxt"));
-        FAIL() << "Expected ngraph::ngraph_error";
-    }
-    catch (ngraph::ngraph_error const& err)
-    {
-        std::string what{err.what()};
-        EXPECT_NE(what.find("nGraph does not support"), std::string::npos);
-        EXPECT_NE(what.find("FakeOpName"), std::string::npos);
-        EXPECT_NE(what.find("AnotherFakeOpName"), std::string::npos);
-    }
-    catch (...)
-    {
-        FAIL() << "Expected ngraph::ngraph_error";
-    }
-}
-
-NGRAPH_TEST(onnx_${BACKEND_NAME}, model_custom_op)
-{
-    onnx_import::register_operator(
-        "AddQ", 1, "com.intel.ai", [](const onnx_import::Node& node) -> NodeVector {
-            NodeVector ng_inputs{node.get_ng_inputs()};
-            return {std::make_shared<ngraph::op::Add>(ng_inputs.at(0), ng_inputs.at(1))};
-        });
-
-    auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/custom_operator.prototxt"));
-
-    Inputs inputs{{1, 2, 3, 4}};
-    Outputs expected_outputs{{3, 6, 9, 12}};
-
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
-}
-
-NGRAPH_TEST(onnx_${BACKEND_NAME}, model_custom_op_default_domain)
-{
-    onnx_import::register_operator(
-        "AddQ", 1, "com.intel.ai", [](const onnx_import::Node& node) -> NodeVector {
-            NodeVector ng_inputs{node.get_ng_inputs()};
-            return {std::make_shared<ngraph::op::Add>(ng_inputs.at(0), ng_inputs.at(1))};
-        });
-
-    auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/custom_operator_default_domain.prototxt"));
-
-    Inputs inputs{{1, 2, 3, 4}};
-    Outputs expected_outputs{{3, 6, 9, 12}};
-
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
-}
-
-NGRAPH_TEST(onnx_${BACKEND_NAME}, model_conv2d_dilation_assymetric_pads_strides)
-{
-    auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/conv2d_dilation_assym_pads_strides.prototxt"));
-
-    //   "",                           // auto_pad
-    //   vector<int64_t>{1, 1},        // dilations
-    //   1,                            // group
-    //   vector<int64_t>{3, 3},        // kernel_shape
-    //   vector<int64_t>{1, 1, 1, 2},  // pads
-    //   vector<int64_t>{3, 1}         // strides
-
-    Inputs inputs;
-    // {2, 1, 1, 1}
-    inputs.emplace_back(
-        test::NDArray<float, 4>({{{{-0.09103918075561523f}}}, {{{-0.32513630390167236f}}}})
-            .get_vector());
-    // {2, 1, 3, 3}
-    inputs.emplace_back(
-        test::NDArray<float, 4>(
-            {{{{0.4312484860420227f, -0.12559029459953308f, 0.44889551401138306f},
-               {-0.3100617825984955f, 0.13522827625274658f, -0.06791308522224426f},
-               {0.22671669721603394f, -0.17391827702522278f, -0.31299442052841187f}}},
-             {{{-0.31545522809028625f, 0.06560015678405762f, 0.2656586766242981f},
-               {0.41363757848739624f, 0.31231558322906494f, -0.376018226146698f},
-               {-0.005708813667297363f, 0.34922850131988525f, 0.45095211267471313f}}}})
-            .get_vector());
-
-    // {2, 2, 1, 2}
-    Outputs expected_output{
-        test::NDArray<float, 4>({{{{-0.012311071157455444f, 0.02822777070105076f}},
-                                  {{-0.028432954102754593f, -0.037657227367162704f}}},
-                                 {{{-0.04396762326359749f, 0.10081233829259872f}},
-                                  {{-0.10154513269662857f, -0.13448859751224518f}}}})
-            .get_vector()};
-
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
-}
-
-NGRAPH_TEST(onnx_${BACKEND_NAME}, model_conv3d_bias)
-{
-    auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/conv3d_bias.prototxt"));
-
-    // "",                                 // auto_pad
-    // vector<int64_t>{2, 2, 2},           // dilations
-    // 1,                                  // group
-    // vector<int64_t>{2, 2, 2},           // kernel_shape
-    // vector<int64_t>{2, 2, 2, 2, 2, 2},  // pads
-    // vector<int64_t>{2, 2, 2}            // strides
-
-    Inputs inputs;
-    // X: {2, 1, 4, 4, 4}
-    inputs.emplace_back(
-        std::vector<float>{0.46796226501464844f,   -0.4613912105560303f,  0.33512794971466064f,
-                           -0.4010460674762726f,   0.41722816228866577f,  -0.048133403062820435f,
-                           0.20415884256362915f,   0.03189706802368164f,  -0.04779183864593506f,
-                           -0.0795503556728363f,   0.4987630844116211f,   0.3506373167037964f,
-                           0.48065757751464844f,   0.269855260848999f,    -0.2463444471359253f,
-                           0.19044137001037598f,   -0.11830493807792664f, -0.2576887905597687f,
-                           -0.33940935134887695f,  -0.257951021194458f,   -0.08279827237129211f,
-                           0.3513314127922058f,    -0.29122066497802734f, -0.43358397483825684f,
-                           -0.13429927825927734f,  0.44032156467437744f,  0.05308258533477783f,
-                           -0.3499870300292969f,   -0.28474611043930054f, -0.44209951162338257f,
-                           -0.07418054342269897f,  -0.10919415950775146f, 0.2845439314842224f,
-                           0.3498746156692505f,    -0.19313520193099976f, 0.32609254121780396f,
-                           0.4880145788192749f,    0.05574071407318115f,  -0.46457427740097046f,
-                           -0.02524462342262268f,  -0.18780940771102905f, -0.14720159769058228f,
-                           0.207585871219635f,     0.47157740592956543f,  -0.05567386746406555f,
-                           -0.49871665239334106f,  0.2274145483970642f,   0.4589425325393677f,
-                           -0.4725189805030823f,   -0.4358765780925751f,  0.2841453552246094f,
-                           -0.27037882804870605f,  0.34227508306503296f,  0.33575427532196045f,
-                           -0.19485199451446533f,  -0.27679920196533203f, -0.4238079786300659f,
-                           -0.4385119676589966f,   0.43724071979522705f,  0.3065117597579956f,
-                           0.45696544647216797f,   0.05291992425918579f,  -0.023618370294570923f,
-                           -0.1860884726047516f,   0.08669537305831909f,  0.32541000843048096f,
-                           0.1846179962158203f,    -0.1984834372997284f,  -0.2754465937614441f,
-                           0.32004624605178833f,   -0.34846532344818115f, 0.0999596118927002f,
-                           -0.11374691128730774f,  0.21225297451019287f,  -0.02315312623977661f,
-                           0.1671370267868042f,    0.22319108247756958f,  0.03609824180603027f,
-                           -0.1587022840976715f,   0.059984564781188965f, -0.03951650857925415f,
-                           -0.4841443598270416f,   0.32919085025787354f,  -0.23115816712379456f,
-                           0.39441078901290894f,   -0.3554944396018982f,  -0.17022761702537537f,
-                           -0.055081307888031006f, 0.15856128931045532f,  -0.4183449149131775f,
-                           -0.2474445104598999f,   0.03603637218475342f,  -0.2836887538433075f,
-                           0.4602506160736084f,    0.29092925786972046f,  -0.199321448802948f,
-                           0.380856454372406f,     -0.13847029209136963f, -0.238397479057312f,
-                           -0.1907123327255249f,   -0.11061936616897583f, -0.08717870712280273f,
-                           0.24449139833450317f,   -0.14727482199668884f, 0.1437196135520935f,
-                           0.3955056071281433f,    -0.12538021802902222f, 0.11590522527694702f,
-                           0.4598066806793213f,    -0.30005723237991333f, -0.46578651666641235f,
-                           -0.33955082297325134f,  -0.2671887278556824f,  0.3611910939216614f,
-                           -0.11423084139823914f,  -0.08382436633110046f, -0.31819307804107666f,
-                           0.14515334367752075f,   0.3157258629798889f,   0.33179205656051636f,
-                           -0.2558857202529907f,   0.11888682842254639f,  0.12824326753616333f,
-                           -0.33106181025505066f,  0.2549159526824951f,   -0.46760573983192444f,
-                           -0.11983257532119751f,  0.1834418773651123f});
-
-    // W: {2, 1, 2, 2, 2}
-    inputs.emplace_back(std::vector<float>{0.388077974319458f,
-                                           -0.16366064548492432f,
-                                           -0.42871910333633423f,
-                                           0.4276432394981384f,
-                                           0.21517693996429443f,
-                                           0.007908165454864502f,
-                                           0.33897721767425537f,
-                                           0.21843165159225464f,
-                                           0.34095364809036255f,
-                                           -0.17043980956077576f,
-                                           -0.013571739196777344f,
-                                           -0.26793742179870605f,
-                                           -0.34863436222076416f,
-                                           -0.2672275900840759f,
-                                           -0.36691007018089294f,
-                                           0.37296557426452637f});
-
-    // B: {2}
-    inputs.emplace_back(std::vector<float>{0.4310183525085449f, -0.4564093053340912f});
-
-    // {2, 2, 3, 3, 3}
-    Outputs expected_output{std::vector<float>{
-        0.5332361459732056f,   0.6628494262695312f,   0.544619083404541f,    0.4242798388004303f,
-        0.6271085739135742f,   0.6721994876861572f,   0.43064039945602417f,  0.4246789515018463f,
-        0.53834068775177f,     0.6932926177978516f,   0.42797625064849854f,  0.2218741625547409f,
-        0.29522019624710083f,  0.8329390287399292f,   0.37605351209640503f,  0.43735477328300476f,
-        0.2920728623867035f,   0.6692450046539307f,   0.5527016520500183f,   0.22643595933914185f,
-        0.5138190984725952f,   0.3041342794895172f,   0.7423423528671265f,   0.26707080006599426f,
-        0.4617553651332855f,   0.32416003942489624f,  0.511577844619751f,    -0.28187549114227295f,
-        -0.5031181573867798f,  -0.5793710947036743f,  -0.5992864370346069f,  -0.5055556893348694f,
-        -0.7562476396560669f,  -0.44363799691200256f, -0.5730307102203369f,  -0.6302952766418457f,
-        -0.4756688177585602f,  -0.728988528251648f,   -0.3900943398475647f,  -0.6694478988647461f,
-        -0.38822290301322937f, -0.35774707794189453f, -0.39807581901550293f, -0.547709047794342f,
-        -0.35872578620910645f, -0.5326492786407471f,  -0.40852290391921997f, -0.4537881314754486f,
-        -0.4545857608318329f,  -0.379546195268631f,   -0.5250767469406128f,  -0.42439910769462585f,
-        -0.5558245182037354f,  -0.38563215732574463f, 0.44995537400245667f,  0.5007325410842896f,
-        0.49359965324401855f,  0.40685802698135376f,  0.407518208026886f,    0.4628955125808716f,
-        0.4301188290119171f,   0.40635955333709717f,  0.4260363280773163f,   0.55128413438797f,
-        0.5498291254043579f,   0.27105778455734253f,  0.40259143710136414f,  0.5747092962265015f,
-        0.4187920391559601f,   0.4507707953453064f,   0.420598566532135f,    0.3950541913509369f,
-        0.593889057636261f,    0.16578882932662964f,  0.5332239270210266f,   0.43014785647392273f,
-        0.50260329246521f,     0.39225444197654724f,  0.4074971079826355f,   0.5073125958442688f,
-        0.3823610544204712f,   -0.4240749180316925f,  -0.41936254501342773f, -0.5241475105285645f,
-        -0.5220003724098206f,  -0.502869725227356f,   -0.5122783780097961f,  -0.4260129928588867f,
-        -0.4105660617351532f,  -0.4483373165130615f,  -0.33759188652038574f, -0.735706090927124f,
-        -0.3714444637298584f,  -0.4888814687728882f,  -0.6191370487213135f,  -0.2640320658683777f,
-        -0.47542816400527954f, -0.5078460574150085f,  -0.4205915927886963f,  -0.5584549903869629f,
-        -0.39770257472991943f, -0.45317384600639343f, -0.5598302483558655f,  -0.2542789578437805f,
-        -0.5359901785850525f,  -0.48090484738349915f, -0.38603779673576355f, -0.4991581439971924f}};
-
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
-}
-
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_matmul_vec_ten3d)
 {
     auto function = onnx_import::import_onnx_model(
@@ -1373,25 +1236,6 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sum_opset8)
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
 
-NGRAPH_TEST(onnx_${BACKEND_NAME}, model_conv_transpose_w_groups)
-{
-    auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/conv_transpose_w_groups.prototxt"));
-
-    Inputs inputs;
-    inputs.emplace_back(std::vector<float>{
-        0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f, 13.f, 14.f, 15.f});
-    inputs.emplace_back(std::vector<float>{0.f,  1.f,  2.f,  3.f,  4.f,  5.f,  6.f,  7.f,
-                                           8.f,  9.f,  10.f, 11.f, 12.f, 13.f, 14.f, 15.f,
-                                           16.f, 17.f, 18.f, 19.f, 20.f, 21.f, 22.f, 23.f,
-                                           24.f, 25.f, 26.f, 27.f, 28.f, 29.f, 30.f, 31.0f});
-
-    Outputs expected_output{
-        std::vector<float>{28.f, 34.f, 252.f, 274.f, 732.f, 770.f, 1468.f, 1522.f}};
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
-}
-
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_argmax_int32)
 {
     auto function = onnx_import::import_onnx_model(
@@ -1423,60 +1267,6 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_argmin_int32)
     EXPECT_TRUE(test::all_close(expected_output.front(), outputs.front()));
 }
 
-NGRAPH_TEST(onnx_${BACKEND_NAME}, is_op_supported)
-{
-    // Simple case
-    EXPECT_TRUE(onnx_import::is_operator_supported("Sum", 1, "ai.onnx"));
-    // With fallback
-    EXPECT_TRUE(onnx_import::is_operator_supported("Sum", 100, "ai.onnx"));
-
-    // Different opset versions
-    EXPECT_TRUE(onnx_import::is_operator_supported("Add", 1, "ai.onnx"));
-    EXPECT_TRUE(onnx_import::is_operator_supported("Add", 7, "ai.onnx"));
-
-    // Default domain name
-    EXPECT_TRUE(onnx_import::is_operator_supported("Sum", 1));
-
-    // Unregistered operator
-    EXPECT_FALSE(onnx_import::is_operator_supported("DummyOp", 1));
-    EXPECT_FALSE(onnx_import::is_operator_supported("DummyOp", 1, "ai.onnx"));
-    EXPECT_FALSE(onnx_import::is_operator_supported("DummyOp", 10, "ai.onnx"));
-
-    // Operator with bad domain name
-    EXPECT_FALSE(onnx_import::is_operator_supported("Sum", 1, "bad.domain"));
-
-    // Registered custom operator
-    onnx_import::register_operator(
-        "AddQ", 1, "com.intel.ai", [](const onnx_import::Node& node) -> NodeVector {
-            NodeVector ng_inputs{node.get_ng_inputs()};
-            return {std::make_shared<ngraph::op::Add>(ng_inputs.at(0), ng_inputs.at(1))};
-        });
-    EXPECT_TRUE(onnx_import::is_operator_supported("AddQ", 1, "com.intel.ai"));
-}
-
-NGRAPH_TEST(onnx_${BACKEND_NAME}, model_missing_op_domain)
-{
-    onnx_import::register_operator(
-        "CustomAdd", 1, "custom.op", [](const onnx_import::Node& node) -> NodeVector {
-            NodeVector ng_inputs{node.get_ng_inputs()};
-            return {std::make_shared<ngraph::op::Add>(ng_inputs.at(0), ng_inputs.at(1))};
-        });
-
-    EXPECT_TRUE(onnx_import::is_operator_supported("CustomAdd", 1, "custom.op"));
-
-    auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/missing_op_domain.prototxt"));
-
-    Inputs inputs;
-    inputs.emplace_back(std::vector<float>{0.f, 1.f, 2.f, 3.f});
-    inputs.emplace_back(std::vector<float>{0.f, 1.f, 2.f, 3.f});
-
-    Outputs expected_output{std::vector<float>{0.f, 2.f, 4.f, 6.f}};
-
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
-}
-
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_top_k)
 {
     auto function =
@@ -1496,138 +1286,6 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_top_k)
 
     EXPECT_TRUE(test::all_close_f(expected_values_output, values_output));
     EXPECT_TRUE(test::all_close(expected_indices_output, indices_output));
-}
-
-NGRAPH_TEST(onnx_${BACKEND_NAME}, model_lstm_fwd_with_clip)
-{
-    auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/lstm_fwd_with_clip.prototxt"));
-
-    Inputs inputs{};
-    // X
-    inputs.emplace_back(std::vector<float>{-0.455351, -0.276391, -0.185934, -0.269585});
-
-    // W
-    inputs.emplace_back(std::vector<float>{-0.494659f,
-                                           0.0453352f,
-                                           -0.487793f,
-                                           0.417264f,
-                                           -0.0175329f,
-                                           0.489074f,
-                                           -0.446013f,
-                                           0.414029f,
-                                           -0.0091708f,
-                                           -0.255364f,
-                                           -0.106952f,
-                                           -0.266717f,
-                                           -0.0888852f,
-                                           -0.428709f,
-                                           -0.283349f,
-                                           0.208792f});
-
-    // R
-    inputs.emplace_back(std::vector<float>{0.146626f,
-                                           -0.0620289f,
-                                           -0.0815302f,
-                                           0.100482f,
-                                           -0.219535f,
-                                           -0.306635f,
-                                           -0.28515f,
-                                           -0.314112f,
-                                           -0.228172f,
-                                           0.405972f,
-                                           0.31576f,
-                                           0.281487f,
-                                           -0.394864f,
-                                           0.42111f,
-                                           -0.386624f,
-                                           -0.390225f});
-
-    // B
-    inputs.emplace_back(std::vector<float>{0.381619f,
-                                           0.0323954f,
-                                           -0.14449f,
-                                           0.420804f,
-                                           -0.258721f,
-                                           0.45056f,
-                                           -0.250755f,
-                                           0.0967895f,
-                                           0.0f,
-                                           0.0f,
-                                           0.0f,
-                                           0.0f,
-                                           0.0f,
-                                           0.0f,
-                                           0.0f,
-                                           0.0f});
-    // P
-    inputs.emplace_back(std::vector<float>{0.2345f, 0.5235f, 0.4378f, 0.3475f, 0.8927f, 0.3456f});
-
-    Outputs expected_output{};
-    // Y_data
-    expected_output.emplace_back(
-        std::vector<float>{-0.02280854f, 0.02744377f, -0.03516197f, 0.03875681f});
-    // Y_h_data
-    expected_output.emplace_back(std::vector<float>{-0.03516197f, 0.03875681f});
-    // Y_c_data
-    expected_output.emplace_back(std::vector<float>{-0.07415761f, 0.07395997f});
-
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-
-    EXPECT_TRUE(outputs.size() == expected_output.size());
-    for (std::size_t i{0}; i < expected_output.size(); ++i)
-    {
-        // We have to enlarge tolerance bits to 3 - it's only one bit more than default value.
-        // The discrepancies may occur at most on 7th decimal position.
-        EXPECT_TRUE(test::all_close_f(expected_output.at(i), outputs.at(i), 3));
-    }
-}
-
-NGRAPH_TEST(onnx_${BACKEND_NAME}, model_missing_input)
-{
-    onnx_import::register_operator(
-        "TestMissingInOut", 1, "com.intel.ai", [](const onnx_import::Node& node) -> NodeVector {
-            NodeVector ng_inputs{node.get_ng_inputs()};
-            std::shared_ptr<ngraph::Node> A = ng_inputs.at(0);
-            std::shared_ptr<ngraph::Node> B = ng_inputs.at(1);
-            std::shared_ptr<ngraph::Node> C = ng_inputs.at(2);
-
-            A = A * C;
-            if (!B->is_null())
-            {
-                B = B / C;
-            }
-
-            C = C + C;
-            return {A, B, C};
-        });
-
-    onnx_import::register_operator(
-        "TestMissingIn", 1, "com.intel.ai", [](const onnx_import::Node& node) -> NodeVector {
-            NodeVector ng_inputs{node.get_ng_inputs()};
-            std::shared_ptr<ngraph::Node> result = std::make_shared<ngraph::op::Constant>(
-                element::f32, ngraph::Shape{2, 2}, std::vector<float>{1, 1, 1, 1});
-
-            for (const auto& ng_input : ng_inputs)
-            {
-                if (!ng_input->is_null())
-                {
-                    result = ng_input * result;
-                }
-            }
-
-            return {result};
-        });
-
-    auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/missing_input.prototxt"));
-
-    Inputs inputs{{1, 2, 3, 4}, {5, 6, 7, 8}};
-    Outputs expected_outputs{{50, 144, 294, 512}};
-
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sinh)
@@ -1656,21 +1314,6 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_cosh)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-NGRAPH_TEST(onnx_${BACKEND_NAME}, model_initializer_wo_input)
-{
-    // This test checks a model which has an initializer, but no input with the same name
-    auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/initializer_wo_input.prototxt"));
-
-    Inputs inputs;
-    inputs.emplace_back(std::vector<float>{0, 1, 2, 3, 4, 5});
-
-    std::vector<float> expected_output{0, 2, 6, 12, 20, 30};
-
-    Outputs output{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_output, output.front()));
-}
-
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sign)
 {
     auto function =
@@ -1685,65 +1328,6 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sign)
     Outputs expected_outputs{std::vector<float>{-1.0f, -1.0f, 0.0f, 1.0f, 1.0f}};
 
     Outputs outputs{execute<float>(function, inputs, "${BACKEND_NAME}")};
-
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
-}
-
-NGRAPH_TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p0)
-{
-    auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/global_lp_pool_p0.prototxt"));
-
-    std::vector<std::vector<std::int64_t>> inputs{std::vector<std::int64_t>{
-        1, 0, -4, 0, 2, 1, -6, 1, 0, 0, 0, 0, -7, 1, -1, 0, -1, 8, 0, 10, 9, 0, 0, 5}};
-
-    std::vector<std::vector<std::int64_t>> expected_outputs{std::vector<std::int64_t>{6, 8}};
-
-    std::vector<std::vector<std::int64_t>> outputs{execute(function, inputs, "${BACKEND_NAME}")};
-
-    EXPECT_TRUE(test::all_close(expected_outputs.front(), outputs.front()));
-}
-
-NGRAPH_TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p1)
-{
-    auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/global_lp_pool_p1.prototxt"));
-
-    Inputs inputs{std::vector<float>(2 * 3 * 4)};
-    std::iota(std::begin(inputs.front()), std::end(inputs.front()), 0.f);
-
-    Outputs expected_outputs{std::vector<float>{66.f, 210.f}};
-
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
-}
-
-NGRAPH_TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p2)
-{
-    auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/global_lp_pool_p2.prototxt"));
-
-    Inputs inputs{std::vector<float>(2 * 3 * 4)};
-    std::iota(std::begin(inputs.front()), std::end(inputs.front()), 0.f);
-
-    Outputs expected_outputs{std::vector<float>{22.494444f, 61.789967f}};
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
-}
-
-NGRAPH_TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p3)
-{
-    auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/global_lp_pool_p3.prototxt"));
-
-    Inputs inputs{std::vector<float>(2 * 3 * 4)};
-    std::iota(std::begin(inputs.front()), std::end(inputs.front()), 0.f);
-
-    Outputs expected_outputs{std::vector<float>{16.331620904278438f, 41.56697946707537f}};
-
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
 
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
@@ -1804,142 +1388,6 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_where)
     std::vector<std::vector<int>> outputs{execute(function, inputs, "${BACKEND_NAME}")};
 
     EXPECT_EQ(expected_outputs.front(), outputs.front());
-}
-
-NGRAPH_TEST(onnx_${BACKEND_NAME}, model_override_op)
-{
-    onnx_import::register_operator(
-        "FalseAdd", 1, "", [](const onnx_import::Node& node) -> NodeVector {
-            NodeVector ng_inputs{node.get_ng_inputs()};
-            return {std::make_shared<ngraph::op::Add>(ng_inputs.at(0), ng_inputs.at(1))};
-        });
-
-    onnx_import::register_operator(
-        "FalseAdd", 1, "", [](const onnx_import::Node& node) -> NodeVector {
-            NodeVector ng_inputs{node.get_ng_inputs()};
-            return {std::make_shared<ngraph::op::Subtract>(ng_inputs.at(0), ng_inputs.at(1))};
-        });
-
-    auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/override_op.prototxt"));
-
-    Inputs inputs;
-    inputs.emplace_back(std::vector<float>{0.f, 1.f, 2.f, 3.f});
-    inputs.emplace_back(std::vector<float>{3.f, 2.f, 1.f, 0.f});
-
-    Outputs expected_output{std::vector<float>{-3.f, -1.f, 1.f, 3.f}};
-
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
-}
-
-NGRAPH_TEST(onnx_${BACKEND_NAME}, import_non_existing_file)
-{
-    try
-    {
-        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/i.dont.exist"));
-    }
-    catch (const std::runtime_error& exc)
-    {
-        // asserts that an exception was thrown and that the error message contains the file name
-        std::string msg{exc.what()};
-        EXPECT_TRUE(msg.find("i.dont.exist") != std::string::npos);
-    }
-}
-
-NGRAPH_TEST(onnx_${BACKEND_NAME}, model_lstm_fwd_mixed_seq)
-{
-    auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/lstm_fwd_mixed_seq.prototxt"));
-
-    int hidden_size{3};
-    int parameters_cout{5};
-
-    // X
-    std::vector<float> in_x{1.f, 2.f, 10.f, 11.f};
-    // W
-    std::vector<float> in_w{0.1f, 0.2f, 0.3f, 0.4f, 1.f, 2.f, 3.f, 4.f, 10.f, 11.f, 12.f, 13.f};
-    // R
-    std::vector<float> in_r(4 * hidden_size * hidden_size, 0.1f);
-    // B
-    std::vector<float> in_b(8 * hidden_size, 0.0f);
-
-    std::vector<int> in_seq_lengths{1, 2};
-
-    std::vector<float> out_y_data{0.28828835f,
-                                  0.36581863f,
-                                  0.45679406f,
-                                  0.34526032f,
-                                  0.47220859f,
-                                  0.55850911f,
-                                  0.f,
-                                  0.f,
-                                  0.f,
-                                  0.85882828f,
-                                  0.90703777f,
-                                  0.92382453f};
-
-    std::vector<float> out_y_h_data{
-        0.28828835f, 0.36581863f, 0.45679406f, 0.85882828f, 0.90703777f, 0.92382453f};
-
-    std::vector<float> out_y_c_data{
-        0.52497941f, 0.54983425f, 0.5744428f, 1.3249796f, 1.51063104f, 1.61451544f};
-
-    Outputs expected_output;
-
-    expected_output.emplace_back(out_y_data);
-    expected_output.emplace_back(out_y_h_data);
-    expected_output.emplace_back(out_y_c_data);
-
-    auto backend = ngraph::runtime::Backend::create("${BACKEND_NAME}");
-    auto parameters = function->get_parameters();
-
-    EXPECT_TRUE(parameters.size() == parameters_cout);
-
-    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> arg_tensors;
-
-    auto add_tensor = [&arg_tensors, &backend](const std::vector<float>& v,
-                                               const std::shared_ptr<ngraph::op::Parameter>& p) {
-        auto t = backend->create_tensor(p->get_element_type(), p->get_shape());
-        copy_data(t, v);
-        arg_tensors.push_back(t);
-    };
-
-    add_tensor(in_x, parameters.at(0));
-    add_tensor(in_w, parameters.at(1));
-    add_tensor(in_r, parameters.at(2));
-    add_tensor(in_b, parameters.at(3));
-
-    auto t_in_seq_lengths =
-        backend->create_tensor(parameters.at(4)->get_element_type(), parameters.at(4)->get_shape());
-    copy_data(t_in_seq_lengths, in_seq_lengths);
-    arg_tensors.push_back(t_in_seq_lengths);
-
-    auto results = function->get_results();
-    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> result_tensors(results.size());
-
-    for (std::size_t i{0}; i < results.size(); ++i)
-    {
-        result_tensors.at(i) =
-            backend->create_tensor(results.at(i)->get_element_type(), results.at(i)->get_shape());
-    }
-
-    auto handle = backend->compile(function);
-    handle->call_with_validate(result_tensors, arg_tensors);
-
-    Outputs outputs;
-    for (auto rt : result_tensors)
-    {
-        outputs.push_back(read_vector<float>(rt));
-    }
-
-    EXPECT_TRUE(outputs.size() == expected_output.size());
-    for (std::size_t i{0}; i < expected_output.size(); ++i)
-    {
-        // We have to enlarge tolerance bits to 3 - it's only one bit more than default value.
-        // The discrepancies may occur at most on 7th decimal position.
-        EXPECT_TRUE(test::all_close_f(expected_output.at(i), outputs.at(i), 3));
-    }
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_erf)
