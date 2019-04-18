@@ -45,10 +45,10 @@
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/tanh.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
-#include "utils/broadcasting.hpp"
 #include "utils/common.hpp"
 #include "utils/reshape.hpp"
 #include "utils/rnn/activation_functions.hpp"
@@ -64,21 +64,21 @@ namespace ngraph
                 std::shared_ptr<ngraph::Node> add(const std::shared_ptr<ngraph::Node>& lhs,
                                                   const std::shared_ptr<ngraph::Node>& rhs)
                 {
-                    auto args = numpy_style_broadcast({lhs, rhs});
+                    auto args = ngraph::op::numpy_style_broadcast({lhs, rhs});
                     return {std::make_shared<ngraph::op::Add>(args.at(0), args.at(1))};
                 }
 
                 std::shared_ptr<ngraph::Node> sub(const std::shared_ptr<ngraph::Node>& lhs,
                                                   const std::shared_ptr<ngraph::Node>& rhs)
                 {
-                    auto args = numpy_style_broadcast({lhs, rhs});
+                    auto args = ngraph::op::numpy_style_broadcast({lhs, rhs});
                     return {std::make_shared<ngraph::op::Subtract>(args.at(0), args.at(1))};
                 }
 
                 std::shared_ptr<ngraph::Node> mul(const std::shared_ptr<ngraph::Node>& lhs,
                                                   const std::shared_ptr<ngraph::Node>& rhs)
                 {
-                    auto args = numpy_style_broadcast({lhs, rhs});
+                    auto args = ngraph::op::numpy_style_broadcast({lhs, rhs});
                     return {std::make_shared<ngraph::op::Multiply>(args.at(0), args.at(1))};
                 }
 
@@ -504,7 +504,7 @@ namespace ngraph
                                                           time_step));
 
                         std::shared_ptr<ngraph::Node> batch_seq_length =
-                            legacy_style_broadcast_for_binary_operation(
+                            ngraph::op::legacy_style_broadcast_for_binary_operation(
                                 curr_time_step_node, m_seq_lengths, batch_axis)
                                 .at(1);
 

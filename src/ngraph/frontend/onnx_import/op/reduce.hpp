@@ -28,7 +28,7 @@
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/sum.hpp"
-#include "utils/broadcasting.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 #include "utils/norm.hpp"
 #include "utils/reduction.hpp"
 
