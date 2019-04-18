@@ -20,7 +20,7 @@
 
 namespace ngraph
 {
-    static bool provenance_enabled = std::getenv("NGRAPH_PROVENANCE_ENABLE") != nullptr;
+    static bool s_provenance_enabled = std::getenv("NGRAPH_PROVENANCE_ENABLE") != nullptr;
     void set_provenance_enabled(bool enabled);
     bool get_provenance_enabled();
 }
