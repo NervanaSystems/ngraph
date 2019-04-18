@@ -2849,3 +2849,18 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_erf)
 
     EXPECT_TRUE(test::all_close_f(expected_outputs, outputs.front()));
 }
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_erf_int32)
+{
+    const auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/erf_int32.prototxt"));
+
+    const std::vector<std::vector<int32_t>> inputs{
+        {-std::numeric_limits<int32_t>::max(), -1, 0, 1, std::numeric_limits<int32_t>::max()}};
+
+    const std::vector<int32_t> expected_outputs{-1, 0, 0, 0, 1};
+
+    const std::vector<std::vector<int32_t>> outputs{execute(function, inputs, "${BACKEND_NAME}")};
+
+    EXPECT_TRUE(test::all_close(expected_outputs, outputs.front()));
+}
