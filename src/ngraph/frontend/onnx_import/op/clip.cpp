@@ -23,7 +23,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
-#include "utils/broadcasting.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 
 namespace ngraph
 {
@@ -46,13 +46,15 @@ namespace ngraph
                         std::make_shared<ngraph::op::Constant>(data->get_element_type(),
                                                                ngraph::Shape{},
                                                                std::vector<double>{max_value});
-                    max_value_node = make_broadcast_node(max_value_node, data->get_shape());
+                    max_value_node =
+                        ngraph::op::make_broadcast_node(max_value_node, data->get_shape());
 
                     std::shared_ptr<ngraph::Node> min_value_node =
                         std::make_shared<ngraph::op::Constant>(data->get_element_type(),
                                                                ngraph::Shape{},
                                                                std::vector<double>{min_value});
-                    min_value_node = make_broadcast_node(min_value_node, data->get_shape());
+                    min_value_node =
+                        ngraph::op::make_broadcast_node(min_value_node, data->get_shape());
 
                     return {std::make_shared<ngraph::op::Minimum>(
                         max_value_node,
