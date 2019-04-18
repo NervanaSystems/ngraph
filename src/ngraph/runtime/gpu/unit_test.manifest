@@ -123,7 +123,7 @@ model_dequantize_linear_1d_zero_scale_int8_4d
 model_dequantize_linear_1d_zero_scale_uint8_negative_axis
 model_quantize_linear
 model_quantize_linear_zero_point
-quantize_linear_axis_zero
+model_quantize_linear_axis_zero
 model_quantize_linear_axis_negative
 model_quant_conv_linear
 model_quant_conv_linear_2d
@@ -137,6 +137,7 @@ create_tensor_2_output
 erf
 zero_sized_erf
 model_erf
+model_erf_int32
 gather_no_axis
 gather
 gather_nd_scalar_from_2d
@@ -152,4 +153,3 @@ gather_nd_batch_2d_from_3d
 gather_scalar_indices_no_axis
 gather_scalar_indices
 gather_nd_single_indices
-

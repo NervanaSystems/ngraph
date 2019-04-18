@@ -16,25 +16,11 @@
 
 #pragma once
 
-#include <CPP/topology.hpp>
-
-#include "ngraph/shape.hpp"
-#include "ngraph/type/element_type.hpp"
+#include <cstdlib>
 
 namespace ngraph
 {
-    namespace runtime
-    {
-        namespace intelgpu
-        {
-            void do_softmax_operation(cldnn::topology& topology,
-                                      const std::string& input_name,
-                                      const Shape& input_shape,
-                                      const element::Type& input_type,
-                                      const std::string& output_name,
-                                      const Shape& output_shape,
-                                      const element::Type& output_type,
-                                      const AxisSet& axes);
-        }
-    }
+    static bool s_provenance_enabled = std::getenv("NGRAPH_PROVENANCE_ENABLE") != nullptr;
+    void set_provenance_enabled(bool enabled);
+    bool get_provenance_enabled();
 }
