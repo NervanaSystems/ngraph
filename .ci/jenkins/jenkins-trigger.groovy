@@ -24,7 +24,7 @@
 // Parameters which ngraph-unittest uses:
 String  PR_URL = CHANGE_URL
 String  PR_COMMIT_AUTHOR = CHANGE_AUTHOR
-String  JENKINS_BRANCH = "Aslepko/winclean"
+String  JENKINS_BRANCH = "aslepko/simple_ci"
 Integer TIMEOUTTIME = "3600"
 // BRANCH parameter is no loner needed
 // TRIGGER_URL parameter is no longer needed
@@ -49,7 +49,7 @@ timestamps {
         //      contain references to technology which has not yet been released.
         //
         echo "Calling ngraph-ci-premerge.groovy"
-        def ngraphCIPreMerge = load("${JENKINS_DIR}/ngraph-ci-premerge.groovy")
+        def ngraphCIPreMerge = load("${JENKINS_DIR}/ngraph-ci-checks.groovy")
         ngraphCIPreMerge(PR_URL, PR_COMMIT_AUTHOR, JENKINS_BRANCH, TIMEOUTTIME)
         echo "ngraph-ci-premerge.groovy completed"
 
