@@ -3,6 +3,6 @@
 .. _sitemap.rst:
  
 .. toctree::
-   :includehidden:
- 
+   :includehidden: 
+
    index.rst

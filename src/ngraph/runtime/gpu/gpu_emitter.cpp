@@ -44,6 +44,7 @@
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/broadcast_distributed.hpp"
 #include "ngraph/op/ceiling.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
@@ -56,8 +57,13 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/equal.hpp"
+#include "ngraph/op/erf.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/batch_mat_mul.hpp"
 #include "ngraph/op/experimental/dyn_broadcast.hpp"
+#include "ngraph/op/experimental/dyn_pad.hpp"
+#include "ngraph/op/experimental/dyn_reshape.hpp"
+#include "ngraph/op/experimental/dyn_slice.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
@@ -69,6 +75,8 @@
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/floor.hpp"
+#include "ngraph/op/gather.hpp"
+#include "ngraph/op/gather_nd.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
@@ -325,6 +333,11 @@ std::string runtime::gpu::GPU_Emitter::emit_AvgPoolBackprop(EMIT_ARGS)
     }
 }
 
+std::string runtime::gpu::GPU_Emitter::emit_BatchMatMul(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
 template <typename T>
 std::string emit_BatchNorm(EMIT_ARGS, runtime::gpu::CUDNNEmitter::Prop direction, bool save_stats)
 {
@@ -544,6 +557,11 @@ std::string runtime::gpu::GPU_Emitter::emit_Cosh(EMIT_ARGS)
     return emit_elementwise<ngraph::op::Cosh>(compiled_function, function_name, node, args, out);
 }
 
+std::string runtime::gpu::GPU_Emitter::emit_BroadcastDistributed(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
 std::string runtime::gpu::GPU_Emitter::emit_Divide(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Divide>(compiled_function, function_name, node, args, out);
@@ -588,6 +606,16 @@ std::string runtime::gpu::GPU_Emitter::emit_Dot(EMIT_ARGS)
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
+std::string runtime::gpu::GPU_Emitter::emit_DynReshape(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_DynSlice(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
 std::string runtime::gpu::GPU_Emitter::emit_EmbeddingLookup(EMIT_ARGS)
 {
     throw ngraph_error("EmbeddingLookup is not yet implemented for NVIDIA GPU");
@@ -598,6 +626,11 @@ std::string runtime::gpu::GPU_Emitter::emit_Equal(EMIT_ARGS)
     return emit_elementwise<ngraph::op::Equal>(compiled_function, function_name, node, args, out);
 }
 
+std::string runtime::gpu::GPU_Emitter::emit_Erf(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
 std::string runtime::gpu::GPU_Emitter::emit_Exp(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Exp>(compiled_function, function_name, node, args, out);
@@ -606,6 +639,16 @@ std::string runtime::gpu::GPU_Emitter::emit_Exp(EMIT_ARGS)
 std::string runtime::gpu::GPU_Emitter::emit_Floor(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Floor>(compiled_function, function_name, node, args, out);
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_Gather(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_GatherND(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_GenerateMask(EMIT_ARGS)
@@ -1370,7 +1413,7 @@ std::string runtime::gpu::GPU_Emitter::emit_TopK(EMIT_ARGS)
     auto index_elem_type = topk->get_index_element_type();
     bool compute_max = topk->get_compute_max();
     std::vector<element::Type> dtypes{args[0].get_element_type()};
-    NGRAPH_ASSERT(out.size() == 2) << "TopK can only have 2 outputs";
+    NGRAPH_CHECK(out.size() == 2, "TopK can only have 2 outputs");
     for (size_t i = 0; i < out.size(); i++)
     {
         dtypes.push_back(out[i].get_element_type());
@@ -1384,6 +1427,11 @@ std::string runtime::gpu::GPU_Emitter::emit_TopK(EMIT_ARGS)
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_DynBroadcast(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_DynPad(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }

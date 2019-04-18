@@ -81,7 +81,7 @@ vector<PerfShape> to_perf_shape(shared_ptr<Function> f,
             throw runtime_error(os.str());
         }
 
-        Shape shape = node->get_outputs()[0].get_shape();
+        Shape shape = node->output(0).get_shape();
         result.push_back(PerfShape(p, shape));
     }
     return result;
@@ -167,7 +167,7 @@ element::Type get_op_element_type(const Node& op)
     element::Type type;
     if (op.description() == "Convert")
     {
-        type = op.get_input_element_type(0);
+        type = op.input(0).get_element_type();
     }
     else if (op.description() == "Equal" || op.description() == "Greater" ||
              op.description() == "GreaterEq" || op.description() == "Less" ||
@@ -176,11 +176,11 @@ element::Type get_op_element_type(const Node& op)
         // Get the type of the second input, not the first
         // All BinaryElementwiseComparision ops have the same type for inputs
         // Select has bool for first input and the type we are interested in for the second
-        type = op.get_input_element_type(1);
+        type = op.input(1).get_element_type();
     }
     else
     {
-        type = op.get_outputs().at(0).get_element_type();
+        type = op.output(0).get_element_type();
     }
     return type;
 }
@@ -359,7 +359,7 @@ OPTIONS
                 {
                     string name = node->get_name();
                     string op_name = name.substr(0, name.find('_'));
-                    string shape_name = "{" + join(node->get_outputs()[0].get_shape()) + "}";
+                    string shape_name = "{" + join(node->output(0).get_shape()) + "}";
                     op_list[op_name + shape_name]++;
                     auto et = get_op_element_type(*node);
                     string type_string = et.c_type_string();
@@ -367,8 +367,8 @@ OPTIONS
 
                     if (op_name == "Constant")
                     {
-                        const Shape& shape = node->get_outputs()[0].get_shape();
-                        size_t const_size = node->get_outputs()[0].get_element_type().size();
+                        const Shape& shape = node->output(0).get_shape();
+                        size_t const_size = node->output(0).get_element_type().size();
                         if (shape.size() == 0)
                         {
                             total_constant_bytes += const_size;
@@ -376,7 +376,7 @@ OPTIONS
                         else
                         {
                             total_constant_bytes +=
-                                (const_size * shape_size(node->get_outputs()[0].get_shape()));
+                                (const_size * shape_size(node->output(0).get_shape()));
                         }
                     }
                 }

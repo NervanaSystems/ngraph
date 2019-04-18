@@ -55,10 +55,25 @@ namespace ngraph
                     Shape y_scale_shape = x_scale->get_shape();
                     Shape y_zero_point_shape = zero_point->get_shape();
 
-                    ASSERT_VALID_ARGUMENT(node, y_scale_shape.size() == 0)
-                        << "x_scale must be a scalar.";
-                    ASSERT_VALID_ARGUMENT(node, y_zero_point_shape.size() == 0)
-                        << "zero_point must be a scalar.";
+                    // get axis twice with two default values to see if it is set
+                    int64_t axis_0{node.get_attribute_value<int64_t>("axis", 0)};
+                    int64_t axis_1{node.get_attribute_value<int64_t>("axis", 1)};
+
+                    AxisSet axes;
+                    // if axis attribute is set
+                    if (axis_0 == axis_1)
+                    {
+                        // positive axis
+                        if (axis_0 >= 0)
+                        {
+                            axes.insert(axis_0);
+                        }
+                        // negative axis
+                        else if (axis_0 < 0)
+                        {
+                            axes.insert(x->get_shape().size() + axis_0);
+                        }
+                    }
 
                     if (x->get_element_type() != zero_point->get_element_type())
                     {
@@ -67,7 +82,7 @@ namespace ngraph
                     }
 
                     return {std::make_shared<ngraph::op::Dequantize>(
-                        x, x_scale, zero_point, x_scale->get_element_type(), AxisSet{})};
+                        x, x_scale, zero_point, x_scale->get_element_type(), axes)};
                 }
 
             } // namespace set_1

@@ -83,8 +83,7 @@ ONNX
 ====
 
 Additionally, we validated the following workloads are functional through 
-`nGraph ONNX importer`_: 
-
+`nGraph ONNX importer`_. ONNX models can be downloaded from the `ONNX Model Zoo`_.
 
 .. csv-table::
    :header: "ONNX Workload", "Genre of Deep Learning"
@@ -92,9 +91,11 @@ Additionally, we validated the following workloads are functional through
    :escape: ~
 
    ResNet-50, Image recognition
+   ResNet-50-v2, Image recognition
    DenseNet-121, Image recognition
    Inception-v1, Image recognition
    Inception-v2, Image recognition
+   Mobilenet, Image recognition
    Shufflenet, Image recognition
    SqueezeNet, Image recognition
    VGG-19, Image recognition
@@ -104,7 +105,8 @@ Additionally, we validated the following workloads are functional through
    BVLC AlexNet, Image recognition
    BVLC GoogleNet, Image recognition
    BVLC CaffeNet, Image recognition
-   BVLC R-CNN ILSVRC13, Object detection 
+   BVLC R-CNN ILSVRC13, Object detection
+   ArcFace, Face Detection and Recognition
 
 
 .. important:: Please see Intel's `Optimization Notice`_ for details on disclaimers. 
@@ -123,6 +125,7 @@ Additionally, we validated the following workloads are functional through
 
 .. _Optimization Notice: https://software.intel.com/en-us/articles/optimization-notice
 .. _nGraph ONNX importer: https://github.com/NervanaSystems/ngraph-onnx/blob/master/README.md
+.. _ONNX Model Zoo: https://github.com/onnx/models
 
 .. Notice revision #20110804: Intel's compilers may or may not optimize to the same degree for 
    non-Intel microprocessors for optimizations that are not unique to Intel microprocessors. 

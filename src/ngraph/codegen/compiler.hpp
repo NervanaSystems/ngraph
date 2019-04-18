@@ -93,6 +93,9 @@ private:
     std::string m_source_name;
     std::vector<std::string> m_extra_search_path_list;
     std::string m_precompiled_header_source;
+#ifdef _WIN32
+    std::vector<std::string> m_header_strings;
+#endif
 
     bool is_version_number(const std::string& path);
     int full_version_number(const std::string& path, const std::string& gpp_ver);

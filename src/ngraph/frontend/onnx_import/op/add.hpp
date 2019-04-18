@@ -31,7 +31,10 @@ namespace ngraph
             {
                 inline NodeVector add(const Node& node)
                 {
-                    auto axis = node.get_attribute_value<int64_t>("axis", 0);
+                    auto left_rank = node.get_ng_inputs().at(0)->get_shape().size();
+                    auto right_rank = node.get_ng_inputs().at(1)->get_shape().size();
+                    auto axis =
+                        node.get_attribute_value<std::int64_t>("axis", left_rank - right_rank);
                     NodeVector ng_inputs{legacy_style_broadcast_for_binary_operation(
                         node.get_ng_inputs().at(0), node.get_ng_inputs().at(1), axis)};
 

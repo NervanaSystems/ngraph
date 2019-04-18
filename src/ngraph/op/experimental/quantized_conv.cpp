@@ -30,13 +30,15 @@ op::QuantizedConvolution::QuantizedConvolution(const shared_ptr<Node>& data_batc
                                                const CoordinateDiff& padding_below,
                                                const CoordinateDiff& padding_above,
                                                const Strides& data_dilation_strides,
-                                               const std::shared_ptr<Node> scale)
+                                               const std::shared_ptr<Node> scale,
+                                               const bool requantize)
     : Op("QuantizedConvolution", check_single_output_args({data_batch, filters, scale}))
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
     , m_padding_below(padding_below)
     , m_padding_above(padding_above)
     , m_data_dilation_strides(data_dilation_strides)
+    , m_requantize(requantize)
 {
     constructor_validate_and_infer_types();
 
@@ -45,8 +47,10 @@ op::QuantizedConvolution::QuantizedConvolution(const shared_ptr<Node>& data_batc
     auto& data_batch_shape = data_batch->get_shape();
     auto& filters_shape = filters->get_shape();
 
+    auto output_et = requantize ? element::i8 : element::i32;
+
     set_output_type(0,
-                    element::i8,
+                    output_et,
                     util::infer_convolution_output_shape(this,
                                                          data_batch_shape,
                                                          filters_shape,
@@ -76,5 +80,6 @@ shared_ptr<Node> op::QuantizedConvolution::copy_with_new_args(const NodeVector& 
                                                      get_padding_below(),
                                                      get_padding_above(),
                                                      get_data_dilation_strides(),
-                                                     new_args.at(2)));
+                                                     new_args.at(2),
+                                                     m_requantize));
 }

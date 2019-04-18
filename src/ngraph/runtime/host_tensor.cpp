@@ -24,6 +24,8 @@
 using namespace ngraph;
 using namespace std;
 
+static const size_t alignment = 64;
+
 runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type,
                                 const Shape& shape,
                                 void* memory_pointer,
@@ -46,7 +48,7 @@ runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type,
     }
     else if (m_buffer_size > 0)
     {
-        size_t allocation_size = m_buffer_size + runtime::alignment;
+        size_t allocation_size = m_buffer_size + alignment;
         m_allocated_buffer_pool = static_cast<char*>(ngraph_malloc(allocation_size));
         m_aligned_buffer_pool = m_allocated_buffer_pool;
         size_t mod = size_t(m_aligned_buffer_pool) % alignment;

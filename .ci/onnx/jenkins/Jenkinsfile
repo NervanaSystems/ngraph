@@ -17,10 +17,11 @@
 
 // Set LABEL variable if empty or not declared
 try{ if(LABEL.trim() == "") {throw new Exception();} }catch(Exception e){LABEL="onnx && ci"}; echo "${LABEL}"
+if(DOCKER_REGISTRY.trim() == "") {throw new Exception("Missing Docker registry url!");}
 // CI settings and constants
-PROJECT_NAME = "ngraph-onnx"
+PROJECT_NAME = "ngraph_cpp"
 CI_ROOT = "ngraph/.ci/onnx/jenkins"
-DOCKER_CONTAINER_NAME = "jenkins_${PROJECT_NAME}_ci"
+DOCKER_CONTAINER_NAME = "jenkins_ngraph-onnx_ci"
 NGRAPH_GIT_ADDRESS = "https://github.com/NervanaSystems/ngraph.git"
 ONNX_GIT_ADDRESS = "https://github.com/NervanaSystems/ngraph-onnx.git"
 JENKINS_GITHUB_CREDENTIAL_ID = "7157091e-bc04-42f0-99fd-dc4da2922a55"
@@ -81,24 +82,25 @@ def cloneRepository(String jenkins_github_credential_id, String ngraph_git_addre
     }
 }
 
-def buildImage(configurationMaps) {
-    Closure buildMethod = { configMap ->
+def pullImage(configurationMaps) {
+    Closure pullMethod = { configMap ->
         sh """
-            ${CI_ROOT}/utils/docker.sh build \
+            ${CI_ROOT}/utils/docker.sh pull \
+                                --docker_registry=${DOCKER_REGISTRY} \
                                 --name=${configMap["projectName"]} \
-                                --version=${configMap["name"]} \
-                                --dockerfile_path=${configMap["dockerfilePath"]}
+                                --version=${configMap["name"]} || return 1
         """
     }
-    UTILS.createStage("Build_image", buildMethod, configurationMaps)
+    UTILS.createStage("Pull_image", pullMethod, configurationMaps)
 }
 
 def runDockerContainers(configurationMaps) {
     Closure runContainerMethod = { configMap ->
-        UTILS.propagateStatus("Build_image", configMap["name"])
+        UTILS.propagateStatus("Pull_image", configMap["name"])
         sh """
             mkdir -p ${HOME}/ONNX_CI
             ${CI_ROOT}/utils/docker.sh start \
+                                --docker_registry=${DOCKER_REGISTRY} \
                                 --name=${configMap["projectName"]} \
                                 --version=${configMap["name"]} \
                                 --container_name=${configMap["dockerContainerName"]} \
@@ -133,16 +135,17 @@ def runToxTests(configurationMaps) {
 def cleanup(configurationMaps) {
     Closure cleanupMethod = { configMap ->
         sh """
+            docker exec ${configMap["dockerContainerName"]} bash -c 'rm -rf ~/*' || true
             cd ${HOME}/ONNX_CI
             ./docker.sh chmod --container_name=${configMap["dockerContainerName"]} --directory="/logs" --options="-R 777" || true
             ./docker.sh stop --container_name=${configMap["dockerContainerName"]} || true
             ./docker.sh remove --container_name=${configMap["dockerContainerName"]} || true
             ./docker.sh clean_up || true
-            rm ${HOME}/ONNX_CI/docker.sh
+            rm -rf ${HOME}/ONNX_CI/docker.sh
             rm -rf ${WORKSPACE}/${BUILD_NUMBER}
         """
     }
-    UTILS.createStage("Cleanup", cleanupMethod, configurationMaps)
+    UTILS.createStage("Cleanup", cleanupMethod, configurationMaps, true)
 }
 
 def notifyByEmail() {
@@ -171,7 +174,7 @@ def notifyByEmail() {
             )
         }
     }
-    UTILS.createStage("Notify", notifyMethod, configurationMaps)
+    UTILS.createStage("Notify", notifyMethod, configurationMaps, true)
 }
 
 def main(String label, String projectName, String projectRoot, String dockerContainerName, String jenkins_github_credential_id, String ngraph_git_address, String onnx_git_address) {
@@ -189,15 +192,15 @@ def main(String label, String projectName, String projectRoot, String dockerCont
                     // Create configuration maps
                     configurationMaps = UTILS.getDockerEnvList(projectName, dockerContainerName, projectRoot)
                     // Execute CI steps
-                    buildImage(configurationMaps)
+                    pullImage(configurationMaps)
                     runDockerContainers(configurationMaps)
                     prepareEnvironment(configurationMaps)
                     runToxTests(configurationMaps)
                 }
             }
-            catch(e) {
+            catch(Exception e) {
                 // Set result to ABORTED if exception contains exit code of a process interrupted by SIGTERM
-                if ("$e".contains("143")) {
+                if (e.toString().contains("FlowInterruptedException")) {
                     currentBuild.result = "ABORTED"
                 } else {
                     currentBuild.result = "FAILURE"
