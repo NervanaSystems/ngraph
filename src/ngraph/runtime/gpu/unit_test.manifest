@@ -136,6 +136,7 @@ create_tensor_2_output
 # Not implemented
 erf
 zero_sized_erf
+model_erf
 gather_no_axis
 gather
 gather_nd_scalar_from_2d

@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <numeric>
+
 #include "ngraph/coordinate_transform.hpp"
 #include "ngraph/runtime/reference/gather_nd.hpp"
 
@@ -80,7 +82,7 @@ namespace ngraph
                 }
                 Strides out_outer_strides(out_ndim, 1);
                 AxisVector out_outer_axis_order(out_ndim);
-                iota(out_outer_axis_order.begin(), out_outer_axis_order.end(), 0);
+                std::iota(out_outer_axis_order.begin(), out_outer_axis_order.end(), 0);
                 CoordinateTransform out_outer_transform(out_shape,
                                                         out_outer_start_corner,
                                                         out_outer_end_corner,
@@ -97,7 +99,7 @@ namespace ngraph
                 }
                 Strides params_outer_strides(params_ndim, 1);
                 AxisVector params_outer_axis_order(params_ndim);
-                iota(params_outer_axis_order.begin(), params_outer_axis_order.end(), 0);
+                std::iota(params_outer_axis_order.begin(), params_outer_axis_order.end(), 0);
                 CoordinateTransform params_outer_transform(params_shape,
                                                            params_outer_start_corner,
                                                            params_outer_end_corner,
@@ -113,7 +115,7 @@ namespace ngraph
                 }
                 Strides indices_outer_strides(indices_ndim, 1);
                 AxisVector indices_outer_axis_order(indices_ndim);
-                iota(indices_outer_axis_order.begin(), indices_outer_axis_order.end(), 0);
+                std::iota(indices_outer_axis_order.begin(), indices_outer_axis_order.end(), 0);
                 CoordinateTransform indices_outer_transform(indices_shape,
                                                             indices_outer_start_corner,
                                                             indices_outer_end_corner,
@@ -136,7 +138,7 @@ namespace ngraph
                 }
                 Strides out_inner_strides(out_inner_ndim, 1);
                 AxisVector out_inner_axis_order(out_inner_ndim);
-                iota(out_inner_axis_order.begin(), out_inner_axis_order.end(), 0);
+                std::iota(out_inner_axis_order.begin(), out_inner_axis_order.end(), 0);
                 CoordinateTransform out_inner_transform(out_inner_shape,
                                                         out_inner_start_corner,
                                                         out_inner_end_corner,
