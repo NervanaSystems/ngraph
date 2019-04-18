@@ -24,6 +24,7 @@ pass::PassBase::PassBase()
 {
     set_property(PassProperty::REGULAR_FUSIONS, true);
 }
+
 pass::ManagerState& pass::PassBase::get_state()
 {
     return *m_state;
@@ -38,6 +39,7 @@ bool pass::PassBase::get_property(const PassPropertyMask& prop) const
 {
     return m_property.is_set(prop);
 }
+
 void pass::PassBase::set_property(const PassPropertyMask& prop, bool value)
 {
     if (value)

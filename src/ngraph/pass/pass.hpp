@@ -48,11 +48,7 @@ namespace ngraph
         };
         enum class PassProperty : uint32_t
         {
-            //`DIFFERENTIABLE_FUSIONS` produce ops that support autodiff
-            // i.e. implement `generate_adjoints`
-            DIFFERENTIABLE_FUSIONS = 0x1,
             REGULAR_FUSIONS = 1 << 1,
-            ALL_FUSIONS = REGULAR_FUSIONS | DIFFERENTIABLE_FUSIONS,
             REQUIRE_STATIC_SHAPE = 1 << 2,
             CHANGE_FUNCTION_STATE = 1 << 3
         };
