@@ -37,6 +37,7 @@
 #include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
+#include "ngraph/op/gather.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max.hpp"
@@ -90,6 +91,8 @@
 #include "ngraph/runtime/reference/equal.hpp"
 #include "ngraph/runtime/reference/exp.hpp"
 #include "ngraph/runtime/reference/floor.hpp"
+#include "ngraph/runtime/reference/gather.hpp"
+#include "ngraph/runtime/reference/gather_nd.hpp"
 #include "ngraph/runtime/reference/generate_mask.hpp"
 #include "ngraph/runtime/reference/greater.hpp"
 #include "ngraph/runtime/reference/greater_eq.hpp"
@@ -765,6 +768,61 @@ private:
             size_t element_count = shape_size(node.get_output_shape(0));
             reference::floor<T>(
                 static_cast<const T*>(args[0]), static_cast<T*>(out[0]), element_count);
+            break;
+        }
+        case OP_TYPEID::Gather:
+        {
+            const op::Gather* gather = static_cast<const op::Gather*>(&node);
+            if (node.get_input_element_type(1) == element::i64)
+            {
+                reference::gather<T, int64_t>(args[0]->get_data_ptr<T>(),
+                                              args[1]->get_data_ptr<int64_t>(),
+                                              out[0]->get_data_ptr<T>(),
+                                              node.get_input_shape(0),
+                                              node.get_input_shape(1),
+                                              node.get_output_shape(0),
+                                              gather->get_axis());
+            }
+            else if (node.get_input_element_type(1) == element::i32)
+            {
+                reference::gather<T, int32_t>(args[0]->get_data_ptr<T>(),
+                                              args[1]->get_data_ptr<int32_t>(),
+                                              out[0]->get_data_ptr<T>(),
+                                              node.get_input_shape(0),
+                                              node.get_input_shape(1),
+                                              node.get_output_shape(0),
+                                              gather->get_axis());
+            }
+            else
+            {
+                throw ngraph_error("Unexpected type");
+            }
+            break;
+        }
+        case OP_TYPEID::GatherND:
+        {
+            if (node.get_input_element_type(1) == element::i64)
+            {
+                reference::gather_nd<T, int64_t>(args[0]->get_data_ptr<T>(),
+                                                 args[1]->get_data_ptr<int64_t>(),
+                                                 out[0]->get_data_ptr<T>(),
+                                                 node.get_input_shape(0),
+                                                 node.get_input_shape(1),
+                                                 node.get_output_shape(0));
+            }
+            else if (node.get_input_element_type(1) == element::i32)
+            {
+                reference::gather_nd<T, int32_t>(args[0]->get_data_ptr<T>(),
+                                                 args[1]->get_data_ptr<int32_t>(),
+                                                 out[0]->get_data_ptr<T>(),
+                                                 node.get_input_shape(0),
+                                                 node.get_input_shape(1),
+                                                 node.get_output_shape(0));
+            }
+            else
+            {
+                throw ngraph_error("Unexpected type");
+            }
             break;
         }
         case OP_TYPEID::Greater:
