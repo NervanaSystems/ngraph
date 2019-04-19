@@ -2,4 +2,3 @@ computation_reuse
 tensorview_custom_mem
 batch_norm_inference_f64
 batch_norm_inference_f32
-divide_by_zero_int32

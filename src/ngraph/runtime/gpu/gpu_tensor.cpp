@@ -72,12 +72,37 @@ runtime::gpu::GPUTensor::~GPUTensor()
     }
 }
 
-void runtime::gpu::GPUTensor::write(const void* source, size_t tensor_offset, size_t n)
+void runtime::gpu::GPUTensor::write(const void* source, size_t tensor_offset, size_t n_bytes)
 {
-    CUDA_RT_SAFE_CALL(cudaMemcpy(m_allocated_buffer_pool, source, n, cudaMemcpyHostToDevice));
+    runtime::gpu::cuda_memcpyHtD(m_allocated_buffer_pool, source, n_bytes);
 }
 
-void runtime::gpu::GPUTensor::read(void* target, size_t tensor_offset, size_t n) const
+void runtime::gpu::GPUTensor::read(void* target, size_t tensor_offset, size_t n_bytes) const
 {
-    CUDA_RT_SAFE_CALL(cudaMemcpy(target, m_allocated_buffer_pool, n, cudaMemcpyDeviceToHost));
+    runtime::gpu::cuda_memcpyDtH(target, m_allocated_buffer_pool, n_bytes);
+}
+
+void runtime::gpu::GPUTensor::copy_from(const runtime::Tensor& source)
+{
+    try
+    {
+        const GPUTensor& src = dynamic_cast<const GPUTensor&>(source);
+
+        if (get_element_count() != src.get_element_count())
+        {
+            throw invalid_argument("runtime::gpu::GPUTensor::copy_from element count must match.");
+        }
+        if (get_element_type() != src.get_element_type())
+        {
+            throw invalid_argument("runtime::gpu::GPUTensor::copy_from element types must match.");
+        }
+        runtime::gpu::cuda_memcpyDtD(
+            m_allocated_buffer_pool, src.m_allocated_buffer_pool, source.get_size_in_bytes());
+    }
+    catch (const std::bad_cast& e)
+    {
+        throw invalid_argument(
+            "runtime::gpu::GPUTensor::copy_from source must be a GPUTensor. ErrMsg:\n" +
+            std::string(e.what()));
+    }
 }

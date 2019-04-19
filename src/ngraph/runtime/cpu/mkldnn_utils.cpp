@@ -25,13 +25,13 @@
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
-#include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/type/element_type.hpp"
 
@@ -40,6 +40,20 @@
 using namespace mkldnn;
 using namespace ngraph;
 using namespace std;
+
+#if defined(MKLDNN_VERSION_MAJOR) && defined(MKLDNN_VERSION_MINOR) && defined(MKLDNN_VERSION_PATCH)
+/** Intel(R) MKL-DNN Version type */
+/* typedef struct {
+    int    major;
+    int    minor;
+    int    patch;
+    const char *hash;
+} mkldnn_version_t; */
+static const mkldnn_version_t* get_mkldnn_version()
+{
+    return mkldnn_version();
+}
+#endif
 
 std::map<element::Type, const mkldnn::memory::data_type>&
     runtime::cpu::mkldnn_utils::get_mkldnn_data_type_map()
@@ -691,7 +705,7 @@ bool runtime::cpu::mkldnn_utils::use_mkldnn_kernel(const ngraph::Node* node)
 
 void runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(Node* node)
 {
-    auto ngraph_op = static_cast<op::Op*>(node);
+    auto ngraph_op = static_cast<ngraph::op::Op*>(node);
     auto op_annotations = std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
     op_annotations->set_mkldnn_op(true);
     ngraph_op->set_op_annotations(op_annotations);
@@ -710,6 +724,25 @@ bool runtime::cpu::mkldnn_utils::can_use_mkldnn_batchnorm_fprop(const ngraph::No
     {
         return false;
     }
+}
+
+mkldnn::algorithm runtime::cpu::mkldnn_utils::get_deconv_algo()
+{
+    // Note: there is no deconvolution_auto, so for now will return direct
+    // TODO:
+    return mkldnn::algorithm::deconvolution_direct;
+}
+
+mkldnn::algorithm runtime::cpu::mkldnn_utils::get_conv_algo()
+{
+#if defined(MKLDNN_VERSION_MAJOR) && defined(MKLDNN_VERSION_MINOR) && defined(MKLDNN_VERSION_PATCH)
+    auto mkldnn_version = get_mkldnn_version();
+    if (mkldnn_version->major >= 0 && mkldnn_version->minor >= 18 && mkldnn_version->patch >= 0)
+    {
+        return mkldnn::algorithm::convolution_auto;
+    }
+#endif
+    return mkldnn::algorithm::convolution_direct;
 }
 
 bool runtime::cpu::mkldnn_utils::can_use_mkldnn_batchnorm_bprop(const ngraph::Node* node)

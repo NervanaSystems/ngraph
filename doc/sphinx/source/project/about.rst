@@ -20,7 +20,7 @@ stack diagram is simplified to show how nGraph executes deep learning
 workloads with two hardware backends; however, many other deep learning
 frameworks and backends currently are functioning.
 
-.. figure:: ../graphics/stackngrknl.png
+.. figure:: ../graphics/stackngrknl-notice.png
    :alt: 
 
 Bridge

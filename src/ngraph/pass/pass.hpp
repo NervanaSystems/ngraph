@@ -40,6 +40,9 @@ namespace ngraph
             // i.e. implement `generate_adjoints`
             DIFFERENTIABLE_FUSIONS = 0x1,
             REGULAR_FUSIONS = 0x2,
+            //`FOP_FUSIONS` produce ops in the FusedOps category that might
+            // not be supported by all backends
+            FOP_FUSIONS = 0x4,
             ALL_FUSIONS = 0xFFFFFFFF
         };
     }

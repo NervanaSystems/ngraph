@@ -33,9 +33,9 @@ namespace ngraph
         ///
         /// ## Inputs
         ///
-        /// |       | Type                                                    | Description                                 |
-        /// | ----- | ------------------------------------------------------- | ------------------------------------------- |
-        /// | `arg` | \f$E[d_1,\dots,d_{m-1},d_{m+1},\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape and any element type. |
+        /// |       | Type                                                    | Description                                                    |
+        /// | ----- | ------------------------------------------------------- | -------------------------------------------------------------- |
+        /// | `arg` | \f$E[d_1,\dots,d_{m-1},d_{m+1},\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape and any non-floating point element type. |
         ///
         /// ## Output
         ///

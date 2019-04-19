@@ -49,7 +49,8 @@ NGRAPH_TEST(${BACKEND_NAME}, abs)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{1, 2, 0, 4.75f}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{1, 2, 0, 4.75f}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, acos)
@@ -154,7 +155,9 @@ NGRAPH_TEST(${BACKEND_NAME}, ceiling)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{-2.0f, -2.0f, 1.0f, 5.0f}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{-2.0f, -2.0f, 1.0f, 5.0f}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, cos)
@@ -208,6 +211,32 @@ NGRAPH_TEST(${BACKEND_NAME}, cosh)
     EXPECT_TRUE(test::all_close_f(input, read_vector<float>(result)));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, erf)
+{
+    Shape shape{8};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Erf>(A), ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a, vector<float>{-4.0f, -3.0f, -2.0f, -1.0f, 0.0f, 1.0f, 2.0f, 3.0f});
+    auto result = backend->create_tensor(element::f32, shape);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(test::all_close_f(vector<float>{erf(-4.0f),
+                                                erf(-3.0f),
+                                                erf(-2.0f),
+                                                erf(-1.0f),
+                                                erf(0.0f),
+                                                erf(1.0f),
+                                                erf(2.0f),
+                                                erf(3.0f)},
+                                  read_vector<float>(result)));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, exp)
 {
     Shape shape{8};
@@ -243,7 +272,9 @@ NGRAPH_TEST(${BACKEND_NAME}, floor)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{-3.0f, -2.0f, 0.0f, 4.0f}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{-3.0f, -2.0f, 0.0f, 4.0f}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, floor_int32)
@@ -306,7 +337,9 @@ NGRAPH_TEST(${BACKEND_NAME}, negative)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{-1, 2, 0, 4.75f, -8.75f, 8.75f}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f((vector<float>{-1, 2, 0, 4.75f, -8.75f, 8.75f}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, not)
@@ -342,7 +375,8 @@ NGRAPH_TEST(${BACKEND_NAME}, sign)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<float>{1, -1, 0, -1, 1, 0}), read_vector<float>(result));
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{1, -1, 0, -1, 1, 0}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, sin)

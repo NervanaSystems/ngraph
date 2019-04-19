@@ -22,7 +22,6 @@
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/frontend/onnx_import/exceptions.hpp"
 #include "ngraph/frontend/onnx_import/op/conv.hpp"
-#include "ngraph/frontend/onnx_import/utils/broadcasting.hpp"
 #include "ngraph/frontend/onnx_import/utils/convpool.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/broadcast.hpp"
@@ -31,6 +30,7 @@
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/slice.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/strides.hpp"
 #include "quant_conv.hpp"
 
@@ -159,9 +159,6 @@ namespace ngraph
 
                 NodeVector quant_conv(const Node& node)
                 {
-                    NGRAPH_WARN << "[" << node.get_name()
-                                << "] Zero point different from 0 is not supported. Assuming Zero "
-                                   "point is 0";
                     const NodeVector& inputs = node.get_ng_inputs();
                     auto data = inputs.at(0);
                     auto filters = inputs.at(3);
@@ -214,16 +211,36 @@ namespace ngraph
                     }
                     else
                     {
-                        conv_node =
-                            make_ng_quant_conv(data,
-                                               filters,
-                                               strides,
-                                               filter_dilations,
-                                               padding_below,
-                                               padding_above,
-                                               data_dilations,
-                                               groups,
-                                               OpScale{data_scale, filters_scale, output_scale});
+                        if (filters->get_element_type() == ngraph::element::u8 && groups == 1)
+                        {
+                            conv_node = ngraph::builder::quantization::QuantizedLinearConvolution(
+                                data,
+                                filters,
+                                strides,
+                                filter_dilations,
+                                padding_below,
+                                padding_above,
+                                data_dilations,
+                                data_scale,
+                                inputs.at(2),
+                                filters_scale,
+                                inputs.at(5),
+                                output_scale,
+                                inputs.at(7));
+                        }
+                        else
+                        {
+                            conv_node = make_ng_quant_conv(
+                                data,
+                                filters,
+                                strides,
+                                filter_dilations,
+                                padding_below,
+                                padding_above,
+                                data_dilations,
+                                groups,
+                                OpScale{data_scale, filters_scale, output_scale});
+                        }
                     }
 
                     return {conv_node};

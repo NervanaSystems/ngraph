@@ -1,4 +1,4 @@
-.. quantize.rst: 
+.. ops/quantize.rst:
 
 ########
 Quantize
