@@ -86,6 +86,7 @@ add_library(onnx_import STATIC
         op/flatten.cpp
         op/flatten.hpp
         op/floor.hpp
+        op/gather.hpp
         op/gemm.cpp
         op/gemm.hpp
         op/global_average_pool.cpp
@@ -179,8 +180,6 @@ add_library(onnx_import STATIC
         op/xor.hpp
         ops_bridge.cpp
         ops_bridge.hpp
-        utils/broadcasting.cpp
-        utils/broadcasting.hpp
         utils/common.hpp
         utils/convpool.cpp
         utils/convpool.hpp

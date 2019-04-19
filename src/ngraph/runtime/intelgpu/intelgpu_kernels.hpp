@@ -23,9 +23,17 @@
 #include <CPP/topology.hpp>
 
 #include "ngraph/node.hpp"
+#include "ngraph/op/all.hpp"
+#include "ngraph/op/any.hpp"
+#include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/max.hpp"
+#include "ngraph/op/min.hpp"
+#include "ngraph/op/product.hpp"
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/slice.hpp"
+#include "ngraph/op/softmax.hpp"
+#include "ngraph/op/sum.hpp"
 
 namespace ngraph
 {
@@ -98,11 +106,19 @@ public:
 private:
     void queue_krnl(const krnl_info& krn_info, const std::shared_ptr<Node>& op);
 
+    krnl_info build_krnl(const std::shared_ptr<op::All>& op) const;
+    krnl_info build_krnl(const std::shared_ptr<op::Any>& op) const;
+    krnl_info build_krnl(const std::shared_ptr<op::Broadcast>& op) const;
     krnl_info build_krnl(const std::shared_ptr<op::Convolution>& op) const;
     krnl_info build_krnl(const std::shared_ptr<op::ConvolutionBackpropData>& op) const;
     krnl_info build_krnl(const std::shared_ptr<op::ConvolutionBackpropFilters>& op) const;
+    krnl_info build_krnl(const std::shared_ptr<op::Max>& op) const;
+    krnl_info build_krnl(const std::shared_ptr<op::Min>& op) const;
+    krnl_info build_krnl(const std::shared_ptr<op::Product>& op) const;
     krnl_info build_krnl(const std::shared_ptr<op::Select>& op) const;
     krnl_info build_krnl(const std::shared_ptr<op::Slice>& op) const;
+    krnl_info build_krnl(const std::shared_ptr<op::Softmax>& op) const;
+    krnl_info build_krnl(const std::shared_ptr<op::Sum>& op) const;
 
     cldnn::topology& stream;
     size_t m_count_krnls;

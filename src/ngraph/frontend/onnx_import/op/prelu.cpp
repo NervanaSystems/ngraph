@@ -29,8 +29,8 @@
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 #include "prelu.hpp"
-#include "utils/broadcasting.hpp"
 
 namespace ngraph
 {
@@ -53,11 +53,11 @@ namespace ngraph
                         auto it = std::find(
                             std::begin(data_shape), std::end(data_shape), slope_shape.at(0));
                         auto index = std::distance(std::begin(data_shape), it);
-                        slope = make_broadcast_node(slope, data->get_shape(), index);
+                        slope = ngraph::op::make_broadcast_node(slope, data->get_shape(), index);
                     }
                     else if (data_shape != slope_shape)
                     {
-                        slope = numpy_style_broadcast({slope, data})[0];
+                        slope = ngraph::op::numpy_style_broadcast({slope, data})[0];
                     }
 
                     // x <  0 => f(x) = x * slope
@@ -66,7 +66,7 @@ namespace ngraph
                     std::shared_ptr<ngraph::Node> zero_node =
                         std::make_shared<ngraph::op::Constant>(
                             data->get_element_type(), ngraph::Shape{}, std::vector<double>{0});
-                    zero_node = make_broadcast_node(zero_node, data->get_shape());
+                    zero_node = ngraph::op::make_broadcast_node(zero_node, data->get_shape());
 
                     std::shared_ptr<ngraph::Node> negative_map =
                         std::make_shared<ngraph::op::Convert>(
