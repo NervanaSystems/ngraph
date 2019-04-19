@@ -36,6 +36,8 @@ bool runtime::hybrid::pass::DefaultPlacement::run_on_node(shared_ptr<Node> node)
     {
         if (backend->is_supported(*node))
         {
+            NGRAPH_INFO << backend_index << " " << *node;
+
             node->set_placement_index(backend_index);
             return false;
         }

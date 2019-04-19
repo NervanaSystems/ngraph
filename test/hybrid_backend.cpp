@@ -40,7 +40,7 @@ using namespace ngraph;
 
 static runtime::Backend* hybrid_creator(const char* config)
 {
-    vector<string> unsupported_0 = {"Add"};
+    vector<string> unsupported_0 = {"Add", "Max"};
     vector<string> unsupported_1 = {"Multiply"};
     vector<shared_ptr<runtime::Backend>> backend_list = {
         make_shared<runtime::interpreter::INTBackend>(unsupported_0),
@@ -133,4 +133,26 @@ TEST(HYBRID, abc)
     handle->call_with_validate({result1, result2}, {a, b, c, d});
     EXPECT_TRUE(
         test::all_close_f(read_vector<float>(result2), (vector<float>{150, 576, 1176, 1536})));
+}
+
+TEST(HYBRID, simple)
+{
+    const string backend_name = "H1";
+    runtime::BackendManager::register_backend(backend_name, hybrid_creator);
+
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::i8, shape);
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0, 1}), ParameterVector{A});
+
+    shared_ptr<runtime::Backend> backend = runtime::Backend::create("H1");
+    static_pointer_cast<runtime::hybrid::HybridBackend>(backend)->set_debug_enabled(true);
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::i8, shape);
+    copy_data(a, vector<int8_t>{1, 2, 3, 4});
+    auto result = backend->create_tensor(element::i8, Shape{});
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_EQ((vector<int8_t>{4}), read_vector<int8_t>(result));
 }
