@@ -226,7 +226,7 @@ void runtime::hybrid::rewrite_function(const shared_ptr<Function>& f,
                 ngraph::plot_graph(sub_function, "sub_function.png", node_modifiers);
                 auto fc = make_shared<runtime::hybrid::op::FunctionCall>(function_call_outputs,
                                                                          function_call_inputs,
-                                                                         sub_function,
+                                                                         *sub_function,
                                                                          backend_list[placement]);
                 fc->set_placement_index(0);
                 for (size_t i = 0; i < function_call_outputs.size(); i++)

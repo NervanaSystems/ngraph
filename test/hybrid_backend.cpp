@@ -25,6 +25,7 @@
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/hybrid/hybrid_backend.hpp"
 #include "ngraph/runtime/hybrid/hybrid_util.hpp"
 #include "ngraph/runtime/hybrid/op/function_call.hpp"
@@ -44,7 +45,7 @@ static runtime::Backend* hybrid_creator(const char* config)
     vector<string> unsupported_1 = {"Multiply"};
     vector<shared_ptr<runtime::Backend>> backend_list = {
         make_shared<runtime::interpreter::INTBackend>(unsupported_0),
-        make_shared<runtime::interpreter::INTBackend>(unsupported_1)};
+        make_shared<runtime::cpu::CPU_Backend>()};
 
     return new runtime::hybrid::HybridBackend(backend_list);
 }
@@ -71,7 +72,7 @@ TEST(HYBRID, function_call)
     auto C = make_shared<op::Parameter>(element::f32, shape);
     NodeVector fcall_args{A, B, C};
     auto H = make_shared<runtime::hybrid::op::FunctionCall>(
-        inner_Result, fcall_args, inner_function, backend_list[0]);
+        inner_Result, fcall_args, *inner_function, backend_list[0]);
     auto G0 = make_shared<ngraph::op::GetOutputElement>(H, 0);
     auto G1 = make_shared<ngraph::op::GetOutputElement>(H, 1);
     NodeVector out{G0, G1};
