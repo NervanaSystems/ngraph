@@ -18,8 +18,7 @@
 
 #include "core/node.hpp"
 #include "ngraph/node_vector.hpp"
-#include "ngraph/op/greater.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
+#include "ngraph/op/gather.hpp"
 
 namespace ngraph
 {
@@ -29,11 +28,14 @@ namespace ngraph
         {
             namespace set_1
             {
-                inline NodeVector greater(const Node& node)
+                inline NodeVector gather(const Node& node)
                 {
-                    NodeVector ng_inputs{ngraph::op::numpy_style_broadcast(node.get_ng_inputs())};
-                    return {
-                        std::make_shared<ngraph::op::Greater>(ng_inputs.at(0), ng_inputs.at(1))};
+                    NodeVector ng_inputs{node.get_ng_inputs()};
+                    auto data = ng_inputs.at(0);
+                    auto indices = ng_inputs.at(1);
+                    auto axis = node.get_attribute_value<int64_t>("axis", 0);
+
+                    return {std::make_shared<ngraph::op::Gather>(data, indices, axis)};
                 }
 
             } // namespace set_1

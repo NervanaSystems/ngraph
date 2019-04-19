@@ -14,32 +14,12 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include <cstdlib>
 
-#include "core/node.hpp"
-#include "ngraph/node_vector.hpp"
-#include "ngraph/op/greater.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
+#include "provenance.hpp"
 
 namespace ngraph
 {
-    namespace onnx_import
-    {
-        namespace op
-        {
-            namespace set_1
-            {
-                inline NodeVector greater(const Node& node)
-                {
-                    NodeVector ng_inputs{ngraph::op::numpy_style_broadcast(node.get_ng_inputs())};
-                    return {
-                        std::make_shared<ngraph::op::Greater>(ng_inputs.at(0), ng_inputs.at(1))};
-                }
-
-            } // namespace set_1
-
-        } //namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+    void set_provenance_enabled(bool enabled) { s_provenance_enabled = enabled; }
+    bool get_provenance_enabled() { return s_provenance_enabled; }
+}

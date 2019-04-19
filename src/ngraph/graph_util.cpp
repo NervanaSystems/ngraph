@@ -32,6 +32,7 @@
 #include "ngraph/op/result.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
+#include "ngraph/provenance.hpp"
 #include "ngraph/result_vector.hpp"
 #include "ngraph/util.hpp"
 
@@ -150,6 +151,24 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
     // Fix input/output descriptors
     NGRAPH_CHECK(target->get_output_size() == replacement->get_output_size());
 
+    if (ngraph::get_provenance_enabled())
+    {
+        auto set_replacement_prov = [replacement](std::shared_ptr<Node> node) {
+            replacement->merge_provenance_tags_from(node);
+        };
+
+        traverse_nodes({target}, set_replacement_prov, false, replacement->get_arguments());
+
+        auto propagate_replacement_prov = [replacement](std::shared_ptr<Node> node) {
+            if (is_post_dominated(node.get(), replacement.get()))
+            {
+                node->merge_provenance_tags_from(replacement);
+            }
+        };
+
+        traverse_nodes({replacement}, propagate_replacement_prov, false);
+    }
+
     // For each of target's output O with replacement output O_rep:
     //     For each O's connected downstream input I:
     //         Change I's connected upstream output to O_rep
@@ -160,7 +179,6 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
             input.replace_source_output(replacement->output(i));
         }
     }
-    replacement->merge_provenance_tags_from(target);
 }
 
 // Check if all paths from X to a result go through Y
