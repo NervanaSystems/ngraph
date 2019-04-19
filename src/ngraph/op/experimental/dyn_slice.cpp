@@ -20,11 +20,11 @@
 using namespace std;
 using namespace ngraph;
 
-op::DynSlice::DynSlice(const shared_ptr<Node>& arg,
-                       const shared_ptr<Node>& lower_bounds,
-                       const shared_ptr<Node>& upper_bounds,
-                       const shared_ptr<Node>& strides)
-    : Op("DynSlice", check_single_output_args({arg, lower_bounds, upper_bounds, strides}))
+op::DynSlice::DynSlice(const Output<Node>& arg,
+                       const Output<Node>& lower_bounds,
+                       const Output<Node>& upper_bounds,
+                       const Output<Node>& strides)
+    : Op("DynSlice", {arg, lower_bounds, upper_bounds, strides})
 {
     constructor_validate_and_infer_types();
 }

@@ -34,10 +34,10 @@ namespace ngraph
             /// \param upper_bounds The axiswise upper bounds of the slice (exclusive).
             /// \param strides The slicing strides; for example, strides of `{n,m}` means to take
             ///                every nth row and every mth column of the input matrix.
-            DynSlice(const std::shared_ptr<Node>& arg,
-                     const std::shared_ptr<Node>& lower_bounds,
-                     const std::shared_ptr<Node>& upper_bounds,
-                     const std::shared_ptr<Node>& strides);
+            DynSlice(const Output<Node>& arg,
+                     const Output<Node>& lower_bounds,
+                     const Output<Node>& upper_bounds,
+                     const Output<Node>& strides);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

@@ -29,14 +29,14 @@ namespace ngraph
         public:
             /// \brief Perform dynamic padding of a tensor
             ///
-            /// \param arg The node producing input tensor to be padded.
-            /// \param padding_below The node producing the padding-below widths.
-            /// \param padding_above The node producing the padding-above widths.
+            /// \param arg The output producing input tensor to be padded.
+            /// \param padding_below The output producing the padding-below widths.
+            /// \param padding_above The output producing the padding-above widths.
             /// \param padding_value The value to be used for padding. Must be scalar.
-            DynPad(const std::shared_ptr<Node>& arg,
-                   const std::shared_ptr<Node>& padding_below,
-                   const std::shared_ptr<Node>& padding_above,
-                   const std::shared_ptr<Node>& padding_value);
+            DynPad(const Output<Node>& arg,
+                   const Output<Node>& padding_below,
+                   const Output<Node>& padding_above,
+                   const Output<Node>& padding_value);
 
             void validate_and_infer_types() override;
 

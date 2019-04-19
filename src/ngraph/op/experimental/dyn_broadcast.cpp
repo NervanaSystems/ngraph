@@ -20,10 +20,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::DynBroadcast::DynBroadcast(const shared_ptr<Node>& arg,
-                               const shared_ptr<Node>& shape,
-                               const shared_ptr<Node>& broadcast_axes)
-    : Op("DynBroadcast", check_single_output_args({arg, shape, broadcast_axes}))
+op::DynBroadcast::DynBroadcast(const Output<Node>& arg,
+                               const Output<Node>& shape,
+                               const Output<Node>& broadcast_axes)
+    : Op("DynBroadcast", {arg, shape, broadcast_axes})
 {
     constructor_validate_and_infer_types();
 }

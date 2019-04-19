@@ -18,6 +18,7 @@
 
 #include <string>
 
+#include "ngraph/deprecated.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/util/op_annotations.hpp"
 #include "ngraph/output_vector.hpp"
@@ -41,7 +42,8 @@ namespace ngraph
 
             virtual bool is_op() const override { return true; }
         protected:
-            Op(const std::string& node_type, const NodeVector& arguments);
+            Op(const std::string& node_type, const NodeVector& arguments)
+                NGRAPH_DEPRECATED("use Op(const std::string&, const OutputVector&) instead");
             Op(const std::string& node_type, const OutputVector& arguments);
 
         private:

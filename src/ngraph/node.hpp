@@ -37,17 +37,6 @@
 #include "ngraph/node_vector.hpp"
 #include "ngraph/placement.hpp"
 
-// There is work in progress on deprecating some old APIs here, and for development purposes it is
-// nice to have a compile-time option to turn on actual deprecation.
-//
-// Enable the deprecation with -DNGRAPH_DEPRECATE_OLD_NODE_APIS=ON at cmake time.
-#ifdef NGRAPH_DEPRECATE_OLD_NODE_APIS
-#define OLD_NODE_APIS_DEPRECATED(msg) __attribute__((deprecated((msg))))
-#undef NGRAPH_DEPRECATE_OLD_NODE_APIS
-#else
-#define OLD_NODE_APIS_DEPRECATED(msg)
-#endif
-
 namespace ngraph
 {
     template <typename NodeType>
@@ -103,6 +92,7 @@ namespace ngraph
         void validate_and_infer_elementwise_arithmetic();
         void validate_and_infer_elementwise_logical();
 
+        // TODO: deprecate this in favor of the outputs-based constructor.
         Node(const std::string& node_type, const NodeVector& arguments, size_t output_size = 1);
         Node(const std::string& node_type,
              const OutputVector& source_outputs,

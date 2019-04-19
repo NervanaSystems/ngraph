@@ -23,8 +23,8 @@
 using namespace std;
 using namespace ngraph;
 
-op::DynReshape::DynReshape(const shared_ptr<Node>& arg, const shared_ptr<Node>& pattern)
-    : Op("DynReshape", check_single_output_args({arg, pattern}))
+op::DynReshape::DynReshape(const Output<Node>& arg, const Output<Node>& pattern)
+    : Op("DynReshape", {arg, pattern})
 {
     constructor_validate_and_infer_types();
 }

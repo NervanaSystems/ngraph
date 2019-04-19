@@ -21,8 +21,8 @@
 using namespace std;
 using namespace ngraph;
 
-op::Transpose::Transpose(const shared_ptr<Node>& arg, const shared_ptr<Node>& input_order)
-    : Op("Transpose", check_single_output_args({arg, input_order}))
+op::Transpose::Transpose(const Output<Node>& arg, const Output<Node>& input_order)
+    : Op("Transpose", {arg, input_order})
 {
     constructor_validate_and_infer_types();
 }
