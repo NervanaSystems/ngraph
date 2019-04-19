@@ -29,10 +29,9 @@ namespace ngraph
         {
         public:
             NgraphTestCase(std::shared_ptr<Function> function, const std::string& backend_name)
-                : m_backend_name(backend_name)
-                , m_function(std::move(function))
+                : m_function(std::move(function))
+                , m_backend(ngraph::runtime::Backend::create(backend_name))
             {
-                m_backend = ngraph::runtime::Backend::create(backend_name);
             }
 
             template <typename T>
@@ -84,7 +83,6 @@ namespace ngraph
             void run();
 
         protected:
-            std::string m_backend_name;
             std::shared_ptr<Function> m_function;
             std::unique_ptr<runtime::Backend> m_backend;
             std::vector<std::shared_ptr<ngraph::runtime::Tensor>> m_input_tensors;

@@ -18,6 +18,7 @@
 #include "all_close.hpp"
 #include "all_close_f.hpp"
 #include "gtest/gtest.h"
+#include "ngraph/assertion.hpp"
 #include "test_tools.hpp"
 
 void ngraph::test::NgraphTestCase::run()
@@ -33,12 +34,24 @@ void ngraph::test::NgraphTestCase::run()
     {
         auto result_tensor = m_result_tensors.at(i);
         auto expected_result_constant = m_expected_outputs.at(i);
+        auto element_type = result_tensor->get_element_type();
 
-        if (result_tensor->get_element_type() == ngraph::element::f32)
+        if (element_type == ngraph::element::f32)
         {
             auto result = read_vector<float>(result_tensor);
             auto expected = expected_result_constant->get_vector<float>();
             EXPECT_TRUE(test::all_close_f(expected, result));
+        }
+        else if (element_type == ngraph::element::u8)
+        {
+            auto result = read_vector<uint8_t>(result_tensor);
+            auto expected = expected_result_constant->get_vector<uint8_t>();
+            EXPECT_TRUE(test::all_close(expected, result));
+        }
+        else
+        {
+            NGRAPH_FAIL() << "Please add support for " << element_type
+                          << " to ngraph::test::NgraphTestCase::run().";
         }
     }
 }
