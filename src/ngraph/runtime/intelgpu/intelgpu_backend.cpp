@@ -50,13 +50,10 @@
 #include "ngraph/pass/reshape_elimination.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_backend.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_executable.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_kernels.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_batchnorm.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_op_broadcast.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_op_convolution.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_op_custom_func_call.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_op_softmax.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_tensor_view.hpp"
 #include "ngraph/runtime/intelgpu/visualize_tree.hpp"
 
@@ -89,6 +86,7 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
+#include "ngraph/op/select.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
@@ -391,6 +389,7 @@ shared_ptr<runtime::Executable>
 
     set<cldnn::primitive_id> func_output_names;
     cldnn::topology topology;
+    CustomKernels kern(topology);
     stopwatch timer_compile;
     double consumed_memory = 0.0;
     double compilation_time = 0.0;
@@ -487,15 +486,7 @@ shared_ptr<runtime::Executable>
             }
             else
             {
-                do_slice_operation(topology,
-                                   op->get_input_tensor_name(0),
-                                   op->get_input_shape(0),
-                                   op->get_output_tensor_name(0),
-                                   op->get_output_shape(0),
-                                   op->get_output_element_type(0),
-                                   lower_bounds,
-                                   upper_bounds,
-                                   strides);
+                kern.emit<op::Slice>(elem);
             }
             break;
         }
@@ -505,16 +496,7 @@ shared_ptr<runtime::Executable>
 
             if (op->get_output_element_type(0) != element::f32)
             {
-                do_select_operation(topology,
-                                    op->get_input_tensor_name(0),
-                                    op->get_input_shape(0),
-                                    op->get_input_tensor_name(1),
-                                    op->get_input_shape(1),
-                                    op->get_input_tensor_name(2),
-                                    op->get_input_shape(2),
-                                    op->get_output_tensor_name(0),
-                                    op->get_output_shape(0),
-                                    op->get_output_element_type(0));
+                kern.emit<op::Select>(static_pointer_cast<op::Select>(op));
             }
             else
             {
@@ -686,14 +668,7 @@ shared_ptr<runtime::Executable>
             if ((shape_dim_count > 3) || ((shape_dim_count == 3) && (axes_size == 2)) ||
                 (op->get_input_element_type(0) != element::f32))
             {
-                do_softmax_operation(topology,
-                                     op->get_input_tensor_name(0),
-                                     op->get_input_shape(0),
-                                     op->get_input_element_type(0),
-                                     op->get_output_tensor_name(0),
-                                     op->get_output_shape(0),
-                                     op->get_output_element_type(0),
-                                     axes);
+                kern.emit<op::Softmax>(softmax_op);
             }
             else
             {
@@ -994,15 +969,7 @@ shared_ptr<runtime::Executable>
             }
             else
             {
-                do_bcast_sum_operation(topology,
-                                       op->get_input_tensor_name(0),
-                                       op->get_input_shape(0),
-                                       op->get_input_element_type(0),
-                                       op->get_output_tensor_name(0),
-                                       op->get_output_shape(0),
-                                       op->get_output_element_type(0),
-                                       axis,
-                                       true);
+                kern.emit<op::Broadcast>(broadcast);
             }
             break;
         }
@@ -1020,15 +987,7 @@ shared_ptr<runtime::Executable>
             }
             else
             {
-                do_bcast_sum_operation(topology,
-                                       op->get_input_tensor_name(0),
-                                       op->get_input_shape(0),
-                                       op->get_input_element_type(0),
-                                       op->get_output_tensor_name(0),
-                                       op->get_output_shape(0),
-                                       op->get_output_element_type(0),
-                                       axis,
-                                       false);
+                kern.emit<op::Sum>(sum);
             }
             break;
         }
@@ -1046,13 +1005,7 @@ shared_ptr<runtime::Executable>
             }
             else
             {
-                do_product_operation(topology,
-                                     op->get_input_tensor_name(0),
-                                     op->get_input_shape(0),
-                                     op->get_output_tensor_name(0),
-                                     op->get_output_shape(0),
-                                     op->get_output_element_type(0),
-                                     axis);
+                kern.emit<op::Product>(prod);
             }
             break;
         }
@@ -1113,44 +1066,16 @@ shared_ptr<runtime::Executable>
         {
             arguments_check(op, 1, 1);
 
-            const shared_ptr<op::All> all_op = static_pointer_cast<op::All>(op);
-            const AxisSet& axis = all_op->get_reduction_axes();
-            const shared_ptr<Node> def_val = all_op->get_default_value();
-            const shared_ptr<op::Constant> def_const = static_pointer_cast<op::Constant>(def_val);
-            const vector<std::string>& values = def_const->get_value_strings();
-
             // Empty axis is not a case for do_equal_propagation()
-            do_all_any_op(topology,
-                          op->get_input_tensor_name(0),
-                          op->get_input_shape(0),
-                          op->get_output_tensor_name(0),
-                          op->get_output_shape(0),
-                          op->get_output_element_type(0),
-                          axis,
-                          "lhs && rhs",
-                          values.at(0));
+            kern.emit<op::All>(static_pointer_cast<op::All>(op));
             break;
         }
         case OP_TYPEID::Any:
         {
             arguments_check(op, 1, 1);
 
-            const shared_ptr<op::Any> any_op = static_pointer_cast<op::Any>(op);
-            const AxisSet& axis = any_op->get_reduction_axes();
-            const shared_ptr<Node> def_val = any_op->get_default_value();
-            const shared_ptr<op::Constant> def_const = static_pointer_cast<op::Constant>(def_val);
-            const vector<std::string>& values = def_const->get_value_strings();
-
             // Empty axis is not a case for do_equal_propagation()
-            do_all_any_op(topology,
-                          op->get_input_tensor_name(0),
-                          op->get_input_shape(0),
-                          op->get_output_tensor_name(0),
-                          op->get_output_shape(0),
-                          op->get_output_element_type(0),
-                          axis,
-                          "lhs || rhs",
-                          values.at(0));
+            kern.emit<op::Any>(static_pointer_cast<op::Any>(op));
             break;
         }
         case OP_TYPEID::ReluBackprop:
@@ -1605,25 +1530,7 @@ shared_ptr<runtime::Executable>
                 (data_dilation.at(0) != 1) || (data_dilation.at(1) != 1) ||
                 (op->get_output_element_type(0) != element::f32))
             {
-                do_convolution_operation(topology,
-                                         op->get_input_tensor_name(0),
-                                         op->get_input_shape(0),
-                                         op->get_input_tensor_name(1),
-                                         op->get_input_shape(1),
-                                         op->get_output_tensor_name(0),
-                                         op->get_output_shape(0),
-                                         op->get_output_element_type(0),
-                                         conv_op->get_padding_below(),
-                                         conv_op->get_window_movement_strides(),
-                                         conv_op->get_window_dilation_strides(),
-                                         conv_op->get_data_dilation_strides(),
-                                         0,
-                                         1,
-                                         1,
-                                         "input[batch][input_channel]",
-                                         "filter[output_channel][input_channel]",
-                                         "output[batch][output_channel]",
-                                         false);
+                kern.emit<op::Convolution>(conv_op);
             }
             else
             {
@@ -1691,25 +1598,7 @@ shared_ptr<runtime::Executable>
                 (win_dilation.size() != 2) || (op->get_output_element_type(0) != element::f32) ||
                 proceed_with_custom_kernel)
             {
-                do_convolution_operation(topology,
-                                         op->get_input_tensor_name(0),
-                                         op->get_input_shape(0),
-                                         op->get_input_tensor_name(1),
-                                         op->get_input_shape(1),
-                                         op->get_output_tensor_name(0),
-                                         op->get_output_shape(0),
-                                         op->get_output_element_type(0),
-                                         conv_op->get_padding_below_forward(),
-                                         win_stride,
-                                         win_dilation,
-                                         data_dilation,
-                                         1,
-                                         0,
-                                         0,
-                                         "input[input_channel][batch]",
-                                         "filter[input_channel][output_channel]",
-                                         "output[output_channel][batch]",
-                                         false);
+                kern.emit<op::ConvolutionBackpropFilters>(conv_op);
             }
             else
             {
@@ -1793,25 +1682,7 @@ shared_ptr<runtime::Executable>
                 (win_dilation.at(1) != 1) || (op->get_output_element_type(0) != element::f32) ||
                 ((pad_below.at(0) == pad_above.at(0)) && (pad_below.at(1) == pad_above.at(1))))
             {
-                do_convolution_operation(topology,
-                                         op->get_input_tensor_name(1),
-                                         op->get_input_shape(1),
-                                         op->get_input_tensor_name(0),
-                                         op->get_input_shape(0),
-                                         op->get_output_tensor_name(0),
-                                         op->get_output_shape(0),
-                                         op->get_output_element_type(0),
-                                         pad_below,
-                                         win_stride,
-                                         win_dilation,
-                                         data_dilation,
-                                         0,
-                                         1,
-                                         1,
-                                         "input[batch][input_channel]",
-                                         "filter[input_channel][output_channel]",
-                                         "output[batch][output_channel]",
-                                         true);
+                kern.emit<op::ConvolutionBackpropData>(conv_op);
             }
             else
             {
@@ -1857,34 +1728,14 @@ shared_ptr<runtime::Executable>
         {
             arguments_check(op, 1, 1);
 
-            const shared_ptr<op::Min> min_op = static_pointer_cast<op::Min>(op);
-            const AxisSet& axis = min_op->get_reduction_axes();
-
-            do_max_min_operation(topology,
-                                 op->get_input_tensor_name(0),
-                                 op->get_input_shape(0),
-                                 op->get_output_tensor_name(0),
-                                 op->get_output_shape(0),
-                                 op->get_output_element_type(0),
-                                 axis,
-                                 true);
+            kern.emit<op::Min>(static_pointer_cast<op::Min>(op));
             break;
         }
         case OP_TYPEID::Max:
         {
             arguments_check(op, 1, 1);
 
-            const shared_ptr<op::Max> max_op = static_pointer_cast<op::Max>(op);
-            const AxisSet& axis = max_op->get_reduction_axes();
-
-            do_max_min_operation(topology,
-                                 op->get_input_tensor_name(0),
-                                 op->get_input_shape(0),
-                                 op->get_output_tensor_name(0),
-                                 op->get_output_shape(0),
-                                 op->get_output_element_type(0),
-                                 axis,
-                                 false);
+            kern.emit<op::Max>(static_pointer_cast<op::Max>(op));
             break;
         }
         case OP_TYPEID::OneHot:
@@ -2077,6 +1928,8 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::DynReshape:
         case OP_TYPEID::DynSlice:
         case OP_TYPEID::Erf:
+        case OP_TYPEID::Gather:
+        case OP_TYPEID::GatherND:
         case OP_TYPEID::QuantizedAvgPool:
         case OP_TYPEID::QuantizedConvolutionBias:
         case OP_TYPEID::QuantizedConvolutionBiasAdd:

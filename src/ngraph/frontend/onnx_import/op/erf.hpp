@@ -16,25 +16,28 @@
 
 #pragma once
 
-#include <CPP/topology.hpp>
+#include <memory>
 
-#include "ngraph/shape.hpp"
-#include "ngraph/type/element_type.hpp"
+#include "core/node.hpp"
+#include "ngraph/node_vector.hpp"
+#include "ngraph/op/erf.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace onnx_import
     {
-        namespace intelgpu
+        namespace op
         {
-            void do_softmax_operation(cldnn::topology& topology,
-                                      const std::string& input_name,
-                                      const Shape& input_shape,
-                                      const element::Type& input_type,
-                                      const std::string& output_name,
-                                      const Shape& output_shape,
-                                      const element::Type& output_type,
-                                      const AxisSet& axes);
-        }
-    }
-}
+            namespace set_1
+            {
+                inline NodeVector erf(const Node& node)
+                {
+                    return {std::make_shared<ngraph::op::Erf>(node.get_ng_inputs().at(0))};
+                }
+            } // namespace set_1
+
+        } //namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

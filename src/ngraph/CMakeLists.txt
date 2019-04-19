@@ -165,6 +165,10 @@ set (SRC
     op/experimental/transpose.hpp
     op/floor.cpp
     op/floor.hpp
+    op/gather.cpp
+    op/gather.hpp
+    op/gather_nd.cpp
+    op/gather_nd.hpp
     op/get_output_element.cpp
     op/get_output_element.hpp
     op/greater.cpp
@@ -350,6 +354,8 @@ set (SRC
     pattern/op/skip.hpp
     placement.cpp
     placement.hpp
+    provenance.cpp
+    provenance.hpp
     rank.hpp
     result_vector.hpp
     runtime/aligned_buffer.cpp
