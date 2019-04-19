@@ -29,8 +29,8 @@ namespace ngraph
         {
         public:
             NgraphTestCase(std::shared_ptr<Function> function, const std::string& backend_name)
-                    : m_backend_name(backend_name)
-                    , m_function(std::move(function))
+                : m_backend_name(backend_name)
+                , m_function(std::move(function))
             {
                 m_backend = ngraph::runtime::Backend::create(backend_name);
             }
@@ -40,9 +40,11 @@ namespace ngraph
             {
                 auto params = m_function->get_parameters();
 
-                NGRAPH_CHECK(m_input_index < params.size(), "All function parameters already have inputs.");
+                NGRAPH_CHECK(m_input_index < params.size(),
+                             "All function parameters already have inputs.");
 
-                auto tensor = m_backend->create_tensor(params.at(m_input_index)->get_element_type(), params.at(m_input_index)->get_shape());
+                auto tensor = m_backend->create_tensor(params.at(m_input_index)->get_element_type(),
+                                                       params.at(m_input_index)->get_shape());
                 copy_data(tensor, values);
 
                 m_input_tensors.push_back(tensor);
@@ -53,7 +55,8 @@ namespace ngraph
             template <typename T>
             void add_multiple_inputs(const std::vector<std::vector<T>>& vector_of_values)
             {
-                for(auto const& value: vector_of_values) {
+                for (auto const& value : vector_of_values)
+                {
                     add_input(value);
                 }
             }
@@ -63,7 +66,8 @@ namespace ngraph
             {
                 auto results = m_function->get_results();
 
-                NGRAPH_CHECK(m_output_index < results.size(), "All function results already have expected outputs.");
+                NGRAPH_CHECK(m_output_index < results.size(),
+                             "All function results already have expected outputs.");
 
                 auto function_output_type = results.at(m_output_index)->get_element_type();
                 auto function_output_shape = results.at(m_output_index)->get_shape();
@@ -71,7 +75,7 @@ namespace ngraph
                 m_result_tensors.push_back(tensor);
 
                 auto constant_node = std::make_shared<ngraph::op::Constant>(
-                        function_output_type, function_output_shape, values);
+                    function_output_type, function_output_shape, values);
                 m_expected_outputs.push_back(constant_node);
 
                 ++m_output_index;
