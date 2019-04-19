@@ -103,7 +103,7 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
     // for each ordered op in the graph
     for (const NodeWrapper& wrapped : m_wrapped_nodes)
     {
-        const Node* op = &wrapped.get_node();
+        auto op = wrapped.get_node();
         auto type_id = wrapped.get_typeid();
         if (type_id == OP_TYPEID::Parameter)
         {
@@ -178,7 +178,7 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
         }
         if (m_nan_check_enabled)
         {
-            perform_nan_check(op_outputs, op);
+            perform_nan_check(op_outputs, op.get());
         }
     }
 
@@ -207,7 +207,7 @@ void runtime::interpreter::INTExecutable::generate_calls(const element::Type& ty
     case element::Type_t::undefined:
     case element::Type_t::dynamic:
     case element::Type_t::bf16:
-        ss << "unsupported element type " << type << " op " << op.get_node().get_name();
+        ss << "unsupported element type " << type << " op " << op.get_node()->get_name();
         throw ngraph_error(ss.str());
     }
 }
@@ -221,11 +221,9 @@ vector<runtime::PerformanceCounter>
     runtime::interpreter::INTExecutable::get_performance_data() const
 {
     vector<runtime::PerformanceCounter> rc;
-    for (const pair<const Node*, stopwatch> p : m_timer_map)
+    for (const pair<shared_ptr<const Node>, stopwatch> p : m_timer_map)
     {
-        rc.emplace_back(p.first->get_name().c_str(),
-                        p.second.get_total_microseconds(),
-                        p.second.get_call_count());
+        rc.emplace_back(p.first, p.second.get_total_microseconds(), p.second.get_call_count());
     }
     return rc;
 }
