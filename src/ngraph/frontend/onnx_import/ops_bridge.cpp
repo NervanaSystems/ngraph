@@ -50,9 +50,11 @@
 #include "op/dropout.hpp"
 #include "op/elu.hpp"
 #include "op/equal.hpp"
+#include "op/erf.hpp"
 #include "op/exp.hpp"
 #include "op/flatten.hpp"
 #include "op/floor.hpp"
+#include "op/gather.hpp"
 #include "op/gemm.hpp"
 #include "op/global_average_pool.hpp"
 #include "op/global_max_pool.hpp"
@@ -250,9 +252,11 @@ namespace ngraph
             REGISTER_OPERATOR("Dropout", 1, dropout);
             REGISTER_OPERATOR("Elu", 1, elu);
             REGISTER_OPERATOR("Equal", 1, equal);
+            REGISTER_OPERATOR("Erf", 1, erf);
             REGISTER_OPERATOR("Exp", 1, exp);
             REGISTER_OPERATOR("Flatten", 1, flatten);
             REGISTER_OPERATOR("Floor", 1, floor);
+            REGISTER_OPERATOR("Gather", 1, gather);
             REGISTER_OPERATOR("Gemm", 1, gemm);
             REGISTER_OPERATOR("GlobalAveragePool", 1, global_average_pool);
             REGISTER_OPERATOR("GlobalLpPool", 1, global_lp_pool);
