@@ -378,9 +378,6 @@ class BuildExt(build_ext):
         build_ext.build_extensions(self)
 
 
-with open(os.path.join(PYNGRAPH_ROOT_DIR, 'requirements.txt')) as req:
-    requirements = req.read().splitlines()
-
 setup(
     name='ngraph-core',
     description="nGraph - Intel's graph compiler and runtime for Neural Networks",
@@ -397,7 +394,6 @@ setup(
     cmdclass={'build_ext': BuildExt},
     data_files=data_files,
     setup_requires=['numpy'],
-    install_requires=requirements,
     zip_safe=False,
     extras_require={
         'plaidml': ['plaidml>=0.5.0'],
