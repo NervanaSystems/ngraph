@@ -20,12 +20,12 @@
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
-#include "ngraph/runtime/cpu/op/conv_bias.hpp"
 
 using namespace ngraph;
 using namespace std;

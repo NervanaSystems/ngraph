@@ -81,8 +81,8 @@ void op::BatchMatMul::generate_adjoints(autodiff::Adjoints& adjoints, const Node
 {
     auto delta = deltas.at(0); // NxIxK
 
-    auto arg0 = get_inputs().at(0).get_output().get_node(); // NxIxJ
-    auto arg1 = get_inputs().at(1).get_output().get_node(); // NxJxK
+    auto arg0 = get_argument(0); // NxIxJ
+    auto arg1 = get_argument(1); // NxJxK
 
     auto delta_dot_arg1 =
         make_shared<op::BatchMatMul>(delta, util::batch_mat_transpose(arg1)); // IK.KJ->IJ

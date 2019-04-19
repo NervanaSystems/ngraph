@@ -14,7 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cassert>
 #include <memory>
 
 #include "ngraph/op/concat.hpp"
@@ -132,8 +131,8 @@ std::vector<std::shared_ptr<op::Constant>> op::Concat::as_constants() const
     {
         auto const_node = static_pointer_cast<op::Constant>(get_argument(i));
         // A little extra paranoia ahead of the memcpy.
-        NGRAPH_ASSERT(get_input_shape(i) == const_node->get_shape() &&
-                      const_node->get_output_element_type(0) == element::i64);
+        NGRAPH_CHECK(get_input_shape(i) == const_node->get_shape() &&
+                     const_node->get_output_element_type(0) == element::i64);
         // This memcpy should be safe, because values was initialized to have space for
         // sum(0 <= j < num_inputs)(shape_size(get_input_shape(j))) elements, and pos is
         // sum(0 <= j < i)(shape_size(get_input_shape(j))).

@@ -42,6 +42,7 @@
 #include "ngraph/op/experimental/quantized_dot.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
+#include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
@@ -60,9 +61,9 @@
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
-#include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
+#include "ngraph/runtime/cpu/op/deconv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
@@ -393,6 +394,13 @@ namespace ngraph
 
                     std::unique_ptr<convolution_forward::desc> fwd_desc{nullptr};
                     auto convolution_algo = mkldnn_utils::get_conv_algo();
+
+                    if (node->get_input_element_type(0) != element::f32 &&
+                        convolution_algo != mkldnn::algorithm::convolution_direct)
+                    {
+                        convolution_algo = mkldnn::algorithm::convolution_direct;
+                    }
+
                     if (use_bias)
                     {
                         memory::data_type et_bias =
@@ -832,6 +840,86 @@ namespace ngraph
                 }
 
                 template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::DeconvolutionBias)
+                {
+                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        auto convolution =
+                            static_cast<const ngraph::op::DeconvolutionBias*>(node.get());
+
+                        auto data_batch_shape = convolution->get_data_batch_shape();
+                        auto weights_shape = node->get_input_shape(0);
+                        auto delta_shape = node->get_input_shape(1);
+                        auto bias_shape = node->get_input_shape(2);
+                        auto result_shape = node->get_output_shape(0);
+                        auto filter_strides = convolution->get_window_movement_strides_forward();
+                        auto padding_below = convolution->get_padding_below_forward();
+                        auto padding_above = convolution->get_padding_above_forward();
+
+                        Strides window_dilation_strides_adjusted;
+
+                        for (size_t s : convolution->get_window_dilation_strides_forward())
+                        {
+                            window_dilation_strides_adjusted.push_back(s - 1);
+                        }
+
+                        memory::data_type et =
+                            mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(0));
+
+                        engine cpu_engine(engine::cpu, 0);
+                        memory::dims mkldnn_arg0_shape(weights_shape.begin(), weights_shape.end());
+                        memory::dims mkldnn_arg1_shape(delta_shape.begin(), delta_shape.end());
+                        memory::dims mkldnn_arg2_shape(bias_shape.begin(), bias_shape.end());
+                        memory::dims mkldnn_result_shape(result_shape.begin(), result_shape.end());
+                        memory::dims mkldnn_filter_strides(filter_strides.begin(),
+                                                           filter_strides.end());
+                        memory::dims mkldnn_dilated_strides(
+                            window_dilation_strides_adjusted.begin(),
+                            window_dilation_strides_adjusted.end());
+                        memory::dims mkldnn_padding_below(padding_below.begin(),
+                                                          padding_below.end());
+                        memory::dims mkldnn_padding_above(padding_above.begin(),
+                                                          padding_above.end());
+
+                        const memory::desc weights_desc(mkldnn_arg0_shape, et, memory::format::any);
+                        const memory::desc delta_desc(mkldnn_arg1_shape, et, memory::format::any);
+                        const memory::desc bias_desc(mkldnn_arg2_shape, et, memory::format::any);
+                        const memory::desc result_desc(
+                            mkldnn_result_shape, et, memory::format::any);
+
+                        deconvolution_forward::desc deconv_desc(prop_kind::forward_inference,
+                                                                algorithm::deconvolution_direct,
+                                                                delta_desc,   //src_desc
+                                                                weights_desc, //weights_desc
+                                                                bias_desc,    //bias_desc
+                                                                result_desc,  // dst_desc
+                                                                mkldnn_filter_strides,
+                                                                mkldnn_dilated_strides,
+                                                                mkldnn_padding_below,
+                                                                mkldnn_padding_above,
+                                                                padding_kind::zero);
+
+                        deconvolution_forward::primitive_desc deconv_prim_desc(deconv_desc,
+                                                                               cpu_engine);
+
+                        vector<memory::desc> i_mds;
+                        vector<memory::desc> o_mds;
+                        i_mds.push_back(deconv_prim_desc.weights_primitive_desc()
+                                            .desc()); //TODO: Find what format this is?
+                        i_mds.push_back(deconv_prim_desc.src_primitive_desc().desc());
+                        i_mds.push_back(deconv_prim_desc.bias_primitive_desc().desc());
+                        o_mds.push_back(deconv_prim_desc.dst_primitive_desc().desc());
+
+                        node = insert_input_conversions(external_function, node, i_mds);
+                        set_output_layouts(node, o_mds);
+                    }
+                    else
+                    {
+                        throw ngraph_error("DeconvolutionBias only supported in MKLDNN for now");
+                    }
+                }
+
+                template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::ConvolutionBackpropData)
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
@@ -959,8 +1047,6 @@ namespace ngraph
                     if (use_bias)
                     {
                         auto bias_shape = node->get_output_shape(1);
-                        ngraph::op::util::validate_convbias_shapes(
-                            data_shape, filters_shape, bias_shape);
                         memory::dims mkldnn_bias_shape(bias_shape.begin(), bias_shape.end());
                         const memory::desc bias_desc(mkldnn_bias_shape, et, memory::format::any);
                         bwd_desc.reset(
@@ -2302,6 +2388,8 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolutionBiasSignedAdd>},
     {TI(ngraph::op::GroupConvolutionBias),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::GroupConvolutionBias>},
+    {TI(ngraph::op::DeconvolutionBias),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::DeconvolutionBias>},
     {TI(ngraph::op::QuantizedConcat),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConcat>},
     {TI(ngraph::op::QuantizedDotBias),

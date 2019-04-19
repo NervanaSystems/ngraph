@@ -14,28 +14,12 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include <cstdlib>
 
-#include <CPP/topology.hpp>
-
-#include "ngraph/axis_set.hpp"
-#include "ngraph/shape.hpp"
+#include "provenance.hpp"
 
 namespace ngraph
 {
-    namespace runtime
-    {
-        namespace intelgpu
-        {
-            void do_all_any_op(cldnn::topology& topology,
-                               const std::string& input0_name,
-                               const Shape& input0_shape,
-                               const std::string& output_name,
-                               const Shape& output_shape,
-                               const element::Type& output_type,
-                               const AxisSet& axis,
-                               const std::string& operation,
-                               const std::string& init_val);
-        }
-    }
+    void set_provenance_enabled(bool enabled) { s_provenance_enabled = enabled; }
+    bool get_provenance_enabled() { return s_provenance_enabled; }
 }

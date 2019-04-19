@@ -14,7 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cassert>
 #include <memory>
 
 #include "ngraph/op/concat.hpp"

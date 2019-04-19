@@ -20,6 +20,50 @@
 using namespace std;
 using namespace ngraph;
 
+Strides ngraph::conv_default_strides(const Node* node,
+                                     const PartialShape& data_batch_shape,
+                                     const PartialShape& filters_shape)
+{
+    size_t rank;
+
+    if (data_batch_shape.rank().is_static() && static_cast<size_t>(data_batch_shape.rank()) >= 2)
+    {
+        rank = static_cast<size_t>(data_batch_shape.rank()) - 2;
+    }
+    else if (filters_shape.rank().is_static() && static_cast<size_t>(filters_shape.rank()) >= 2)
+    {
+        rank = static_cast<size_t>(filters_shape.rank()) - 2;
+    }
+    else
+    {
+        rank = 0;
+    }
+
+    return Strides(rank, 1);
+}
+
+CoordinateDiff ngraph::conv_default_padding(const Node* node,
+                                            const PartialShape& data_batch_shape,
+                                            const PartialShape& filters_shape)
+{
+    size_t rank;
+
+    if (data_batch_shape.rank().is_static() && static_cast<size_t>(data_batch_shape.rank()) >= 2)
+    {
+        rank = static_cast<size_t>(data_batch_shape.rank()) - 2;
+    }
+    else if (filters_shape.rank().is_static() && static_cast<size_t>(filters_shape.rank()) >= 2)
+    {
+        rank = static_cast<size_t>(filters_shape.rank()) - 2;
+    }
+    else
+    {
+        rank = 0;
+    }
+
+    return CoordinateDiff(rank, 0);
+}
+
 //
 // Infers the output shape of a windowed reduction operation, where the data may be dilated and/or
 // padded, and the reduction window may be strided and/or dilated.
