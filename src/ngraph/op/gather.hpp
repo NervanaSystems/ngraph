@@ -29,10 +29,8 @@ namespace ngraph
             // \param params The tensor from which slices are gathered
             // \param indices Index tensor: Data type must be `element::i32` or `element::i64`
             // \param axis Axis in params to gather
-            Gather(const std::shared_ptr<Node>& params,
-                   const std::shared_ptr<Node>& indices,
-                   size_t axis = 0)
-                : Op("Gather", check_single_output_args({params, indices}))
+            Gather(const Output<Node>& params, const Output<Node>& indices, size_t axis = 0)
+                : Op("Gather", {params, indices})
                 , m_axis(axis)
             {
                 constructor_validate_and_infer_types();
