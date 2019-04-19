@@ -72,6 +72,12 @@ public:
             construct_conv_add_relu();
             construct_update_slice();
             construct_fuse_lstm_recurrent_state();
+            if (std::getenv("NGRAPH_DECONV_FUSE") != nullptr)
+            {
+                // Note: enable when the deconv perf is better than convbackpropdata
+                construct_deconvolution_affine_folding();
+                construct_deconvolution_affine_folding_relu();
+            }
         }
     }
 
@@ -101,6 +107,8 @@ private:
     void construct_groupconv_batchnorm_global_stats_folding_relu();
     void construct_update_slice();
     void construct_fuse_lstm_recurrent_state();
+    void construct_deconvolution_affine_folding();
+    void construct_deconvolution_affine_folding_relu();
 };
 
 class CPU_BACKEND_API ngraph::runtime::cpu::pass::CPUQuantFusion : public ngraph::pass::GraphRewrite

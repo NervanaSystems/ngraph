@@ -58,6 +58,7 @@ set(SRC
     pass_memory_layout.cpp
     pass_shape_specialization.cpp
     pattern.cpp
+    provenance.cpp
     reshape_elimination.cpp
     reshape_sinking.cpp
     serialize.cpp
@@ -143,6 +144,7 @@ set(MULTI_TEST_SRC
     backend_dot.in.cpp
     backend_embedding_lookup.in.cpp
     backend_fused_op.in.cpp
+    backend_gather.in.cpp
     backend_one_hot.in.cpp
     backend_pool.in.cpp
     backend_reshape.in.cpp
@@ -163,9 +165,14 @@ if (NGRAPH_CPU_ENABLE)
 endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
-    list(APPEND MULTI_TEST_SRC onnx_import.in.cpp)
+    list(APPEND MULTI_TEST_SRC
+            onnx/onnx_import.in.cpp
+            onnx/onnx_import_convpool.in.cpp
+            onnx/onnx_import_reshape.in.cpp
+            onnx/onnx_import_rnn.in.cpp
+            onnx/onnx_import_quant.in.cpp)
     if (NGRAPH_ONNXIFI_ENABLE)
-        list(APPEND SRC onnxifi.cpp onnxifi_span.cpp)
+        list(APPEND SRC onnx/onnxifi.cpp onnx/onnxifi_span.cpp)
     endif()
 endif()
 
