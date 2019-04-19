@@ -20,6 +20,11 @@
 using namespace std;
 using namespace ngraph;
 
+pass::PassBase::PassBase()
+{
+    set_property(PassProperty::REGULAR_FUSIONS, true);
+}
+
 pass::ManagerState& pass::PassBase::get_state()
 {
     return *m_state;
@@ -28,4 +33,21 @@ pass::ManagerState& pass::PassBase::get_state()
 void pass::PassBase::set_state(ManagerState& state)
 {
     m_state = &state;
+}
+
+bool pass::PassBase::get_property(const PassPropertyMask& prop) const
+{
+    return m_property.is_set(prop);
+}
+
+void pass::PassBase::set_property(const PassPropertyMask& prop, bool value)
+{
+    if (value)
+    {
+        m_property.set(prop);
+    }
+    else
+    {
+        m_property.clear(prop);
+    }
 }
