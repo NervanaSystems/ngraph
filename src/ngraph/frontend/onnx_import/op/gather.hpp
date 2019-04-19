@@ -14,40 +14,34 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/pass/pass.hpp"
-#include "ngraph/pass/manager.hpp"
+#pragma once
 
-using namespace std;
-using namespace ngraph;
+#include "core/node.hpp"
+#include "ngraph/node_vector.hpp"
+#include "ngraph/op/gather.hpp"
 
-pass::PassBase::PassBase()
+namespace ngraph
 {
-    set_property(PassProperty::REGULAR_FUSIONS, true);
-}
-
-pass::ManagerState& pass::PassBase::get_state()
-{
-    return *m_state;
-}
-
-void pass::PassBase::set_state(ManagerState& state)
-{
-    m_state = &state;
-}
-
-bool pass::PassBase::get_property(const PassPropertyMask& prop) const
-{
-    return m_property.is_set(prop);
-}
-
-void pass::PassBase::set_property(const PassPropertyMask& prop, bool value)
-{
-    if (value)
+    namespace onnx_import
     {
-        m_property.set(prop);
-    }
-    else
-    {
-        m_property.clear(prop);
-    }
-}
+        namespace op
+        {
+            namespace set_1
+            {
+                inline NodeVector gather(const Node& node)
+                {
+                    NodeVector ng_inputs{node.get_ng_inputs()};
+                    auto data = ng_inputs.at(0);
+                    auto indices = ng_inputs.at(1);
+                    auto axis = node.get_attribute_value<int64_t>("axis", 0);
+
+                    return {std::make_shared<ngraph::op::Gather>(data, indices, axis)};
+                }
+
+            } // namespace set_1
+
+        } //namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

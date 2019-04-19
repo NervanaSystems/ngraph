@@ -197,6 +197,7 @@ int main(int argc, char** argv)
     bool visualize = false;
     int warmup_iterations = 1;
     bool copy_data = true;
+    bool dot_file = false;
 
     for (size_t i = 1; i < argc; i++)
     {
@@ -236,6 +237,10 @@ int main(int argc, char** argv)
         else if (arg == "-v" || arg == "--visualize")
         {
             visualize = true;
+        }
+        else if (arg == "--dot")
+        {
+            dot_file = true;
         }
         else if (arg == "-d" || arg == "--directory")
         {
@@ -294,6 +299,7 @@ OPTIONS
         --timing_detail           Gather detailed timing
         -w|--warmup_iterations    Number of warm-up iterations
         --no_copy_data            Disable copy of input/result data every iteration
+        --dot                     Generate graphviz dot file
 )###";
         return 1;
     }
@@ -339,10 +345,10 @@ OPTIONS
             {
                 shared_ptr<Function> f = deserialize(model);
                 auto model_file_name = ngraph::file_util::get_file_name(model) + std::string(".") +
-                                       pass::VisualizeTree::get_file_ext();
+                                       (dot_file ? "dot" : pass::VisualizeTree::get_file_ext());
 
                 pass::Manager pass_manager;
-                pass_manager.register_pass<pass::VisualizeTree>(model_file_name);
+                pass_manager.register_pass<pass::VisualizeTree>(model_file_name, nullptr, true);
                 pass_manager.run_passes(f);
             }
 

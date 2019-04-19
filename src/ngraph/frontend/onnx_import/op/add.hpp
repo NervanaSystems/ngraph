@@ -51,7 +51,7 @@ namespace ngraph
                     return {std::make_shared<ngraph::op::Add>(ng_inputs.at(0), ng_inputs.at(1))};
                 }
 
-            } // namespace set_1
+            } // namespace set_7
 
         } //namespace op
 

@@ -167,9 +167,14 @@ if (NGRAPH_CPU_ENABLE)
 endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
-    list(APPEND MULTI_TEST_SRC onnx_import.in.cpp)
+    list(APPEND MULTI_TEST_SRC
+            onnx/onnx_import.in.cpp
+            onnx/onnx_import_convpool.in.cpp
+            onnx/onnx_import_reshape.in.cpp
+            onnx/onnx_import_rnn.in.cpp
+            onnx/onnx_import_quant.in.cpp)
     if (NGRAPH_ONNXIFI_ENABLE)
-        list(APPEND SRC onnxifi.cpp onnxifi_span.cpp)
+        list(APPEND SRC onnx/onnxifi.cpp onnx/onnxifi_span.cpp)
     endif()
 endif()
 
