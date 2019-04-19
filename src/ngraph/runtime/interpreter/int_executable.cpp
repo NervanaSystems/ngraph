@@ -37,6 +37,7 @@ using descriptor::layout::DenseTensorLayout;
 
 runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& function,
                                                    bool enable_performance_collection)
+    : m_performance_counters_enabled{enable_performance_collection}
 {
     m_is_compiled = true;
     pass::Manager pass_manager;
