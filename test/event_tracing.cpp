@@ -32,6 +32,9 @@ using namespace ngraph;
 
 TEST(event_tracing, duration)
 {
+    const string test_file_name = "event_tracing.duration.json";
+    event::Manager::close();
+    event::Manager::open(test_file_name);
     event::Manager::enable_event_tracing();
     vector<thread> threads;
     mutex mtx;
@@ -43,7 +46,6 @@ TEST(event_tracing, duration)
             oss << "Event: " << id;
             event::Duration event(oss.str(), "Dummy");
             this_thread::sleep_for(chrono::milliseconds(2));
-            event.write();
         });
         this_thread::sleep_for(chrono::milliseconds(2));
         threads.push_back(move(next_thread));
@@ -59,12 +61,13 @@ TEST(event_tracing, duration)
     event::Manager::close();
 
     // Now read the file
-    auto json_string = ngraph::file_util::read_file_to_string("ngraph_event_trace.json");
+    auto json_string = ngraph::file_util::read_file_to_string(test_file_name);
     nlohmann::json json_from_file = nlohmann::json::parse(json_string);
 
     EXPECT_EQ(10, json_from_file.size());
 
     event::Manager::disable_event_tracing();
+    event::Manager::close();
 }
 
 TEST(event_tracing, object)
@@ -80,7 +83,7 @@ TEST(event_tracing, object)
         args["arg0"] = i * 10;
         args["arg1"] = i * 20;
         args["arg2"] = i * 30;
-        objects.emplace_back(ss.str(), args);
+        objects.emplace_back(ss.str(), args.dump());
     }
     this_thread::sleep_for(chrono::milliseconds(10));
     for (event::Object& obj : objects)
@@ -89,7 +92,7 @@ TEST(event_tracing, object)
         args["arg0.1"] = "one";
         args["arg1.1"] = "two";
         args["arg2.1"] = "three";
-        obj.snapshot(args);
+        obj.snapshot(args.dump());
     }
     this_thread::sleep_for(chrono::milliseconds(10));
     for (event::Object& obj : objects)
@@ -117,9 +120,7 @@ TEST(benchmark, event_tracing)
             for (size_t inner = 0; inner < inner_size; ++inner)
             {
                 event::Duration inner_event("inner", "Dummy");
-                inner_event.write();
             }
-            outer_event.write();
         }
         timer.stop();
         NGRAPH_INFO << "enabled time " << timer.get_milliseconds() << "ms";
@@ -139,9 +140,7 @@ TEST(benchmark, event_tracing)
             for (size_t inner = 0; inner < inner_size; ++inner)
             {
                 event::Duration inner_event("inner", "Dummy");
-                inner_event.write();
             }
-            outer_event.write();
         }
         timer.stop();
         NGRAPH_INFO << "disabled time " << timer.get_milliseconds() << "ms";

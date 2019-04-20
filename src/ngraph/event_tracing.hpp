@@ -31,8 +31,6 @@
 #include <unistd.h>
 #endif
 
-#include "nlohmann/json.hpp"
-
 namespace ngraph
 {
     namespace event
@@ -89,55 +87,57 @@ public:
 private:
     static std::ofstream& get_output_stream();
     static const std::string& get_process_id();
-    static std::chrono::microseconds get_current_microseconds()
+    static size_t get_current_microseconds()
     {
-        return std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::high_resolution_clock::now().time_since_epoch());
+        return std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000;
     }
     static std::string get_thread_id();
     static std::mutex& get_mutex() { return s_file_mutex; }
+    static bool is_first_write();
     static std::ostream s_ostream;
     static std::mutex s_file_mutex;
     static bool s_tracing_enabled;
+    static bool s_is_first_write;
 };
 
+/// \brief Duration is RAII so the easiest way to use it is to create it at the place where
+/// you want tracing to start and it automatically writes the duration event when the class
+/// goes out of scope. This makes it simple to time functions and code blocks.
 class ngraph::event::Duration
 {
 public:
     explicit Duration(const std::string& name,
                       const std::string& category,
-                      nlohmann::json args = nullptr);
+                      const std::string& = "");
+    ~Duration();
 
     /// \brief stop the timer without writing the data to the log file. To write the data
     /// call the `write` method
     /// Calls to stop() are optional
     void stop();
 
-    /// \brief write the log data to the log file for this event
-    /// This funtion has an implicit stop() if stop() has not been previously called
-    void write();
-
     Duration(const Duration&) = delete;
     Duration& operator=(Duration const&) = delete;
 
 private:
+    void write();
     std::string to_json() const;
     size_t m_start;
     size_t m_stop;
     std::string m_name;
     std::string m_category;
-    nlohmann::json m_args;
+    std::string m_args;
 };
 
 class ngraph::event::Object
 {
 public:
-    Object(const std::string& name, nlohmann::json args);
-    void snapshot(nlohmann::json args);
+    Object(const std::string& name, const std::string&);
+    void snapshot(const std::string&);
     void destroy();
 
 private:
-    void write_snapshot(std::ostream& out, nlohmann::json& args);
+    void write_snapshot(std::ostream& out, const std::string& args);
     const std::string m_name;
     size_t m_id;
 };

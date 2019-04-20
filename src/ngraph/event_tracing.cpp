@@ -15,12 +15,12 @@
 //*****************************************************************************
 
 #include <iostream>
+#include <map>
 #include <sstream>
 #include <string>
 
 #include "event_tracing.hpp"
 #include "ngraph/log.hpp"
-#include "nlohmann/json.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -34,12 +34,13 @@ static bool read_tracing_env_var()
 
 mutex event::Manager::s_file_mutex;
 bool event::Manager::s_tracing_enabled = read_tracing_env_var();
+bool event::Manager::s_is_first_write = false;
 
-event::Duration::Duration(const string& name, const string& category, nlohmann::json args)
+event::Duration::Duration(const string& name, const string& category, const string& args)
 {
     if (Manager::is_tracing_enabled())
     {
-        m_start = Manager::get_current_microseconds().count();
+        m_start = Manager::get_current_microseconds();
         m_stop = 0;
         m_name = name;
         m_category = category;
@@ -47,19 +48,11 @@ event::Duration::Duration(const string& name, const string& category, nlohmann::
     }
 }
 
-void event::Duration::stop()
+event::Duration::~Duration()
 {
     if (Manager::is_tracing_enabled())
     {
-        m_stop = Manager::get_current_microseconds().count();
-    }
-}
-
-void event::Duration::write()
-{
-    if (Manager::is_tracing_enabled())
-    {
-        size_t stop_time = (m_stop != 0 ? m_stop : Manager::get_current_microseconds().count());
+        size_t stop_time = (m_stop != 0 ? m_stop : Manager::get_current_microseconds());
 
         lock_guard<mutex> lock(Manager::get_mutex());
 
@@ -68,7 +61,7 @@ void event::Duration::write()
         {
             event::Manager::open();
         }
-        else
+        if (!event::Manager::is_first_write())
         {
             Manager::get_output_stream() << ",\n";
         }
@@ -77,12 +70,25 @@ void event::Duration::write()
             R"({"name":")" << m_name << R"(","cat":")" << m_category << R"(","ph":"X","pid":)"
                                      << Manager::get_process_id() << R"(,"tid":)"
                                      << Manager::get_thread_id() <<
-            R"(,"ts":)" << to_string(m_start) << R"(,"dur":)" << to_string(stop_time - m_start)
-                                     << "}";
+            R"(,"ts":)" << m_start << R"(,"dur":)" << (stop_time - m_start);
+        if (!m_args.empty())
+        {
+            out <<
+                R"(,"args":)" << m_args;
+        }
+        out << "}";
     }
 }
 
-event::Object::Object(const string& name, nlohmann::json args)
+void event::Duration::stop()
+{
+    if (Manager::is_tracing_enabled())
+    {
+        m_stop = Manager::get_current_microseconds();
+    }
+}
+
+event::Object::Object(const string& name, const string& args)
     : m_name{name}
     , m_id{static_cast<size_t>(chrono::high_resolution_clock::now().time_since_epoch().count())}
 {
@@ -95,19 +101,25 @@ event::Object::Object(const string& name, nlohmann::json args)
         {
             event::Manager::open();
         }
-        else
+        if (!event::Manager::is_first_write())
         {
             Manager::get_output_stream() << ",\n";
         }
-        out << R"({"name":")" << m_name << R"(","ph":"N","id":")" << to_string(m_id) <<
-            R"(","ts":)" << to_string(Manager::get_current_microseconds().count()) <<
-            R"(,"pid":)" << Manager::get_process_id() << R"(,"tid":)" << Manager::get_thread_id()
-            << "},\n";
+        out << R"({"name":")" << m_name << R"(","ph":"N","id":")" << m_id <<
+            R"(","ts":)" << Manager::get_current_microseconds() <<
+            R"(,"pid":)" << Manager::get_process_id() << R"(,"tid":)" << Manager::get_thread_id();
+        if (!args.empty())
+        {
+            out <<
+                R"(,"args":)" << args;
+        }
+        out << "}";
+
         write_snapshot(out, args);
     }
 }
 
-void event::Object::snapshot(nlohmann::json args)
+void event::Object::snapshot(const string& args)
 {
     if (Manager::is_tracing_enabled())
     {
@@ -118,7 +130,7 @@ void event::Object::snapshot(nlohmann::json args)
         {
             event::Manager::open();
         }
-        else
+        if (!event::Manager::is_first_write())
         {
             Manager::get_output_stream() << ",\n";
         }
@@ -126,12 +138,17 @@ void event::Object::snapshot(nlohmann::json args)
     }
 }
 
-void event::Object::write_snapshot(ostream& out, nlohmann::json& args)
+void event::Object::write_snapshot(ostream& out, const string& args)
 {
-    out << R"({"name":")" << m_name << R"(","ph":"O","id":")" << to_string(m_id) <<
-        R"(","ts":)" << to_string(Manager::get_current_microseconds().count()) <<
-        R"(,"pid":)" << Manager::get_process_id() << R"(,"tid":)" << Manager::get_thread_id() <<
-        R"(,"args":)" << args.dump() << "}";
+    out << R"({"name":")" << m_name << R"(","ph":"O","id":")" << m_id <<
+        R"(","ts":)" << Manager::get_current_microseconds() <<
+        R"(,"pid":)" << Manager::get_process_id() << R"(,"tid":)" << Manager::get_thread_id();
+    if (!args.empty())
+    {
+        out <<
+            R"(,"args":)" << args;
+    }
+    out << "}";
 }
 
 void event::Object::destroy()
@@ -145,12 +162,12 @@ void event::Object::destroy()
         {
             event::Manager::open();
         }
-        else
+        if (!event::Manager::is_first_write())
         {
             Manager::get_output_stream() << ",\n";
         }
-        out << R"({"name":")" << m_name << R"(","ph":"D","id":")" << to_string(m_id) <<
-            R"(","ts":)" << to_string(Manager::get_current_microseconds().count()) <<
+        out << R"({"name":")" << m_name << R"(","ph":"D","id":")" << m_id <<
+            R"(","ts":)" << Manager::get_current_microseconds() <<
             R"(,"pid":)" << Manager::get_process_id() << R"(,"tid":)" << Manager::get_thread_id()
             << "}";
     }
@@ -163,6 +180,7 @@ void event::Manager::open(const string& path)
     {
         out.open(path, ios_base::trunc);
         out << "[\n";
+        s_is_first_write = true;
     }
 }
 
@@ -207,13 +225,20 @@ string event::Manager::get_thread_id()
     if (it == tid_map.end())
     {
         stringstream ss;
-        ss << tid;
-        rc = "\"" + ss.str() + "\"";
+        ss << "\"" << tid << "\"";
+        rc = ss.str();
         tid_map.insert({tid, rc});
     }
     else
     {
         rc = it->second;
     }
+    return rc;
+}
+
+bool event::Manager::is_first_write()
+{
+    bool rc = s_is_first_write;
+    s_is_first_write = false;
     return rc;
 }
