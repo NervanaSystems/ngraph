@@ -1,4 +1,4 @@
-.. ops/index.rst
+   .. ops/index.rst
 
 ####################
 List of Core ``ops``
@@ -26,6 +26,7 @@ Not currently a comprehensive list.
    * :doc:`batch_norm_training`
    * :doc:`batch_norm_training_backprop`
    * :doc:`broadcast`
+   * :doc:`broadcast_distributed`
    * :doc:`ceiling`
    * :doc:`concat`
    * :doc:`constant`
@@ -97,6 +98,7 @@ Not currently a comprehensive list.
    batch_norm_training.rst
    batch_norm_training_backprop.rst
    broadcast.rst
+   broadcast_distributed.rst
    ceiling.rst
    concat.rst
    constant.rst
@@ -161,7 +163,7 @@ dependency computation graph.
 bridges and that can be compiled by all transformers. A framework bridge may 
 define framework-specific ops to simplify graph construction, provided that the 
 bridge can enable every transformer to replace all such ops with equivalent 
-clusters or subgraphs composed of core ops. Similary, transformers may define 
+clusters or subgraphs composed of core ops. In a similar manner, transformers may define 
 transformer-specific ops to represent kernels or other intermediate operations. 
 
 If a framework supports extending the set of ops it offers, a bridge may even 
@@ -179,7 +181,7 @@ expose transformer-specific ops to the framework user.
    running kernels; rather, our compilation will match ``ops`` to appropriate 
    kernels for the backend(s) in use. Thus, we expect that adding of new Core 
    ops should be infrequent and that most functionality instead gets added with 
-   new functions that build sub-graphs from existing core ops.   
+   new functions that build sub-graphs from existing core ops.
 
 It is easiest to define a new op by adapting an existing op. Some of the tasks 
 that must be performed are:

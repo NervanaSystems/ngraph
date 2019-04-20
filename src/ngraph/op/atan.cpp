@@ -46,7 +46,7 @@ void op::Atan::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector&
 {
     auto delta = deltas.at(0);
 
-    auto x = get_inputs().at(0).get_output().get_node();
+    auto x = get_argument(0);
 
     auto one = make_shared<op::Constant>(x->get_element_type(), Shape{}, vector<string>{"1"});
 

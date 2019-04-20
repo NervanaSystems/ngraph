@@ -25,10 +25,11 @@
 #include "ngraph/log.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/experimental/quantized_dot.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
-#include "utils/broadcasting.hpp"
 #include "utils/reshape.hpp"
 
 /// \brief      Slice the sub matrix from the input tensor.
@@ -68,11 +69,26 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector matmul(const Node& node)
+                NodeVector make_matmul_op(const Node& node, bool quantized)
                 {
                     const NodeVector& ng_inputs{node.get_ng_inputs()};
                     auto left = std::shared_ptr<ngraph::Node>{ng_inputs.at(0)};
-                    auto right = std::shared_ptr<ngraph::Node>{ng_inputs.at(1)};
+                    auto right = std::shared_ptr<ngraph::Node>{};
+                    auto scale = std::shared_ptr<ngraph::Node>{};
+                    if (quantized)
+                    {
+                        NGRAPH_WARN
+                            << "[" << node.get_name()
+                            << "] Zero point different from 0 is not supported. Assuming Zero "
+                               "point is 0";
+                        right = ng_inputs.at(3);
+                        scale = ng_inputs.at(6);
+                    }
+                    else
+                    {
+                        right = ng_inputs.at(1);
+                    }
+
                     std::size_t left_rank{left->get_shape().size()};
                     std::size_t right_rank{right->get_shape().size()};
 
@@ -89,8 +105,19 @@ namespace ngraph
                     // Multiply two tensors where both of them has rank lower equal 2.
                     if (left_rank <= 2 && right_rank <= 2)
                     {
-                        return {
-                            std::make_shared<ngraph::op::Dot>(ng_inputs.at(0), ng_inputs.at(1))};
+                        if (quantized)
+                        {
+                            right = std::make_shared<ngraph::op::Reshape>(
+                                right,
+                                AxisVector{1, 0},
+                                Shape(right->get_shape().rbegin(), right->get_shape().rend()));
+
+                            return {std::make_shared<ngraph::op::QuantizedDot>(left, right, scale)};
+                        }
+                        else
+                        {
+                            return {std::make_shared<ngraph::op::Dot>(left, right)};
+                        }
                     }
 
                     // Second case:
@@ -100,7 +127,7 @@ namespace ngraph
                     if (left_rank > 1 && right_rank > 1)
                     {
                         const NodeVector& broadcasted_nodes =
-                            numpy_style_broadcast_for_matmul_operation(left, right);
+                            ngraph::op::numpy_style_broadcast_for_matmul_operation(left, right);
 
                         left = broadcasted_nodes.at(0);
                         right = broadcasted_nodes.at(1);
@@ -132,9 +159,24 @@ namespace ngraph
                     for (std::size_t g = 0; g < groups; ++g)
                     {
                         const auto& sliced_left = get_sub_matrix(left, g);
-                        const auto& sliced_right = get_sub_matrix(right, g);
+                        auto sliced_right = get_sub_matrix(right, g);
 
-                        auto sub_dot = std::make_shared<ngraph::op::Dot>(sliced_left, sliced_right);
+                        auto sub_dot = std::shared_ptr<ngraph::Node>{};
+
+                        if (quantized)
+                        {
+                            sliced_right = std::make_shared<ngraph::op::Reshape>(
+                                sliced_right,
+                                AxisVector{1, 0},
+                                Shape(sliced_right->get_shape().rbegin(),
+                                      sliced_right->get_shape().rend()));
+                            sub_dot = std::make_shared<ngraph::op::QuantizedDot>(
+                                sliced_left, sliced_right, scale);
+                        }
+                        else
+                        {
+                            sub_dot = std::make_shared<ngraph::op::Dot>(sliced_left, sliced_right);
+                        }
 
                         // Expand sub_dot result with single empty outermost axis, in order to
                         // later concatenate sub_dots at this axis.
@@ -162,6 +204,7 @@ namespace ngraph
                     }
                 }
 
+                NodeVector matmul(const Node& node) { return make_matmul_op(node, false); }
             } // namespace set_1
 
         } //namespace op

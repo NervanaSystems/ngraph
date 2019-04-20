@@ -162,7 +162,7 @@ int main(int argc, char** argv)
     {
         size_t total_size = 0;
         size_t total_count = 0;
-        const string prefix = "pReFiX";
+        const string delim = "pReFiX";
         ofstream out(output_path);
         out << "#pragma clang diagnostic ignored \"-Weverything\"\n";
         out << "#include <vector>\n";
@@ -175,23 +175,61 @@ int main(int argc, char** argv)
             out << "        \"" << path.search_path << "\",\n";
         }
         out << "    };\n";
-
+#ifdef _WIN32
+        out << "    const std::vector<std::pair<std::string, std::vector<std::string>>> "
+               "builtin_headers =\n";
+#else
         out << "    const std::vector<std::pair<std::string, std::string>> builtin_headers =\n";
+#endif
         out << "    {\n";
         for (const ResourceInfo& path : include_paths)
         {
             for (const string& header_path : path.files)
             {
-                string header_data = read_file_to_string(header_path);
-                string relative_path = header_path.substr(path.search_path.size() + 1);
-                header_data = rewrite_header(header_data, relative_path);
-                // header_data = uncomment(header_data);
-                total_size += header_data.size();
-                total_count++;
-
                 out << "        {";
-                out << "\"" << header_path << "\",\nR\"" << prefix << "(" << header_data << ")"
-                    << prefix << "\"},\n";
+                out << "\"" << header_path << "\",\n";
+                string relative_path = header_path.substr(path.search_path.size() + 1);
+                std::ifstream file(header_path);
+                if (file.is_open())
+                {
+                    std::string line;
+#ifdef _WIN32
+                    const int max_partial_size = 65500;
+                    out << "{\n";
+                    bool first_line = true;
+                    int partial_size = 0;
+                    out << "R\"" << delim << "(";
+                    while (getline(file, line))
+                    {
+                        line = rewrite_header(line, relative_path);
+                        // line = uncomment(line);
+                        total_size += line.size();
+                        partial_size += line.size();
+                        if (partial_size > max_partial_size)
+                        {
+                            out << ")" << delim << "\",\n";
+                            partial_size = line.size();
+                            out << "R\"" << delim << "(";
+                        }
+                        out << line;
+                    }
+                    out << ")" << delim << "\"";
+                    out << "}";
+#else
+                    out << "R\"" << delim << "(";
+                    while (getline(file, line))
+                    {
+                        line = rewrite_header(line, relative_path);
+                        // line = uncomment(line);
+                        total_size += line.size();
+                        out << line;
+                    }
+                    out << ")" << delim << "\"";
+#endif
+                    file.close();
+                }
+                out << "},\n";
+                total_count++;
             }
         }
         out << "    };\n";

@@ -25,6 +25,15 @@ framework developer customize targeted solutions. Experimental APIs to support
 current and future nGraph Backends are also available; see, for example, the 
 section on the :ref:`plaidml_backend`.
 
+.. csv-table::
+   :header: "Backend", "Current nGraph support", "Future nGraph support"
+   :widths: 35, 10, 10
+
+   Intel® Architecture Processors (CPUs), Yes, Yes
+   Intel® Nervana™ Neural Network Processor™ (NNPs), Yes, Yes
+   NVIDIA\* CUDA (GPUs), Yes, Some 
+   AMD\* GPUs, Yes, Some
+
 
 .. _hybrid_transformer:
 

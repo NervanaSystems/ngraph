@@ -8,18 +8,6 @@ This section details some of the *configuration options* and some of the
 your system already has a version of nGraph installed with one of our supported
 backends. 
 
-.. csv-table::
-   :header: "Backend", "Current nGraph support", "Future nGraph support"
-   :widths: 35, 10, 10
-
-   Intel® Architecture Processors (CPUs), Yes, Yes
-   Intel® Nervana™ Neural Network Processor™ (NNPs), Yes, Yes
-   NVIDIA\* CUDA (GPUs), Yes, Some 
-   :abbr:`Field Programmable Gate Arrays (FPGA)` (FPGAs), Coming soon, Yes
-   `Movidius`_, Not yet, Yes
-   Other, Not yet, Ask
-
-
 Regardless of the framework, after the :doc:`../buildlb` step, a good place 
 to start usually involves making the libraries available to the framework. On 
 Linux\* systems built on Intel® Architecture, that command tends to looks 
@@ -75,7 +63,8 @@ additional component to be able to use these configuration settings.
 * ``KMP_BLOCKTIME`` Sets the time, in milliseconds, that a thread should wait 
   after completing the execution of a parallel region, before sleeping.
 * ``KMP_AFFINITY`` Enables the runtime library to bind threads to physical 
-  processing units. 
+  processing units. A useful article that explains more about how to use this 
+  option for various CPU backends is here: https://web.archive.org/web/20190401182248/https://www.nas.nasa.gov/hecc/support/kb/Using-Intel-OpenMP-Thread-Affinity-for-Pinning_285.html
 * ``KMP_SETTINGS`` Enables (``true``) or disables (``false``) the printing of 
   OpenMP\* runtime library environment variables during program execution.
 * ``OMP_NUM_THREADS`` Specifies the number of threads to use.
@@ -174,9 +163,8 @@ Compiler stack runs on transformers handled by Intel® Architecture (IA), and
 thus can make more efficient use of the underlying hardware.
 
 
-
-
-.. _KMP options: https://software.intel.com/en-us/node/522691
+.. _KMP options: https://software.intel.com/en-us/cpp-compiler-developer-guide-and-reference-controlling-thread-allocation
+.. KMP options: https://software.intel.com/en-us/node/522691
 .. _MKL-DNN: https://github.com/intel/mkl-dnn
 .. _gnu.org site: https://gcc.gnu.org/onlinedocs/libgomp/Environment-Variables.html
 .. _Movidius: https://www.movidius.com/

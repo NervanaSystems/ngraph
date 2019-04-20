@@ -310,3 +310,173 @@ TEST(core_fusion, reshape_softmax_reshape)
 
     EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
 }
+
+TEST(core_fusion, conv_bias)
+{
+    auto gen_f = [](bool with_fused_op) {
+        auto data = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5});
+        auto weights = make_shared<op::Parameter>(element::f32, Shape{4, 3, 2, 2});
+        auto bias = make_shared<op::Parameter>(element::f32, Shape{4});
+        if (with_fused_op)
+        {
+            return make_shared<Function>(make_shared<op::ConvolutionBias>(data, weights, bias),
+                                         ParameterVector{data, weights, bias});
+        }
+        else
+        {
+            auto conv = make_shared<op::Convolution>(data, weights);
+            auto conv_bias =
+                conv + make_shared<op::Broadcast>(bias, conv->get_shape(), AxisSet{0, 2, 3});
+            return make_shared<Function>(conv_bias, ParameterVector{data, weights, bias});
+        }
+    };
+
+    auto fused_f = gen_f(true);
+    auto decomp_f1 = gen_f(false);
+    auto decomp_f2 = gen_f(false);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::CoreFusion>(ngraph::pass::ALL_FUSIONS);
+    pass_manager.run_passes(decomp_f1);
+    ASSERT_EQ(count_ops_of_type<op::ConvolutionBias>(decomp_f1), 1);
+
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : fused_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto fused_r = execute(fused_f, args, "INTERPRETER");
+    auto decomp_r1 = execute(decomp_f1, args, "INTERPRETER");
+    auto decomp_r2 = execute(decomp_f2, args, "INTERPRETER");
+
+    for (size_t i = 0; i < fused_r.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(fused_r.at(i), decomp_r1.at(i)));
+        EXPECT_TRUE(test::all_close(fused_r.at(i), decomp_r2.at(i)));
+    }
+}
+
+TEST(core_fusion, conv_bias_add)
+{
+    auto gen_f = [](bool with_fused_op) {
+        auto data = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5});
+        auto weights = make_shared<op::Parameter>(element::f32, Shape{4, 3, 2, 2});
+        auto bias = make_shared<op::Parameter>(element::f32, Shape{4});
+        auto add = make_shared<op::Parameter>(element::f32, Shape{2, 4, 3, 4});
+        if (with_fused_op)
+        {
+            auto conv_bias = make_shared<op::ConvolutionBias>(data, weights, bias);
+            return make_shared<Function>(make_shared<op::ConvolutionBiasAdd>(conv_bias, add),
+                                         ParameterVector{data, weights, bias, add});
+        }
+        else
+        {
+            auto conv = make_shared<op::Convolution>(data, weights);
+            auto conv_bias =
+                conv + make_shared<op::Broadcast>(bias, conv->get_shape(), AxisSet{0, 2, 3});
+            return make_shared<Function>(conv_bias + add,
+                                         ParameterVector{data, weights, bias, add});
+        }
+    };
+
+    auto fused_f = gen_f(true);
+    auto decomp_f1 = gen_f(false);
+    auto decomp_f2 = gen_f(false);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::CoreFusion>(ngraph::pass::ALL_FUSIONS);
+    pass_manager.run_passes(decomp_f1);
+    ASSERT_EQ(count_ops_of_type<op::ConvolutionBiasAdd>(decomp_f1), 1);
+
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : fused_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto fused_r = execute(fused_f, args, "INTERPRETER");
+    auto decomp_r1 = execute(decomp_f1, args, "INTERPRETER");
+    auto decomp_r2 = execute(decomp_f2, args, "INTERPRETER");
+
+    for (size_t i = 0; i < fused_r.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(fused_r.at(i), decomp_r1.at(i)));
+        EXPECT_TRUE(test::all_close(fused_r.at(i), decomp_r2.at(i)));
+    }
+}
+
+// TODO: Enable once fusion is moved to core
+TEST(core_fusion, DISABLED_conv_bias_bprop)
+{
+    auto gen_f = [](bool with_fused_op) {
+        auto data = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5});
+        auto weights = make_shared<op::Parameter>(element::f32, Shape{4, 3, 2, 2});
+        auto bias = make_shared<op::Parameter>(element::f32, Shape{4});
+        auto delta = make_shared<op::Parameter>(element::f32, Shape{2, 4, 3, 4});
+        if (with_fused_op)
+        {
+            auto conv_bprop =
+                make_shared<op::ConvolutionBiasBackpropFiltersBias>(data,
+                                                                    weights->get_shape(),
+                                                                    bias->get_shape(),
+                                                                    delta,
+                                                                    Strides{1, 1},
+                                                                    Strides{1, 1},
+                                                                    CoordinateDiff{0, 0},
+                                                                    CoordinateDiff{0, 0},
+                                                                    Strides{1, 1});
+            auto goe0 = make_shared<op::GetOutputElement>(conv_bprop, 0);
+            auto goe1 = make_shared<op::GetOutputElement>(conv_bprop, 1);
+            return make_shared<Function>(NodeVector{goe0, goe1}, ParameterVector{data, delta});
+        }
+        else
+        {
+            auto conv_bprop = make_shared<op::ConvolutionBackpropFilters>(data,
+                                                                          weights->get_shape(),
+                                                                          delta,
+                                                                          Strides{1, 1},
+                                                                          Strides{1, 1},
+                                                                          CoordinateDiff{0, 0},
+                                                                          CoordinateDiff{0, 0},
+                                                                          Strides{1, 1});
+            auto bias_bprop = make_shared<op::Sum>(delta, AxisSet{0, 2, 3});
+            return make_shared<Function>(NodeVector{conv_bprop, bias_bprop},
+                                         ParameterVector{data, delta});
+        }
+    };
+
+    auto fused_f = gen_f(true);
+    auto decomp_f1 = gen_f(false);
+    auto decomp_f2 = gen_f(false);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::CoreFusion>(ngraph::pass::ALL_FUSIONS);
+    pass_manager.run_passes(decomp_f1);
+    ASSERT_EQ(count_ops_of_type<op::ConvolutionBiasBackpropFiltersBias>(decomp_f1), 1);
+
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : fused_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto fused_r = execute(fused_f, args, "INTERPRETER");
+    auto decomp_r1 = execute(decomp_f1, args, "INTERPRETER");
+    auto decomp_r2 = execute(decomp_f2, args, "INTERPRETER");
+
+    for (size_t i = 0; i < fused_r.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(fused_r.at(i), decomp_r1.at(i)));
+        EXPECT_TRUE(test::all_close(fused_r.at(i), decomp_r2.at(i)));
+    }
+}

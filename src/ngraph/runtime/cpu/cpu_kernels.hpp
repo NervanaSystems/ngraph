@@ -218,6 +218,12 @@ namespace ngraph
                                           const Coordinate& upper_bounds,
                                           const Strides& slice_strides,
                                           int arena);
+
+                template <typename ElementType>
+                void erf(void* input0, void* output, size_t count, int arena);
+
+                template <typename ElementType>
+                void reference_erf(void* arg, void* out, size_t count);
             }
         }
     }

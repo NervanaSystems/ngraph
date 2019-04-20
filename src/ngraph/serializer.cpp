@@ -34,6 +34,7 @@
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/broadcast_distributed.hpp"
 #include "ngraph/op/ceiling.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
@@ -46,8 +47,13 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/equal.hpp"
+#include "ngraph/op/erf.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/batch_mat_mul.hpp"
 #include "ngraph/op/experimental/dyn_broadcast.hpp"
+#include "ngraph/op/experimental/dyn_pad.hpp"
+#include "ngraph/op/experimental/dyn_reshape.hpp"
+#include "ngraph/op/experimental/dyn_slice.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
@@ -59,6 +65,10 @@
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/floor.hpp"
+#include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/prelu.hpp"
+#include "ngraph/op/gather.hpp"
+#include "ngraph/op/gather_nd.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
@@ -119,6 +129,7 @@ using const_data_callback_t = shared_ptr<Node>(const string&, const element::Typ
 #define NGRAPH_OP(a, b) a,
 enum class OP_TYPEID
 {
+#include "ngraph/op/fused_op_tbl.hpp"
 #include "ngraph/op/op_tbl.hpp"
     UnknownOp
 };
@@ -132,6 +143,7 @@ static OP_TYPEID get_typeid(const string& s)
 // ...
 #define NGRAPH_OP(a, b) {#a, OP_TYPEID::a},
     static const unordered_map<string, OP_TYPEID> typeid_map{
+#include "ngraph/op/fused_op_tbl.hpp"
 #include "ngraph/op/op_tbl.hpp"
     };
 #undef NGRAPH_OP
@@ -555,6 +567,12 @@ static shared_ptr<ngraph::Function>
                                                         include_padding_in_avg_computation);
                 break;
             }
+            case OP_TYPEID::BatchMatMul:
+            {
+                node = make_shared<op::BatchMatMul>(args[0], args[1]);
+                break;
+            }
+
             case OP_TYPEID::BatchNormTraining:
             {
                 auto epsilon = node_js.at("eps").get<double>();
@@ -583,6 +601,11 @@ static shared_ptr<ngraph::Function>
                 auto shape = node_js.at("shape").get<vector<size_t>>();
                 auto axes = node_js.at("axes").get<set<size_t>>();
                 node = make_shared<op::Broadcast>(args[0], shape, axes);
+                break;
+            }
+            case OP_TYPEID::BroadcastDistributed:
+            {
+                node = make_shared<op::BroadcastDistributed>(args[0]);
                 break;
             }
             case OP_TYPEID::BroadcastLike:
@@ -711,6 +734,75 @@ static shared_ptr<ngraph::Function>
                                                                    data_dilation_strides_forward);
                 break;
             }
+            case OP_TYPEID::ConvolutionBias:
+            {
+                auto window_movement_strides =
+                    node_js.at("window_movement_strides").get<vector<size_t>>();
+                auto window_dilation_strides =
+                    node_js.at("window_dilation_strides").get<vector<size_t>>();
+                auto padding_below = node_js.at("padding_below").get<vector<std::ptrdiff_t>>();
+                auto padding_above = node_js.at("padding_above").get<vector<std::ptrdiff_t>>();
+                auto data_dilation_strides =
+                    node_js.at("data_dilation_strides").get<vector<size_t>>();
+
+                node = make_shared<op::ConvolutionBias>(args[0],
+                                                        args[1],
+                                                        args[2],
+                                                        window_movement_strides,
+                                                        window_dilation_strides,
+                                                        padding_below,
+                                                        padding_above,
+                                                        data_dilation_strides);
+                break;
+            }
+            case OP_TYPEID::ConvolutionBiasAdd:
+            {
+                auto window_movement_strides =
+                    node_js.at("window_movement_strides").get<vector<size_t>>();
+                auto window_dilation_strides =
+                    node_js.at("window_dilation_strides").get<vector<size_t>>();
+                auto padding_below = node_js.at("padding_below").get<vector<std::ptrdiff_t>>();
+                auto padding_above = node_js.at("padding_above").get<vector<std::ptrdiff_t>>();
+                auto data_dilation_strides =
+                    node_js.at("data_dilation_strides").get<vector<size_t>>();
+
+                node = make_shared<op::ConvolutionBiasAdd>(args[0],
+                                                           args[1],
+                                                           args[2],
+                                                           args[3],
+                                                           window_movement_strides,
+                                                           window_dilation_strides,
+                                                           padding_below,
+                                                           padding_above,
+                                                           data_dilation_strides);
+                break;
+            }
+            case OP_TYPEID::ConvolutionBiasBackpropFiltersBias:
+            {
+                auto filters_shape = node_js.at("filters_shape").get<vector<size_t>>();
+                auto bias_shape = node_js.at("bias_shape").get<vector<size_t>>();
+                auto window_movement_strides_forward =
+                    node_js.at("window_movement_strides_forward").get<vector<size_t>>();
+                auto window_dilation_strides_forward =
+                    node_js.at("window_dilation_strides_forward").get<vector<size_t>>();
+                auto padding_below_forward =
+                    node_js.at("padding_below_forward").get<vector<std::ptrdiff_t>>();
+                auto padding_above_forward =
+                    node_js.at("padding_above_forward").get<vector<std::ptrdiff_t>>();
+                auto data_dilation_strides_forward =
+                    node_js.at("data_dilation_strides_forward").get<vector<size_t>>();
+                node = make_shared<op::ConvolutionBiasBackpropFiltersBias>(
+                    args[0],
+                    filters_shape,
+                    bias_shape,
+                    args[1],
+                    window_movement_strides_forward,
+                    window_dilation_strides_forward,
+                    padding_below_forward,
+                    padding_above_forward,
+                    data_dilation_strides_forward);
+                break;
+            }
             case OP_TYPEID::Cos:
             {
                 node = make_shared<op::Cos>(args[0]);
@@ -753,6 +845,21 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::DynBroadcast>(args[0], args[1], args[2]);
                 break;
             }
+            case OP_TYPEID::DynPad:
+            {
+                node = make_shared<op::DynPad>(args[0], args[1], args[2], args[3]);
+                break;
+            }
+            case OP_TYPEID::DynReshape:
+            {
+                node = make_shared<op::DynReshape>(args[0], args[1]);
+                break;
+            }
+            case OP_TYPEID::DynSlice:
+            {
+                node = make_shared<op::DynSlice>(args[0], args[1], args[2], args[3]);
+                break;
+            }
             case OP_TYPEID::EmbeddingLookup:
             {
                 node = make_shared<op::EmbeddingLookup>(args[0], args[1]);
@@ -763,6 +870,11 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Equal>(args[0], args[1]);
                 break;
             }
+            case OP_TYPEID::Erf:
+            {
+                node = make_shared<op::Erf>(args[0]);
+                break;
+            }
             case OP_TYPEID::Exp:
             {
                 node = make_shared<op::Exp>(args[0]);
@@ -771,6 +883,17 @@ static shared_ptr<ngraph::Function>
             case OP_TYPEID::Floor:
             {
                 node = make_shared<op::Floor>(args[0]);
+                break;
+            }
+            case OP_TYPEID::Gather:
+            {
+                auto axis = node_js.at("axis").get<size_t>();
+                node = make_shared<op::Gather>(args[0], args[1], axis);
+                break;
+            }
+            case OP_TYPEID::GatherND:
+            {
+                node = make_shared<op::GatherND>(args[0], args[1]);
                 break;
             }
             case OP_TYPEID::GenerateMask:
@@ -948,11 +1071,15 @@ static shared_ptr<ngraph::Function>
                 // This is a legacy field whose functionality is no longer supported. The new
                 // behavior is equivalent to interior padding of 0, so we will accept it under
                 // those conditions.
-                auto padding_interior = node_js.at("padding_interior").get<vector<size_t>>();
-                NGRAPH_ASSERT(std::all_of(padding_interior.begin(),
-                                          padding_interior.end(),
-                                          [](size_t s) { return s == 0; }))
-                    << "Legacy padding_interior field must be zero everywhere.";
+                auto padding_interior_maybe = node_js.find("padding_interior");
+                if (padding_interior_maybe != node_js.end())
+                {
+                    auto padding_interior = padding_interior_maybe->get<vector<size_t>>();
+                    NGRAPH_CHECK(std::all_of(padding_interior.begin(),
+                                             padding_interior.end(),
+                                             [](size_t s) { return s == 0; }),
+                                 "Legacy padding_interior field must be zero everywhere.");
+                }
 
                 auto pad_mode = node_js.count("pad_mode") == 0
                                     ? op::PadMode::CONSTANT
@@ -992,6 +1119,11 @@ static shared_ptr<ngraph::Function>
             case OP_TYPEID::Power:
             {
                 node = make_shared<op::Power>(args[0], args[1]);
+                break;
+            }
+            case OP_TYPEID::PRelu:
+            {
+                node = make_shared<op::PRelu>(args[0], args[1]);
                 break;
             }
             case OP_TYPEID::Product:
@@ -1304,17 +1436,17 @@ static json write(const Node& n, bool binary_constant_data)
     json control_deps = json::array();
     json outputs = json::array();
 
-    for (const descriptor::Input& input : n.get_inputs())
+    for (auto& input : n.inputs())
     {
-        inputs.push_back(input.get_output().get_node()->get_name());
+        inputs.push_back(input.get_source_output().get_node()->get_name());
     }
     for (auto cdep : n.get_control_dependencies())
     {
         control_deps.push_back(cdep->get_name());
     }
-    for (size_t i = 0; i < n.get_output_size(); ++i)
+    for (auto& output : n.outputs())
     {
-        outputs.push_back(n.get_output_tensor(i).get_name());
+        outputs.push_back(output.get_tensor().get_name());
     }
 
     node["inputs"] = inputs;
@@ -1399,6 +1531,8 @@ static json write(const Node& n, bool binary_constant_data)
         node["include_padding_in_avg_computation"] = tmp->get_include_padding_in_avg_computation();
         break;
     }
+    case OP_TYPEID::BatchMatMul: { break;
+    }
     case OP_TYPEID::BatchNormTraining:
     {
         auto tmp = dynamic_cast<const op::BatchNormTraining*>(&n);
@@ -1423,6 +1557,8 @@ static json write(const Node& n, bool binary_constant_data)
         node["axes"] = tmp->get_broadcast_axes();
         node["shape"] = tmp->get_broadcast_shape();
         break;
+    }
+    case OP_TYPEID::BroadcastDistributed: { break;
     }
     case OP_TYPEID::BroadcastLike:
     {
@@ -1487,6 +1623,38 @@ static json write(const Node& n, bool binary_constant_data)
         node["data_dilation_strides_forward"] = tmp->get_data_dilation_strides_forward();
         break;
     }
+    case OP_TYPEID::ConvolutionBias:
+    {
+        auto tmp = dynamic_cast<const op::ConvolutionBias*>(&n);
+        node["window_movement_strides"] = tmp->get_window_movement_strides();
+        node["window_dilation_strides"] = tmp->get_window_dilation_strides();
+        node["padding_below"] = tmp->get_padding_below();
+        node["padding_above"] = tmp->get_padding_above();
+        node["data_dilation_strides"] = tmp->get_data_dilation_strides();
+        break;
+    }
+    case OP_TYPEID::ConvolutionBiasAdd:
+    {
+        auto tmp = dynamic_cast<const op::ConvolutionBiasAdd*>(&n);
+        node["window_movement_strides"] = tmp->get_window_movement_strides();
+        node["window_dilation_strides"] = tmp->get_window_dilation_strides();
+        node["padding_below"] = tmp->get_padding_below();
+        node["padding_above"] = tmp->get_padding_above();
+        node["data_dilation_strides"] = tmp->get_data_dilation_strides();
+        break;
+    }
+    case OP_TYPEID::ConvolutionBiasBackpropFiltersBias:
+    {
+        auto tmp = dynamic_cast<const op::ConvolutionBiasBackpropFiltersBias*>(&n);
+        node["filters_shape"] = tmp->get_filters_shape();
+        node["bias_shape"] = tmp->get_bias_shape();
+        node["window_movement_strides_forward"] = tmp->get_window_movement_strides_forward();
+        node["window_dilation_strides_forward"] = tmp->get_window_dilation_strides_forward();
+        node["padding_below_forward"] = tmp->get_padding_below_forward();
+        node["padding_above_forward"] = tmp->get_padding_above_forward();
+        node["data_dilation_strides_forward"] = tmp->get_data_dilation_strides_forward();
+        break;
+    }
     case OP_TYPEID::Cos: { break;
     }
     case OP_TYPEID::Cosh: { break;
@@ -1508,13 +1676,29 @@ static json write(const Node& n, bool binary_constant_data)
     }
     case OP_TYPEID::DynBroadcast: { break;
     }
+    case OP_TYPEID::DynPad: { break;
+    }
+    case OP_TYPEID::DynReshape: { break;
+    }
+    case OP_TYPEID::DynSlice: { break;
+    }
     case OP_TYPEID::EmbeddingLookup: { break;
     }
     case OP_TYPEID::Equal: { break;
     }
+    case OP_TYPEID::Erf: { break;
+    }
     case OP_TYPEID::Exp: { break;
     }
     case OP_TYPEID::Floor: { break;
+    }
+    case OP_TYPEID::Gather:
+    {
+        auto tmp = dynamic_cast<const op::Gather*>(&n);
+        node["axis"] = tmp->get_axis();
+        break;
+    }
+    case OP_TYPEID::GatherND: { break;
     }
     case OP_TYPEID::GetOutputElement:
     {
@@ -1633,6 +1817,8 @@ static json write(const Node& n, bool binary_constant_data)
         }
         node["output_shapes"] = std::move(outputs_js);
         break;
+    }
+    case OP_TYPEID::PRelu: { break;
     }
     case OP_TYPEID::Product:
     {

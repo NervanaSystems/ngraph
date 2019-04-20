@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <cstdint>
 #include <cstring>
 
 #include "ngraph/op/embedding_lookup.hpp"
@@ -77,6 +78,19 @@ namespace ngraph
                                 in_shape);
                         };
                     }
+                    else if (index_element_type == element::i64)
+                    {
+                        functor = [&, in_shape, element_count](CPURuntimeContext* ctx,
+                                                               CPUExecutionContext* ectx) {
+
+                            ngraph::runtime::reference::embedding<float, int64_t>(
+                                static_cast<int64_t*>(arg0_tensor),
+                                static_cast<float*>(arg1_tensor),
+                                static_cast<float*>(out_tensor),
+                                element_count,
+                                in_shape);
+                        };
+                    }
                     else
                     {
                         throw ngraph_error(
@@ -111,6 +125,19 @@ namespace ngraph
                                 in_shape);
                         };
                     }
+                    else if (index_element_type == element::i64)
+                    {
+                        functor = [&, in_shape, element_count](CPURuntimeContext* ctx,
+                                                               CPUExecutionContext* ectx) {
+
+                            ngraph::runtime::reference::embedding<int, int64_t>(
+                                static_cast<int64_t*>(arg0_tensor),
+                                static_cast<int*>(arg1_tensor),
+                                static_cast<int*>(out_tensor),
+                                element_count,
+                                in_shape);
+                        };
+                    }
                     else
                     {
                         throw ngraph_error(
@@ -119,7 +146,7 @@ namespace ngraph
                 }
                 else
                 {
-                    throw ngraph_error("Unsupported type in CPU Builder for ArgMin");
+                    throw ngraph_error("Unsupported type in CPU Builder for EmbeddingLookup");
                 }
 
                 functors.emplace_back(functor);

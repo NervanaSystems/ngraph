@@ -63,9 +63,9 @@ public:
             throw ngraph_error("Expected some arguments or dependencies");
         }
 
-        if (deps.size() != 0)
+        for (auto& node : deps)
         {
-            m_control_dependencies.insert(deps.begin(), deps.end());
+            add_control_dependency(node);
         }
 
         if (args.size() != 0)

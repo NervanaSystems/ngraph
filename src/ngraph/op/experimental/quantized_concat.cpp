@@ -14,7 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cassert>
 #include <memory>
 
 #include "ngraph/op/concat.hpp"
@@ -33,13 +32,13 @@ op::QuantizedConcat::QuantizedConcat(const NodeVector& args, size_t concatenatio
 
 void op::QuantizedConcat::validate_and_infer_types()
 {
-    NODE_VALIDATION_CHECK(this, m_inputs.size() >= 1, "At least one argument required.");
+    NODE_VALIDATION_CHECK(this, get_input_size() >= 1, "At least one argument required.");
 
     PartialShape inputs_shape_scheme{PartialShape::dynamic()};
     element::Type inputs_et{element::dynamic};
     Dimension concatenation_axis_output_dim{0};
 
-    for (auto i = 0; i < get_inputs().size(); i++)
+    for (auto i = 0; i < get_input_size(); i++)
     {
         PartialShape this_input_shape = get_input_partial_shape(i);
         Dimension this_input_rank = this_input_shape.rank();

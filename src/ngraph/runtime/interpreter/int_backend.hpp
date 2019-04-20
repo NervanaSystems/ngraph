@@ -24,10 +24,6 @@
 
 #include "ngraph/runtime/tensor.hpp"
 
-#ifdef NGRAPH_DISTRIBUTED_ENABLE
-#include "ngraph/runtime/reference/allreduce.hpp"
-#endif
-
 namespace ngraph
 {
     namespace runtime

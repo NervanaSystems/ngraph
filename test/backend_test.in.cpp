@@ -31,10 +31,15 @@
 #include "ngraph/state/rng_state.hpp"
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
+#include "util/autodiff/backprop_function.hpp"
 #include "util/ndarray.hpp"
 #include "util/random.hpp"
 #include "util/test_control.hpp"
 #include "util/test_tools.hpp"
+
+// clang-format off
+#define BACKEND_TEST_${BACKEND_NAME}
+// clang-format on
 
 using namespace std;
 using namespace ngraph;
@@ -1324,6 +1329,31 @@ NGRAPH_TEST(${BACKEND_NAME}, select)
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, select_double)
+{
+    Shape shape{2, 2, 2};
+    auto A = make_shared<op::Parameter>(element::boolean, shape);
+    auto B = make_shared<op::Parameter>(element::f64, shape);
+    auto C = make_shared<op::Parameter>(element::f64, shape);
+    auto f = make_shared<Function>(make_shared<op::Select>(A, B, C), ParameterVector{A, B, C});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::boolean, shape);
+    copy_data(a, vector<char>{0, 1, 1, 0, 0, 1, 0, 1});
+    auto b = backend->create_tensor(element::f64, shape);
+    copy_data(b, vector<double>{1, 2, 3, 4, 5, 6, 7, 8});
+    auto c = backend->create_tensor(element::f64, shape);
+    copy_data(c, vector<double>{11, 12, 13, 14, 15, 16, 17, 18});
+    auto result = backend->create_tensor(element::f64, shape);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b, c});
+    EXPECT_TRUE(test::all_close_f((vector<double>{11, 2, 3, 14, 15, 6, 17, 8}),
+                                  read_vector<double>(result)));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, tensor_constant)
 {
     Shape shape{2, 2, 2};
@@ -1437,40 +1467,49 @@ NGRAPH_TEST(${BACKEND_NAME}, convert_uint16_float32)
 
 NGRAPH_TEST(${BACKEND_NAME}, convert_int32_bool)
 {
-    Shape shape{2, 2};
+    Shape shape{2, 3};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto f =
         make_shared<Function>(make_shared<op::Convert>(A, element::boolean), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
+    int32_t lowest = std::numeric_limits<int32_t>::lowest();
+    int32_t max = std::numeric_limits<int32_t>::max();
+
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::i32, shape);
-    copy_data(a, vector<int32_t>{1, 2, 3, 4});
+    copy_data(a, vector<int32_t>{0, 12, 23, 0, lowest, max});
     auto result = backend->create_tensor(element::boolean, shape);
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<char>{1, 2, 3, 4}), read_vector<char>(result));
+    EXPECT_EQ((vector<char>{0, 1, 1, 0, 1, 1}), read_vector<char>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, convert_float32_bool)
 {
-    Shape shape{2, 2};
+    Shape shape{3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f =
         make_shared<Function>(make_shared<op::Convert>(A, element::boolean), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
+    float lowest = std::numeric_limits<float>::lowest();
+    float max = std::numeric_limits<float>::max();
+    float min = std::numeric_limits<float>::min();
+    float pos_inf = std::numeric_limits<float>::infinity();
+    float neg_inf = -std::numeric_limits<float>::infinity();
+
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape);
-    copy_data(a, vector<float>{1, 2, 3, 4});
+    copy_data(a, vector<float>{0.f, 1.5745f, 0.12352f, 0.f, lowest, max, min, pos_inf, neg_inf});
     auto result = backend->create_tensor(element::boolean, shape);
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<char>{1, 2, 3, 4}), read_vector<char>(result));
+    EXPECT_EQ((vector<char>{0, 1, 1, 0, 1, 1, 1, 1, 1}), read_vector<char>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, slice_scalar)
@@ -2685,6 +2724,11 @@ NGRAPH_TEST(${BACKEND_NAME}, zero_sized_abs)
 NGRAPH_TEST(${BACKEND_NAME}, zero_sized_ceiling)
 {
     make_unary_empty_test<op::Ceiling>("${BACKEND_NAME}");
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, zero_sized_erf)
+{
+    make_unary_empty_test<op::Erf>("${BACKEND_NAME}");
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, zero_sized_exp)
@@ -5750,6 +5794,51 @@ NGRAPH_TEST(${BACKEND_NAME}, logical_or)
     EXPECT_EQ((vector<char>{1, 0, 1, 1, 1, 1, 1, 0}), read_vector<char>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, batch_norm_inference_parameters_duplication)
+{
+    auto input_shape = Shape{2, 2, 2, 1};
+    auto input = make_shared<op::Parameter>(element::f32, input_shape);
+
+    auto mvgb_shape = Shape{2};
+    auto mvgb = make_shared<op::Parameter>(element::f32, mvgb_shape);
+
+    double eps = 0.001;
+    auto shape_r = Shape{2, 2, 2, 1};
+    auto bn = make_shared<op::BatchNormInference>(input, mvgb, mvgb, mvgb, mvgb, eps);
+
+    auto f = make_shared<Function>(bn, ParameterVector{input, mvgb, mvgb, mvgb, mvgb});
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    // Create some tensors for input/output
+    auto _input = backend->create_tensor(element::f32, input_shape);
+    copy_data(_input,
+              vector<float>{0.54881352f,
+                            0.71518934f,
+                            0.60276335f,
+                            0.54488319f,
+                            0.42365479f,
+                            0.64589411f,
+                            0.4375872f,
+                            0.89177299f});
+
+    auto _mvgb = backend->create_tensor(element::f32, mvgb_shape);
+    copy_data(_mvgb, vector<float>{1.0f, 1.0f});
+    auto bn_output = backend->create_tensor(element::f32, shape_r);
+
+    vector<float> expected_result{0.54903894f,
+                                  0.71533161f,
+                                  0.60296183f,
+                                  0.54511058f,
+                                  0.42394274f,
+                                  0.64607101f,
+                                  0.43786817f,
+                                  0.89182704f};
+    auto handle = backend->compile(f);
+    handle->call_with_validate({bn_output}, {_input, _mvgb, _mvgb, _mvgb, _mvgb});
+
+    ASSERT_TRUE(
+        ngraph::test::all_close(expected_result, read_vector<float>(bn_output), 1e-3f, 1e-4f));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, batch_norm_fprop_b1c2h2w2)
 {
     auto input_shape = Shape{1, 2, 2, 2};
@@ -7178,12 +7267,12 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_scalar)
 
     auto a = backend->create_tensor(element::f32, input_shape);
     copy_data(a, vector<float>{0});
-    auto result = backend->create_tensor(element::u64, output_shape);
+    auto result = backend->create_tensor(element::i64, output_shape);
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    vector<uint64_t> expected{};
-    EXPECT_EQ(expected, read_vector<uint64_t>(result));
+    vector<int64_t> expected{};
+    EXPECT_EQ(expected, read_vector<int64_t>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, shape_of_vector)
@@ -7198,12 +7287,12 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_vector)
 
     auto a = backend->create_tensor(element::f32, input_shape);
     copy_data(a, vector<float>(2, 0));
-    auto result = backend->create_tensor(element::u64, output_shape);
+    auto result = backend->create_tensor(element::i64, output_shape);
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    vector<uint64_t> expected{2};
-    EXPECT_EQ(expected, read_vector<uint64_t>(result));
+    vector<int64_t> expected{2};
+    EXPECT_EQ(expected, read_vector<int64_t>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, shape_of_matrix)
@@ -7218,12 +7307,12 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_matrix)
 
     auto a = backend->create_tensor(element::f32, input_shape);
     copy_data(a, vector<float>(2 * 4, 0));
-    auto result = backend->create_tensor(element::u64, output_shape);
+    auto result = backend->create_tensor(element::i64, output_shape);
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    vector<uint64_t> expected{2, 4};
-    EXPECT_EQ(expected, read_vector<uint64_t>(result));
+    vector<int64_t> expected{2, 4};
+    EXPECT_EQ(expected, read_vector<int64_t>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, shape_of_5d)
@@ -7238,12 +7327,12 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_5d)
 
     auto a = backend->create_tensor(element::f32, input_shape);
     copy_data(a, vector<float>(2 * 4 * 8 * 16 * 32, 0));
-    auto result = backend->create_tensor(element::u64, output_shape);
+    auto result = backend->create_tensor(element::i64, output_shape);
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    vector<uint64_t> expected{2, 4, 8, 16, 32};
-    EXPECT_EQ(expected, read_vector<uint64_t>(result));
+    vector<int64_t> expected{2, 4, 8, 16, 32};
+    EXPECT_EQ(expected, read_vector<int64_t>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, dequantize_dynamic_offset)
@@ -7322,29 +7411,91 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_dynamic_offset)
               read_vector<output_c_type>(y));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, get_parameters_and_results)
+#if defined(BACKEND_TEST_CPU) || defined(BACKEND_TEST_INTERPRETER)
+// XXX lfeng: remove backend check once all backends support this
+TEST(${BACKEND_NAME}, batch_mat_mul_forward)
 {
-    Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C});
+    auto make_dot = [](ParameterVector& a_params, ParameterVector& b_params) {
+        Shape shape_a{2, 3};
+        Shape shape_b{3, 2};
+        auto A = make_shared<op::Parameter>(element::f32, shape_a);
+        auto B = make_shared<op::Parameter>(element::f32, shape_b);
+        a_params.push_back(A);
+        b_params.push_back(B);
+        return make_shared<op::Dot>(A, B);
+    };
 
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    ParameterVector dot_a_params;
+    ParameterVector dot_b_params;
+    auto dot1 = make_dot(dot_a_params, dot_b_params);
+    auto dot2 = make_dot(dot_a_params, dot_b_params);
+    auto dot3 = make_dot(dot_a_params, dot_b_params);
+    auto dot_concat = make_shared<op::Concat>(NodeVector{dot1, dot2, dot3}, 0);
+    ParameterVector dot_params(dot_a_params);
+    dot_params.insert(dot_params.end(), dot_b_params.begin(), dot_b_params.end());
+    auto ref_f = make_shared<Function>(dot_concat, dot_params);
 
-    // Create some tensors for input/output
-    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shape);
-    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::f32, shape);
-    shared_ptr<runtime::Tensor> c = backend->create_tensor(element::f32, shape);
-    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::f32, shape);
+    auto make_batchmatmul = [](ParameterVector& params) {
+        Shape shape_a{3, 2, 3};
+        Shape shape_b{3, 3, 2};
+        auto A = make_shared<op::Parameter>(element::f32, shape_a);
+        auto B = make_shared<op::Parameter>(element::f32, shape_b);
+        params.push_back(A);
+        params.push_back(B);
+        return make_shared<op::BatchMatMul>(A, B);
+    };
 
-    copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
-    copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
-    copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
+    ParameterVector batchmatmul_params;
+    auto batchmatmul = make_batchmatmul(batchmatmul_params);
+    auto backend_f = make_shared<Function>(batchmatmul, batchmatmul_params);
 
-    auto handle = backend->compile(f);
-    auto parameters = handle->get_parameters();
-    auto results = handle->get_results();
-    EXPECT_EQ(parameters.size(), 3);
-    EXPECT_EQ(results.size(), 1);
+    test::Uniform<float> dot_rng(-1.0f, 1.0f);
+    vector<vector<float>> dot_args;
+    for (shared_ptr<op::Parameter> param : dot_params)
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        dot_rng.initialize(tensor_val);
+        dot_args.push_back(tensor_val);
+    }
+
+    test::Uniform<float> batchmatmul_rng(-1.0f, 1.0f);
+    vector<vector<float>> batchmatmul_args;
+    for (shared_ptr<op::Parameter> param : batchmatmul_params)
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        batchmatmul_rng.initialize(tensor_val);
+        batchmatmul_args.push_back(tensor_val);
+    }
+    auto ref_results = execute(ref_f, dot_args, "INTERPRETER");
+    auto backend_results = execute(backend_f, batchmatmul_args, "${BACKEND_NAME}");
+    for (size_t i = 0; i < ref_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(ref_results.at(i), backend_results.at(i), 1.0e-4f, 1.0e-4f));
+    }
+}
+
+#endif
+
+// clang-format off
+#ifdef BACKEND_TEST_${BACKEND_NAME}
+#undef BACKEND_TEST_${BACKEND_NAME}
+#endif
+// clang-format on
+
+NGRAPH_TEST(${BACKEND_NAME}, validate_function_for_dynamic_shape)
+{
+    auto make_function = [&](bool dynmaic_shape) {
+
+        auto param1_shape =
+            dynmaic_shape ? PartialShape{Dimension::dynamic(), 2, 3} : Shape{5, 4, 2};
+        auto param2_shape = dynmaic_shape ? PartialShape::dynamic() : Shape{5, 2, 3};
+        auto param_1 = std::make_shared<op::Parameter>(element::f32, param1_shape);
+        auto param_2 = std::make_shared<op::Parameter>(element::f32, param2_shape);
+        auto batch_dot = make_shared<op::BatchMatMul>(param_1, param_2);
+        auto f = make_shared<Function>(NodeVector{batch_dot}, ParameterVector{param_1, param_2});
+        return f;
+    };
+
+    EXPECT_EQ(true, make_function(true)->is_dynamic());
+    EXPECT_EQ(false, make_function(false)->is_dynamic());
 }

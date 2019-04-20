@@ -31,7 +31,10 @@ def random_array_float_literals(length, seed=8086):
 
     for i in range(0, length):
         # generate numbers that can be exactly represented in binary
-        literal_n = np.float32(random.randint(-64, 64)) / 64.0
+        sig_bits = 6
+        range_bits = 2
+        literal_n = np.float32(random.randint(-pow(2, sig_bits-1),
+                                              pow(2, sig_bits-1))) / pow(2.0, sig_bits - range_bits)
         literals.append(str(literal_n))
 
     return literals
@@ -128,7 +131,7 @@ def convolution_ref(data_batch, filter, move_strides, filter_dilation, below_pad
     slice_tops = (0, 0) + tuple(np.clip(above_pads, None, 0))
     slices = list(map(lambda p: slice(
         p[0], p[1] if p[1] < 0 else None), zip(slice_bottoms, slice_tops)))
-    data_batch = data_batch[slices]
+    data_batch = data_batch[tuple(slices)]
 
     item_count = data_batch.shape[0]               # N
     ci_count = data_batch.shape[1]                 # Ci
@@ -370,7 +373,6 @@ tests = [
     ("convolution_3d_2item_large_5o3i_padded_strided_uneven_filter_uneven_data_dilation_filter_dilated_data_dilated",
      (2, 3, 8, 8, 8),  (5, 3, 2, 3, 4),  (2, 3, 2),  (3, 2, 2),  (2, 1, 2),    (1, 2, 3),    (2, 3, 2),   "// "),
 ]
-
 
 def main():
     assert(len(sys.argv) > 1)

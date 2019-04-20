@@ -35,10 +35,12 @@
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
+#include "ngraph/op/experimental/batch_mat_mul.hpp"
 #include "ngraph/op/experimental/dyn_broadcast.hpp"
-#include "ngraph/op/experimental/dyn_broadcast.hpp"
+#include "ngraph/op/experimental/dyn_pad.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
+#include "ngraph/op/gather.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max.hpp"
@@ -74,6 +76,7 @@
 #include "ngraph/runtime/reference/asin.hpp"
 #include "ngraph/runtime/reference/atan.hpp"
 #include "ngraph/runtime/reference/avg_pool.hpp"
+#include "ngraph/runtime/reference/batch_mat_mul.hpp"
 #include "ngraph/runtime/reference/batch_norm.hpp"
 #include "ngraph/runtime/reference/broadcast.hpp"
 #include "ngraph/runtime/reference/ceiling.hpp"
@@ -89,8 +92,11 @@
 #include "ngraph/runtime/reference/dot.hpp"
 #include "ngraph/runtime/reference/embedding_lookup.hpp"
 #include "ngraph/runtime/reference/equal.hpp"
+#include "ngraph/runtime/reference/erf.hpp"
 #include "ngraph/runtime/reference/exp.hpp"
 #include "ngraph/runtime/reference/floor.hpp"
+#include "ngraph/runtime/reference/gather.hpp"
+#include "ngraph/runtime/reference/gather_nd.hpp"
 #include "ngraph/runtime/reference/generate_mask.hpp"
 #include "ngraph/runtime/reference/greater.hpp"
 #include "ngraph/runtime/reference/greater_eq.hpp"
@@ -138,6 +144,7 @@
 
 #ifdef NGRAPH_DISTRIBUTED_ENABLE
 #include "ngraph/runtime/reference/allreduce.hpp"
+#include "ngraph/runtime/reference/broadcast_distributed.hpp"
 #endif
 
 namespace ngraph
@@ -366,6 +373,17 @@ private:
             std::memcpy(out[0]->get_data_ptr<T>(), args[n]->get_data_ptr<T>(), num_bytes);
             break;
         }
+        case OP_TYPEID::BatchMatMul:
+        {
+            reference::batch_mat_mul(args[0]->get_data_ptr<const T>(),
+                                     args[1]->get_data_ptr<const T>(),
+                                     out[0]->get_data_ptr<T>(),
+                                     node.get_input_shape(0),
+                                     node.get_input_shape(1),
+                                     node.get_output_shape(0));
+            break;
+        }
+
         case OP_TYPEID::BatchNormTraining:
         {
             const ngraph::op::BatchNormTraining* bn =
@@ -438,6 +456,32 @@ private:
                                     broadcast_axes);
             break;
         }
+        case OP_TYPEID::BroadcastDistributed: {
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
+            Distributed dist;
+            int Rank_ID;
+            Rank_ID = dist.get_rank();
+            if (Rank_ID == 0)
+            {
+                reference::broadcastdistributed<T>(
+                    args[0]->get_data_ptr<T>(),
+                    node.get_input_element_type(0),
+                    static_cast<int>(shape_size(node.get_input_shape(0))));
+                auto memSize = static_cast<int>(shape_size(node.get_input_shape(0))) *
+                               sizeof(node.get_input_element_type(0));
+                memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), memSize);
+            }
+            else
+            {
+                reference::broadcastdistributed<T>(
+                    out[0]->get_data_ptr<T>(),
+                    node.get_input_element_type(0),
+                    static_cast<int>(shape_size(node.get_input_shape(0))));
+            }
+            break;
+#endif
+            break;
+        }
         case OP_TYPEID::BroadcastLike: break;
         case OP_TYPEID::Ceiling:
         {
@@ -480,7 +524,7 @@ private:
             switch (type.get_type_enum())
             {
             case element::Type_t::boolean:
-                reference::convert<T>(
+                reference::convert_to_bool<T>(
                     args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<char>(), element_count);
                 break;
             case element::Type_t::f32:
@@ -663,6 +707,16 @@ private:
                            dot->get_reduction_axes_count());
             break;
         }
+        case OP_TYPEID::DynReshape:
+        {
+            throw unsupported_op("Unsupported op '" + node.description() + "'");
+            break;
+        }
+        case OP_TYPEID::DynSlice:
+        {
+            throw unsupported_op("Unsupported op '" + node.description() + "'");
+            break;
+        }
         case OP_TYPEID::EmbeddingLookup:
         {
             const op::EmbeddingLookup* embed = static_cast<const op::EmbeddingLookup*>(&node);
@@ -717,6 +771,13 @@ private:
                                 element_count);
             break;
         }
+        case OP_TYPEID::Erf:
+        {
+            size_t element_count = shape_size(node.get_output_shape(0));
+            reference::erf<T>(
+                args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
+            break;
+        }
         case OP_TYPEID::Exp:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -752,6 +813,61 @@ private:
             size_t element_count = shape_size(node.get_output_shape(0));
             reference::floor<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
+            break;
+        }
+        case OP_TYPEID::Gather:
+        {
+            const op::Gather* gather = static_cast<const op::Gather*>(&node);
+            if (node.get_input_element_type(1) == element::i64)
+            {
+                reference::gather<T, int64_t>(args[0]->get_data_ptr<T>(),
+                                              args[1]->get_data_ptr<int64_t>(),
+                                              out[0]->get_data_ptr<T>(),
+                                              node.get_input_shape(0),
+                                              node.get_input_shape(1),
+                                              node.get_output_shape(0),
+                                              gather->get_axis());
+            }
+            else if (node.get_input_element_type(1) == element::i32)
+            {
+                reference::gather<T, int32_t>(args[0]->get_data_ptr<T>(),
+                                              args[1]->get_data_ptr<int32_t>(),
+                                              out[0]->get_data_ptr<T>(),
+                                              node.get_input_shape(0),
+                                              node.get_input_shape(1),
+                                              node.get_output_shape(0),
+                                              gather->get_axis());
+            }
+            else
+            {
+                throw ngraph_error("Unexpected type");
+            }
+            break;
+        }
+        case OP_TYPEID::GatherND:
+        {
+            if (node.get_input_element_type(1) == element::i64)
+            {
+                reference::gather_nd<T, int64_t>(args[0]->get_data_ptr<T>(),
+                                                 args[1]->get_data_ptr<int64_t>(),
+                                                 out[0]->get_data_ptr<T>(),
+                                                 node.get_input_shape(0),
+                                                 node.get_input_shape(1),
+                                                 node.get_output_shape(0));
+            }
+            else if (node.get_input_element_type(1) == element::i32)
+            {
+                reference::gather_nd<T, int32_t>(args[0]->get_data_ptr<T>(),
+                                                 args[1]->get_data_ptr<int32_t>(),
+                                                 out[0]->get_data_ptr<T>(),
+                                                 node.get_input_shape(0),
+                                                 node.get_input_shape(1),
+                                                 node.get_output_shape(0));
+            }
+            else
+            {
+                throw ngraph_error("Unexpected type");
+            }
             break;
         }
         case OP_TYPEID::Greater:
@@ -941,8 +1057,8 @@ private:
             reference::pad(args[0]->get_data_ptr<const T>(),
                            args[1]->get_data_ptr<const T>(),
                            out[0]->get_data_ptr<T>(),
-                           node.get_inputs().at(0).get_shape(),
-                           node.get_output_shape(0),
+                           node.input(0).get_shape(),
+                           node.output(0).get_shape(),
                            pad->get_padding_below(),
                            pad->get_padding_above(),
                            pad->get_pad_mode());
@@ -1251,6 +1367,7 @@ private:
         }
         case OP_TYPEID::DynBroadcast:
         case OP_TYPEID::Transpose:
+        case OP_TYPEID::DynPad:
         default: throw unsupported_op("Unsupported op '" + node.description() + "'");
 #pragma GCC diagnostic pop
         }
