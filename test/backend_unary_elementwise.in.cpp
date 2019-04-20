@@ -28,58 +28,63 @@
 #include "util/ndarray.hpp"
 #include "util/test_control.hpp"
 #include "util/test_tools.hpp"
+#include "util/test_vector_generator.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
-NGRAPH_TEST(${BACKEND_NAME}, abs)
+NGRAPH_TEST(${BACKEND_NAME}, abs_${DATA_TYPE})
 {
-    Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto input = test::make_floating_point_data<${DATA_TYPE}>();
+    auto output = vector<${DATA_TYPE}>(input.size());
+    Shape shape = Shape{input.size()};
+    auto A = make_shared<op::Parameter>(${ELEMENT_TYPE}, shape);
     auto f = make_shared<Function>(make_shared<op::Abs>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->create_tensor(element::f32, shape);
-    copy_data(a, vector<float>{1, -2, 0, -4.75f});
-    auto result = backend->create_tensor(element::f32, shape);
+    auto a = backend->create_tensor(${ELEMENT_TYPE}, shape, input.data());
+    auto result = backend->create_tensor(${ELEMENT_TYPE}, shape, output.data());
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_TRUE(test::all_close_f(
-        (vector<float>{1, 2, 0, 4.75f}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+
+    vector<${DATA_TYPE}> expected;
+    for (auto x : input)
+    {
+        expected.push_back(abs(x));
+    }
+
+    EXPECT_TRUE(test::all_close_f(expected, output, MIN_FLOAT_TOLERANCE_BITS));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, acos)
+NGRAPH_TEST(${BACKEND_NAME}, acos_${DATA_TYPE})
 {
-    Shape shape{11};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto input = test::make_floating_point_data<${DATA_TYPE}>(-1, 1);
+    auto output = vector<${DATA_TYPE}>(input.size());
+    Shape shape = Shape{input.size()};
+    auto A = make_shared<op::Parameter>(${ELEMENT_TYPE}, shape);
     auto f = make_shared<Function>(make_shared<op::Acos>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->create_tensor(element::f32, shape);
-    vector<float> input{-1.f, -0.75f, -0.5f, -0.25f, -0.125f, 0.f, 0.125f, 0.25f, 0.5f, 0.75f, 1.f};
-    copy_data(a, input);
-    auto result = backend->create_tensor(element::f32, shape);
+    auto a = backend->create_tensor(${ELEMENT_TYPE}, shape, input.data());
+    auto result = backend->create_tensor(${ELEMENT_TYPE}, shape, output.data());
+
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_TRUE(test::all_close_f(vector<float>{3.14159265f,
-                                                2.41885841f,
-                                                2.09439510f,
-                                                1.82347658f,
-                                                1.69612416f,
-                                                1.57079633f,
-                                                1.44546850f,
-                                                1.31811607f,
-                                                1.04719755f,
-                                                0.72273425f,
-                                                0.00000000f},
-                                  read_vector<float>(result)));
+
+    vector<${DATA_TYPE}> expected;
+    for (auto x : input)
+    {
+        expected.push_back(acos(x));
+    }
+
+    EXPECT_TRUE(test::all_close_f(expected, output, MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, asin)

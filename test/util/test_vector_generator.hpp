@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <limits>
 #include <vector>
 
 #include "ngraph/type/bfloat16.hpp"
@@ -25,7 +26,8 @@ namespace ngraph
     namespace test
     {
         template <typename T>
-        std::vector<T> make_floating_point_data();
+        std::vector<T> make_floating_point_data(T min = std::numeric_limits<T>::min(),
+                                                T max = std::numeric_limits<T>::max());
 
         template <typename T>
         std::vector<T> make_tensor_data(T min_value, T max_value, size_t count)

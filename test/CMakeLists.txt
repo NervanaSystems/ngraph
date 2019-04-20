@@ -178,6 +178,8 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
     endif()
 endif()
 
+set(DATA_TYPE float)
+set(ELEMENT_TYPE element::f32)
 foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})
     # Some---but not all---autodiff tests go through multiple iterations with
     # different random seeds. On the CPU backend this is currently very slow

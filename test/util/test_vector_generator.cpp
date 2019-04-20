@@ -23,10 +23,13 @@ using namespace ngraph;
 using namespace std;
 
 template <>
-std::vector<float> test::make_floating_point_data()
+std::vector<float> test::make_floating_point_data(float min, float max)
 {
     std::vector<float> data;
-    data.push_back(0);
+    if (0 >= min && 0 <= max)
+    {
+        data.push_back(0);
+    }
     for (int32_t e = 0; e < 255; e++)
     {
         uint32_t x = e;
@@ -34,21 +37,27 @@ std::vector<float> test::make_floating_point_data()
         test::FloatUnion u;
         u.i = x | 0x499999;
         // NGRAPH_INFO << test::float_to_bits(u.f) << ", " << u.f;
-        data.push_back(u.f);
-        data.push_back(-u.f);
+        if (u.f >= min && u.f <= max)
+        {
+            data.push_back(u.f);
+        }
+        if (-u.f >= min && -u.f <= max)
+        {
+            data.push_back(-u.f);
+        }
     }
     sort(data.begin(), data.end());
     return data;
 }
 
 template <>
-std::vector<bfloat16> test::make_floating_point_data()
+std::vector<bfloat16> test::make_floating_point_data(bfloat16 min, bfloat16 max)
 {
     vector<bfloat16> bfloat16_data;
-    for (float f : make_floating_point_data<float>())
+    for (float f : make_floating_point_data<float>(min, max))
     {
         bfloat16_data.emplace_back(bfloat16::from_bits(bfloat16::truncate(f)));
-        NGRAPH_INFO << test::bfloat16_to_bits(bfloat16_data.back()) << ", " << bfloat16_data.back();
+        // NGRAPH_INFO << test::bfloat16_to_bits(bfloat16_data.back()) << ", " << bfloat16_data.back();
     }
     return bfloat16_data;
 }
