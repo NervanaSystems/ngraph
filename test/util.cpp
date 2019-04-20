@@ -393,21 +393,6 @@ TEST(graph_util, test_subgraph_topological_sort_control_dependencies)
     std::list<std::shared_ptr<Node>> expected{A, D, add, mul};
     ASSERT_EQ(expected, sorted);
 }
-<<<<<<< HEAD
-=======
-
-TEST(pass, visualize_tree)
-{
-    Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C});
-
-    ngraph::pass::Manager pm;
-    pm.register_pass<pass::VisualizeTree>("test_viz.png");
-    pm.run_passes(f);
-}
 
 TEST(util, enum_mask_construction)
 {
@@ -552,4 +537,3 @@ TEST(util, enum_mask_operators)
     EXPECT_EQ(false, n[Type::d]);
     EXPECT_EQ(true, n[Type::b]);
 }
->>>>>>> master
