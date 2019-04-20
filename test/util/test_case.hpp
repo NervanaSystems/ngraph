@@ -76,7 +76,7 @@ namespace ngraph
             }
 
             template <typename T>
-            void add_expected_output(const std::vector<T>& values)
+            void add_expected_output(ngraph::Shape expected_shape, const std::vector<T>& values)
             {
                 auto results = m_function->get_results();
 
@@ -89,24 +89,32 @@ namespace ngraph
                 m_result_tensors.push_back(tensor);
 
                 auto constant_node = std::make_shared<ngraph::op::Constant>(
-                    function_output_type, function_output_shape, values);
+                    function_output_type, expected_shape, values);
                 m_expected_outputs.push_back(constant_node);
 
                 ++m_output_index;
             }
 
+
             template <typename T>
-            void add_expected_output_from_file(const std::string& basepath, const std::string& filename)
+            void add_expected_output(const std::vector<T>& values)
             {
-                auto filepath = ngraph::file_util::path_join(basepath, filename);
-                add_expected_output_from_file<T>(filepath);
+                auto shape = m_function->get_results().at(m_output_index)->get_shape();
+                add_expected_output(shape, values);
             }
 
             template <typename T>
-            void add_expected_output_from_file(const std::string& filepath)
+            void add_expected_output_from_file(ngraph::Shape expected_shape, const std::string& basepath, const std::string& filename)
+            {
+                auto filepath = ngraph::file_util::path_join(basepath, filename);
+                add_expected_output_from_file<T>(expected_shape, filepath);
+            }
+
+            template <typename T>
+            void add_expected_output_from_file(ngraph::Shape expected_shape, const std::string& filepath)
             {
                 auto value = read_binary_file<T>(filepath);
-                add_expected_output(value);
+                add_expected_output(expected_shape, value);
             }
             void run();
 

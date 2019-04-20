@@ -36,6 +36,11 @@ void ngraph::test::NgraphTestCase::run()
         auto expected_result_constant = m_expected_outputs.at(i);
         auto element_type = result_tensor->get_element_type();
 
+        auto expected_shape = expected_result_constant->get_shape();
+        auto result_shape = result_tensor->get_shape();
+
+        EXPECT_EQ(expected_shape, result_shape);
+
         if (element_type == ngraph::element::f32)
         {
             auto result = read_vector<float>(result_tensor);
