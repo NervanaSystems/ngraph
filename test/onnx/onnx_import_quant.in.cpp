@@ -492,6 +492,6 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_quant_conv_linear_3d)
     test_case.add_input_from_file<float>(TEST_FILES, "onnx/qlinearconv3d/y_scale.bin");
     test_case.add_input(std::vector<uint8_t>{128});  // y_zero_point
 
-    test_case.add_expected_output_from_file<uint8_t>(TEST_FILES, "onnx/qlinearconv3d/y.bin");
+    test_case.add_expected_output_from_file<uint8_t>({ 1, 1, 4, 4, 4 }, TEST_FILES, "onnx/qlinearconv3d/y.bin");
     test_case.run();
 }
