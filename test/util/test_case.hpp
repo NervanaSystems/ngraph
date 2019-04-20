@@ -20,6 +20,7 @@
 
 #include "ngraph/function.hpp"
 #include "ngraph/ngraph.hpp"
+#include "test_tools.hpp"
 
 namespace ngraph
 {
@@ -52,6 +53,20 @@ namespace ngraph
             }
 
             template <typename T>
+            void add_input_from_file(const std::string& basepath, const std::string& filename)
+            {
+                auto filepath = ngraph::file_util::path_join(basepath, filename);
+                add_input_from_file<T>(filepath);
+            }
+
+            template <typename T>
+            void add_input_from_file(const std::string& filepath)
+            {
+                auto value = read_binary_file<T>(filepath);
+                add_input(value);
+            }
+
+            template <typename T>
             void add_multiple_inputs(const std::vector<std::vector<T>>& vector_of_values)
             {
                 for (auto const& value : vector_of_values)
@@ -80,6 +95,19 @@ namespace ngraph
                 ++m_output_index;
             }
 
+            template <typename T>
+            void add_expected_output_from_file(const std::string& basepath, const std::string& filename)
+            {
+                auto filepath = ngraph::file_util::path_join(basepath, filename);
+                add_expected_output_from_file<T>(filepath);
+            }
+
+            template <typename T>
+            void add_expected_output_from_file(const std::string& filepath)
+            {
+                auto value = read_binary_file<T>(filepath);
+                add_expected_output(value);
+            }
             void run();
 
         protected:
