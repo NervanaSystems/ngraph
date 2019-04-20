@@ -84,6 +84,9 @@ namespace ngraph
                 */
                 mkldnn::algorithm get_conv_algo();
 
+                // Placeholder for when "auto" support is added for deconv
+                mkldnn::algorithm get_deconv_algo();
+
                 bool use_mkldnn_kernel(const ngraph::Node* node);
                 void assign_mkldnn_kernel(Node* node);
 
@@ -120,7 +123,7 @@ namespace ngraph
                         }
                     }
 
-                    if (arg0_rank != 4 && arg0_rank != 5)
+                    if (arg0_rank != 3 && arg0_rank != 4 && arg0_rank != 5)
                     {
                         return false;
                     }

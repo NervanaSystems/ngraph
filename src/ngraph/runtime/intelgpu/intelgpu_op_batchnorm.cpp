@@ -14,21 +14,15 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <CPP/batch_norm.hpp>
-#include <CPP/concatenation.hpp>
-#include <CPP/custom_gpu_primitive.hpp>
-#include <CPP/scale.hpp>
-#include <CPP/split.hpp>
-
 #include "ngraph/code_writer.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_op_batchnorm.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_kernels.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
 
 #include "ngraph/op/batch_norm.hpp"
 
 using namespace std;
 using namespace ngraph;
+using namespace ngraph::runtime::intelgpu;
 
 // According to the documentation, input data channel is always being axis 1
 // Assumed the second dimension from the left. Example {0, 1, 0, 0} or {0, 1}
@@ -39,9 +33,8 @@ static Shape get_channel_shape(const Shape& shape, const string& function_name)
 {
     if (shape.size() < channel_axis + 1)
     {
-        const string err = "intelgpu::" + function_name + "() input_shape" +
-                           runtime::intelgpu::array_dims(shape) + " should be at least " +
-                           to_string(channel_axis + 1) + "D.";
+        const string err = "intelgpu::" + function_name + "() input_shape" + array_dims(shape) +
+                           " should be at least " + to_string(channel_axis + 1) + "D.";
         throw invalid_argument(err);
     }
 
@@ -53,15 +46,14 @@ static size_t get_idx_size(const Shape& shape, size_t pos)
     return accumulate(shape.cbegin() + pos, shape.cend(), 1, multiplies<size_t>());
 }
 
-void runtime::intelgpu::do_create_mean(cldnn::topology& topology,
-                                       const string& output_name,
-                                       const element::Type& output_type,
-                                       const string& input_name,
-                                       const Shape& input_shape,
-                                       bool backward)
+// This creates mean of the input matrix by Channel axis
+static CustomKernels::krnl_info do_create_mean(const string& output_name,
+                                               const element::Type& output_type,
+                                               const string& input_name,
+                                               const Shape& input_shape,
+                                               bool backward)
 {
     const Shape channel_shape = get_channel_shape(input_shape, "create_mean");
-    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, channel_shape);
     const string entry_point_name = "create_mean_" + output_name;
     const size_t output_counts = shape_size<Shape>(input_shape) / input_shape.at(channel_axis);
     const string kernel_data_type = get_opencl_type_name(output_type);
@@ -118,26 +110,23 @@ void runtime::intelgpu::do_create_mean(cldnn::topology& topology,
     } // Main function body
     writer.block_end();
 
-    const cldnn::custom_gpu_primitive op_mean(output_name,
-                                              {input_name},
-                                              {writer.get_code()},
-                                              entry_point_name,
-                                              get_kernel_args(1, 1),
-                                              "",
-                                              layout,
-                                              {1});
-    topology.add(op_mean);
+    const CustomKernelInfo op_bcast_sum(output_name,
+                                        channel_shape,
+                                        output_type,
+                                        {input_name},
+                                        {writer.get_code()},
+                                        entry_point_name);
+    return {op_bcast_sum};
 }
 
-void runtime::intelgpu::do_create_variance(cldnn::topology& topology,
-                                           const string& output_name,
-                                           const element::Type& output_type,
-                                           const string& input_name,
-                                           const Shape& input_shape,
-                                           const std::string& mean_name)
+// This creates variance of the input matrix by Channel axis
+static CustomKernels::krnl_info do_create_variance(const string& output_name,
+                                                   const element::Type& output_type,
+                                                   const string& input_name,
+                                                   const Shape& input_shape,
+                                                   const std::string& mean_name)
 {
     const Shape channel_shape = get_channel_shape(input_shape, "create_variance");
-    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, channel_shape);
     const string entry_point_name = "create_variance_" + output_name;
     const size_t output_counts = shape_size<Shape>(input_shape) / input_shape.at(channel_axis);
     const string kernel_data_type = get_opencl_type_name(output_type);
@@ -194,30 +183,26 @@ void runtime::intelgpu::do_create_variance(cldnn::topology& topology,
     } // Main function body
     writer.block_end();
 
-    const cldnn::custom_gpu_primitive op_variance(output_name,
-                                                  {input_name, mean_name},
-                                                  {writer.get_code()},
-                                                  entry_point_name,
-                                                  get_kernel_args(2, 1),
-                                                  "",
-                                                  layout,
-                                                  {1});
-    topology.add(op_variance);
+    const CustomKernelInfo op_variance(output_name,
+                                       channel_shape,
+                                       output_type,
+                                       {input_name, mean_name},
+                                       {writer.get_code()},
+                                       entry_point_name);
+    return {op_variance};
 }
 
-void runtime::intelgpu::do_batch_norm_operation(cldnn::topology& topology,
-                                                const string& output_name,
-                                                const element::Type& output_type,
-                                                double eps,
-                                                const string& input_name,
-                                                const Shape& input_shape,
-                                                const string& gamma_name,
-                                                const string& beta_name,
-                                                const string& mean_name_inp,
-                                                const string& variance_name_inp)
+static CustomKernels::krnl_info do_batch_norm_operation(const string& output_name,
+                                                        const element::Type& output_type,
+                                                        double eps,
+                                                        const string& input_name,
+                                                        const Shape& input_shape,
+                                                        const string& gamma_name,
+                                                        const string& beta_name,
+                                                        const string& mean_name_inp,
+                                                        const string& variance_name_inp)
 {
     const Shape channel_shape = get_channel_shape(input_shape, "batch_norm");
-    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, input_shape);
     const vector<size_t> gws(input_shape.begin(), input_shape.begin() + 2);
     const string entry_point_name = "batch_norm_" + output_name;
     const string kernel_data_type = get_opencl_type_name(output_type);
@@ -265,32 +250,30 @@ void runtime::intelgpu::do_batch_norm_operation(cldnn::topology& topology,
     } // Main function body
     writer.block_end();
 
-    const vector<cldnn::primitive_id>& inputs = {
+    const vector<string>& inputs = {
         input_name, gamma_name, beta_name, mean_name_inp, variance_name_inp};
-    const cldnn::custom_gpu_primitive op_batch_norm(output_name,
-                                                    inputs,
-                                                    {writer.get_code()},
-                                                    entry_point_name,
-                                                    get_kernel_args(5, 1),
-                                                    "",
-                                                    layout,
-                                                    gws,
-                                                    {1, 1, 1});
-    topology.add(op_batch_norm);
+    const CustomKernelInfo op_batch_norm(output_name,
+                                         input_shape,
+                                         output_type,
+                                         inputs,
+                                         {writer.get_code()},
+                                         entry_point_name,
+                                         gws,
+                                         {1, 1, 1});
+    return {op_batch_norm};
 }
 
-void runtime::intelgpu::do_create_variance_back(cldnn::topology& topology,
-                                                const string& output_name,
-                                                const element::Type& output_type,
-                                                double eps,
-                                                const string& input_name,
-                                                const Shape& input_shape,
-                                                const string& mean_name,
-                                                const string& variance_name,
-                                                const string& delta_name)
+// This creates variance backprop of the input matrix by Channel axis
+static CustomKernels::krnl_info do_create_variance_back(const string& output_name,
+                                                        const element::Type& output_type,
+                                                        double eps,
+                                                        const string& input_name,
+                                                        const Shape& input_shape,
+                                                        const string& mean_name,
+                                                        const string& variance_name,
+                                                        const string& delta_name)
 {
     const Shape channel_shape = get_channel_shape(input_shape, "create_variance_back");
-    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, channel_shape);
     const string entry_point_name = "create_variance_back_" + output_name;
     const string kernel_data_type = get_opencl_type_name(output_type);
     CodeWriter writer;
@@ -343,34 +326,34 @@ void runtime::intelgpu::do_create_variance_back(cldnn::topology& topology,
     } // Main function body
     writer.block_end();
 
-    const vector<cldnn::primitive_id>& inputs = {input_name, delta_name, mean_name, variance_name};
-    const cldnn::custom_gpu_primitive op_create_variance_back(output_name,
-                                                              inputs,
-                                                              {writer.get_code()},
-                                                              entry_point_name,
-                                                              get_kernel_args(4, 1),
-                                                              "",
-                                                              layout,
-                                                              gws);
-    topology.add(op_create_variance_back);
+    const vector<string>& inputs = {input_name, delta_name, mean_name, variance_name};
+    const CustomKernelInfo op_create_variance_back(output_name,
+                                                   channel_shape,
+                                                   output_type,
+                                                   inputs,
+                                                   {writer.get_code()},
+                                                   entry_point_name,
+                                                   gws);
+    return {op_create_variance_back};
 }
 
-void runtime::intelgpu::do_batch_norm_backprop_operation(cldnn::topology& topology,
-                                                         const Shape& shape,
-                                                         const element::Type& type,
-                                                         const string& gamma_name,
-                                                         const string& beta_name,
-                                                         const string& input_name,
-                                                         const string& mean_name,
-                                                         const string& variance_name,
-                                                         const string& delta_name,
-                                                         double eps,
-                                                         const string& output_name,
-                                                         const string& output_gamma_name,
-                                                         const string& output_beta_name)
+// This function uses "shape" parameter as input or output Shape
+// Shape of all other calculated as first axis from the left
+// Example: output[ 4, 3, 2, 8 ] means out_gamma[ 3 ]
+static CustomKernels::krnl_info do_batch_norm_backprop_operation(const Shape& shape,
+                                                                 const element::Type& type,
+                                                                 const string& gamma_name,
+                                                                 const string& beta_name,
+                                                                 const string& input_name,
+                                                                 const string& mean_name,
+                                                                 const string& variance_name,
+                                                                 const string& delta_name,
+                                                                 double eps,
+                                                                 const string& output_name,
+                                                                 const string& output_gamma_name,
+                                                                 const string& output_beta_name)
 {
     const Shape channel_shape = get_channel_shape(shape, "batch_norm_backprop");
-    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(type, shape);
     const string entry_point_name = "batch_norm_backprop_" + output_name;
     const size_t r_axes_size = shape_size(shape) / shape_size(channel_shape);
     const string kernel_data_type = get_opencl_type_name(type);
@@ -391,7 +374,7 @@ void runtime::intelgpu::do_batch_norm_backprop_operation(cldnn::topology& topolo
     { // Main function body
 
         // Main loops
-        gws = runtime::intelgpu::generate_loops(writer, shape, true);
+        gws = generate_loops(writer, shape, true);
 
         writer << kernel_data_type << " stddev = sqrt(variance[i" << channel_axis << "] + " << eps
                << ");\n";
@@ -404,25 +387,139 @@ void runtime::intelgpu::do_batch_norm_backprop_operation(cldnn::topology& topolo
                << channel_axis << "]) / " << r_axes_size << ");\n";
 
         // Closing brackets for main loops
-        runtime::intelgpu::generate_loops(writer, shape, false);
+        generate_loops(writer, shape, false);
 
     } // Main function body
     writer.block_end();
 
-    const vector<cldnn::primitive_id>& inputs = {input_name,
-                                                 delta_name,
-                                                 mean_name,
-                                                 variance_name,
-                                                 gamma_name,
-                                                 output_gamma_name,
-                                                 output_beta_name};
-    const cldnn::custom_gpu_primitive op_batch_norm_backprop(output_name,
-                                                             inputs,
-                                                             {writer.get_code()},
-                                                             entry_point_name,
-                                                             get_kernel_args(7, 1),
-                                                             "",
-                                                             layout,
-                                                             gws);
-    topology.add(op_batch_norm_backprop);
+    const vector<string>& inputs = {input_name,
+                                    delta_name,
+                                    mean_name,
+                                    variance_name,
+                                    gamma_name,
+                                    output_gamma_name,
+                                    output_beta_name};
+    const CustomKernelInfo op_batch_norm_backprop(
+        output_name, shape, type, inputs, {writer.get_code()}, entry_point_name, gws);
+    return {op_batch_norm_backprop};
+}
+
+CustomKernels::krnl_info
+    CustomKernels::build_krnl(const shared_ptr<op::BatchNormInference>& op) const
+{
+    return do_batch_norm_operation(op->get_output_tensor_name(0),
+                                   op->get_output_element_type(0),
+                                   op->get_eps_value(),
+                                   op->get_input_tensor_name(2),
+                                   op->get_input_shape(2),
+                                   op->get_input_tensor_name(0),
+                                   op->get_input_tensor_name(1),
+                                   op->get_input_tensor_name(3),
+                                   op->get_input_tensor_name(4));
+}
+
+CustomKernels::krnl_info
+    CustomKernels::build_krnl(const shared_ptr<op::BatchNormTraining>& op) const
+{
+    CustomKernels::krnl_info result;
+
+    string mean_name;
+    string variance_name;
+
+    if (op->get_inputs().size() < 3 || op->get_outputs().empty())
+    {
+        arguments_check(op, 3, 1); // throw exception in this case
+    }
+
+    if (op->get_outputs().size() == 3)
+    {
+        arguments_check(op, 3, 3);
+
+        mean_name = op->get_output_tensor_name(1);
+        variance_name = op->get_output_tensor_name(2);
+
+        CustomKernels::krnl_info mean = do_create_mean(mean_name,
+                                                       op->get_output_element_type(0),
+                                                       op->get_input_tensor_name(2),
+                                                       op->get_input_shape(2),
+                                                       false);
+        result.insert(result.end(), mean.begin(), mean.end());
+
+        CustomKernels::krnl_info variance = do_create_variance(variance_name,
+                                                               op->get_output_element_type(0),
+                                                               op->get_input_tensor_name(2),
+                                                               op->get_input_shape(2),
+                                                               mean_name);
+        result.insert(result.end(), variance.begin(), variance.end());
+    }
+
+    if (op->get_outputs().size() == 1 || op->get_outputs().size() == 3)
+    {
+        if (mean_name.empty() || variance_name.empty())
+        {
+            arguments_check(op, 5, 1);
+
+            mean_name = op->get_input_tensor_name(3);
+            variance_name = op->get_input_tensor_name(4);
+        }
+
+        CustomKernels::krnl_info batch_norm =
+            do_batch_norm_operation(op->get_output_tensor_name(0),
+                                    op->get_output_element_type(0),
+                                    op->get_eps_value(),
+                                    op->get_input_tensor_name(2),
+                                    op->get_input_shape(2),
+                                    op->get_input_tensor_name(0),
+                                    op->get_input_tensor_name(1),
+                                    mean_name,
+                                    variance_name);
+        result.insert(result.end(), batch_norm.begin(), batch_norm.end());
+    }
+    else
+    {
+        arguments_check(op, 5, 1); // throw exception in this case
+    }
+
+    return result;
+}
+
+CustomKernels::krnl_info
+    CustomKernels::build_krnl(const shared_ptr<op::BatchNormTrainingBackprop>& op) const
+{
+    CustomKernels::krnl_info result;
+
+    CustomKernels::krnl_info mean = do_create_mean(op->get_output_tensor_name(2), // d_beta
+                                                   op->get_output_element_type(2),
+                                                   op->get_input_tensor_name(5), // delta
+                                                   op->get_input_shape(5),
+                                                   true);
+    result.insert(result.end(), mean.begin(), mean.end());
+
+    CustomKernels::krnl_info variance =
+        do_create_variance_back(op->get_output_tensor_name(1), // d_gamma
+                                op->get_output_element_type(1),
+                                op->get_eps_value(),
+                                op->get_input_tensor_name(2), // input
+                                op->get_input_shape(2),
+                                op->get_input_tensor_name(3),  // gamma
+                                op->get_input_tensor_name(4),  // beta
+                                op->get_input_tensor_name(5)); // delta
+    result.insert(result.end(), variance.begin(), variance.end());
+
+    CustomKernels::krnl_info batch_norm =
+        do_batch_norm_backprop_operation(op->get_input_shape(2),
+                                         op->get_input_element_type(2),
+                                         op->get_input_tensor_name(0),
+                                         op->get_input_tensor_name(1),
+                                         op->get_input_tensor_name(2),
+                                         op->get_input_tensor_name(3),
+                                         op->get_input_tensor_name(4),
+                                         op->get_input_tensor_name(5),
+                                         op->get_eps_value(),
+                                         op->get_output_tensor_name(0),
+                                         op->get_output_tensor_name(1),
+                                         op->get_output_tensor_name(2));
+    result.insert(result.end(), batch_norm.begin(), batch_norm.end());
+
+    return result;
 }

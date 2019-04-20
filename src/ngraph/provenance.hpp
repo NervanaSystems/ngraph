@@ -14,39 +14,13 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <sstream>
-#include <string>
-#include <vector>
+#pragma once
 
-#include "gtest/gtest.h"
+#include <cstdlib>
 
-#include "ngraph/uuid.hpp"
-
-using namespace std;
-using namespace ngraph;
-
-TEST(uuid, zero)
+namespace ngraph
 {
-    uuid_type zero = uuid_type::zero();
-
-    stringstream ss;
-    ss << zero;
-    std::string expected = "00000000-0000-0000-0000-000000000000";
-
-    EXPECT_STREQ(expected.c_str(), ss.str().c_str());
-}
-
-TEST(uuid, eq)
-{
-    uuid_type z1 = uuid_type::zero();
-    uuid_type z2 = uuid_type::zero();
-    EXPECT_EQ(z1, z2);
-}
-
-TEST(uuid, ne)
-{
-    uuid_type u1;
-    uuid_type u2;
-
-    EXPECT_NE(u1, u2);
+    static bool s_provenance_enabled = std::getenv("NGRAPH_PROVENANCE_ENABLE") != nullptr;
+    void set_provenance_enabled(bool enabled);
+    bool get_provenance_enabled();
 }

@@ -25,13 +25,13 @@
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
-#include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/type/element_type.hpp"
 
@@ -724,6 +724,13 @@ bool runtime::cpu::mkldnn_utils::can_use_mkldnn_batchnorm_fprop(const ngraph::No
     {
         return false;
     }
+}
+
+mkldnn::algorithm runtime::cpu::mkldnn_utils::get_deconv_algo()
+{
+    // Note: there is no deconvolution_auto, so for now will return direct
+    // TODO:
+    return mkldnn::algorithm::deconvolution_direct;
 }
 
 mkldnn::algorithm runtime::cpu::mkldnn_utils::get_conv_algo()

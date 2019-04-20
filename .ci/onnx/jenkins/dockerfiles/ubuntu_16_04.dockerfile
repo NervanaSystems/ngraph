@@ -39,3 +39,22 @@ RUN apt-get -y install protobuf-compiler libprotobuf-dev && \
 
 # Install tox
 RUN pip3 install tox
+
+# Build nGraph master
+ARG NGRAPH_CACHE_DIR=/cache
+
+WORKDIR /root
+
+RUN git clone https://github.com/NervanaSystems/ngraph.git && \
+    cd ngraph && \
+    mkdir -p ./build && \
+    cd ./build && \
+    cmake ../ -DNGRAPH_TOOLS_ENABLE=FALSE -DNGRAPH_UNIT_TEST_ENABLE=FALSE -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE && \
+    make -j $(lscpu --parse=CORE | grep -v '#' | sort | uniq | wc -l)
+
+# Store built nGraph
+RUN mkdir -p ${NGRAPH_CACHE_DIR} && \
+    cp -Rf /root/ngraph/build ${NGRAPH_CACHE_DIR}/
+
+# Cleanup remaining sources
+RUN rm -rf /root/ngraph

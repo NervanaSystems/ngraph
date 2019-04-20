@@ -23,6 +23,14 @@
 
 namespace ngraph
 {
+    Strides conv_default_strides(const Node* node,
+                                 const PartialShape& data_batch_shape,
+                                 const PartialShape& filters_shape);
+
+    CoordinateDiff conv_default_padding(const Node* node,
+                                        const PartialShape& data_batch_shape,
+                                        const PartialShape& filters_shape);
+
     PartialShape infer_windowed_reduction_output_shape(const Node* node,
                                                        const PartialShape& data_shape,
                                                        const Strides& data_dilation,
