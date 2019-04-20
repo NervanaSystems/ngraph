@@ -1084,15 +1084,11 @@ static shared_ptr<ngraph::Function>
                 // This is a legacy field whose functionality is no longer supported. The new
                 // behavior is equivalent to interior padding of 0, so we will accept it under
                 // those conditions.
-                auto padding_interior_maybe = node_js.find("padding_interior");
-                if (padding_interior_maybe != node_js.end())
-                {
-                    auto padding_interior = padding_interior_maybe->get<vector<size_t>>();
-                    NGRAPH_CHECK(std::all_of(padding_interior.begin(),
-                                             padding_interior.end(),
-                                             [](size_t s) { return s == 0; }),
-                                 "Legacy padding_interior field must be zero everywhere.");
-                }
+                auto padding_interior = get_value<vector<size_t>>(node_js, "padding_interior");
+                NGRAPH_CHECK(std::all_of(padding_interior.begin(),
+                                         padding_interior.end(),
+                                         [](size_t s) { return s == 0; }),
+                             "Legacy padding_interior field must be zero everywhere.");
 
                 auto pad_mode = node_js.count("pad_mode") == 0
                                     ? op::PadMode::CONSTANT
