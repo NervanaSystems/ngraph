@@ -15,12 +15,13 @@
 # ******************************************************************************
 
 set (SRC
-    autodiff/backprop_function.cpp
     all_close_f.cpp
+    autodiff/backprop_function.cpp
     float_util.cpp
-    test_tools.cpp
-    test_control.cpp
     test_case.cpp
+    test_control.cpp
+    test_tools.cpp
+    test_vector_generator.cpp
 )
 
 add_library(ngraph_test_util STATIC ${SRC})
