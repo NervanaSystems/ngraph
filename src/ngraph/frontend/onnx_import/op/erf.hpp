@@ -16,26 +16,28 @@
 
 #pragma once
 
-#include <CPP/topology.hpp>
+#include <memory>
 
-#include "ngraph/axis_set.hpp"
-#include "ngraph/shape.hpp"
+#include "core/node.hpp"
+#include "ngraph/node_vector.hpp"
+#include "ngraph/op/erf.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace onnx_import
     {
-        namespace intelgpu
+        namespace op
         {
-            void do_all_any_op(cldnn::topology& topology,
-                               const std::string& input0_name,
-                               const Shape& input0_shape,
-                               const std::string& output_name,
-                               const Shape& output_shape,
-                               const element::Type& output_type,
-                               const AxisSet& axis,
-                               const std::string& operation,
-                               const std::string& init_val);
-        }
-    }
-}
+            namespace set_1
+            {
+                inline NodeVector erf(const Node& node)
+                {
+                    return {std::make_shared<ngraph::op::Erf>(node.get_ng_inputs().at(0))};
+                }
+            } // namespace set_1
+
+        } //namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

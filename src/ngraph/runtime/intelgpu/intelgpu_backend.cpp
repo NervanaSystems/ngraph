@@ -52,11 +52,7 @@
 #include "ngraph/runtime/intelgpu/intelgpu_executable.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_kernels.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_op_batchnorm.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_op_broadcast.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_op_custom_func_call.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_op_softmax.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_tensor_view.hpp"
 #include "ngraph/runtime/intelgpu/visualize_tree.hpp"
 
@@ -64,6 +60,7 @@
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/all.hpp"
+#include "ngraph/op/and.hpp"
 #include "ngraph/op/any.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
@@ -76,13 +73,20 @@
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
+#include "ngraph/op/equal.hpp"
 #include "ngraph/op/erf.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/greater.hpp"
+#include "ngraph/op/greater_eq.hpp"
+#include "ngraph/op/less.hpp"
+#include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/min.hpp"
+#include "ngraph/op/not_equal.hpp"
 #include "ngraph/op/one_hot.hpp"
+#include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
@@ -132,25 +136,13 @@ static OP_TYPEID get_typeid(const string& s)
     return it->second;
 }
 
-static void arguments_check(const shared_ptr<Node>& op, size_t input, size_t output)
-{
-    if (op->get_input_size() != input || op->get_output_size() != output)
-    {
-        ostringstream os;
-        os << "Operation \"" << op->description() << "\" input and output sizes mismatch."
-           << " Expected input size=" << input << ", provided=" << op->get_input_size()
-           << ". Expected output size=" << output << ", provided=" << op->get_output_size();
-        throw invalid_argument(os.str());
-    }
-}
-
 static void do_eltwise_operation(cldnn::topology& topology,
                                  const shared_ptr<Node>& op,
                                  const string& custom_op,
                                  bool function_operation,
                                  cldnn::eltwise_mode mode)
 {
-    arguments_check(op, 2, 1);
+    runtime::intelgpu::arguments_check(op, 2, 1);
 
     if (op->get_input_element_type(0) != element::f32 ||
         op->get_input_element_type(1) != element::f32 ||
@@ -183,7 +175,7 @@ static void do_cldnn_unary(cldnn::topology& topology,
                            cldnn_activation_func mode,
                            const cldnn_activation_additional_params& param = {0.f, 0.f})
 {
-    arguments_check(op, 1, 1);
+    runtime::intelgpu::arguments_check(op, 1, 1);
 
     const cldnn::activation cldnn_unary(
         op->get_output_tensor_name(0), op->get_input_tensor_name(0), mode, param);
@@ -193,7 +185,7 @@ static void do_cldnn_unary(cldnn::topology& topology,
 static void
     do_custom_unary(cldnn::topology& topology, const shared_ptr<Node>& op, const string& operation)
 {
-    arguments_check(op, 1, 1);
+    runtime::intelgpu::arguments_check(op, 1, 1);
 
     runtime::intelgpu::do_custom_unary_operation(topology,
                                                  op->get_input_tensor_name(0),
@@ -212,7 +204,7 @@ static void do_universal_unary(cldnn::topology& topology,
                                bool force_custom = false,
                                const cldnn_activation_additional_params& param = {0.f, 0.f})
 {
-    arguments_check(op, 1, 1);
+    runtime::intelgpu::arguments_check(op, 1, 1);
 
     if (force_custom || (op->get_input_element_type(0) != element::f32))
     {
@@ -231,7 +223,7 @@ static void do_pooling_operation(cldnn::topology& topology,
                                  const Shape& pad_below,
                                  const cldnn::pooling_mode mode)
 {
-    arguments_check(op, 1, 1);
+    runtime::intelgpu::arguments_check(op, 1, 1);
 
     const cldnn::tensor output_size = intelgpu_space::create_cldnn_tensor(op->get_output_shape(0));
     const cldnn::tensor input_offset = intelgpu_space::create_cldnn_offset(pad_below);
@@ -248,22 +240,12 @@ static void do_pooling_operation(cldnn::topology& topology,
     topology.add(cldnn_pooling);
 }
 
-static void do_logical_operation(cldnn::topology& topology,
-                                 const shared_ptr<Node>& op,
-                                 const string& operation)
+template <typename OP>
+static void do_logical_operation(runtime::intelgpu::CustomKernels& kern, const shared_ptr<Node>& op)
 {
-    arguments_check(op, 2, 1);
+    runtime::intelgpu::arguments_check(op, 2, 1);
 
-    runtime::intelgpu::do_logic_kernel(topology,
-                                       op->get_input_tensor_name(0),
-                                       op->get_input_shape(0),
-                                       op->get_input_element_type(0),
-                                       op->get_input_tensor_name(1),
-                                       op->get_input_shape(1),
-                                       op->get_output_tensor_name(0),
-                                       op->get_output_shape(0),
-                                       op->get_output_element_type(0),
-                                       operation);
+    kern.emit<OP>(static_pointer_cast<OP>(op));
 }
 
 // This function needed to only change the name of the data in topology
@@ -671,14 +653,7 @@ shared_ptr<runtime::Executable>
             if ((shape_dim_count > 3) || ((shape_dim_count == 3) && (axes_size == 2)) ||
                 (op->get_input_element_type(0) != element::f32))
             {
-                do_softmax_operation(topology,
-                                     op->get_input_tensor_name(0),
-                                     op->get_input_shape(0),
-                                     op->get_input_element_type(0),
-                                     op->get_output_tensor_name(0),
-                                     op->get_output_shape(0),
-                                     op->get_output_element_type(0),
-                                     axes);
+                kern.emit<op::Softmax>(softmax_op);
             }
             else
             {
@@ -979,15 +954,7 @@ shared_ptr<runtime::Executable>
             }
             else
             {
-                do_bcast_sum_operation(topology,
-                                       op->get_input_tensor_name(0),
-                                       op->get_input_shape(0),
-                                       op->get_input_element_type(0),
-                                       op->get_output_tensor_name(0),
-                                       op->get_output_shape(0),
-                                       op->get_output_element_type(0),
-                                       axis,
-                                       true);
+                kern.emit<op::Broadcast>(broadcast);
             }
             break;
         }
@@ -1005,15 +972,7 @@ shared_ptr<runtime::Executable>
             }
             else
             {
-                do_bcast_sum_operation(topology,
-                                       op->get_input_tensor_name(0),
-                                       op->get_input_shape(0),
-                                       op->get_input_element_type(0),
-                                       op->get_output_tensor_name(0),
-                                       op->get_output_shape(0),
-                                       op->get_output_element_type(0),
-                                       axis,
-                                       false);
+                kern.emit<op::Sum>(sum);
             }
             break;
         }
@@ -1031,13 +990,7 @@ shared_ptr<runtime::Executable>
             }
             else
             {
-                do_product_operation(topology,
-                                     op->get_input_tensor_name(0),
-                                     op->get_input_shape(0),
-                                     op->get_output_tensor_name(0),
-                                     op->get_output_shape(0),
-                                     op->get_output_element_type(0),
-                                     axis);
+                kern.emit<op::Product>(prod);
             }
             break;
         }
@@ -1098,44 +1051,16 @@ shared_ptr<runtime::Executable>
         {
             arguments_check(op, 1, 1);
 
-            const shared_ptr<op::All> all_op = static_pointer_cast<op::All>(op);
-            const AxisSet& axis = all_op->get_reduction_axes();
-            const shared_ptr<Node> def_val = all_op->get_default_value();
-            const shared_ptr<op::Constant> def_const = static_pointer_cast<op::Constant>(def_val);
-            const vector<std::string>& values = def_const->get_value_strings();
-
             // Empty axis is not a case for do_equal_propagation()
-            do_all_any_op(topology,
-                          op->get_input_tensor_name(0),
-                          op->get_input_shape(0),
-                          op->get_output_tensor_name(0),
-                          op->get_output_shape(0),
-                          op->get_output_element_type(0),
-                          axis,
-                          "lhs && rhs",
-                          values.at(0));
+            kern.emit<op::All>(static_pointer_cast<op::All>(op));
             break;
         }
         case OP_TYPEID::Any:
         {
             arguments_check(op, 1, 1);
 
-            const shared_ptr<op::Any> any_op = static_pointer_cast<op::Any>(op);
-            const AxisSet& axis = any_op->get_reduction_axes();
-            const shared_ptr<Node> def_val = any_op->get_default_value();
-            const shared_ptr<op::Constant> def_const = static_pointer_cast<op::Constant>(def_val);
-            const vector<std::string>& values = def_const->get_value_strings();
-
             // Empty axis is not a case for do_equal_propagation()
-            do_all_any_op(topology,
-                          op->get_input_tensor_name(0),
-                          op->get_input_shape(0),
-                          op->get_output_tensor_name(0),
-                          op->get_output_shape(0),
-                          op->get_output_element_type(0),
-                          axis,
-                          "lhs || rhs",
-                          values.at(0));
+            kern.emit<op::Any>(static_pointer_cast<op::Any>(op));
             break;
         }
         case OP_TYPEID::ReluBackprop:
@@ -1306,42 +1231,42 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::Greater:
         {
-            do_logical_operation(topology, op, " > ");
+            do_logical_operation<op::Greater>(kern, op);
             break;
         }
         case OP_TYPEID::GreaterEq:
         {
-            do_logical_operation(topology, op, " >= ");
+            do_logical_operation<op::GreaterEq>(kern, op);
             break;
         }
         case OP_TYPEID::Equal:
         {
-            do_logical_operation(topology, op, " == ");
+            do_logical_operation<op::Equal>(kern, op);
             break;
         }
         case OP_TYPEID::NotEqual:
         {
-            do_logical_operation(topology, op, " != ");
+            do_logical_operation<op::NotEqual>(kern, op);
             break;
         }
         case OP_TYPEID::Less:
         {
-            do_logical_operation(topology, op, " < ");
+            do_logical_operation<op::Less>(kern, op);
             break;
         }
         case OP_TYPEID::LessEq:
         {
-            do_logical_operation(topology, op, " <= ");
+            do_logical_operation<op::LessEq>(kern, op);
             break;
         }
         case OP_TYPEID::And:
         {
-            do_logical_operation(topology, op, " && ");
+            do_logical_operation<op::And>(kern, op);
             break;
         }
         case OP_TYPEID::Or:
         {
-            do_logical_operation(topology, op, " || ");
+            do_logical_operation<op::Or>(kern, op);
             break;
         }
         case OP_TYPEID::Pad:
@@ -1365,40 +1290,8 @@ shared_ptr<runtime::Executable>
         {
             arguments_check(op, 6, 3);
 
-            const shared_ptr<op::BatchNormTrainingBackprop> batch_norm =
-                static_pointer_cast<op::BatchNormTrainingBackprop>(op);
-            const double eps = batch_norm->get_eps_value();
-
-            do_create_mean(topology,
-                           op->get_output_tensor_name(2), // d_beta
-                           op->get_output_element_type(2),
-                           op->get_input_tensor_name(5), // delta
-                           op->get_input_shape(5),
-                           true);
-
-            do_create_variance_back(topology,
-                                    op->get_output_tensor_name(1), // d_gamma
-                                    op->get_output_element_type(1),
-                                    eps,
-                                    op->get_input_tensor_name(2), // input
-                                    op->get_input_shape(2),
-                                    op->get_input_tensor_name(3),  // gamma
-                                    op->get_input_tensor_name(4),  // beta
-                                    op->get_input_tensor_name(5)); // delta
-
-            do_batch_norm_backprop_operation(topology,
-                                             op->get_input_shape(2),
-                                             op->get_input_element_type(2),
-                                             op->get_input_tensor_name(0),
-                                             op->get_input_tensor_name(1),
-                                             op->get_input_tensor_name(2),
-                                             op->get_input_tensor_name(3),
-                                             op->get_input_tensor_name(4),
-                                             op->get_input_tensor_name(5),
-                                             eps,
-                                             op->get_output_tensor_name(0),
-                                             op->get_output_tensor_name(1),
-                                             op->get_output_tensor_name(2));
+            kern.emit<op::BatchNormTrainingBackprop>(
+                static_pointer_cast<op::BatchNormTrainingBackprop>(op));
             break;
         }
         case OP_TYPEID::BatchNormInference:
@@ -1427,16 +1320,7 @@ shared_ptr<runtime::Executable>
             if (proceed_with_custom_kernel || (op->get_input_shape(2).size() != 4) ||
                 (op->get_input_element_type(0) != ngraph::element::f32))
             {
-                do_batch_norm_operation(topology,
-                                        op->get_output_tensor_name(0),
-                                        op->get_output_element_type(0),
-                                        eps,
-                                        op->get_input_tensor_name(2),
-                                        op->get_input_shape(2),
-                                        op->get_input_tensor_name(0),
-                                        op->get_input_tensor_name(1),
-                                        op->get_input_tensor_name(3),
-                                        op->get_input_tensor_name(4));
+                kern.emit<op::BatchNormInference>(bnorm);
             }
             else
             {
@@ -1460,61 +1344,7 @@ shared_ptr<runtime::Executable>
             if ((op->get_input_shape(2).size() != 4) ||
                 (op->get_input_element_type(0) != ngraph::element::f32))
             {
-                string mean_name;
-                string variance_name;
-
-                if (op->get_inputs().size() < 3 || op->get_outputs().empty())
-                {
-                    arguments_check(op, 3, 1); // throw exception in this case
-                }
-
-                if (op->get_outputs().size() == 3)
-                {
-                    arguments_check(op, 3, 3);
-
-                    mean_name = op->get_output_tensor_name(1);
-                    variance_name = op->get_output_tensor_name(2);
-
-                    do_create_mean(topology,
-                                   mean_name,
-                                   op->get_output_element_type(0),
-                                   op->get_input_tensor_name(2),
-                                   op->get_input_shape(2),
-                                   false);
-
-                    do_create_variance(topology,
-                                       variance_name,
-                                       op->get_output_element_type(0),
-                                       op->get_input_tensor_name(2),
-                                       op->get_input_shape(2),
-                                       mean_name);
-                }
-
-                if (op->get_outputs().size() == 1 || op->get_outputs().size() == 3)
-                {
-                    if (mean_name.empty() || variance_name.empty())
-                    {
-                        arguments_check(op, 5, 1);
-
-                        mean_name = op->get_input_tensor_name(3);
-                        variance_name = op->get_input_tensor_name(4);
-                    }
-
-                    do_batch_norm_operation(topology,
-                                            op->get_output_tensor_name(0),
-                                            op->get_output_element_type(0),
-                                            eps,
-                                            op->get_input_tensor_name(2),
-                                            op->get_input_shape(2),
-                                            op->get_input_tensor_name(0),
-                                            op->get_input_tensor_name(1),
-                                            mean_name,
-                                            variance_name);
-                }
-                else
-                {
-                    arguments_check(op, 5, 1); // throw exception in this case
-                }
+                kern.emit<op::BatchNormTraining>(bnorm);
             }
             else
             {
@@ -1788,34 +1618,14 @@ shared_ptr<runtime::Executable>
         {
             arguments_check(op, 1, 1);
 
-            const shared_ptr<op::Min> min_op = static_pointer_cast<op::Min>(op);
-            const AxisSet& axis = min_op->get_reduction_axes();
-
-            do_max_min_operation(topology,
-                                 op->get_input_tensor_name(0),
-                                 op->get_input_shape(0),
-                                 op->get_output_tensor_name(0),
-                                 op->get_output_shape(0),
-                                 op->get_output_element_type(0),
-                                 axis,
-                                 true);
+            kern.emit<op::Min>(static_pointer_cast<op::Min>(op));
             break;
         }
         case OP_TYPEID::Max:
         {
             arguments_check(op, 1, 1);
 
-            const shared_ptr<op::Max> max_op = static_pointer_cast<op::Max>(op);
-            const AxisSet& axis = max_op->get_reduction_axes();
-
-            do_max_min_operation(topology,
-                                 op->get_input_tensor_name(0),
-                                 op->get_input_shape(0),
-                                 op->get_output_tensor_name(0),
-                                 op->get_output_shape(0),
-                                 op->get_output_element_type(0),
-                                 axis,
-                                 false);
+            kern.emit<op::Max>(static_pointer_cast<op::Max>(op));
             break;
         }
         case OP_TYPEID::OneHot:
@@ -2008,6 +1818,8 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::DynReshape:
         case OP_TYPEID::DynSlice:
         case OP_TYPEID::Erf:
+        case OP_TYPEID::Gather:
+        case OP_TYPEID::GatherND:
         case OP_TYPEID::QuantizedAvgPool:
         case OP_TYPEID::QuantizedConvolutionBias:
         case OP_TYPEID::QuantizedConvolutionBiasAdd:

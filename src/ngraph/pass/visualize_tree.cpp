@@ -65,9 +65,10 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
     return false;
 }
 
-pass::VisualizeTree::VisualizeTree(const string& file_name, node_modifiers_t nm)
+pass::VisualizeTree::VisualizeTree(const string& file_name, node_modifiers_t nm, bool dot_only)
     : m_name{file_name}
     , m_node_modifiers{nm}
+    , m_dot_only(dot_only)
 {
 }
 
@@ -177,15 +178,18 @@ void pass::VisualizeTree::render() const
         out << "}\n";
         out.close();
 
-#ifndef _WIN32
-        stringstream ss;
-        ss << "dot -T" << get_file_ext() << " " << dot_file << " -o " << m_name;
-        auto cmd = ss.str();
-        auto stream = popen(cmd.c_str(), "r");
-        if (stream)
+        if (!m_dot_only)
         {
-            pclose(stream);
-        }
+#ifndef _WIN32
+            stringstream ss;
+            ss << "dot -T" << get_file_ext() << " " << dot_file << " -o " << m_name;
+            auto cmd = ss.str();
+            auto stream = popen(cmd.c_str(), "r");
+            if (stream)
+            {
+                pclose(stream);
+            }
 #endif
+        }
     }
 }
