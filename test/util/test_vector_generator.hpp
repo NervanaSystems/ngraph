@@ -24,8 +24,8 @@ namespace ngraph
 {
     namespace test
     {
-        std::vector<float> make_float_data();
-        std::vector<ngraph::bfloat16> make_bfloat16_data();
+        template <typename T>
+        std::vector<T> make_floating_point_data();
 
         template <typename T>
         std::vector<T> make_tensor_data(T min_value, T max_value, size_t count)

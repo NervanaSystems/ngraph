@@ -38,8 +38,8 @@ static string s_manifest = "${MANIFEST}";
 
 NGRAPH_TEST(${BACKEND_NAME}, add)
 {
-    test::make_float_data();
-    test::make_bfloat16_data();
+    test::make_floating_point_data<float>();
+    test::make_floating_point_data<bfloat16>();
 
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);

@@ -61,8 +61,6 @@ namespace ngraph
         operator float() const;
         operator double() const;
 
-        static std::vector<float> to_float_vector(const std::vector<bfloat16>&);
-        static std::vector<bfloat16> from_float_vector(const std::vector<float>&);
         static bfloat16 from_bits(uint16_t bits) { return bfloat16(bits, false); }
         uint16_t to_bits() const;
         friend std::ostream& operator<<(std::ostream& out, const bfloat16& obj)

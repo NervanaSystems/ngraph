@@ -22,7 +22,8 @@
 using namespace ngraph;
 using namespace std;
 
-std::vector<float> test::make_float_data()
+template <>
+std::vector<float> test::make_floating_point_data()
 {
     std::vector<float> data;
     data.push_back(0);
@@ -40,13 +41,14 @@ std::vector<float> test::make_float_data()
     return data;
 }
 
-std::vector<bfloat16> test::make_bfloat16_data()
+template <>
+std::vector<bfloat16> test::make_floating_point_data()
 {
     vector<bfloat16> bfloat16_data;
-    for (float f : make_float_data())
+    for (float f : make_floating_point_data<float>())
     {
         bfloat16_data.emplace_back(bfloat16::from_bits(bfloat16::truncate(f)));
-        // NGRAPH_INFO << test::bfloat16_to_bits(bfloat16_data.back()) << ", " << bfloat16_data.back();
+        NGRAPH_INFO << test::bfloat16_to_bits(bfloat16_data.back()) << ", " << bfloat16_data.back();
     }
     return bfloat16_data;
 }
