@@ -38,13 +38,13 @@ using namespace ngraph;
 #define DLSYM(a, b) dlsym(a, b)
 #endif
 
-unordered_map<string, runtime::new_backend_t>& runtime::BackendManager::get_registry()
+unordered_map<string, runtime::BackendConstructor*>& runtime::BackendManager::get_registry()
 {
-    static unordered_map<string, new_backend_t> s_registered_backend;
+    static unordered_map<string, BackendConstructor*> s_registered_backend;
     return s_registered_backend;
 }
 
-void runtime::BackendManager::register_backend(const string& name, new_backend_t new_backend)
+void runtime::BackendManager::register_backend(const string& name, BackendConstructor* new_backend)
 {
     get_registry()[name] = new_backend;
 }
@@ -82,9 +82,8 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
     auto it = registry.find(type);
     if (it != registry.end())
     {
-        NGRAPH_INFO << "************************* bad";
-        // new_backend_t new_backend = it->second;
-        // backend = new_backend(config.c_str());
+        BackendConstructor* new_backend = it->second;
+        backend = new_backend->create(config);
     }
     else
     {
