@@ -99,13 +99,11 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
             throw runtime_error(ss.str());
         }
 
-        auto sym = DLSYM(handle, "get_backend_constructor_pointer");
-        if (sym)
+        function<runtime::BackendConstructor*()> get_backend_constructor_pointer =
+            reinterpret_cast<runtime::BackendConstructor* (*)()>(
+                DLSYM(handle, "get_backend_constructor_pointer"));
+        if (get_backend_constructor_pointer)
         {
-            NGRAPH_INFO;
-            function<runtime::BackendConstructor*()> get_backend_constructor_pointer =
-                reinterpret_cast<runtime::BackendConstructor* (*)()>(sym);
-            NGRAPH_INFO << "new backend construction method";
             backend = get_backend_constructor_pointer()->create(config);
         }
         else
