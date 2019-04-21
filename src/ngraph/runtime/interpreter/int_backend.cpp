@@ -24,14 +24,11 @@
 using namespace std;
 using namespace ngraph;
 
-extern "C" const char* get_ngraph_version_string()
+extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
 {
-    return NGRAPH_VERSION;
-}
-
-extern "C" runtime::Backend* new_backend(const char* configuration_string)
-{
-    return new runtime::interpreter::INTBackend();
+    static shared_ptr<runtime::BackendConstructor> s_backend_constructor(
+        new runtime::interpreter::INTBackendConstructor());
+    return s_backend_constructor.get();
 }
 
 runtime::interpreter::INTBackend::INTBackend()

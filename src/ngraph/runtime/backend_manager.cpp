@@ -66,9 +66,9 @@ vector<string> runtime::BackendManager::get_registered_backends()
     return rc;
 }
 
-unique_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::string& config)
+shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::string& config)
 {
-    runtime::Backend* backend = nullptr;
+    shared_ptr<runtime::Backend> backend;
     string type = config;
 
     // strip off attributes, IE:CPU becomes IE
@@ -82,8 +82,9 @@ unique_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
     auto it = registry.find(type);
     if (it != registry.end())
     {
-        new_backend_t new_backend = it->second;
-        backend = new_backend(config.c_str());
+        NGRAPH_INFO << "************************* bad";
+        // new_backend_t new_backend = it->second;
+        // backend = new_backend(config.c_str());
     }
     else
     {
@@ -97,26 +98,24 @@ unique_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
 #endif
             throw runtime_error(ss.str());
         }
-        function<const char*()> get_ngraph_version_string =
-            reinterpret_cast<const char* (*)()>(DLSYM(handle, "get_ngraph_version_string"));
-        if (!get_ngraph_version_string)
+
+        auto sym = DLSYM(handle, "get_backend_constructor_pointer");
+        if (sym)
+        {
+            NGRAPH_INFO;
+            function<runtime::BackendConstructor*()> get_backend_constructor_pointer =
+                reinterpret_cast<runtime::BackendConstructor* (*)()>(sym);
+            NGRAPH_INFO << "new backend construction method";
+            backend = get_backend_constructor_pointer()->create(config);
+        }
+        else
         {
             CLOSE_LIBRARY(handle);
             throw runtime_error("Backend '" + type +
-                                "' does not implement get_ngraph_version_string");
+                                "' does not implement get_backend_constructor_pointer");
         }
-
-        function<runtime::Backend*(const char*)> new_backend =
-            reinterpret_cast<runtime::Backend* (*)(const char*)>(DLSYM(handle, "new_backend"));
-        if (!new_backend)
-        {
-            CLOSE_LIBRARY(handle);
-            throw runtime_error("Backend '" + type + "' does not implement new_backend");
-        }
-
-        backend = new_backend(config.c_str());
     }
-    return unique_ptr<runtime::Backend>(backend);
+    return backend;
 }
 
 // This doodad finds the full path of the containing shared library

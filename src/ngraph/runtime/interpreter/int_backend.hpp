@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 
+#include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
 namespace ngraph
@@ -32,6 +33,7 @@ namespace ngraph
         {
             class INTBackend;
             class INTExecutable;
+            class INTBackendConstructor;
         }
     }
 }
@@ -57,4 +59,13 @@ public:
 
 private:
     std::set<std::string> m_unsupported_op_name_list;
+};
+
+class ngraph::runtime::interpreter::INTBackendConstructor : public BackendConstructor
+{
+public:
+    std::shared_ptr<Backend> create(const std::string& config) override
+    {
+        return std::make_shared<INTBackend>();
+    }
 };
