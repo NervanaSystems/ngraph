@@ -26,7 +26,7 @@ using namespace ngraph;
 
 extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
 {
-    static shared_ptr<runtime::BackendConstructor> s_backend_constructor(
+    static unique_ptr<runtime::BackendConstructor> s_backend_constructor(
         new runtime::interpreter::INTBackendConstructor());
     return s_backend_constructor.get();
 }
