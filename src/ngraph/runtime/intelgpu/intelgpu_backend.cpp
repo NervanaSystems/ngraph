@@ -48,6 +48,7 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_backend.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_executable.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_kernels.hpp"
@@ -260,19 +261,20 @@ static void do_equal_propagation(cldnn::topology& topology,
     topology.add(op_concat);
 }
 
-extern "C" const char* get_ngraph_version_string()
+extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
 {
-    return NGRAPH_VERSION;
-}
+    class IntelGPUBackendConstructor : public runtime::BackendConstructor
+    {
+    public:
+        std::shared_ptr<runtime::Backend> create(const std::string& config) override
+        {
+            return std::make_shared<runtime::intelgpu::IntelGPUBackend>();
+        }
+    };
 
-extern "C" runtime::Backend* new_backend(const char* configuration_string)
-{
-    return new runtime::intelgpu::IntelGPUBackend();
-}
-
-extern "C" void delete_backend(runtime::Backend* backend)
-{
-    delete backend;
+    static unique_ptr<runtime::BackendConstructor> s_backend_constructor(
+        new IntelGPUBackendConstructor());
+    return s_backend_constructor.get();
 }
 
 runtime::intelgpu::IntelGPUBackend::IntelGPUBackend()
