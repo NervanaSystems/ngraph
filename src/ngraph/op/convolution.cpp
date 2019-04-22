@@ -33,13 +33,15 @@ op::Convolution::Convolution(const shared_ptr<Node>& data_batch,
                              const Strides& window_dilation_strides,
                              const CoordinateDiff& padding_below,
                              const CoordinateDiff& padding_above,
-                             const Strides& data_dilation_strides)
+                             const Strides& data_dilation_strides,
+                             const PadType& pad_type)
     : Op("Convolution", check_single_output_args({data_batch, filters}))
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
     , m_padding_below(padding_below)
     , m_padding_above(padding_above)
     , m_data_dilation_strides(data_dilation_strides)
+    , m_pad_type(pad_type)
 {
     constructor_validate_and_infer_types();
 }
@@ -74,6 +76,25 @@ void op::Convolution::validate_and_infer_types()
     if (m_padding_above.size() == 0)
     {
         m_padding_above = conv_default_padding(this, data_batch_shape, filters_shape);
+    }
+
+    if (m_pad_type == PadType::SAME_UPPER || m_pad_type == PadType::SAME_LOWER)
+    {
+        if (data_batch_shape.is_static() && filters_shape.is_static())
+        {
+            // TODO: data dilation
+            m_padding_below.clear();
+            m_padding_above.clear();
+            auto filter_shape = filters_shape.to_shape();
+            filter_shape.erase(filter_shape.begin(), filter_shape.begin() + 2); // Remove {O,I}
+            infer_auto_padding(data_batch_shape.to_shape(),
+                               filter_shape,
+                               m_window_movement_strides,
+                               m_window_dilation_strides,
+                               m_pad_type,
+                               m_padding_above,
+                               m_padding_below);
+        }
     }
 
     element::Type result_et;
