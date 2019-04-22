@@ -279,7 +279,7 @@ except Exception:
 
 setup(
     name='ngraph-core',
-    description='nGraph - Intel\'s graph compiler and runtime for Neural Networks',
+    description="nGraph - Intel's graph compiler and runtime for Neural Networks",
     version=__version__,
     author='Intel',
     author_email='intelnervana@intel.com',
