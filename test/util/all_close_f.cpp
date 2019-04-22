@@ -39,8 +39,20 @@ constexpr uint64_t DOUBLE_MAX_DIFF = ULLONG_MAX - 1;
 
 uint32_t test::float_distance(float a, float b, float min_signal)
 {
-    if (!isfinite(a) || !isfinite(b))
+    if (isnan(a) && isnan(b))
     {
+        return 0;
+    }
+    else if (isinf(a) && isinf(b))
+    {
+        if (a > 0 && b > 0)
+        {
+            return 0;
+        }
+        else if (a < 0 && b < 0)
+        {
+            return 0;
+        }
         return FLOAT_MAX_DIFF;
     }
 
