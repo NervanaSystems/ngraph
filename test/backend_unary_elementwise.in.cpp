@@ -35,57 +35,58 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
-NGRAPH_TEST(${BACKEND_NAME}, abs_${DATA_TYPE})
-{
-    auto input = test::make_floating_point_data<${DATA_TYPE}>();
-    auto output = vector<${DATA_TYPE}>(input.size());
-    Shape shape = Shape{input.size()};
-    auto A = make_shared<op::Parameter>(${ELEMENT_TYPE}, shape);
-    auto f = make_shared<Function>(make_shared<op::Abs>(A), ParameterVector{A});
-
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(${ELEMENT_TYPE}, shape, input.data());
-    auto result = backend->create_tensor(${ELEMENT_TYPE}, shape, output.data());
-
-    auto handle = backend->compile(f);
-    handle->call_with_validate({result}, {a});
-
-    vector<${DATA_TYPE}> expected;
-    for (auto x : input)
-    {
-        expected.push_back(abs(x));
+#define NGRAPH_TYPED_TEST(c_func__, op__, min__, max__)                                            \
+    NGRAPH_TEST(${BACKEND_NAME}, c_func__##_${DATA_TYPE})                                          \
+    {                                                                                              \
+        auto input = test::make_floating_point_data<${DATA_TYPE}>(min__, max__);                   \
+        auto output = vector<${DATA_TYPE}>(input.size());                                          \
+        Shape shape = Shape{input.size()};                                                         \
+        auto A = make_shared<op::Parameter>(${ELEMENT_TYPE}, shape);                               \
+        auto f = make_shared<Function>(make_shared<op__>(A), ParameterVector{A});                  \
+                                                                                                   \
+        auto backend = runtime::Backend::create("${BACKEND_NAME}");                                \
+        auto a = backend->create_tensor(${ELEMENT_TYPE}, shape, input.data());                     \
+        auto result = backend->create_tensor(${ELEMENT_TYPE}, shape, output.data());               \
+                                                                                                   \
+        auto handle = backend->compile(f);                                                         \
+        handle->call_with_validate({result}, {a});                                                 \
+                                                                                                   \
+        vector<${DATA_TYPE}> expected;                                                             \
+        for (auto x : input)                                                                       \
+        {                                                                                          \
+            expected.push_back(c_func__(x));                                                       \
+        }                                                                                          \
+                                                                                                   \
+        EXPECT_TRUE(test::all_close_f(expected, output, MIN_FLOAT_TOLERANCE_BITS));                \
     }
 
-    EXPECT_TRUE(test::all_close_f(expected, output, MIN_FLOAT_TOLERANCE_BITS));
-}
+NGRAPH_TYPED_TEST(abs, ngraph::op::Abs, 1e+10, 1e+10);
 
-NGRAPH_TEST(${BACKEND_NAME}, acos_${DATA_TYPE})
-{
-    auto input = test::make_floating_point_data<${DATA_TYPE}>(-1, 1);
-    auto output = vector<${DATA_TYPE}>(input.size());
-    Shape shape = Shape{input.size()};
-    auto A = make_shared<op::Parameter>(${ELEMENT_TYPE}, shape);
-    auto f = make_shared<Function>(make_shared<op::Acos>(A), ParameterVector{A});
+// NGRAPH_TEST(${BACKEND_NAME}, acos_${DATA_TYPE})
+// {
+//     auto input = test::make_floating_point_data<${DATA_TYPE}>(-1, 1);
+//     auto output = vector<${DATA_TYPE}>(input.size());
+//     Shape shape = Shape{input.size()};
+//     auto A = make_shared<op::Parameter>(${ELEMENT_TYPE}, shape);
+//     auto f = make_shared<Function>(make_shared<op::Acos>(A), ParameterVector{A});
 
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+//     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(${ELEMENT_TYPE}, shape, input.data());
-    auto result = backend->create_tensor(${ELEMENT_TYPE}, shape, output.data());
+//     // Create some tensors for input/output
+//     auto a = backend->create_tensor(${ELEMENT_TYPE}, shape, input.data());
+//     auto result = backend->create_tensor(${ELEMENT_TYPE}, shape, output.data());
 
-    auto handle = backend->compile(f);
-    handle->call_with_validate({result}, {a});
+//     auto handle = backend->compile(f);
+//     handle->call_with_validate({result}, {a});
 
-    vector<${DATA_TYPE}> expected;
-    for (auto x : input)
-    {
-        expected.push_back(acos(x));
-    }
+//     vector<${DATA_TYPE}> expected;
+//     for (auto x : input)
+//     {
+//         expected.push_back(acos(x));
+//     }
 
-    EXPECT_TRUE(test::all_close_f(expected, output, MIN_FLOAT_TOLERANCE_BITS));
-}
+//     EXPECT_TRUE(test::all_close_f(expected, output, MIN_FLOAT_TOLERANCE_BITS));
+// }
 
 NGRAPH_TEST(${BACKEND_NAME}, asin)
 {
