@@ -132,10 +132,7 @@ void print_times(const multimap<size_t, string>& timing)
     for (const pair<size_t, string>& p : timing)
     {
         name_width = max(name_width, static_cast<int>(p.second.size()));
-        stringstream ss;
-        ss.imbue(locale(""));
-        ss << p.first;
-        time_width = max(time_width, static_cast<int>(ss.str().size()));
+        time_width = max(time_width, static_cast<int>(locale_string(p.first).size()));
     }
     for (auto it = timing.rbegin(); it != timing.rend(); it++)
     {
@@ -381,7 +378,8 @@ OPTIONS
                     }
                 }
                 cout << "--\n";
-                cout << "Total Constant size: " << total_constant_bytes << " bytes\n";
+                cout << "Total Constant size: " << locale_string(total_constant_bytes)
+                     << " bytes\n";
                 cout << "--\n";
                 cout << "Types used:\n";
                 for (const string& type : type_list)
