@@ -348,8 +348,13 @@ OPTIONS
                 shared_ptr<Function> f = deserialize(model);
 
                 cout << "\n---- Source Graph Statistics ----\n";
-                cout << "Total nodes: " << f->get_ops().size() << endl;
+                cout << "Total nodes: " << locale_string(f->get_ops().size()) << endl;
                 size_t total_constant_bytes = 0;
+                size_t total_parameter_bytes = 0;
+                size_t total_result_bytes = 0;
+                size_t total_constant_count = 0;
+                size_t total_parameter_count = 0;
+                size_t total_result_count = 0;
                 unordered_map<string, size_t> op_list;
                 set<string> type_list;
                 for (shared_ptr<Node> node : f->get_ordered_ops())
@@ -364,6 +369,7 @@ OPTIONS
 
                     if (op_name == "Constant")
                     {
+                        total_constant_count++;
                         const Shape& shape = node->output(0).get_shape();
                         size_t const_size = node->output(0).get_element_type().size();
                         if (shape.size() == 0)
@@ -376,10 +382,28 @@ OPTIONS
                                 (const_size * shape_size(node->output(0).get_shape()));
                         }
                     }
+                    else if (op_name == "Parameter")
+                    {
+                        total_parameter_count++;
+                        const Shape& shape = node->output(0).get_shape();
+                        size_t size = node->output(0).get_element_type().size() * shape_size(shape);
+                        total_parameter_bytes += size;
+                    }
+                    else if (op_name == "Result")
+                    {
+                        total_result_count++;
+                        const Shape& shape = node->input(0).get_shape();
+                        size_t size = node->input(0).get_element_type().size() * shape_size(shape);
+                        total_result_bytes += size;
+                    }
                 }
                 cout << "--\n";
                 cout << "Total Constant size: " << locale_string(total_constant_bytes)
-                     << " bytes\n";
+                     << " bytes in " << total_constant_count << " constants\n";
+                cout << "Total Parameter size: " << locale_string(total_parameter_bytes)
+                     << " bytes in " << total_parameter_count << " parameters\n";
+                cout << "Total Result size: " << locale_string(total_result_bytes) << " bytes in "
+                     << total_result_count << " results\n";
                 cout << "--\n";
                 cout << "Types used:\n";
                 for (const string& type : type_list)
