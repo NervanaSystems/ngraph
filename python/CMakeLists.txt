@@ -96,6 +96,20 @@ if (NGRAPH_MANYLINUX_ENABLE)
     list(APPEND WHEEL_DEP_LIBS ext_omprt)
 endif()
 
+if(LINUX)
+    find_program(PATCHELF patchelf)
+    if(PATCHELF)
+        add_custom_command(
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/patchelf.timestamp
+            WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}
+            COMMAND ${PATCHELF} --force-rpath --set-rpath \'$$ORIGIN\' ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLML_LIB}
+            COMMAND ${CMAKE_COMMAND} -E touch patchelf.timestamp
+            DEPENDS ${WHEEL_DEP_LIBS} ${WHEEL_DEPS}
+        )
+        list(APPEND WHEEL_DEPS ${CMAKE_CURRENT_BINARY_DIR}/patchelf.timestamp)
+    endif()
+endif()
+
 if (NOT NGRAPH_MANYLINUX_ENABLE)
     unset(PYTHON_EXECUTABLE)
     unset(PYTHONINTERP_FOUND)
