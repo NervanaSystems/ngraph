@@ -1277,18 +1277,16 @@ CustomKernels::krnl_info CustomKernels::build_krnl(const shared_ptr<op::Select>&
     return {krn_ret};
 }
 
-void runtime::intelgpu::do_logic_kernel(cldnn::topology& topology,
-                                        const string& input0_name,
-                                        const Shape& input0_shape,
-                                        const element::Type& input0_type,
-                                        const string& input1_name,
-                                        const Shape& input1_shape,
-                                        const string& output_name,
-                                        const Shape& output_shape,
-                                        const element::Type& output_type,
-                                        const string& operation)
+static CustomKernels::krnl_info do_logic_kernel(const shared_ptr<Node>& op, const string& operation)
 {
-    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const string& input0_name = op->get_input_tensor_name(0);
+    const Shape& input0_shape = op->get_input_shape(0);
+    const element::Type& input0_type = op->get_input_element_type(0);
+    const string& input1_name = op->get_input_tensor_name(1);
+    const Shape& input1_shape = op->get_input_shape(1);
+    const string& output_name = op->get_output_tensor_name(0);
+    const Shape& output_shape = op->get_output_shape(0);
+    const element::Type& output_type = op->get_output_element_type(0);
     const string entry_point_name = "logic_" + output_name;
     CodeWriter writer;
     vector<size_t> gws;
@@ -1313,15 +1311,14 @@ void runtime::intelgpu::do_logic_kernel(cldnn::topology& topology,
     }
     writer.block_end();
 
-    const cldnn::custom_gpu_primitive op_logical(output_name,
-                                                 {input0_name, input1_name},
-                                                 {writer.get_code()},
-                                                 entry_point_name,
-                                                 get_kernel_args(2, 1),
-                                                 "",
-                                                 layout,
-                                                 gws);
-    topology.add(op_logical);
+    const CustomKernelInfo op_logical(output_name,
+                                      output_shape,
+                                      output_type,
+                                      {input0_name, input1_name},
+                                      {writer.get_code()},
+                                      entry_point_name,
+                                      gws);
+    return {op_logical};
 }
 
 void runtime::intelgpu::do_eltwise_kernel(cldnn::topology& topology,
@@ -2332,4 +2329,44 @@ size_t runtime::intelgpu::get_max_memory_rss()
     }
 
     return result;
+}
+
+CustomKernels::krnl_info CustomKernels::build_krnl(const shared_ptr<op::And>& op) const
+{
+    return do_logic_kernel(op, " && ");
+}
+
+CustomKernels::krnl_info CustomKernels::build_krnl(const shared_ptr<op::Equal>& op) const
+{
+    return do_logic_kernel(op, " == ");
+}
+
+CustomKernels::krnl_info CustomKernels::build_krnl(const shared_ptr<op::Greater>& op) const
+{
+    return do_logic_kernel(op, " > ");
+}
+
+CustomKernels::krnl_info CustomKernels::build_krnl(const shared_ptr<op::GreaterEq>& op) const
+{
+    return do_logic_kernel(op, " >= ");
+}
+
+CustomKernels::krnl_info CustomKernels::build_krnl(const shared_ptr<op::Less>& op) const
+{
+    return do_logic_kernel(op, " < ");
+}
+
+CustomKernels::krnl_info CustomKernels::build_krnl(const shared_ptr<op::LessEq>& op) const
+{
+    return do_logic_kernel(op, " <= ");
+}
+
+CustomKernels::krnl_info CustomKernels::build_krnl(const shared_ptr<op::NotEqual>& op) const
+{
+    return do_logic_kernel(op, " != ");
+}
+
+CustomKernels::krnl_info CustomKernels::build_krnl(const shared_ptr<op::Or>& op) const
+{
+    return do_logic_kernel(op, " || ");
 }
