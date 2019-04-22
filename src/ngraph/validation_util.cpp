@@ -598,6 +598,7 @@ void ngraph::infer_auto_padding(const Shape& image_shape,
                                 CoordinateDiff& padding_above,
                                 CoordinateDiff& padding_below)
 {
+    NGRAPH_CHECK(pad_type == op::PadType::SAME_UPPER || pad_type == op::PadType::SAME_LOWER);
     for (size_t i = 0; i < static_cast<size_t>(filter_shape.size()); i++)
     {
         int64_t image_size = static_cast<int64_t>(image_shape[i + 2]);
