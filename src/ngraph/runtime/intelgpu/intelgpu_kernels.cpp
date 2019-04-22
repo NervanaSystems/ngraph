@@ -44,3 +44,15 @@ void runtime::intelgpu::CustomKernels::queue_krnl(const krnl_info& krnl_info,
         stream.add(kernel_item);
     }
 }
+
+void runtime::intelgpu::arguments_check(const shared_ptr<Node>& op, size_t input, size_t output)
+{
+    if (op->get_input_size() != input || op->get_output_size() != output)
+    {
+        ostringstream os;
+        os << "Operation \"" << op->description() << "\" input and output sizes mismatch."
+           << " Expected input size=" << input << ", provided=" << op->get_input_size()
+           << ". Expected output size=" << output << ", provided=" << op->get_output_size();
+        throw invalid_argument(os.str());
+    }
+}

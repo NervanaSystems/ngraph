@@ -16,30 +16,11 @@
 
 #pragma once
 
-#include "core/node.hpp"
-#include "ngraph/node_vector.hpp"
-#include "ngraph/op/greater.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
+#include <cstdlib>
 
 namespace ngraph
 {
-    namespace onnx_import
-    {
-        namespace op
-        {
-            namespace set_1
-            {
-                inline NodeVector greater(const Node& node)
-                {
-                    NodeVector ng_inputs{ngraph::op::numpy_style_broadcast(node.get_ng_inputs())};
-                    return {
-                        std::make_shared<ngraph::op::Greater>(ng_inputs.at(0), ng_inputs.at(1))};
-                }
-
-            } // namespace set_1
-
-        } //namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+    static bool s_provenance_enabled = std::getenv("NGRAPH_PROVENANCE_ENABLE") != nullptr;
+    void set_provenance_enabled(bool enabled);
+    bool get_provenance_enabled();
+}

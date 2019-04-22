@@ -40,7 +40,8 @@ include(var_functions)
 
 NGRAPH_GET_VERSION_LABEL()
 
-string(REGEX MATCH "([0-9?]+)\\.([0-9?]+)\\.([0-9?]+)" NGRAPH_VERSION_SHORT "${NGRAPH_VERSION_LABEL}")
+string(REGEX MATCH "([0-9?]+)\\.([0-9?]+)\\.([0-9?]+)(-rc\\.[0-9?]+)?" NGRAPH_VERSION_SHORT "${NGRAPH_VERSION_LABEL}")
+string(REGEX REPLACE "-rc." "rc" NGRAPH_WHEEL_VERSION "${NGRAPH_VERSION_SHORT}")
 string(REGEX MATCH "([0-9?]+)\\.([0-9?]+)" NGRAPH_API_VERSION "${NGRAPH_VERSION_LABEL}")
 string(REGEX MATCH "[^v](.*)" NGRAPH_VERSION "${NGRAPH_VERSION_LABEL}")
 string(REPLACE "." ";" NGRAPH_VERSION_PARTS "${NGRAPH_VERSION_SHORT}")
@@ -51,6 +52,7 @@ configure_file(VERSION.in VERSION)
 
 message(STATUS "NGRAPH_VERSION ${NGRAPH_VERSION}")
 message(STATUS "NGRAPH_VERSION_SHORT ${NGRAPH_VERSION_SHORT}")
+message(STATUS "NGRAPH_WHEEL_VERSION ${NGRAPH_WHEEL_VERSION}")
 message(STATUS "NGRAPH_API_VERSION ${NGRAPH_API_VERSION}")
 
 set(NGRAPH_INCLUDE_PATH
@@ -74,7 +76,8 @@ if ("${CMAKE_GENERATOR}" MATCHES "^Visual Studio.*$")
     set(MSVS TRUE)
 endif()
 
-if (APPLE AND (NOT CMAKE_OSX_SYSROOT))
+# APPLE: Set CMAKE_OSX_SYSROOT if not set already.
+if (APPLE)
     execute_process(COMMAND sw_vers -productVersion
         OUTPUT_VARIABLE OSX_FULL_VERSION
         OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -82,14 +85,26 @@ if (APPLE AND (NOT CMAKE_OSX_SYSROOT))
     string(REGEX REPLACE "^([0-9]+\\.[0-9]+).*$" "\\1"
         OSX_SHORT_VERSION "${OSX_FULL_VERSION}")
 
-    if(NOT (OSX_SHORT_VERSION VERSION_LESS 10.14))
-        # Xcode is installed
-        set(XCODE_ISYSROOT /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX${OSX_SHORT_VERSION}.sdk)
-        message(STATUS "Trying Xcode sdk at ${XCODE_ISYSROOT}.")
-        if(NOT EXISTS ${XCODE_ISYSROOT})
+    message(STATUS "Detected: OSX ${OSX_SHORT_VERSION}")
+
+    if (CMAKE_OSX_SYSROOT)
+        message(STATUS "Using CMAKE_OSX_SYSROOT: ${CMAKE_OSX_SYSROOT}")
+    else()
+        execute_process(COMMAND xcode-select -p
+            OUTPUT_VARIABLE APPLE_DEV_DIR
+            OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+        if("${APPLE_DEV_DIR}" STREQUAL "/Library/Developer/CommandLineTools")
             # Command line tools only
-            set(XCODE_ISYSROOT /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk)
+            set(XCODE_ISYSROOT ${APPLE_DEV_DIR}/SDKs/MacOSX.sdk)
             message(STATUS "Trying command line tool sdk at ${XCODE_ISYSROOT}.")
+            if(NOT EXISTS ${XCODE_ISYSROOT})
+                message(FATAL_ERROR "Cannot find macos sdk.")
+            endif()
+        else()
+            # Xcode is installed
+            set(XCODE_ISYSROOT ${APPLE_DEV_DIR}/Platforms/MacOSX.platform/Developer/SDKs/MacOSX${OSX_SHORT_VERSION}.sdk)
+            message(STATUS "Trying Xcode sdk at ${XCODE_ISYSROOT}.")
             if(NOT EXISTS ${XCODE_ISYSROOT})
                 message(FATAL_ERROR "Cannot find macos sdk.")
             endif()
@@ -100,10 +115,18 @@ if (APPLE AND (NOT CMAKE_OSX_SYSROOT))
 endif()
 
 # Setup CMAKE_ARGS to be forwarded to External Projects
-set(NGRAPH_FORWARD_CMAKE_ARGS
+if (CMAKE_OSX_SYSROOT)
+    set(NGRAPH_FORWARD_CMAKE_ARGS
+        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+        -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
+        )
+else()
+    set(NGRAPH_FORWARD_CMAKE_ARGS
         -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
         -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
         )
+endif()
 
 if (NOT MSVS)
     if(NOT CMAKE_BUILD_TYPE)
@@ -430,12 +453,17 @@ endif()
 
 set(NGRAPH_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/src/ngraph)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
-set(NGRAPH_LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR}/${CMAKE_CFG_INTDIR})
 if(WIN32)
+    set(NGRAPH_LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR}/${CMAKE_CFG_INTDIR})
+    set(NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY ${NGRAPH_BUILD_DIR}/\${CMAKE_INSTALL_CONFIG_NAME})
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
     set(NGRAPH_ARCHIVE_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR}/${CMAKE_CFG_INTDIR})
+    set(NGRAPH_ARCHIVE_INSTALL_SRC_DIRECTORY ${NGRAPH_BUILD_DIR}/\${CMAKE_INSTALL_CONFIG_NAME})
     set(CMAKE_PDB_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+else()
+    set(NGRAPH_LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+    set(NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY ${NGRAPH_BUILD_DIR})
 endif()
 
 set(EXTERNAL_INSTALL_DIR ${CMAKE_BINARY_DIR}/external)
