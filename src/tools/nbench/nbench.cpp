@@ -27,7 +27,9 @@
 #include "ngraph/except.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/serializer.hpp"
@@ -347,18 +349,30 @@ OPTIONS
             {
                 shared_ptr<Function> f = deserialize(model);
 
+                pass::Manager pass_manager;
+                pass_manager.register_pass<pass::Liveness>();
+                pass_manager.register_pass<pass::MemoryLayout>();
+                pass_manager.run_passes(f);
+
                 cout << "\n---- Source Graph Statistics ----\n";
                 cout << "Total nodes: " << locale_string(f->get_ops().size()) << endl;
                 size_t total_constant_bytes = 0;
                 size_t total_parameter_bytes = 0;
                 size_t total_result_bytes = 0;
+                size_t total_temporary_bytes = 0;
                 size_t total_constant_count = 0;
                 size_t total_parameter_count = 0;
                 size_t total_result_count = 0;
+                size_t total_temporary_count = 0;
                 unordered_map<string, size_t> op_list;
                 set<string> type_list;
                 for (shared_ptr<Node> node : f->get_ordered_ops())
                 {
+                    for (descriptor::Tensor* tensor : node->liveness_new_list)
+                    {
+                        total_temporary_bytes += tensor->size();
+                        total_temporary_count++;
+                    }
                     string name = node->get_name();
                     string op_name = name.substr(0, name.find('_'));
                     string shape_name = "{" + join(node->output(0).get_shape()) + "}";
@@ -404,6 +418,10 @@ OPTIONS
                      << " bytes in " << total_parameter_count << " parameters\n";
                 cout << "Total Result size: " << locale_string(total_result_bytes) << " bytes in "
                      << total_result_count << " results\n";
+                cout << "Total Temporary size: " << locale_string(total_temporary_bytes)
+                     << " bytes in " << total_temporary_count << " temporaries\n";
+                cout << "Temporary size with reuse : "
+                     << locale_string(f->get_temporary_pool_size()) << " bytes\n";
                 cout << "--\n";
                 cout << "Types used:\n";
                 for (const string& type : type_list)
