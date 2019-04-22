@@ -32,7 +32,7 @@ namespace ngraph
         ///
         /// Follows ONNX padding type definitions
         /// EXPLICIT   - Pad dimensions are explicity specified
-        /// SAME_UPPER - Pad dimensions computed to match input shape
+        /// SAME_LOWER - Pad dimensions computed to match input shape
         ///              Ceil(num_dims/2) at the beginning and
         ///              Floor(num_dims/2) at the end
         /// SAME_UPPER - Pad dimensions computed to match input shape
@@ -43,8 +43,8 @@ namespace ngraph
         enum class PadType
         {
             EXPLICIT = 0,
-            SAME_UPPER,
             SAME_LOWER,
+            SAME_UPPER,
             VALID,
             AUTO = SAME_UPPER,
             NOTSET = EXPLICIT
