@@ -484,12 +484,12 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_quant_conv_linear_3d)
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
 
     test_case.add_input_from_file<uint8_t>(TEST_FILES, "onnx/qlinearconv3d/x.bin");
-    test_case.add_input_from_file<float>(TEST_FILES, "onnx/qlinearconv3d/x_scale.bin");
-    test_case.add_input_from_file<uint8_t>(TEST_FILES, "onnx/qlinearconv3d/x_zero_point.bin");
-    test_case.add_input_from_file<uint8_t>(TEST_FILES, "onnx/qlinearconv3d/w.bin");
+    test_case.add_input(std::vector<float>{0.00389225385151803f});  // x_scale
+    test_case.add_input(std::vector<uint8_t>{127});  // x_zero_point
+    test_case.add_input(std::vector<uint8_t>{255});  // w
     test_case.add_input(std::vector<float>{0.00128723995294422f});  // w_scale
-    test_case.add_input_from_file<uint8_t>(TEST_FILES, "onnx/qlinearconv3d/w_zero_point.bin");
-    test_case.add_input_from_file<float>(TEST_FILES, "onnx/qlinearconv3d/y_scale.bin");
+    test_case.add_input(std::vector<uint8_t>{0});  // w_zero_point
+    test_case.add_input(std::vector<float>{0.0011764180380851f});  // y_scale
     test_case.add_input(std::vector<uint8_t>{128});  // y_zero_point
 
     test_case.add_expected_output_from_file<uint8_t>({ 1, 1, 4, 4, 4 }, TEST_FILES, "onnx/qlinearconv3d/y.bin");
