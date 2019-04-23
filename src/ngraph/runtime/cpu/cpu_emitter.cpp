@@ -618,8 +618,6 @@ namespace ngraph
                 std::vector<std::size_t> deps;
                 emit_build_primitives(external_function, node, writer, rnn_index, deps);
 
-                writer << "std::cout << \"set primitives\" << std::endl;\n";
-
                 writer << "set_memory_ptr_cg(cg_ctx, " << to_string(deps[0]) << ", "
                        << args[0].get_name() << ");\n";
                 writer << "set_memory_ptr_cg(cg_ctx, " << to_string(deps[1]) << ", "

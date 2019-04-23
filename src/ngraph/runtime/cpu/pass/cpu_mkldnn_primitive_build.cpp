@@ -43,6 +43,7 @@
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/replace_slice.hpp"
+#include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
@@ -1425,6 +1426,23 @@ bool MKLDNNPrimitiveBuildPass::run_on_call_graph(const std::list<std::shared_ptr
         }
 
         Node* node = shp_node.get();
+
+        // skip in place concat, relu, reshape, slice.
+        if (std::dynamic_pointer_cast<ngraph::op::Concat>(shp_node) ||
+            std::dynamic_pointer_cast<ngraph::op::Relu>(shp_node) ||
+            std::dynamic_pointer_cast<ngraph::op::Reshape>(shp_node) ||
+            std::dynamic_pointer_cast<ngraph::op::Slice>(shp_node))
+        {
+            auto op = static_cast<const ngraph::op::Op*>(node);
+            if (auto op_annotations = op->get_op_annotations())
+            {
+                auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
+                if (in_place_oi_pairs.size() > 0)
+                {
+                    continue;
+                }
+            }
+        }
 
         if (mkldnn_utils::use_mkldnn_kernel(node))
         {
