@@ -95,7 +95,6 @@ namespace ngraph
                 ++m_output_index;
             }
 
-
             template <typename T>
             void add_expected_output(const std::vector<T>& values)
             {
@@ -104,14 +103,17 @@ namespace ngraph
             }
 
             template <typename T>
-            void add_expected_output_from_file(ngraph::Shape expected_shape, const std::string& basepath, const std::string& filename)
+            void add_expected_output_from_file(ngraph::Shape expected_shape,
+                                               const std::string& basepath,
+                                               const std::string& filename)
             {
                 auto filepath = ngraph::file_util::path_join(basepath, filename);
                 add_expected_output_from_file<T>(expected_shape, filepath);
             }
 
             template <typename T>
-            void add_expected_output_from_file(ngraph::Shape expected_shape, const std::string& filepath)
+            void add_expected_output_from_file(ngraph::Shape expected_shape,
+                                               const std::string& filepath)
             {
                 auto value = read_binary_file<T>(filepath);
                 add_expected_output(expected_shape, value);
