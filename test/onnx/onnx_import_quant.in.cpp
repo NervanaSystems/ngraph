@@ -219,39 +219,17 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_dequantize_linear_1d_zero_scale_uint8)
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/dequantize_linear_2.prototxt"));
 
-    auto x = std::vector<uint8_t>{0, 1, 2, 3, 0, 1, 2, 3, 0, 10, 20, 30};
-    auto scale = std::vector<float>{1.0f, 2.0f, 4.0f};
-    auto zero_point = std::vector<uint8_t>{0, 0, 0};
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
 
-    auto backend = ngraph::runtime::Backend::create("${BACKEND_NAME}");
+    test_case.add_input(std::vector<uint8_t>{0, 1, 2, 3, 0, 1, 2, 3, 0, 10, 20, 30}); // x
+    test_case.add_input(std::vector<float>{1.0f, 2.0f, 4.0f});                        // scale
+    test_case.add_input(std::vector<uint8_t>{0, 0, 0});                               // zero_point
 
-    auto params = function->get_parameters();
-    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> input_tensors;
-    input_tensors.push_back(
-        backend->create_tensor(params.at(0)->get_element_type(), params.at(0)->get_shape()));
-    input_tensors.push_back(
-        backend->create_tensor(params.at(1)->get_element_type(), params.at(1)->get_shape()));
-    input_tensors.push_back(
-        backend->create_tensor(params.at(2)->get_element_type(), params.at(2)->get_shape()));
-
-    copy_data(input_tensors[0], x);
-    copy_data(input_tensors[1], scale);
-    copy_data(input_tensors[2], zero_point);
-
-    auto results = function->get_results();
-    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> result_tensors;
-    result_tensors.push_back(
-        backend->create_tensor(results.at(0)->get_element_type(), results.at(0)->get_shape()));
-
-    auto handle = backend->compile(function);
-    handle->call_with_validate(result_tensors, input_tensors);
-
-    std::vector<std::vector<float>> outputs;
-    outputs.push_back(read_vector<float>(result_tensors[0]));
-
-    auto expected_output = std::vector<std::vector<float>>{
-        {0.0f, 1.0f, 2.0f, 3.0f, 0.0f, 2.0f, 4.0f, 6.0f, 0.0f, 40.0f, 80.0f, 120.0f}};
-    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+    test_case.add_expected_output<float>(
+        {3, 4},
+        std::vector<float>{
+            0.0f, 1.0f, 2.0f, 3.0f, 0.0f, 2.0f, 4.0f, 6.0f, 0.0f, 40.0f, 80.0f, 120.0f});
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_dequantize_linear_1d_zero_scale_int8)
