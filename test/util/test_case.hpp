@@ -70,7 +70,7 @@ namespace ngraph
             template <typename T>
             void add_multiple_inputs(const std::vector<std::vector<T>>& vector_of_values)
             {
-                for (auto const& value : vector_of_values)
+                for (const auto& value : vector_of_values)
                 {
                     add_input(value);
                 }
