@@ -684,7 +684,7 @@ using namespace ngraph::runtime;
     writer << "void inline CPURuntimeContextCG::init_mkldnn_primitives()\n";
     writer.block_begin();
     writer << "mkldnn_primitives = std::vector<mkldnn::primitive*>("
-           << to_string(m_mkldnn_emitter->get_mkldnn_primitives().size()) << ");\n";
+           << to_string(m_mkldnn_emitter->get_mkldnn_primitives_cg().size()) << ");\n";
     writer.block_end();
     writer << "\n";
 

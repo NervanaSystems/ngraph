@@ -79,6 +79,11 @@ const std::vector<mkldnn::primitive*>& MKLDNNEmitter::get_mkldnn_primitives() co
     return m_mkldnn_primitives;
 }
 
+const std::vector<mkldnn::primitive*>& MKLDNNEmitter::get_mkldnn_primitives_cg() const
+{
+    return m_mkldnn_primitives_cg;
+}
+
 const std::vector<char*>& MKLDNNEmitter::get_mkldnn_workspaces()
 {
     return m_workspace_bufs;
@@ -106,6 +111,11 @@ size_t MKLDNNEmitter::reserve_workspace()
 const std::vector<size_t>& MKLDNNEmitter::get_primitive_deps(size_t index) const
 {
     return m_primitive_deps.at(index);
+}
+
+const std::vector<size_t>& MKLDNNEmitter::get_primitive_deps_cg(size_t index) const
+{
+    return m_primitive_deps_cg.at(index);
 }
 
 mkldnn::memory::desc MKLDNNEmitter::build_memory_descriptor(const TensorViewWrapper& tvw,
@@ -1105,35 +1115,6 @@ void MKLDNNEmitter::build_reorder(const mkldnn::memory::desc& input_desc,
         new mkldnn::reorder(*m_mkldnn_primitives[input_index], *m_mkldnn_primitives[result_index]);
 }
 
-size_t MKLDNNEmitter::build_lrn_forward(const mkldnn::memory::desc& input_desc,
-                                        const mkldnn::memory::desc& result_desc,
-                                        float alpha,
-                                        float beta,
-                                        float bias,
-                                        int nsize)
-{
-    size_t input_index = build_memory_primitive(input_desc);
-    size_t result_index = build_memory_primitive(result_desc);
-
-    auto lrn_desc = mkldnn::lrn_forward::desc(mkldnn::prop_kind::forward_scoring,
-                                              mkldnn::algorithm::lrn_across_channels,
-                                              input_desc,
-                                              nsize,
-                                              alpha,
-                                              beta,
-                                              bias);
-    auto lrn_prim_desc = mkldnn::lrn_forward::primitive_desc(lrn_desc, executor::global_cpu_engine);
-
-    size_t primitive_index = insert_primitive(new mkldnn::lrn_forward(
-        lrn_prim_desc, *m_mkldnn_primitives[input_index], *m_mkldnn_primitives[result_index]));
-
-    NGRAPH_ASSERT(m_primitive_deps.find(primitive_index) == m_primitive_deps.end())
-        << "Dependencies already created for node";
-
-    m_primitive_deps[primitive_index] = {input_index, result_index};
-    return primitive_index;
-}
-
 mkldnn::lrn_forward::desc MKLDNNEmitter::get_lrn_forward_desc(const ngraph::Node* node)
 {
     const ngraph::op::LRN* lrn = static_cast<const ngraph::op::LRN*>(node);
@@ -1397,37 +1378,6 @@ void MKLDNNEmitter::build_sigmoid_backward(const mkldnn::eltwise_backward::desc&
                                      *m_mkldnn_primitives[result_index]);
 }
 
-size_t MKLDNNEmitter::build_elementwise_add(
-    const mkldnn::memory::desc& input0_data_desc,
-    const mkldnn::memory::desc& input1_data_desc,
-    const mkldnn::memory::desc& result_desc,
-    const std::vector<float>& scale_vector,
-    const std::vector<mkldnn::memory::primitive_desc>& inputs_pd)
-
-{
-    std::vector<mkldnn::memory::primitive::at> inputs_primitive;
-
-    size_t input0_data_index = build_memory_primitive(input0_data_desc);
-    size_t input1_data_index = build_memory_primitive(input1_data_desc);
-    size_t result_index = build_memory_primitive(result_desc);
-
-    inputs_primitive.push_back(*m_mkldnn_primitives[input0_data_index]);
-    inputs_primitive.push_back(*m_mkldnn_primitives[input1_data_index]);
-
-    // elementwise sum primtive descriptor
-    mkldnn::sum::primitive_desc sum_pd =
-        mkldnn::sum::primitive_desc(result_desc, scale_vector, inputs_pd);
-    // sum primitive
-    size_t add_index = insert_primitive(
-        new mkldnn::sum(sum_pd, inputs_primitive, *m_mkldnn_primitives[result_index]));
-
-    NGRAPH_ASSERT(m_primitive_deps.find(add_index) == m_primitive_deps.end())
-        << "Dependencies already created for node";
-
-    m_primitive_deps[add_index] = {input0_data_index, input1_data_index, result_index};
-    return add_index;
-}
-
 mkldnn::sum::primitive_desc MKLDNNEmitter::get_elementwise_add_desc(const ngraph::Node* node)
 {
     std::vector<float> scale_vector(2, 1);
@@ -1465,66 +1415,6 @@ void MKLDNNEmitter::build_elementwise_add(const mkldnn::sum::primitive_desc& sum
     // sum primitive
     m_mkldnn_primitives[add_index] =
         new mkldnn::sum(sum_pd, inputs_primitive, *m_mkldnn_primitives[result_index]);
-}
-
-size_t MKLDNNEmitter::build_batchnorm_forward(const mkldnn::memory::desc& input_desc,
-                                              const mkldnn::memory::desc& weights_desc,
-                                              const mkldnn::memory::desc& result_desc,
-                                              const mkldnn::memory::desc& mean_desc,
-                                              const mkldnn::memory::desc& variance_desc,
-                                              const double eps,
-                                              bool use_global_stats,
-                                              bool bn_training_flag,
-                                              const mkldnn::post_ops& pops)
-{
-    size_t input_index = build_memory_primitive(input_desc);
-    size_t weights_index = build_memory_primitive(weights_desc);
-    size_t result_index = build_memory_primitive(result_desc);
-    size_t mean_index = build_memory_primitive(mean_desc);
-    size_t variance_index = build_memory_primitive(variance_desc);
-
-    mkldnn::primitive_attr bn_attr;
-    bn_attr.set_post_ops(pops);
-
-    if (bn_training_flag && !use_global_stats)
-    {
-        size_t batchnorm_index = insert_primitive(new mkldnn::batch_normalization_forward(
-            {{mkldnn::prop_kind::forward_training,
-              input_desc,
-              eps,
-              mkldnn::batch_normalization_flag::use_scale_shift},
-             bn_attr,
-             executor::global_cpu_engine},
-            mkldnn::primitive::at(*m_mkldnn_primitives[input_index]),
-            mkldnn::primitive::at(*m_mkldnn_primitives[weights_index]),
-            static_cast<mkldnn::memory>(*m_mkldnn_primitives[result_index]),
-            *m_mkldnn_primitives[mean_index],
-            *m_mkldnn_primitives[variance_index]));
-
-        m_primitive_deps[batchnorm_index] = {
-            input_index, weights_index, result_index, mean_index, variance_index};
-        return batchnorm_index;
-    }
-    else
-    {
-        size_t batchnorm_index = insert_primitive(new mkldnn::batch_normalization_forward(
-            {{mkldnn::prop_kind::forward_training,
-              input_desc,
-              eps,
-              mkldnn::batch_normalization_flag::use_scale_shift |
-                  mkldnn::batch_normalization_flag::use_global_stats},
-             bn_attr,
-             executor::global_cpu_engine},
-            mkldnn::primitive::at(*m_mkldnn_primitives[input_index]),
-            mkldnn::primitive::at(*m_mkldnn_primitives[mean_index]),
-            mkldnn::primitive::at(*m_mkldnn_primitives[variance_index]),
-            mkldnn::primitive::at(*m_mkldnn_primitives[weights_index]),
-            static_cast<mkldnn::memory>(*m_mkldnn_primitives[result_index])));
-
-        m_primitive_deps[batchnorm_index] = {
-            input_index, mean_index, variance_index, weights_index, result_index};
-        return batchnorm_index;
-    }
 }
 
 void MKLDNNEmitter::build_batchnorm_forward(
@@ -1581,56 +1471,6 @@ void MKLDNNEmitter::build_batchnorm_forward(
     }
 }
 
-size_t MKLDNNEmitter::build_batchnorm_backward(const mkldnn::memory::desc& weights_desc,
-                                               const mkldnn::memory::desc& input_desc,
-                                               const mkldnn::memory::desc& mean_desc,
-                                               const mkldnn::memory::desc& variance_desc,
-                                               const mkldnn::memory::desc& delta_desc,
-                                               const mkldnn::memory::desc& dinput_desc,
-                                               const mkldnn::memory::desc& dweights_desc,
-                                               const double eps)
-{
-    size_t weights_index = build_memory_primitive(weights_desc);
-    size_t input_index = build_memory_primitive(input_desc);
-    size_t mean_index = build_memory_primitive(mean_desc);
-    size_t variance_index = build_memory_primitive(variance_desc);
-    size_t delta_index = build_memory_primitive(delta_desc);
-    size_t dinput_index = build_memory_primitive(dinput_desc);
-    size_t dweights_index = build_memory_primitive(dweights_desc);
-
-    size_t batchnorm_index = insert_primitive(new mkldnn::batch_normalization_backward(
-        {{mkldnn::prop_kind::backward,
-          delta_desc,
-          input_desc,
-          eps,
-          mkldnn::batch_normalization_flag::use_scale_shift},
-         executor::global_cpu_engine,
-         {{mkldnn::prop_kind::forward_training,
-           input_desc,
-           eps,
-           mkldnn::batch_normalization_flag::use_scale_shift},
-          executor::global_cpu_engine}},
-        *m_mkldnn_primitives[input_index],
-        *m_mkldnn_primitives[mean_index],
-        *m_mkldnn_primitives[variance_index],
-        *m_mkldnn_primitives[delta_index],
-        *m_mkldnn_primitives[weights_index],
-        *m_mkldnn_primitives[dinput_index],
-        *m_mkldnn_primitives[dweights_index]));
-
-    NGRAPH_ASSERT(m_primitive_deps.find(batchnorm_index) == m_primitive_deps.end())
-        << "Dependencies already created for node";
-
-    m_primitive_deps[batchnorm_index] = {weights_index,
-                                         input_index,
-                                         mean_index,
-                                         variance_index,
-                                         delta_index,
-                                         dinput_index,
-                                         dweights_index};
-    return batchnorm_index;
-}
-
 mkldnn::batch_normalization_backward::desc
     MKLDNNEmitter::get_batchnorm_backward_desc(const ngraph::Node* node)
 {
@@ -1685,72 +1525,6 @@ void MKLDNNEmitter::build_batchnorm_backward(
         *m_mkldnn_primitives[weights_index],
         *m_mkldnn_primitives[dinput_index],
         *m_mkldnn_primitives[dweights_index]);
-}
-
-size_t MKLDNNEmitter::build_rnn_forward(const mkldnn::memory::desc& src_layer_desc,
-                                        const mkldnn::memory::desc& src_iter_desc,
-                                        const mkldnn::memory::desc& weights_layer_desc,
-                                        const mkldnn::memory::desc& weights_iter_desc,
-                                        const mkldnn::memory::desc& bias_desc,
-                                        const mkldnn::memory::desc& dst_layer_desc,
-                                        const mkldnn::memory::desc& dst_iter_desc,
-                                        const mkldnn::rnn_direction& rnn_direction,
-                                        const mkldnn::algorithm& rnn_algorithm)
-{
-    size_t src_layer_index = build_memory_primitive(src_layer_desc);
-    size_t src_iter_index = build_memory_primitive(src_iter_desc);
-    size_t weights_layer_index = build_memory_primitive(weights_layer_desc);
-    size_t weights_iter_index = build_memory_primitive(weights_iter_desc);
-    size_t bias_index = build_memory_primitive(bias_desc);
-    size_t dst_layer_index = build_memory_primitive(dst_layer_desc);
-    size_t dst_iter_index = build_memory_primitive(dst_iter_desc);
-
-    mkldnn::rnn_cell::desc rnn_cell(rnn_algorithm);
-    mkldnn::rnn_forward::desc rnn_layer_desc(mkldnn::prop_kind::forward_training,
-                                             rnn_cell,
-                                             rnn_direction,
-                                             src_layer_desc,
-                                             src_iter_desc,
-                                             weights_layer_desc,
-                                             weights_iter_desc,
-                                             bias_desc,
-                                             dst_layer_desc,
-                                             dst_iter_desc);
-
-    auto rnn_layer_prim_desc =
-        mkldnn::rnn_forward::primitive_desc(rnn_layer_desc, executor::global_cpu_engine);
-    auto workspace_index =
-        build_memory_primitive(rnn_layer_prim_desc.workspace_primitive_desc().desc());
-    auto workspace = std::unique_ptr<MKLDNNWorkspace>(
-        new MKLDNNWorkspace(rnn_layer_prim_desc.workspace_primitive_desc().get_size()));
-
-    auto workspace_buf_index = insert_workspace(workspace);
-
-    size_t rnn_index = insert_primitive(new mkldnn::rnn_forward(
-        rnn_layer_prim_desc,
-        mkldnn::primitive::at(*m_mkldnn_primitives[src_layer_index]),
-        mkldnn::primitive::at(*m_mkldnn_primitives[src_iter_index]),
-        mkldnn::primitive::at(*m_mkldnn_primitives[weights_layer_index]),
-        mkldnn::primitive::at(*m_mkldnn_primitives[weights_iter_index]),
-        mkldnn::primitive::at(*m_mkldnn_primitives[bias_index]),
-        static_cast<mkldnn::memory>(*m_mkldnn_primitives[dst_layer_index]),
-        static_cast<mkldnn::memory>(*m_mkldnn_primitives[dst_iter_index]),
-        static_cast<mkldnn::memory>(*m_mkldnn_primitives[workspace_index])));
-
-    NGRAPH_ASSERT(m_primitive_deps.find(rnn_index) == m_primitive_deps.end())
-        << "Dependencies already created for node";
-
-    m_primitive_deps[rnn_index] = {src_layer_index,
-                                   src_iter_index,
-                                   weights_layer_index,
-                                   weights_iter_index,
-                                   bias_index,
-                                   dst_layer_index,
-                                   dst_iter_index,
-                                   workspace_index,
-                                   workspace_buf_index};
-
-    return rnn_index;
 }
 
 void MKLDNNEmitter::build_rnn_forward(const mkldnn::rnn_forward::desc& rnn_desc, size_t rnn_index)
@@ -2143,6 +1917,21 @@ size_t MKLDNNEmitter::reserve_primitive_space(size_t count, bool new_workspace)
         m_primitive_deps[m_mkldnn_primitives.size() - 1].push_back(0);
     }
     return m_mkldnn_primitives.size() - 1;
+}
+
+size_t MKLDNNEmitter::reserve_primitive_space_cg(size_t count, bool new_workspace)
+{
+    size_t size = m_mkldnn_primitives_cg.size();
+    m_mkldnn_primitives_cg.resize(size + count, nullptr);
+    for (auto i = 0; i < count - 1; i++)
+    {
+        m_primitive_deps_cg[m_mkldnn_primitives_cg.size() - 1].push_back(size + i);
+    }
+    if (new_workspace)
+    {
+        m_primitive_deps_cg[m_mkldnn_primitives_cg.size() - 1].push_back(0);
+    }
+    return m_mkldnn_primitives_cg.size() - 1;
 }
 
 size_t MKLDNNEmitter::build_quantized_inner_product_forward(
