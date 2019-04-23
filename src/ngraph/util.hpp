@@ -80,6 +80,14 @@ namespace ngraph
     std::string to_upper(const std::string& s);
     std::string trim(const std::string& s);
     std::vector<std::string> split(const std::string& s, char delimiter, bool trim = false);
+    template <typename T>
+    std::string locale_string(T x)
+    {
+        std::stringstream ss;
+        ss.imbue(std::locale(""));
+        ss << x;
+        return ss.str();
+    }
 
     class stopwatch
     {
