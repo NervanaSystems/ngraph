@@ -27,6 +27,7 @@
 #include "ngraph/shape.hpp"
 #include "quantize_linear.hpp"
 #include "utils/common.hpp"
+#include "utils/reshape.hpp"
 
 namespace ngraph
 {
@@ -40,7 +41,6 @@ namespace ngraph
                 {
                     NodeVector inputs{node.get_ng_inputs()};
                     std::shared_ptr<ngraph::Node> x = inputs.at(0);
-                    std::shared_ptr<ngraph::Node> x_scale = inputs.at(1);
                     std::shared_ptr<ngraph::Node> zero_point;
                     if (inputs.size() == 3 && !inputs.at(2)->is_null())
                     {
@@ -51,9 +51,6 @@ namespace ngraph
                         zero_point = common::make_constant_node(
                             x->get_element_type(), Shape{}, std::vector<std::uint8_t>{0});
                     }
-
-                    Shape y_scale_shape = x_scale->get_shape();
-                    Shape y_zero_point_shape = zero_point->get_shape();
 
                     // get axis twice with two default values to see if it is set
                     int64_t axis_0{node.get_attribute_value<int64_t>("axis", 0)};
@@ -79,6 +76,19 @@ namespace ngraph
                     {
                         zero_point = std::make_shared<ngraph::op::Convert>(zero_point,
                                                                            x->get_element_type());
+                    }
+
+                    Shape zero_point_shape = zero_point->get_shape();
+                    if (zero_point_shape.size() == 1 && zero_point_shape[0] == 1)
+                    {
+                        zero_point = reshape::reshape(zero_point, Shape{});
+                    }
+
+                    std::shared_ptr<ngraph::Node> x_scale = inputs.at(1);
+                    Shape x_scale_shape = x_scale->get_shape();
+                    if (x_scale_shape.size() == 1 && x_scale_shape[0] == 1)
+                    {
+                        x_scale = reshape::reshape(x_scale, Shape{});
                     }
 
                     return {std::make_shared<ngraph::op::Dequantize>(
