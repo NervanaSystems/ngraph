@@ -403,7 +403,7 @@ namespace ngraph
                             mkldnn_arg2_shape, et_bias, memory::format::any);
                         try
                         {
-                            fwd_desc.reset(new convolution_forward::desc(prop_kind::forward,
+                            fwd_desc.reset(new convolution_forward::desc(prop_kind::forward_inference,
                                                                          convolution_algo,
                                                                          input_data_desc,
                                                                          weights_desc,
@@ -426,7 +426,7 @@ namespace ngraph
                     {
                         try
                         {
-                            fwd_desc.reset(new convolution_forward::desc(prop_kind::forward,
+                            fwd_desc.reset(new convolution_forward::desc(prop_kind::forward_inference,
                                                                          convolution_algo,
                                                                          input_data_desc,
                                                                          weights_desc,
@@ -885,7 +885,7 @@ namespace ngraph
                                                                  mkldnn_padding_above,
                                                                  padding_kind::zero);
 
-                        convolution_forward::desc fwd_desc(prop_kind::forward,
+                        convolution_forward::desc fwd_desc(prop_kind::forward_inference,
                                                            algorithm::convolution_direct,
                                                            result_desc,
                                                            weights_desc,
@@ -975,7 +975,7 @@ namespace ngraph
                                                                    mkldnn_padding_above,
                                                                    padding_kind::zero));
 
-                        fwd_desc.reset(new convolution_forward::desc(prop_kind::forward,
+                        fwd_desc.reset(new convolution_forward::desc(prop_kind::forward_inference,
                                                                      algorithm::convolution_direct,
                                                                      data_desc,
                                                                      filters_desc,
@@ -1000,7 +1000,7 @@ namespace ngraph
                                                                    mkldnn_padding_above,
                                                                    padding_kind::zero));
 
-                        fwd_desc.reset(new convolution_forward::desc(prop_kind::forward,
+                        fwd_desc.reset(new convolution_forward::desc(prop_kind::forward_inference,
                                                                      algorithm::convolution_direct,
                                                                      data_desc,
                                                                      filters_desc,

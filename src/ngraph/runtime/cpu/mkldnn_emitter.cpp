@@ -245,8 +245,9 @@ mkldnn::memory::format MKLDNNEmitter::query_convolution_forward_weight_format(
 
     mkldnn::algorithm convolution_algo = mkldnn_utils::get_conv_algo();
     mkldnn::engine cpu_engine(mkldnn::engine::cpu, 0);
+    std ::cout << "MKLDNNEmitter::query_convolution_forward_weight_format cpp \n";
     mkldnn::convolution_forward::desc conv_desc_layout(
-        mkldnn::prop_kind::forward,
+        mkldnn::prop_kind::forward_inference,
         convolution_algo,
         input_data_desc,
         weights_desc_any, // this needs to be in default format
@@ -282,7 +283,7 @@ size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& inpu
     try
     {
         auto conv_prim = new mkldnn::convolution_forward(
-            {{mkldnn::prop_kind::forward,
+            {{mkldnn::prop_kind::forward_inference,
               convolution_algo,
               input_data_desc,
               weights_desc,
@@ -333,8 +334,9 @@ size_t
     /* Specify the scales array and corresponding mask */
     conv_attr.set_output_scales(0, output_scale);
     mkldnn::algorithm convolution_algo = mkldnn_utils::get_conv_algo();
+    std::cout << "build_quantized_convolution_forward cpp \n";
     size_t conv_index = insert_primitive(new mkldnn::convolution_forward(
-        {{mkldnn::prop_kind::forward,
+        {{mkldnn::prop_kind::forward_inference,
           convolution_algo,
           input_data_desc,
           weights_desc,
@@ -378,8 +380,9 @@ size_t
     /* Specify the scales array and corresponding mask */
     conv_attr.set_output_scales(0, output_scale);
     mkldnn::algorithm convolution_algo = mkldnn_utils::get_conv_algo();
+    std::cout << "build_quantized_convolution_forward cpp \n";
     size_t conv_index = insert_primitive(new mkldnn::convolution_forward(
-        {{mkldnn::prop_kind::forward,
+        {{mkldnn::prop_kind::forward_inference,
           convolution_algo,
           input_data_desc,
           weights_desc,
@@ -423,7 +426,7 @@ size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& inpu
     try
     {
         conv_index = insert_primitive(new mkldnn::convolution_forward(
-            {{mkldnn::prop_kind::forward,
+            {{mkldnn::prop_kind::forward_inference,
               convolution_algo,
               input_data_desc,
               weights_desc,
@@ -1093,7 +1096,7 @@ size_t MKLDNNEmitter::build_relu_forward(const mkldnn::memory::desc& input_desc,
 
     const float negative_slope = 0.0f;
     auto relu_desc = mkldnn::eltwise_forward::desc(
-        mkldnn::prop_kind::forward, mkldnn::algorithm::eltwise_relu, input_desc, negative_slope);
+        mkldnn::prop_kind::forward_inference, mkldnn::algorithm::eltwise_relu, input_desc, negative_slope);
     auto relu_pd = mkldnn::eltwise_forward::primitive_desc(relu_desc, executor::global_cpu_engine);
 
     size_t primitive_index = insert_primitive(new mkldnn::eltwise_forward(
@@ -1110,7 +1113,7 @@ mkldnn::eltwise_forward::desc MKLDNNEmitter::get_relu_forward_desc(const ngraph:
     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
 
     return mkldnn::eltwise_forward::desc(
-        mkldnn::prop_kind::forward, mkldnn::algorithm::eltwise_relu, input_desc, negative_slope);
+        mkldnn::prop_kind::forward_inference, mkldnn::algorithm::eltwise_relu, input_desc, negative_slope);
 }
 
 void MKLDNNEmitter::build_relu_forward(const mkldnn::eltwise_forward::desc& relu_desc,
@@ -1392,7 +1395,7 @@ size_t MKLDNNEmitter::build_batchnorm_forward(const mkldnn::memory::desc& input_
     if (bn_training_flag && !use_global_stats)
     {
         size_t batchnorm_index = insert_primitive(new mkldnn::batch_normalization_forward(
-            {{mkldnn::prop_kind::forward_training,
+            {{mkldnn::prop_kind::forward_inference,
               input_desc,
               eps,
               mkldnn::batch_normalization_flag::use_scale_shift},

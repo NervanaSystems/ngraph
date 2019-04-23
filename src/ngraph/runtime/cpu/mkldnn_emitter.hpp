@@ -800,7 +800,7 @@ namespace ngraph
                     {
                         auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
                         return mkldnn::batch_normalization_forward::desc(
-                            mkldnn::prop_kind::forward_training,
+                            mkldnn::prop_kind::forward_inference,
                             input_desc,
                             eps,
                             mkldnn::batch_normalization_flag::use_scale_shift);
@@ -809,7 +809,7 @@ namespace ngraph
                     {
                         auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
                         return mkldnn::batch_normalization_forward::desc(
-                            mkldnn::prop_kind::forward_training,
+                            mkldnn::prop_kind::forward_inference,
                             input_desc,
                             eps,
                             mkldnn::batch_normalization_flag::use_scale_shift |
@@ -1267,8 +1267,9 @@ namespace ngraph
                     if (has_bias<OP>())
                     {
                         auto bias_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
+                        std::cout  << "get_convolution_forward_desc #4\n";
                         return mkldnn::convolution_forward::desc(
-                            mkldnn::prop_kind::forward,
+                            mkldnn::prop_kind::forward_inference,
                             convolution_algo,
                             data_desc,
                             weights_desc,
@@ -1282,8 +1283,9 @@ namespace ngraph
                     }
                     else
                     {
+                        std::cout << "get_convolution_forward_desc #5\n";
                         return mkldnn::convolution_forward::desc(
-                            mkldnn::prop_kind::forward,
+                            mkldnn::prop_kind::forward_inference,
                             convolution_algo,
                             data_desc,
                             weights_desc,
@@ -1603,6 +1605,7 @@ namespace ngraph
                         auto delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
                         auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
+			std::cout <<"Creating convolution_fwd_desc #1\n";
                         return mkldnn::convolution_forward::desc(
                             mkldnn::prop_kind::forward,
                             convolution_algo,
@@ -1620,6 +1623,7 @@ namespace ngraph
                         auto in_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                         auto in_delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
                         auto out_weights_delta_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+                        std::cout << "Creating convolution_fwd_desc #2\n";
                         return mkldnn::convolution_forward::desc(
                             mkldnn::prop_kind::forward,
                             convolution_algo,
@@ -1639,6 +1643,7 @@ namespace ngraph
                         auto out_weights_delta_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
                         auto out_bias_delta_desc = mkldnn_utils::get_output_mkldnn_md(node, 1);
 
+			std::cout << "Creating convolution_fwd_desc #3\n";
                         return mkldnn::convolution_forward::desc(
                             mkldnn::prop_kind::forward,
                             convolution_algo,
