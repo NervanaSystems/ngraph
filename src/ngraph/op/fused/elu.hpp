@@ -24,11 +24,19 @@ namespace ngraph
 {
     namespace op
     {
+        /// \brief Exponential Linear Unit
+        /// x <  0 => f(x) = alpha * (exp(x) - 1.)
+        /// x >= 0 => f(x) = x
+        ///
         class Elu : public ngraph::op::util::FusedOp
         {
         public:
+            /// \brief Constructs an Elu operation.
+            ///
+            /// \param data Input tensor
+            /// \param alpha Multiplier for negative values
             Elu(const std::shared_ptr<ngraph::Node>& data,
-                const std::shared_ptr<ngraph::Node>& slope);
+                const std::shared_ptr<ngraph::Node>& alpha);
 
             virtual NodeVector decompose_op() const override;
 
