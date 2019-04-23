@@ -7517,3 +7517,52 @@ NGRAPH_TEST(${BACKEND_NAME}, not)
     handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<char>{0, 1, 0, 1}), read_vector<char>(result));
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, divide_adjoint_stability)
+{
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    Shape shape{2, 2};
+
+    auto make_external = [&]() {
+        auto A = make_shared<op::Parameter>(element::f32, shape);
+        auto B = make_shared<op::Parameter>(element::f32, shape);
+        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), ParameterVector{A, B});
+
+        auto Y_out = f->get_output_op(0);
+        auto Xs = f->get_parameters();
+        auto C = std::make_shared<op::Parameter>(Y_out->get_element_type(), Y_out->get_shape());
+        ngraph::autodiff::Adjoints adjoints(NodeVector{Y_out}, NodeVector{C});
+        std::vector<std::shared_ptr<Node>> dYdXs(Xs.size());
+        transform(
+            Xs.begin(), Xs.end(), dYdXs.begin(), [C, &adjoints](const std::shared_ptr<Node>& X) {
+                return adjoints.backprop_node(X);
+            });
+        std::vector<std::shared_ptr<op::Parameter>> params(Xs);
+        params.push_back(C);
+
+        auto bf = std::make_shared<Function>(dYdXs, params);
+
+        return bf;
+    };
+
+    auto bf = make_external();
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a, vector<float>{0, 0, 1, 1});
+    auto b = backend->create_tensor(element::f32, shape);
+    copy_data(b, vector<float>{2, 2, 2, 2});
+    auto c = backend->create_tensor(element::f32, shape);
+    copy_data(c, vector<float>{1, 1, 1, 1});
+
+    auto resulta = backend->create_tensor(element::f32, shape);
+    auto resultb = backend->create_tensor(element::f32, shape);
+
+    auto handle = backend->compile(bf);
+    handle->call_with_validate({resulta, resultb}, {a, b, c});
+    EXPECT_TRUE(
+        test::all_close_f((vector<float>{0.5, 0.5, 0.5, 0.5}), read_vector<float>(resulta)));
+    EXPECT_TRUE(
+        test::all_close_f((vector<float>{-0.0, -0.0, -0.25, -0.25}), read_vector<float>(resultb)));
+}

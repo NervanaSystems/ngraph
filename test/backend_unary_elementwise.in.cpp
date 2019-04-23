@@ -45,11 +45,14 @@ static string s_manifest = "${MANIFEST}";
         auto f = make_shared<Function>(make_shared<op__>(A), ParameterVector{A});                  \
                                                                                                    \
         auto backend = runtime::Backend::create("${BACKEND_NAME}");                                \
-        auto a = backend->create_tensor(${ELEMENT_TYPE}, shape, input.data());                     \
-        auto result = backend->create_tensor(${ELEMENT_TYPE}, shape, output.data());               \
+        auto a = backend->create_tensor(${ELEMENT_TYPE}, shape);                                   \
+        auto result = backend->create_tensor(${ELEMENT_TYPE}, shape);                              \
+                                                                                                   \
+        copy_data(a, input);                                                                       \
                                                                                                    \
         auto handle = backend->compile(f);                                                         \
         handle->call_with_validate({result}, {a});                                                 \
+        auto output_data = read_vector<${DATA_TYPE}>(result);                                      \
                                                                                                    \
         vector<${DATA_TYPE}> expected;                                                             \
         for (auto x : input)                                                                       \
@@ -57,7 +60,7 @@ static string s_manifest = "${MANIFEST}";
             expected.push_back(c_func__(x));                                                       \
         }                                                                                          \
                                                                                                    \
-        EXPECT_TRUE(test::all_close_f(expected, output, MIN_FLOAT_TOLERANCE_BITS));                \
+        EXPECT_TRUE(test::all_close_f(expected, output_data, MIN_FLOAT_TOLERANCE_BITS));           \
     }
 
 // clang-format off
