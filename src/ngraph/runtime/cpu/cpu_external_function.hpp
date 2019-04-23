@@ -142,8 +142,9 @@ namespace ngraph
                     get_primitive_build_tuple(const Node* node) const
                 {
                     auto it = m_node_primitive_string_deps_index_map.find(node);
-                    NGRAPH_ASSERT(it != m_node_primitive_string_deps_index_map.end())
-                        << "Primitive string not found for node " << node->description();
+                    NGRAPH_CHECK(it != m_node_primitive_string_deps_index_map.end(),
+                                 "Primitive build tuple not found for node ",
+                                 node->description());
 
                     return it->second;
                 }
