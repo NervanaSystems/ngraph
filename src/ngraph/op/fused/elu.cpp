@@ -28,7 +28,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Elu::Elu(const shared_ptr<Node>& data, const shared_ptr<Node>& alpha)
-    : FusedOp("Elu", {data, alpha})
+        : FusedOp("Elu", {data, alpha})
 {
     constructor_validate_and_infer_types();
 }
@@ -41,12 +41,12 @@ NodeVector op::Elu::decompose_op() const
     alpha_node = ngraph::op::make_broadcast_node(alpha_node, data->get_shape());
 
     std::shared_ptr<ngraph::Node> zero_node = std::make_shared<ngraph::op::Constant>(
-        data->get_element_type(), Shape{}, std::vector<double>{0});
+            data->get_element_type(), Shape{}, std::vector<double>{0});
     zero_node = ngraph::op::make_broadcast_node(zero_node, data->get_shape());
 
     return {std::make_shared<ngraph::op::Maximum>(data, zero_node) +
             alpha_node * std::make_shared<ngraph::op::Exp>(
-                             std::make_shared<ngraph::op::Minimum>(data, zero_node)) -
+                    std::make_shared<ngraph::op::Minimum>(data, zero_node)) -
             alpha_node};
 }
 
