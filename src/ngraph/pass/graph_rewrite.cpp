@@ -74,6 +74,14 @@ bool pass::GraphRewrite::run_on_function(shared_ptr<Function> f)
         {
             for (auto matcher : matchers)
             {
+                if (f->is_dynamic() &&
+                    (matcher->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE)))
+                {
+                    NGRAPH_DEBUG
+                        << "matcher requires static shape but the function is dynamic, "
+                        << "skipping this optimization till the shapes are fully materialized";
+                    continue;
+                }
                 NGRAPH_DEBUG << "Running matcher " << matcher->get_name() << "("
                              << matcher->get_pattern()->get_name() << ") on " << node->get_name();
                 if (matcher->match(node))
@@ -147,6 +155,14 @@ bool pass::RecurrentGraphRewrite::run_on_function(shared_ptr<Function> f)
         {
             for (auto matcher : m_matchers)
             {
+                if (f->is_dynamic() &&
+                    (matcher->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE)))
+                {
+                    NGRAPH_DEBUG
+                        << "matcher requires static shape but the function is dynamic, "
+                        << "skipping this optimization till the shapes are fully materialized";
+                    continue;
+                }
                 NGRAPH_DEBUG << "Running matcher " << matcher << " on " << node->get_name();
                 if (matcher->match(node))
                 {

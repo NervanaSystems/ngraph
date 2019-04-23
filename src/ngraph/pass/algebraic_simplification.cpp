@@ -483,6 +483,7 @@ static unordered_map<type_index, FunctionWithPassProperties> ops_to_simplifiers 
 bool pass::AlgebraicSimplification::run_on_function(shared_ptr<Function> f)
 {
     bool replaced = false;
+    bool is_dynamic_function = f->is_dynamic();
     for (auto n : f->get_ordered_ops())
     {
         if (n->is_output() || n->is_parameter())
@@ -497,12 +498,12 @@ bool pass::AlgebraicSimplification::run_on_function(shared_ptr<Function> f)
             continue;
         }
 
-        if ((!f->is_dynamic() &&
-             (eh->second.second.is_any_set(pass::PassProperty::REQUIRE_STATIC_SHAPE))) ||
-            (f->is_dynamic() &&
+        if (!is_dynamic_function ||
+            (is_dynamic_function &&
              (eh->second.second.is_clear(pass::PassProperty::REQUIRE_STATIC_SHAPE))))
         {
             replaced = eh->second.first(n) || replaced;
+            is_dynamic_function = f->is_dynamic();
         }
     }
     return replaced;
