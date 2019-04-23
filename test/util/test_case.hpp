@@ -29,8 +29,9 @@ namespace ngraph
         class NgraphTestCase
         {
         public:
-            NgraphTestCase(std::shared_ptr<Function> function, const std::string& backend_name)
-                : m_function(std::move(function))
+            NgraphTestCase(const std::shared_ptr<Function>& function,
+                           const std::string& backend_name)
+                : m_function(function)
                 , m_backend(ngraph::runtime::Backend::create(backend_name))
             {
             }
@@ -85,12 +86,11 @@ namespace ngraph
 
                 auto function_output_type = results.at(m_output_index)->get_element_type();
                 auto function_output_shape = results.at(m_output_index)->get_shape();
-                auto tensor = m_backend->create_tensor(function_output_type, function_output_shape);
-                m_result_tensors.push_back(tensor);
+                m_result_tensors.emplace_back(
+                    m_backend->create_tensor(function_output_type, function_output_shape));
 
-                auto constant_node = std::make_shared<ngraph::op::Constant>(
-                    function_output_type, expected_shape, values);
-                m_expected_outputs.push_back(constant_node);
+                m_expected_outputs.emplace_back(std::make_shared<ngraph::op::Constant>(
+                    function_output_type, expected_shape, values));
 
                 ++m_output_index;
             }
