@@ -61,42 +61,24 @@ static string s_manifest = "${MANIFEST}";
     }
 
 // clang-format off
-NGRAPH_TYPED_TEST(abs, ngraph::op::Abs, -1e+10, 1e+10);
-NGRAPH_TYPED_TEST(acos, ngraph::op::Acos, -1, 1);
-NGRAPH_TYPED_TEST(asin, ngraph::op::Asin, -1, 1);
-NGRAPH_TYPED_TEST(atan, ngraph::op::Atan, -1e+10, 1e+10);
-NGRAPH_TYPED_TEST(cos, ngraph::op::Cos, -1e+10, 1e+10);
-NGRAPH_TYPED_TEST(sin, ngraph::op::Sin, -1e+10, 1e+10);
-NGRAPH_TYPED_TEST(tan, ngraph::op::Tan, -1e+10, 1e+10);
-NGRAPH_TYPED_TEST(cosh, ngraph::op::Cosh, -1e+10, 1e+10);
-NGRAPH_TYPED_TEST(sinh, ngraph::op::Sinh, -1e+10, 1e+10);
-NGRAPH_TYPED_TEST(tanh, ngraph::op::Tanh, -1e+10, 1e+10);
-NGRAPH_TYPED_TEST(sqrt, ngraph::op::Sqrt, -1e+10, 1e+10);
-NGRAPH_TYPED_TEST(log, ngraph::op::Log, -1e+10, 1e+10);
 static ${DATA_TYPE} negative(${DATA_TYPE} x) { return -x;}
-NGRAPH_TYPED_TEST(negative, ngraph::op::Negative, -1e+10, 1e+10);
-NGRAPH_TYPED_TEST(erf, ngraph::op::Erf, -1e+10, 1e+10);
-NGRAPH_TYPED_TEST(floor, ngraph::op::Floor, -1e+10, 1e+10);
-NGRAPH_TYPED_TEST(ceil, ngraph::op::Ceiling, -1e+10, 1e+10);
-NGRAPH_TYPED_TEST(exp, ngraph::op::Exp, -1e+10, 1e+10);
 static ${DATA_TYPE} sign(${DATA_TYPE} x) { return x==0 ? 0 : (x>0 ? 1 : -1);}
+NGRAPH_TYPED_TEST(abs, ngraph::op::Abs, -1e+10, 1e+10);
+NGRAPH_TYPED_TEST(acos, ngraph::op::Acos, -1e+10, 1e+10);
+NGRAPH_TYPED_TEST(asin, ngraph::op::Asin, -1e+10, 1e+10);
+NGRAPH_TYPED_TEST(atan, ngraph::op::Atan, -1e+10, 1e+10);
+NGRAPH_TYPED_TEST(ceil, ngraph::op::Ceiling, -1e+10, 1e+10);
+NGRAPH_TYPED_TEST(cos, ngraph::op::Cos, -1e+10, 1e+10);
+NGRAPH_TYPED_TEST(cosh, ngraph::op::Cosh, -1e+10, 1e+10);
+NGRAPH_TYPED_TEST(erf, ngraph::op::Erf, -1e+10, 1e+10);
+NGRAPH_TYPED_TEST(exp, ngraph::op::Exp, -1e+10, 1e+10);
+NGRAPH_TYPED_TEST(floor, ngraph::op::Floor, -1e+10, 1e+10);
+NGRAPH_TYPED_TEST(log, ngraph::op::Log, -1e+10, 1e+10);
+NGRAPH_TYPED_TEST(negative, ngraph::op::Negative, -1e+10, 1e+10);
 NGRAPH_TYPED_TEST(sign, ngraph::op::Sign, -1e+10, 1e+10);
+NGRAPH_TYPED_TEST(sin, ngraph::op::Sin, -1e+10, 1e+10);
+NGRAPH_TYPED_TEST(sinh, ngraph::op::Sinh, -1e+10, 1e+10);
+NGRAPH_TYPED_TEST(sqrt, ngraph::op::Sqrt, -1e+10, 1e+10);
+NGRAPH_TYPED_TEST(tan, ngraph::op::Tan, -1e+10, 1e+10);
+NGRAPH_TYPED_TEST(tanh, ngraph::op::Tanh, -1e+10, 1e+10);
 // clang-format on
-
-NGRAPH_TEST(${BACKEND_NAME}, not)
-{
-    Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::boolean, shape);
-    auto f = make_shared<Function>(make_shared<op::Not>(A), ParameterVector{A});
-
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::boolean, shape);
-    copy_data(a, vector<char>{1, 0, 2, 0});
-    auto result = backend->create_tensor(element::boolean, shape);
-
-    auto handle = backend->compile(f);
-    handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<char>{0, 1, 0, 1}), read_vector<char>(result));
-}

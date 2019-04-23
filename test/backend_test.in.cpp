@@ -7499,3 +7499,21 @@ NGRAPH_TEST(${BACKEND_NAME}, validate_function_for_dynamic_shape)
     EXPECT_EQ(true, make_function(true)->is_dynamic());
     EXPECT_EQ(false, make_function(false)->is_dynamic());
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, not)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::boolean, shape);
+    auto f = make_shared<Function>(make_shared<op::Not>(A), ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::boolean, shape);
+    copy_data(a, vector<char>{1, 0, 2, 0});
+    auto result = backend->create_tensor(element::boolean, shape);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_EQ((vector<char>{0, 1, 0, 1}), read_vector<char>(result));
+}
