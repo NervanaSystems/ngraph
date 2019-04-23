@@ -76,7 +76,7 @@ namespace ngraph
                                                            std::vector<mkldnn::memory::desc>& descs,
                                                            std::vector<std::string>& desc_names)
                 {
-                    NGRAPH_ASSERT(descs.size() == desc_names.size());
+                    NGRAPH_CHECK(descs.size() == desc_names.size());
                     for (auto i = 0; i < descs.size(); i++)
                     {
                         desc_file.write(reinterpret_cast<char*>(&descs[i]),
@@ -93,8 +93,8 @@ namespace ngraph
                                                         std::vector<size_t>& deps,
                                                         bool new_workspace = false)
                 {
-                    NGRAPH_ASSERT(desc_names.size() == new_workspace ? deps.size()
-                                                                     : deps.size() - 1);
+                    NGRAPH_CHECK(desc_names.size() == new_workspace ? deps.size()
+                                                                    : deps.size() - 1);
                     for (auto i = 0; i < desc_names.size(); i++)
                     {
                         writer << "cg_ctx->mkldnn_primitives[" << std::to_string(deps[i])
@@ -1449,8 +1449,10 @@ bool MKLDNNPrimitiveBuildPass::run_on_call_graph(const std::list<std::shared_ptr
         if (mkldnn_utils::use_mkldnn_kernel(node))
         {
             auto handler = prim_build_string_construct_dispatcher.find(TI(*node));
-            NGRAPH_ASSERT(handler != prim_build_string_construct_dispatcher.end())
-                << "Unsupported node '" << node->description() << "' in MKLDNNPrimitiveBuildPass";
+            NGRAPH_CHECK(handler != prim_build_string_construct_dispatcher.end(),
+                         "Unsupported node '",
+                         node->description(),
+                         "' in MKLDNNPrimitiveBuildPass");
 
             std::string construct_string;
             std::vector<size_t> deps;
