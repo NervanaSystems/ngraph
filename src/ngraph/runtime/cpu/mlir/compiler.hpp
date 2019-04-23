@@ -15,19 +15,19 @@
 //*****************************************************************************
 #pragma once
 
-#include "mlir/IR/Attributes.h"
-#include "mlir/IR/Builders.h"
-#include "mlir/IR/Location.h"
-#include "mlir/IR/MLIRContext.h"
-#include "mlir/IR/Module.h"
-#include "mlir/IR/StandardTypes.h"
-#include "mlir/IR/Types.h"
-#include "mlir/StandardOps/Ops.h"
-
-#include "llvm/ADT/STLExtras.h"
-
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/node.hpp"
+
+// TODO(dcab): Revisit and do fw decl when possible.
+#include <mlir/ExecutionEngine/ExecutionEngine.h>
+#include <mlir/IR/Attributes.h>
+#include <mlir/IR/Builders.h>
+#include <mlir/IR/Location.h>
+#include <mlir/IR/MLIRContext.h>
+#include <mlir/IR/Module.h>
+#include <mlir/IR/StandardTypes.h>
+#include <mlir/IR/Types.h>
+#include <mlir/StandardOps/Ops.h>
 
 namespace ngraph
 {
@@ -41,10 +41,13 @@ namespace ngraph
                 using TensorList = std::vector<descriptor::Tensor*>;
                 using TypeList = llvm::SmallVector<mlir::Type, 4>;
 
-                MLIRCompiler(const std::vector<const Node*>& sub_graph)
+                MLIRCompiler(const std::vector<const Node*>& sub_graph,
+                             const std::vector<void*>& external_tensors)
                     : m_sub_graph(sub_graph.begin(), sub_graph.end())
+                    , m_external_tensors(external_tensors)
                 {
                 }
+
                 static void init_mlir();
                 // compiles and runs a subgraph in MLIR
                 void compile();
@@ -59,7 +62,11 @@ namespace ngraph
             private:
                 void build_module();
                 void lower_dialect();
-                void lower_to_llvm();
+                void optimize();
+                void bind_tensors_to_arguments();
+                void execute();
+                void cleanup();
+
                 void build_tensors_list();
                 mlir::Type get_mlir_type(const descriptor::Tensor* tensor);
                 mlir::Type get_mlir_type(const element::Type& type);
@@ -82,6 +89,7 @@ namespace ngraph
                 mlir::MLIRContext m_context;
                 std::unique_ptr<mlir::Module> m_module;
                 std::unique_ptr<mlir::FuncBuilder> m_builder;
+                std::unique_ptr<mlir::ExecutionEngine> m_engine;
 
                 using TensorToInfo = std::pair<descriptor::Tensor*, TensorInfo>;
                 using TensorToInfoMap = std::unordered_map<descriptor::Tensor*, TensorInfo>;
@@ -90,6 +98,9 @@ namespace ngraph
                 using MLIRCompOpMap = std::unordered_map<std::type_index, MLIRCompOpFunction>;
 
                 llvm::SmallVector<const Node*, 4> m_sub_graph;
+                const std::vector<void*>& m_external_tensors;
+                llvm::SmallVector<void*, 8> m_invoke_args;
+
                 // Maps tensor to the value it represents in the IR
                 // use for MLIR dialect gen
                 TensorToInfoMap m_tensor_to_value_map;

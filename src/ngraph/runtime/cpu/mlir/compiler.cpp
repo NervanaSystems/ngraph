@@ -14,22 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 #include "compiler.hpp"
-#include <memory>
-
-#include "mlir/ExecutionEngine/ExecutionEngine.h"
-#include "mlir/ExecutionEngine/OptUtils.h"
-#include "mlir/LLVMIR/LLVMDialect.h"
-#include "mlir/LLVMIR/Transforms.h"
-#include "mlir/Pass/PassManager.h"
-#include "mlir/Target/LLVMIR.h"
-#include "mlir/Transforms/DialectConversion.h"
-#include "mlir/Transforms/Passes.h"
-
-#include "llvm/IR/Module.h"
-#include "llvm/Support/ErrorOr.h"
-#include "llvm/Support/MemoryBuffer.h"
-#include "llvm/Support/SourceMgr.h"
-#include "llvm/Support/TargetSelect.h"
 
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/graph_util.hpp"
@@ -41,7 +25,25 @@
 #include "ngraph/runtime/cpu/mlir/lowerer.hpp"
 #include "ngraph/type/element_type.hpp"
 
+#include <llvm/ADT/STLExtras.h>
+#include <llvm/IR/Module.h>
+#include <llvm/Support/ErrorOr.h>
+#include <llvm/Support/MemoryBuffer.h>
+#include <llvm/Support/SourceMgr.h>
+#include <llvm/Support/TargetSelect.h>
+#include <memory>
+#include <mlir/ExecutionEngine/ExecutionEngine.h>
+#include <mlir/ExecutionEngine/MemRefUtils.h>
+#include <mlir/ExecutionEngine/OptUtils.h>
+#include <mlir/LLVMIR/LLVMDialect.h>
+#include <mlir/LLVMIR/Transforms.h>
+#include <mlir/Pass/PassManager.h>
+#include <mlir/Target/LLVMIR.h>
+#include <mlir/Transforms/DialectConversion.h>
+#include <mlir/Transforms/Passes.h>
+
 using llvm::SmallVector;
+using llvm::StringRef;
 using llvm::make_unique;
 using namespace ngraph::runtime::cpu;
 
@@ -50,9 +52,9 @@ using namespace ngraph::runtime::cpu;
 
 namespace ngraph
 {
-    void MLIRCompiler::init_mlir() 
-    { 
-        mlir::registerDialect<NGDialect>(); 
+    void MLIRCompiler::init_mlir()
+    {
+        mlir::registerDialect<NGDialect>();
         // Register any LLVM command line options
         llvm::cl::ParseEnvironmentOptions("ngraph", "MLIR_LLVM_OPTIONS", "");
     }
@@ -60,8 +62,10 @@ namespace ngraph
     {
         build_module(); // MLIR gen
         lower_dialect();
-        lower_to_llvm();
-        // JIT and invoke main
+        optimize();
+        bind_tensors_to_arguments();
+        execute();
+        cleanup();
     }
 
     void MLIRCompiler::build_module()
@@ -228,7 +232,7 @@ namespace ngraph
         }
     }
 
-    void MLIRCompiler::lower_to_llvm()
+    void MLIRCompiler::optimize()
     {
         mlir::PassManager pm;
         // Lower affine ops
@@ -236,33 +240,6 @@ namespace ngraph
         auto rr = pm.run(m_module.get());
         (void)rr;
         assert(succeeded(rr) && "affine loop lowering failed");
-        // std to llvm dialect
-        auto converter = mlir::createStdToLLVMConverter();
-        auto r = converter->convert(m_module.get());
-        (void)r;
-        assert(succeeded(r) && "second conversion failed");
-
-        auto llvmModule = mlir::translateModuleToLLVMIR(*m_module);
-        if (!llvmModule)
-        {
-            llvm::errs() << "Failed to emit LLVM IR\n";
-            return;
-        }
-        // Initialize LLVM targets.
-        llvm::InitializeNativeTarget();
-        llvm::InitializeNativeTargetAsmPrinter();
-        mlir::ExecutionEngine::setupTargetTriple(llvmModule.get());
-        auto optPipeline = mlir::makeOptimizingTransformer(/* optLevel=*/3, /* sizeLevel=*/0);
-        if (auto err = optPipeline(llvmModule.get()))
-        {
-            llvm::errs() << "Failed to optimize LLVM IR " << err << "\n";
-            return;
-        }
-        if (std::getenv("NGRAPH_MLIR_DUMP_ALL") != nullptr)
-        {
-            llvmModule->dump();
-        }
-        return;
     }
 
 // MLIR builders
@@ -322,5 +299,77 @@ namespace ngraph
             value_list.push_back(get_tensor_value(tensor).m_value);
         }
         m_builder->create<NG_ReturnOp>(mlir::UnknownLoc::get(&m_context), value_list);
+    }
+
+    void MLIRCompiler::bind_tensors_to_arguments()
+    {
+        NGRAPH_ASSERT(m_module && "MLIR module is not ready.");
+
+        mlir::Function* func = m_module->getNamedFunction("main");
+        NGRAPH_ASSERT(func && !func->getBlocks().empty()) << "Function not found";
+
+        // Create list with a type-erased double pointer for each invocation arguments.
+        // We currently use 'allocateMemRefArguments', which creates a
+        // SmallVector<StaticFloatMemref*>. StaticFloatMemref is just a struct with the
+        // actual pointer to the data.
+
+        // TODO (dcab): Only f32 arguments are supported for now. We may want to implement
+        // this more generically by just allocating a void double pointer.
+        auto expected_arguments = allocateMemRefArguments(func);
+        NGRAPH_ASSERT(expected_arguments) << "Arguments can't be created";
+        m_invoke_args = std::move(*expected_arguments);
+
+        NGRAPH_ASSERT(m_invoke_args.size() == m_external_tensors.size())
+            << "Number of external tensors doesn't match number of function arguments";
+
+        // Assign external tensor pointers to invocation arguments.
+        for (size_t i = 0, num_args = m_invoke_args.size(); i < num_args; ++i)
+        {
+            ((mlir::StaticFloatMemRef*)m_invoke_args[i])->data = (float*)m_external_tensors[i];
+        }
+    }
+
+    void MLIRCompiler::execute()
+    {
+        NGRAPH_ASSERT(m_module && "MLIR module is not ready.");
+
+        // Lower Standard dialect to LLVM dialect.
+        auto converter = mlir::createStdToLLVMConverter();
+        auto r = converter->convert(m_module.get());
+        (void)r;
+        NGRAPH_ASSERT(succeeded(r)) << "second conversion failed";
+
+        // Initialize LLVM targets.
+        llvm::InitializeNativeTarget();
+        llvm::InitializeNativeTargetAsmPrinter();
+
+        // Create an MLIR execution engine. Note that it takes a null pass manager
+        // to make sure it won't run "default" passes on the MLIR that would trigger
+        // a second conversion to LLVM IR.  The execution engine eagerly JIT-compiles
+        // the module.
+        auto maybeEngine = mlir::ExecutionEngine::create(m_module.get(), /*pm=*/nullptr);
+        NGRAPH_ASSERT(maybeEngine) << "failed to construct an execution engine";
+        m_engine = std::move(maybeEngine.get());
+
+        // Invoke the JIT-compiled function with the arguments. Note that, for API
+        // uniformity reasons, it takes a list of type-erased pointers to arguments.
+        // Please, note that 'invoke' method is overloaded with a parameter pack version.
+        // Make sure the MutableArrayRef version is invoked.
+        auto invocationResult =
+            m_engine->invoke("main", llvm::MutableArrayRef<void*>(m_invoke_args));
+        NGRAPH_ASSERT(!invocationResult) << "JIT invocation of 'main' failed\n";
+    }
+
+    void MLIRCompiler::cleanup()
+    {
+        // Free void double pointer arguments without freeing external tensor data.
+        for (auto* arg : m_invoke_args)
+        {
+            free(arg);
+        }
+
+        // Free MLIR function builder.
+        if (m_builder)
+            m_builder.reset(nullptr);
     }
 }
