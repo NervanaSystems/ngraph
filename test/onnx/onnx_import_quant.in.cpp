@@ -105,21 +105,16 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_quantize_linear_axis_negative)
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/quantize_linear_axis_negative.prototxt"));
 
-    Inputs inputs;
-    inputs.emplace_back(std::vector<float>{
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input(std::vector<float>{
         0.f, 2.f, 3.f, 1000.f, 0.f, 2.f, 3.f, 1000.f, 0.f, 2.f, 3.f, 1000.f}); // x
-    inputs.emplace_back(std::vector<float>{1.f, 2.f, 4.f});                    // y_scale
+    test_case.add_input(std::vector<float>{1.f, 2.f, 4.f});                    // y_scale
+    test_case.add_input(std::vector<std::uint8_t>{0, 0, 0});                   // y_zero_point
 
-    std::vector<std::vector<std::uint8_t>> int_inputs;
-    int_inputs.emplace_back(std::vector<std::uint8_t>{0, 0, 0}); // y_zero_point
-
-    std::vector<std::vector<std::uint8_t>> expected_output{
-        //  std::vector<std::uint8_t>{0, 2, 3, 255, 0, 1, 2, 255, 0, 1, 1, 250}}; <- bad expected output given HALF_TO_EVEN round mode
-        std::vector<std::uint8_t>{0, 2, 3, 255, 0, 1, 2, 255, 0, 0, 1, 250}};
-
-    std::vector<std::vector<std::uint8_t>> outputs{execute<float, std::uint8_t, std::uint8_t>(
-        function, inputs, int_inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close(expected_output.front(), outputs.front()));
+    //  std::vector<std::uint8_t>{0, 2, 3, 255, 0, 1, 2, 255, 0, 1, 1, 250}}; <- bad expected output given HALF_TO_EVEN round mode
+    test_case.add_expected_output<std::uint8_t>(
+        {3, 4}, std::vector<std::uint8_t>{0, 2, 3, 255, 0, 1, 2, 255, 0, 0, 1, 250});
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_dequantize_linear)
