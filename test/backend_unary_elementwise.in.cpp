@@ -65,7 +65,10 @@ static string s_manifest = "${MANIFEST}";
 
 // clang-format off
 static ${DATA_TYPE} negative(${DATA_TYPE} x) { return -x;}
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wfloat-equal"
 static ${DATA_TYPE} sign(${DATA_TYPE} x) { return x==0 ? 0 : (x>0 ? 1 : -1);}
+#pragma clang diagnostic pop
 // clang-format on
 NGRAPH_TYPED_TEST(abs, ngraph::op::Abs, -1e+10, 1e+10);
 NGRAPH_TYPED_TEST(acos, ngraph::op::Acos, -1e+10, 1e+10);
