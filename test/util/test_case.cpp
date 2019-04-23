@@ -23,7 +23,7 @@
 
 void ngraph::test::NgraphTestCase::run()
 {
-    auto function_results = m_function->get_results();
+    const auto& function_results = m_function->get_results();
     NGRAPH_CHECK(m_expected_outputs.size() == function_results.size(),
                  "Expected number of outputs is different from the function's number of results.");
 
@@ -32,20 +32,20 @@ void ngraph::test::NgraphTestCase::run()
 
     for (int i = 0; i < m_expected_outputs.size(); ++i)
     {
-        auto result_tensor = m_result_tensors.at(i);
-        auto expected_result_constant = m_expected_outputs.at(i);
-        auto element_type = result_tensor->get_element_type();
+        const auto& result_tensor = m_result_tensors.at(i);
+        const auto& expected_result_constant = m_expected_outputs.at(i);
+        const auto& element_type = result_tensor->get_element_type();
 
         if (element_type == ngraph::element::f32)
         {
-            auto result = read_vector<float>(result_tensor);
-            auto expected = expected_result_constant->get_vector<float>();
+            const auto result = read_vector<float>(result_tensor);
+            const auto expected = expected_result_constant->get_vector<float>();
             EXPECT_TRUE(test::all_close_f(expected, result));
         }
         else if (element_type == ngraph::element::u8)
         {
-            auto result = read_vector<uint8_t>(result_tensor);
-            auto expected = expected_result_constant->get_vector<uint8_t>();
+            const auto result = read_vector<uint8_t>(result_tensor);
+            const auto expected = expected_result_constant->get_vector<uint8_t>();
             EXPECT_TRUE(test::all_close(expected, result));
         }
         else
