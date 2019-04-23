@@ -456,20 +456,28 @@ static bool simplify_reduction(shared_ptr<Node> n)
     return true;
 }
 
-static unordered_map<type_index, function<bool(shared_ptr<Node>)>> initialize_ops_to_simplifiers()
+using FunctionWithPassProperties =
+    std::pair<function<bool(shared_ptr<Node>)>, ngraph::pass::PassPropertyMask>;
+
+static unordered_map<type_index, FunctionWithPassProperties> initialize_ops_to_simplifiers()
 {
-    return unordered_map<type_index, function<bool(shared_ptr<Node>)>>(
-        {{TI(op::Add), simplify_add},
-         {TI(op::Multiply), simplify_multiply},
-         {TI(op::Concat), simplify_concat},
+    return unordered_map<type_index, FunctionWithPassProperties>(
+        {{TI(op::Add), std::make_pair(simplify_add, pass::PassProperty::REGULAR_FUSIONS)},
+         {TI(op::Multiply), std::make_pair(simplify_multiply, pass::PassProperty::REGULAR_FUSIONS)},
+         {TI(op::Concat),
+          std::make_pair(simplify_concat, pass::PassProperty::REQUIRE_STATIC_SHAPE)},
          {TI(op::Sum),
-          function<bool(shared_ptr<Node>)>{simplify_reduction<op::Sum, get_sum_constant>}},
+          std::make_pair(
+              function<bool(shared_ptr<Node>)>{simplify_reduction<op::Sum, get_sum_constant>},
+              pass::PassProperty::REQUIRE_STATIC_SHAPE)},
          {TI(op::Product),
-          function<bool(shared_ptr<Node>)>{simplify_reduction<op::Product, get_prod_constant>}},
-         {TI(op::Log), simplify_log}});
+          std::make_pair(
+              function<bool(shared_ptr<Node>)>{simplify_reduction<op::Product, get_prod_constant>},
+              pass::PassProperty::REQUIRE_STATIC_SHAPE)},
+         {TI(op::Log), std::make_pair(simplify_log, pass::PassProperty::REGULAR_FUSIONS)}});
 }
 
-static unordered_map<type_index, function<bool(shared_ptr<Node>)>> ops_to_simplifiers =
+static unordered_map<type_index, FunctionWithPassProperties> ops_to_simplifiers =
     initialize_ops_to_simplifiers();
 
 bool pass::AlgebraicSimplification::run_on_function(shared_ptr<Function> f)
@@ -489,7 +497,13 @@ bool pass::AlgebraicSimplification::run_on_function(shared_ptr<Function> f)
             continue;
         }
 
-        replaced = eh->second(n) || replaced;
+        if ((!f->is_dynamic() &&
+             (eh->second.second.is_any_set(pass::PassProperty::REQUIRE_STATIC_SHAPE))) ||
+            (f->is_dynamic() &&
+             (eh->second.second.is_clear(pass::PassProperty::REQUIRE_STATIC_SHAPE))))
+        {
+            replaced = eh->second.first(n) || replaced;
+        }
     }
     return replaced;
 }
