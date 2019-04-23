@@ -1497,6 +1497,7 @@ void MKLDNNEmitter::build_rnn_forward(std::vector<mkldnn::primitive*>& mkldnn_pr
     size_t weights_layer_index = deps[2];
     build_memory_primitive(
         mkldnn_primitives, rnn_desc.data.weights_layer_desc, weights_layer_index);
+
     size_t weights_iter_index = m_primitive_deps[rnn_index][3];
     build_memory_primitive(mkldnn_primitives, rnn_desc.data.weights_iter_desc, weights_iter_index);
     size_t bias_index = deps[4];

@@ -1556,7 +1556,6 @@ static bool in_new_map(const std::shared_ptr<Node>& node)
 
 bool MKLDNNPrimitiveBuildPass::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)
 {
-
     for (const auto& shp_node : nodes)
     {
         if (in_new_map(shp_node))
