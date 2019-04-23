@@ -373,7 +373,7 @@ INSTANTIATE_TEST_CASE_P(
 // 1 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 TEST(all_close_f, mantissa_8_near_0)
 {
-    constexpr int tolerance_bits = (FLOAT_MANTISSA_BITS - BFLOAT_MANTISSA_BITS + 2);
+    constexpr int tolerance_bits = (FLOAT_MANTISSA_BITS - BFLOAT16_MANTISSA_BITS + 2);
 
     // 0.f, the ground-truth value
     float expected = test::bits_to_float("0  00000000  000 0000 0000 0000 0000 0000");
@@ -462,7 +462,7 @@ TEST(all_close_f, mantissa_8_near_0)
 // 1 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 TEST(all_close_f, mantissa_8_near_n0)
 {
-    constexpr int tolerance_bits = (FLOAT_MANTISSA_BITS - BFLOAT_MANTISSA_BITS + 2);
+    constexpr int tolerance_bits = (FLOAT_MANTISSA_BITS - BFLOAT16_MANTISSA_BITS + 2);
 
     // 0.f, the ground-truth value
     float expected = test::bits_to_float("1  00000000  000 0000 0000 0000 0000 0000");
@@ -545,7 +545,7 @@ TEST(all_close_f, mantissa_8_near_n0)
 // 0 0 1 1 1 1 1 1 0 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 TEST(all_close_f, mantissa_8_near_1)
 {
-    constexpr int tolerance_bits = (FLOAT_MANTISSA_BITS - BFLOAT_MANTISSA_BITS + 2);
+    constexpr int tolerance_bits = (FLOAT_MANTISSA_BITS - BFLOAT16_MANTISSA_BITS + 2);
 
     // 1.f, the ground-truth value
     float expected = test::bits_to_float("0  01111111  000 0000 0000 0000 0000 0000");
@@ -609,7 +609,7 @@ TEST(all_close_f, mantissa_8_near_1)
 // 1 0 1 1 1 1 1 1 1 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 TEST(all_close_f, mantissa_8_near_n1)
 {
-    constexpr int tolerance_bits = (FLOAT_MANTISSA_BITS - BFLOAT_MANTISSA_BITS + 2);
+    constexpr int tolerance_bits = (FLOAT_MANTISSA_BITS - BFLOAT16_MANTISSA_BITS + 2);
 
     // -1.f, the ground-truth value
     float expected = test::bits_to_float("1  01111111  000 0000 0000 0000 0000 0000");
@@ -653,7 +653,7 @@ TEST(all_close_f, mantissa_8_near_n1)
 //                           |  2 |<=
 TEST(all_close_f, mantissa_8_near_0_1_10_100_1000)
 {
-    constexpr int tolerance_bits = (FLOAT_MANTISSA_BITS - BFLOAT_MANTISSA_BITS + 2);
+    constexpr int tolerance_bits = (FLOAT_MANTISSA_BITS - BFLOAT16_MANTISSA_BITS + 2);
 
     float expected;
     float upper_bound;
@@ -893,14 +893,14 @@ TEST(all_close_f, inf_nan)
     EXPECT_FALSE(test::close_f(zero, signaling_nan));
     EXPECT_FALSE(test::all_close_f(vector<float>({zero}), vector<float>({signaling_nan})));
 
-    EXPECT_FALSE(test::close_f(infinity, infinity));
-    EXPECT_FALSE(test::all_close_f(vector<float>({infinity}), vector<float>({infinity})));
-    EXPECT_FALSE(test::close_f(neg_infinity, neg_infinity));
-    EXPECT_FALSE(test::all_close_f(vector<float>({neg_infinity}), vector<float>({neg_infinity})));
-    EXPECT_FALSE(test::close_f(quiet_nan, quiet_nan));
-    EXPECT_FALSE(test::all_close_f(vector<float>({quiet_nan}), vector<float>({quiet_nan})));
-    EXPECT_FALSE(test::close_f(signaling_nan, signaling_nan));
-    EXPECT_FALSE(test::all_close_f(vector<float>({signaling_nan}), vector<float>({signaling_nan})));
+    EXPECT_TRUE(test::close_f(infinity, infinity));
+    EXPECT_TRUE(test::all_close_f(vector<float>({infinity}), vector<float>({infinity})));
+    EXPECT_TRUE(test::close_f(neg_infinity, neg_infinity));
+    EXPECT_TRUE(test::all_close_f(vector<float>({neg_infinity}), vector<float>({neg_infinity})));
+    EXPECT_TRUE(test::close_f(quiet_nan, quiet_nan));
+    EXPECT_TRUE(test::all_close_f(vector<float>({quiet_nan}), vector<float>({quiet_nan})));
+    EXPECT_TRUE(test::close_f(signaling_nan, signaling_nan));
+    EXPECT_TRUE(test::all_close_f(vector<float>({signaling_nan}), vector<float>({signaling_nan})));
 }
 
 TEST(all_close_f, double_inf_nan)
@@ -920,13 +920,13 @@ TEST(all_close_f, double_inf_nan)
     EXPECT_FALSE(test::close_f(zero, signaling_nan));
     EXPECT_FALSE(test::all_close_f(vector<double>({zero}), vector<double>({signaling_nan})));
 
-    EXPECT_FALSE(test::close_f(infinity, infinity));
-    EXPECT_FALSE(test::all_close_f(vector<double>({infinity}), vector<double>({infinity})));
-    EXPECT_FALSE(test::close_f(neg_infinity, neg_infinity));
-    EXPECT_FALSE(test::all_close_f(vector<double>({neg_infinity}), vector<double>({neg_infinity})));
-    EXPECT_FALSE(test::close_f(quiet_nan, quiet_nan));
-    EXPECT_FALSE(test::all_close_f(vector<double>({quiet_nan}), vector<double>({quiet_nan})));
-    EXPECT_FALSE(test::close_f(signaling_nan, signaling_nan));
-    EXPECT_FALSE(
+    EXPECT_TRUE(test::close_f(infinity, infinity));
+    EXPECT_TRUE(test::all_close_f(vector<double>({infinity}), vector<double>({infinity})));
+    EXPECT_TRUE(test::close_f(neg_infinity, neg_infinity));
+    EXPECT_TRUE(test::all_close_f(vector<double>({neg_infinity}), vector<double>({neg_infinity})));
+    EXPECT_TRUE(test::close_f(quiet_nan, quiet_nan));
+    EXPECT_TRUE(test::all_close_f(vector<double>({quiet_nan}), vector<double>({quiet_nan})));
+    EXPECT_TRUE(test::close_f(signaling_nan, signaling_nan));
+    EXPECT_TRUE(
         test::all_close_f(vector<double>({signaling_nan}), vector<double>({signaling_nan})));
 }

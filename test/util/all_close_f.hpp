@@ -22,13 +22,23 @@
 #include "gtest/gtest.h"
 #include "test_tools.hpp"
 
-static constexpr int BFLOAT_MANTISSA_BITS = 8;
+static constexpr int BFLOAT16_MANTISSA_BITS = 8;
 static constexpr int FLOAT_MANTISSA_BITS = 24;
 static constexpr int DOUBLE_MANTISSA_BITS = 53;
+
+// Maximum available bfloat16 bits
+#ifndef MAX_BFLOAT16_BITS
+#define MAX_BFLOAT16_BITS BFLOAT16_MANTISSA_BITS
+#endif
 
 // Maximum available float bits
 #ifndef MAX_FLOAT_BITS
 #define MAX_FLOAT_BITS FLOAT_MANTISSA_BITS
+#endif
+
+// Minimum bfloat16 tolerance bits possible
+#ifndef MIN_BFLOAT16_TOLERANCE_BITS
+#define MIN_BFLOAT16_TOLERANCE_BITS (BFLOAT16_MANTISSA_BITS - MAX_BFLOAT16_BITS)
 #endif
 
 // Minimum float tolerance bits possible
@@ -36,10 +46,20 @@ static constexpr int DOUBLE_MANTISSA_BITS = 53;
 #define MIN_FLOAT_TOLERANCE_BITS (FLOAT_MANTISSA_BITS - MAX_FLOAT_BITS)
 #endif
 
+static_assert((MAX_BFLOAT16_BITS > 0) && (MAX_BFLOAT16_BITS <= BFLOAT16_MANTISSA_BITS),
+              "MAX_BFLOAT16_BITS must be in range (0, 8]");
+static_assert((MIN_BFLOAT16_TOLERANCE_BITS >= 0) &&
+                  (MIN_BFLOAT16_TOLERANCE_BITS < BFLOAT16_MANTISSA_BITS),
+              "MIN_BFLOAT16_TOLERANCE_BITS must be in range [0, 8)");
 static_assert((MAX_FLOAT_BITS > 0) && (MAX_FLOAT_BITS <= FLOAT_MANTISSA_BITS),
               "MAX_FLOAT_BITS must be in range (0, 24]");
 static_assert((MIN_FLOAT_TOLERANCE_BITS >= 0) && (MIN_FLOAT_TOLERANCE_BITS < FLOAT_MANTISSA_BITS),
               "MIN_FLOAT_TOLERANCE_BITS must be in range [0, 24)");
+
+// Default bfloat16 tolerance bits
+#ifndef DEFAULT_BFLOAT16_TOLERANCE_BITS
+#define DEFAULT_BFLOAT16_TOLERANCE_BITS (MIN_BFLOAT16_TOLERANCE_BITS + 2)
+#endif
 
 // Default float tolerance bits
 #ifndef DEFAULT_FLOAT_TOLERANCE_BITS
@@ -50,6 +70,10 @@ static_assert((MIN_FLOAT_TOLERANCE_BITS >= 0) && (MIN_FLOAT_TOLERANCE_BITS < FLO
 #ifndef DEFAULT_DOUBLE_TOLERANCE_BITS
 #define DEFAULT_DOUBLE_TOLERANCE_BITS 2
 #endif
+
+static_assert((DEFAULT_BFLOAT16_TOLERANCE_BITS >= 0) &&
+                  (DEFAULT_BFLOAT16_TOLERANCE_BITS < BFLOAT16_MANTISSA_BITS),
+              "DEFAULT_BFLOAT16_TOLERANCE_BITS must be in range [0, 8)");
 
 static_assert((DEFAULT_FLOAT_TOLERANCE_BITS >= 0) &&
                   (DEFAULT_FLOAT_TOLERANCE_BITS < FLOAT_MANTISSA_BITS),
@@ -189,6 +213,17 @@ namespace ngraph
         /// See float_distance for limitations and assumptions.
         uint32_t matching_mantissa_bits(uint64_t distance);
 
+        /// \brief Check if the two bfloat16 vectors are all close
+        /// \param a First number to compare
+        /// \param b Second number to compare
+        /// \param tolerance_bits Bit tolerance error
+        /// \param min_signal Minimum value for comparisons
+        /// \returns ::testing::AssertionSuccess iff the two floating point vectors are close
+        ::testing::AssertionResult all_close_f(const std::vector<bfloat16>& a,
+                                               const std::vector<bfloat16>& b,
+                                               int tolerance_bits = DEFAULT_BFLOAT16_TOLERANCE_BITS,
+                                               float min_signal = 0.0f);
+
         /// \brief Check if the two floating point vectors are all close
         /// \param a First number to compare
         /// \param b Second number to compare
@@ -211,23 +246,23 @@ namespace ngraph
                                                int tolerance_bits = DEFAULT_DOUBLE_TOLERANCE_BITS,
                                                double min_signal = 0.0);
 
-        /// \brief Check if the two TensorViews are all close in float
+        /// \brief Check if the two Tensors are all close in float
         /// \param a First Tensor to compare
         /// \param b Second Tensor to compare
         /// \param tolerance_bits Bit tolerance error
         /// \param min_signal Minimum value for comparisons
-        /// Returns true iff the two TensorViews are all close in float
+        /// Returns true iff the two Tensors are all close in float
         ::testing::AssertionResult all_close_f(const std::shared_ptr<runtime::Tensor>& a,
                                                const std::shared_ptr<runtime::Tensor>& b,
                                                int tolerance_bits = DEFAULT_FLOAT_TOLERANCE_BITS,
                                                float min_signal = 0.0f);
 
-        /// \brief Check if the two vectors of TensorViews are all close in float
+        /// \brief Check if the two vectors of Tensors are all close in float
         /// \param as First vector of Tensor to compare
         /// \param bs Second vector of Tensor to compare
         /// \param tolerance_bits Bit tolerance error
         /// \param min_signal Minimum value for comparisons
-        /// Returns true iff the two TensorViews are all close in float
+        /// Returns true iff the two Tensors are all close in float
         ::testing::AssertionResult
             all_close_f(const std::vector<std::shared_ptr<runtime::Tensor>>& as,
                         const std::vector<std::shared_ptr<runtime::Tensor>>& bs,
