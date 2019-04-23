@@ -40,12 +40,12 @@ NodeVector op::Elu::decompose_op() const
 
     alpha_node = ngraph::op::make_broadcast_node(alpha_node, data->get_shape());
 
-    std::shared_ptr<ngraph::Node> zero_node =
-        op::make_constant_node(data->get_element_type(), data->get_shape(), std::vector<double>{0});
+    shared_ptr<ngraph::Node> zero_node =
+        op::make_constant_node(data->get_element_type(), data->get_shape(), vector<double>{0});
 
-    return {std::make_shared<ngraph::op::Maximum>(data, zero_node) +
-            alpha_node * std::make_shared<ngraph::op::Exp>(
-                             std::make_shared<ngraph::op::Minimum>(data, zero_node)) -
+    return {make_shared<ngraph::op::Maximum>(data, zero_node) +
+            alpha_node *
+                make_shared<ngraph::op::Exp>(make_shared<ngraph::op::Minimum>(data, zero_node)) -
             alpha_node};
 }
 
