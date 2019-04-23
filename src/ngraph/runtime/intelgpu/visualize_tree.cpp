@@ -44,6 +44,7 @@
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
+#include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/util.hpp"
@@ -293,6 +294,13 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
         const shared_ptr<op::Dequantize> quant_op = static_pointer_cast<op::Dequantize>(node);
 
         writer << print_table_row_dims("axes", quant_op->get_axes());
+        break;
+    }
+    case OP_TYPEID::Softmax:
+    {
+        const shared_ptr<op::Softmax> softmax_op = static_pointer_cast<op::Softmax>(node);
+
+        writer << print_table_row_dims("axes", softmax_op->get_axes());
         break;
     }
     case OP_TYPEID::Concat:
