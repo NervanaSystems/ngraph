@@ -1588,6 +1588,23 @@ bool MKLDNNPrimitiveBuildPass::run_on_call_graph(const std::list<std::shared_ptr
 
         Node* node = shp_node.get();
 
+        // skip in place concat, relu, reshape, slice.
+        if (std::dynamic_pointer_cast<ngraph::op::Concat>(shp_node) ||
+            std::dynamic_pointer_cast<ngraph::op::Relu>(shp_node) ||
+            std::dynamic_pointer_cast<ngraph::op::Reshape>(shp_node) ||
+            std::dynamic_pointer_cast<ngraph::op::Slice>(shp_node))
+        {
+            auto op = static_cast<const ngraph::op::Op*>(node);
+            if (auto op_annotations = op->get_op_annotations())
+            {
+                auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
+                if (in_place_oi_pairs.size() > 0)
+                {
+                    continue;
+                }
+            }
+        }
+
         if (mkldnn_utils::use_mkldnn_kernel(node))
         {
             auto handler = prim_build_string_construct_dispatcher.find(TI(*node));
