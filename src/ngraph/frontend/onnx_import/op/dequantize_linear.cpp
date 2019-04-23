@@ -24,9 +24,9 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/dequantize.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
 #include "quantize_linear.hpp"
-#include "utils/common.hpp"
 
 namespace ngraph
 {
@@ -48,7 +48,7 @@ namespace ngraph
                     }
                     else
                     {
-                        zero_point = common::make_constant_node(
+                        zero_point = ngraph::op::make_constant_node(
                             x->get_element_type(), Shape{}, std::vector<std::uint8_t>{0});
                     }
 
