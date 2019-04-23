@@ -63,19 +63,14 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_quantize_linear_zero_point)
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/quantize_linear_zero_point.prototxt"));
 
-    Inputs inputs;
-    inputs.emplace_back(std::vector<float>{0.f, 2.f, 3.f, 1000.f, -254.f, -1000.f}); // x
-    inputs.emplace_back(std::vector<float>{2.0f});                                   // y_scale
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input(std::vector<float>{0.f, 2.f, 3.f, 1000.f, -254.f, -1000.f}); // x
+    test_case.add_input(std::vector<float>{2.0f});                                   // y_scale
+    test_case.add_input(std::vector<std::uint8_t>{128});                             // y_zero_point
 
-    std::vector<std::vector<std::uint8_t>> int_inputs;
-    int_inputs.emplace_back(std::vector<std::uint8_t>{128}); // y_zero_point
-
-    std::vector<std::vector<std::uint8_t>> expected_output{
-        std::vector<std::uint8_t>{128, 129, 130, 255, 1, 0}};
-
-    std::vector<std::vector<std::uint8_t>> outputs{execute<float, std::uint8_t, std::uint8_t>(
-        function, inputs, int_inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close(expected_output.front(), outputs.front()));
+    test_case.add_expected_output<std::uint8_t>(
+        {6}, std::vector<std::uint8_t>{128, 129, 130, 255, 1, 0});
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_quantize_linear_axis_zero)
