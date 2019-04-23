@@ -299,46 +299,23 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_dequantize_linear_1d_zero_scale_int8_4d)
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/dequantize_linear_4.prototxt"));
 
-    auto x = std::vector<int8_t>{7, 9, 10, 10, 5,  8, 9, 1, 8, 6, 7, 9, 10, 0, 7, 10,
-                                 8, 2, 6,  0,  5,  9, 8, 1, 2, 7, 5, 3, 2,  4, 1, 3,
-                                 8, 7, 4,  8,  10, 1, 5, 5, 7, 7, 0, 2, 4,  4, 0, 5};
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
 
-    auto scale = std::vector<float>{1.0f, 10.0f, 7.0f};
-    auto zero_point = std::vector<int8_t>{10, 2, 1};
+    test_case.add_input(std::vector<uint8_t>{7, 9, 10, 10, 5, 8, 9, 1, 8, 6, 7, 9, 10, 0, 7, 10, 8,
+                                             2, 6, 0,  5,  9, 8, 1, 2, 7, 5, 3, 2, 4,  1, 3, 8,  7,
+                                             4, 8, 10, 1,  5, 5, 7, 7, 0, 2, 4, 4, 0,  5}); // x
+    test_case.add_input(std::vector<float>{1.0f, 10.0f, 7.0f});                             // scale
+    test_case.add_input(std::vector<uint8_t>{10, 2, 1}); // zero_point
 
-    auto backend = ngraph::runtime::Backend::create("${BACKEND_NAME}");
+    test_case.add_expected_output<float>(
+        {2, 3, 2, 4},
+        std::vector<float>{-3.0f, -1.0f, 0.0f,  0.0f,   -5.0f, -2.0f, -1.0f, -9.0f,  60.0f, 40.0f,
+                           50.0f, 70.0f, 80.0f, -20.0f, 50.0f, 80.0f, 49.0f, 7.0f,   35.0f, -7.0f,
+                           28.0f, 56.0f, 49.0f, 0.0f,   -8.0f, -3.0f, -5.0f, -7.0f,  -8.0f, -6.0f,
+                           -9.0f, -7.0f, 60.0f, 50.0f,  20.0f, 60.0f, 80.0f, -10.0f, 30.0f, 30.0f,
+                           42.0f, 42.0f, -7.0f, 7.0f,   21.0f, 21.0f, -7.0f, 28.0f});
 
-    auto params = function->get_parameters();
-    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> input_tensors;
-    input_tensors.push_back(
-        backend->create_tensor(params.at(0)->get_element_type(), params.at(0)->get_shape()));
-    input_tensors.push_back(
-        backend->create_tensor(params.at(1)->get_element_type(), params.at(1)->get_shape()));
-    input_tensors.push_back(
-        backend->create_tensor(params.at(2)->get_element_type(), params.at(2)->get_shape()));
-
-    copy_data(input_tensors[0], x);
-    copy_data(input_tensors[1], scale);
-    copy_data(input_tensors[2], zero_point);
-
-    auto results = function->get_results();
-    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> result_tensors;
-    result_tensors.push_back(
-        backend->create_tensor(results.at(0)->get_element_type(), results.at(0)->get_shape()));
-
-    auto handle = backend->compile(function);
-    handle->call_with_validate(result_tensors, input_tensors);
-
-    std::vector<std::vector<float>> outputs;
-    outputs.push_back(read_vector<float>(result_tensors[0]));
-
-    auto expected_output = std::vector<std::vector<float>>{
-        {-3.0f, -1.0f,  0.0f,  0.0f,  -5.0f, -2.0f, -1.0f, -9.0f, 60.0f, 40.0f, 50.0f, 70.0f,
-         80.0f, -20.0f, 50.0f, 80.0f, 49.0f, 7.0f,  35.0f, -7.0f, 28.0f, 56.0f, 49.0f, 0.0f,
-         -8.0f, -3.0f,  -5.0f, -7.0f, -8.0f, -6.0f, -9.0f, -7.0f, 60.0f, 50.0f, 20.0f, 60.0f,
-         80.0f, -10.0f, 30.0f, 30.0f, 42.0f, 42.0f, -7.0f, 7.0f,  21.0f, 21.0f, -7.0f, 28.0f}};
-
-    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_dequantize_linear_1d_zero_scale_uint8_negative_axis)
