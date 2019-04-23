@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2018 Intel Corporation
+// Copyright 2018-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -59,7 +59,7 @@ TEST(halide, halide_subgraph)
     vector<float> expected{1, 36, 6, 55, 3, 55, 105, 171};
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b, c, d});
+    handle->call_with_validate({result}, {a, b, c, d});
 
     EXPECT_TRUE(test::all_close(read_vector<float>(result), expected, 1.0e-4f, 1.0e-4f));
 }

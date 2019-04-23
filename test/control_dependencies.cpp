@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -63,9 +63,9 @@ public:
             throw ngraph_error("Expected some arguments or dependencies");
         }
 
-        if (deps.size() != 0)
+        for (auto& node : deps)
         {
-            m_control_dependencies.insert(deps.begin(), deps.end());
+            add_control_dependency(node);
         }
 
         if (args.size() != 0)

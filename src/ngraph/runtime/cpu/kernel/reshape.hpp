@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -145,12 +145,12 @@ namespace ngraph
                 }
 
                 template <typename ElementType>
-                void reshape(const void* arg,
-                             void* out,
-                             const Shape& in_shape,
-                             const AxisVector& in_axis_order,
-                             const Shape& out_shape,
-                             int arena)
+                void reshape_ref(const void* arg,
+                                 void* out,
+                                 const Shape& in_shape,
+                                 const AxisVector& in_axis_order,
+                                 const Shape& out_shape,
+                                 int arena)
                 {
                     reference::reshape(static_cast<const ElementType*>(arg),
                                        static_cast<ElementType*>(out),

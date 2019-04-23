@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 
 #include <cmath>
 
-#include "ngraph/assertion.hpp"
+#include "ngraph/check.hpp"
 #include "ngraph/coordinate_transform.hpp"
 
 namespace ngraph
@@ -61,8 +61,8 @@ namespace ngraph
                     CoordinateTransform output_chunk_transform(
                         out_shape, out_start_coord, out_end_coord);
 
-                    NGRAPH_ASSERT(shape_size(input_transform.get_target_shape()) ==
-                                  shape_size(output_chunk_transform.get_target_shape()));
+                    NGRAPH_CHECK(shape_size(input_transform.get_target_shape()) ==
+                                 shape_size(output_chunk_transform.get_target_shape()));
 
                     CoordinateTransform::Iterator output_chunk_it = output_chunk_transform.begin();
 

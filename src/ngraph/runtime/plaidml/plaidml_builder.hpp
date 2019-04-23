@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@
 #include <string>
 #include <utility>
 
+#include "ngraph/axis_vector.hpp"
 #include "ngraph/runtime/plaidml/plaidml_config.hpp"
 
 // Utilities for constructing PlaidML functions.
@@ -136,8 +137,21 @@ public:
         return std::move(*this);
     }
 
+    Input& transpose(const AxisVector& axes) &
+    {
+        apply_transpose(axes);
+        return *this;
+    }
+    Input&& transpose(const AxisVector& axes) &&
+    {
+        apply_transpose(axes);
+        return std::move(*this);
+    }
+
 private:
     friend class Function;
+
+    void apply_transpose(const AxisVector& axes);
 
     vertexai::plaidml::variable m_var;
     std::string m_name;
@@ -230,8 +244,21 @@ public:
         return std::move(*this);
     }
 
+    ContractionOutput& transpose(const AxisVector& axes) &
+    {
+        apply_transpose(axes);
+        return *this;
+    }
+    ContractionOutput&& transpose(const AxisVector& axes) &&
+    {
+        apply_transpose(axes);
+        return std::move(*this);
+    }
+
 private:
     friend class Function;
+
+    void apply_transpose(const AxisVector& axes);
 
     std::string m_name;
     std::list<std::string> m_indices;
@@ -268,8 +295,21 @@ public:
         return std::move(*this);
     }
 
+    ContractionInput& transpose(const AxisVector& axes) &
+    {
+        apply_transpose(axes);
+        return *this;
+    }
+    ContractionInput&& transpose(const AxisVector& axes) &&
+    {
+        apply_transpose(axes);
+        return std::move(*this);
+    }
+
 private:
     friend class Function;
+
+    void apply_transpose(const AxisVector& axes);
 
     std::string m_name;
     std::list<std::string> m_indices;

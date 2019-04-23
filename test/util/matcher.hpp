@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ public:
     bool match(const std::shared_ptr<ngraph::Node>& pattern_node,
                const std::shared_ptr<ngraph::Node>& graph_node)
     {
-        assert(
+        NGRAPH_CHECK(
             pattern_node &&
             graph_node); // the same condition throws an exception in the non-test version of `match`
         NGRAPH_DEBUG << "Starting match pattern = " << pattern_node->get_name()

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -102,10 +102,11 @@ namespace ngraph
                 {
                     if (inferred_dims.at(idx) == 0)
                     {
-                        NGRAPH_ASSERT(idx < input_shape.size())
-                            << "Node " << node_name
-                            << " cannot copy dimension from the input data shape because "
-                               "requested index is out of range.";
+                        NGRAPH_CHECK(idx < input_shape.size(),
+                                     "Node ",
+                                     node_name,
+                                     " cannot copy dimension from the input data shape because "
+                                     "requested index is out of range.");
 
                         inferred_dims.at(idx) = input_shape.at(idx);
                     }
@@ -119,10 +120,12 @@ namespace ngraph
                 if (neg_value_it != std::end(inferred_dims))
                 {
                     // only single '-1' value is allowed
-                    NGRAPH_ASSERT(std::find(std::next(neg_value_it), std::end(inferred_dims), -1) ==
-                                  std::end(inferred_dims))
-                        << "Node " << node_name << " more than one dimension is set to (-1). "
-                        << "Only one dimension value can be inferred.";
+                    NGRAPH_CHECK(std::find(std::next(neg_value_it), std::end(inferred_dims), -1) ==
+                                     std::end(inferred_dims),
+                                 "Node ",
+                                 node_name,
+                                 " more than one dimension is set to (-1). ",
+                                 "Only one dimension value can be inferred.");
 
                     // Set dimension value to 1 temporarily to be able to calculate its value.
                     *neg_value_it = 1;
@@ -221,17 +224,14 @@ namespace ngraph
                     node, get_default_axis_vector(node->get_shape().size()), shape);
             }
 
-            std::shared_ptr<ngraph::Node> add_empty_axes(const std::shared_ptr<ngraph::Node>& node,
-                                                         std::size_t outermost_axes_count,
-                                                         std::size_t innermost_axes_count)
+            std::shared_ptr<ngraph::Node> expand_dims(const std::shared_ptr<ngraph::Node>& node,
+                                                      std::size_t axis)
             {
-                // Add outermost empty dimensions.
-                Shape output_shape(outermost_axes_count, 1);
-                output_shape.insert(std::end(output_shape),
-                                    std::begin(node->get_shape()),
-                                    std::end(node->get_shape()));
-                // Add innermost empty dimensions.
-                output_shape.insert(std::end(output_shape), innermost_axes_count, 1);
+                Shape output_shape(node->get_shape());
+                // Add empty axis at specified position.
+                auto empty_axis_it = std::begin(output_shape);
+                std::advance(empty_axis_it, axis);
+                output_shape.insert(empty_axis_it, 1);
                 return std::make_shared<ngraph::op::Reshape>(
                     node, reshape::get_default_axis_vector(node->get_shape().size()), output_shape);
             }

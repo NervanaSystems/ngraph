@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,14 +39,15 @@ cudnnTensorDescriptor_t& runtime::gpu::CUDNNEmitter::tensor_descriptor_from_shap
     {
         std::array<int, 4> dimensions;
         size_t pos = 0;
-        for (size_t i = shape.size(); i < 4; i++)
-        {
-            dimensions[pos++] = 1;
-        }
         for (size_t i = 0; i < shape.size(); i++)
         {
             dimensions[pos++] = static_cast<int>(shape[i]);
         }
+        for (size_t i = shape.size(); i < 4; i++)
+        {
+            dimensions[pos++] = 1;
+        }
+
         CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(desc,
                                                    tensor_format,
                                                    data_type,
@@ -167,13 +168,13 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
     auto input_type = dtypes[0];
     bool use_cudnn_reduce = !((reduction_mode == ReductionMode::Reduce) &&
                               ((input_type == element::i32) || (input_type == element::i8)));
-    NGRAPH_ASSERT(use_cudnn_reduce)
-        << "cuDNN reduce for input type int32_t or int8_t currently not supported";
+    NGRAPH_CHECK(use_cudnn_reduce,
+                 "cuDNN reduce for input type int32_t or int8_t currently not supported");
 
     bool unsupported_int8_type_arg_reduce =
         !((reduction_mode == ReductionMode::ArgReduce) && (input_type == element::i8));
-    NGRAPH_ASSERT(unsupported_int8_type_arg_reduce)
-        << "cuDNN arg_reduce for input type int8_t currently not supported";
+    NGRAPH_CHECK(unsupported_int8_type_arg_reduce,
+                 "cuDNN arg_reduce for input type int8_t currently not supported");
     auto output_type = dtypes[1];
     std::stringstream ss;
     ss << "reduce_" << reduce_op << "_" << input_type.c_type_string() << "_"
@@ -396,10 +397,9 @@ cudnnFilterDescriptor_t& runtime::gpu::CUDNNEmitter::get_cudnn_filter_descriptor
     const Shape& shape, const cudnnDataType_t data_type, const cudnnTensorFormat_t tensor_format)
 {
     std::vector<int> dimensions(fmax(4, shape.size()), 1);
-    int idx = 0;
-    for (size_t i = dimensions.size() - shape.size(); i < dimensions.size(); i++)
+    for (size_t i = 0; i < shape.size(); i++)
     {
-        dimensions[i] = static_cast<int>(shape[idx++]);
+        dimensions[i] = static_cast<int>(shape[i]);
     }
 
     auto& filter_descriptor = m_descriptors.build<cudnnFilterDescriptor_t>();
@@ -460,6 +460,13 @@ cudnnConvolutionDescriptor_t& runtime::gpu::CUDNNEmitter::get_cudnn_convolution_
         window_movement_strides_int[i] = static_cast<int>(window_movement_strides[i]);
         window_dilation_strides_int[i] = static_cast<int>(window_dilation_strides[i]);
         padding_int[i] = static_cast<int>(padding[i]);
+    }
+
+    if (padding.size() == 1)
+    {
+        window_movement_strides_int.push_back(1);
+        window_dilation_strides_int.push_back(1);
+        padding_int.push_back(0);
     }
 
     if (padding.size() == 2)
@@ -1688,20 +1695,26 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const cudnnPoolingMode_t& pool_
         {
             pool.reset(new gpu::primitive{
                 [=, &desc, &input_desc, &output_desc](void** inputs, void** outputs) {
+                    void* y = inputs[0];
+                    void* dy = inputs[0];
+                    void* x = inputs[0];
+                    if (pool_op == 0 || pool_op == 3)
+                    {
+                        y = inputs[2];
+                        dy = inputs[1];
+                        x = inputs[0];
+                    }
                     CUDNN_SAFE_CALL(cudnnPoolingBackward(*m_ctx->cudnn_handle,
                                                          desc,
                                                          alpha,
-                                                         // output (wrt maxpool) tensor
                                                          output_desc,
-                                                         inputs[2],
-                                                         // adjoint of output
+                                                         y,
                                                          output_desc,
-                                                         inputs[1],
-                                                         // input (wrt maxpool) tensor
+                                                         dy,
                                                          input_desc,
-                                                         inputs[0],
+                                                         x,
                                                          beta,
-                                                         // adjoint of input
+                                                         // adjoint of input (dx)
                                                          input_desc,
                                                          outputs[0]));
                     debug_sync();

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@
 
 #include <mkldnn.hpp>
 
+#include "cpu_backend_visibility.h"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/shape.hpp"
 
@@ -32,7 +33,7 @@ namespace ngraph
     {
         namespace cpu
         {
-            class LayoutDescriptor : public ngraph::descriptor::layout::TensorLayout
+            class CPU_BACKEND_API LayoutDescriptor : public ngraph::descriptor::layout::TensorLayout
             {
             public:
                 LayoutDescriptor(const ngraph::descriptor::Tensor& tv);

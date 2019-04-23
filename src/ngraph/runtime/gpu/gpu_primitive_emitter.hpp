@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@
 #include "ngraph/runtime/gpu/gpu_kernel_args.hpp"
 #include "ngraph/runtime/gpu/gpu_memory_manager.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
+#include "ngraph/runtime/gpu/host_emitter.hpp"
 
 namespace ngraph
 {
@@ -34,6 +35,7 @@ namespace ngraph
             public:
                 GPUPrimitiveEmitter();
                 GPUPrimitiveEmitter(const std::unique_ptr<GPURuntimeContext>& ctx);
+                std::unique_ptr<HostEmitter>& get_host_emitter();
                 std::unique_ptr<CUDAEmitter>& get_cuda_emitter();
                 std::unique_ptr<CUDNNEmitter>& get_cudnn_emitter();
                 std::unique_ptr<CUBLASEmitter>& get_cublas_emitter();
@@ -59,6 +61,7 @@ namespace ngraph
                 std::vector<std::unique_ptr<gpu::primitive>> m_managed_primitives;
                 GPUMemoryManager m_memory_manager;
                 std::shared_ptr<GPUHostParameters> m_host_parameters;
+                std::unique_ptr<HostEmitter> m_host_emitter;
                 std::unique_ptr<CUDAEmitter> m_cuda_emitter;
                 std::unique_ptr<CUDNNEmitter> m_cudnn_emitter;
                 std::unique_ptr<CUBLASEmitter> m_cublas_emitter;

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ namespace ngraph
         /// \param atol Absolute tolerance
         /// \returns true if shapes match and for all elements, |a_i-b_i| <= atol + rtol*|b_i|.
         template <typename T>
-        typename std::enable_if<std::is_signed<T>::value, ::testing::AssertionResult>::type
+        typename std::enable_if<std::is_floating_point<T>::value, ::testing::AssertionResult>::type
             all_close(const std::vector<T>& a,
                       const std::vector<T>& b,
                       T rtol = static_cast<T>(1e-5),
@@ -43,7 +43,10 @@ namespace ngraph
         {
             bool rc = true;
             ::testing::AssertionResult ar_fail = ::testing::AssertionFailure();
-            assert(a.size() == b.size());
+            if (a.size() != b.size())
+            {
+                throw std::invalid_argument("all_close: Argument vectors' sizes do not match");
+            }
             size_t count = 0;
             for (size_t i = 0; i < a.size(); ++i)
             {
@@ -70,7 +73,7 @@ namespace ngraph
         /// \param atol Absolute tolerance
         /// \returns true if shapes match and for all elements, |a_i-b_i| <= atol + rtol*|b_i|.
         template <typename T>
-        typename std::enable_if<std::is_unsigned<T>::value, ::testing::AssertionResult>::type
+        typename std::enable_if<std::is_integral<T>::value, ::testing::AssertionResult>::type
             all_close(const std::vector<T>& a,
                       const std::vector<T>& b,
                       T rtol = static_cast<T>(1e-5),
@@ -78,7 +81,10 @@ namespace ngraph
         {
             bool rc = true;
             ::testing::AssertionResult ar_fail = ::testing::AssertionFailure();
-            assert(a.size() == b.size());
+            if (a.size() != b.size())
+            {
+                throw std::invalid_argument("all_close: Argument vectors' sizes do not match");
+            }
             for (size_t i = 0; i < a.size(); ++i)
             {
                 T abs_diff = (a[i] > b[i]) ? (a[i] - b[i]) : (b[i] - a[i]);

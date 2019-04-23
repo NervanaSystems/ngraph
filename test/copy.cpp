@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -190,32 +190,6 @@ TEST(copy, floor)
     ASSERT_TRUE(check_unary<op::Floor>());
 }
 
-TEST(copy, FunctionCall)
-{
-    Shape shape{1};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C});
-
-    auto arg0 = make_shared<op::Parameter>(element::f32, shape);
-    auto arg1 = make_shared<op::Parameter>(element::f32, shape);
-    auto arg2 = make_shared<op::Parameter>(element::f32, shape);
-    auto node = make_shared<op::FunctionCall>(f, NodeVector{arg0, arg1, arg2});
-
-    NodeVector new_args{make_shared<op::Parameter>(element::f32, shape),
-                        make_shared<op::Parameter>(element::f32, shape),
-                        make_shared<op::Parameter>(element::f32, shape)};
-    auto new_node = node->copy_with_new_args(new_args);
-    auto node_cast = dynamic_pointer_cast<op::FunctionCall>(new_node);
-    ASSERT_NE(node_cast, nullptr);
-
-    ASSERT_TRUE(nullptr != new_node);
-    EXPECT_TRUE(new_args == new_node->get_arguments());
-    ASSERT_EQ(node_cast->get_functions().size(), 1);
-    EXPECT_NE(f, node_cast->get_functions()[0]);
-}
-
 TEST(copy, greater_eq)
 {
     ASSERT_TRUE(check_binary<op::GreaterEq>());
@@ -282,32 +256,6 @@ TEST(copy, parameter)
 TEST(copy, power)
 {
     ASSERT_TRUE(check_binary<op::Power>());
-}
-
-TEST(copy, reduce)
-{
-    Shape scalar_shape{};
-    auto A = make_shared<op::Parameter>(element::f32, scalar_shape);
-    auto B = make_shared<op::Parameter>(element::f32, scalar_shape);
-    auto f = make_shared<Function>(A + B, ParameterVector{A, B});
-
-    Shape shape{4, 3};
-    AxisSet axes{1};
-    auto arg0 = make_shared<op::Parameter>(element::f32, shape);
-    auto arg_init = make_shared<op::Parameter>(element::f32, scalar_shape);
-    NodeVector new_args{make_shared<op::Parameter>(element::f32, shape),
-                        make_shared<op::Parameter>(element::f32, scalar_shape)};
-
-    auto node = make_shared<op::Reduce>(arg0, arg_init, f, axes);
-    auto new_node = node->copy_with_new_args(new_args);
-    auto node_cast = dynamic_pointer_cast<op::Reduce>(new_node);
-    ASSERT_NE(node_cast, nullptr);
-
-    ASSERT_TRUE(nullptr != new_node);
-    EXPECT_TRUE(new_args == new_node->get_arguments());
-    ASSERT_EQ(node_cast->get_functions().size(), 1);
-    EXPECT_NE(f, node_cast->get_functions()[0]);
-    EXPECT_TRUE(axes == node_cast->get_reduction_axes());
 }
 
 TEST(copy, reshape)

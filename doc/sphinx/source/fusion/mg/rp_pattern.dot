@@ -1,9 +1,0 @@
-digraph G {
-    Label_0 -> Add_2
-    Constant_1 -> Add_2
-    Label_0 [shape=ellipse color=black]
-    Constant_1 [shape=ellipse color=black]
-    Add_2 [shape=ellipse color=black]
-}
-
-

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 #pragma once
 
 #include <cudnn.h>
+#include <memory>
 #include <vector>
 
 namespace ngraph
@@ -29,6 +30,7 @@ namespace ngraph
             void check_cuda_errors(CUresult err);
             void* create_gpu_buffer(size_t buffer_size, const void* data = nullptr);
             void free_gpu_buffer(void* buffer);
+            bool is_device_pointer(const void* ptr);
             void cuda_memcpyDtD(void* dst, const void* src, size_t buffer_size);
             void cuda_memcpyHtD(void* dst, const void* src, size_t buffer_size);
             void cuda_memcpyDtH(void* dst, const void* src, size_t buffer_size);
@@ -36,6 +38,12 @@ namespace ngraph
             std::pair<uint64_t, uint64_t> idiv_magic_u32(uint64_t max_numerator, uint64_t divisor);
             std::pair<uint64_t, uint64_t> idiv_magic_u64(uint64_t divisor);
             uint32_t idiv_ceil(int n, int d);
+
+            template <typename T, typename... Args>
+            std::unique_ptr<T> make_unique(Args&&... args)
+            {
+                return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+            }
 
             // This is commented out because it increases the compile time.
             // It should be moved to a debug header.

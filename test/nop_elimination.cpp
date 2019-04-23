@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,12 +31,10 @@ TEST(nop_elimination, eliminate_pad)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
-    Shape padding_below{0};
-    Shape padding_above{0};
-    Shape padding_interior{0};
-    auto f = make_shared<Function>(
-        make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
-        ParameterVector{A, B});
+    CoordinateDiff padding_below{0};
+    CoordinateDiff padding_above{0};
+    auto f = make_shared<Function>(make_shared<op::Pad>(A, B, padding_below, padding_above),
+                                   ParameterVector{A, B});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::NopElimination>();

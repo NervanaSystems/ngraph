@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -284,16 +284,29 @@ void random_init(ngraph::runtime::Tensor* tv, std::default_random_engine& engine
 }
 
 template <>
-void print_results(std::vector<char>& ref_data, std::vector<char>& actual_data, size_t max_results)
+string
+    get_results_str(std::vector<char>& ref_data, std::vector<char>& actual_data, size_t max_results)
 {
+    stringstream ss;
     size_t num_results = std::min(static_cast<size_t>(max_results), ref_data.size());
-    std::cout << "First " << num_results << " results";
+    ss << "First " << num_results << " results";
     for (size_t i = 0; i < num_results; ++i)
     {
-        std::cout << "\n"
-                  << std::setw(4) << i << " ref: " << std::setw(16) << std::left
-                  << static_cast<int>(ref_data[i]) << "  actual: " << std::setw(16) << std::left
-                  << static_cast<int>(actual_data[i]);
+        ss << "\n"
+           << std::setw(4) << i << " ref: " << std::setw(16) << std::left
+           << static_cast<int>(ref_data[i]) << "  actual: " << std::setw(16) << std::left
+           << static_cast<int>(actual_data[i]);
     }
-    std::cout << std::endl;
+    ss << "\n";
+
+    return ss.str();
+}
+
+std::shared_ptr<Function> make_function_from_file(const std::string& file_name)
+{
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, file_name);
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    return func;
 }

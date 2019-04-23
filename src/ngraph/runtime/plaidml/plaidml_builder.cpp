@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 #include <stdexcept>
 #include <utility>
 
+#include "ngraph/except.hpp"
 #include "ngraph/runtime/plaidml/plaidml_builder.hpp"
 #include "ngraph/runtime/plaidml/plaidml_logger.hpp"
 
@@ -467,6 +468,24 @@ ngraph::runtime::plaidml::builder::Input&&
     return std::move(*this);
 }
 
+void ngraph::runtime::plaidml::builder::Input::apply_transpose(const AxisVector& axes)
+{
+    if (axes.size() != m_dims.size())
+    {
+        throw ngraph_error{"Mismatched shape in input transposition"};
+    }
+
+    std::size_t idx = 0;
+    std::vector<std::string> dims(m_dims.size());
+    for (auto dim : m_dims)
+    {
+        dims[axes[idx]] = dim;
+        idx++;
+    }
+    m_dims.clear();
+    m_dims.insert(m_dims.end(), dims.begin(), dims.end());
+}
+
 ngraph::runtime::plaidml::builder::Output::Output(std::string name)
     : m_name{std::move(name)}
 {
@@ -611,6 +630,28 @@ ngraph::runtime::plaidml::builder::ContractionOutput&&
     return std::move(*this);
 }
 
+void ngraph::runtime::plaidml::builder::ContractionOutput::apply_transpose(const AxisVector& axes)
+{
+    if (axes.size() != m_dims.size() || axes.size() != m_indices.size())
+    {
+        throw ngraph_error{"Mismatched shape in contraction output transposition"};
+    }
+
+    std::vector<std::string> dims{m_dims.begin(), m_dims.end()};
+    m_dims.clear();
+    for (auto idx : axes)
+    {
+        m_dims.emplace_back(dims[idx]);
+    }
+
+    std::vector<std::string> indices{m_indices.begin(), m_indices.end()};
+    m_indices.clear();
+    for (auto idx : axes)
+    {
+        m_indices.emplace_back(indices[idx]);
+    }
+}
+
 ngraph::runtime::plaidml::builder::ContractionInput&
     ngraph::runtime::plaidml::builder::ContractionInput::add_indices(std::string prefix,
                                                                      std::size_t first,
@@ -673,6 +714,24 @@ ngraph::runtime::plaidml::builder::ContractionInput&&
 {
     m_indices.insert(m_indices.end(), s.begin(), s.end());
     return std::move(*this);
+}
+
+void ngraph::runtime::plaidml::builder::ContractionInput::apply_transpose(const AxisVector& axes)
+{
+    if (axes.size() != m_indices.size())
+    {
+        throw ngraph_error{"Mismatched shape in contraction input transposition"};
+    }
+
+    std::size_t idx = 0;
+    std::vector<std::string> indices(m_indices.size());
+    for (auto dim : m_indices)
+    {
+        indices[axes[idx]] = dim;
+        idx++;
+    }
+    m_indices.clear();
+    m_indices.insert(m_indices.end(), indices.begin(), indices.end());
 }
 
 ngraph::runtime::plaidml::builder::UnaryContraction::UnaryContraction(std::string agg_op)

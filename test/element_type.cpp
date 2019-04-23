@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,46 +43,6 @@ TEST(element_type, mapable)
     std::map<element::Type, std::string> test_map;
 
     test_map.insert({element::f32, "float"});
-}
-
-TEST(element_type, size)
-{
-    {
-        element::Type t1{1, false, false, false, ""};
-        EXPECT_EQ(1, t1.size());
-    }
-    {
-        element::Type t1{2, false, false, false, ""};
-        EXPECT_EQ(1, t1.size());
-    }
-    {
-        element::Type t1{3, false, false, false, ""};
-        EXPECT_EQ(1, t1.size());
-    }
-    {
-        element::Type t1{4, false, false, false, ""};
-        EXPECT_EQ(1, t1.size());
-    }
-    {
-        element::Type t1{5, false, false, false, ""};
-        EXPECT_EQ(1, t1.size());
-    }
-    {
-        element::Type t1{6, false, false, false, ""};
-        EXPECT_EQ(1, t1.size());
-    }
-    {
-        element::Type t1{7, false, false, false, ""};
-        EXPECT_EQ(1, t1.size());
-    }
-    {
-        element::Type t1{8, false, false, false, ""};
-        EXPECT_EQ(1, t1.size());
-    }
-    {
-        element::Type t1{9, false, false, false, ""};
-        EXPECT_EQ(2, t1.size());
-    }
 }
 
 TEST(element_type, merge_both_dynamic)

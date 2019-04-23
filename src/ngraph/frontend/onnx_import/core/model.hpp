@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -60,6 +60,15 @@ namespace ngraph
             /// \brief Check availability of operator base on NodeProto.
             /// \return `true` if the operator is available, otherwise it returns `false`.
             bool is_operator_available(const onnx::NodeProto& node_proto) const;
+
+            /// \brief      Enable operators from provided domain to use by this model.
+            ///
+            /// \note       This function makes visible all currently registered in provided domain
+            ///             operators for use in this model.
+            ///
+            /// \param[in]  domain  The domain name.
+            ///
+            void enable_opset_domain(const std::string& domain);
 
         private:
             const onnx::ModelProto* m_model_proto;

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -129,13 +129,4 @@ std::string ngraph::runtime::plaidml::tile_converter(const std::string& tensor_n
         return tensor_name;
     }
     return tile_converter(tensor_name, to_plaidml(element_type));
-}
-
-vp::variable ngraph::runtime::plaidml::plaidml_logical_to_data(vp::variable var, bool debug)
-{
-    return builder::Function{"logicalToData", debug}
-        .add(builder::Input{var, "I"})
-        .add(builder::Output{"O"})
-        .add(builder::Elementwise{"O", "as_int(I ? 1 : 0, 8)"})
-        .finalize();
 }

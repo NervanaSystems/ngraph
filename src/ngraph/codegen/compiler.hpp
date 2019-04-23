@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -78,7 +78,7 @@ public:
     bool is_debuginfo_enabled() { return m_debuginfo_enabled; }
     void set_precompiled_header_source(const std::string& source);
     const std::string& get_precompiled_header_source() const;
-    void add_header_search_path(const std::string& path);
+    void add_header_search_path(const std::string& path, bool check_path = false);
 
     std::unique_ptr<ngraph::codegen::Module>
         compile(std::unique_ptr<clang::CodeGenAction>& compiler_action, const std::string& source);
@@ -93,10 +93,15 @@ private:
     std::string m_source_name;
     std::vector<std::string> m_extra_search_path_list;
     std::string m_precompiled_header_source;
+#ifdef _WIN32
+    std::vector<std::string> m_header_strings;
+#endif
 
     bool is_version_number(const std::string& path);
+    int full_version_number(const std::string& path, const std::string& gpp_ver);
     std::string find_header_version(const std::string& path);
     std::string find_os_specific_path(const std::string& path);
+    std::string find_rh_devtoolset_path();
     void configure_search_path();
     void load_headers_from_resource();
 };

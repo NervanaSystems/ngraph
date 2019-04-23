@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,8 +21,7 @@ if (NGRAPH_GPUH_ENABLE)
             VERSION ${NGRAPH_VERSION}
             SOVERSION ${NGRAPH_API_VERSION})
     endif()
-    target_link_libraries(gpuh_backend PUBLIC ngraph)
-    set_target_properties(gpuh_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+    target_link_libraries(gpuh_backend PUBLIC ngraph hybrid_base gpu_backend)
 
     install(TARGETS gpuh_backend
         LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"

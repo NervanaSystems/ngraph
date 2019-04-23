@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,6 +33,16 @@ namespace ngraph
             template <typename T, typename U>
             static bool compare_max(const std::tuple<T, U>& a, const std::tuple<T, U>& b)
             {
+// this is intentional to be able to compare floats directly
+// without using relative or absolute tolerance
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wfloat-equal"
+                if (std::get<0>(a) == std::get<0>(b))
+                {
+                    return std::get<1>(a) < std::get<1>(b);
+                }
+#pragma clang diagnostic pop
+
                 return a > b;
             }
             template <typename T, typename U>

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -174,7 +174,8 @@ namespace ngraph
                                            std::numeric_limits<uint8_t>::max() *
                                                std::numeric_limits<int8_t>::max());
 
-                return range / (max_abs_input_range * max_abs_filter_range);
+                // Inverting the scale calculation here as the Quantize op passes scale as 1/scale.
+                return (max_abs_input_range * max_abs_filter_range) / range;
             }
 
             std::shared_ptr<Node> get_sum_scale(std::shared_ptr<Node> min_freezed_output_conv_1,
@@ -248,6 +249,74 @@ namespace ngraph
 
                 return max_abs_range / target_range;
             }
-        }
-    }
-}
+
+            void
+                check_concat(const NodeVector& args, const NodeVector& mins, const NodeVector& maxs)
+            {
+                auto size = args.size();
+                if (size != mins.size() || size != maxs.size())
+                {
+                    throw ngraph_error("Min and Max node vectors must be of same length");
+                }
+                for (size_t i = 0; i < size; i++)
+                {
+                    auto min = mins[i];
+                    auto max = maxs[i];
+                    auto type = min->get_element_type();
+                    if (type != max->get_element_type())
+                    {
+                        throw ngraph_error("check_concat: min and max must have same type");
+                    }
+
+                    if (min->get_shape() != Shape{1} || max->get_shape() != Shape{1})
+                    {
+                        throw ngraph_error("check_concat: min/max shape not Shape{1}: " +
+                                           vector_to_string(min->get_shape()) +
+                                           vector_to_string(max->get_shape()));
+                    }
+                }
+            }
+
+            std::shared_ptr<Node> get_dot_scale(std::shared_ptr<Node> min_input,
+                                                std::shared_ptr<Node> max_input,
+                                                std::shared_ptr<Node> min_filter,
+                                                std::shared_ptr<Node> max_filter,
+                                                std::shared_ptr<Node> min_freezed_output,
+                                                std::shared_ptr<Node> max_freezed_output,
+                                                const ngraph::element::Type& input_type,
+                                                const ngraph::element::Type& output_type,
+                                                const bool requantize = true)
+            {
+                auto type = min_input->get_element_type();
+                if (type != max_input->get_element_type() ||
+                    type != min_filter->get_element_type() ||
+                    type != max_filter->get_element_type() ||
+                    type != min_freezed_output->get_element_type() ||
+                    type != max_freezed_output->get_element_type())
+                {
+                    throw ngraph_error("get_dot_scale: min and max must have same type");
+                }
+
+                auto shape = min_input->get_shape();
+                if (shape != max_input->get_shape() || shape != min_filter->get_shape() ||
+                    shape != max_filter->get_shape() || shape != min_freezed_output->get_shape() ||
+                    shape != max_freezed_output->get_shape())
+                {
+                    throw ngraph_error("get_dot_scale: min and max must have same shape");
+                }
+                auto data_scale = get_scale(min_input, max_input, input_type);
+                auto weight_scale = get_scale(min_filter, max_filter, element::i8);
+                auto out_scale = get_scale(min_freezed_output, max_freezed_output, output_type);
+                if (requantize)
+                {
+                    return data_scale * weight_scale / out_scale;
+                }
+                else
+                {
+                    return data_scale * weight_scale;
+                }
+            }
+
+        } // namespace quantization_util
+    }     // namespace builder
+} // namespace ngraph

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,12 +16,14 @@
 
 #include <memory>
 
+#include "ngraph/builder/make_constant.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/add.hpp"
-#include "ngraph/op/constant.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/greater.hpp"
 #include "ngraph/op/log.hpp"
-#include "utils/broadcasting.hpp"
+#include "ngraph/op/negative.hpp"
+#include "ngraph/op/select.hpp"
 
 #include "softplus.hpp"
 
@@ -37,12 +39,31 @@ namespace ngraph
                 {
                     auto data = node.get_ng_inputs().at(0);
 
-                    std::shared_ptr<ngraph::Node> one_node = std::make_shared<ngraph::op::Constant>(
-                        data->get_element_type(), Shape{}, std::vector<double>{1});
-                    one_node = make_broadcast_node(one_node, data->get_shape());
+                    std::shared_ptr<ngraph::Node> zero_node =
+                        builder::make_constant(data->get_element_type(), data->get_shape(), 0.f);
+                    std::shared_ptr<ngraph::Node> one_node =
+                        builder::make_constant(data->get_element_type(), data->get_shape(), 1.f);
 
-                    return {std::make_shared<ngraph::op::Log>(
-                        std::make_shared<ngraph::op::Exp>(data) + one_node)};
+                    std::shared_ptr<ngraph::Node> positive_val_node =
+                        data + std::make_shared<ngraph::op::Log>(
+                                   std::make_shared<ngraph::op::Exp>(
+                                       std::make_shared<ngraph::op::Negative>(data)) +
+                                   one_node);
+
+                    std::shared_ptr<ngraph::Node> negative_val_node =
+                        std::make_shared<ngraph::op::Log>(std::make_shared<ngraph::op::Exp>(data) +
+                                                          one_node);
+
+                    std::shared_ptr<ngraph::Node> condition_node =
+                        std::make_shared<ngraph::op::Greater>(data, zero_node);
+
+                    //
+                    // This equation represents:
+                    //     x + log(exp(-x) + 1) - for x > 0; to manage exponent overflow,
+                    //     log(exp(x) + 1)      - elsewhere.
+                    //
+                    return {std::make_shared<ngraph::op::Select>(
+                        condition_node, positive_val_node, negative_val_node)};
                 }
 
             } // namespace set_1

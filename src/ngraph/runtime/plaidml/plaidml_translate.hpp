@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -46,9 +46,6 @@ namespace ngraph
 
             std::string tile_converter(const std::string& tensor_name,
                                        const ngraph::element::Type& element_type);
-
-            vertexai::plaidml::variable plaidml_logical_to_data(vertexai::plaidml::variable var,
-                                                                bool debug);
         }
     }
 }

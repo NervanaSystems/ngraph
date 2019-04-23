@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
+#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -24,6 +25,7 @@ runtime::cpu::op::ConvertLayout::ConvertLayout(
     const shared_ptr<Node>& arg, const shared_ptr<runtime::cpu::LayoutDescriptor>& layout)
     : ConvertLayout(arg, 0, layout)
 {
+    runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(this);
 }
 
 shared_ptr<Node>
@@ -44,6 +46,7 @@ runtime::cpu::op::ConvertLayout::ConvertLayout(
     , arg_output_index(output_index)
     , output_layout(layout)
 {
+    runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(this);
     constructor_validate_and_infer_types();
 }
 

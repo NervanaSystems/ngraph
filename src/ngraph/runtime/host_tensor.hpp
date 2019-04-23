@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 
 #include <memory>
 
+#include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/type/element_type.hpp"
 
@@ -25,8 +26,6 @@ namespace ngraph
 {
     namespace runtime
     {
-        static size_t alignment = 64;
-
         class HostTensor;
     }
 }
@@ -36,11 +35,20 @@ class ngraph::runtime::HostTensor : public ngraph::runtime::Tensor
 public:
     HostTensor(const ngraph::element::Type& element_type,
                const Shape& shape,
-               const std::string& name = "external");
+               const std::string& name = "external",
+               const Backend* parent = nullptr);
     HostTensor(const ngraph::element::Type& element_type,
                const Shape& shape,
                void* memory_pointer,
-               const std::string& name = "external");
+               const std::string& name = "external",
+               const Backend* parent = nullptr);
+    HostTensor(const ngraph::element::Type& element_type,
+               const Shape& shape,
+               const Backend* parent);
+    HostTensor(const ngraph::element::Type& element_type,
+               const Shape& shape,
+               void* memory_pointer,
+               const Backend* parent);
     virtual ~HostTensor() override;
 
     char* get_data_ptr();

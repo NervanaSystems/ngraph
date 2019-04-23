@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -123,7 +123,7 @@ unique_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
 static string find_my_file()
 {
 #ifdef _WIN32
-    HMODULE hModule = GetModuleHandleW(NULL);
+    HMODULE hModule = GetModuleHandleW(L"ngraph.dll");
     WCHAR wpath[MAX_PATH];
     GetModuleFileNameW(hModule, wpath, MAX_PATH);
     wstring ws(wpath);
@@ -157,6 +157,7 @@ DL_HANDLE runtime::BackendManager::open_shared_library(string type)
     string my_directory = file_util::get_directory(find_my_file());
     string library_path = file_util::path_join(my_directory, library_name);
 #ifdef _WIN32
+    SetDllDirectory((LPCSTR)my_directory.c_str());
     handle = LoadLibrary(library_path.c_str());
 #else
     handle = dlopen(library_path.c_str(), RTLD_NOW | RTLD_GLOBAL);

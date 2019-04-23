@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ namespace ngraph
         public:
             /// \brief Constructs an "any" reduction operation.
             ///
-            /// \param arg The tensor view to be reduced.
+            /// \param arg The tensor to be reduced.
             /// \param reduction_axes The axis positions (0-based) to be eliminated.
             Any(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes);
 

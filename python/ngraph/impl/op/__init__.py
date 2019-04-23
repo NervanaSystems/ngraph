@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -56,7 +56,7 @@ from _pyngraph.op import Constant
 """ Retrieve Constant inner data.
 
     Internally uses PyBind11 Numpy's buffer protocol.
-    
+
     :return Numpy array containing internally stored constant data.
 """
 Constant.get_data = lambda self: np.array(self, copy=True)
@@ -72,7 +72,6 @@ from _pyngraph.op import Dot
 from _pyngraph.op import Equal
 from _pyngraph.op import Exp
 from _pyngraph.op import Floor
-from _pyngraph.op import FunctionCall
 from _pyngraph.op import GetOutputElement
 from _pyngraph.op import Greater
 from _pyngraph.op import GreaterEq
@@ -97,7 +96,6 @@ from _pyngraph.op import Pad
 from _pyngraph.op import Parameter
 from _pyngraph.op import Power
 from _pyngraph.op import Product
-from _pyngraph.op import Reduce
 from _pyngraph.op import Relu
 from _pyngraph.op import ReluBackprop
 from _pyngraph.op import ReplaceSlice

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include <algorithm>
-#include <cassert>
 #include <deque>
 #include <forward_list>
 #include <iomanip>
@@ -23,6 +22,7 @@
 #include <numeric>
 #include <unordered_set>
 
+#include "ngraph/coordinate_diff.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
@@ -160,24 +160,23 @@ size_t ngraph::hash_combine(const std::vector<size_t>& list)
     return seed;
 }
 
-void* ngraph::aligned_alloc(size_t alignment, size_t size)
+void* ngraph::ngraph_malloc(size_t size)
 {
-#ifdef __APPLE__
-    return new uint64_t[round_up(size, sizeof(uint64_t)) / sizeof(uint64_t)];
-#elif defined _WIN32
-    return new uint64_t[round_up(size, sizeof(uint64_t)) / sizeof(uint64_t)];
-#else
-    return ::aligned_alloc(alignment, size);
-#endif
+    auto ptr = malloc(size);
+    if (size != 0 && !ptr)
+    {
+        NGRAPH_ERR << "malloc failed to allocate memory of size " << size;
+        throw std::bad_alloc();
+    }
+    return ptr;
 }
 
-void ngraph::aligned_free(void* p)
+void ngraph::ngraph_free(void* ptr)
 {
-#ifdef __APPLE__
-    delete[] reinterpret_cast<uint64_t*>(p);
-#else
-    free(p);
-#endif
+    if (ptr)
+    {
+        free(ptr);
+    }
 }
 
 size_t ngraph::round_up(size_t size, size_t alignment)
@@ -440,7 +439,7 @@ void ngraph::check_fp_values_isnan(const char* name, const float* array, size_t 
 {
     for (size_t i = 0; i < n; i++)
     {
-        if (std::isinf(array[i]))
+        if (std::isnan(array[i]))
         {
             throw std::runtime_error("Discovered NaN in '" + string(name) + "'");
         }
@@ -451,7 +450,7 @@ void ngraph::check_fp_values_isnan(const char* name, const double* array, size_t
 {
     for (size_t i = 0; i < n; i++)
     {
-        if (std::isinf(array[i]))
+        if (std::isnan(array[i]))
         {
             throw std::runtime_error("Discovered NaN in '" + string(name) + "'");
         }
@@ -478,6 +477,13 @@ T ngraph::apply_permutation(T input, AxisVector order)
 
 template AxisVector ngraph::apply_permutation<AxisVector>(AxisVector input, AxisVector order);
 template Shape ngraph::apply_permutation<Shape>(Shape input, AxisVector order);
+template ngraph::Coordinate ngraph::apply_permutation<ngraph::Coordinate>(ngraph::Coordinate input,
+                                                                          ngraph::AxisVector order);
+template ngraph::CoordinateDiff
+    ngraph::apply_permutation<ngraph::CoordinateDiff>(ngraph::CoordinateDiff input,
+                                                      ngraph::AxisVector order);
+template ngraph::Strides ngraph::apply_permutation<ngraph::Strides>(ngraph::Strides input,
+                                                                    ngraph::AxisVector order);
 
 AxisVector ngraph::get_default_order(const Shape& shape)
 {

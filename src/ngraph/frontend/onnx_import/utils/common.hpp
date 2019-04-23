@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <cmath>       // std::floor
+#include <cmath>       // std::floor, std::min
 #include <cstddef>     // std::size_t
 #include <iterator>    // std::begin, std::end
 #include <memory>      // std::shared_ptr, std::make_shared
@@ -24,8 +24,8 @@
 #include <vector>
 
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
-#include "utils/broadcasting.hpp"
 
 namespace ngraph
 {
@@ -125,7 +125,7 @@ namespace ngraph
                 if (data.size() == 1)
                 {
                     node = std::make_shared<ngraph::op::Constant>(type, ngraph::Shape{}, data);
-                    node = make_broadcast_node(node, shape);
+                    node = ngraph::op::make_broadcast_node(node, shape);
                 }
                 else
                 {
@@ -133,6 +133,29 @@ namespace ngraph
                 }
 
                 return node;
+            }
+
+            /// \brief      Handle negative axis value.
+            ///
+            /// \param[in]  axis        The requested axis value.
+            /// \param[in]  tensor_dim  The corresponding tensor dimensionality.
+            ///
+            /// \tparam     T           Provided axis value type.
+            ///
+            /// \return     If negative axis, then return sum of tensor dimension and axis.
+            ///
+            template <typename T,
+                      typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
+            std::int64_t convert_negative_axis(T axis, std::size_t tensor_dim)
+            {
+                if (axis >= 0)
+                {
+                    return std::min(axis, static_cast<T>(tensor_dim));
+                }
+                else
+                {
+                    return static_cast<std::int64_t>(tensor_dim) + axis;
+                }
             }
 
         } // namespace  common

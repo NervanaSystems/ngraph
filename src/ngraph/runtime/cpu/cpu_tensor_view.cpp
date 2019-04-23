@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/shape.hpp"
+#include "ngraph/util.hpp"
 
 using namespace mkldnn;
 using namespace ngraph;
@@ -35,8 +36,9 @@ using namespace std;
 runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_type,
                                            const Shape& shape,
                                            void* memory_pointer,
-                                           const string& name)
-    : runtime::Tensor(std::make_shared<ngraph::descriptor::Tensor>(element_type, shape, name))
+                                           const runtime::Backend* parent)
+    : runtime::Tensor(std::make_shared<ngraph::descriptor::Tensor>(element_type, shape, "external"),
+                      parent)
     , buffer(nullptr)
     , aligned_buffer(nullptr)
 {
@@ -55,11 +57,7 @@ runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_
     else if (buffer_size > 0)
     {
         size_t allocation_size = buffer_size + BufferAlignment;
-        auto ptr = malloc(allocation_size);
-        if (!ptr)
-        {
-            throw ngraph_error("Error allocating CPU Tensor View memory");
-        }
+        auto ptr = ngraph_malloc(allocation_size);
         buffer = static_cast<char*>(ptr);
 
 // GCC major versions below 5 do not implement C++11 std::align
@@ -77,14 +75,14 @@ runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_
 
 runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_type,
                                            const Shape& shape,
-                                           const string& name)
-    : CPUTensorView(element_type, shape, nullptr, name)
+                                           const runtime::Backend* parent)
+    : CPUTensorView(element_type, shape, nullptr, parent)
 {
 }
 
 runtime::cpu::CPUTensorView::~CPUTensorView()
 {
-    free(buffer);
+    ngraph_free(buffer);
 }
 
 char* runtime::cpu::CPUTensorView::get_data_ptr()

@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,11 +19,11 @@ find_program(CLANG_FORMAT ${CLANG_FORMAT_FILENAME} PATHS ENV PATH)
 
 macro(STYLE_CHECK_FILE PATH)
     execute_process(COMMAND ${CLANG_FORMAT} -style=file -output-replacements-xml ${PATH}
-        OUTPUT_VARIABLE STYLE_CHECK_RESULT)
-        list(LENGTH STYLE_CHECK_RESULT RESULT_LENGTH)
-        if (RESULT_LENGTH GREATER 1)
-            list(APPEND ERROR_LIST ${PATH})
-        endif()
+        OUTPUT_VARIABLE STYLE_CHECK_RESULT
+    )
+    if("${STYLE_CHECK_RESULT}" MATCHES ".*<replacement .*")
+        list(APPEND ERROR_LIST ${PATH})
+    endif()
 endmacro()
 
 set(DIRECTORIES_OF_INTEREST

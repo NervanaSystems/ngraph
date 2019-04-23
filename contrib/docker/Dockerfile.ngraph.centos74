@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -62,7 +62,7 @@ RUN pip install breathe
 # need numpy to successfully build docs for python_api
 RUN pip install numpy
 
-# release notes need this markdown extension 
+# release notes need this markdown extension
 # RUN python3 -m pip install m2r
 
 

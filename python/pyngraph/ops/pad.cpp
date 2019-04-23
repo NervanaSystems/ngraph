@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 #include <pybind11/pybind11.h>
 
+#include "ngraph/coordinate_diff.hpp"
 #include "ngraph/op/pad.hpp"
-#include "ngraph/shape.hpp"
 #include "pyngraph/ops/pad.hpp"
 
 namespace py = pybind11;
@@ -28,7 +28,7 @@ void regclass_pyngraph_op_Pad(py::module m)
     pad.doc() = "ngraph.impl.op.Pad wraps ngraph::op::Pad";
     pad.def(py::init<const std::shared_ptr<ngraph::Node>&,
                      const std::shared_ptr<ngraph::Node>&,
-                     const ngraph::Shape&,
-                     const ngraph::Shape&,
-                     const ngraph::Shape&>());
+                     const ngraph::CoordinateDiff&,
+                     const ngraph::CoordinateDiff&,
+                     ngraph::op::PadMode>());
 }

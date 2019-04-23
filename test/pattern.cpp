@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,68 +47,9 @@
 using namespace ngraph;
 using namespace std;
 
-template <typename T>
-std::shared_ptr<Node> create_reduction(const std::shared_ptr<Node>& node,
-                                       const std::string& init_val,
-                                       const AxisSet& reduction_axes)
-{
-    const auto& et = node->get_element_type();
-    auto f_A = std::make_shared<op::Parameter>(et, Shape{});
-    auto f_B = std::make_shared<op::Parameter>(et, Shape{});
-    auto f = std::make_shared<Function>(std::make_shared<T>(f_A, f_B), ParameterVector{f_A, f_B});
-
-    auto init = std::make_shared<op::Constant>(et, Shape{}, std::vector<std::string>({init_val}));
-    return std::make_shared<op::Reduce>(node, init, f, reduction_axes);
-}
-
-std::shared_ptr<Node> xla_sum(const std::shared_ptr<Node>& node, const AxisSet& reduction_axes)
-{
-    return create_reduction<op::Add>(node, "0", reduction_axes);
-}
-
 static std::shared_ptr<Node> construct_constant_node(int n)
 {
     return op::Constant::create(element::i32, Shape{}, {n});
-}
-
-bool sum_predicate(std::shared_ptr<Node> gn)
-{
-    NGRAPH_DEBUG << "pred_v2 : looking at " << gn->get_name();
-    if (auto r = std::dynamic_pointer_cast<op::Reduce>(gn))
-    {
-        auto reducee = gn->get_argument(0);
-        auto reduce_constant = gn->get_argument(1);
-
-        if (!ngraph::is_zero(reduce_constant))
-        {
-            return false;
-        }
-
-        auto result = r->get_functions()[0]->get_result()->get_argument(0);
-        NGRAPH_DEBUG << "looking at function's result  " << result->get_name();
-        if (auto sum = std::dynamic_pointer_cast<op::Add>(result))
-        {
-            auto parm1 = std::dynamic_pointer_cast<op::Parameter>(sum->get_argument(0));
-            auto parm2 = std::dynamic_pointer_cast<op::Parameter>(sum->get_argument(1));
-
-            const auto parm_or_nil = [](std::shared_ptr<Node> p) {
-                return p ? p->get_name() : std::string("(nil)");
-            };
-            NGRAPH_DEBUG << "parm1 = " << parm_or_nil(parm1) << " , parm2 = " << parm_or_nil(parm2)
-                         << std::endl;
-            if (parm1 && parm2 && parm1 != parm2)
-            {
-                return true;
-            }
-        }
-    }
-
-    return false;
-}
-
-std::shared_ptr<pattern::op::Label> construct_sum_pattern() // for the sake of explicitness
-{
-    return std::make_shared<pattern::op::Label>(element::i32, Shape{}, sum_predicate);
 }
 
 static std::shared_ptr<pattern::op::Label> construct_variance_graph()
@@ -152,7 +93,7 @@ public:
         ngraph::pattern::graph_rewrite_callback callback = [pattern](pattern::Matcher& m) {
             NGRAPH_DEBUG << "In a callback for construct_multiply_by_one against "
                          << m.get_match_root()->get_name();
-            assert(m.get_match_root()->get_arguments().size() == 2);
+            NGRAPH_CHECK(m.get_match_root()->get_arguments().size() == 2);
 
             auto pattern_map = m.get_pattern_map();
 
@@ -198,7 +139,7 @@ public:
         auto callback = [pattern](pattern::Matcher& m) {
             NGRAPH_DEBUG << "In a callback for construct_add_zero against "
                          << m.get_match_root()->get_name();
-            assert(m.get_match_root()->get_arguments().size() == 2);
+            NGRAPH_CHECK(m.get_match_root()->get_arguments().size() == 2);
 
             auto pattern_map = m.get_pattern_map();
 
@@ -235,33 +176,11 @@ public:
         this->add_matcher(m);
     }
 
-    void construct_sum()
-    {
-        auto sum_pattern = construct_sum_pattern();
-
-        ngraph::pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
-            NGRAPH_DEBUG << "In a callback for construct_sum_pattern against "
-                         << m.get_match_root()->get_name();
-            auto reduce = std::dynamic_pointer_cast<op::Reduce>(m.get_match_root());
-            auto reducee = reduce->get_inputs().at(0).get_output().get_node();
-            NGRAPH_DEBUG << "reducee = " << reducee->get_name();
-            auto sum =
-                std::shared_ptr<ngraph::Node>(new op::Sum(reducee, reduce->get_reduction_axes()));
-
-            ngraph::replace_node(m.get_match_root(), sum);
-            return true;
-        };
-
-        auto m = make_shared<TestMatcher>(sum_pattern, callback);
-        this->add_matcher(m);
-    }
-
     TestGraphRewrite()
         : GraphRewrite()
     {
         construct_multiply_by_one();
         construct_add_zero();
-        construct_sum();
     }
 };
 
@@ -291,8 +210,8 @@ TEST(pattern, graph_rewrite)
                                             ParameterVector{a, b, c});
         pass_manager.run_passes(f);
 
-        ASSERT_TRUE(graph_a->get_output_inputs(0).empty());
-        ASSERT_TRUE(graph_b->get_output_inputs(0).empty());
+        ASSERT_TRUE(graph_a->output(0).get_target_inputs().empty());
+        ASSERT_TRUE(graph_b->output(0).get_target_inputs().empty());
 
         auto expected = ngraph::NodeVector{a, b, a, c, b};
         ASSERT_TRUE(count_ops_of_type<op::Add>(f) == 0);
@@ -306,12 +225,13 @@ TEST(pattern, graph_rewrite)
         auto graph = b + sum;
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(1), a);
-        ASSERT_EQ(&graph->get_inputs().at(1).get_output(),
-                  &a->get_outputs().at(0)); // graph's input points to a's output
-        ASSERT_TRUE(sum->get_output_inputs(0)
-                        .empty()); // graph's input is removed from sum's output.get_inputs()
-        ASSERT_TRUE(a->get_outputs().at(0).get_inputs().count(
-            &graph->get_inputs().at(1))); // a's output feeds into graph's input
+        ASSERT_EQ(graph->input(1).get_source_output(),
+                  a->output(0)); // graph's input points to a's output
+        ASSERT_TRUE(sum->output(0)
+                        .get_target_inputs()
+                        .empty()); // graph's input is removed from sum's target inptus
+        ASSERT_TRUE(a->output(0).get_target_inputs().count(
+            graph->input(1))); // a's output feeds into graph's input
     }
 
     {
@@ -322,14 +242,13 @@ TEST(pattern, graph_rewrite)
         auto graph = b + mul;
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(1), a);
-        ASSERT_EQ(&graph->get_inputs().at(1).get_output(),
-                  &a->get_outputs().at(0)); // graph's input points to a's output
-        ASSERT_TRUE(mul->get_outputs()
-                        .at(0)
-                        .get_inputs()
-                        .empty()); // graph's input is removed from sum's output.get_inputs()
-        ASSERT_TRUE(a->get_outputs().at(0).get_inputs().count(
-            &graph->get_inputs().at(1))); // a's output feeds into graph's input
+        ASSERT_EQ(graph->input(1).get_source_output(),
+                  a->output(0)); // graph's input points to a's output
+        ASSERT_TRUE(mul->output(0)
+                        .get_target_inputs()
+                        .empty()); // graph's input is removed from sum's target inputs
+        ASSERT_TRUE(a->output(0).get_target_inputs().count(
+            graph->input(1))); // a's output feeds into graph's input
     }
 
     {
@@ -339,10 +258,10 @@ TEST(pattern, graph_rewrite)
         auto graph = ((((a * iconst1) * iconst1) * iconst1) * iconst1) + b;
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(0), a);
-        ASSERT_EQ(&graph->get_inputs().at(0).get_output(),
-                  &a->get_outputs().at(0)); // graph's input points to a's output
-        ASSERT_TRUE(a->get_outputs().at(0).get_inputs().count(
-            &graph->get_inputs().at(0))); // a's output feeds into graph's input
+        ASSERT_EQ(graph->input(0).get_source_output(),
+                  a->output(0)); // graph's input points to a's output
+        ASSERT_TRUE(a->output(0).get_target_inputs().count(
+            graph->input(0))); // a's output feeds into graph's input
     }
 
     {
@@ -353,10 +272,10 @@ TEST(pattern, graph_rewrite)
         auto graph = b + (iconst0 + ((a + iconst0) * iconst1));
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(1), a);
-        ASSERT_EQ(&graph->get_inputs().at(1).get_output(),
-                  &a->get_outputs().at(0)); // graph's input points to a's output
-        ASSERT_TRUE(a->get_outputs().at(0).get_inputs().count(
-            &graph->get_inputs().at(1))); // a's output feeds into graph's input
+        ASSERT_EQ(graph->input(1).get_source_output(),
+                  a->output(0)); // graph's input points to a's output
+        ASSERT_TRUE(a->output(0).get_target_inputs().count(
+            graph->input(1))); // a's output feeds into graph's input
     }
 
     {
@@ -366,27 +285,10 @@ TEST(pattern, graph_rewrite)
         auto graph = b + (iconst1 * (iconst1 * (iconst1 * (iconst1 * a))));
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(1), a);
-        ASSERT_EQ(&graph->get_inputs().at(1).get_output(),
-                  &a->get_outputs().at(0)); // graph's input points to a's output
-        ASSERT_TRUE(a->get_outputs().at(0).get_inputs().count(
-            &graph->get_inputs().at(1))); // a's output feeds into graph's input
-    }
-
-    // Sum rewrite
-    {
-        auto parm = make_shared<op::Parameter>(element::i32, Shape{2, 2});
-        auto axes = AxisSet{0, 1};
-        auto sum_graph = xla_sum(parm, axes);
-        auto innermost_abs = make_shared<op::Abs>(sum_graph);
-
-        auto nested_sum_graph = make_shared<op::Abs>(
-            make_shared<op::Abs>(make_shared<op::Abs>(make_shared<op::Abs>(innermost_abs))));
-
-        run_passes(pass_manager, nested_sum_graph, {parm});
-        auto sum = std::dynamic_pointer_cast<op::Sum>(innermost_abs->get_argument(0));
-        ASSERT_TRUE(sum);
-        ASSERT_EQ(sum->get_reduction_axes(), axes);
-        ASSERT_EQ(sum->get_argument(0), parm);
+        ASSERT_EQ(graph->input(1).get_source_output(),
+                  a->output(0)); // graph's input points to a's output
+        ASSERT_TRUE(a->output(0).get_target_inputs().count(
+            graph->input(1))); // a's output feeds into graph's input
     }
 }
 
@@ -544,7 +446,7 @@ TEST(pattern, matcher)
 
     // strict mode
     {
-        TestMatcher sm(nullptr, nullptr, "TestMatcher", true);
+        TestMatcher sm(nullptr, nullptr, "TestMatcher", pass::PassProperty::REGULAR_FUSIONS, true);
         // exact shape and type
         auto scalar_param = make_shared<op::Parameter>(element::i32, Shape{});
         auto label_dynamic_shape =
@@ -564,28 +466,6 @@ TEST(pattern, matcher)
             make_shared<pattern::op::Label>(element::dynamic, PartialShape{Dimension::dynamic()});
         ASSERT_TRUE(sm.match(label_dynamic_type, vector_param));
     }
-}
-
-TEST(pattern, sum)
-{
-    // Sum
-    TestMatcher n(nullptr);
-    auto reducee_const = std::make_shared<op::Constant>(
-        element::i32, Shape{2, 2}, std::vector<std::string>({"0", "0", "0", "0"}));
-    auto sum_graph = xla_sum(reducee_const, AxisSet{0, 1});
-
-    auto reduce_label = construct_sum_pattern();
-    ASSERT_TRUE(n.match(reduce_label, sum_graph));
-    ASSERT_EQ(n.get_pattern_map()[reduce_label], sum_graph);
-
-    auto nested_sum_graph = make_shared<op::Abs>(make_shared<op::Abs>(
-        make_shared<op::Abs>(make_shared<op::Abs>(make_shared<op::Abs>(sum_graph)))));
-
-    auto nested_reduce_label = make_shared<op::Abs>(make_shared<op::Abs>(
-        make_shared<op::Abs>(make_shared<op::Abs>(make_shared<op::Abs>(reduce_label)))));
-
-    ASSERT_TRUE(n.match(nested_reduce_label, nested_sum_graph));
-    ASSERT_EQ(n.get_pattern_map()[reduce_label], sum_graph);
 }
 
 TEST(pattern, mean)
@@ -721,8 +601,6 @@ public:
             std::make_shared<pattern::op::Label>(iconst0, nullptr, NodeVector{iconst0});
         auto rpattern = std::make_shared<pattern::op::Label>(element::i32, shape);
         auto padd = iconst_label + rpattern;
-
-        auto sum_pattern = construct_sum_pattern();
 
         ngraph::pattern::recurrent_graph_rewrite_callback callback = [iconst_label, rpattern](
             pattern::RecurrentMatcher& rm) {

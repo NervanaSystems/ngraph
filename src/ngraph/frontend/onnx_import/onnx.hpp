@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,6 +51,18 @@ namespace ngraph
         ///
         std::set<std::string> get_supported_operators(std::int64_t version,
                                                       const std::string& domain);
+
+        /// \brief      Determines whether ONNX operator is supported.
+        ///
+        /// \param[in]  op_name  The ONNX operator name.
+        /// \param[in]  version  The ONNX operator set version.
+        /// \param[in]  domain   The domain the ONNX operator is registered to.
+        ///
+        /// \return     True if operator is supported, False otherwise.
+        ///
+        bool is_operator_supported(const std::string& op_name,
+                                   std::int64_t version,
+                                   const std::string& domain = "ai.onnx");
 
         /// \brief Convert an ONNX model to nGraph function
         /// The function translated serialized ONNX model to nGraph function. The serialized

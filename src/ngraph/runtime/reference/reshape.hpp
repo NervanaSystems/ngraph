@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@
 
 #include <cmath>
 
-#include "ngraph/assertion.hpp"
 #include "ngraph/axis_vector.hpp"
+#include "ngraph/check.hpp"
 #include "ngraph/coordinate_transform.hpp"
 
 namespace ngraph
@@ -44,8 +44,8 @@ namespace ngraph
                     in_shape, in_start_corner, in_shape, in_strides, in_axis_order);
                 CoordinateTransform output_transform(out_shape);
 
-                NGRAPH_ASSERT(shape_size(input_transform.get_target_shape()) ==
-                              shape_size(output_transform.get_target_shape()));
+                NGRAPH_CHECK(shape_size(input_transform.get_target_shape()) ==
+                             shape_size(output_transform.get_target_shape()));
 
                 CoordinateTransform::Iterator output_it = output_transform.begin();
 

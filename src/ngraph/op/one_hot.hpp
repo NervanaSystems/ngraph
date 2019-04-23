@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,9 +33,9 @@ namespace ngraph
         ///
         /// ## Inputs
         ///
-        /// |       | Type                                                    | Description                                 |
-        /// | ----- | ------------------------------------------------------- | ------------------------------------------- |
-        /// | `arg` | \f$E[d_1,\dots,d_{m-1},d_{m+1},\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape and any element type. |
+        /// |       | Type                                                    | Description                                                    |
+        /// | ----- | ------------------------------------------------------- | -------------------------------------------------------------- |
+        /// | `arg` | \f$E[d_1,\dots,d_{m-1},d_{m+1},\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape and any non-floating point element type. |
         ///
         /// ## Output
         ///

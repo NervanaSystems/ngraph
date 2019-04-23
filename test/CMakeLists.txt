@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,10 @@
 # limitations under the License.
 # ******************************************************************************
 
+if(LINUX)
+    set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+endif()
+
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "4.0.0")
         # gtest has issues with this with v1.8.x
@@ -25,63 +29,75 @@ endif()
 set(SRC
     algebraic_simplification.cpp
     all_close_f.cpp
-    any_all_insertion.cpp
-    any_all_replacement.cpp
     assertion.cpp
+    bfloat16.cpp
     build_graph.cpp
     builder_autobroadcast.cpp
+    check.cpp
     constant_folding.cpp
+    concat_fusion.cpp
     control_dependencies.cpp
     coordinate.cpp
     copy.cpp
+    core.cpp
     cpio.cpp
     cse.cpp
     element_type.cpp
+    event_tracing.cpp
     file_util.cpp
-    graph_partition.cpp
     includes.cpp
-    inliner.cpp
     input_output_assign.cpp
     main.cpp
+    misc.cpp
+    node_input_output.cpp
     nop_elimination.cpp
     op.cpp
     partial_shape.cpp
     pass_liveness.cpp
     pass_manager.cpp
     pass_memory_layout.cpp
+    pass_shape_specialization.cpp
     pattern.cpp
+    provenance.cpp
     reshape_elimination.cpp
     reshape_sinking.cpp
     serialize.cpp
     shape.cpp
+    specialize_shapes.cpp
     tensor.cpp
     type_prop.cpp
     util.cpp
-    uuid.cpp
     zero_dim_tensor_elimination.cpp
 )
 
+if(NOT WIN32 AND NGRAPH_TOOLS_ENABLE)
+    list(APPEND SRC tools.cpp)
+endif()
+
+if(NGRAPH_DISTRIBUTED_ENABLE)
+    list(APPEND SRC distributed_setup.cpp)
+endif()
+
 set_source_files_properties(includes.cpp PROPERTIES COMPILE_DEFINITIONS
     NGRAPH_INCLUDES="${PROJECT_SOURCE_DIR}/src/ngraph")
-
-if (NGRAPH_ONNX_IMPORT_ENABLE)
-    list(APPEND SRC onnx_import.cpp)
-    if (NGRAPH_ONNXIFI_ENABLE)
-        list(APPEND SRC onnxifi.cpp onnxifi_span.cpp)
-    endif()
-endif()
 
 if (NGRAPH_INTERPRETER_ENABLE)
     list(APPEND SRC
         backend_debug_api.cpp
         builder.cpp
         backend_api.cpp)
+        if (NGRAPH_CPU_ENABLE)
+            list(APPEND SRC hybrid_backend.cpp)
+        endif()
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTERPRETER)
 endif()
 
 if (NGRAPH_CPU_ENABLE)
     list(APPEND SRC core_fusion.cpp builder_quantization.cpp)
     list(APPEND SRC backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_debugger.cpp)
+    if (NOT NGRAPH_DEX_ONLY)
+        list(APPEND SRC cpu_codegen.cpp)
+    endif()
     if (NGRAPH_HALIDE)
         list(APPEND SRC halide.cpp)
     endif()
@@ -89,7 +105,7 @@ if (NGRAPH_CPU_ENABLE)
 endif()
 
 if(NGRAPH_GPU_ENABLE)
-    list(APPEND SRC cudnn.cpp gpu_test.cpp gpu_fusion.cpp)
+    list(APPEND SRC gpu_test.cpp gpu_fusion.cpp)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GPU)
 endif()
 
@@ -103,6 +119,10 @@ endif()
 
 if (NGRAPH_PLAIDML_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} PlaidML)
+endif()
+
+if (NGRAPH_GENERIC_CPU_ENABLE)
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GCPU)
 endif()
 
 add_subdirectory(models)
@@ -119,14 +139,16 @@ set(MULTI_TEST_SRC
     autodiff.in.cpp
     backend_all.in.cpp
     backend_any.in.cpp
+    backend_api.in.cpp
     backend_binary_elementwise.in.cpp
     backend_broadcast.in.cpp
     backend_comparison.in.cpp
     backend_dot.in.cpp
     backend_embedding_lookup.in.cpp
+    backend_fused_op.in.cpp
+    backend_gather.in.cpp
     backend_one_hot.in.cpp
     backend_pool.in.cpp
-    backend_reduce.in.cpp
     backend_reshape.in.cpp
     backend_sum.in.cpp
     backend_topk.in.cpp
@@ -135,11 +157,25 @@ set(MULTI_TEST_SRC
     backend_unary_elementwise.in.cpp
     convolution_test.in.cpp
 )
+
 if(NGRAPH_DISTRIBUTED_ENABLE)
     list(APPEND MULTI_TEST_SRC distributed.in.cpp)
 endif()
+
 if (NGRAPH_CPU_ENABLE)
     list(APPEND MULTI_TEST_SRC backend_graph_comparison.in.cpp)
+endif()
+
+if (NGRAPH_ONNX_IMPORT_ENABLE)
+    list(APPEND MULTI_TEST_SRC
+            onnx/onnx_import.in.cpp
+            onnx/onnx_import_convpool.in.cpp
+            onnx/onnx_import_reshape.in.cpp
+            onnx/onnx_import_rnn.in.cpp
+            onnx/onnx_import_quant.in.cpp)
+    if (NGRAPH_ONNXIFI_ENABLE)
+        list(APPEND SRC onnx/onnxifi.cpp onnx/onnxifi_span.cpp)
+    endif()
 endif()
 
 foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})
@@ -179,8 +215,16 @@ if(NGRAPH_ADDRESS_SANITIZER)
 endif()
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
-    target_compile_definitions(unit-test PRIVATE NGRAPH_DISTRIBUTED)
-    target_link_libraries(unit-test PRIVATE libmlsl)
+    if(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
+        target_link_libraries(unit-test PRIVATE libmlsl)
+    elseif(NGRAPH_DISTRIBUTED_OMPI_ENABLE)
+        find_package(MPI REQUIRED)
+        target_include_directories(unit-test
+        SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+        target_link_libraries(unit-test PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+    else()
+            message(FATAL_ERROR "Distributed Library not supported/mentioned")
+    endif()
 endif()
 
 target_link_libraries(unit-test PRIVATE ngraph_test_util)
@@ -195,9 +239,16 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
 endif()
 
 if (NGRAPH_CPU_ENABLE)
-    # The INTERPRETER backend is required for graph_partition, convolution, and backwards unit tests
+    # The INTERPRETER backend is required for convolution, and backwards unit tests
     target_link_libraries(unit-test PRIVATE cpu_backend interpreter_backend)
     target_link_libraries(unit-test PRIVATE libmkldnn)
+endif()
+
+if (NGRAPH_TOOLS_ENABLE)
+    get_property(NBENCH_PATH TARGET nbench PROPERTY BINARY_DIR)
+    set(NBENCH "${NBENCH_PATH}/nbench")
+    target_compile_definitions(unit-test PRIVATE NBENCH_PATH="${NBENCH}")
+    add_dependencies(unit-test nbench)
 endif()
 
 if (NGRAPH_PLAIDML_ENABLE)
@@ -217,10 +268,6 @@ if (NGRAPH_INTERPRETER_ENABLE)
     target_link_libraries(unit-test PRIVATE interpreter_backend)
 endif()
 
-if (NGRAPH_HYBRID_ENABLE)
-    target_link_libraries(unit-test PRIVATE hybrid_backend)
-endif()
-
 if (NGRAPH_GPU_ENABLE)
     target_link_libraries(unit-test PRIVATE gpu_backend)
 endif()
@@ -238,10 +285,19 @@ if (NGRAPH_ONNXIFI_ENABLE)
     target_link_libraries(unit-test PRIVATE onnxifi-ngraph)
 endif()
 
-add_custom_target(unit-test-check
-    COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
-    DEPENDS unit-test
-)
+# If all the runtime libraries are installed into one location, that will make life easier.
+if (MSVS)
+    add_custom_target(unit-test-check
+        COMMAND set "PATH=${EXTERNAL_PROJECTS_ROOT}/src/ngraph/Release;${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/;${EXTERNAL_PROJECTS_ROOT}/mkl/src/ext_mkl/lib/;${EXTERNAL_PROJECTS_ROOT}/ext_tbb-prefix/src/ext_tbb/tbb2019_20181203oss/bin/intel64/vc14;%PATH%"
+        COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
+        DEPENDS unit-test
+    )
+else()
+    add_custom_target(unit-test-check
+        COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
+        DEPENDS unit-test
+    )
+endif()
 
 add_custom_target(check
     DEPENDS

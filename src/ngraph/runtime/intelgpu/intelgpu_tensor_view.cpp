@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,8 +28,9 @@ using namespace std;
 runtime::intelgpu::IntelGPUTensorView::IntelGPUTensorView(const element::Type& element_type,
                                                           const Shape& shape,
                                                           const cldnn::engine& backend_engine,
-                                                          void* memory_pointer)
-    : runtime::Tensor(make_shared<descriptor::Tensor>(element_type, shape, "external"))
+                                                          void* memory_pointer,
+                                                          const runtime::Backend* parent)
+    : runtime::Tensor(make_shared<descriptor::Tensor>(element_type, shape, "external"), parent)
 {
     const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(element_type, shape);
 

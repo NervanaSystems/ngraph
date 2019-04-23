@@ -1,5 +1,5 @@
 // INTEL CONFIDENTIAL
-// Copyright 2018 Intel Corporation All Rights Reserved.
+// Copyright 2018-2019 Intel Corporation All Rights Reserved.
 // The source code contained or described herein and all documents related to the
 // source code ("Material") are owned by Intel Corporation or its suppliers or
 // licensors. Title to the Material remains with Intel Corporation or its
@@ -56,10 +56,10 @@ def generateMap(Closure method, configurationMaps) {
     return executionMap
 }
 
-def createStage(String stageName, Closure method, configurationMaps) {
+def createStage(String stageName, Closure method, configurationMaps, force = false) {
     /**
     * Create pipeline stage.
-    * 
+    *
     * @param stageName Name of stage that will be create.
     * @param method Method that will be executed in each map(configuration).
     * @param configurationMaps Map of configuration that will be parallelized.
@@ -71,24 +71,41 @@ def createStage(String stageName, Closure method, configurationMaps) {
             configurationMaps[i]["stageName"] = stageName
         }
 
-        Closure genericBodyMethod = { configMap ->
-            def status = "SUCCESS"
-            try {
-                method(configMap)
-            } catch(e) {
-                status = "FAILURE"
-                throw e
-            } finally {
-                UTILS.setConfigurationStatus(configMap["stageName"], configMap["name"], status)
+        // Fail current stage If earlier stage got aborted or failed
+        // unless it's executed with force argument set to true
+        Closure genericBodyMethod = {}
+        if (!force && ["FAILURE", "ABORTED"].contains(currentBuild.result)) {
+            genericBodyMethod = { configMap ->
+                println("Skipping stage due to earlier stage ${currentBuild.result}")
+                setConfigurationStatus(configMap["stageName"], configMap["name"], currentBuild.result)
+                throw new Exception("Skipped due to ${currentBuild.result} in earlier stage")
+            }
+        }
+        else
+        {
+            genericBodyMethod = { configMap ->
+                def status = "SUCCESS"
+                try {
+                    method(configMap)
+                } catch(Exception e) {
+                    if (e.toString().contains("FlowInterruptedException")) {
+                        status = "ABORTED"
+                    } else {
+                        status = "FAILURE"
+                    }
+                    currentBuild.result = status
+                    throw e
+                } finally {
+                    setConfigurationStatus(configMap["stageName"], configMap["name"], status)
+                }
             }
         }
 
         try {
             def prepareEnvMap = generateMap(genericBodyMethod, configurationMaps)
             parallel prepareEnvMap
-        } catch(e) {
-            // Set result to ABORTED if exception contains exit code of a process interrupted by SIGTERM
-            if ("$e".contains("143")) {
+        } catch(Exception e) {
+            if (e.toString().contains("FlowInterruptedException")) {
                 currentBuild.result = "ABORTED"
             } else {
                 currentBuild.result = "FAILURE"
@@ -100,7 +117,7 @@ def createStage(String stageName, Closure method, configurationMaps) {
 def setConfigurationStatus(String stageName, String configurationName, String status) {
     /**
     * Set stage status.
-    * 
+    *
     * @param stageName The name of the stage in which the configuration is.
     * @param configurationName The name of the configuration whose status will be updated.
     * @param status Configuration status: SUCCESS or FAILURE.
@@ -108,7 +125,7 @@ def setConfigurationStatus(String stageName, String configurationName, String st
     if (!STAGES_STATUS_MAP.containsKey(stageName)) {
         STAGES_STATUS_MAP[stageName] = [:]
     }
-    if (["FAILURE", "SUCCESS"].contains(status.toUpperCase())) {
+    if (["FAILURE", "SUCCESS", "ABORTED"].contains(status.toUpperCase())) {
         STAGES_STATUS_MAP[stageName][configurationName] = status.toUpperCase()
     } else {
         throw new Exception("Not supported status name.")
@@ -120,7 +137,7 @@ def propagateStatus(String parentStageName, String parentConfigurationName) {
     * Popagate status in parent configuration fails.
     * This method will throw exeption "Propagating status of $parentStageName"
     * if parent configuration name status is FAILURE
-    * 
+    *
     * @param parentStageName The name of the stage in which the configuration is.
     * @param parentConfigurationName The name of the configuration whose status will be propagated.
     */

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -103,6 +103,12 @@ namespace ngraph
                 void convert_to_u64(void* input, void* output, size_t count, int arena)
                 {
                     convert<InputElementType, uint64_t>(input, output, count, arena);
+                }
+
+                template <typename InputElementType>
+                void convert_to_bool(void* input, void* output, size_t count, int arena)
+                {
+                    convert<InputElementType, bool>(input, output, count, arena);
                 }
             }
         }

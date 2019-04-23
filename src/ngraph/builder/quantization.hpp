@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,9 +20,12 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
+#include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
+#include "ngraph/op/experimental/quantized_dot.hpp"
+#include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/quantize.hpp"
 
@@ -42,6 +45,11 @@ namespace ngraph
                                                std::shared_ptr<Node> max,
                                                const ngraph::element::Type& type,
                                                const ngraph::AxisSet& axes);
+
+        std::shared_ptr<Node> ScaledQuantizedConcat(const NodeVector& args,
+                                                    size_t concatenation_axis,
+                                                    const NodeVector& mins,
+                                                    const NodeVector& maxes);
 
         std::shared_ptr<Node> ScaledQuantizedAvgPool(std::shared_ptr<Node> input,
                                                      const Shape& window_shape,
@@ -145,5 +153,29 @@ namespace ngraph
                                                     std::shared_ptr<Node> min_freezed_output_conv_2,
                                                     std::shared_ptr<Node> max_freezed_output_conv_2,
                                                     const bool with_relu);
-    }
-}
+
+        std::shared_ptr<Node> ScaledQuantizedDotBias(std::shared_ptr<Node> input,
+                                                     std::shared_ptr<Node> filters,
+                                                     std::shared_ptr<Node> bias,
+                                                     std::shared_ptr<Node> min_input,
+                                                     std::shared_ptr<Node> max_input,
+                                                     std::shared_ptr<Node> min_filter,
+                                                     std::shared_ptr<Node> max_filter,
+                                                     std::shared_ptr<Node> min_freezed_output,
+                                                     std::shared_ptr<Node> max_freezed_output,
+                                                     const bool requantize = true,
+                                                     const bool with_relu = false);
+
+        std::shared_ptr<Node> ScaledQuantizedDot(std::shared_ptr<Node> input,
+                                                 std::shared_ptr<Node> filters,
+                                                 std::shared_ptr<Node> min_input,
+                                                 std::shared_ptr<Node> max_input,
+                                                 std::shared_ptr<Node> min_filter,
+                                                 std::shared_ptr<Node> max_filter,
+                                                 std::shared_ptr<Node> min_freezed_output,
+                                                 std::shared_ptr<Node> max_freezed_output,
+                                                 const bool requantize = true,
+                                                 const bool with_relu = false);
+
+    } // namespace builder
+} // namespace ngraph

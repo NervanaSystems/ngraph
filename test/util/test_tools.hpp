@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,11 +17,13 @@
 #pragma once
 
 #include <exception>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <list>
 #include <memory>
 #include <random>
+#include <vector>
 
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/file_util.hpp"
@@ -38,6 +40,7 @@ namespace ngraph
 
 bool validate_list(const std::list<std::shared_ptr<ngraph::Node>>& nodes);
 std::shared_ptr<ngraph::Function> make_test_graph();
+std::shared_ptr<ngraph::Function> make_function_from_file(const std::string& file_name);
 
 template <typename T>
 void copy_data(std::shared_ptr<ngraph::runtime::Tensor> tv, const std::vector<T>& data)
@@ -126,26 +129,43 @@ void init_real_tv(ngraph::runtime::Tensor* tv, std::default_random_engine& engin
 
 void random_init(ngraph::runtime::Tensor* tv, std::default_random_engine& engine);
 
-template <typename T, typename T1 = T>
-std::vector<std::vector<T1>> execute(const std::shared_ptr<ngraph::Function>& function,
-                                     std::vector<std::vector<T>> args,
-                                     const std::string& backend_id)
+template <typename T1, typename T2>
+std::vector<std::shared_ptr<ngraph::runtime::Tensor>>
+    prepare_and_run(const std::shared_ptr<ngraph::Function>& function,
+                    std::vector<std::vector<T1>> t1args,
+                    std::vector<std::vector<T2>> t2args,
+                    const std::string& backend_id)
 {
     auto backend = ngraph::runtime::Backend::create(backend_id);
 
     auto parms = function->get_parameters();
 
-    if (parms.size() != args.size())
+    if (parms.size() != t1args.size() + t2args.size())
     {
         throw ngraph::ngraph_error("number of parameters and arguments don't match");
     }
 
-    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> arg_tensors(args.size());
-    for (size_t i = 0; i < args.size(); i++)
+    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> arg_tensors(t1args.size() +
+                                                                      t2args.size());
+
+    size_t total_arg_count = 0;
+    for (size_t i = 0; i < t1args.size(); i++)
     {
-        auto t = backend->create_tensor(parms.at(i)->get_element_type(), parms.at(i)->get_shape());
-        copy_data(t, args.at(i));
-        arg_tensors.at(i) = t;
+        auto t = backend->create_tensor(parms.at(total_arg_count)->get_element_type(),
+                                        parms.at(total_arg_count)->get_shape());
+        auto x = t1args.at(i);
+        copy_data(t, x);
+        arg_tensors.at(total_arg_count) = t;
+        total_arg_count++;
+    }
+
+    for (size_t i = 0; i < t2args.size(); i++)
+    {
+        auto t = backend->create_tensor(parms.at(total_arg_count)->get_element_type(),
+                                        parms.at(total_arg_count)->get_shape());
+        copy_data(t, t2args.at(i));
+        arg_tensors.at(total_arg_count) = t;
+        total_arg_count++;
     }
 
     auto results = function->get_results();
@@ -158,29 +178,98 @@ std::vector<std::vector<T1>> execute(const std::shared_ptr<ngraph::Function>& fu
     }
 
     auto handle = backend->compile(function);
-    backend->call_with_validate(handle, result_tensors, arg_tensors);
+    handle->call_with_validate(result_tensors, arg_tensors);
 
-    std::vector<std::vector<T1>> result_vectors;
+    return result_tensors;
+}
+
+template <typename T>
+std::vector<std::shared_ptr<ngraph::runtime::Tensor>>
+    prepare_and_run(const std::shared_ptr<ngraph::Function>& function,
+                    std::vector<std::vector<T>> args,
+                    const std::string& backend_id)
+{
+    std::vector<std::vector<T>> emptyargs;
+    return prepare_and_run<T, T>(function, args, emptyargs, backend_id);
+}
+
+template <typename TIN1, typename TIN2, typename TOUT>
+std::vector<std::vector<TOUT>> execute(const std::shared_ptr<ngraph::Function>& function,
+                                       std::vector<std::vector<TIN1>> t1args,
+                                       std::vector<std::vector<TIN2>> t2args,
+                                       const std::string& backend_id)
+{
+    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> result_tensors =
+        prepare_and_run(function, t1args, t2args, backend_id);
+
+    std::vector<std::vector<TOUT>> result_vectors;
     for (auto rt : result_tensors)
     {
-        result_vectors.push_back(read_vector<T1>(rt));
+        result_vectors.push_back(read_vector<TOUT>(rt));
     }
     return result_vectors;
 }
 
-template <typename T>
-void print_results(std::vector<T>& ref_data, std::vector<T>& actual_data, size_t max_results = 16)
+template <typename TIN, typename TOUT = TIN>
+std::vector<std::vector<TOUT>> execute(const std::shared_ptr<ngraph::Function>& function,
+                                       std::vector<std::vector<TIN>> args,
+                                       const std::string& backend_id)
 {
+    std::vector<std::vector<TIN>> emptyargs;
+    return execute<TIN, TIN, TOUT>(function, args, emptyargs, backend_id);
+}
+
+template <typename T>
+std::string
+    get_results_str(std::vector<T>& ref_data, std::vector<T>& actual_data, size_t max_results = 16)
+{
+    std::stringstream ss;
     size_t num_results = std::min(static_cast<size_t>(max_results), ref_data.size());
-    std::cout << "First " << num_results << " results";
+    ss << "First " << num_results << " results";
     for (size_t i = 0; i < num_results; ++i)
     {
-        std::cout << "\n"
-                  << std::setw(4) << i << " ref: " << std::setw(16) << std::left << ref_data[i]
-                  << "  actual: " << std::setw(16) << std::left << actual_data[i];
+        ss << "\n"
+           << std::setw(4) << i << " ref: " << std::setw(16) << std::left << ref_data[i]
+           << "  actual: " << std::setw(16) << std::left << actual_data[i];
     }
-    std::cout << std::endl;
+    ss << "\n";
+
+    return ss.str();
 }
 
 template <>
-void print_results(std::vector<char>& ref_data, std::vector<char>& actual_data, size_t max_results);
+std::string get_results_str(std::vector<char>& ref_data,
+                            std::vector<char>& actual_data,
+                            size_t max_results);
+
+/// \brief      Reads a binary file to a vector.
+///
+/// \param[in]  path  The path where the file is located.
+///
+/// \tparam     T     The type we want to interpret as the elements in binary file.
+///
+/// \return     Return vector of data read from input binary file.
+///
+template <typename T>
+std::vector<T> read_binary_file(const std::string& path)
+{
+    std::vector<T> file_content;
+    std::ifstream inputs_fs{path, std::ios::in | std::ios::binary};
+    if (!inputs_fs)
+    {
+        throw std::runtime_error("Failed to open the file: " + path);
+    }
+
+    inputs_fs.seekg(0, std::ios::end);
+    auto size = inputs_fs.tellg();
+    inputs_fs.seekg(0, std::ios::beg);
+    if (size % sizeof(T) != 0)
+    {
+        throw std::runtime_error(
+            "Error reading binary file content: Input file size (in bytes) "
+            "is not a multiple of requested data type size.");
+    }
+    file_content.resize(size / sizeof(T));
+    inputs_fs.read(reinterpret_cast<char*>(file_content.data()), size);
+    return file_content;
+}

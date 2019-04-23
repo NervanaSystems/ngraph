@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -134,7 +134,7 @@ CoordinateTransform::CoordinateTransform(const Shape& source_shape,
     for (size_t i = 0; i < m_n_axes; i++)
     {
         if (source_start_corner[i] >= padded_upper_bounds[i] &&
-            !(source_start_corner[i] == 0 && source_shape[i] == 0))
+            source_start_corner[i] != source_shape[i])
         {
             std::stringstream ss;
 

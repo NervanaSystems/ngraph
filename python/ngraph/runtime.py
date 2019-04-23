@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2018 Intel Corporation
+# Copyright 2018-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ from typing import List, Union
 import numpy as np
 
 from ngraph.impl import Function, Node, Shape, serialize, util
-from ngraph.impl.runtime import Backend, Tensor
+from ngraph.impl.runtime import Backend, Executable, Tensor
 from ngraph.utils.types import get_dtype, NumericData
 from ngraph.exceptions import UserInputError
 
@@ -43,7 +43,7 @@ class Runtime:
         self.backend = Backend.create(backend_name)
 
     def __repr__(self):  # type: () -> str
-        return '<Runtime: Backend=\'{}\'>'.format(self.backend_name)
+        return "<Runtime: Backend='{}'>".format(self.backend_name)
 
     def computation(self, node_or_function, *inputs):
         # type: (Union[Node, Function], *Node) -> 'Computation'
@@ -93,7 +93,7 @@ class Computation(object):
                 value = np.array(value)
             Computation._write_ndarray_to_tensor_view(value, tensor_view)
 
-        self.runtime.backend.call(self.handle, self.result_views, self.tensor_views)
+        self.handle.call(self.result_views, self.tensor_views)
 
         results = []
         for result_view in self.result_views:
@@ -120,7 +120,7 @@ class Computation(object):
         # type: (np.ndarray, Tensor) -> None
         tensor_view_dtype = get_dtype(tensor_view.element_type)
         if list(tensor_view.shape) != list(value.shape) and len(value.shape) > 0:
-            raise UserInputError('Provided tensor\'s shape: %s does not match the expected: %s.',
+            raise UserInputError("Provided tensor's shape: %s does not match the expected: %s.",
                                  list(value.shape), list(tensor_view.shape))
         if value.dtype != tensor_view_dtype:
             log.warning(

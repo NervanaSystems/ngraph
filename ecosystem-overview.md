@@ -16,7 +16,7 @@ framework-based complexity and [import it] to test or run on targeted and
 efficient backends with our user-friendly Python-based API.
 
 nGraph is also integrated as an execution provider for [ONNX Runtime], 
-which is the first publicably available inference engine for ONNX.
+which is the first publicly available inference engine for ONNX.
 
 The table below summarizes our current progress on supported frameworks. 
 If you are an architect of a framework wishing to take advantage of speed 

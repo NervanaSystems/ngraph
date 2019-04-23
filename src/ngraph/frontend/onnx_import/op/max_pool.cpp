@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/max_pool.hpp"
+#include "core/null_node.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/node_vector.hpp"
 #include "utils/convpool.hpp"
@@ -29,7 +30,9 @@ namespace ngraph
             {
                 NodeVector max_pool(const Node& node)
                 {
-                    return convpool::make_ng_pool<ngraph::op::MaxPool>(node);
+                    auto max_pool = convpool::make_ng_pool<ngraph::op::MaxPool>(node);
+                    max_pool.emplace_back(std::make_shared<NullNode>()); // Indices (optional)
+                    return max_pool;
                 }
 
             } // namespace set_1

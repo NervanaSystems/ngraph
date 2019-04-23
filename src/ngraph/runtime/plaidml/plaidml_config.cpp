@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -79,6 +79,7 @@ ngraph::runtime::plaidml::Config
     bool debug = false;
     std::size_t device_idx = 0;
     std::string eventlog_config;
+    std::string graphviz;
 
 #ifdef NGRAPH_DEBUG_ENABLE
     debug = true;
@@ -155,7 +156,7 @@ ngraph::runtime::plaidml::Config
             return (oname_end - oname_begin == len) && !strncmp(oname_begin, opt, len);
         };
 
-        auto oval_len = oval_end - oval_begin;
+        std::size_t oval_len = oval_end - oval_begin;
         bool has_oval = oval_begin != oname_end;
 
         // N.B. oval_len != 0 => has_oval, but there's no other relationship.
@@ -229,6 +230,17 @@ ngraph::runtime::plaidml::Config
             continue;
         }
 
+        // Check for visualization (GraphViz output)
+        if (is_opt("graphviz"))
+        {
+            if (!oval_len)
+            {
+                throw std::invalid_argument{"PlaidML graphviz requires a value"};
+            }
+            graphviz = std::string{oval_begin, oval_len};
+            continue;
+        }
+
         // Reject unknown options
         err = true;
     }
@@ -236,7 +248,7 @@ ngraph::runtime::plaidml::Config
     constexpr char help_text[] =
         "PlaidML Backend Specification: \""
         "PlaidML[:[device_index][,debug][,help][,list_devices][,"
-        "eventlog=<filename>]]\".  For example: \"PlaidML\", \""
+        "eventlog=<filename>][,graphviz=<filename>]]\".  For example: \"PlaidML\", \""
         "PlaidML:0,list_devices\"";
     if (err)
     {
@@ -268,6 +280,8 @@ ngraph::runtime::plaidml::Config
     result.dev = std::make_shared<vertexai::plaidml::device>(get_device(result.ctx, device_idx));
 
     result.debug = debug;
+
+    result.graphviz = graphviz;
 
     return result;
 }

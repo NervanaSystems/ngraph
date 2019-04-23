@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2018 Intel Corporation
+# Copyright 2018-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,10 +23,10 @@ from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Functio
 from ngraph.impl.op import Abs, Acos, Add, And, Asin, ArgMax, ArgMin, Atan, AvgPool, \
     BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Concat, Constant, Convert, \
     Convolution, ConvolutionBackpropData, Cos, Cosh, Divide, Dot, Equal, Exp, Floor, \
-    FunctionCall, GetOutputElement, Greater, GreaterEq, Less, LessEq, Log, LRN, Max, \
-    Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, Pad, \
-    Parameter, Product, Power, Reduce, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, \
-    Sin, Sinh, Slice, Softmax, Sqrt, Subtract, Sum, Tan, Tanh, TopK
+    GetOutputElement, Greater, GreaterEq, Less, LessEq, Log, LRN, Max, Maximum, MaxPool, \
+    Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Product, \
+    Power, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, Sin, Sinh, Slice, Softmax, \
+    Sqrt, Subtract, Sum, Tan, Tanh, TopK
 
 from typing import Callable, Iterable, List, Union
 
@@ -729,7 +729,7 @@ def min(node, reduction_axes=None, name=None):
     # type: (Node, Iterable[int], str) -> Node
     """Min-reduction operation on input tensor, eliminating the specified reduction axes.
 
-    :param node: The tensor we want to max-reduce.
+    :param node: The tensor we want to min-reduce.
     :param reduction_axes: The axes to eliminate through min operation.
     :param name: Optional name for output node.
     """
@@ -747,39 +747,6 @@ def prod(node, reduction_axes=None, name=None):
     :return: The new node performing product-reduction operation.
     """
     return Product(node, AxisSet(get_reduction_axes(node, reduction_axes)))
-
-
-@nameable_op
-def reduce(node,                 # type: Node
-           initial_value,        # type: ScalarData
-           reduction_function,   # type: Union[Callable, Function]
-           reduction_axes=None,  # type: List[int]
-           name=None,            # type: str
-           ):
-    # type: (...) -> Node
-    """Perform general tensor reduction operation.
-
-    :param node: The node providing data for reduction operation.
-    :param initial_value: The initial value for reduction operation.
-    :param reduction_function: The function performing binary reduction operation or a nGraph
-                           Function object. The operation must accept two nodes providing scalar
-                           operands and return a node which produces a scalar result.
-    :param reduction_axes: The list of axes indices to be reduced. Default to reduce all axes.
-    :param name: The new name for output node.
-    :return: The node performing reduction operation with provided reduction node.
-    """
-    if reduction_axes is None:
-        reduction_axes = list(range(len(node.shape)))
-    init_val_node = constant(initial_value)
-    if not isinstance(reduction_function, Function):
-        # wrap reduction function into Function object
-        param1 = Parameter(node.get_element_type(), Shape([]))
-        param2 = Parameter(node.get_element_type(), Shape([]))
-        reduction_operation = Function(NodeVector([reduction_function(param1, param2)]),
-                                       [param1, param2], 'reduction_operation')
-    else:
-        reduction_operation = reduction_function
-    return Reduce(node, init_val_node, reduction_operation, AxisSet(set(reduction_axes)))
 
 
 # reshape ops
@@ -999,12 +966,6 @@ def topk(data,       # type: Node
                 get_element_type(np.int32),
                 k,
                 cmax)
-
-
-@nameable_op
-def function_call(function_to_call, args):  # type: (Node, NodeVector) -> Node
-    """Return Function call op."""
-    return FunctionCall(function_to_call, args)
 
 
 @nameable_op

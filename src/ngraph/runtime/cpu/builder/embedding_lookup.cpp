@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <cstdint>
 #include <cstring>
 
 #include "ngraph/op/embedding_lookup.hpp"
@@ -33,13 +34,12 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::EmbeddingLookup)
             {
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
                 CPUKernelFunctor functor;
+                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
 
-                auto& arg0_tensor = tensor_data[args[0].get_name()];
-                auto& arg1_tensor = tensor_data[args[1].get_name()];
-                auto& out_tensor = tensor_data[out[0].get_name()];
                 if (out[0].get_element_type() != element::f32 &&
                     out[0].get_element_type() != element::f64)
                 {
@@ -72,6 +72,19 @@ namespace ngraph
 
                             ngraph::runtime::reference::embedding<float, int>(
                                 static_cast<int*>(arg0_tensor),
+                                static_cast<float*>(arg1_tensor),
+                                static_cast<float*>(out_tensor),
+                                element_count,
+                                in_shape);
+                        };
+                    }
+                    else if (index_element_type == element::i64)
+                    {
+                        functor = [&, in_shape, element_count](CPURuntimeContext* ctx,
+                                                               CPUExecutionContext* ectx) {
+
+                            ngraph::runtime::reference::embedding<float, int64_t>(
+                                static_cast<int64_t*>(arg0_tensor),
                                 static_cast<float*>(arg1_tensor),
                                 static_cast<float*>(out_tensor),
                                 element_count,
@@ -112,6 +125,19 @@ namespace ngraph
                                 in_shape);
                         };
                     }
+                    else if (index_element_type == element::i64)
+                    {
+                        functor = [&, in_shape, element_count](CPURuntimeContext* ctx,
+                                                               CPUExecutionContext* ectx) {
+
+                            ngraph::runtime::reference::embedding<int, int64_t>(
+                                static_cast<int64_t*>(arg0_tensor),
+                                static_cast<int*>(arg1_tensor),
+                                static_cast<int*>(out_tensor),
+                                element_count,
+                                in_shape);
+                        };
+                    }
                     else
                     {
                         throw ngraph_error(
@@ -120,7 +146,7 @@ namespace ngraph
                 }
                 else
                 {
-                    throw ngraph_error("Unsupported type in CPU Builder for ArgMin");
+                    throw ngraph_error("Unsupported type in CPU Builder for EmbeddingLookup");
                 }
 
                 functors.emplace_back(functor);

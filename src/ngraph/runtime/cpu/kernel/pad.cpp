@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,18 +29,18 @@ namespace ngraph
                                     float* pad_value,
                                     const Shape& input_shape,
                                     const Shape& output_shape,
-                                    const Shape& padding_below,
-                                    const Shape& padding_above,
+                                    const CoordinateDiff& padding_below,
+                                    const CoordinateDiff& padding_above,
                                     int arena)
                 {
-                    pad<float, 4>(input,
-                                  output,
-                                  pad_value,
-                                  input_shape,
-                                  output_shape,
-                                  padding_below,
-                                  padding_above,
-                                  arena);
+                    pad_and_slice<float, 4>(input,
+                                            output,
+                                            pad_value,
+                                            input_shape,
+                                            output_shape,
+                                            padding_below,
+                                            padding_above,
+                                            arena);
                 }
             }
         }

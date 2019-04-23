@@ -11,7 +11,7 @@ Pad
 Description
 ===========
 
- Adds edge and interior padding.
+ Adds edge padding.
 
 Inputs
 ------
@@ -28,15 +28,15 @@ Inputs
 Attributes
 ----------
 
-+-----------------------+-------------------------------------------------------+
-| Name                  | Description                                           |
-+=======================+=======================================================+
-| ``padding_below``     | Shape of padding added before ``arg``                 |
-+-----------------------+-------------------------------------------------------+
-| ``padding_above``     | Shape of padding added after ``arg``                  |
-+-----------------------+-------------------------------------------------------+
-| ``padding_interior``  | Shape of padding inserted between elements of ``arg`` |
-+-----------------------+-------------------------------------------------------+
++-----------------------+---------------------------------------------------------------------+
+| Name                  | Description                                                         |
++=======================+=====================================================================+
+| ``padding_below``     | Padding added before ``arg``. May be negative.                      |
++-----------------------+---------------------------------------------------------------------+
+| ``padding_above``     | Padding added after ``arg``. May be negative.                       |
++-----------------------+---------------------------------------------------------------------+
+| ``pad_mode``          | Padding mode: ``CONSTANT(default)``, ``EDGE`` or ``REFLECT``.       |
++-----------------------+---------------------------------------------------------------------+
 
 Outputs
 -------
@@ -65,8 +65,8 @@ ways:
 The number and position of elements to be inserted along a given axis
 is determined by three attributes:
 
-1. *the padding-below* ``Shape`` :math:`(p_1,\ldots,p_n)`,
-2. *the padding-above* ``Shape`` :math:`(q_1,\ldots,q_n)`, and
+1. *the padding-below* ``CoordinateDiff`` :math:`(p_1,\ldots,p_n)`,
+2. *the padding-above* ``CoordinateDiff`` :math:`(q_1,\ldots,q_n)`, and
 3. *the interior padding* ``Shape`` :math:`(r_1,\ldots,r_n)`.
 
 The output tensor will have the shape :math:`(d'_1,\dots,d'_n)` where

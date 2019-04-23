@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@
 #include "ngraph/runtime/plaidml/plaidml_compilation_cache.hpp"
 #include "ngraph/runtime/plaidml/plaidml_compiler.hpp"
 #include "ngraph/runtime/plaidml/plaidml_config.hpp"
+#include "ngraph/runtime/plaidml/plaidml_executable.hpp"
 
 namespace ngraph
 {
@@ -46,17 +47,17 @@ public:
     std::shared_ptr<ngraph::runtime::Tensor> create_tensor(
         const ngraph::element::Type& element_type, const Shape& shape, void* memory_pointer) final;
 
-    bool compile(std::shared_ptr<Function> func) final;
+    // N.B. The returned Executable will always be an instance of
+    //      PlaidML_Executable, and may be safely converted via static
+    //      casting.
+    std::shared_ptr<Executable> compile(std::shared_ptr<Function> func,
+                                        bool enable_performance_data = false) final;
 
-    bool call(std::shared_ptr<Function> func,
-              const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-              const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) final;
+    bool is_supported(const Node& node) const final;
 
-    void remove_compiled_function(std::shared_ptr<Function> func) final;
+    bool is_supported_property(const Property prop) const final;
 
-    void save(std::shared_ptr<Function> func,
-              const std::string& filename,
-              plaidml_file_format format);
+    void remove_compiled_function(std::shared_ptr<Executable> exec) final;
 
 private:
     Config m_config;

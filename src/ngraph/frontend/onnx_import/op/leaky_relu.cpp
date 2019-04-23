@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@
 
 #include "core/node.hpp"
 #include "leaky_relu.hpp"
-#include "utils/broadcasting.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 
 namespace ngraph
 {
@@ -48,7 +48,7 @@ namespace ngraph
                     std::shared_ptr<ngraph::Node> alpha_node =
                         std::make_shared<ngraph::op::Constant>(
                             data->get_element_type(), Shape{}, std::vector<double>{alpha});
-                    alpha_node = make_broadcast_node(alpha_node, data->get_shape());
+                    alpha_node = ngraph::op::make_broadcast_node(alpha_node, data->get_shape());
                     return {std::make_shared<ngraph::op::Maximum>(data * alpha_node, data)};
                 }
 

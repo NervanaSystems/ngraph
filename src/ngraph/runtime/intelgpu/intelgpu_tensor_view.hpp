@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,7 +38,8 @@ public:
     IntelGPUTensorView(const element::Type& element_type,
                        const Shape& shape,
                        const cldnn::engine& backend_engine,
-                       void* memory_pointer = nullptr);
+                       void* memory_pointer,
+                       const runtime::Backend* parent);
 
     /// \brief Write bytes directly into the tensor
     /// \param p Pointer to source of data
