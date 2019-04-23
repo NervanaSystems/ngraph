@@ -66,6 +66,7 @@ static string s_manifest = "${MANIFEST}";
 // clang-format off
 static ${DATA_TYPE} negative(${DATA_TYPE} x) { return -x;}
 static ${DATA_TYPE} sign(${DATA_TYPE} x) { return x==0 ? 0 : (x>0 ? 1 : -1);}
+// clang-format on
 NGRAPH_TYPED_TEST(abs, ngraph::op::Abs, -1e+10, 1e+10);
 NGRAPH_TYPED_TEST(acos, ngraph::op::Acos, -1e+10, 1e+10);
 NGRAPH_TYPED_TEST(asin, ngraph::op::Asin, -1e+10, 1e+10);
@@ -84,4 +85,3 @@ NGRAPH_TYPED_TEST(sinh, ngraph::op::Sinh, -1e+10, 1e+10);
 NGRAPH_TYPED_TEST(sqrt, ngraph::op::Sqrt, -1e+10, 1e+10);
 NGRAPH_TYPED_TEST(tan, ngraph::op::Tan, -1e+10, 1e+10);
 NGRAPH_TYPED_TEST(tanh, ngraph::op::Tanh, -1e+10, 1e+10);
-// clang-format on
