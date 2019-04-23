@@ -1166,7 +1166,10 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS(ZeroDimTensorElimination, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(LSTMFusion, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(RNNFusion, true, runtime::cpu::pass);
-    REGISTER_KNOBBED_PASS(AlgebraicSimplification, true, ngraph::pass);
+    REGISTER_KNOBBED_PASS_WITH_ARGS(AlgebraicSimplification,
+                                    true,
+                                    ngraph::pass,
+                                    ngraph::pass::PassProperty::REQUIRE_STATIC_SHAPE);
     REGISTER_KNOBBED_PASS(MultiLayerRNNFusion, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(BiDirectionalRnn, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(CPURnnMatFusion, true, runtime::cpu::pass);

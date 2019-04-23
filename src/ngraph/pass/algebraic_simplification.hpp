@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/pass/pass.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -29,7 +30,7 @@ namespace ngraph
 class ngraph::pass::AlgebraicSimplification : public FunctionPass
 {
 public:
-    AlgebraicSimplification()
+    AlgebraicSimplification(pass::PassPropertyMask property = pass::PassProperty::REGULAR_FUSIONS)
         : FunctionPass()
     {
     }
