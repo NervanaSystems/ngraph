@@ -14,39 +14,30 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <sstream>
-#include <string>
-#include <vector>
+#pragma once
 
-#include "gtest/gtest.h"
+#include <memory>
 
-#include "ngraph/uuid.hpp"
+#include "core/node.hpp"
+#include "ngraph/node_vector.hpp"
+#include "ngraph/op/erf.hpp"
 
-using namespace std;
-using namespace ngraph;
-
-TEST(uuid, zero)
+namespace ngraph
 {
-    uuid_type zero = uuid_type::zero();
+    namespace onnx_import
+    {
+        namespace op
+        {
+            namespace set_1
+            {
+                inline NodeVector erf(const Node& node)
+                {
+                    return {std::make_shared<ngraph::op::Erf>(node.get_ng_inputs().at(0))};
+                }
+            } // namespace set_1
 
-    stringstream ss;
-    ss << zero;
-    std::string expected = "00000000-0000-0000-0000-000000000000";
+        } //namespace op
 
-    EXPECT_STREQ(expected.c_str(), ss.str().c_str());
-}
+    } // namespace onnx_import
 
-TEST(uuid, eq)
-{
-    uuid_type z1 = uuid_type::zero();
-    uuid_type z2 = uuid_type::zero();
-    EXPECT_EQ(z1, z2);
-}
-
-TEST(uuid, ne)
-{
-    uuid_type u1;
-    uuid_type u2;
-
-    EXPECT_NE(u1, u2);
-}
+} // namespace ngraph

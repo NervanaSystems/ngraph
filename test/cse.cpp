@@ -306,3 +306,31 @@ TEST(CSE, constant)
     ASSERT_NE(abs0->get_argument(0), absf->get_argument(0));
     ASSERT_NE(abs111->get_argument(0), abs112->get_argument(0));
 }
+
+TEST(CSE, one_hot)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
+    {
+        Shape param_shape{8};
+        Shape out_shape{8, 16};
+        auto A = std::make_shared<op::Parameter>(element::i32, param_shape);
+        auto onehot1 = std::make_shared<op::OneHot>(A, out_shape, 1);
+        auto onehot2 = std::make_shared<op::OneHot>(A, out_shape, 1);
+        auto f = std::make_shared<Function>(NodeVector{onehot1, onehot2}, ParameterVector{A});
+        pass_manager.run_passes(f);
+        ASSERT_EQ(f->get_results().at(0)->get_argument(0), f->get_results().at(1)->get_argument(0));
+    }
+    {
+        Shape param_shape{8, 1};
+        Shape out_shape{8, 16};
+        auto A = std::make_shared<op::Parameter>(element::i32, param_shape);
+        auto reshape1 = std::make_shared<op::Reshape>(A, AxisVector{0, 1}, Shape{8});
+        auto reshape2 = std::make_shared<op::Reshape>(A, AxisVector{0, 1}, Shape{8});
+        auto onehot1 = std::make_shared<op::OneHot>(reshape1, out_shape, 1);
+        auto onehot2 = std::make_shared<op::OneHot>(reshape2, out_shape, 1);
+        auto f = std::make_shared<Function>(NodeVector{onehot1, onehot2}, ParameterVector{A});
+        pass_manager.run_passes(f);
+        ASSERT_EQ(f->get_results().at(0)->get_argument(0), f->get_results().at(1)->get_argument(0));
+    }
+}

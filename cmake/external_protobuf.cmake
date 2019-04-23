@@ -51,6 +51,24 @@ if (WIN32)
         INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf"
         EXCLUDE_FROM_ALL TRUE
     )
+elseif (APPLE)
+    # Don't manually set compiler on macos since it causes compile error on macos >= 10.14
+    ExternalProject_Add(
+        ext_protobuf
+        PREFIX protobuf
+        GIT_REPOSITORY ${NGRAPH_PROTOBUF_GIT_REPO_URL}
+        GIT_TAG ${NGRAPH_PROTOBUF_GIT_TAG}
+        UPDATE_COMMAND ""
+        PATCH_COMMAND ""
+        CONFIGURE_COMMAND ./autogen.sh COMMAND ./configure --prefix=${EXTERNAL_PROJECTS_ROOT}/protobuf --disable-shared CXXFLAGS=-fPIC
+        TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/tmp"
+        STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/stamp"
+        DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/download"
+        SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/src"
+        BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/src"
+        INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf"
+        EXCLUDE_FROM_ALL TRUE
+        )
 else()
     ExternalProject_Add(
         ext_protobuf

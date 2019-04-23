@@ -87,7 +87,7 @@ namespace ngraph
                 for (auto entry : m_pattern_map)
                 {
                     // leaf label
-                    if (entry.first->get_inputs().empty())
+                    if (entry.first->get_input_size() == 0)
                     {
                         label_exclusions.push_back(entry.second);
                     }
@@ -194,7 +194,7 @@ namespace ngraph
             // when their individual GOE are matched
             // this also gives a bit more flexibility since we don't have to worry
             // about *all* outputs of a pattern node but only the ones we want to match.
-            if (m_strict_mode && graph_node->get_outputs().size() == 1)
+            if (m_strict_mode && graph_node->get_output_size() == 1)
             {
                 bool shape_match = pattern_node->get_output_partial_shape(0).compatible(
                     graph_node->get_output_partial_shape(0));
