@@ -71,10 +71,11 @@ namespace ngraph
                     // First we have to disperse the data from height and width channels, then
                     // rearrange them so as appropriate chunks of data where close to their
                     // destination place. Finally squeeze data from respective dimensions.
-                    std::shared_ptr<ngraph::Node> flat_node =
-                        reshape::reshape(data, ngraph::Shape{n, c, h_flat, bs, w_flat, bs});
+                    std::shared_ptr<ngraph::Node> flat_node = ngraph::op::util::reshape(
+                        data, ngraph::Shape{n, c, h_flat, bs, w_flat, bs});
                     flat_node = ngraph::op::util::reorder_axes(flat_node, {0, 3, 5, 1, 2, 4});
-                    return {reshape::reshape(flat_node, ngraph::Shape{n, c_high, h_flat, w_flat})};
+                    return {ngraph::op::util::reshape(flat_node,
+                                                      ngraph::Shape{n, c_high, h_flat, w_flat})};
                 }
             } // namespace set_1
 

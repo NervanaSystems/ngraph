@@ -24,6 +24,14 @@
 
 using namespace ngraph;
 
+std::shared_ptr<Node> op::util::reshape(const std::shared_ptr<Node>& node,
+                                        const AxisVector& axis_order,
+                                        const Shape& shape)
+{
+    return std::make_shared<op::Reshape>(
+        node, op::util::get_default_axis_vector(node->get_shape().size()), shape);
+}
+
 AxisVector op::util::get_default_axis_vector(std::size_t data_shape_rank, std::size_t start_value)
 {
     AxisVector axes(data_shape_rank);

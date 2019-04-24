@@ -91,25 +91,6 @@ namespace ngraph
                                                    const std::size_t start_axis,
                                                    const std::size_t end_axis);
 
-            /// \brief      Change shape of input tensor.
-            ///
-            /// \param[in]  node   The node which shape will be changed.
-            /// \param[in]  shape  The new shape for input tensor.
-            ///
-            /// \return     The node representing reshaped input tensor.
-            ///
-            std::shared_ptr<ngraph::Node> reshape(const std::shared_ptr<ngraph::Node>& node,
-                                                  const AxisVector& axis_order,
-                                                  const Shape& shape);
-
-            inline std::shared_ptr<ngraph::Node> reshape(const std::shared_ptr<ngraph::Node>& node,
-                                                         const Shape& shape)
-            {
-                return reshape(node,
-                               ngraph::op::util::get_default_axis_vector(node->get_shape().size()),
-                               shape);
-            }
-
             /// \brief      Expands node tensor shape with empty axis at
             ///             specified position.
             ///

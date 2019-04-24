@@ -35,6 +35,23 @@ namespace ngraph
             AxisVector get_default_axis_vector(std::size_t data_shape_rank,
                                                std::size_t start_value = 0);
 
+            /// \brief      Change shape of input tensor.
+            ///
+            /// \param[in]  node   The node which shape will be used as input to Reshape.
+            /// \param[in]  shape  The new shape for input tensor.
+            ///
+            /// \return     The node representing a Reshape operation.
+            ///
+            std::shared_ptr<ngraph::Node> reshape(const std::shared_ptr<ngraph::Node>& node,
+                                                  const AxisVector& axis_order,
+                                                  const Shape& shape);
+
+            inline std::shared_ptr<ngraph::Node> reshape(const std::shared_ptr<ngraph::Node>& node,
+                                                         const Shape& shape)
+            {
+                return reshape(node, get_default_axis_vector(node->get_shape().size()), shape);
+            }
+
             /// \brief Permute axes according to specified axes_order parameter.
             ///
             /// \param node The node which axes we want to permute.
@@ -43,7 +60,6 @@ namespace ngraph
             /// \return: New node with permuted axes.
             std::shared_ptr<ngraph::Node> reorder_axes(const std::shared_ptr<ngraph::Node>& node,
                                                        std::vector<std::size_t> axes_order);
-
         } // namespace util
     }     // namespace  op
 } // namespace  ngraph

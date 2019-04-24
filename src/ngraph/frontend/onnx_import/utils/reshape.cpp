@@ -169,7 +169,7 @@ namespace ngraph
                         output_shape.push_back(axis);
                     }
                 }
-                return reshape(node, output_shape);
+                return ngraph::op::util::reshape(node, output_shape);
             }
 
             std::shared_ptr<ngraph::Node> collapse(const std::shared_ptr<ngraph::Node>& node,
@@ -187,17 +187,7 @@ namespace ngraph
                 output_shape.insert(std::end(output_shape),
                                     std::next(std::begin(shape), end_axis + 1),
                                     std::end(shape));
-                return reshape(node, output_shape);
-            }
-
-            std::shared_ptr<ngraph::Node> reshape(const std::shared_ptr<ngraph::Node>& node,
-                                                  const AxisVector& axis_order,
-                                                  const Shape& shape)
-            {
-                return std::make_shared<ngraph::op::Reshape>(
-                    node,
-                    ngraph::op::util::get_default_axis_vector(node->get_shape().size()),
-                    shape);
+                return ngraph::op::util::reshape(node, output_shape);
             }
 
             std::shared_ptr<ngraph::Node> expand_dims(const std::shared_ptr<ngraph::Node>& node,
