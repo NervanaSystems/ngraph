@@ -42,6 +42,8 @@ void runtime::intelgpu::CustomKernels::queue_krnl(const krnl_info& krnl_info,
                                                       kr.m_gws,
                                                       kr.m_lws);
         stream.add(kernel_item);
+
+        ++m_count_krnls;
     }
 }
 
