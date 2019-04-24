@@ -50,7 +50,6 @@
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
-#include "utils/common.hpp"
 #include "utils/reshape.hpp"
 #include "utils/rnn/activation_functions.hpp"
 

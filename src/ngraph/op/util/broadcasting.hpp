@@ -125,6 +125,5 @@ namespace ngraph
                 new_shape,
                 calculate_broadcast_axes(new_shape, node->get_shape(), start_match_axis));
         }
-
     } // namespace  op
 } // namespace  ngraph
