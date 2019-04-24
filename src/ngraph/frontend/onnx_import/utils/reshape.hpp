@@ -41,15 +41,14 @@ namespace ngraph
             std::shared_ptr<ngraph::Node> flatten(const std::shared_ptr<ngraph::Node>& node,
                                                   int axis);
 
-            /// \brief      Gets the AxisVector filled with monotonic increasing
-            ///             sequence.
+            /// \brief      Prepares an AxisVector with monotonically increasing values.
             ///
-            /// \param[in]  data_shape_size  The data shape size.
-            /// \param[in]  start_value      The start_value for sequence. Default equals 0.
+            /// \param[in]  data_shape_rank  The number of entries (axes) in the output vector.
+            /// \param[in]  start_value      The first value for sequence. Defaults to 0.
             ///
             /// \return     The filled AxisVector.
             ///
-            AxisVector get_default_axis_vector(std::size_t data_shape_size,
+            AxisVector get_default_axis_vector(std::size_t data_shape_rank,
                                                std::size_t start_value = 0);
 
             /// \brief      Infer `output_shape` dimension values.

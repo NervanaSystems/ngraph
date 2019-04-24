@@ -84,10 +84,11 @@ namespace ngraph
                     Shape{first_dim_size, last_dim_size});
             }
 
-            AxisVector get_default_axis_vector(std::size_t data_shape_size, std::size_t start_value)
+            AxisVector get_default_axis_vector(std::size_t data_shape_rank, std::size_t start_value)
             {
-                return AxisVector{
-                    common::get_monotonic_range<std::size_t>(data_shape_size, start_value)};
+                AxisVector axes(data_shape_rank);
+                std::iota(std::begin(axes), std::end(axes), start_value);
+                return axes;
             }
 
             std::vector<std::size_t> infer_dimensions(const std::string& node_name,
