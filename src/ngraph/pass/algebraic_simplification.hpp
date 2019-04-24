@@ -30,10 +30,12 @@ namespace ngraph
 class ngraph::pass::AlgebraicSimplification : public FunctionPass
 {
 public:
-    AlgebraicSimplification(pass::PassPropertyMask property = pass::PassProperty::REGULAR_FUSIONS)
+    AlgebraicSimplification(pass::PassPropertyMask property =
+                                pass::PassPropertyMask(pass::PassProperty::REGULAR_FUSIONS) |
+                                pass::PassPropertyMask(pass::PassProperty::REQUIRE_STATIC_SHAPE))
         : FunctionPass()
     {
+        ngraph::pass::PassBase::set_property(property, true);
     }
-
     virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
 };
