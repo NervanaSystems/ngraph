@@ -66,6 +66,7 @@
 #include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/prelu.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/gather_nd.hpp"
@@ -951,6 +952,33 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::GreaterEq>(args[0], args[1]);
                 break;
             }
+            case OP_TYPEID::GroupConvolution:
+            {
+                auto window_movement_strides =
+                    node_js.at("window_movement_strides").get<vector<size_t>>();
+                auto window_dilation_strides =
+                    node_js.at("window_dilation_strides").get<vector<size_t>>();
+                auto padding_below = node_js.at("padding_below").get<vector<std::ptrdiff_t>>();
+                auto padding_above = node_js.at("padding_above").get<vector<std::ptrdiff_t>>();
+                auto data_dilation_strides =
+                    node_js.at("data_dilation_strides").get<vector<size_t>>();
+                auto groups = node_js.at("groups").get<size_t>();
+
+                op::PadType pad_type = node_js["pad_type"].empty()
+                                           ? op::PadType::EXPLICIT
+                                           : static_cast<op::PadType>(node_js.at("pad_type"));
+
+                node = make_shared<op::GroupConvolution>(args[0],
+                                                         args[1],
+                                                         window_movement_strides,
+                                                         window_dilation_strides,
+                                                         padding_below,
+                                                         padding_above,
+                                                         data_dilation_strides,
+                                                         groups,
+                                                         pad_type);
+                break;
+            }
             case OP_TYPEID::Less:
             {
                 node = make_shared<op::Less>(args[0], args[1]);
@@ -1758,6 +1786,18 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Greater: { break;
     }
     case OP_TYPEID::GreaterEq: { break;
+    }
+    case OP_TYPEID::GroupConvolution:
+    {
+        auto tmp = dynamic_cast<const op::GroupConvolution*>(&n);
+        node["window_movement_strides"] = tmp->get_window_movement_strides();
+        node["window_dilation_strides"] = tmp->get_window_dilation_strides();
+        node["padding_below"] = tmp->get_padding_below();
+        node["padding_above"] = tmp->get_padding_above();
+        node["data_dilation_strides"] = tmp->get_data_dilation_strides();
+        node["groups"] = tmp->get_groups();
+        node["pad_type"] = tmp->get_pad_type();
+        break;
     }
     case OP_TYPEID::Less: { break;
     }

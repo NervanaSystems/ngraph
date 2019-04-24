@@ -261,6 +261,8 @@ set (SRC
     op/topk.hpp
     op/fused/conv_fused.cpp
     op/fused/conv_fused.hpp
+    op/fused/group_conv.hpp
+    op/fused/group_conv.cpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
     op/util/arithmetic_reduction.cpp
@@ -287,6 +289,8 @@ set (SRC
     pass/algebraic_simplification.cpp
     pass/algebraic_simplification.hpp
     pass/assign_layout.hpp
+    pass/batch_fusion.hpp
+    pass/batch_fusion.cpp
     pass/common_function_collection.cpp
     pass/common_function_collection.hpp
     pass/constant_folding.cpp

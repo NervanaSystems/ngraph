@@ -34,6 +34,7 @@
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/negative.hpp"
@@ -45,6 +46,7 @@
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/pass/algebraic_simplification.hpp"
+#include "ngraph/pass/batch_fusion.hpp"
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -62,7 +64,6 @@
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/deconv.hpp"
-#include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/loop_kernel.hpp"
@@ -1216,8 +1217,7 @@ shared_ptr<Function> gen_groupconv_batchnorm(const bool add_goe,
                                                         CoordinateDiff{0, 0},
                                                         CoordinateDiff{0, 0},
                                                         Strides{1, 1},
-                                                        groups,
-                                                        shape_out);
+                                                        groups);
 
     double eps = 0.001;
     auto gamma = std::make_shared<op::Parameter>(element::f32, shape_bn);
@@ -2194,51 +2194,7 @@ TEST(cpu_fusion, convbias_affine_folding2)
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
 }
 
-TEST(cpu_fusion, group_convolution_fusion)
-{
-    Shape shape_a{1, 32, 2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    Shape shape_b{2, 16, 1, 1};
-    auto B = make_shared<op::Parameter>(element::f32, shape_b);
-    Shape shape_r{1, 2, 2, 2};
-
-    auto a_slice0 = std::make_shared<op::Slice>(A, Coordinate{0, 0, 0, 0}, Coordinate{1, 16, 2, 2});
-    auto a_slice1 =
-        std::make_shared<op::Slice>(A, Coordinate{0, 16, 0, 0}, Coordinate{1, 32, 2, 2});
-
-    auto b_slice0 = std::make_shared<op::Slice>(B, Coordinate{0, 0, 0, 0}, Coordinate{1, 16, 1, 1});
-    auto b_slice1 = std::make_shared<op::Slice>(B, Coordinate{1, 0, 0, 0}, Coordinate{2, 16, 1, 1});
-
-    auto conv_lower = make_shared<op::Convolution>(a_slice0,
-                                                   b_slice0,
-                                                   Strides{1, 1},
-                                                   Strides{1, 1},
-                                                   CoordinateDiff{0, 0},
-                                                   CoordinateDiff{0, 0},
-                                                   Strides{1, 1});
-
-    auto conv_upper = make_shared<op::Convolution>(a_slice1,
-                                                   b_slice1,
-                                                   Strides{1, 1},
-                                                   Strides{1, 1},
-                                                   CoordinateDiff{0, 0},
-                                                   CoordinateDiff{0, 0},
-                                                   Strides{1, 1});
-
-    auto concat = make_shared<op::Concat>(NodeVector{conv_lower, conv_upper}, 1);
-
-    auto f = make_shared<Function>(NodeVector{concat}, ParameterVector{A, B});
-    pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before_group.png");
-    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
-    pass_manager.register_pass<pass::VisualizeTree>("after_group.png");
-    pass_manager.run_passes(f);
-    auto gc =
-        std::dynamic_pointer_cast<op::GroupConvolution>(f->get_results().at(0)->get_argument(0));
-    ASSERT_TRUE(gc);
-}
-
-TEST(cpu_fusion, group_convolution)
+TEST(batch_fusion, group_convolution)
 {
     auto backend = runtime::Backend::create("CPU");
     test::Uniform<float> rng(2.0f, 10.0f);
@@ -2256,8 +2212,7 @@ TEST(cpu_fusion, group_convolution)
                                                         CoordinateDiff{0, 0},
                                                         CoordinateDiff{0, 0},
                                                         Strides{1, 1},
-                                                        GROUPS,
-                                                        shape_r);
+                                                        GROUPS);
 
     Shape shape_c{1, 16, 2, 2};
     auto C = make_shared<op::Parameter>(element::f32, shape_c);

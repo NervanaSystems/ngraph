@@ -14,11 +14,26 @@
 // limitations under the License.
 //*****************************************************************************
 
-// This collection contains one entry for each fused op.
-//
+#pragma once
 
-NGRAPH_OP(PRelu, ngraph::op)
-NGRAPH_OP(ConvolutionBias, ngraph::op)
-NGRAPH_OP(ConvolutionBiasAdd, ngraph::op)
-NGRAPH_OP(ConvolutionBiasBackpropFiltersBias, ngraph::op)
-NGRAPH_OP(GroupConvolution, ngraph::op)
+#include "ngraph/pass/pass.hpp"
+
+namespace ngraph
+{
+    namespace pass
+    {
+        class BatchFusion : public ngraph::pass::FunctionPass
+        {
+        public:
+            BatchFusion(ngraph::pass::FusionType type = ngraph::pass::ALL_FUSIONS)
+                : FunctionPass()
+                , m_fusion_type(type)
+            {
+            }
+            virtual bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+
+        private:
+            ngraph::pass::FusionType m_fusion_type;
+        };
+    }
+}

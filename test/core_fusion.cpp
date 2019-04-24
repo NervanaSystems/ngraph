@@ -26,9 +26,11 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/softmax.hpp"
+#include "ngraph/pass/batch_fusion.hpp"
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -479,4 +481,46 @@ TEST(core_fusion, DISABLED_conv_bias_bprop)
         EXPECT_TRUE(test::all_close(fused_r.at(i), decomp_r1.at(i)));
         EXPECT_TRUE(test::all_close(fused_r.at(i), decomp_r2.at(i)));
     }
+}
+
+TEST(batch_fusion, group_convolution_fusion)
+{
+    Shape shape_a{1, 32, 2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{2, 16, 1, 1};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_r{1, 2, 2, 2};
+
+    auto a_slice0 = std::make_shared<op::Slice>(A, Coordinate{0, 0, 0, 0}, Coordinate{1, 16, 2, 2});
+    auto a_slice1 =
+        std::make_shared<op::Slice>(A, Coordinate{0, 16, 0, 0}, Coordinate{1, 32, 2, 2});
+
+    auto b_slice0 = std::make_shared<op::Slice>(B, Coordinate{0, 0, 0, 0}, Coordinate{1, 16, 1, 1});
+    auto b_slice1 = std::make_shared<op::Slice>(B, Coordinate{1, 0, 0, 0}, Coordinate{2, 16, 1, 1});
+
+    auto conv_lower = make_shared<op::Convolution>(a_slice0,
+                                                   b_slice0,
+                                                   Strides{1, 1},
+                                                   Strides{1, 1},
+                                                   CoordinateDiff{0, 0},
+                                                   CoordinateDiff{0, 0},
+                                                   Strides{1, 1});
+
+    auto conv_upper = make_shared<op::Convolution>(a_slice1,
+                                                   b_slice1,
+                                                   Strides{1, 1},
+                                                   Strides{1, 1},
+                                                   CoordinateDiff{0, 0},
+                                                   CoordinateDiff{0, 0},
+                                                   Strides{1, 1});
+
+    auto concat = make_shared<op::Concat>(NodeVector{conv_lower, conv_upper}, 1);
+
+    auto f = make_shared<Function>(NodeVector{concat}, ParameterVector{A, B});
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::BatchFusion>();
+    pass_manager.run_passes(f);
+    auto gc =
+        std::dynamic_pointer_cast<op::GroupConvolution>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(gc);
 }
