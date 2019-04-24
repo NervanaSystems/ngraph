@@ -126,37 +126,5 @@ namespace ngraph
                 calculate_broadcast_axes(new_shape, node->get_shape(), start_match_axis));
         }
 
-        /// \brief      Makes a Constant nGraph node, broadcasing to a specified shape if needed.
-        ///
-        /// Current implementation supports broadcasting a scalar value to the desired shape.
-        ///
-        /// \param[in]  type   The Constant node element type.
-        /// \param[in]  shape  The tensor data shape.
-        /// \param[in]  data   The data to initialize node with.
-        ///
-        /// \tparam     T      Input data value type.
-        ///
-        /// \return     The nGraph node representing Constant data.
-        ///
-        template <typename T>
-        std::shared_ptr<ngraph::Node> make_constant_node(const ngraph::element::Type& type,
-                                                         const ngraph::Shape& shape,
-                                                         const std::vector<T>& data)
-        {
-            std::shared_ptr<ngraph::Node> node;
-            // Make constant node filled with single value.
-            if (data.size() == 1)
-            {
-                node = std::make_shared<ngraph::op::Constant>(type, ngraph::Shape{}, data);
-                node = ngraph::op::make_broadcast_node(node, shape);
-            }
-            else
-            {
-                node = std::make_shared<ngraph::op::Constant>(type, shape, data);
-            }
-
-            return node;
-        }
-
     } // namespace  op
 } // namespace  ngraph

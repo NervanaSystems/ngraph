@@ -15,6 +15,7 @@
 //*****************************************************************************
 #include "ngraph/op/fused/elu.hpp"
 
+#include "ngraph/builder/make_constant.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/exp.hpp"
@@ -41,7 +42,7 @@ NodeVector op::Elu::decompose_op() const
     alpha_node = ngraph::op::make_broadcast_node(alpha_node, data->get_shape());
 
     shared_ptr<ngraph::Node> zero_node =
-        op::make_constant_node(data->get_element_type(), data->get_shape(), vector<double>{0});
+        builder::make_constant(data->get_element_type(), data->get_shape(), 0);
 
     return {make_shared<ngraph::op::Maximum>(data, zero_node) +
             alpha_node *

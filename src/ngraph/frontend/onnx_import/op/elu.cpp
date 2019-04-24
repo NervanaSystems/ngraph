@@ -39,7 +39,7 @@ namespace ngraph
                         std::make_shared<ngraph::op::Constant>(
                             data->get_element_type(), Shape{}, std::vector<double>{alpha});
 
-                    return {std::make_shared<ngraph::op::Elu>(data, alpha_node)};
+                    return NodeVector{std::make_shared<ngraph::op::Elu>(data, alpha_node)};
                 }
 
             } // namespace set_1

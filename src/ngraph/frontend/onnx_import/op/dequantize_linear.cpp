@@ -21,6 +21,7 @@
 
 #include "exceptions.hpp"
 #include "ngraph/axis_set.hpp"
+#include "ngraph/builder/make_constant.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/dequantize.hpp"
@@ -48,8 +49,8 @@ namespace ngraph
                     }
                     else
                     {
-                        zero_point = ngraph::op::make_constant_node(
-                            x->get_element_type(), Shape{}, std::vector<std::uint8_t>{0});
+                        zero_point =
+                            ngraph::builder::make_constant(x->get_element_type(), Shape{}, 0);
                     }
 
                     Shape y_scale_shape = x_scale->get_shape();
