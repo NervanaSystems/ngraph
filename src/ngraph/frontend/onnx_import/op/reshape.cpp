@@ -22,6 +22,7 @@
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/util/reshape.hpp"
 #include "ngraph/shape.hpp"
 #include "reshape.hpp"
 #include "utils/reshape.hpp"
@@ -64,7 +65,7 @@ namespace ngraph
                         reshape::infer_dimensions(node.get_name(), data_shape, output_shape);
                     return {std::make_shared<ngraph::op::Reshape>(
                         data,
-                        reshape::get_default_axis_vector(data_shape.size()),
+                        ngraph::op::util::get_default_axis_vector(data_shape.size()),
                         Shape{output_shape})};
                 }
 

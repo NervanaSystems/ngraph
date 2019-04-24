@@ -20,6 +20,7 @@
 
 #include "exceptions.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/util/reshape.hpp"
 #include "unsqueeze.hpp"
 #include "utils/reshape.hpp"
 
@@ -47,7 +48,8 @@ namespace ngraph
 
                     std::sort(std::begin(axes), std::end(axes), std::less<int64_t>());
 
-                    AxisVector input_order{reshape::get_default_axis_vector(data_shape.size())};
+                    AxisVector input_order{
+                        ngraph::op::util::get_default_axis_vector(data_shape.size())};
 
                     for (auto axis : axes)
                     {

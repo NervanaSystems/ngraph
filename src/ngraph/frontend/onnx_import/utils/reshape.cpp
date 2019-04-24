@@ -25,6 +25,7 @@
 #include "exceptions.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
+#include "ngraph/op/util/reshape.hpp"
 #include "utils/common.hpp"
 #include "utils/reshape.hpp"
 
@@ -80,15 +81,8 @@ namespace ngraph
 
                 return std::make_shared<ngraph::op::Reshape>(
                     node,
-                    get_default_axis_vector(data_shape.size()),
+                    ngraph::op::util::get_default_axis_vector(data_shape.size()),
                     Shape{first_dim_size, last_dim_size});
-            }
-
-            AxisVector get_default_axis_vector(std::size_t data_shape_rank, std::size_t start_value)
-            {
-                AxisVector axes(data_shape_rank);
-                std::iota(std::begin(axes), std::end(axes), start_value);
-                return axes;
             }
 
             std::vector<std::size_t> infer_dimensions(const std::string& node_name,
@@ -222,7 +216,9 @@ namespace ngraph
                                                   const Shape& shape)
             {
                 return std::make_shared<ngraph::op::Reshape>(
-                    node, get_default_axis_vector(node->get_shape().size()), shape);
+                    node,
+                    ngraph::op::util::get_default_axis_vector(node->get_shape().size()),
+                    shape);
             }
 
             std::shared_ptr<ngraph::Node> expand_dims(const std::shared_ptr<ngraph::Node>& node,
@@ -234,7 +230,9 @@ namespace ngraph
                 std::advance(empty_axis_it, axis);
                 output_shape.insert(empty_axis_it, 1);
                 return std::make_shared<ngraph::op::Reshape>(
-                    node, reshape::get_default_axis_vector(node->get_shape().size()), output_shape);
+                    node,
+                    ngraph::op::util::get_default_axis_vector(node->get_shape().size()),
+                    output_shape);
             }
 
             NodeVector split(const std::shared_ptr<ngraph::Node>& node,
