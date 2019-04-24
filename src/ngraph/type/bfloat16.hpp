@@ -62,10 +62,7 @@ namespace ngraph
 
         static std::vector<float> to_float_vector(const std::vector<bfloat16>&);
         static std::vector<bfloat16> from_float_vector(const std::vector<float>&);
-        static constexpr bfloat16 from_bits(uint16_t bits)
-        {
-            return *reinterpret_cast<bfloat16*>(&bits);
-        }
+        static constexpr bfloat16 from_bits(uint16_t bits) { return bfloat16(bits, true); }
         uint16_t to_bits() const;
         friend std::ostream& operator<<(std::ostream& out, const bfloat16& obj)
         {
@@ -87,6 +84,10 @@ namespace ngraph
 
         static uint16_t truncate(float x) { return static_cast<uint16_t>((cu32(x)) >> 16); }
     private:
+        constexpr bfloat16(uint16_t x, bool)
+            : m_value{x}
+        {
+        }
         union F32 {
             F32(float val)
                 : f{val}
