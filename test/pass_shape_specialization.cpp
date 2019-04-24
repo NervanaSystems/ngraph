@@ -155,15 +155,17 @@ TEST(shape_specialization, specialization_pass_concat_transpose)
 }
 
 // Slight variation on the above test, where the "Concat" does not already have constants going
-// into it. (The permutation is Concat(Const<1>,Add(Const<0>,Const<0>)) rather than
+// into it. (The permutation is Concat(Const<1>,Concat(Const<>,Const<0>)) rather than simply
 // Concat(Const<1>,Const<0>).)
 TEST(shape_specialization, specialization_pass_add_concat_transpose)
 {
     auto param0 = make_shared<op::Parameter>(element::boolean, Shape{4, 6});
     auto k0 = op::Constant::create(element::i64, Shape{1}, {0});
     auto k1 = op::Constant::create(element::i64, Shape{1}, {1});
+    auto kempty = op::Constant::create(element::i64, Shape{0}, vector<int64_t>{});
 
-    auto concat = make_shared<op::Concat>(NodeVector{k1, k0 + k0}, 0);
+    auto concat = make_shared<op::Concat>(
+        NodeVector{k1, make_shared<op::Concat>(NodeVector{kempty, k0}, 0)}, 0);
 
     auto transpose = make_shared<op::Transpose>(param0, concat);
     auto f = make_shared<Function>(transpose, ParameterVector{param0});
