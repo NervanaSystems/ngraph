@@ -14,27 +14,28 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "depth_to_space.hpp"
-#include "ngraph/op/fused/depth_to_space.hpp"
+#pragma once
+
+#include "ngraph/node.hpp"
+#include "ngraph/op/op.hpp"
+#include "ngraph/op/util/fused_op.hpp"
 
 namespace ngraph
 {
-    namespace onnx_import
+    namespace op
     {
-        namespace op
+        class DepthToSpace : public ngraph::op::util::FusedOp
         {
-            namespace set_1
-            {
-                NodeVector depth_to_space(const Node& node)
-                {
-                    auto data = node.get_ng_inputs().at(0);
-                    std::int64_t block_size{node.get_attribute_value<std::int64_t>("blocksize")};
-                    return NodeVector{std::make_shared<ngraph::op::DepthToSpace>(data, block_size)};
-                }
-            } // namespace set_1
+        public:
+            DepthToSpace(const std::shared_ptr<ngraph::Node>& data, const std::int64_t block_size);
 
-        } //namespace op
+            virtual NodeVector decompose_op() const override;
 
-    } // namespace onnx_import
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
 
-} // namespace ngraph
+        protected:
+            std::int64_t m_blocksize;
+        };
+    }
+}
