@@ -59,6 +59,4 @@ private:
 
     std::vector<std::shared_ptr<runtime::Backend>> m_backend_list;
     bool m_debug_enabled = false;
-
-    // size_t get_placement(const runtime::Tensor* t);
 };
