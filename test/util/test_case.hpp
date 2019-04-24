@@ -18,8 +18,11 @@
 
 #include <utility>
 
+#include "all_close.hpp"
+#include "all_close_f.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/ngraph.hpp"
+#include "test_tools.hpp"
 
 namespace ngraph
 {
@@ -83,6 +86,34 @@ namespace ngraph
             void run();
 
         protected:
+            template <typename T>
+            static typename std::enable_if<std::is_floating_point<T>::value,
+                                           ::testing::AssertionResult>::type
+                compare_values(const std::shared_ptr<ngraph::op::Constant>& expected_results,
+                               const std::shared_ptr<ngraph::runtime::Tensor>& results)
+            {
+                const auto expected = expected_results->get_vector<T>();
+                const auto result = read_vector<T>(results);
+                return ngraph::test::all_close_f(expected, result);
+            }
+
+            template <typename T>
+            static typename std::enable_if<std::is_integral<T>::value,
+                                           ::testing::AssertionResult>::type
+                compare_values(const std::shared_ptr<ngraph::op::Constant>& expected_results,
+                               const std::shared_ptr<ngraph::runtime::Tensor>& results)
+            {
+                const auto expected = expected_results->get_vector<T>();
+                const auto result = read_vector<T>(results);
+                return ngraph::test::all_close(expected, result);
+            }
+
+            using value_comparator_function = std::function<::testing::AssertionResult(
+                const std::shared_ptr<ngraph::op::Constant>&,
+                const std::shared_ptr<ngraph::runtime::Tensor>&)>;
+
+            static std::map<ngraph::element::Type_t, value_comparator_function> value_comparators;
+
             std::shared_ptr<Function> m_function;
             std::unique_ptr<runtime::Backend> m_backend;
             std::vector<std::shared_ptr<ngraph::runtime::Tensor>> m_input_tensors;
