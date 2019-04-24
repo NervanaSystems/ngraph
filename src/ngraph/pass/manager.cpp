@@ -136,7 +136,7 @@ void pass::Manager::run_passes(shared_ptr<Function> func, bool transitive)
             for (auto f_pair : fs)
             {
                 shared_ptr<Function> f = f_pair.first;
-                if (function_pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE) &&
+                if (call_graph_pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE) &&
                     f_pair.second)
                 {
                     continue;
