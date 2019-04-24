@@ -209,6 +209,7 @@ namespace ngraph
                     size_t filter_in_channel_stride =
                         row_major_strides(filter_shape).at(filter_in_channel_axis);
 
+                    size_t out_idx = out_transform.index(out_coord);
                     while (in_it != in_it_end && filter_it != filter_it_end)
                     {
                         const Coordinate& in_coord = *in_it;
@@ -219,8 +220,8 @@ namespace ngraph
                             size_t filter_idx = filter_transform.index(filter_coord);
                             for (size_t in_channel = 0; in_channel < n_in_channels; ++in_channel)
                             {
-                                INPUT in_v = in[in_idx];
-                                FILTER f_v = filter[filter_idx];
+                                ACCUMULATION in_v = in[in_idx];
+                                ACCUMULATION f_v = filter[filter_idx];
                                 result += in_v * f_v;
                                 in_idx += in_channel_stride;
                                 filter_idx += filter_in_channel_stride;
@@ -229,7 +230,6 @@ namespace ngraph
                         ++in_it;
                         ++filter_it;
                     }
-
                     out[out_transform.index(out_coord)] = rescale(result);
                 }
                 std::fesetround(old_mode);
