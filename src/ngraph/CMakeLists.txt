@@ -265,6 +265,8 @@ set (SRC
     op/fused/depth_to_space.hpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
+    op/fused/space_to_depth.cpp
+    op/fused/space_to_depth.hpp
     op/util/arithmetic_reduction.cpp
     op/util/arithmetic_reduction.hpp
     op/util/binary_elementwise_arithmetic.cpp

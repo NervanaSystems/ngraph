@@ -17,22 +17,22 @@
 #include <cstdint>
 #include <memory>
 
-#include "depth_to_space.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/util/reshape.hpp"
 #include "ngraph/shape.hpp"
+#include "space_to_depth.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::DepthToSpace::DepthToSpace(const shared_ptr<Node>& data, const int64_t block_size)
-    : FusedOp("DepthToSpace", {data})
+op::SpaceToDepth::SpaceToDepth(const shared_ptr<Node>& data, const int64_t block_size)
+    : FusedOp("SpaceToDepth", {data})
     , m_blocksize(block_size)
 {
     constructor_validate_and_infer_types();
 }
 
-NodeVector op::DepthToSpace::decompose_op() const
+NodeVector op::SpaceToDepth::decompose_op() const
 {
     auto data = get_argument(0);
     const Shape& data_shape = data->get_shape();
@@ -61,26 +61,28 @@ NodeVector op::DepthToSpace::decompose_op() const
         w = data_shape.at(2);
     }
 
-    NGRAPH_CHECK((c % (m_blocksize * m_blocksize) == 0 && m_blocksize > 0),
-                 "SpaceToDepth: The depth axis size must be a multiple of ",
-                 "squared block_size attribute value.");
+    NGRAPH_CHECK((h % m_blocksize == 0 && w % m_blocksize == 0 && m_blocksize > 0),
+                 "SpaceToDepth: The width and height axes size must be a multiple of ",
+                 "squared block_size attribute value");
 
-    auto bs = static_cast<size_t>(m_blocksize);
-    size_t c_flat = c / (bs * bs);
+    size_t bs = static_cast<size_t>(m_blocksize);
+    size_t w_flat = w / bs;
+    size_t h_flat = h / bs;
+    size_t c_high = c * bs * bs;
 
-    // First we have to disperse the data from depth channel, then rearrange them
-    // so as appropriate chunks of data where close to their destination place.
-    // Finally squeeze data from respective dimensions.
-    shared_ptr<Node> flat_node = op::util::reshape(data, Shape{n, bs, bs, c_flat, h, w});
-    flat_node = op::util::reorder_axes(flat_node, {0, 3, 4, 1, 5, 2});
-    return NodeVector{op::util::reshape(flat_node, Shape{n, c_flat, h * bs, w * bs})};
+    // First we have to disperse the data from height and width channels, then
+    // rearrange them so as appropriate chunks of data where close to their
+    // destination place. Finally squeeze data from respective dimensions.
+    shared_ptr<Node> flat_node = op::util::reshape(data, Shape{n, c, h_flat, bs, w_flat, bs});
+    flat_node = op::util::reorder_axes(flat_node, {0, 3, 5, 1, 2, 4});
+    return NodeVector{op::util::reshape(flat_node, Shape{n, c_high, h_flat, w_flat})};
 }
 
-shared_ptr<Node> op::DepthToSpace::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::SpaceToDepth::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() != 1)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return make_shared<DepthToSpace>(new_args.at(0), m_blocksize);
+    return make_shared<SpaceToDepth>(new_args.at(0), m_blocksize);
 }
