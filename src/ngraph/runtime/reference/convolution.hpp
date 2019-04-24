@@ -17,6 +17,7 @@
 #pragma once
 
 #include <cmath>
+#include <functional>
 
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/coordinate_transform.hpp"
@@ -29,27 +30,56 @@ namespace ngraph
     {
         namespace reference
         {
+            template <typename T>
+            struct widen
+            {
+                using type = T;
+            };
+
+            template <>
+            struct widen<float>
+            {
+                using type = double;
+            };
+
+            template <>
+            struct widen<double>
+            {
+                using type = long double;
+            };
+
+            template <typename OUTPUT, typename INPUT>
+            OUTPUT identity_rescale(INPUT in)
+            {
+                return static_cast<OUTPUT>(in);
+            }
+
             // in: NC_I...
             // filter: C_OC_I...
             // out: NC_O...
-            template <typename T>
-            void general_convolution(const T* in,
-                                     const T* filter,
-                                     T* out,
-                                     const Shape& in_shape,
-                                     const Shape& filter_shape,
-                                     const Shape& out_shape,
-                                     const Strides& stride,
-                                     const Strides& filter_dilation,
-                                     const CoordinateDiff& in_pad_below,
-                                     const CoordinateDiff& in_pad_above,
-                                     const Strides& in_dilation,
-                                     size_t in_batch_axis,
-                                     size_t in_channel_axis,
-                                     size_t filter_out_channel_axis,
-                                     size_t filter_in_channel_axis,
-                                     size_t out_batch_axis,
-                                     size_t out_channel_axis)
+            template <typename INPUT,
+                      typename FILTER,
+                      typename OUTPUT,
+                      typename ACCUMULATION = typename widen<OUTPUT>::type>
+            void general_convolution(
+                const INPUT* in,
+                const FILTER* filter,
+                OUTPUT* out,
+                const Shape& in_shape,
+                const Shape& filter_shape,
+                const Shape& out_shape,
+                const Strides& stride,
+                const Strides& filter_dilation,
+                const CoordinateDiff& in_pad_below,
+                const CoordinateDiff& in_pad_above,
+                const Strides& in_dilation,
+                size_t in_batch_axis,
+                size_t in_channel_axis,
+                size_t filter_out_channel_axis,
+                size_t filter_in_channel_axis,
+                size_t out_batch_axis,
+                size_t out_channel_axis,
+                std::function<OUTPUT(INPUT)> rescale = identity_rescale<OUTPUT, INPUT>)
             {
                 // Comments throughout assume without loss of generality that:
                 //
@@ -164,7 +194,7 @@ namespace ngraph
                     //
                     //   out[O] += in[I] * filter[F].
 
-                    T result = 0;
+                    ACCUMULATION result = 0;
 
                     CoordinateTransform::Iterator in_it = in_transform.begin();
                     CoordinateTransform::Iterator filter_it = filter_transform.begin();
@@ -185,8 +215,8 @@ namespace ngraph
                             size_t filter_idx = filter_transform.index(filter_coord);
                             for (size_t in_channel = 0; in_channel < n_in_channels; ++in_channel)
                             {
-                                T in_v = in[in_idx];
-                                T f_v = filter[filter_idx];
+                                INPUT in_v = in[in_idx];
+                                FILTER f_v = filter[filter_idx];
                                 result += in_v * f_v;
                                 in_idx += in_channel_stride;
                                 filter_idx += filter_in_channel_stride;
@@ -196,14 +226,17 @@ namespace ngraph
                         ++filter_it;
                     }
 
-                    out[out_transform.index(out_coord)] = result;
+                    out[out_transform.index(out_coord)] = rescale(result);
                 }
             }
 
-            template <typename T>
-            void convolution(const T* in,
-                             const T* filter,
-                             T* out,
+            template <typename INPUT,
+                      typename FILTER,
+                      typename OUTPUT,
+                      typename ACCUMULATION = typename widen<OUTPUT>::type>
+            void convolution(const INPUT* in,
+                             const FILTER* filter,
+                             OUTPUT* out,
                              const Shape& in_shape,
                              const Shape& filter_shape,
                              const Shape& out_shape,
@@ -213,29 +246,32 @@ namespace ngraph
                              const CoordinateDiff& in_pad_above,
                              const Strides& in_dilation)
             {
-                general_convolution(in,
-                                    filter,
-                                    out,
-                                    in_shape,
-                                    filter_shape,
-                                    out_shape,
-                                    stride,
-                                    filter_dilation,
-                                    in_pad_below,
-                                    in_pad_above,
-                                    in_dilation,
-                                    0,
-                                    1,
-                                    0,
-                                    1,
-                                    0,
-                                    1);
+                general_convolution<INPUT, FILTER, OUTPUT, ACCUMULATION>(in,
+                                                                         filter,
+                                                                         out,
+                                                                         in_shape,
+                                                                         filter_shape,
+                                                                         out_shape,
+                                                                         stride,
+                                                                         filter_dilation,
+                                                                         in_pad_below,
+                                                                         in_pad_above,
+                                                                         in_dilation,
+                                                                         0,
+                                                                         1,
+                                                                         0,
+                                                                         1,
+                                                                         0,
+                                                                         1);
             }
 
-            template <typename T>
-            void convolution_backprop_filter(const T* in,
-                                             const T* delta_out,
-                                             T* delta_filter,
+            template <typename INPUT,
+                      typename OUTPUT,
+                      typename FILTER,
+                      typename ACCUMULATION = typename widen<FILTER>::type>
+            void convolution_backprop_filter(const INPUT* in,
+                                             const OUTPUT* delta_out,
+                                             FILTER* delta_filter,
                                              const Shape& in_shape,
                                              const Shape& out_shape,
                                              const Shape& filter_shape,
@@ -245,29 +281,32 @@ namespace ngraph
                                              const CoordinateDiff& backprop_in_pad_above,
                                              const Strides& in_dilation)
             {
-                general_convolution(in,
-                                    delta_out,
-                                    delta_filter,
-                                    in_shape,
-                                    out_shape,
-                                    filter_shape,
-                                    filter_dilation,
-                                    stride,
-                                    in_pad_below,
-                                    backprop_in_pad_above,
-                                    in_dilation,
-                                    1,
-                                    0,
-                                    1,
-                                    0,
-                                    1,
-                                    0);
+                general_convolution<INPUT, OUTPUT, FILTER, ACCUMULATION>(in,
+                                                                         delta_out,
+                                                                         delta_filter,
+                                                                         in_shape,
+                                                                         out_shape,
+                                                                         filter_shape,
+                                                                         filter_dilation,
+                                                                         stride,
+                                                                         in_pad_below,
+                                                                         backprop_in_pad_above,
+                                                                         in_dilation,
+                                                                         1,
+                                                                         0,
+                                                                         1,
+                                                                         0,
+                                                                         1,
+                                                                         0);
             }
 
-            template <typename T>
-            void convolution_backprop_in(const T* delta_out,
-                                         const T* filter,
-                                         T* delta_in,
+            template <typename OUTPUT,
+                      typename FILTER,
+                      typename INPUT,
+                      typename ACCUMULATION = typename widen<INPUT>::type>
+            void convolution_backprop_in(const OUTPUT* delta_out,
+                                         const FILTER* filter,
+                                         INPUT* delta_in,
                                          const Shape& out_shape,
                                          const Shape& filter_shape,
                                          const Shape& in_shape,
@@ -279,31 +318,32 @@ namespace ngraph
             {
                 // Note that we only reverse the spatial dimensions here (loop
                 // starts at 2)
-                std::vector<T> reversed(shape_size(filter_shape));
+                std::vector<INPUT> reversed(shape_size(filter_shape));
                 AxisSet reverse_axes;
                 for (size_t i = 2; i < filter_shape.size(); ++i)
                 {
                     reverse_axes.insert(i);
                 }
-                reverse<T>(filter, &reversed[0], filter_shape, filter_shape, reverse_axes);
+                reverse<FILTER>(filter, &reversed[0], filter_shape, filter_shape, reverse_axes);
 
-                general_convolution(delta_out,
-                                    &reversed[0],
-                                    delta_in,
-                                    out_shape,
-                                    filter_shape,
-                                    in_shape,
-                                    in_dilation,
-                                    filter_dilation,
-                                    backward_delta_out_pad_below,
-                                    backward_delta_out_pad_above,
-                                    stride,
-                                    0,
-                                    1,
-                                    1,
-                                    0,
-                                    0,
-                                    1);
+                general_convolution<OUTPUT, FILTER, INPUT, ACCUMULATION>(
+                    delta_out,
+                    &reversed[0],
+                    delta_in,
+                    out_shape,
+                    filter_shape,
+                    in_shape,
+                    in_dilation,
+                    filter_dilation,
+                    backward_delta_out_pad_below,
+                    backward_delta_out_pad_above,
+                    stride,
+                    0,
+                    1,
+                    1,
+                    0,
+                    0,
+                    1);
             }
         } // namespace reference
     }     // namespace runtime
