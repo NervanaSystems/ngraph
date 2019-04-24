@@ -30,6 +30,7 @@
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
 #include "util/ndarray.hpp"
+#include "util/test_case.hpp"
 #include "util/test_control.hpp"
 #include "util/test_tools.hpp"
 
@@ -545,4 +546,57 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_quant_conv_linear_3d)
         read_binary_file<uint8_t>(file_util::path_join(TEST_FILES, "onnx/qlinearconv3d/y.bin")));
 
     EXPECT_EQ(expected_output.front(), outputs.front());
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_dequantize_linear_scalar_as_vector)
+{
+    auto fx = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/dequantize_linear_scalar_as_vector.prototxt"));
+
+    auto test_case = ngraph::test::NgraphTestCase(fx, "${BACKEND_NAME}");
+
+    test_case.add_input(std::vector<std::uint8_t>{0, 3, 128, 255});
+    test_case.add_input(std::vector<float>{2.});
+    test_case.add_input(std::vector<std::uint8_t>{128});
+    test_case.add_expected_output(std::vector<float>{-256., -250., 0., 254.});
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_quantize_linear_scalar_as_vector)
+{
+    auto fx = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/quantize_linear_scalar_as_vector.prototxt"));
+
+    auto test_case = ngraph::test::NgraphTestCase(fx, "${BACKEND_NAME}");
+
+    test_case.add_input(std::vector<float>{0., 2., 3., 1000., -254., -1000.});
+    test_case.add_input(std::vector<float>{2.});
+    test_case.add_input(std::vector<std::uint8_t>{128});
+    test_case.add_expected_output(std::vector<std::uint8_t>{128, 129, 130, 255, 1, 0});
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_qlinearconv_scalar_as_vector)
+{
+    auto fx = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/qlinearconv_scalar_as_vector.prototxt"));
+
+    auto test_case = ngraph::test::NgraphTestCase(fx, "${BACKEND_NAME}");
+
+    test_case.add_input(std::vector<std::uint8_t>{
+        255, 174, 162, 25,  203, 168, 58,  15,  59,  237, 95,  129, 0,  64,  56, 242, 153,
+        221, 168, 12,  166, 232, 178, 186, 195, 237, 162, 237, 188, 39, 124, 77, 80,  102,
+        43,  127, 230, 21,  83,  41,  40,  134, 255, 154, 92,  141, 42, 148, 247});
+    test_case.add_input(std::vector<float>{0.00369205});
+    test_case.add_input(std::vector<std::uint8_t>{132});
+    test_case.add_input(std::vector<std::uint8_t>{0});
+    test_case.add_input(std::vector<float>{0.00172795});
+    test_case.add_input(std::vector<std::uint8_t>{255});
+    test_case.add_input(std::vector<float>{0.00162681});
+    test_case.add_input(std::vector<std::uint8_t>{123});
+    test_case.add_expected_output(std::vector<std::uint8_t>{
+        0,   81,  93,  230, 52,  87,  197, 240, 196, 18,  160, 126, 255, 191, 199, 13,  102,
+        34,  87,  243, 89,  23,  77,  69,  60,  18,  93,  18,  67,  216, 131, 178, 175, 153,
+        212, 128, 25,  234, 172, 214, 215, 121, 0,   101, 163, 114, 213, 107, 8});
+    test_case.run();
 }

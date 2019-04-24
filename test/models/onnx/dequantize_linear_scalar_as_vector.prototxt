@@ -1,0 +1,67 @@
+ir_version: 5
+producer_name: "nGraph ONNX Importer"
+graph {
+  node {
+    input: "x"
+    input: "x_scale"
+    input: "x_zero_point"
+    output: "y"
+    op_type: "DequantizeLinear"
+  }
+  name: "test_dequantizelinear"
+  input {
+    name: "x"
+    type {
+      tensor_type {
+        elem_type: 2
+        shape {
+          dim {
+            dim_value: 4
+          }
+        }
+      }
+    }
+  }
+  input {
+    name: "x_scale"
+    type {
+      tensor_type {
+        elem_type: 1
+        shape {
+          dim {
+            dim_value: 1
+          }
+        }
+      }
+    }
+  }
+  input {
+    name: "x_zero_point"
+    type {
+      tensor_type {
+        elem_type: 2
+        shape {
+          dim {
+            dim_value: 1
+          }
+        }
+      }
+    }
+  }
+  output {
+    name: "y"
+    type {
+      tensor_type {
+        elem_type: 1
+        shape {
+          dim {
+            dim_value: 4
+          }
+        }
+      }
+    }
+  }
+}
+opset_import {
+  version: 10
+}
