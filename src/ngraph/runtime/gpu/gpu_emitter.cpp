@@ -59,6 +59,7 @@
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/erf.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/batch_mat_mul.hpp"
 #include "ngraph/op/experimental/dyn_broadcast.hpp"
 #include "ngraph/op/experimental/dyn_pad.hpp"
 #include "ngraph/op/experimental/dyn_reshape.hpp"
@@ -74,6 +75,8 @@
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/floor.hpp"
+#include "ngraph/op/gather.hpp"
+#include "ngraph/op/gather_nd.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
@@ -328,6 +331,11 @@ std::string runtime::gpu::GPU_Emitter::emit_AvgPoolBackprop(EMIT_ARGS)
     {
         throw ngraph_error("AvgPoolBackprop currently only supports tensors of rank 4 and greater");
     }
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_BatchMatMul(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 template <typename T>
@@ -631,6 +639,16 @@ std::string runtime::gpu::GPU_Emitter::emit_Exp(EMIT_ARGS)
 std::string runtime::gpu::GPU_Emitter::emit_Floor(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Floor>(compiled_function, function_name, node, args, out);
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_Gather(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_GatherND(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_GenerateMask(EMIT_ARGS)
@@ -1395,7 +1413,7 @@ std::string runtime::gpu::GPU_Emitter::emit_TopK(EMIT_ARGS)
     auto index_elem_type = topk->get_index_element_type();
     bool compute_max = topk->get_compute_max();
     std::vector<element::Type> dtypes{args[0].get_element_type()};
-    NGRAPH_ASSERT(out.size() == 2) << "TopK can only have 2 outputs";
+    NGRAPH_CHECK(out.size() == 2, "TopK can only have 2 outputs");
     for (size_t i = 0; i < out.size(); i++)
     {
         dtypes.push_back(out[i].get_element_type());

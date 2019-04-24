@@ -25,6 +25,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "ngraph/check.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/placement.hpp"
@@ -45,13 +46,29 @@ namespace ngraph
     void traverse_nodes(const std::shared_ptr<const Function> p,
                         std::function<void(std::shared_ptr<Node>)> f,
                         bool include_control_deps = false);
+
     void traverse_nodes(const Function* p,
                         std::function<void(std::shared_ptr<Node>)> f,
                         bool include_control_deps);
 
-    void traverse_nodes(const NodeVector& io_nodes,
+    /// \brief Visit each node in a sub-graph of the entire graph
+    /// \param subgraph_results The output nodes of the sub-graph
+    /// \param f Function to execute at each node in the traversal
+    /// \param include_control_deps Whether to include control deps
+    ///        while traversing the sub-graph
+    /// \param subgraph_params Input nodes of the sub-graph (optional)
+    ///
+    /// Traverses a sub-graph starting from subgraph_results moving up
+    /// towards parameter nodes. Traversal stops if it hits a node in
+    /// subgraph_params.
+    ///
+    /// Most useful for finding parameters of a graph directly from the
+    /// result nodes and not from function parameters or extracting a
+    /// subgraph relevant to the computation of certain outputs
+    void traverse_nodes(const NodeVector& subgraph_results,
                         std::function<void(std::shared_ptr<Node>)> f,
-                        bool include_control_deps);
+                        bool include_control_deps,
+                        const NodeVector& subgraph_params = {});
 
     void traverse_functions(std::shared_ptr<Function> p,
                             std::function<void(std::shared_ptr<Function>)> f);
@@ -81,7 +98,7 @@ namespace ngraph
             }
 
             node_map[node.get()] = node;
-            size_t deps_count = node->get_inputs().size() + control_deps_count;
+            size_t deps_count = node->get_input_size() + control_deps_count;
             node_dependency_count[node.get()] = deps_count;
             if (deps_count == 0)
             {
@@ -120,10 +137,11 @@ namespace ngraph
             }
         }
 
-        NGRAPH_ASSERT(nodes.size() == result_list.size());
+        NGRAPH_CHECK(nodes.size() == result_list.size());
         return result_list;
     }
 
+    // For cases, where `nodes` is a subset of the entire graph
     template <typename T>
     std::list<std::shared_ptr<Node>> subgraph_topological_sort(const T& nodes,
                                                                bool include_control_deps = false)
@@ -197,14 +215,14 @@ namespace ngraph
             }
         }
 
-        NGRAPH_ASSERT(nodes.size() == result_list.size());
+        NGRAPH_CHECK(nodes.size() == result_list.size());
         return result_list;
     }
 
     template <typename T>
     void validate_nodes_and_infer_types(const T& nodes)
     {
-        for (auto node : topological_sort(nodes))
+        for (auto node : subgraph_topological_sort(nodes))
         {
             node->delayed_validate_and_infer_types();
         }
@@ -295,6 +313,10 @@ namespace ngraph
                                     const NodeVector& exclusions,
                                     bool ignore_unused = false);
 
+    // Extract sub-graph computing the `results`. Stops backward traversal at either a Parameter node
+    // or a node that belongs to args
+    NodeVector extract_subgraph(const NodeVector& results, const NodeVector& args);
+
     bool is_one(std::shared_ptr<Node> reduce_constant);
 
     bool compare_constants(const std::shared_ptr<Node>& n1, const std::shared_ptr<Node>& n2);
@@ -318,4 +340,11 @@ namespace ngraph
         std::shared_ptr<Function> f,
         const std::string& filename,
         std::function<void(const Node& node, std::vector<std::string>& attributes)> = nullptr);
+
+    /// \return A vector containing handles for each input of dst that is connected to an output
+    ///         of `src`.
+    std::vector<Input<Node>> get_inputs_from(Node& src, Node& dst);
+    /// \return A vector containing a handle for each output of src that is connected to an input
+    ///         of `dst`.
+    std::vector<Output<Node>> get_outputs_to(Node& src, Node& dst);
 }

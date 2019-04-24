@@ -27,7 +27,9 @@
 #include "ngraph/except.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/serializer.hpp"
@@ -81,7 +83,7 @@ vector<PerfShape> to_perf_shape(shared_ptr<Function> f,
             throw runtime_error(os.str());
         }
 
-        Shape shape = node->get_outputs()[0].get_shape();
+        Shape shape = node->output(0).get_shape();
         result.push_back(PerfShape(p, shape));
     }
     return result;
@@ -132,10 +134,7 @@ void print_times(const multimap<size_t, string>& timing)
     for (const pair<size_t, string>& p : timing)
     {
         name_width = max(name_width, static_cast<int>(p.second.size()));
-        stringstream ss;
-        ss.imbue(locale(""));
-        ss << p.first;
-        time_width = max(time_width, static_cast<int>(ss.str().size()));
+        time_width = max(time_width, static_cast<int>(locale_string(p.first).size()));
     }
     for (auto it = timing.rbegin(); it != timing.rend(); it++)
     {
@@ -167,7 +166,7 @@ element::Type get_op_element_type(const Node& op)
     element::Type type;
     if (op.description() == "Convert")
     {
-        type = op.get_input_element_type(0);
+        type = op.input(0).get_element_type();
     }
     else if (op.description() == "Equal" || op.description() == "Greater" ||
              op.description() == "GreaterEq" || op.description() == "Less" ||
@@ -176,11 +175,11 @@ element::Type get_op_element_type(const Node& op)
         // Get the type of the second input, not the first
         // All BinaryElementwiseComparision ops have the same type for inputs
         // Select has bool for first input and the type we are interested in for the second
-        type = op.get_input_element_type(1);
+        type = op.input(1).get_element_type();
     }
     else
     {
-        type = op.get_outputs().at(0).get_element_type();
+        type = op.output(0).get_element_type();
     }
     return type;
 }
@@ -197,6 +196,7 @@ int main(int argc, char** argv)
     bool visualize = false;
     int warmup_iterations = 1;
     bool copy_data = true;
+    bool dot_file = false;
 
     for (size_t i = 1; i < argc; i++)
     {
@@ -236,6 +236,10 @@ int main(int argc, char** argv)
         else if (arg == "-v" || arg == "--visualize")
         {
             visualize = true;
+        }
+        else if (arg == "--dot")
+        {
+            dot_file = true;
         }
         else if (arg == "-d" || arg == "--directory")
         {
@@ -294,6 +298,7 @@ OPTIONS
         --timing_detail           Gather detailed timing
         -w|--warmup_iterations    Number of warm-up iterations
         --no_copy_data            Disable copy of input/result data every iteration
+        --dot                     Generate graphviz dot file
 )###";
         return 1;
     }
@@ -339,10 +344,10 @@ OPTIONS
             {
                 shared_ptr<Function> f = deserialize(model);
                 auto model_file_name = ngraph::file_util::get_file_name(model) + std::string(".") +
-                                       pass::VisualizeTree::get_file_ext();
+                                       (dot_file ? "dot" : pass::VisualizeTree::get_file_ext());
 
                 pass::Manager pass_manager;
-                pass_manager.register_pass<pass::VisualizeTree>(model_file_name);
+                pass_manager.register_pass<pass::VisualizeTree>(model_file_name, nullptr, true);
                 pass_manager.run_passes(f);
             }
 
@@ -350,16 +355,33 @@ OPTIONS
             {
                 shared_ptr<Function> f = deserialize(model);
 
+                pass::Manager pass_manager;
+                pass_manager.register_pass<pass::Liveness>();
+                pass_manager.register_pass<pass::MemoryLayout>();
+                pass_manager.run_passes(f);
+
                 cout << "\n---- Source Graph Statistics ----\n";
-                cout << "Total nodes: " << f->get_ops().size() << endl;
+                cout << "Total nodes: " << locale_string(f->get_ops().size()) << endl;
                 size_t total_constant_bytes = 0;
+                size_t total_parameter_bytes = 0;
+                size_t total_result_bytes = 0;
+                size_t total_temporary_bytes = 0;
+                size_t total_constant_count = 0;
+                size_t total_parameter_count = 0;
+                size_t total_result_count = 0;
+                size_t total_temporary_count = 0;
                 unordered_map<string, size_t> op_list;
                 set<string> type_list;
                 for (shared_ptr<Node> node : f->get_ordered_ops())
                 {
+                    for (descriptor::Tensor* tensor : node->liveness_new_list)
+                    {
+                        total_temporary_bytes += tensor->size();
+                        total_temporary_count++;
+                    }
                     string name = node->get_name();
                     string op_name = name.substr(0, name.find('_'));
-                    string shape_name = "{" + join(node->get_outputs()[0].get_shape()) + "}";
+                    string shape_name = "{" + join(node->output(0).get_shape()) + "}";
                     op_list[op_name + shape_name]++;
                     auto et = get_op_element_type(*node);
                     string type_string = et.c_type_string();
@@ -367,8 +389,9 @@ OPTIONS
 
                     if (op_name == "Constant")
                     {
-                        const Shape& shape = node->get_outputs()[0].get_shape();
-                        size_t const_size = node->get_outputs()[0].get_element_type().size();
+                        total_constant_count++;
+                        const Shape& shape = node->output(0).get_shape();
+                        size_t const_size = node->output(0).get_element_type().size();
                         if (shape.size() == 0)
                         {
                             total_constant_bytes += const_size;
@@ -376,12 +399,35 @@ OPTIONS
                         else
                         {
                             total_constant_bytes +=
-                                (const_size * shape_size(node->get_outputs()[0].get_shape()));
+                                (const_size * shape_size(node->output(0).get_shape()));
                         }
+                    }
+                    else if (op_name == "Parameter")
+                    {
+                        total_parameter_count++;
+                        const Shape& shape = node->output(0).get_shape();
+                        size_t size = node->output(0).get_element_type().size() * shape_size(shape);
+                        total_parameter_bytes += size;
+                    }
+                    else if (op_name == "Result")
+                    {
+                        total_result_count++;
+                        const Shape& shape = node->input(0).get_shape();
+                        size_t size = node->input(0).get_element_type().size() * shape_size(shape);
+                        total_result_bytes += size;
                     }
                 }
                 cout << "--\n";
-                cout << "Total Constant size: " << total_constant_bytes << " bytes\n";
+                cout << "Total Constant size: " << locale_string(total_constant_bytes)
+                     << " bytes in " << total_constant_count << " constants\n";
+                cout << "Total Parameter size: " << locale_string(total_parameter_bytes)
+                     << " bytes in " << total_parameter_count << " parameters\n";
+                cout << "Total Result size: " << locale_string(total_result_bytes) << " bytes in "
+                     << total_result_count << " results\n";
+                cout << "Total Temporary size: " << locale_string(total_temporary_bytes)
+                     << " bytes in " << total_temporary_count << " temporaries\n";
+                cout << "Temporary size with reuse : "
+                     << locale_string(f->get_temporary_pool_size()) << " bytes\n";
                 cout << "--\n";
                 cout << "Types used:\n";
                 for (const string& type : type_list)

@@ -44,7 +44,9 @@
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
+#include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/op/topk.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
@@ -294,6 +296,13 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
         writer << print_table_row_dims("axes", quant_op->get_axes());
         break;
     }
+    case OP_TYPEID::Softmax:
+    {
+        const shared_ptr<op::Softmax> softmax_op = static_pointer_cast<op::Softmax>(node);
+
+        writer << print_table_row_dims("axes", softmax_op->get_axes());
+        break;
+    }
     case OP_TYPEID::Concat:
     {
         const shared_ptr<op::Concat> concat_op = static_pointer_cast<op::Concat>(node);
@@ -364,6 +373,17 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
                                        conv_op_data->get_padding_above_forward())
                << print_table_row_dims("pad_below_forward",
                                        conv_op_data->get_padding_below_forward());
+        break;
+    }
+    case OP_TYPEID::TopK:
+    {
+        const shared_ptr<op::TopK> topk_op = static_pointer_cast<op::TopK>(node);
+
+        writer << print_table_row_value("top_k_axis", topk_op->get_top_k_axis())
+               << print_table_row_value("index_element_type", topk_op->get_index_element_type())
+               << print_table_row_value("k", topk_op->get_k())
+               << print_table_row_value("compute_max", topk_op->get_compute_max());
+
         break;
     }
     case OP_TYPEID::UNDEFINED_OP:

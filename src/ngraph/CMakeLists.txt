@@ -31,6 +31,8 @@ set (SRC
     builder/quantization.hpp
     builder/quantization/quantized_linear_convolution.cpp
     builder/quantization/quantized_linear_convolution.hpp
+    builder/quantization/quantized_linear_dot.cpp
+    builder/quantization/quantized_linear_dot.hpp
     builder/quantization_util.hpp
     builder/reduce_ops.cpp
     builder/reduce_ops.hpp
@@ -44,6 +46,7 @@ set (SRC
     coordinate_transform.cpp
     cpio.cpp
     cpio.hpp
+    deprecated.hpp
     descriptor/input.cpp
     descriptor/input.hpp
     descriptor/layout/dense_tensor_layout.cpp
@@ -71,10 +74,6 @@ set (SRC
     ngraph_visibility.hpp
     node.cpp
     node.hpp
-    node_input.cpp
-    node_input.hpp
-    node_output.cpp
-    node_output.hpp
     node_vector.hpp
     op/abs.cpp
     op/abs.hpp
@@ -132,6 +131,8 @@ set (SRC
     op/erf.hpp
     op/exp.cpp
     op/exp.hpp
+    op/experimental/batch_mat_mul.cpp
+    op/experimental/batch_mat_mul.hpp
     op/experimental/dyn_broadcast.cpp
     op/experimental/dyn_broadcast.hpp
     op/experimental/dyn_pad.cpp
@@ -164,6 +165,10 @@ set (SRC
     op/experimental/transpose.hpp
     op/floor.cpp
     op/floor.hpp
+    op/gather.cpp
+    op/gather.hpp
+    op/gather_nd.cpp
+    op/gather_nd.hpp
     op/get_output_element.cpp
     op/get_output_element.hpp
     op/greater.cpp
@@ -254,6 +259,10 @@ set (SRC
     op/tanh.hpp
     op/topk.cpp
     op/topk.hpp
+    op/fused/conv_fused.cpp
+    op/fused/conv_fused.hpp
+    op/fused/prelu.cpp
+    op/fused/prelu.hpp
     op/util/arithmetic_reduction.cpp
     op/util/arithmetic_reduction.hpp
     op/util/binary_elementwise_arithmetic.cpp
@@ -262,6 +271,10 @@ set (SRC
     op/util/binary_elementwise_comparison.hpp
     op/util/binary_elementwise_logical.cpp
     op/util/binary_elementwise_logical.hpp
+    op/util/broadcasting.cpp
+    op/util/broadcasting.hpp
+    op/util/fused_op.cpp
+    op/util/fused_op.hpp
     op/util/index_reduction.cpp
     op/util/index_reduction.hpp
     op/util/logical_reduction.cpp
@@ -278,12 +291,15 @@ set (SRC
     pass/common_function_collection.hpp
     pass/constant_folding.cpp
     pass/constant_folding.hpp
+    pass/constant_to_broadcast.cpp
     pass/core_fusion.cpp
     pass/core_fusion.hpp
     pass/cse.cpp
     pass/cse.hpp
     pass/dump_sorted.cpp
     pass/dump_sorted.hpp
+    pass/fused_op_decomposition.cpp
+    pass/fused_op_decomposition.hpp
     pass/get_output_element_elimination.cpp
     pass/get_output_element_elimination.hpp
     pass/graph_rewrite.cpp
@@ -328,6 +344,8 @@ set (SRC
     pass/zero_dim_tensor_elimination.hpp
     pass/concat_fusion.hpp
     pass/concat_fusion.cpp
+    pass/pass_util.hpp
+    pass/pass_util.cpp
     pattern/matcher.cpp
     pattern/matcher.hpp
     pattern/op/any.hpp
@@ -337,6 +355,8 @@ set (SRC
     pattern/op/skip.hpp
     placement.cpp
     placement.hpp
+    provenance.cpp
+    provenance.hpp
     rank.hpp
     result_vector.hpp
     runtime/aligned_buffer.cpp

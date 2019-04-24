@@ -1413,6 +1413,8 @@ void runtime::gpu::CudaKernelBuilder::get_reverse_sequence_op(
             writer << "uint32_t output_idx_" << rank - 1 << " = input_idx / output_strides["
                    << rank - 1 << "];\n";
             writer << "uint32_t sequence_length = sequence[output_idx_" << batch_axis << "];\n";
+            // TODO: determine whether the following can/should be changed to NGRAPH_CHECK. If
+            // not, explain the exception to our "no-assert rule".
             writer << "assert(sequence_length <= output_shape[" << sequence_axis << "]);\n";
 
             writer << "bool need_reverse = (output_idx_" << sequence_axis

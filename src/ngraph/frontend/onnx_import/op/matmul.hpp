@@ -27,6 +27,7 @@ namespace ngraph
         {
             namespace set_1
             {
+                NodeVector make_matmul_op(const Node& node, bool quantized);
                 NodeVector matmul(const Node& node);
             } // namespace set_1
 

@@ -1725,6 +1725,7 @@ h1 {
 h2, .rst-content .toctree-wrapper p.caption {
   font-size: 139%;
   font-weight: lighter;
+  color: #30333c;
 }
 
 h3 {

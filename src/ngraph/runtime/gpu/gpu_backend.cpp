@@ -223,6 +223,7 @@ bool runtime::gpu::GPU_Backend::is_supported(const Node& op) const
                                    "All",
                                    "Any",
                                    "AllReduce",
+                                   "BatchMatMul",
                                    "DynPad"
                                    "SelectAndScatter",
                                    "StopGradient",

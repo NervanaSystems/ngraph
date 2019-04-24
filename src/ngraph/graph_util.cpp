@@ -14,7 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cassert>
 #include <deque>
 #include <unordered_map>
 #include <unordered_set>
@@ -33,6 +32,7 @@
 #include "ngraph/op/result.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
+#include "ngraph/provenance.hpp"
 #include "ngraph/result_vector.hpp"
 #include "ngraph/util.hpp"
 
@@ -65,17 +65,16 @@ void ngraph::traverse_nodes(const Function* p,
     traverse_nodes(nodes, f, include_control_deps);
 }
 
-// This version of traverses directly from input/output nodes to perform functions on
-// graphs that are not wrapped by functions. Most useful for finding parameters of a graph
-// directly from the result nodes, not from function parameters.
-void ngraph::traverse_nodes(const NodeVector& io_nodes,
+void ngraph::traverse_nodes(const NodeVector& subgraph_results,
                             std::function<void(std::shared_ptr<Node>)> f,
-                            bool include_control_deps)
+                            bool include_control_deps,
+                            const NodeVector& subgraph_params)
 {
-    std::unordered_set<std::shared_ptr<Node>> instances_seen;
+    std::unordered_set<std::shared_ptr<Node>> instances_seen{subgraph_params.begin(),
+                                                             subgraph_params.end()};
     std::deque<std::shared_ptr<Node>> stack;
 
-    for (auto r : io_nodes)
+    for (auto r : subgraph_results)
     {
         stack.push_front(r);
     }
@@ -150,22 +149,36 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
     }
 
     // Fix input/output descriptors
-    assert(target->get_outputs().size() == replacement->get_outputs().size());
+    NGRAPH_CHECK(target->get_output_size() == replacement->get_output_size());
+
+    if (ngraph::get_provenance_enabled())
+    {
+        auto set_replacement_prov = [replacement](std::shared_ptr<Node> node) {
+            replacement->merge_provenance_tags_from(node);
+        };
+
+        traverse_nodes({target}, set_replacement_prov, false, replacement->get_arguments());
+
+        auto propagate_replacement_prov = [replacement](std::shared_ptr<Node> node) {
+            if (is_post_dominated(node.get(), replacement.get()))
+            {
+                node->merge_provenance_tags_from(replacement);
+            }
+        };
+
+        traverse_nodes({replacement}, propagate_replacement_prov, false);
+    }
 
     // For each of target's output O with replacement output O_rep:
     //     For each O's connected downstream input I:
     //         Change I's connected upstream output to O_rep
-    for (size_t i = 0; i < target->get_outputs().size(); i++)
+    for (size_t i = 0; i < target->get_output_size(); i++)
     {
-        auto& target_output = target->get_outputs().at(i);
-        std::set<ngraph::descriptor::Input*> copy_inputs{begin(target_output.get_inputs()),
-                                                         end(target_output.get_inputs())};
-        for (auto input : copy_inputs)
+        for (auto& input : target->output(i).get_target_inputs())
         {
-            input->replace_output(replacement->get_outputs().at(i));
+            input.replace_source_output(replacement->output(i));
         }
     }
-    replacement->merge_provenance_tags_from(target);
 }
 
 // Check if all paths from X to a result go through Y
@@ -345,13 +358,27 @@ pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
     par_node->set_placement(dst_node->get_placement());
 
     // Fix input / output among src, dst and par
-    descriptor::Input* dst_input = dst_node->get_input_from(src_node);
-    descriptor::Output* src_output = src_node->get_output_to(dst_node);
-    src_output->remove_input(dst_input);    // Remove [0]
-    dst_input->replace_output(par_node, 0); // Remove [0] (again), add [8], remove [1], add [9]
+    std::vector<Input<Node>> dst_inputs = get_inputs_from(*src_node, *dst_node);
+    NGRAPH_CHECK(dst_inputs.size() == 1,
+                 "insert_result_parameter_split encountered more than "
+                 "one input between the source and destination nodes");
+    auto& dst_input = dst_inputs[0];
+
+    std::vector<Output<Node>> src_outputs = get_outputs_to(*src_node, *dst_node);
+    NGRAPH_CHECK(src_outputs.size() == 1,
+                 "insert_result_parameter_split encountered more than "
+                 "one output between the source and destination nodes");
+    auto& src_output = src_outputs[0];
+
+    // Remove [0]
+    src_output.remove_target_input(dst_input);
+
+    // Remove [0] (again), add [8], remove [1], add [9]
+    dst_input.replace_source_output(par_node->output(0));
 
     // Add res node
-    shared_ptr<op::Result> res_node = make_shared<op::Result>(src_node); // Add [4], [5], [6], [7]
+    // Add [4], [5], [6], [7]
+    shared_ptr<op::Result> res_node = make_shared<op::Result>(src_node);
     res_node->set_placement(src_node->get_placement());
 
     return make_pair(res_node, par_node);
@@ -402,10 +429,21 @@ void ngraph::insert_new_node_between(const shared_ptr<Node>& src_node,
                                      const shared_ptr<Node>& new_node)
 {
     // Fix input / output
-    descriptor::Input* dst_input = dst_node->get_input_from(src_node);
-    descriptor::Output* src_output = src_node->get_output_to(dst_node);
-    src_output->remove_input(dst_input);    // Remove [0]
-    dst_input->replace_output(new_node, 0); // Remove [0] (again), add [8], remove [1], add [9]
+    std::vector<Input<Node>> dst_inputs = get_inputs_from(*src_node, *dst_node);
+    NGRAPH_CHECK(dst_inputs.size() == 1,
+                 "insert_new_node_between encountered more than one "
+                 "input between the source and destination nodes");
+    auto& dst_input = dst_inputs[0];
+
+    std::vector<Output<Node>> src_outputs = get_outputs_to(*src_node, *dst_node);
+    NGRAPH_CHECK(src_outputs.size() == 1,
+                 "insert_new_node_between encountered more than one "
+                 "output between the source and destination nodes");
+    auto& src_output = src_outputs[0];
+
+    src_output.remove_target_input(dst_input); // Remove [0]
+    dst_input.replace_source_output(
+        new_node->output(0)); // Remove [0] (again), add [8], remove [1], add [9]
 }
 
 std::shared_ptr<Node> ngraph::make_zero(const element::Type& element_type, const Shape& shape)
@@ -470,6 +508,13 @@ NodeVector ngraph::get_subgraph_outputs(const NodeVector& nodes,
     return outputs;
 }
 
+NodeVector ngraph::extract_subgraph(const NodeVector& results, const NodeVector& args)
+{
+    NodeVector subgraph;
+    traverse_nodes(results, [&](std::shared_ptr<Node> n) { subgraph.push_back(n); }, true, args);
+    return subgraph;
+}
+
 bool ngraph::is_used(Node* node)
 {
     std::unordered_set<Node*> instances_seen;
@@ -511,18 +556,18 @@ size_t ngraph::get_user_count(Node* node)
 
 bool ngraph::possibly_overwritten(Node* node)
 {
-    for (const descriptor::Output& output : node->get_outputs())
+    for (auto& output : node->outputs())
     {
-        for (const descriptor::Input* input : output.get_inputs())
+        for (auto& input : output.get_target_inputs())
         {
-            if (input->get_node()->is_op())
+            if (input.get_node()->is_op())
             {
-                auto op = std::static_pointer_cast<ngraph::op::Op>(input->get_node());
+                auto op = static_cast<ngraph::op::Op*>(input.get_node());
                 if (auto op_annotations = op->get_op_annotations())
                 {
                     for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
                     {
-                        if (input->get_index() == oi_pair.input && oi_pair.destructive)
+                        if (input.get_index() == oi_pair.input && oi_pair.destructive)
                         {
                             return true;
                         }
@@ -576,4 +621,45 @@ void ngraph::plot_graph(
     ngraph::pass::Manager pass_manager;
     pass_manager.register_pass<ngraph::pass::VisualizeTree>(filename, attributes);
     pass_manager.run_passes(f);
+}
+
+std::vector<Input<Node>> ngraph::get_inputs_from(Node& src, Node& dst)
+{
+    std::vector<Input<Node>> result;
+
+    for (auto& input : dst.inputs())
+    {
+        if (input.get_source_output().get_node() == &src)
+        {
+            result.push_back(input);
+        }
+    }
+
+    return result;
+}
+
+std::vector<Output<Node>> ngraph::get_outputs_to(Node& src, Node& dst)
+{
+    std::vector<Output<Node>> result;
+
+    for (auto& output : src.outputs())
+    {
+        bool targets_dst = false;
+
+        for (auto& input : output.get_target_inputs())
+        {
+            if (input.get_node() == &dst)
+            {
+                targets_dst = true;
+                break;
+            }
+        }
+
+        if (targets_dst)
+        {
+            result.push_back(output);
+        }
+    }
+
+    return result;
 }

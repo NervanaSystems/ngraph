@@ -40,7 +40,8 @@ include(var_functions)
 
 NGRAPH_GET_VERSION_LABEL()
 
-string(REGEX MATCH "([0-9?]+)\\.([0-9?]+)\\.([0-9?]+)" NGRAPH_VERSION_SHORT "${NGRAPH_VERSION_LABEL}")
+string(REGEX MATCH "([0-9?]+)\\.([0-9?]+)\\.([0-9?]+)(-rc\\.[0-9?]+)?" NGRAPH_VERSION_SHORT "${NGRAPH_VERSION_LABEL}")
+string(REGEX REPLACE "-rc." "rc" NGRAPH_WHEEL_VERSION "${NGRAPH_VERSION_SHORT}")
 string(REGEX MATCH "([0-9?]+)\\.([0-9?]+)" NGRAPH_API_VERSION "${NGRAPH_VERSION_LABEL}")
 string(REGEX MATCH "[^v](.*)" NGRAPH_VERSION "${NGRAPH_VERSION_LABEL}")
 string(REPLACE "." ";" NGRAPH_VERSION_PARTS "${NGRAPH_VERSION_SHORT}")
@@ -51,6 +52,7 @@ configure_file(VERSION.in VERSION)
 
 message(STATUS "NGRAPH_VERSION ${NGRAPH_VERSION}")
 message(STATUS "NGRAPH_VERSION_SHORT ${NGRAPH_VERSION_SHORT}")
+message(STATUS "NGRAPH_WHEEL_VERSION ${NGRAPH_WHEEL_VERSION}")
 message(STATUS "NGRAPH_API_VERSION ${NGRAPH_API_VERSION}")
 
 set(NGRAPH_INCLUDE_PATH
@@ -74,7 +76,8 @@ if ("${CMAKE_GENERATOR}" MATCHES "^Visual Studio.*$")
     set(MSVS TRUE)
 endif()
 
-if (APPLE AND (NOT CMAKE_OSX_SYSROOT))
+# APPLE: Set CMAKE_OSX_SYSROOT if not set already.
+if (APPLE)
     execute_process(COMMAND sw_vers -productVersion
         OUTPUT_VARIABLE OSX_FULL_VERSION
         OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -82,14 +85,26 @@ if (APPLE AND (NOT CMAKE_OSX_SYSROOT))
     string(REGEX REPLACE "^([0-9]+\\.[0-9]+).*$" "\\1"
         OSX_SHORT_VERSION "${OSX_FULL_VERSION}")
 
-    if(NOT (OSX_SHORT_VERSION VERSION_LESS 10.14))
-        # Xcode is installed
-        set(XCODE_ISYSROOT /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX${OSX_SHORT_VERSION}.sdk)
-        message(STATUS "Trying Xcode sdk at ${XCODE_ISYSROOT}.")
-        if(NOT EXISTS ${XCODE_ISYSROOT})
+    message(STATUS "Detected: OSX ${OSX_SHORT_VERSION}")
+
+    if (CMAKE_OSX_SYSROOT)
+        message(STATUS "Using CMAKE_OSX_SYSROOT: ${CMAKE_OSX_SYSROOT}")
+    else()
+        execute_process(COMMAND xcode-select -p
+            OUTPUT_VARIABLE APPLE_DEV_DIR
+            OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+        if("${APPLE_DEV_DIR}" STREQUAL "/Library/Developer/CommandLineTools")
             # Command line tools only
-            set(XCODE_ISYSROOT /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk)
+            set(XCODE_ISYSROOT ${APPLE_DEV_DIR}/SDKs/MacOSX.sdk)
             message(STATUS "Trying command line tool sdk at ${XCODE_ISYSROOT}.")
+            if(NOT EXISTS ${XCODE_ISYSROOT})
+                message(FATAL_ERROR "Cannot find macos sdk.")
+            endif()
+        else()
+            # Xcode is installed
+            set(XCODE_ISYSROOT ${APPLE_DEV_DIR}/Platforms/MacOSX.platform/Developer/SDKs/MacOSX${OSX_SHORT_VERSION}.sdk)
+            message(STATUS "Trying Xcode sdk at ${XCODE_ISYSROOT}.")
             if(NOT EXISTS ${XCODE_ISYSROOT})
                 message(FATAL_ERROR "Cannot find macos sdk.")
             endif()
@@ -100,10 +115,18 @@ if (APPLE AND (NOT CMAKE_OSX_SYSROOT))
 endif()
 
 # Setup CMAKE_ARGS to be forwarded to External Projects
-set(NGRAPH_FORWARD_CMAKE_ARGS
+if (CMAKE_OSX_SYSROOT)
+    set(NGRAPH_FORWARD_CMAKE_ARGS
+        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+        -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
+        )
+else()
+    set(NGRAPH_FORWARD_CMAKE_ARGS
         -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
         -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
         )
+endif()
 
 if (NOT MSVS)
     if(NOT CMAKE_BUILD_TYPE)
@@ -135,6 +158,7 @@ option(NGRAPH_NOP_ENABLE "Control the building of the NOP backend" TRUE)
 option(NGRAPH_GPUH_ENABLE "Control the building of the Hybrid GPU backend" FALSE)
 option(NGRAPH_GENERIC_CPU_ENABLE "Enable build nGraph for generic CPU backend" FALSE)
 option(NGRAPH_DEBUG_ENABLE "Enable output for NGRAPH_DEBUG statements" FALSE)
+option(NGRAPH_DEPRECATED_ENABLE "Enable compiler deprecation pragmas for deprecated APIs (recommended only for development use)" FALSE)
 option(NGRAPH_ONNX_IMPORT_ENABLE "Enable ONNX importer" FALSE)
 option(NGRAPH_DEX_ONLY "Build CPU DEX without codegen" FALSE)
 option(NGRAPH_CODE_COVERAGE_ENABLE "Enable code coverage data collection" FALSE)
@@ -145,7 +169,7 @@ option(NGRAPH_DISTRIBUTED_ENABLE "Enable distributed training using MLSL/OpenMPI
 
 if (NGRAPH_CPU_ENABLE
         AND
-    ((NOT NGRAPH_GPU_ENABLE) AND (NOT NGRAPH_GPUH_ENABLE) 
+    ((NOT NGRAPH_GPU_ENABLE) AND (NOT NGRAPH_GPUH_ENABLE)
         AND (NOT NGRAPH_GENERIC_CPU_ENABLE) AND (NOT NGRAPH_INTELGPU_ENABLE))
    )
     set(NGRAPH_INTEL_CPU_ONLY_ENABLE ON)
@@ -196,6 +220,7 @@ NORMALIZE_BOOL(NGRAPH_NOP_ENABLE)
 NORMALIZE_BOOL(NGRAPH_GPUH_ENABLE)
 NORMALIZE_BOOL(NGRAPH_GENERIC_CPU_ENABLE)
 NORMALIZE_BOOL(NGRAPH_DEBUG_ENABLE)
+NORMALIZE_BOOL(NGRAPH_DEPRECATED_ENABLE)
 NORMALIZE_BOOL(NGRAPH_ONNX_IMPORT_ENABLE)
 NORMALIZE_BOOL(NGRAPH_DEX_ONLY)
 NORMALIZE_BOOL(NGRAPH_CODE_COVERAGE_ENABLE)
@@ -214,6 +239,7 @@ message(STATUS "NGRAPH_NOP_ENABLE:              ${NGRAPH_NOP_ENABLE}")
 message(STATUS "NGRAPH_GPUH_ENABLE:             ${NGRAPH_GPUH_ENABLE}")
 message(STATUS "NGRAPH_GENERIC_CPU_ENABLE:      ${NGRAPH_GENERIC_CPU_ENABLE}")
 message(STATUS "NGRAPH_DEBUG_ENABLE:            ${NGRAPH_DEBUG_ENABLE}")
+message(STATUS "NGRAPH_DEPRECATED_ENABLE:       ${NGRAPH_DEPRECATED_ENABLE}")
 message(STATUS "NGRAPH_ONNX_IMPORT_ENABLE:      ${NGRAPH_ONNX_IMPORT_ENABLE}")
 message(STATUS "NGRAPH_DEX_ONLY:                ${NGRAPH_DEX_ONLY}")
 message(STATUS "NGRAPH_CODE_COVERAGE_ENABLE:    ${NGRAPH_CODE_COVERAGE_ENABLE}")
@@ -267,7 +293,7 @@ endif()
 
 if (WIN32)
     set (CMAKE_CXX_STANDARD 11)
-    set(CMAKE_CXX_FLAGS "/W0 /EHsc")
+    set(CMAKE_CXX_FLAGS "/W0 /EHsc /MP")
 else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g")
@@ -375,17 +401,29 @@ if(NGRAPH_DEBUG_ENABLE)
 endif()
 
 #-----------------------------------------------------------------------------------------------
+# enable or disable deprecation warnings for old APIs
+#-----------------------------------------------------------------------------------------------
+if(NGRAPH_DEPRECATED_ENABLE)
+    add_definitions(-DNGRAPH_DEPRECATED_ENABLE)
+endif()
+
+#-----------------------------------------------------------------------------------------------
 # External projects install directory
 #-----------------------------------------------------------------------------------------------
 
 set(NGRAPH_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/src/ngraph)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
-set(NGRAPH_LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR}/${CMAKE_CFG_INTDIR})
 if(WIN32)
+    set(NGRAPH_LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR}/${CMAKE_CFG_INTDIR})
+    set(NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY ${NGRAPH_BUILD_DIR}/\${CMAKE_INSTALL_CONFIG_NAME})
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
     set(NGRAPH_ARCHIVE_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR}/${CMAKE_CFG_INTDIR})
+    set(NGRAPH_ARCHIVE_INSTALL_SRC_DIRECTORY ${NGRAPH_BUILD_DIR}/\${CMAKE_INSTALL_CONFIG_NAME})
     set(CMAKE_PDB_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+else()
+    set(NGRAPH_LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+    set(NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY ${NGRAPH_BUILD_DIR})
 endif()
 
 set(EXTERNAL_INSTALL_DIR ${CMAKE_BINARY_DIR}/external)

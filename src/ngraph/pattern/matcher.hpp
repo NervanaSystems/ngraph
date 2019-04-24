@@ -16,7 +16,6 @@
 
 #pragma once
 
-#include <cassert>
 #include <functional>
 #include <memory.h>
 
@@ -26,6 +25,7 @@
 #include "ngraph/pattern/op/any_of.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -69,11 +69,13 @@ namespace ngraph
             Matcher(const std::shared_ptr<Node> pattern_node = nullptr,
                     graph_rewrite_callback callback = nullptr,
                     const std::string& name = "Unnamed",
+                    pass::PassPropertyMask property = pass::PassProperty::REGULAR_FUSIONS,
                     bool strict_mode = false)
                 : m_pattern_node(pattern_node)
                 , m_callback(callback)
                 , m_depth(0)
                 , m_name(name)
+                , m_property(property)
                 , m_strict_mode(strict_mode)
             {
             }
@@ -111,6 +113,7 @@ namespace ngraph
                 return matched;
             }
 
+            bool get_property(const pass::PassPropertyMask& prop) const;
             bool is_contained_match(const NodeVector& exclusions = {}, bool ignore_unused = true);
 
             bool process_match(graph_rewrite_callback callback = nullptr);
@@ -173,6 +176,7 @@ namespace ngraph
             graph_rewrite_callback m_callback;
             size_t m_depth;
             std::string m_name;
+            pass::PassPropertyMask m_property;
             bool m_strict_mode;
         };
 

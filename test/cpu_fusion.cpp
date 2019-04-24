@@ -33,6 +33,7 @@
 #include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
+#include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/negative.hpp"
@@ -54,13 +55,13 @@
 #include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
-#include "ngraph/runtime/cpu/op/batch_dot.hpp"
+#include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
-#include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
+#include "ngraph/runtime/cpu/op/deconv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
@@ -506,7 +507,7 @@ TEST(cpu_fusion, fuse_conv_bias)
 {
     pass::Manager pass_manager;
     pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::DIFFERENTIABLE_FUSIONS);
+    pass_manager.register_pass<ngraph::runtime::cpu::pass::CPUFusion>();
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "conv_bias.json");
     const string json_string = file_util::read_file_to_string(json_path);
     stringstream ss(json_string);
@@ -1108,6 +1109,94 @@ TEST(cpu_fusion, conv_add)
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
 }
 
+shared_ptr<Function> gen_deconv(const bool add_goe)
+{
+    Shape conv_out_shape{100, 64, 1, 1};
+    auto out_delta = std::make_shared<op::Parameter>(element::f32, conv_out_shape);
+
+    Shape filters_shape{64, 512, 4, 4};
+    Shape bias_shape{512};
+    Shape data_batch_shape{100, 512, 4, 4};
+
+    auto data_label = std::make_shared<pattern::op::Label>(element::f32, data_batch_shape);
+    auto filters = std::make_shared<op::Parameter>(element::f32, filters_shape);
+
+    auto conv = std::make_shared<op::ConvolutionBackpropData>(data_label->get_shape(),
+                                                              filters,
+                                                              out_delta,
+                                                              Strides{1, 1},
+                                                              Strides{1, 1},
+                                                              CoordinateDiff{0, 0},
+                                                              CoordinateDiff{0, 0},
+                                                              Strides{1, 1});
+    auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
+
+    auto mean = std::make_shared<op::Parameter>(element::f32, bias_shape);
+    auto var = std::make_shared<op::Parameter>(element::f32, bias_shape);
+    auto gamma = std::make_shared<op::Parameter>(element::f32, bias_shape);
+    auto beta = std::make_shared<op::Parameter>(element::f32, bias_shape);
+    double eps = 0.001;
+
+    auto goe_bn = std::make_shared<op::GetOutputElement>(conv, 0);
+
+    // Adding a goe will stop fusion since the patterns wont expect to see this op
+    auto bn = add_goe
+                  ? std::make_shared<op::BatchNormInference>(goe_bn, gamma, beta, mean, var, eps)
+                  : std::make_shared<op::BatchNormInference>(conv, gamma, beta, mean, var, eps);
+
+    return make_shared<Function>(NodeVector{bn},
+                                 ParameterVector{filters, out_delta, gamma, beta, mean, var});
+}
+
+TEST(cpu_fusion, fuse_deconv)
+{
+    bool use_deconv_fuse = (getenv("NGRAPH_DECONV_FUSE") != nullptr);
+    if (!use_deconv_fuse)
+    {
+        set_environment("NGRAPH_DECONV_FUSE", "1", 1);
+    }
+
+    auto fuse_func = gen_deconv(false);
+    auto nofuse_func = gen_deconv(true);
+
+    {
+        pass::Manager pass_manager;
+        pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+        pass_manager.run_passes(fuse_func);
+        ASSERT_EQ(count_ops_of_type<op::DeconvolutionBias>(fuse_func), 1);
+    }
+
+    {
+        pass::Manager pass_manager;
+        pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+        pass_manager.run_passes(nofuse_func);
+        ASSERT_EQ(count_ops_of_type<op::DeconvolutionBias>(nofuse_func), 0);
+        ASSERT_EQ(count_ops_of_type<op::Relu>(nofuse_func), 0);
+    }
+
+    // Test values
+    {
+        test::Uniform<float> rng(1.0f, 100.0f);
+        vector<vector<float>> args;
+        for (shared_ptr<op::Parameter> param : fuse_func->get_parameters())
+        {
+            auto name = param->get_name();
+            vector<float> tensor_val(shape_size(param->get_shape()));
+            rng.initialize(tensor_val);
+            args.push_back(tensor_val);
+        }
+        auto nofuse_results = execute(nofuse_func, args, "CPU");
+        auto fuse_results = execute(fuse_func, args, "CPU");
+
+        EXPECT_TRUE(test::all_close(fuse_results.at(0), nofuse_results.at(0)));
+    }
+
+    if (!use_deconv_fuse)
+    {
+        unset_environment("NGRAPH_DECONV_FUSE");
+    }
+}
+
 shared_ptr<Function> gen_groupconv_batchnorm(const bool add_goe,
                                              const bool with_relu,
                                              const Shape shape_in,
@@ -1365,7 +1454,7 @@ TEST(cpu_fusion, weight_fusion)
     auto reshape_conv =
         std::make_shared<ngraph::op::Reshape>(param, AxisVector{0}, Shape{16, 4, 1, 1});
     auto data_conv = std::make_shared<op::Parameter>(element::f32, Shape{16, 4, 7, 7});
-    auto tvt = reshape_conv->get_outputs().at(0).get_tensor_ptr().get();
+    auto tvt = &reshape_conv->output(0).get_tensor();
     auto lt_desc = std::make_shared<runtime::cpu::LayoutDescriptor>(*tvt);
     auto cvt_lt_conv = std::make_shared<runtime::cpu::op::ConvertLayout>(reshape_conv, lt_desc);
     auto conv = std::make_shared<ngraph::op::Convolution>(
@@ -1374,7 +1463,7 @@ TEST(cpu_fusion, weight_fusion)
     auto reshape_conv_bprop =
         std::make_shared<op::Reshape>(param, AxisVector{0}, Shape{16, 4, 1, 1});
     auto dummy_arg_conv_bprop = std::make_shared<op::Parameter>(element::f32, Shape{1, 16, 7, 7});
-    auto tvt_bprop = reshape_conv_bprop->get_outputs().at(0).get_tensor_ptr().get();
+    auto tvt_bprop = &reshape_conv_bprop->output(0).get_tensor();
     auto lt_desc_bprop = std::make_shared<runtime::cpu::LayoutDescriptor>(*tvt_bprop);
     auto cvt_lt_conv_bprop =
         std::make_shared<runtime::cpu::op::ConvertLayout>(reshape_conv_bprop, lt_desc_bprop);
@@ -1423,22 +1512,22 @@ TEST(cpu_fusion, max_pool_with_indices)
 
     {
         pass::Manager pass_manager;
-        pass_manager.register_pass<pass::VisualizeTree>("max_pool_fprop_before.pdf");
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_fprop_before.png");
         pass_manager.run_passes(f);
     }
 
     {
         NodeVector nv_cwi;
         pass::Manager pass_manager;
-        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_before.pdf");
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_before.png");
         pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
-        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_after.pdf");
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_after.png");
         pass_manager.run_passes(df);
     }
 
     {
         pass::Manager pass_manager;
-        pass_manager.register_pass<pass::VisualizeTree>("max_pool_fprop_after.pdf");
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_fprop_after.png");
         pass_manager.run_passes(f);
     }
 
@@ -1493,9 +1582,9 @@ TEST(cpu_fusion, backwards_maxpool_with_indices_n4_c1_hw4_2x2_max)
     {
         NodeVector nv_cwi;
         pass::Manager pass_manager;
-        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_before2.pdf");
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_before2.png");
         pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
-        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_after2.pdf");
+        pass_manager.register_pass<pass::VisualizeTree>("max_pool_bprop_after2.png");
         pass_manager.run_passes(df);
     }
 
@@ -1794,7 +1883,7 @@ void optimize_graph(std::shared_ptr<ngraph::Function>& f, std::shared_ptr<ngraph
     pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
     pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
     pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
-    pass_manager.register_pass<pass::VisualizeTree>("before.fprop_cache.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("before.fprop_cache.png");
 
     pass_manager.run_passes(f);
     pass_manager.run_passes(bf);
@@ -2140,9 +2229,9 @@ TEST(cpu_fusion, group_convolution_fusion)
 
     auto f = make_shared<Function>(NodeVector{concat}, ParameterVector{A, B});
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before_group.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("before_group.png");
     pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
-    pass_manager.register_pass<pass::VisualizeTree>("after_group.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("after_group.png");
     pass_manager.run_passes(f);
     auto gc =
         std::dynamic_pointer_cast<op::GroupConvolution>(f->get_results().at(0)->get_argument(0));
@@ -2495,9 +2584,9 @@ TEST(cpu_fusion, loop_kernel_fusion_bounded_relu)
     };
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before_relu_fusion.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("before_relu_fusion.png");
     pass_manager.register_pass<runtime::cpu::pass::CPULoopKernelFusion>(3);
-    pass_manager.register_pass<pass::VisualizeTree>("after_relu_fusion.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("after_relu_fusion.png");
     auto cpu_f = make_function();
     auto int_f = make_function();
     pass_manager.run_passes(cpu_f);
@@ -3047,7 +3136,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_backward)
     }
 }
 
-TEST(cpu_fusion, fuse_batch_dot)
+TEST(cpu_fusion, fuse_batch_mat_mul_transpose)
 {
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
@@ -3056,11 +3145,11 @@ TEST(cpu_fusion, fuse_batch_dot)
     stringstream ss(json_string);
     shared_ptr<Function> func = ngraph::deserialize(ss);
     pass_manager.run_passes(func);
-    size_t ccg = count_ops_of_type<op::BatchDot>(func);
+    size_t ccg = count_ops_of_type<op::BatchMatMulTranspose>(func);
     ASSERT_EQ(ccg, 1);
 }
 
-TEST(cpu_fusion, fuse_batch_dot_forward)
+TEST(cpu_fusion, fuse_batch_mat_mul_transpose_forward)
 {
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
