@@ -61,25 +61,25 @@ namespace ngraph
                       typename FILTER,
                       typename OUTPUT,
                       typename ACCUMULATION = typename widen<OUTPUT>::type>
-            void general_convolution(
-                const INPUT* in,
-                const FILTER* filter,
-                OUTPUT* out,
-                const Shape& in_shape,
-                const Shape& filter_shape,
-                const Shape& out_shape,
-                const Strides& stride,
-                const Strides& filter_dilation,
-                const CoordinateDiff& in_pad_below,
-                const CoordinateDiff& in_pad_above,
-                const Strides& in_dilation,
-                size_t in_batch_axis,
-                size_t in_channel_axis,
-                size_t filter_out_channel_axis,
-                size_t filter_in_channel_axis,
-                size_t out_batch_axis,
-                size_t out_channel_axis,
-                std::function<OUTPUT(INPUT)> rescale = identity_rescale<OUTPUT, INPUT>)
+            void general_convolution(const INPUT* in,
+                                     const FILTER* filter,
+                                     OUTPUT* out,
+                                     const Shape& in_shape,
+                                     const Shape& filter_shape,
+                                     const Shape& out_shape,
+                                     const Strides& stride,
+                                     const Strides& filter_dilation,
+                                     const CoordinateDiff& in_pad_below,
+                                     const CoordinateDiff& in_pad_above,
+                                     const Strides& in_dilation,
+                                     size_t in_batch_axis,
+                                     size_t in_channel_axis,
+                                     size_t filter_out_channel_axis,
+                                     size_t filter_in_channel_axis,
+                                     size_t out_batch_axis,
+                                     size_t out_channel_axis,
+                                     std::function<OUTPUT(ACCUMULATION)> rescale =
+                                         identity_rescale<OUTPUT, ACCUMULATION>)
             {
                 // Comments throughout assume without loss of generality that:
                 //
