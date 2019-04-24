@@ -60,15 +60,6 @@ namespace ngraph
                                                       const std::vector<std::size_t>& input_shape,
                                                       const std::vector<std::size_t>& output_shape);
 
-            /// \brief Permute axes according to specified axes_order parameter.
-            ///
-            /// \param node The node which axes we want to permute.
-            /// \param axes_order The permutation of node tensor axes.
-            ///
-            /// \return: New node with permuted axes.
-            std::shared_ptr<ngraph::Node> reorder_axes(const std::shared_ptr<ngraph::Node>& node,
-                                                       std::vector<std::size_t> axes_order);
-
             /// \brief Return transposed tensor (with axes in reversed order).
             ///
             /// \param node Input tensor we want to transpose

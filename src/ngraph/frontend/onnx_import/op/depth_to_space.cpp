@@ -21,6 +21,7 @@
 #include "depth_to_space.hpp"
 #include "exceptions.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/util/reshape.hpp"
 #include "ngraph/shape.hpp"
 #include "utils/reshape.hpp"
 
@@ -70,7 +71,7 @@ namespace ngraph
                     // Finally squeeze data from respective dimensions.
                     std::shared_ptr<ngraph::Node> flat_node =
                         reshape::reshape(data, ngraph::Shape{n, bs, bs, c_flat, h, w});
-                    flat_node = reshape::reorder_axes(flat_node, {0, 3, 4, 1, 5, 2});
+                    flat_node = ngraph::op::util::reorder_axes(flat_node, {0, 3, 4, 1, 5, 2});
                     return {reshape::reshape(flat_node, ngraph::Shape{n, c_flat, h * bs, w * bs})};
                 }
             } // namespace set_1

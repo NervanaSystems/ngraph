@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/axis_vector.hpp"
+#include "ngraph/node.hpp"
 
 namespace ngraph
 {
@@ -33,6 +34,15 @@ namespace ngraph
             ///
             AxisVector get_default_axis_vector(std::size_t data_shape_rank,
                                                std::size_t start_value = 0);
+
+            /// \brief Permute axes according to specified axes_order parameter.
+            ///
+            /// \param node The node which axes we want to permute.
+            /// \param axes_order The permutation of node tensor axes.
+            ///
+            /// \return: New node with permuted axes.
+            std::shared_ptr<ngraph::Node> reorder_axes(const std::shared_ptr<ngraph::Node>& node,
+                                                       std::vector<std::size_t> axes_order);
 
         } // namespace util
     }     // namespace  op
