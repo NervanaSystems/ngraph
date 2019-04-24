@@ -14,6 +14,20 @@ See also: https://github.com/NervanaSystems/ngraph/releases for previous version
 CHANGELOG |release|
 ===================
 
+nGraph v0.18.1
+--------------
+
++ Python formatting issue
++ mkl-dnn work-around
++ Event tracing improvements
++ Gaussian error function
++ Begin tracking framework node names
++ ONNX quantization
++ More fusions
+
+
+Changelog 
+=========
 
 nGraph v0.17.0-rc.0
 -------------------
@@ -28,9 +42,6 @@ Recent API Changes
 
 + Pad op takes CoordinateDiff instead of Shape pad values to allow for negative padding.
 
-
-Changelog 
-=========
 
 nGraph v0.16.0-rc.3
 -------------------
