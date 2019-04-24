@@ -15,11 +15,19 @@
 //*****************************************************************************
 
 #pragma once
-#if defined(NGRAPH_ONNX_IMPORT_ENABLE)
 
-#include <pybind11/pybind11.h>
+#include "ngraph/pass/pass.hpp"
 
-namespace py = pybind11;
+namespace ngraph
+{
+    namespace pass
+    {
+        class ConstantToBroadcast;
+    }
+}
 
-void regmodule_pyngraph_onnx_import(py::module m);
-#endif
+class ngraph::pass::ConstantToBroadcast : public NodePass
+{
+public:
+    bool run_on_node(std::shared_ptr<ngraph::Node>) override;
+};
