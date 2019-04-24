@@ -394,6 +394,10 @@ setup(
     cmdclass={'build_ext': BuildExt},
     data_files=data_files,
     setup_requires=['numpy'],
+    install_requires=['onnx',
+                      'six',
+                      'numpy',
+                      'typing',],
     zip_safe=False,
     extras_require={
         'plaidml': ['plaidml>=0.5.0'],
