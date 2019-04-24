@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <cfenv>
 #include <cmath>
 #include <functional>
 
@@ -81,6 +82,9 @@ namespace ngraph
                                      std::function<OUTPUT(ACCUMULATION)> rescale =
                                          identity_rescale<OUTPUT, ACCUMULATION>)
             {
+#pragma STDC FENV_ACCESS ON
+                auto old_mode = std::fegetround();
+                std::fesetround(FE_TONEAREST);
                 // Comments throughout assume without loss of generality that:
                 //
                 // * batch axes for both in and out are 0
@@ -228,6 +232,7 @@ namespace ngraph
 
                     out[out_transform.index(out_coord)] = rescale(result);
                 }
+                std::fesetround(old_mode);
             }
 
             template <typename INPUT,
