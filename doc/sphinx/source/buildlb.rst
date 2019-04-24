@@ -67,6 +67,7 @@ as needed:
    -- NGRAPH_USE_PREBUILT_LLVM:        OFF
    -- NGRAPH_PLAIDML_ENABLE:           OFF
    -- NGRAPH_DISTRIBUTED_ENABLE:       OFF
+   -- NGRAPH_MANYLINUX_ENABLE:         OFF
 
 .. important:: The default :program:`cmake` procedure (no build flags) will  
    install ``ngraph_dist`` to an OS-level location like ``/usr/bin/ngraph_dist``
@@ -80,29 +81,16 @@ paths on that system. See the :file:`ngraph/CMakeLists.txt` file to change or
 customize the default CMake procedure.
 
 
-Install steps
--------------
+Build steps
+-----------
 
 .. _ubuntu:
 
-Ubuntu 16.04
-~~~~~~~~~~~~
+Ubuntu LTS
+~~~~~~~~~~
 
 The process documented here will work on Ubuntu\* 16.04 (LTS) or on Ubuntu 
 18.04 (LTS).
-
-#. (Optional) Create something like ``/opt/libraries`` and (with sudo), 
-   give ownership of that directory to your user. Creating such a placeholder 
-   can be useful if you'd like to have a local reference for APIs and 
-   documentation, or if you are a developer who wants to experiment with 
-   how to :doc:`core/constructing-graphs/execute` using resources available through the 
-   code base.
-
-   .. code-block:: console
-
-      $ sudo mkdir -p /opt/libraries
-      $ sudo chown -R username:username /opt/libraries
-      $ cd /opt/libraries
 
 #. Clone the `NervanaSystems` ``ngraph`` repo:
 
@@ -160,18 +148,6 @@ CentOS 7.4
 ~~~~~~~~~~
 
 The process documented here will work on CentOS 7.4.
-
-#. (Optional) Create something like ``/opt/libraries`` and (with sudo), 
-   give ownership of that directory to your user. Creating such a placeholder 
-   can be useful if you'd like to have a local reference for APIs and 
-   documentation, or if you are a developer who wants to experiment with 
-   how to :doc:`core/constructing-graphs/execute` using resources available through the 
-   code base.
-
-   .. code-block:: console
-
-      $ sudo mkdir -p /opt/libraries
-      $ sudo chown -R username:username /opt/libraries
 
 #. Update the system with :command:`yum` and issue the following commands: 
    

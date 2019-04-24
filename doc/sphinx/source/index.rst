@@ -88,11 +88,12 @@ boost compared to native implementations. For a high-level overview, see the
    diagnostics/visualize.rst
    diagnostics/debug.rst 
 
+
 .. toctree::
    :maxdepth: 1
    :caption: Tutorials
 
-   nGraph.ai Tutorials <https://www.ngraph.ai/tutorials>   
+   tutorials/index.rst
 
 
 .. toctree::
