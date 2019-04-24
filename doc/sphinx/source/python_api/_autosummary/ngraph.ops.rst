@@ -14,16 +14,20 @@ ngraph.ops
       absolute
       acos
       add
+      argmax
+      argmin
       asin
       atan
       avg_pool
       batch_norm
       broadcast
+      broadcast_to
       ceiling
       concat
       constant
       convert
       convolution
+      convolution_backprop_data
       cos
       cosh
       divide
@@ -31,14 +35,16 @@ ngraph.ops
       equal
       exp
       floor
-      function_call
       get_output_element
       greater
       greater_eq
       less
       less_eq
       log
+      logical_and
       logical_not
+      logical_or
+      lrn
       max
       max_pool
       maximum
@@ -52,7 +58,6 @@ ngraph.ops
       parameter
       power
       prod
-      reduce
       relu
       replace_slice
       reshape
@@ -68,6 +73,7 @@ ngraph.ops
       sum
       tan
       tanh
+      topk
    
    
 

@@ -268,14 +268,55 @@ namespace ngraph
                         throw ngraph_error("check_concat: min and max must have same type");
                     }
 
-                    if (min->get_shape() != Shape{1} || min->get_shape() != Shape{1})
+                    if (min->get_shape() != Shape{1} || max->get_shape() != Shape{1})
                     {
-                        throw ngraph_error("check_concat: min and max must have same shape " +
+                        throw ngraph_error("check_concat: min/max shape not Shape{1}: " +
                                            vector_to_string(min->get_shape()) +
                                            vector_to_string(max->get_shape()));
                     }
                 }
             }
-        }
-    }
-}
+
+            std::shared_ptr<Node> get_dot_scale(std::shared_ptr<Node> min_input,
+                                                std::shared_ptr<Node> max_input,
+                                                std::shared_ptr<Node> min_filter,
+                                                std::shared_ptr<Node> max_filter,
+                                                std::shared_ptr<Node> min_freezed_output,
+                                                std::shared_ptr<Node> max_freezed_output,
+                                                const ngraph::element::Type& input_type,
+                                                const ngraph::element::Type& output_type,
+                                                const bool requantize = true)
+            {
+                auto type = min_input->get_element_type();
+                if (type != max_input->get_element_type() ||
+                    type != min_filter->get_element_type() ||
+                    type != max_filter->get_element_type() ||
+                    type != min_freezed_output->get_element_type() ||
+                    type != max_freezed_output->get_element_type())
+                {
+                    throw ngraph_error("get_dot_scale: min and max must have same type");
+                }
+
+                auto shape = min_input->get_shape();
+                if (shape != max_input->get_shape() || shape != min_filter->get_shape() ||
+                    shape != max_filter->get_shape() || shape != min_freezed_output->get_shape() ||
+                    shape != max_freezed_output->get_shape())
+                {
+                    throw ngraph_error("get_dot_scale: min and max must have same shape");
+                }
+                auto data_scale = get_scale(min_input, max_input, input_type);
+                auto weight_scale = get_scale(min_filter, max_filter, element::i8);
+                auto out_scale = get_scale(min_freezed_output, max_freezed_output, output_type);
+                if (requantize)
+                {
+                    return data_scale * weight_scale / out_scale;
+                }
+                else
+                {
+                    return data_scale * weight_scale;
+                }
+            }
+
+        } // namespace quantization_util
+    }     // namespace builder
+} // namespace ngraph

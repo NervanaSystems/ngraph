@@ -14,6 +14,10 @@
 # limitations under the License.
 # ******************************************************************************
 
+if(LINUX)
+    set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+endif()
+
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "4.0.0")
         # gtest has issues with this with v1.8.x
@@ -26,9 +30,12 @@ set(SRC
     algebraic_simplification.cpp
     all_close_f.cpp
     assertion.cpp
+    bfloat16.cpp
     build_graph.cpp
     builder_autobroadcast.cpp
+    check.cpp
     constant_folding.cpp
+    concat_fusion.cpp
     control_dependencies.cpp
     coordinate.cpp
     copy.cpp
@@ -36,26 +43,31 @@ set(SRC
     cpio.cpp
     cse.cpp
     element_type.cpp
+    event_tracing.cpp
     file_util.cpp
     includes.cpp
     input_output_assign.cpp
     main.cpp
     misc.cpp
+    node_input_output.cpp
     nop_elimination.cpp
     op.cpp
     partial_shape.cpp
+    pass.cpp
     pass_liveness.cpp
     pass_manager.cpp
     pass_memory_layout.cpp
+    pass_shape_specialization.cpp
     pattern.cpp
+    provenance.cpp
     reshape_elimination.cpp
     reshape_sinking.cpp
     serialize.cpp
     shape.cpp
+    specialize_shapes.cpp
     tensor.cpp
     type_prop.cpp
     util.cpp
-    uuid.cpp
     zero_dim_tensor_elimination.cpp
 )
 
@@ -74,8 +86,10 @@ if (NGRAPH_INTERPRETER_ENABLE)
     list(APPEND SRC
         backend_debug_api.cpp
         builder.cpp
-        backend_api.cpp
-        hybrid_backend.cpp)
+        backend_api.cpp)
+        if (NGRAPH_CPU_ENABLE)
+            list(APPEND SRC hybrid_backend.cpp)
+        endif()
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTERPRETER)
 endif()
 
@@ -126,11 +140,14 @@ set(MULTI_TEST_SRC
     autodiff.in.cpp
     backend_all.in.cpp
     backend_any.in.cpp
+    backend_api.in.cpp
     backend_binary_elementwise.in.cpp
     backend_broadcast.in.cpp
     backend_comparison.in.cpp
     backend_dot.in.cpp
     backend_embedding_lookup.in.cpp
+    backend_fused_op.in.cpp
+    backend_gather.in.cpp
     backend_one_hot.in.cpp
     backend_pool.in.cpp
     backend_reshape.in.cpp
@@ -151,9 +168,14 @@ if (NGRAPH_CPU_ENABLE)
 endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
-    list(APPEND MULTI_TEST_SRC onnx_import.in.cpp)
+    list(APPEND MULTI_TEST_SRC
+            onnx/onnx_import.in.cpp
+            onnx/onnx_import_convpool.in.cpp
+            onnx/onnx_import_reshape.in.cpp
+            onnx/onnx_import_rnn.in.cpp
+            onnx/onnx_import_quant.in.cpp)
     if (NGRAPH_ONNXIFI_ENABLE)
-        list(APPEND SRC onnxifi.cpp onnxifi_span.cpp)
+        list(APPEND SRC onnx/onnxifi.cpp onnx/onnxifi_span.cpp)
     endif()
 endif()
 

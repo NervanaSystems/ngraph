@@ -14,7 +14,7 @@
 # limitations under the License.
 # ******************************************************************************
 
-set(ONNX_OPSET_VERSION 9 CACHE INTERNAL "Supported version of ONNX operator set")
+set(ONNX_OPSET_VERSION 10 CACHE INTERNAL "Supported version of ONNX operator set")
 
 add_library(onnx_import_interface OBJECT
         core/node.cpp
@@ -74,15 +74,19 @@ add_library(onnx_import STATIC
         op/conv_transpose.hpp
         op/depth_to_space.cpp
         op/depth_to_space.hpp
+        op/dequantize_linear.cpp
+        op/dequantize_linear.hpp
         op/div.hpp
         op/dropout.hpp
         op/elu.cpp
         op/elu.hpp
         op/equal.hpp
+        op/erf.hpp
         op/exp.hpp
         op/flatten.cpp
         op/flatten.hpp
         op/floor.hpp
+        op/gather.hpp
         op/gemm.cpp
         op/gemm.hpp
         op/global_average_pool.cpp
@@ -123,6 +127,11 @@ add_library(onnx_import STATIC
         op/pow.hpp
         op/prelu.cpp
         op/prelu.hpp
+        op/quant_conv.cpp
+        op/quant_conv.hpp
+        op/quantize_linear.cpp
+        op/quantize_linear.hpp
+        op/quantized_matmul.hpp
         op/reciprocal.cpp
         op/reciprocal.hpp
         op/reduce.cpp
@@ -171,8 +180,6 @@ add_library(onnx_import STATIC
         op/xor.hpp
         ops_bridge.cpp
         ops_bridge.hpp
-        utils/broadcasting.cpp
-        utils/broadcasting.hpp
         utils/common.hpp
         utils/convpool.cpp
         utils/convpool.hpp

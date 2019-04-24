@@ -21,7 +21,6 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/util.hpp"
 
-#include <cassert>
 #include <memory>
 #include <numeric>
 #include <sstream>
@@ -179,8 +178,8 @@ namespace ngraph
         std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>
             numpy_broadcast(const std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>& args)
         {
-            assert(args.first);
-            assert(args.second);
+            NGRAPH_CHECK(args.first);
+            NGRAPH_CHECK(args.second);
 
             const ngraph::Shape& arg1_in_shape = args.first->get_shape();
             const ngraph::Shape& arg2_in_shape = args.second->get_shape();

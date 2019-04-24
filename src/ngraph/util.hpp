@@ -25,6 +25,9 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <typeindex>
+#include <typeinfo>
+#include <unordered_map>
 #include <vector>
 
 #include "ngraph/axis_vector.hpp"
@@ -77,6 +80,14 @@ namespace ngraph
     std::string to_upper(const std::string& s);
     std::string trim(const std::string& s);
     std::vector<std::string> split(const std::string& s, char delimiter, bool trim = false);
+    template <typename T>
+    std::string locale_string(T x)
+    {
+        std::stringstream ss;
+        ss.imbue(std::locale(""));
+        ss << x;
+        return ss.str();
+    }
 
     class stopwatch
     {
@@ -181,9 +192,6 @@ namespace ngraph
     void check_fp_values_isnan(const char* name, const float* array, size_t n);
     void check_fp_values_isnan(const char* name, const double* array, size_t n);
 
-    void* aligned_alloc(size_t alignment, size_t size);
-    void aligned_free(void*);
-
     void* ngraph_malloc(size_t size);
     void ngraph_free(void*);
 
@@ -214,11 +222,20 @@ namespace ngraph
     * This utility takes forward-propogation and back-propagation functions
     * and turns them into clone functions where the intermediate values of
     * the forward prop are added to the output of fprop and the input of the bprop
-    * to avoid repeat calcualtions.
+    * to avoid repeat calculations.
     * The last argument is the adjoints coming into the bprop function, the output
     * bprop function will have these nodes as the first N input parameters
     **/
     FpropCache cache_fprop(std::shared_ptr<Function> fprop, std::shared_ptr<Function> bprop);
+
+    // NodeExecutors are used in compiler optimization passes like ConstantFolding to execute a node
+    // using the supplied input and output memory locations.
+    // A BuildNodeExecutor returns a backend-specific NodeExecutor for a given Node type
+    using NodeExecutorTy =
+        std::function<void(const std::vector<void*>& inputs, std::vector<void*>& outputs)>;
+    using BuildNodeExecutor = std::function<NodeExecutorTy(const ngraph::Node*)>;
+
+    using BuildNodeExecutorMap = std::unordered_map<std::type_index, BuildNodeExecutor>;
 
     enum class CPUTensorRole
     {
@@ -226,6 +243,105 @@ namespace ngraph
         CONSTANT,
         OUTPUT,
         INTERMEDIATE
+    };
+
+    /**
+     * EnumMask is intended to work with a scoped enum type. It's used to store
+     * a combination of enum values and provides easy access and manipulation
+     * of these enum values as a mask.
+     *
+     * EnumMask does not provide a set_all() or invert() operator because they
+     * could do things unexpected by the user, i.e. for enum with 4 bit values,
+     * invert(001000...) != 110100..., due to the extra bits.
+     */
+    template <typename T>
+    class EnumMask
+    {
+    public:
+        /// Make sure the template type is an enum.
+        static_assert(std::is_enum<T>::value, "EnumMask template type must be an enum");
+        /// Extract the underlying type of the enum.
+        typedef typename std::underlying_type<T>::type value_type;
+        /// Some bit operations are not safe for signed values, we require enum
+        /// type to use unsigned underlying type.
+        static_assert(std::is_unsigned<value_type>::value, "EnumMask enum must use unsigned type.");
+
+        EnumMask()
+            : m_value{0}
+        {
+        }
+        EnumMask(const T& enum_value)
+            : m_value{static_cast<value_type>(enum_value)}
+        {
+        }
+        EnumMask(const EnumMask& other)
+            : m_value{other.m_value}
+        {
+        }
+        EnumMask(std::initializer_list<T> enum_values)
+            : m_value{0}
+        {
+            for (auto& v : enum_values)
+            {
+                m_value |= static_cast<value_type>(v);
+            }
+        }
+        value_type value() const { return m_value; }
+        /// Check if any of the enum bit mask match
+        bool is_any_set(const EnumMask& p) const { return m_value & p.m_value; }
+        /// Check if all of the enum bit mask match
+        bool is_set(const EnumMask& p) const { return (m_value & p.m_value) == p.m_value; }
+        /// Check if any of the enum bit mask does not match
+        bool is_any_clear(const EnumMask& p) const { return !is_set(p); }
+        /// Check if all of the enum bit mask do not match
+        bool is_clear(const EnumMask& p) const { return !is_any_set(p); }
+        void set(const EnumMask& p) { m_value |= p.m_value; }
+        void clear(const EnumMask& p) { m_value &= ~p.m_value; }
+        void clear_all() { m_value = 0; }
+        bool operator[](const EnumMask& p) const { return is_set(p); }
+        bool operator==(const EnumMask& other) const { return m_value == other.m_value; }
+        bool operator!=(const EnumMask& other) const { return m_value != other.m_value; }
+        EnumMask& operator=(const EnumMask& other)
+        {
+            m_value = other.m_value;
+            return *this;
+        }
+        EnumMask& operator&=(const EnumMask& other)
+        {
+            m_value &= other.m_value;
+            return *this;
+        }
+
+        EnumMask& operator|=(const EnumMask& other)
+        {
+            m_value |= other.m_value;
+            return *this;
+        }
+
+        EnumMask operator&(const EnumMask& other) const
+        {
+            return EnumMask(m_value & other.m_value);
+        }
+
+        EnumMask operator|(const EnumMask& other) const
+        {
+            return EnumMask(m_value | other.m_value);
+        }
+
+        friend std::ostream& operator<<(std::ostream& os, const EnumMask& m)
+        {
+            os << m.m_value;
+            return os;
+        }
+
+    private:
+        /// Only used internally
+        explicit EnumMask(const value_type& value)
+            : m_value{value}
+        {
+        }
+
+        value_type m_value;
     };
 } // end namespace ngraph
 

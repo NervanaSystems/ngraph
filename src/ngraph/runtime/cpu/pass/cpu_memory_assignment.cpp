@@ -51,7 +51,7 @@ runtime::cpu::pass::CPUMemoryAssignment::CPUMemoryAssignment(
 size_t runtime::cpu::pass::CPUMemoryAssignment::get_bufferID(descriptor::Tensor* tensor)
 {
     auto tensor_it = m_tensor_to_bufferID.find(tensor);
-    NGRAPH_ASSERT(tensor_it != m_tensor_to_bufferID.end());
+    NGRAPH_CHECK(tensor_it != m_tensor_to_bufferID.end());
     return tensor_it->second;
 }
 
@@ -107,7 +107,6 @@ void runtime::cpu::pass::CPUMemoryAssignment::process_in_place_concat(
                                 NGRAPH_DEBUG
                                     << "cpu_memory_assignment: change offset, old offset is "
                                     << old_offset << ", new offset is " << offset << std::endl;
-                                offset += input_tensor->size();
 
                                 // check if need to propagate backward
                                 if (arg->is_op())
@@ -129,6 +128,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::process_in_place_concat(
                                     }
                                 }
                             }
+                            offset += input_tensor->size();
                             arg_index++;
                         }
                     }
@@ -159,7 +159,6 @@ void runtime::cpu::pass::CPUMemoryAssignment::propagate_in_place_concat(
                 input_tensor->set_pool_offset(offset);
                 NGRAPH_DEBUG << "cpu_memory_assignment: change offset, old offset is " << old_offset
                              << ", new offset is " << offset;
-                offset += input_tensor->size();
 
                 // check if need to propagate backward
                 if (arg->is_op())
@@ -180,6 +179,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::propagate_in_place_concat(
                     }
                 }
             }
+            offset += input_tensor->size();
             arg_index++;
         }
     }
@@ -257,8 +257,8 @@ void runtime::cpu::pass::CPUMemoryAssignment::process_in_place_slice(
                     // same set, in place slice allowed
                     if (input_bufferID == output_bufferID)
                     {
-                        NGRAPH_ASSERT(m_bufferID_to_tensorSets.find(output_bufferID) !=
-                                      m_bufferID_to_tensorSets.end());
+                        NGRAPH_CHECK(m_bufferID_to_tensorSets.find(output_bufferID) !=
+                                     m_bufferID_to_tensorSets.end());
                         auto offset = input_tensor->get_pool_offset();
                         auto lower_bounds = slice->get_lower_bounds();
                         auto start = 0, accumulated = 1;
@@ -387,10 +387,10 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(list<shared
             auto output_tensor = &node->get_output_tensor();
             auto input_tensor = &node->get_inputs().at(0).get_tensor();
             auto bufferID = get_bufferID(input_tensor);
-            NGRAPH_ASSERT(bufferID <= count);
+            NGRAPH_CHECK(bufferID <= count);
 
             auto input_buffer_it = m_bufferID_to_tensorSets.find(bufferID);
-            NGRAPH_ASSERT(input_buffer_it != m_bufferID_to_tensorSets.end());
+            NGRAPH_CHECK(input_buffer_it != m_bufferID_to_tensorSets.end());
             auto pair = input_buffer_it->second;
             if (pair.first != CPUTensorRole::INTERMEDIATE ||
                 in_place_slice_chain.find(input_tensor) != in_place_slice_chain.end())
@@ -413,7 +413,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(list<shared
         }
         else
         {
-            NGRAPH_ASSERT(node->is_op());
+            NGRAPH_CHECK(node->is_op());
             auto op = std::static_pointer_cast<op::Op>(node);
             if (auto op_annotations = op->get_op_annotations())
             {
@@ -518,10 +518,20 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(list<shared
                                 }
                                 if (!no_in_place)
                                 {
+                                    auto bufferID = get_bufferID(input_tensor);
+                                    auto input_buffer_it = m_bufferID_to_tensorSets.find(bufferID);
+                                    NGRAPH_CHECK(input_buffer_it != m_bufferID_to_tensorSets.end());
+
                                     if (node->description() == "Slice")
                                     {
-                                        // build in place slice chain
-                                        in_place_slice_chain.insert(output_tensor);
+                                        if (input_buffer_it->second.first !=
+                                            CPUTensorRole::CONSTANT)
+                                        {
+                                            // build in place slice chain
+                                            in_place_slice_chain.insert(output_tensor);
+                                            input_buffer_it->second.second.insert(output_tensor);
+                                            m_tensor_to_bufferID[output_tensor] = bufferID;
+                                        }
                                     }
                                     else
                                     {
@@ -531,13 +541,9 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(list<shared
                                         {
                                             in_place_slice_chain.insert(output_tensor);
                                         }
+                                        input_buffer_it->second.second.insert(output_tensor);
+                                        m_tensor_to_bufferID[output_tensor] = bufferID;
                                     }
-                                    auto bufferID = get_bufferID(input_tensor);
-                                    auto input_buffer_it = m_bufferID_to_tensorSets.find(bufferID);
-                                    NGRAPH_ASSERT(input_buffer_it !=
-                                                  m_bufferID_to_tensorSets.end());
-                                    input_buffer_it->second.second.insert(output_tensor);
-                                    m_tensor_to_bufferID[output_tensor] = bufferID;
                                 }
                             }
                         }
@@ -705,21 +711,16 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                             auto input_op = std::static_pointer_cast<op::Op>(input_node);
                             if (auto input_op_annotations = input_op->get_op_annotations())
                             {
-                                // when input is cacheable, do not allow destructive oi
-                                if (input_op_annotations->is_cacheable())
-                                {
-                                    NGRAPH_DEBUG << "cpu_memory_assignment: cacheable input, no "
-                                                    "destructive oi";
-                                    continue;
-                                }
                                 // when reusing memory, ops with different cacheabilities are using different memory manager
                                 // and should not share the same buffer.
-                                else if (!m_disable_memory_sharing &&
-                                         op_annotations->is_cacheable())
+                                if (!m_disable_memory_sharing &&
+                                    input_op_annotations->is_cacheable() !=
+                                        op_annotations->is_cacheable())
                                 {
-                                    NGRAPH_DEBUG << "cpu_memory_assignment: reusing memory with "
-                                                    "non-cacheable input and cacheable output, no "
-                                                    "destructive oi";
+                                    NGRAPH_DEBUG
+                                        << "cpu_memory_assignment: reusing memory with "
+                                           "input and output have different cacheabilities, no "
+                                           "destructive oi";
                                     continue;
                                 }
                             }
@@ -728,7 +729,7 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                         auto output_bufferID = get_bufferID(output_tensor);
 
                         auto input_buffer_it = m_bufferID_to_tensorSets.find(input_bufferID);
-                        NGRAPH_ASSERT(input_buffer_it != m_bufferID_to_tensorSets.end());
+                        NGRAPH_CHECK(input_buffer_it != m_bufferID_to_tensorSets.end());
                         // do not modify function inputs and constants, so no destructive oi
                         if (input_buffer_it->second.first == CPUTensorRole::INPUT ||
                             input_buffer_it->second.first == CPUTensorRole::CONSTANT)
@@ -755,7 +756,7 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                             }
                         }
                         auto output_buffer_it = m_bufferID_to_tensorSets.find(output_bufferID);
-                        NGRAPH_ASSERT(output_buffer_it != m_bufferID_to_tensorSets.end());
+                        NGRAPH_CHECK(output_buffer_it != m_bufferID_to_tensorSets.end());
                         auto output_set = output_buffer_it->second.second;
                         size_t output_size = input_tensor->size();
                         // get the largest tensor size, which is the size of memory buffer for the set
@@ -800,7 +801,7 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
             size_t offset = 0;
             auto bufferID = get_bufferID(tensor);
             auto buffer_it = m_bufferID_to_tensorSets.find(bufferID);
-            NGRAPH_ASSERT(buffer_it != m_bufferID_to_tensorSets.end());
+            NGRAPH_CHECK(buffer_it != m_bufferID_to_tensorSets.end());
             auto tensor_set = buffer_it->second.second;
             size_t size = tensor->size();
             for (auto e : tensor_set)
@@ -856,7 +857,7 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
     {
         auto bufferID = get_bufferID(item);
         auto buffer_it = m_bufferID_to_tensorSets.find(bufferID);
-        NGRAPH_ASSERT(buffer_it != m_bufferID_to_tensorSets.end());
+        NGRAPH_CHECK(buffer_it != m_bufferID_to_tensorSets.end());
 
         if (buffer_it->second.first == CPUTensorRole::INTERMEDIATE)
         {

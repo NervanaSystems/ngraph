@@ -15,11 +15,10 @@
 .. limitations under the License.
 .. ---------------------------------------------------------------------------
 
-Contributing Documentation
-==========================
+Contributing to documentation
+=============================
 
-Read this for changes affecting anything in ``ngraph/doc``
-----------------------------------------------------------
+.. important:: Read this for changes affecting **anything** in ``ngraph/doc``
 
 For updates to the Intel® nGraph Library ``/doc`` repo, please submit a PR with 
 any changes or ideas you'd like integrated. This helps us maintain trackability 
@@ -109,13 +108,13 @@ How to build the documentation
 -------------------------------
 
 
-.. note:: Stuck on how to generate the html? Run these commands; they assume 
-   you start at a command line running within a clone (or a cloned fork) of the 
-   ``ngraph`` repo.  You do **not** need to run a virtual environment to create 
-   documentation if you don't want; running ``$ make clean`` in the 
+.. note:: Stuck on how to generate the html? Run these commands; they assume
+   you start at a command line running within a clone (or a cloned fork) of the
+   ``ngraph`` repo.  You do **not** need to run a virtual environment to create
+   documentation if you don't want; running ``$ make clean`` in the
    ``doc/sphinx`` folder removes any generated files.
 
-Right now the minimal version of Sphinx needed to build the documentation is 
+Right now the minimal version of Sphinx needed to build the documentation is
 Sphinx v. 1.7.5.  This can be installed with :command:`pip3`, either to a virtual 
 environment, or to your base system if you plan to contribute much core code or
 documentation. For C++ API docs that contain inheritance diagrams and collaboration
@@ -128,8 +127,8 @@ To build documentation locally, run:
    .. code-block:: console
 
       $ sudo apt-get install python3-sphinx
-      $ pip3 install [-I] Sphinx==1.7.5 [--user] 
-      $ pip3 install [-I] breathe numpy [--user]
+      $ pip3 install Sphinx==1.7.5
+      $ pip3 install breathe numpy
       $ cd doc/sphinx/
       $ make html
       $ cd build/html
@@ -143,7 +142,7 @@ To build documentation in a python3 virtualenv, run:
 
       $ python3 -m venv py3doc
       $ . py3doc/bin/activate
-      (py3doc)$ pip install python3-sphinx breathe numpy
+      (py3doc)$ pip install Sphinx breathe numpy
       (py3doc)$ cd doc/sphinx
       (py3doc)$ make html
       (py3doc)$ cd build/html

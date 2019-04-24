@@ -42,7 +42,7 @@ public:
     {
         if (fusions & ngraph::pass::DIFFERENTIABLE_FUSIONS)
         {
-            construct_conv_bias();
+            construct_conv_bias(); // DEPRECATED - Use CoreFusion
             construct_sigmoid_multiply();
         }
 
@@ -63,7 +63,7 @@ public:
             construct_batch_norm_relu_global_stats();
             construct_conv_relu();
             construct_conv_bias_relu();
-            construct_conv_bias_add();
+            construct_conv_bias_add(); // DEPRECATED - Use CoreFusion
             construct_conv_bias_add_relu();
             construct_leaky_relu();
             construct_bounded_relu();
@@ -72,6 +72,12 @@ public:
             construct_conv_add_relu();
             construct_update_slice();
             construct_fuse_lstm_recurrent_state();
+            if (std::getenv("NGRAPH_DECONV_FUSE") != nullptr)
+            {
+                // Note: enable when the deconv perf is better than convbackpropdata
+                construct_deconvolution_affine_folding();
+                construct_deconvolution_affine_folding_relu();
+            }
         }
     }
 
@@ -101,6 +107,8 @@ private:
     void construct_groupconv_batchnorm_global_stats_folding_relu();
     void construct_update_slice();
     void construct_fuse_lstm_recurrent_state();
+    void construct_deconvolution_affine_folding();
+    void construct_deconvolution_affine_folding_relu();
 };
 
 class CPU_BACKEND_API ngraph::runtime::cpu::pass::CPUQuantFusion : public ngraph::pass::GraphRewrite

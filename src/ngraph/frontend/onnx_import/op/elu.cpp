@@ -26,7 +26,7 @@
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/subtract.hpp"
-#include "utils/broadcasting.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 
 #include "elu.hpp"
 
@@ -46,12 +46,12 @@ namespace ngraph
                     std::shared_ptr<ngraph::Node> alpha_node =
                         std::make_shared<ngraph::op::Constant>(
                             data->get_element_type(), Shape{}, std::vector<double>{alpha});
-                    alpha_node = make_broadcast_node(alpha_node, data->get_shape());
+                    alpha_node = ngraph::op::make_broadcast_node(alpha_node, data->get_shape());
 
                     std::shared_ptr<ngraph::Node> zero_node =
                         std::make_shared<ngraph::op::Constant>(
                             data->get_element_type(), Shape{}, std::vector<double>{0});
-                    zero_node = make_broadcast_node(zero_node, data->get_shape());
+                    zero_node = ngraph::op::make_broadcast_node(zero_node, data->get_shape());
 
                     return {std::make_shared<ngraph::op::Maximum>(data, zero_node) +
                             alpha_node *

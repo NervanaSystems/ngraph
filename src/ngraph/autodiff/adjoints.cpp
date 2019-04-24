@@ -14,7 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cassert>
 #include <list>
 #include <memory>
 #include <unordered_map>
@@ -45,7 +44,7 @@ std::shared_ptr<Node> make_zero(const std::shared_ptr<Node>& node)
 NodeVector make_zeros(std::shared_ptr<Node> x)
 {
     NodeVector zeros;
-    if (x->get_outputs().size() > 1)
+    if (x->get_output_size() > 1)
     {
         auto goes = op::get_output_elements(x);
         for (size_t i = 0; i < goes.size(); ++i)
@@ -69,7 +68,7 @@ autodiff::Adjoints::Adjoints(const NodeVector& ys, const NodeVector& cs)
 
     for (size_t i = 0; i < ys.size(); i++)
     {
-        if (ys.at(i)->get_outputs().size() > 1 || cs.at(i)->get_outputs().size() > 1)
+        if (ys.at(i)->get_output_size() > 1 || cs.at(i)->get_output_size() > 1)
         {
             throw ngraph_error(
                 "Adjoints for multi-output ops aren't supported directly.\nProvide deltas for "

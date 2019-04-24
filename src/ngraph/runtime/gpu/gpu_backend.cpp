@@ -26,6 +26,7 @@
 #include "ngraph/runtime/gpu/gpu_internal_function.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor.hpp"
+#include "ngraph/runtime/gpu/gpu_util.hpp"
 #include "ngraph/runtime/hybrid/hybrid_backend.hpp"
 #include "ngraph/util.hpp"
 
@@ -114,6 +115,10 @@ shared_ptr<runtime::Tensor>
 shared_ptr<runtime::Tensor> runtime::gpu::GPU_Backend::create_tensor(
     const element::Type& element_type, const Shape& shape, void* memory_pointer)
 {
+    if (memory_pointer != nullptr && !is_device_pointer(memory_pointer))
+    {
+        throw ngraph_error("The pointer passed to create_tensor is not a device pointer.");
+    }
     return make_shared<runtime::gpu::GPUTensor>(element_type, shape, memory_pointer, this);
 }
 
@@ -212,14 +217,20 @@ bool runtime::gpu::GPU_Backend::is_supported(const Node& op) const
 {
     set<string> unsupported_ops = {"Quantize",
                                    "Dequantize",
+                                   "DynReshape",
+                                   "DynSlice",
                                    "ShapeOf",
                                    "All",
                                    "Any",
                                    "AllReduce",
+                                   "BatchMatMul",
+                                   "DynPad"
                                    "SelectAndScatter",
                                    "StopGradient",
                                    "EmbeddingLookup",
-                                   "GenerateMask"};
+                                   "GenerateMask",
+                                   "DynBroadcast",
+                                   "Transpose"};
 
     set<string> float_only = {"MaxPoolBackprop", "AvgPoolBackprop", "MaxPool", "Dot"};
 

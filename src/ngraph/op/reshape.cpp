@@ -18,6 +18,7 @@
 #include <iostream>
 
 #include "ngraph/function.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/op/reshape.hpp"
 
 using namespace std;
@@ -115,7 +116,7 @@ void op::Reshape::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVect
 {
     auto delta = deltas.at(0);
 
-    auto x_shape = get_inputs().at(0).get_shape();
+    auto x_shape = input(0).get_shape();
     auto x_rank = x_shape.size();
     Shape permuted_x_shape(x_rank);
     AxisVector x_input_order(x_rank);

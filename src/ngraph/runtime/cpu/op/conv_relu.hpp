@@ -19,7 +19,6 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/runtime/cpu/cpu_backend_visibility.h"
-#include "ngraph/runtime/cpu/op/conv_bias.hpp"
 
 namespace ngraph
 {

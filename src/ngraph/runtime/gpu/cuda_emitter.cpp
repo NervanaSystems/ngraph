@@ -221,12 +221,12 @@ size_t runtime::gpu::CUDAEmitter::build_topk(const std::vector<element::Type>& d
                                              const element::Type index_elem_type,
                                              bool compute_max)
 {
-    NGRAPH_ASSERT(dtypes[1] == index_elem_type)
-        << " The index element type does not match out[0] type";
+    NGRAPH_CHECK(dtypes[1] == index_elem_type,
+                 " The index element type does not match out[0] type");
     uint32_t rank = static_cast<uint32_t>(input_shape.size());
-    NGRAPH_ASSERT(rank <= 2) << " The input tensor should be of either rank 1 or rank 2";
-    NGRAPH_ASSERT(topk_axis == rank - 1)
-        << " The axis along which topk is computed should be the last axis";
+    NGRAPH_CHECK(rank <= 2, " The input tensor should be of either rank 1 or rank 2");
+    NGRAPH_CHECK(topk_axis == rank - 1,
+                 " The axis along which topk is computed should be the last axis");
     size_t num_cols = input_shape[rank - 1];
     size_t num_rows = ((rank == 2) ? input_shape[0] : 1);
     std::vector<std::string> dtypes_string = get_string_vector(dtypes);

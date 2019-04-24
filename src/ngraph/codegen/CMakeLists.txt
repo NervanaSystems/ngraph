@@ -73,7 +73,8 @@ if(NGRAPH_GPU_ENABLE)
 endif()
 
 if(NGRAPH_TBB_ENABLE)
-    list(APPEND HEADER_SEARCH_DEFINES TBB_HEADERS_PATH="${TBB_ROOT}/include")
+    get_target_property(TBB_INCLUDE_DIR libtbb INTERFACE_INCLUDE_DIRECTORIES)
+    list(APPEND HEADER_SEARCH_DEFINES TBB_HEADERS_PATH="${TBB_INCLUDE_DIR}")
 endif()
 
 set_source_files_properties(compiler.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES}")
@@ -85,7 +86,7 @@ add_custom_target(header_resource
     BYPRODUCTS
 )
 if (NGRAPH_CPU_ENABLE)
-    add_dependencies(header_resource ext_eigen ext_mkldnn)
+    add_dependencies(header_resource ext_eigen libmkldnn)
 endif()
 
 if(NGRAPH_LIB_VERSIONING_ENABLE)

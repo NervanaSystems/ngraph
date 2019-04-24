@@ -29,6 +29,12 @@ runtime::Backend::~Backend()
 {
 }
 
+std::shared_ptr<ngraph::Node> runtime::Backend::get_backend_op(const std::string& op_name, ...)
+{
+    std::shared_ptr<ngraph::Node> dummy_node(nullptr);
+    return dummy_node;
+}
+
 unique_ptr<runtime::Backend> runtime::Backend::create(const string& type)
 {
     return BackendManager::create_backend(type);

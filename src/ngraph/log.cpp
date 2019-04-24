@@ -113,7 +113,7 @@ void ngraph::LogPrintf(const char* fmt, ...)
 #pragma GCC diagnostic pop
     va_end(args2);
 
-#ifdef NGRAPH_DISTRIBUTED_OMPI_ENABLE
+#ifdef NGRAPH_DISTRIBUTED_ENABLE
     ngraph::Distributed dist;
     std::printf("%s [RANK: %d]: %s\n", get_timestamp().c_str(), dist.get_rank(), buf.data());
 #else

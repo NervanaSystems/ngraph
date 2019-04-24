@@ -28,6 +28,7 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/multiply.hpp"
@@ -112,7 +113,7 @@ void pass::CoreFusion::construct_sigmoid()
             return false;
         }
 
-        if (m.get_match_root()->get_outputs().size() != pattern_map[input]->get_outputs().size())
+        if (m.get_match_root()->get_output_size() != pattern_map[input]->get_output_size())
         {
             NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
                          << "input= " << pattern_map[input]->get_name() << "size dont match!";
@@ -740,5 +741,132 @@ void pass::CoreFusion::construct_reshape_softmax_reshape()
     };
 
     auto m = make_shared<pattern::Matcher>(reshape2, callback, "CoreFusion.ReshapeSoftmaxReshape");
+    this->add_matcher(m);
+}
+
+void ngraph::pass::CoreFusion::construct_conv_bias()
+{
+    Shape shape{2, 2, 1, 1};
+    auto data_batch = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto filters = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto pbias = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+
+    auto pbroadcast = std::make_shared<ngraph::op::Broadcast>(pbias, shape, AxisSet{0, 1, 2, 3});
+
+    auto pconv1 = std::make_shared<ngraph::op::Convolution>(data_batch,
+                                                            filters,
+                                                            Strides{1, 1},
+                                                            Strides{1, 1},
+                                                            CoordinateDiff{0, 0},
+                                                            CoordinateDiff{0, 0},
+                                                            Strides{1, 1});
+    auto p_conv_bias = pbroadcast + pconv1;
+
+    ngraph::pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for construct_conv_bias against node = "
+                     << m.get_match_root()->get_name();
+        auto pattern_map = m.get_pattern_map();
+
+        auto conv_m =
+            std::dynamic_pointer_cast<ngraph::op::Convolution>(m.get_match_root()->get_argument(0));
+        auto bcast_m =
+            std::dynamic_pointer_cast<op::Broadcast>(m.get_match_root()->get_argument(1));
+
+        if (conv_m == nullptr)
+        {
+            conv_m = std::dynamic_pointer_cast<ngraph::op::Convolution>(
+                m.get_match_root()->get_argument(1));
+            bcast_m = std::dynamic_pointer_cast<op::Broadcast>(m.get_match_root()->get_argument(0));
+        }
+
+        if (conv_m->get_shape().size() > 5 || conv_m->get_element_type() != element::f32)
+        {
+            // Most backends are unlikely to efficiently support these convolutions. Skip fusion
+            return false;
+        }
+
+        // Except for the 2nd axis (channel dimension), we should either be broadcasting
+        // to it or the dimension size should be 1.
+        auto bcast_axes = bcast_m->get_broadcast_axes();
+        for (size_t i = 0; i < bcast_m->get_shape().size(); i++)
+        {
+            if (i != 1 && bcast_axes.find(i) == bcast_axes.end() && bcast_m->get_shape()[i] != 1)
+            {
+                return false;
+            }
+        }
+
+        auto bias = bcast_m->get_argument(0);
+        if (bias->get_shape().size() > 1)
+        {
+            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
+                         << "conv_bias bias shape != 1, requires reshape to match filter count.";
+            auto order = ngraph::get_default_order(bias->get_shape());
+            auto bias_reshape = std::make_shared<ngraph::op::Reshape>(
+                bias, order, Shape{conv_m->get_input_shape(1)[0]});
+            auto conv_bias =
+                std::shared_ptr<Node>(new ngraph::op::ConvolutionBias(conv_m, bias_reshape));
+            ngraph::replace_node(m.get_match_root(), conv_bias);
+        }
+        else
+        {
+            auto conv_bias = std::shared_ptr<Node>(new ngraph::op::ConvolutionBias(conv_m, bias));
+            ngraph::replace_node(m.get_match_root(), conv_bias);
+        }
+        return true;
+    };
+
+    auto m =
+        std::make_shared<ngraph::pattern::Matcher>(p_conv_bias, callback, "CoreFusion.ConvBias");
+    this->add_matcher(m);
+}
+
+void ngraph::pass::CoreFusion::construct_conv_bias_add()
+{
+    Shape shape{2, 2, 1, 1};
+    auto data_batch = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto filters = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto bias = std::make_shared<pattern::op::Label>(element::f32, Shape{shape[0]});
+
+    auto pconv = std::make_shared<ngraph::op::ConvolutionBias>(data_batch,
+                                                               filters,
+                                                               bias,
+                                                               Strides{1, 1},
+                                                               Strides{1, 1},
+                                                               CoordinateDiff{0, 0},
+                                                               CoordinateDiff{0, 0},
+                                                               Strides{1, 1});
+    auto add_input = std::make_shared<pattern::op::Label>(element::f32, pconv->get_shape());
+    auto padd = std::make_shared<ngraph::op::Add>(add_input, pconv);
+
+    pattern::graph_rewrite_callback callback = [data_batch, filters](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In a callback for construct_conv_sum against "
+                     << m.get_match_root()->get_name();
+
+        auto add_m = m.get_match_root();
+        auto pattern_map = m.get_pattern_map();
+        auto conv_m =
+            std::dynamic_pointer_cast<ngraph::op::ConvolutionBias>(add_m->get_argument(1));
+        auto add_input_m = add_m->get_argument(0);
+
+        if (!conv_m)
+        {
+            conv_m = std::dynamic_pointer_cast<ngraph::op::ConvolutionBias>(add_m->get_argument(0));
+            add_input_m = add_m->get_argument(1);
+        }
+
+        if (get_user_count(conv_m.get()) > 1)
+        {
+            NGRAPH_DEBUG << "Convolution has more than one user";
+            return false;
+        }
+
+        auto conv_add =
+            std::shared_ptr<Node>(new ngraph::op::ConvolutionBiasAdd(conv_m, add_input_m, false));
+        ngraph::replace_node(m.get_match_root(), conv_add);
+        return true;
+    };
+
+    auto m = std::make_shared<pattern::Matcher>(padd, callback, "CoreFusion.ConvBiasAdd");
     this->add_matcher(m);
 }

@@ -36,10 +36,14 @@ runtime::hybrid::HybridExecutable::HybridExecutable(
     const shared_ptr<Function>& func,
     bool enable_performance_collection,
     bool debug_enabled)
-    : m_function{func}
+    : m_function{clone_function(*func)}
     , m_backend_list{backend_list}
     , m_debug_enabled{debug_enabled}
 {
+    if (backend_list.size() == 0)
+    {
+        throw runtime_error("Hybrid Executable constructed with zero-sized backend list");
+    }
     // Run placement pass
     ngraph::pass::Manager pass_manager;
     pass_manager.register_pass<runtime::hybrid::pass::DefaultPlacement>(m_backend_list);

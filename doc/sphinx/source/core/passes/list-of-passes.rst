@@ -1,45 +1,93 @@
 .. core/passes/list-of-passes:
 
 List of passes
-==============
+##############
+
+The kinds of compiler passes available can be broken down into different buckets:
+
+Graph Optimization Passes
+=========================
 
 .. csv-table::
-   :header: "Pass Name", "More Detail"
+   :header: "Graph Optimization Passes", "More Detail"
    :widths: 29, 31
    :escape: ~
 
    ``AlgebraicSimplification``, :ref:`algebraic_simpl`
-   ``AssignLayout``, Coming Soon
-   ``CallGraphPass``, Coming Soon
-   ``CommonFunctionCollection``, Coming Soon
    ``CommonSubexpressionElimination``, :ref:`common_subex_elim`
    ``ConstantFolding``, :ref:`constant_fold`
-   ``CoreFusion``, Coming Soon
-   ``DumpSorted``, Coming Soon
-   ``FunctionPass``, Coming Soon
-   ``GetOutputElementElimination``, Coming Soon
-   ``GraphRewrite``, Coming Soon
-   ``LikeReplacement``, Coming Soon
-   ``Liveness``, Coming Soon
-   ``Manager``, Coming Soon
-   ``ManagerState``, Coming Soon
-   ``MemoryLayout``, Coming Soon
-   ``MemoryManager``, Coming Soon
-   ``MemoryVisualize``, Coming Soon
-   ``ModulePass``, Coming Soon
-   ``NodePass``, Coming Soon
-   ``NopElimination``, Coming Soon
-   ``PassBase``, Coming Soon
-   ``PassConfig``, Coming Soon
-   ``PrefixReshapeElimination``, Coming Soon
-   ``PropagateCacheability``, Coming Soon
-   ``RecurrentGraphRewrite``, Coming Soon
+   ``CoreFusion``, :ref:`core_fusion`
    ``ReshapeElimination``, :ref:`reshape_transpose_elim`
    ``ReshapeSinking``, :ref:`reshape_transpose_sink`
-   ``Serialization``, Coming Soon
-   ``ValidateGraph``, Coming Soon
-   ``VisualizeTree``, Coming Soon
-   ``ZeroDimTensorElimination``, Coming soon 
+
+
+Node Optimization Passes
+========================
+
+.. csv-table::
+   :header: "Node Optimization Passes", "More Detail"
+   :widths: 29, 31
+   :escape: ~
+
+   ``NopElimination``, ""
+   ``ZeroDimTensorElimination``, ""
+
+
+Memory Assignment Passes
+========================
+
+.. csv-table::
+   :header: "Memory Assignment Passes", "More Detail"
+   :widths: 29, 31
+   :escape: ~
+
+   ``AssignLayout``, ""
+   ``Liveness``, ""
+   ``MemoryLayout``, ""
+   ``PropagateCacheability``, ""
+
+
+Codegen Passes
+==============
+
+.. important:: Codegen is currently experimental only. 
+
+
+.. csv-table::
+   :header: "Codegen Passes", "More Detail"
+   :widths: 29, 31
+   :escape: ~
+
+   ``CommonFunctionCollection``, "Experimental Only"
+
+
+Debug Passes
+============
+
+.. csv-table::
+   :header: "Debug Passes", "More Detail"
+   :widths: 29, 31
+   :escape: ~
+
+   ``DumpSorted``, ""
+   ``MemoryVisualize``, ""
+   ``Serialization``, ""
+   ``VisualizeTree``, ""
+
+
+Maintenance Passes
+==================
+
+.. csv-table::
+   :header: "Maintenance Passes", "More Detail"
+   :widths: 29, 31
+   :escape: ~
+
+   ``GetOutputElementElimination``, ""
+   ``LikeReplacement``, ""
+   ``ValidateGraph``, ""
+
+
 
 
 .. important:: All of the above passes are currently implementable; more 
@@ -53,7 +101,7 @@ List of passes
 ----------------------------
 
 .. figure:: ../../graphics/algebraic-simpl.png
-   :width: 650px
+   :width: 450 px
 
    Algebraic simplification
 
@@ -104,7 +152,7 @@ can be.
 The pass also called **Reshape/Transpose Elimination** will find and optimize where 
 we can "push" two ``Transpose`` ops through a matrix multiplication. For example, 
 if you have two matrices (say, *foo* and *bar*), both of these matrices will be 
-transposed (to produce *foo.t* and *bar.t*, respectively), aftew which *foo.t* 
+transposed (to produce *foo.t* and *bar.t*, respectively), after which *foo.t* 
 and *bar.t* get multiplied together.
 
 Often a more efficient way to implement this is to switch the order of the 
@@ -112,14 +160,13 @@ arguments *foo* and *bar*, multiply them together, and then transpose the output
 of the matmul. Effectively, this cuts two `Transpose` operations down to just 
 one, where the **Reshape/Transpose** elimination will do that rewrite for you.
 
-Another common pattern can be optimized via nGraph is the case where two 
+Another common pattern that can be optimized via nGraph is the case where two 
 transpositions cancel each other out. One example of this is taking the 
 "Transpose" of the transpose of a matrix, though actually a more common case is 
 when the graph is translating among different batch formats. We can often move 
 these operations around through a process called **Reshape sinking/swimming**, 
 and in cases where two transposes wind up canceling each other out, we can cut 
 them both out of the graph.
-
 
 
 .. _reshape_transpose_sink:

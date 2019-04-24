@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include <algorithm>
-#include <cassert>
 #include <deque>
 #include <forward_list>
 #include <iomanip>
@@ -23,6 +22,7 @@
 #include <numeric>
 #include <unordered_set>
 
+#include "ngraph/coordinate_diff.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
@@ -158,26 +158,6 @@ size_t ngraph::hash_combine(const std::vector<size_t>& list)
         seed ^= v + 0x9e3779b9 + (seed << 6) + (seed >> 2);
     }
     return seed;
-}
-
-void* ngraph::aligned_alloc(size_t alignment, size_t size)
-{
-#ifdef __APPLE__
-    return new uint64_t[round_up(size, sizeof(uint64_t)) / sizeof(uint64_t)];
-#elif defined _WIN32
-    return new uint64_t[round_up(size, sizeof(uint64_t)) / sizeof(uint64_t)];
-#else
-    return ::aligned_alloc(alignment, size);
-#endif
-}
-
-void ngraph::aligned_free(void* p)
-{
-#ifdef __APPLE__
-    delete[] reinterpret_cast<uint64_t*>(p);
-#else
-    free(p);
-#endif
 }
 
 void* ngraph::ngraph_malloc(size_t size)
@@ -499,6 +479,9 @@ template AxisVector ngraph::apply_permutation<AxisVector>(AxisVector input, Axis
 template Shape ngraph::apply_permutation<Shape>(Shape input, AxisVector order);
 template ngraph::Coordinate ngraph::apply_permutation<ngraph::Coordinate>(ngraph::Coordinate input,
                                                                           ngraph::AxisVector order);
+template ngraph::CoordinateDiff
+    ngraph::apply_permutation<ngraph::CoordinateDiff>(ngraph::CoordinateDiff input,
+                                                      ngraph::AxisVector order);
 template ngraph::Strides ngraph::apply_permutation<ngraph::Strides>(ngraph::Strides input,
                                                                     ngraph::AxisVector order);
 

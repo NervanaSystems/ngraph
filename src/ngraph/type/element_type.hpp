@@ -78,6 +78,9 @@ namespace ngraph
             bool is_static() const;
             bool is_dynamic() const { return !is_static(); }
             bool is_real() const;
+            // TODO: We may want to revisit this definition when we do a more general cleanup of
+            // element types:
+            bool is_integral() const { return !is_real(); }
             bool is_signed() const;
             bool is_quantized() const;
             size_t bitwidth() const;

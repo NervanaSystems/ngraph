@@ -24,6 +24,8 @@
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
+#include "ngraph/op/experimental/quantized_dot.hpp"
+#include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/quantize.hpp"
 
@@ -151,5 +153,29 @@ namespace ngraph
                                                     std::shared_ptr<Node> min_freezed_output_conv_2,
                                                     std::shared_ptr<Node> max_freezed_output_conv_2,
                                                     const bool with_relu);
-    }
-}
+
+        std::shared_ptr<Node> ScaledQuantizedDotBias(std::shared_ptr<Node> input,
+                                                     std::shared_ptr<Node> filters,
+                                                     std::shared_ptr<Node> bias,
+                                                     std::shared_ptr<Node> min_input,
+                                                     std::shared_ptr<Node> max_input,
+                                                     std::shared_ptr<Node> min_filter,
+                                                     std::shared_ptr<Node> max_filter,
+                                                     std::shared_ptr<Node> min_freezed_output,
+                                                     std::shared_ptr<Node> max_freezed_output,
+                                                     const bool requantize = true,
+                                                     const bool with_relu = false);
+
+        std::shared_ptr<Node> ScaledQuantizedDot(std::shared_ptr<Node> input,
+                                                 std::shared_ptr<Node> filters,
+                                                 std::shared_ptr<Node> min_input,
+                                                 std::shared_ptr<Node> max_input,
+                                                 std::shared_ptr<Node> min_filter,
+                                                 std::shared_ptr<Node> max_filter,
+                                                 std::shared_ptr<Node> min_freezed_output,
+                                                 std::shared_ptr<Node> max_freezed_output,
+                                                 const bool requantize = true,
+                                                 const bool with_relu = false);
+
+    } // namespace builder
+} // namespace ngraph

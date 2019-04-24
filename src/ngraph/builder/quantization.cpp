@@ -399,5 +399,69 @@ namespace ngraph
                                                                             with_relu);
             return make_shared<op::Convert>(qconv, element::u8);
         }
-    }
-}
+
+        std::shared_ptr<Node> ScaledQuantizedDotBias(std::shared_ptr<Node> input,
+                                                     std::shared_ptr<Node> filters,
+                                                     std::shared_ptr<Node> bias,
+                                                     std::shared_ptr<Node> min_input,
+                                                     std::shared_ptr<Node> max_input,
+                                                     std::shared_ptr<Node> min_filter,
+                                                     std::shared_ptr<Node> max_filter,
+                                                     std::shared_ptr<Node> min_freezed_output,
+                                                     std::shared_ptr<Node> max_freezed_output,
+                                                     const bool requantize,
+                                                     const bool with_relu)
+        {
+            auto requantization_scale =
+                quantization_util::get_dot_scale(min_input,
+                                                 max_input,
+                                                 min_filter,
+                                                 max_filter,
+                                                 min_freezed_output,
+                                                 max_freezed_output,
+                                                 input->get_element_type(),
+                                                 with_relu ? element::u8 : element::i8,
+                                                 requantize);
+
+            if (bias->get_element_type() != element::i32)
+            {
+                auto zero = make_constant(element::i32, min_input->get_shape(), 0);
+                AxisSet quantization_axes;
+                auto bias_scale =
+                    quantization_util::get_bias_scale(min_input, max_input, min_filter, max_filter);
+                op::Quantize::RoundMode round_mode =
+                    op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+
+                bias = make_shared<op::Quantize>(
+                    bias, bias_scale, zero, element::i32, quantization_axes, round_mode);
+            }
+            return make_shared<op::QuantizedDotBias>(
+                input, filters, bias, requantization_scale, requantize, with_relu);
+        }
+
+        std::shared_ptr<Node> ScaledQuantizedDot(std::shared_ptr<Node> input,
+                                                 std::shared_ptr<Node> filters,
+                                                 std::shared_ptr<Node> min_input,
+                                                 std::shared_ptr<Node> max_input,
+                                                 std::shared_ptr<Node> min_filter,
+                                                 std::shared_ptr<Node> max_filter,
+                                                 std::shared_ptr<Node> min_freezed_output,
+                                                 std::shared_ptr<Node> max_freezed_output,
+                                                 const bool requantize,
+                                                 const bool with_relu)
+        {
+            auto requantization_scale =
+                quantization_util::get_dot_scale(min_input,
+                                                 max_input,
+                                                 min_filter,
+                                                 max_filter,
+                                                 min_freezed_output,
+                                                 max_freezed_output,
+                                                 input->get_element_type(),
+                                                 with_relu ? element::u8 : element::i8,
+                                                 requantize);
+            return make_shared<op::QuantizedDot>(
+                input, filters, requantization_scale, requantize, with_relu);
+        }
+    } // namespace builder
+} // namespace ngraph
