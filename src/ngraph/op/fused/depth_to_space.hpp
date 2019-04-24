@@ -24,9 +24,20 @@ namespace ngraph
 {
     namespace op
     {
+        /// \brief DepthToSpace permutes data from the depth dimension of the input blob into spatial dimensions.
+        ///
+        /// \note  Values from the depth dimension (assuming NCHW layout) are moved in
+        ///        spatial blocks to the height and width dimensions.
+        ///
+        ///        Output node produces a tensor with shape:
+        ///        [N, C/(blocksize * blocksize), H * blocksize, W * blocksize]
         class DepthToSpace : public ngraph::op::util::FusedOp
         {
         public:
+            /// \brief Constructs a DepthToSpace operation.
+            ///
+            /// \param data - Node producing the input tensor
+            /// \param block_size - the size of the block of values to be moved
             DepthToSpace(const std::shared_ptr<ngraph::Node>& data, const std::int64_t block_size);
 
             virtual NodeVector decompose_op() const override;
