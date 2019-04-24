@@ -38,11 +38,9 @@ namespace ngraph
         class Tensor
         {
         protected:
-            Tensor(const std::shared_ptr<ngraph::descriptor::Tensor>& descriptor,
-                   const Backend* parent)
+            Tensor(const std::shared_ptr<ngraph::descriptor::Tensor>& descriptor)
                 : m_descriptor(descriptor)
                 , m_stale(true)
-                , m_parent(parent)
             {
             }
 
@@ -107,11 +105,9 @@ namespace ngraph
             /// \param source The source tensor
             virtual void copy_from(const ngraph::runtime::Tensor& source);
 
-            const Backend* get_parent() const { return m_parent; }
         protected:
             std::shared_ptr<ngraph::descriptor::Tensor> m_descriptor;
             bool m_stale;
-            const Backend* m_parent;
         };
 
         using TensorViewPtrs = std::vector<std::shared_ptr<Tensor>>;

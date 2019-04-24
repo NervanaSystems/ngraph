@@ -26,23 +26,18 @@ namespace ngraph
 {
     namespace runtime
     {
-        class HostTensor;
+        class HybridTensor;
     }
 }
 
-class ngraph::runtime::HostTensor : public ngraph::runtime::Tensor
+class ngraph::runtime::HybridTensor : public ngraph::runtime::Tensor
 {
 public:
-    HostTensor(const ngraph::element::Type& element_type,
-               const Shape& shape,
-               const std::string& name);
-    HostTensor(const ngraph::element::Type& element_type,
-               const Shape& shape,
-               void* memory_pointer,
-               const std::string& name);
-    HostTensor(const ngraph::element::Type& element_type, const Shape& shape);
-    HostTensor(const ngraph::element::Type& element_type, const Shape& shape, void* memory_pointer);
-    virtual ~HostTensor() override;
+    HybridTensor(const ngraph::element::Type& element_type, const Shape& shape);
+    HybridTensor(const ngraph::element::Type& element_type,
+                 const Shape& shape,
+                 void* memory_pointer);
+    virtual ~HybridTensor() override;
 
     char* get_data_ptr();
     const char* get_data_ptr() const;
@@ -72,9 +67,9 @@ public:
     void read(void* p, size_t tensor_offset, size_t n) const override;
 
 private:
-    HostTensor(const HostTensor&) = delete;
-    HostTensor(HostTensor&&) = delete;
-    HostTensor& operator=(const HostTensor&) = delete;
+    HybridTensor(const HybridTensor&) = delete;
+    HybridTensor(HybridTensor&&) = delete;
+    HybridTensor& operator=(const HybridTensor&) = delete;
 
     char* m_allocated_buffer_pool;
     char* m_aligned_buffer_pool;

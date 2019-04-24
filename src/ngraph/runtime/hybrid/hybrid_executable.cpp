@@ -92,28 +92,29 @@ bool runtime::hybrid::HybridExecutable::call(const vector<shared_ptr<runtime::Te
         auto it = map_node_to_tensor.find(parameter_node);
         if (it != map_node_to_tensor.end())
         {
-            if (it->second->get_parent() == backend.get())
-            {
-                parameters.push_back(it->second);
-            }
-            else
-            {
-                auto parameter = backend->create_tensor(parameter_node->get_element_type(),
-                                                        parameter_node->get_shape());
-                parameter->copy_from(*(it->second));
-                parameters.push_back(parameter);
-            }
+            // if (it->second->get_parent() == backend.get())
+            // {
+            //     parameters.push_back(it->second);
+            // }
+            // else
+            // {
+            //     auto parameter = backend->create_tensor(parameter_node->get_element_type(),
+            //                                             parameter_node->get_shape());
+            //     parameter->copy_from(*(it->second));
+            //     parameters.push_back(parameter);
+            // }
+            parameters.push_back(it->second);
         }
         else
         {
             // Handle temporary tensors that go between subgraphs
-            auto result_node = m_map_parameter_to_result.at(parameter_node);
-            auto result = map_node_to_tensor.at(result_node);
-            auto parameter = backend->create_tensor(parameter_node->get_element_type(),
-                                                    parameter_node->get_shape());
-            parameter->copy_from(*result);
-            map_node_to_tensor[parameter_node] = parameter;
-            parameters.push_back(parameter);
+            // auto result_node = m_map_parameter_to_result.at(parameter_node);
+            // auto result = map_node_to_tensor.at(result_node);
+            // auto parameter = backend->create_tensor(parameter_node->get_element_type(),
+            //                                         parameter_node->get_shape());
+            // parameter->copy_from(*result);
+            // map_node_to_tensor[parameter_node] = parameter;
+            // parameters.push_back(parameter);
         }
     }
 
@@ -125,25 +126,26 @@ bool runtime::hybrid::HybridExecutable::call(const vector<shared_ptr<runtime::Te
         auto it = map_node_to_tensor.find(result_node);
         if (it != map_node_to_tensor.end())
         {
-            if (it->second->get_parent() == backend.get())
-            {
-                results.push_back(it->second);
-            }
-            else
-            {
-                auto result = backend->create_tensor(result_node->get_element_type(),
-                                                     result_node->get_shape());
-                results.push_back(result);
-                copy_back.insert({result.get(), it->second.get()});
-            }
+            // if (it->second->get_parent() == backend.get())
+            // {
+            //     results.push_back(it->second);
+            // }
+            // else
+            // {
+            //     auto result = backend->create_tensor(result_node->get_element_type(),
+            //                                          result_node->get_shape());
+            //     results.push_back(result);
+            //     copy_back.insert({result.get(), it->second.get()});
+            // }
+            results.push_back(it->second);
         }
         else
         {
             // Handle temporary tensors that go between subgraphs
-            auto result =
-                backend->create_tensor(result_node->get_element_type(), result_node->get_shape());
-            map_node_to_tensor[result_node] = result;
-            results.push_back(result);
+            // auto result =
+            //     backend->create_tensor(result_node->get_element_type(), result_node->get_shape());
+            // map_node_to_tensor[result_node] = result;
+            // results.push_back(result);
         }
     }
 
@@ -158,16 +160,16 @@ bool runtime::hybrid::HybridExecutable::call(const vector<shared_ptr<runtime::Te
     return rc;
 }
 
-size_t runtime::hybrid::HybridExecutable::get_placement(const runtime::Tensor* t)
-{
-    size_t index = 0;
-    for (const shared_ptr<ngraph::runtime::Backend>& be : m_backend_list)
-    {
-        if (t->get_parent() == be.get())
-        {
-            return index;
-        }
-        index++;
-    }
-    return -1;
-}
+// size_t runtime::hybrid::HybridExecutable::get_placement(const runtime::Tensor* t)
+// {
+//     size_t index = 0;
+//     for (const shared_ptr<ngraph::runtime::Backend>& be : m_backend_list)
+//     {
+//         if (t->get_parent() == be.get())
+//         {
+//             return index;
+//         }
+//         index++;
+//     }
+//     return -1;
+// }
