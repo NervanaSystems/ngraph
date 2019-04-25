@@ -20,6 +20,50 @@
 using namespace std;
 using namespace ngraph;
 
+Strides ngraph::conv_default_strides(const Node* node,
+                                     const PartialShape& data_batch_shape,
+                                     const PartialShape& filters_shape)
+{
+    size_t rank;
+
+    if (data_batch_shape.rank().is_static() && static_cast<size_t>(data_batch_shape.rank()) >= 2)
+    {
+        rank = static_cast<size_t>(data_batch_shape.rank()) - 2;
+    }
+    else if (filters_shape.rank().is_static() && static_cast<size_t>(filters_shape.rank()) >= 2)
+    {
+        rank = static_cast<size_t>(filters_shape.rank()) - 2;
+    }
+    else
+    {
+        rank = 0;
+    }
+
+    return Strides(rank, 1);
+}
+
+CoordinateDiff ngraph::conv_default_padding(const Node* node,
+                                            const PartialShape& data_batch_shape,
+                                            const PartialShape& filters_shape)
+{
+    size_t rank;
+
+    if (data_batch_shape.rank().is_static() && static_cast<size_t>(data_batch_shape.rank()) >= 2)
+    {
+        rank = static_cast<size_t>(data_batch_shape.rank()) - 2;
+    }
+    else if (filters_shape.rank().is_static() && static_cast<size_t>(filters_shape.rank()) >= 2)
+    {
+        rank = static_cast<size_t>(filters_shape.rank()) - 2;
+    }
+    else
+    {
+        rank = 0;
+    }
+
+    return CoordinateDiff(rank, 0);
+}
+
 //
 // Infers the output shape of a windowed reduction operation, where the data may be dilated and/or
 // padded, and the reduction window may be strided and/or dilated.
@@ -544,4 +588,29 @@ std::tuple<element::Type, PartialShape, PartialShape>
         input_element_type,
         input_shape,
         {{gamma_element_type, gamma_shape, "gamma"}, {beta_element_type, beta_shape, "beta"}});
+}
+
+void ngraph::infer_auto_padding(const Shape& image_shape,
+                                const Shape& filter_shape,
+                                const Strides& filter_strides,
+                                const Strides& filter_dilations,
+                                const op::PadType pad_type,
+                                CoordinateDiff& padding_above,
+                                CoordinateDiff& padding_below)
+{
+    NGRAPH_CHECK(pad_type == op::PadType::SAME_UPPER || pad_type == op::PadType::SAME_LOWER);
+    for (size_t i = 0; i < static_cast<size_t>(filter_shape.size()); i++)
+    {
+        int64_t image_size = static_cast<int64_t>(image_shape[i + 2]);
+        int64_t filter_size = (static_cast<int64_t>(filter_shape[i]) - 1) * filter_dilations[i] + 1;
+        int64_t filter_stride = static_cast<int64_t>(filter_strides[i]);
+        auto output_size = (image_size + filter_stride - 1) / filter_stride;
+
+        auto padding_needed =
+            std::max(int64_t(0), (output_size - 1) * filter_stride + filter_size - image_size);
+        auto padding_lhs = padding_needed / 2;
+        auto padding_rhs = padding_needed - padding_lhs;
+        padding_below.push_back(pad_type == op::PadType::SAME_UPPER ? padding_lhs : padding_rhs);
+        padding_above.push_back(pad_type == op::PadType::SAME_UPPER ? padding_rhs : padding_lhs);
+    }
 }

@@ -52,6 +52,7 @@
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/erf.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/batch_mat_mul.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_concat.hpp"
@@ -61,6 +62,9 @@
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/floor.hpp"
+#include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/gather.hpp"
+#include "ngraph/op/gather_nd.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
@@ -107,13 +111,13 @@
 #include "ngraph/runtime/cpu/cpu_kernel_emitters.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
-#include "ngraph/runtime/cpu/op/batch_dot.hpp"
+#include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
-#include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
+#include "ngraph/runtime/cpu/op/deconv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
@@ -363,17 +367,17 @@ namespace ngraph
             }
 
             template <typename T>
-            static void emitBatchDot(const ngraph::Node* node,
-                                     const Shape& shape_a,
-                                     const Shape& shape_b,
-                                     const Shape& shape_c,
-                                     const std::vector<TensorViewWrapper>& args,
-                                     const std::vector<TensorViewWrapper>& out,
-                                     CodeWriter& writer)
+            static void emitBatchMatMul(const ngraph::Node* node,
+                                        const Shape& shape_a,
+                                        const Shape& shape_b,
+                                        const Shape& shape_c,
+                                        const std::vector<TensorViewWrapper>& args,
+                                        const std::vector<TensorViewWrapper>& out,
+                                        const bool transpose_a,
+                                        const bool transpose_b,
+                                        CodeWriter& writer)
             {
                 writer.block_begin();
-
-                const T* batch_dot = static_cast<const T*>(node);
 
                 auto mat_a = args[0];
                 auto mat_b = args[1];
@@ -387,8 +391,8 @@ namespace ngraph
                                     shape_a,
                                     shape_b,
                                     shape_c,
-                                    batch_dot->get_is_a_transposed(),
-                                    batch_dot->get_is_b_transposed(),
+                                    transpose_a,
+                                    transpose_b,
                                     mat_a.get_name(),
                                     mat_b.get_name(),
                                     mat_c.get_name(),
@@ -437,8 +441,15 @@ namespace ngraph
                 const Shape& arg2_shape = node->get_shape();                 // bias (C)
                 const Shape& padded_result_shape = pad_with(node->get_shape(), 1, 3);
                 // Step 1: dot(A,B)
-                emitBatchDot<ngraph::op::MatmulBias>(
-                    node, arg0_shape, arg1_shape, padded_result_shape, args, out, writer);
+                emitBatchMatMul<ngraph::op::MatmulBias>(node,
+                                                        arg0_shape,
+                                                        arg1_shape,
+                                                        padded_result_shape,
+                                                        args,
+                                                        out,
+                                                        cg->get_is_a_transposed(),
+                                                        cg->get_is_b_transposed(),
+                                                        writer);
 
                 // Step 2: add bias
                 if (args.size() < 3)
@@ -549,16 +560,33 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchDot)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchMatMul)
             {
-                const auto* cg = static_cast<const ngraph::op::BatchDot*>(node);
-                emitBatchDot<ngraph::op::BatchDot>(node,
-                                                   cg->get_a_shape(),
-                                                   cg->get_b_shape(),
-                                                   out[0].get_shape(),
-                                                   args,
-                                                   out,
-                                                   writer);
+                const auto* cg = static_cast<const ngraph::op::BatchMatMul*>(node);
+                emitBatchMatMul<ngraph::op::BatchMatMul>(node,
+                                                         cg->get_input_shape(0),
+                                                         cg->get_input_shape(1),
+                                                         out[0].get_shape(),
+                                                         args,
+                                                         out,
+                                                         false,
+                                                         false,
+                                                         writer);
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchMatMulTranspose)
+            {
+                const auto* cg = static_cast<const ngraph::op::BatchMatMulTranspose*>(node);
+                emitBatchMatMul<ngraph::op::BatchMatMul>(node,
+                                                         cg->get_input_shape(0),
+                                                         cg->get_input_shape(1),
+                                                         out[0].get_shape(),
+                                                         args,
+                                                         out,
+                                                         cg->get_transpose_arg0(),
+                                                         cg->get_transpose_arg1(),
+                                                         writer);
             }
 
             template <>
@@ -1783,6 +1811,50 @@ namespace ngraph
             }
 
             template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Gather)
+            {
+                auto gather = static_cast<const ngraph::op::Gather*>(node);
+                if (args[1].get_element_type() != element::i64 &&
+                    args[1].get_element_type() != element::i32)
+                {
+                    throw ngraph_error("Unsupported index element type");
+                }
+
+                writer.block_begin();
+                writer << "reference::gather<" << args[0].get_type() << ", "
+                       << args[1].get_element_type().c_type_string() << ">(" << args[0].get_name()
+                       << ",\n";
+                writer << "                   " << args[1].get_name() << ",\n";
+                writer << "                   " << out[0].get_name() << ",\n";
+                writer << "                   {" << join(args[0].get_shape()) << "},\n";
+                writer << "                   {" << join(args[1].get_shape()) << "},\n";
+                writer << "                   {" << join(out[0].get_shape()) << "},\n";
+                writer << "                   " << gather->get_axis() << ");\n";
+                writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::GatherND)
+            {
+                if (args[1].get_element_type() != element::i64 &&
+                    args[1].get_element_type() != element::i32)
+                {
+                    throw ngraph_error("Unsupported index element type");
+                }
+
+                writer.block_begin();
+                writer << "reference::gather_nd<" << args[0].get_type() << ", "
+                       << args[1].get_element_type().c_type_string() << ">(" << args[0].get_name()
+                       << ",\n";
+                writer << "                   " << args[1].get_name() << ",\n";
+                writer << "                   " << out[0].get_name() << ",\n";
+                writer << "                   {" << join(args[0].get_shape()) << "},\n";
+                writer << "                   {" << join(args[1].get_shape()) << "},\n";
+                writer << "                   {" << join(out[0].get_shape()) << "});\n";
+                writer.block_end();
+            }
+
+            template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Power)
             {
                 writer.block_begin();
@@ -2209,6 +2281,40 @@ namespace ngraph
                            << join(convolution->compute_backward_in_pad_above()) << "},\n";
                     writer << "                         {"
                            << join(convolution->get_data_dilation_strides_forward()) << "});\n";
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::DeconvolutionBias)
+            {
+                auto arg0_shape = args[0].get_shape();
+                auto arg1_shape = args[1].get_shape();
+                auto arg2_shape = args[2].get_shape();
+                auto result_shape = out[0].get_shape();
+
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto conv_index =
+                        mkldnn_emitter->build_deconvolution<ngraph::op::DeconvolutionBias>(
+                            node, args, out);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << args[2].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(conv_index) << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error("DeconvolutionBias is only supported with MKLDNN kernel.");
                 }
             }
 
@@ -2997,7 +3103,7 @@ namespace ngraph
                     writer << "cpu::kernel::reference_erf<"
                            << args[0].get_element_type().c_type_string() << ">("
                            << args[0].get_name() << ", " << out[0].get_name() << ", "
-                           << ", " << element_count << ");\n";
+                           << element_count << ");\n";
                 }
                 writer.block_end();
             }
@@ -3278,7 +3384,7 @@ namespace ngraph
                         "generate_sigmoid_mul_func input function type not supported");
                 }
 
-                NGRAPH_ASSERT(!func_block.empty()) << "'func_block' must not be empty";
+                NGRAPH_CHECK(!func_block.empty(), "'func_block' must not be empty");
 
                 return func_block;
             }

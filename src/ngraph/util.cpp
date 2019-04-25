@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include <algorithm>
-#include <cassert>
 #include <deque>
 #include <forward_list>
 #include <iomanip>
@@ -159,26 +158,6 @@ size_t ngraph::hash_combine(const std::vector<size_t>& list)
         seed ^= v + 0x9e3779b9 + (seed << 6) + (seed >> 2);
     }
     return seed;
-}
-
-void* ngraph::aligned_alloc(size_t alignment, size_t size)
-{
-#ifdef __APPLE__
-    return new uint64_t[round_up(size, sizeof(uint64_t)) / sizeof(uint64_t)];
-#elif defined _WIN32
-    return new uint64_t[round_up(size, sizeof(uint64_t)) / sizeof(uint64_t)];
-#else
-    return ::aligned_alloc(alignment, size);
-#endif
-}
-
-void ngraph::aligned_free(void* p)
-{
-#ifdef __APPLE__
-    delete[] reinterpret_cast<uint64_t*>(p);
-#else
-    free(p);
-#endif
 }
 
 void* ngraph::ngraph_malloc(size_t size)

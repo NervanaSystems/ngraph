@@ -29,12 +29,14 @@ op::MaxPool::MaxPool(const shared_ptr<Node>& arg,
                      const Shape& window_shape,
                      const Strides& window_movement_strides,
                      const Shape& padding_below,
-                     const Shape& padding_above)
+                     const Shape& padding_above,
+                     const PadType& pad_type)
     : Op("MaxPool", check_single_output_args({arg}))
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)
     , m_padding_above(padding_above)
+    , m_pad_type(pad_type)
 {
     constructor_validate_and_infer_types();
 }
@@ -57,6 +59,23 @@ void op::MaxPool::validate_and_infer_types()
     }
 
     const PartialShape& arg_shape = get_input_partial_shape(0);
+
+    if (m_pad_type == PadType::SAME_UPPER || m_pad_type == PadType::SAME_LOWER)
+    {
+        if (arg_shape.is_static())
+        {
+            CoordinateDiff padding_above, padding_below;
+            infer_auto_padding(arg_shape.to_shape(),
+                               m_window_shape,
+                               m_window_movement_strides,
+                               Strides(m_window_shape.size(), 1), // No dilation
+                               m_pad_type,
+                               padding_above,
+                               padding_below);
+            m_padding_above = Shape(padding_above.begin(), padding_above.end());
+            m_padding_below = Shape(padding_below.begin(), padding_below.end());
+        }
+    }
 
     // infer_batched_forward_pooling wants CoordinateDiffs for these, while the pooling ops for
     // now still take Shape (no negative padding).

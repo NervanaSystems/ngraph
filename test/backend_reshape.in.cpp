@@ -276,7 +276,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_3d_transpose_021)
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     vector<float> a_data(shape_size(shape_a));
-    iota(a_data.begin(), a_data.end(), 1);
+    iota(a_data.begin(), a_data.end(), 1.f);
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -302,7 +302,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_3d_transpose_210)
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     vector<float> a_data(shape_size(shape_a));
-    iota(a_data.begin(), a_data.end(), 1);
+    iota(a_data.begin(), a_data.end(), 1.f);
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -328,7 +328,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_3d_transpose_201)
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     vector<float> a_data(shape_size(shape_a));
-    iota(a_data.begin(), a_data.end(), 1);
+    iota(a_data.begin(), a_data.end(), 1.f);
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -354,7 +354,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_3d_transpose_102)
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     vector<float> a_data(shape_size(shape_a));
-    iota(a_data.begin(), a_data.end(), 1);
+    iota(a_data.begin(), a_data.end(), 1.f);
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -380,7 +380,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_3d_transpose_120)
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     vector<float> a_data(shape_size(shape_a));
-    iota(a_data.begin(), a_data.end(), 1);
+    iota(a_data.begin(), a_data.end(), 1.f);
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -406,7 +406,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_4d_transpose)
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     vector<float> a_data(shape_size(shape_a));
-    iota(a_data.begin(), a_data.end(), 1);
+    iota(a_data.begin(), a_data.end(), 1.f);
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -438,7 +438,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_4d_no_transpose)
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     vector<float> a_data(shape_size(shape_a));
-    iota(a_data.begin(), a_data.end(), 1);
+    iota(a_data.begin(), a_data.end(), 1.f);
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -522,7 +522,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_6d)
     Shape shape_r{3, 2, 2, 4, 3, 2};
 
     vector<float> a_data(shape_size(shape_a));
-    iota(a_data.begin(), a_data.end(), 1);
+    iota(a_data.begin(), a_data.end(), 1.f);
 
     auto r = make_shared<op::Reshape>(A, AxisVector{2, 4, 0, 5, 3, 1}, shape_r);
     auto f = make_shared<Function>(r, ParameterVector{A});
@@ -577,7 +577,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_shufflenet_5d)
     Shape shape_r{1, 112, 56, 56};
 
     vector<float> a_data(shape_size(shape_a));
-    iota(a_data.begin(), a_data.end(), 1);
+    iota(a_data.begin(), a_data.end(), 1.f);
 
     auto r0 = make_shared<op::Reshape>(A, AxisVector{0, 1, 2, 3}, shape_b);
     auto r1 = make_shared<op::Reshape>(r0, AxisVector{0, 2, 1, 3, 4}, shape_c);

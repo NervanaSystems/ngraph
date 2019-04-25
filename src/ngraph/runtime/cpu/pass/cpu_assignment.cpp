@@ -16,7 +16,6 @@
 
 #include "ngraph/runtime/cpu/pass/cpu_assignment.hpp"
 #include <algorithm>
-#include <cassert>
 #include <memory>
 #include <typeindex>
 #include <typeinfo>
@@ -41,6 +40,7 @@
 #include "ngraph/op/experimental/quantized_dot.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
+#include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
@@ -54,8 +54,8 @@
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
-#include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
+#include "ngraph/runtime/cpu/op/deconv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
@@ -251,6 +251,40 @@ namespace ngraph
                     if (mkldnn_utils::can_use_mkldnn_batchnorm_fprop(node))
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
+                    }
+                }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::DeconvolutionBias)
+                {
+                    auto convolution = static_cast<ngraph::op::DeconvolutionBias*>(node);
+
+                    auto arg0_shape = node->get_input_shape(0);
+                    auto arg1_shape = node->get_input_shape(1);
+                    auto arg2_shape = node->get_input_shape(2);
+                    auto result_shape = node->get_output_shape(0);
+                    auto arg0_rank = arg0_shape.size();
+                    auto arg1_rank = arg1_shape.size();
+                    auto arg2_rank = arg2_shape.size();
+
+                    bool data_dilated = false;
+                    for (size_t s : convolution->get_data_dilation_strides_forward())
+                    {
+                        data_dilated = data_dilated || (s != 1);
+                    }
+
+                    if (!data_dilated && ((arg0_rank == 4 && arg1_rank == 4) ||
+                                          (arg0_rank == 5 && arg1_rank == 5)) &&
+                        (arg2_rank == 1) && node->get_input_element_type(0) == element::f32)
+                    {
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        convolution->set_op_annotations(op_annotations);
+                    }
+                    else
+                    {
+                        NGRAPH_DEBUG << "DeconvolutionBias : data_dilated = " << data_dilated;
                     }
                 }
 
@@ -953,6 +987,8 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedDotBias>},
     {TI(ngraph::op::GetOutputElement),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::GetOutputElement>},
+    {TI(ngraph::op::DeconvolutionBias),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::DeconvolutionBias>},
 };
 
 bool runtime::cpu::pass::CPUAssignment::run_on_call_graph(
