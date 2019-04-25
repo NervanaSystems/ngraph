@@ -44,7 +44,7 @@ pad_reflect_2d
 pad_reflect_2d_with_neg
 
 # Not implemented
-erf
+erf_float
 zero_sized_erf
 gather_no_axis
 gather
