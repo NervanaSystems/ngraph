@@ -30,6 +30,7 @@
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/equal.hpp"
+#include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
 #include "ngraph/op/less.hpp"
@@ -111,8 +112,6 @@ public:
         krnl_info = build_krnl(op);
 
         queue_krnl(krnl_info, op);
-
-        ++m_count_krnls;
     }
 
     size_t get_custom_kernel_count() const { return m_count_krnls; }
@@ -129,6 +128,9 @@ private:
     krnl_info build_krnl(const std::shared_ptr<op::Convolution>& op) const;
     krnl_info build_krnl(const std::shared_ptr<op::ConvolutionBackpropData>& op) const;
     krnl_info build_krnl(const std::shared_ptr<op::ConvolutionBackpropFilters>& op) const;
+    krnl_info build_krnl(const std::shared_ptr<op::ConvolutionBias>& op) const;
+    krnl_info build_krnl(const std::shared_ptr<op::ConvolutionBiasAdd>& op) const;
+    krnl_info build_krnl(const std::shared_ptr<op::ConvolutionBiasBackpropFiltersBias>& op) const;
     krnl_info build_krnl(const std::shared_ptr<op::Equal>& op) const;
     krnl_info build_krnl(const std::shared_ptr<op::Greater>& op) const;
     krnl_info build_krnl(const std::shared_ptr<op::GreaterEq>& op) const;
