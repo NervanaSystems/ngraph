@@ -67,7 +67,6 @@ as needed:
    -- NGRAPH_USE_PREBUILT_LLVM:        OFF
    -- NGRAPH_PLAIDML_ENABLE:           OFF
    -- NGRAPH_DISTRIBUTED_ENABLE:       OFF
-   -- NGRAPH_MANYLINUX_ENABLE:         OFF
 
 .. important:: The default :program:`cmake` procedure (no build flags) will  
    install ``ngraph_dist`` to an OS-level location like ``/usr/bin/ngraph_dist``
