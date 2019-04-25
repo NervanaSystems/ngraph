@@ -61,12 +61,12 @@ def download(target_name, repo, version):
 current_sha = check_output(['git', 'rev-parse', 'HEAD']).strip().decode("utf-8")
 print("nGraph SHA: ", current_sha)
 
-# Download ngraph-tf 
-download('ngraph-tf', 'https://github.com/NervanaSystems/ngraph-tf.git', 'master')
+# Download ngraph-bridge 
+download('ngraph-bridge', 'https://github.com/tensorflow/ngraph-bridge.git', 'master')
 
-# Run ngraph-tf-build
+# Run ngraph-bridge-build
 pwd = os.getcwd()
-os.chdir('ngraph-tf')
+os.chdir('ngraph-bridge')
 command_executor(['./build_ngtf.py', '--ngraph_version', current_sha])
 
 # Now run the tests
