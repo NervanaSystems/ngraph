@@ -81,12 +81,11 @@ boost compared to native implementations. For a high-level overview, see the
 
 .. toctree::
    :maxdepth: 1
-   :caption: Diagnostics and Visualization
+   :caption: Inspecting Graphs
 
-   diagnostics/nbench.rst
-   diagnostics/performance-profile.rst
-   diagnostics/visualize.rst
-   diagnostics/debug.rst 
+   inspection/index.rst
+   inspection/performance-profile.rst
+   inspection/debug.rst 
 
 
 .. toctree::
@@ -105,7 +104,8 @@ boost compared to native implementations. For a high-level overview, see the
    project/contribution-guide.rst
    project/governance.rst
    project/doc-contributor-README.rst
-   project/index.rst 
+   project/index.rst
+   project/extras.rst 
    glossary.rst
 
 Indices and tables
