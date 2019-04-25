@@ -1328,6 +1328,16 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::ScalarConstantLike>(args[0], value);
                 break;
             }
+            case OP_TYPEID::ScatterAdd:
+            {
+                node = make_shared<op::Select>(args[0], args[1], args[2]);
+                break;
+            }
+            case OP_TYPEID::ScatterNDAdd:
+            {
+                node = make_shared<op::Select>(args[0], args[1], args[2]);
+                break;
+            }
             case OP_TYPEID::Select:
             {
                 node = make_shared<op::Select>(args[0], args[1], args[2]);
