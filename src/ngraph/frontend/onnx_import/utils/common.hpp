@@ -16,11 +16,12 @@
 
 #pragma once
 
+#include <algorithm>   // std::generate
 #include <cmath>       // std::floor, std::min
 #include <cstddef>     // std::size_t
 #include <iterator>    // std::begin, std::end
 #include <memory>      // std::shared_ptr, std::make_shared
-#include <type_traits> // std::enable_if, std::is_floating_point, std::is_integral
+#include <type_traits> // std::enable_if
 #include <vector>
 
 #include "ngraph/op/constant.hpp"
