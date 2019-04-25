@@ -47,7 +47,7 @@ namespace ngraph
             const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
             std::shared_ptr<Node> get_filters() { return get_argument(1); }
             std::shared_ptr<Node> get_data_batch() { return get_argument(0); }
-            const size_t get_groups() const { return m_groups; }
+            size_t get_groups() const { return m_groups; }
             const PadType& get_pad_type() const { return m_pad_type; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
