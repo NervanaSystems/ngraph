@@ -22,14 +22,17 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Gather slices from params with shapes given by indices
-        class GatherND : public Op
+        /// \brief Add updates to slices from inputs addressed by indices
+        class ScatterNDAdd : public Op
         {
         public:
-            // \param params The tensor from which slices are gathered
+            // \param inputs Tensor
             // \param indices Index tensor: Data type must be `element::i32` or `element::i64`
-            GatherND(const std::shared_ptr<Node>& params, const std::shared_ptr<Node>& indices)
-                : Op("GatherND", check_single_output_args({params, indices}))
+            // \param update Tensor: Must have same type as inputs
+            ScatterNDAdd(const std::shared_ptr<Node>& inputs,
+                         const std::shared_ptr<Node>& indices
+                         const std::shared_ptr<Node>& updates)
+                : Op("ScatterNDAdd", check_single_output_args({inputs, indices, updates}))
             {
                 constructor_validate_and_infer_types();
             }

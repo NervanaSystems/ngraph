@@ -22,18 +22,17 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Add updates to slices from ref addressed by indices
-        class Gather : public Op
+        /// \brief Add updates to slices from inputs addressed by indices
+        class ScatterAdd : public Op
         {
         public:
-            // \param params The tensor from which slices are gathered
+            // \param inputs Tensor
             // \param indices Index tensor: Data type must be `element::i32` or `element::i64`
-            // \param axis Axis in params to gather
-            Gather(const std::shared_ptr<Node>& params,
+            // \param update Tensor: Must have same type as inputs
+            Gather(const std::shared_ptr<Node>& inputs,
                    const std::shared_ptr<Node>& indices,
-                   size_t axis = 0)
-                : Op("Gather", check_single_output_args({params, indices}))
-                , m_axis(axis)
+                   const std::shared_ptr<Node>& updates)
+                : Op("ScatterAdd", check_single_output_args({inputs, indices, updates}))
             {
                 constructor_validate_and_infer_types();
             }
@@ -45,12 +44,8 @@ namespace ngraph
                 throw ngraph_error("Not yet implemented");
             }
 
-            size_t get_axis() const { return m_axis; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
-
-        protected:
-            size_t m_axis;
         };
     }
 }
