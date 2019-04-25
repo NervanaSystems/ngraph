@@ -79,6 +79,7 @@ public:
         m_entry_point = entry_point;
         m_gws = gws;
         m_lws = lws;
+        kernel = nullptr;
     }
 
     std::string m_name;
@@ -89,6 +90,7 @@ public:
     std::string m_entry_point;
     std::vector<size_t> m_gws;
     std::vector<size_t> m_lws;
+    void* kernel;
 };
 
 class ngraph::runtime::intelgpu::CustomKernels

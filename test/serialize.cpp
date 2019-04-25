@@ -204,6 +204,10 @@ TEST(benchmark, serialize)
     shared_ptr<Function> f = ngraph::deserialize(json_string);
     timer.stop();
     cout << "deserialize took " << timer.get_milliseconds() << "ms\n";
+
+    ngraph::set_serialize_output_shapes(true);
+    ofstream out("test.json");
+    out << serialize(f, 4);
 }
 
 MATCHER_P2(IsOutputShape, type, shape, "")
