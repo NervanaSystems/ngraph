@@ -165,6 +165,10 @@ if (NGRAPH_CPU_ENABLE)
         add_dependencies(cpu_backend ext_halide)
     endif()
 
+    if (NGRAPH_DISABLE_FAST_MATH)
+        target_compile_definitions(cpu_backend PRIVATE EIGEN_FAST_MATH=0)
+    endif()
+
     if(OPENMP_FOUND)
         target_compile_options(cpu_backend PRIVATE "${OpenMP_CXX_FLAGS}")
         if (NOT WIN32)
