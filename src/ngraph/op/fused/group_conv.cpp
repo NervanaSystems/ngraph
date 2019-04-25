@@ -27,14 +27,6 @@
 using namespace std;
 using namespace ngraph;
 
-static void validate_group_convolution(Node* node,
-                                       const PartialShape& data_shape,
-                                       const PartialShape& filter_shape,
-                                       const size_t groups,
-                                       const op::PadType& pad_type)
-{
-}
-
 op::GroupConvolution::GroupConvolution(const shared_ptr<Node>& data_batch,
                                        const shared_ptr<Node>& filters,
                                        const Strides& window_movement_strides,
