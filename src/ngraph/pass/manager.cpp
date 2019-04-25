@@ -116,8 +116,8 @@ void pass::Manager::run_passes(shared_ptr<Function> func, bool transitive)
                 {
                     continue;
                 }
-                function_pass->run_on_function(f);
-                f_pair.second = f->is_dynamic();
+                bool function_modified = function_pass->run_on_function(f);
+                f_pair.second = (function_modified == true) ? f->is_dynamic() : f_pair.second;
             }
         }
         else if (node_pass)
@@ -141,8 +141,8 @@ void pass::Manager::run_passes(shared_ptr<Function> func, bool transitive)
                 {
                     continue;
                 }
-                call_graph_pass->run_on_call_graph(f->get_ordered_ops());
-                f_pair.second = f->is_dynamic();
+                bool function_modified = call_graph_pass->run_on_call_graph(f->get_ordered_ops());
+                f_pair.second = (function_modified == true) ? f->is_dynamic() : f_pair.second;
             }
         }
 
