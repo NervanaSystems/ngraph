@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <climits>
 #include <random>
 
 #include "gtest/gtest.h"
@@ -22,6 +23,7 @@
 #include "ngraph/type/bfloat16.hpp"
 #include "util/float_util.hpp"
 
+using namespace std;
 using namespace ngraph;
 
 template <typename T>
@@ -135,6 +137,22 @@ TEST(bfloat16, to_float)
     bf = test::bits_to_bfloat16(source_string);
     f = static_cast<float>(bf);
     EXPECT_EQ(f, 1.03125f);
+}
+
+TEST(bfloat16, numeric_limits)
+{
+    bfloat16 infinity = numeric_limits<bfloat16>::infinity();
+    bfloat16 neg_infinity = -numeric_limits<bfloat16>::infinity();
+    bfloat16 quiet_nan = numeric_limits<bfloat16>::quiet_NaN();
+    bfloat16 signaling_nan = numeric_limits<bfloat16>::signaling_NaN();
+
+    // Would be nice if we could have bfloat16 overloads for these, but it would require adding
+    // overloads into ::std. So we just cast to float here. We can't rely on an implicit cast
+    // because it fails with some versions of AppleClang.
+    EXPECT_TRUE(isinf(static_cast<float>(infinity)));
+    EXPECT_TRUE(isinf(static_cast<float>(neg_infinity)));
+    EXPECT_TRUE(isnan(static_cast<float>(quiet_nan)));
+    EXPECT_TRUE(isnan(static_cast<float>(signaling_nan)));
 }
 
 TEST(benchmark, bfloat16)
