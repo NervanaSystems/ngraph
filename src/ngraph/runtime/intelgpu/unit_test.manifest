@@ -28,6 +28,7 @@ convert_float32_bool
 prelu
 prelu_shared_slope
 prelu_negative_slope
+group_conv
 
 # Unsupported extra padding modes
 pad_edge_1d
