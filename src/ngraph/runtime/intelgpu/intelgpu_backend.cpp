@@ -43,20 +43,15 @@
 
 #include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/cse.hpp"
-#include "ngraph/pass/fused_op_decomposition.hpp"
 #include "ngraph/pass/get_output_element_elimination.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_backend.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_executable.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_kernels.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_op_batchnorm.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_op_broadcast.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_op_convolution.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_op_custom_func_call.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_op_softmax.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_tensor_view.hpp"
 #include "ngraph/runtime/intelgpu/visualize_tree.hpp"
 
@@ -64,6 +59,7 @@
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/all.hpp"
+#include "ngraph/op/and.hpp"
 #include "ngraph/op/any.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
@@ -76,19 +72,28 @@
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
+#include "ngraph/op/equal.hpp"
 #include "ngraph/op/erf.hpp"
+#include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/greater.hpp"
+#include "ngraph/op/greater_eq.hpp"
+#include "ngraph/op/less.hpp"
+#include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/min.hpp"
+#include "ngraph/op/not_equal.hpp"
 #include "ngraph/op/one_hot.hpp"
+#include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
+#include "ngraph/op/select.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
@@ -108,6 +113,7 @@ using intelgpu_space = runtime::intelgpu::IntelGPULayout;
 #define NGRAPH_OP(a, b) a,
 enum class OP_TYPEID
 {
+#include "ngraph/op/fused_op_tbl.hpp"
 #include "ngraph/op/op_tbl.hpp"
 };
 #undef NGRAPH_OP
@@ -120,6 +126,7 @@ static OP_TYPEID get_typeid(const string& s)
 // ...
 #define NGRAPH_OP(a, b) {#a, OP_TYPEID::a},
     static const unordered_map<string, OP_TYPEID> typeid_map{
+#include "ngraph/op/fused_op_tbl.hpp"
 #include "ngraph/op/op_tbl.hpp"
     };
 #undef NGRAPH_OP
@@ -131,25 +138,13 @@ static OP_TYPEID get_typeid(const string& s)
     return it->second;
 }
 
-static void arguments_check(const shared_ptr<Node>& op, size_t input, size_t output)
-{
-    if (op->get_input_size() != input || op->get_output_size() != output)
-    {
-        ostringstream os;
-        os << "Operation \"" << op->description() << "\" input and output sizes mismatch."
-           << " Expected input size=" << input << ", provided=" << op->get_input_size()
-           << ". Expected output size=" << output << ", provided=" << op->get_output_size();
-        throw invalid_argument(os.str());
-    }
-}
-
 static void do_eltwise_operation(cldnn::topology& topology,
                                  const shared_ptr<Node>& op,
                                  const string& custom_op,
                                  bool function_operation,
                                  cldnn::eltwise_mode mode)
 {
-    arguments_check(op, 2, 1);
+    runtime::intelgpu::arguments_check(op, 2, 1);
 
     if (op->get_input_element_type(0) != element::f32 ||
         op->get_input_element_type(1) != element::f32 ||
@@ -182,7 +177,7 @@ static void do_cldnn_unary(cldnn::topology& topology,
                            cldnn_activation_func mode,
                            const cldnn_activation_additional_params& param = {0.f, 0.f})
 {
-    arguments_check(op, 1, 1);
+    runtime::intelgpu::arguments_check(op, 1, 1);
 
     const cldnn::activation cldnn_unary(
         op->get_output_tensor_name(0), op->get_input_tensor_name(0), mode, param);
@@ -192,7 +187,7 @@ static void do_cldnn_unary(cldnn::topology& topology,
 static void
     do_custom_unary(cldnn::topology& topology, const shared_ptr<Node>& op, const string& operation)
 {
-    arguments_check(op, 1, 1);
+    runtime::intelgpu::arguments_check(op, 1, 1);
 
     runtime::intelgpu::do_custom_unary_operation(topology,
                                                  op->get_input_tensor_name(0),
@@ -211,7 +206,7 @@ static void do_universal_unary(cldnn::topology& topology,
                                bool force_custom = false,
                                const cldnn_activation_additional_params& param = {0.f, 0.f})
 {
-    arguments_check(op, 1, 1);
+    runtime::intelgpu::arguments_check(op, 1, 1);
 
     if (force_custom || (op->get_input_element_type(0) != element::f32))
     {
@@ -230,7 +225,7 @@ static void do_pooling_operation(cldnn::topology& topology,
                                  const Shape& pad_below,
                                  const cldnn::pooling_mode mode)
 {
-    arguments_check(op, 1, 1);
+    runtime::intelgpu::arguments_check(op, 1, 1);
 
     const cldnn::tensor output_size = intelgpu_space::create_cldnn_tensor(op->get_output_shape(0));
     const cldnn::tensor input_offset = intelgpu_space::create_cldnn_offset(pad_below);
@@ -247,22 +242,12 @@ static void do_pooling_operation(cldnn::topology& topology,
     topology.add(cldnn_pooling);
 }
 
-static void do_logical_operation(cldnn::topology& topology,
-                                 const shared_ptr<Node>& op,
-                                 const string& operation)
+template <typename OP>
+static void do_logical_operation(runtime::intelgpu::CustomKernels& kern, const shared_ptr<Node>& op)
 {
-    arguments_check(op, 2, 1);
+    runtime::intelgpu::arguments_check(op, 2, 1);
 
-    runtime::intelgpu::do_logic_kernel(topology,
-                                       op->get_input_tensor_name(0),
-                                       op->get_input_shape(0),
-                                       op->get_input_element_type(0),
-                                       op->get_input_tensor_name(1),
-                                       op->get_input_shape(1),
-                                       op->get_output_tensor_name(0),
-                                       op->get_output_shape(0),
-                                       op->get_output_element_type(0),
-                                       operation);
+    kern.emit<OP>(static_pointer_cast<OP>(op));
 }
 
 // This function needed to only change the name of the data in topology
@@ -391,6 +376,7 @@ shared_ptr<runtime::Executable>
 
     set<cldnn::primitive_id> func_output_names;
     cldnn::topology topology;
+    CustomKernels kern(topology);
     stopwatch timer_compile;
     double consumed_memory = 0.0;
     double compilation_time = 0.0;
@@ -410,7 +396,6 @@ shared_ptr<runtime::Executable>
     {
         ngraph::pass::Manager pass_manager;
 
-        pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>();
         pass_manager.register_pass<ngraph::pass::NopElimination>();
         pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
         pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
@@ -429,13 +414,14 @@ shared_ptr<runtime::Executable>
 
     for (shared_ptr<Node> op : func->get_ops())
     {
+        const OP_TYPEID op_type_id = get_typeid(op->description());
 // We want to check that every OP_TYPEID enumeration is included in the list.
 // These GCC flags enable compile-time checking so that if an enumeration
 // is not in the list an error is generated.
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
-        switch (get_typeid(op->description()))
+        switch (op_type_id)
         {
         case OP_TYPEID::Parameter:
         {
@@ -487,15 +473,7 @@ shared_ptr<runtime::Executable>
             }
             else
             {
-                do_slice_operation(topology,
-                                   op->get_input_tensor_name(0),
-                                   op->get_input_shape(0),
-                                   op->get_output_tensor_name(0),
-                                   op->get_output_shape(0),
-                                   op->get_output_element_type(0),
-                                   lower_bounds,
-                                   upper_bounds,
-                                   strides);
+                kern.emit<op::Slice>(elem);
             }
             break;
         }
@@ -505,16 +483,7 @@ shared_ptr<runtime::Executable>
 
             if (op->get_output_element_type(0) != element::f32)
             {
-                do_select_operation(topology,
-                                    op->get_input_tensor_name(0),
-                                    op->get_input_shape(0),
-                                    op->get_input_tensor_name(1),
-                                    op->get_input_shape(1),
-                                    op->get_input_tensor_name(2),
-                                    op->get_input_shape(2),
-                                    op->get_output_tensor_name(0),
-                                    op->get_output_shape(0),
-                                    op->get_output_element_type(0));
+                kern.emit<op::Select>(static_pointer_cast<op::Select>(op));
             }
             else
             {
@@ -686,14 +655,7 @@ shared_ptr<runtime::Executable>
             if ((shape_dim_count > 3) || ((shape_dim_count == 3) && (axes_size == 2)) ||
                 (op->get_input_element_type(0) != element::f32))
             {
-                do_softmax_operation(topology,
-                                     op->get_input_tensor_name(0),
-                                     op->get_input_shape(0),
-                                     op->get_input_element_type(0),
-                                     op->get_output_tensor_name(0),
-                                     op->get_output_shape(0),
-                                     op->get_output_element_type(0),
-                                     axes);
+                kern.emit<op::Softmax>(softmax_op);
             }
             else
             {
@@ -994,15 +956,7 @@ shared_ptr<runtime::Executable>
             }
             else
             {
-                do_bcast_sum_operation(topology,
-                                       op->get_input_tensor_name(0),
-                                       op->get_input_shape(0),
-                                       op->get_input_element_type(0),
-                                       op->get_output_tensor_name(0),
-                                       op->get_output_shape(0),
-                                       op->get_output_element_type(0),
-                                       axis,
-                                       true);
+                kern.emit<op::Broadcast>(broadcast);
             }
             break;
         }
@@ -1020,15 +974,7 @@ shared_ptr<runtime::Executable>
             }
             else
             {
-                do_bcast_sum_operation(topology,
-                                       op->get_input_tensor_name(0),
-                                       op->get_input_shape(0),
-                                       op->get_input_element_type(0),
-                                       op->get_output_tensor_name(0),
-                                       op->get_output_shape(0),
-                                       op->get_output_element_type(0),
-                                       axis,
-                                       false);
+                kern.emit<op::Sum>(sum);
             }
             break;
         }
@@ -1046,13 +992,7 @@ shared_ptr<runtime::Executable>
             }
             else
             {
-                do_product_operation(topology,
-                                     op->get_input_tensor_name(0),
-                                     op->get_input_shape(0),
-                                     op->get_output_tensor_name(0),
-                                     op->get_output_shape(0),
-                                     op->get_output_element_type(0),
-                                     axis);
+                kern.emit<op::Product>(prod);
             }
             break;
         }
@@ -1113,44 +1053,16 @@ shared_ptr<runtime::Executable>
         {
             arguments_check(op, 1, 1);
 
-            const shared_ptr<op::All> all_op = static_pointer_cast<op::All>(op);
-            const AxisSet& axis = all_op->get_reduction_axes();
-            const shared_ptr<Node> def_val = all_op->get_default_value();
-            const shared_ptr<op::Constant> def_const = static_pointer_cast<op::Constant>(def_val);
-            const vector<std::string>& values = def_const->get_value_strings();
-
             // Empty axis is not a case for do_equal_propagation()
-            do_all_any_op(topology,
-                          op->get_input_tensor_name(0),
-                          op->get_input_shape(0),
-                          op->get_output_tensor_name(0),
-                          op->get_output_shape(0),
-                          op->get_output_element_type(0),
-                          axis,
-                          "lhs && rhs",
-                          values.at(0));
+            kern.emit<op::All>(static_pointer_cast<op::All>(op));
             break;
         }
         case OP_TYPEID::Any:
         {
             arguments_check(op, 1, 1);
 
-            const shared_ptr<op::Any> any_op = static_pointer_cast<op::Any>(op);
-            const AxisSet& axis = any_op->get_reduction_axes();
-            const shared_ptr<Node> def_val = any_op->get_default_value();
-            const shared_ptr<op::Constant> def_const = static_pointer_cast<op::Constant>(def_val);
-            const vector<std::string>& values = def_const->get_value_strings();
-
             // Empty axis is not a case for do_equal_propagation()
-            do_all_any_op(topology,
-                          op->get_input_tensor_name(0),
-                          op->get_input_shape(0),
-                          op->get_output_tensor_name(0),
-                          op->get_output_shape(0),
-                          op->get_output_element_type(0),
-                          axis,
-                          "lhs || rhs",
-                          values.at(0));
+            kern.emit<op::Any>(static_pointer_cast<op::Any>(op));
             break;
         }
         case OP_TYPEID::ReluBackprop:
@@ -1321,42 +1233,42 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::Greater:
         {
-            do_logical_operation(topology, op, " > ");
+            do_logical_operation<op::Greater>(kern, op);
             break;
         }
         case OP_TYPEID::GreaterEq:
         {
-            do_logical_operation(topology, op, " >= ");
+            do_logical_operation<op::GreaterEq>(kern, op);
             break;
         }
         case OP_TYPEID::Equal:
         {
-            do_logical_operation(topology, op, " == ");
+            do_logical_operation<op::Equal>(kern, op);
             break;
         }
         case OP_TYPEID::NotEqual:
         {
-            do_logical_operation(topology, op, " != ");
+            do_logical_operation<op::NotEqual>(kern, op);
             break;
         }
         case OP_TYPEID::Less:
         {
-            do_logical_operation(topology, op, " < ");
+            do_logical_operation<op::Less>(kern, op);
             break;
         }
         case OP_TYPEID::LessEq:
         {
-            do_logical_operation(topology, op, " <= ");
+            do_logical_operation<op::LessEq>(kern, op);
             break;
         }
         case OP_TYPEID::And:
         {
-            do_logical_operation(topology, op, " && ");
+            do_logical_operation<op::And>(kern, op);
             break;
         }
         case OP_TYPEID::Or:
         {
-            do_logical_operation(topology, op, " || ");
+            do_logical_operation<op::Or>(kern, op);
             break;
         }
         case OP_TYPEID::Pad:
@@ -1380,40 +1292,8 @@ shared_ptr<runtime::Executable>
         {
             arguments_check(op, 6, 3);
 
-            const shared_ptr<op::BatchNormTrainingBackprop> batch_norm =
-                static_pointer_cast<op::BatchNormTrainingBackprop>(op);
-            const double eps = batch_norm->get_eps_value();
-
-            do_create_mean(topology,
-                           op->get_output_tensor_name(2), // d_beta
-                           op->get_output_element_type(2),
-                           op->get_input_tensor_name(5), // delta
-                           op->get_input_shape(5),
-                           true);
-
-            do_create_variance_back(topology,
-                                    op->get_output_tensor_name(1), // d_gamma
-                                    op->get_output_element_type(1),
-                                    eps,
-                                    op->get_input_tensor_name(2), // input
-                                    op->get_input_shape(2),
-                                    op->get_input_tensor_name(3),  // gamma
-                                    op->get_input_tensor_name(4),  // beta
-                                    op->get_input_tensor_name(5)); // delta
-
-            do_batch_norm_backprop_operation(topology,
-                                             op->get_input_shape(2),
-                                             op->get_input_element_type(2),
-                                             op->get_input_tensor_name(0),
-                                             op->get_input_tensor_name(1),
-                                             op->get_input_tensor_name(2),
-                                             op->get_input_tensor_name(3),
-                                             op->get_input_tensor_name(4),
-                                             op->get_input_tensor_name(5),
-                                             eps,
-                                             op->get_output_tensor_name(0),
-                                             op->get_output_tensor_name(1),
-                                             op->get_output_tensor_name(2));
+            kern.emit<op::BatchNormTrainingBackprop>(
+                static_pointer_cast<op::BatchNormTrainingBackprop>(op));
             break;
         }
         case OP_TYPEID::BatchNormInference:
@@ -1442,16 +1322,7 @@ shared_ptr<runtime::Executable>
             if (proceed_with_custom_kernel || (op->get_input_shape(2).size() != 4) ||
                 (op->get_input_element_type(0) != ngraph::element::f32))
             {
-                do_batch_norm_operation(topology,
-                                        op->get_output_tensor_name(0),
-                                        op->get_output_element_type(0),
-                                        eps,
-                                        op->get_input_tensor_name(2),
-                                        op->get_input_shape(2),
-                                        op->get_input_tensor_name(0),
-                                        op->get_input_tensor_name(1),
-                                        op->get_input_tensor_name(3),
-                                        op->get_input_tensor_name(4));
+                kern.emit<op::BatchNormInference>(bnorm);
             }
             else
             {
@@ -1475,61 +1346,7 @@ shared_ptr<runtime::Executable>
             if ((op->get_input_shape(2).size() != 4) ||
                 (op->get_input_element_type(0) != ngraph::element::f32))
             {
-                string mean_name;
-                string variance_name;
-
-                if (op->get_inputs().size() < 3 || op->get_outputs().empty())
-                {
-                    arguments_check(op, 3, 1); // throw exception in this case
-                }
-
-                if (op->get_outputs().size() == 3)
-                {
-                    arguments_check(op, 3, 3);
-
-                    mean_name = op->get_output_tensor_name(1);
-                    variance_name = op->get_output_tensor_name(2);
-
-                    do_create_mean(topology,
-                                   mean_name,
-                                   op->get_output_element_type(0),
-                                   op->get_input_tensor_name(2),
-                                   op->get_input_shape(2),
-                                   false);
-
-                    do_create_variance(topology,
-                                       variance_name,
-                                       op->get_output_element_type(0),
-                                       op->get_input_tensor_name(2),
-                                       op->get_input_shape(2),
-                                       mean_name);
-                }
-
-                if (op->get_outputs().size() == 1 || op->get_outputs().size() == 3)
-                {
-                    if (mean_name.empty() || variance_name.empty())
-                    {
-                        arguments_check(op, 5, 1);
-
-                        mean_name = op->get_input_tensor_name(3);
-                        variance_name = op->get_input_tensor_name(4);
-                    }
-
-                    do_batch_norm_operation(topology,
-                                            op->get_output_tensor_name(0),
-                                            op->get_output_element_type(0),
-                                            eps,
-                                            op->get_input_tensor_name(2),
-                                            op->get_input_shape(2),
-                                            op->get_input_tensor_name(0),
-                                            op->get_input_tensor_name(1),
-                                            mean_name,
-                                            variance_name);
-                }
-                else
-                {
-                    arguments_check(op, 5, 1); // throw exception in this case
-                }
+                kern.emit<op::BatchNormTraining>(bnorm);
             }
             else
             {
@@ -1588,42 +1405,73 @@ shared_ptr<runtime::Executable>
             break;
         }
         case OP_TYPEID::Convolution:
+        case OP_TYPEID::ConvolutionBias:
+        case OP_TYPEID::ConvolutionBiasAdd:
         {
-            arguments_check(op, 2, 1);
+            // since bad inheritance design of these classes
+            Strides win_stride;
+            Strides win_dilation;
+            Strides data_dilation;
+            CoordinateDiff pad_below;
+            CoordinateDiff pad_above;
 
-            const shared_ptr<op::Convolution> conv_op = static_pointer_cast<op::Convolution>(op);
-            const Strides& win_stride = conv_op->get_window_movement_strides();
-            const Strides& win_dilation = conv_op->get_window_dilation_strides();
-            const Strides& data_dilation = conv_op->get_data_dilation_strides();
-            const CoordinateDiff& pad_below = conv_op->get_padding_below();
-            const CoordinateDiff& pad_above = conv_op->get_padding_above();
+            if (op_type_id == OP_TYPEID::ConvolutionBias)
+            {
+                arguments_check(op, 3, 1);
+
+                const shared_ptr<op::ConvolutionBias> conv_op =
+                    static_pointer_cast<op::ConvolutionBias>(op);
+                win_stride = conv_op->get_window_movement_strides();
+                win_dilation = conv_op->get_window_dilation_strides();
+                data_dilation = conv_op->get_data_dilation_strides();
+                pad_below = conv_op->get_padding_below();
+                pad_above = conv_op->get_padding_above();
+            }
+            else if (op_type_id == OP_TYPEID::ConvolutionBiasAdd)
+            {
+                arguments_check(op, 4, 1);
+
+                const shared_ptr<op::ConvolutionBiasAdd> conv_op =
+                    static_pointer_cast<op::ConvolutionBiasAdd>(op);
+                win_stride = conv_op->get_window_movement_strides();
+                win_dilation = conv_op->get_window_dilation_strides();
+                data_dilation = conv_op->get_data_dilation_strides();
+                pad_below = conv_op->get_padding_below();
+                pad_above = conv_op->get_padding_above();
+            }
+            else
+            {
+                arguments_check(op, 2, 1);
+
+                const shared_ptr<op::Convolution> conv_op =
+                    static_pointer_cast<op::Convolution>(op);
+                win_stride = conv_op->get_window_movement_strides();
+                win_dilation = conv_op->get_window_dilation_strides();
+                data_dilation = conv_op->get_data_dilation_strides();
+                pad_below = conv_op->get_padding_below();
+                pad_above = conv_op->get_padding_above();
+            }
 
             // clDNN has quite limited support for Convolution operation
             // following are the checks to go with workaround
-            if ((win_stride.size() > 2) || (pad_below.size() > 2) || (pad_above.size() > 2) ||
-                (win_dilation.size() > 2) || (data_dilation.size() > 2) ||
+            if ((win_stride.size() != 2) || (pad_below.size() != 2) || (pad_above.size() != 2) ||
+                (win_dilation.size() != 2) || (data_dilation.size() != 2) ||
                 (data_dilation.at(0) != 1) || (data_dilation.at(1) != 1) ||
                 (op->get_output_element_type(0) != element::f32))
             {
-                do_convolution_operation(topology,
-                                         op->get_input_tensor_name(0),
-                                         op->get_input_shape(0),
-                                         op->get_input_tensor_name(1),
-                                         op->get_input_shape(1),
-                                         op->get_output_tensor_name(0),
-                                         op->get_output_shape(0),
-                                         op->get_output_element_type(0),
-                                         conv_op->get_padding_below(),
-                                         conv_op->get_window_movement_strides(),
-                                         conv_op->get_window_dilation_strides(),
-                                         conv_op->get_data_dilation_strides(),
-                                         0,
-                                         1,
-                                         1,
-                                         "input[batch][input_channel]",
-                                         "filter[output_channel][input_channel]",
-                                         "output[batch][output_channel]",
-                                         false);
+                if (op_type_id == OP_TYPEID::ConvolutionBias)
+                {
+                    kern.emit<op::ConvolutionBias>(static_pointer_cast<op::ConvolutionBias>(op));
+                }
+                else if (op_type_id == OP_TYPEID::ConvolutionBiasAdd)
+                {
+                    kern.emit<op::ConvolutionBiasAdd>(
+                        static_pointer_cast<op::ConvolutionBiasAdd>(op));
+                }
+                else
+                {
+                    kern.emit<op::Convolution>(static_pointer_cast<op::Convolution>(op));
+                }
             }
             else
             {
@@ -1653,14 +1501,59 @@ shared_ptr<runtime::Executable>
                 const cldnn::tensor strides(1, 1, win_stride.at(1), win_stride.at(0));
                 const cldnn::tensor dilation(1, 1, win_dilation.at(1), win_dilation.at(0));
 
-                const cldnn::convolution cldnn_conv(op->get_output_tensor_name(0),
-                                                    op_input_name,
-                                                    {op->get_input_tensor_name(1)},
-                                                    strides,
-                                                    input_offset,
-                                                    dilation);
-                topology.add(cldnn_conv);
+                if (op_type_id == OP_TYPEID::ConvolutionBias)
+                {
+                    const cldnn::convolution cldnn_conv_bias(op->get_output_tensor_name(0),
+                                                             op_input_name,
+                                                             {op->get_input_tensor_name(1)},
+                                                             {op->get_input_tensor_name(2)},
+                                                             strides,
+                                                             input_offset,
+                                                             dilation);
+                    topology.add(cldnn_conv_bias);
+                }
+                else if (op_type_id == OP_TYPEID::ConvolutionBiasAdd)
+                {
+                    // Do not understand which cldnn::convolution::ctor() should be called
+                    // make it clear by two operations
+                    const string intermediate_name =
+                        op_input_name + op->get_output_tensor_name(0) + "_intermediate";
+
+                    const cldnn::convolution cldnn_conv_bias(intermediate_name,
+                                                             op_input_name,
+                                                             {op->get_input_tensor_name(1)},
+                                                             {op->get_input_tensor_name(2)},
+                                                             strides,
+                                                             input_offset,
+                                                             dilation);
+                    topology.add(cldnn_conv_bias);
+
+                    const cldnn::eltwise cldnn_conv_bias_add(
+                        op->get_output_tensor_name(0),
+                        {intermediate_name, op->get_input_tensor_name(3)},
+                        cldnn::eltwise_mode::sum);
+
+                    topology.add(cldnn_conv_bias_add);
+                }
+                else
+                {
+                    const cldnn::convolution cldnn_conv(op->get_output_tensor_name(0),
+                                                        op_input_name,
+                                                        {op->get_input_tensor_name(1)},
+                                                        strides,
+                                                        input_offset,
+                                                        dilation);
+                    topology.add(cldnn_conv);
+                }
             }
+            break;
+        }
+        case OP_TYPEID::ConvolutionBiasBackpropFiltersBias:
+        {
+            arguments_check(op, 2, 2);
+
+            kern.emit<op::ConvolutionBiasBackpropFiltersBias>(
+                static_pointer_cast<op::ConvolutionBiasBackpropFiltersBias>(op));
             break;
         }
         case OP_TYPEID::ConvolutionBackpropFilters:
@@ -1676,30 +1569,22 @@ shared_ptr<runtime::Executable>
             const Strides& win_dilation = conv_op->get_window_movement_strides_forward();
             const Strides& data_dilation = conv_op->get_data_dilation_strides_forward();
 
-            if ((win_stride.size() > 2) || (win_stride.at(0) != 1) || (win_stride.at(1) != 1) ||
-                (pad_below.size() > 2) || (pad_above.size() > 2) || (data_dilation.size() > 2) ||
-                (data_dilation.at(0) != 1) || (data_dilation.at(1) != 1) ||
-                (win_dilation.size() > 2) || (op->get_output_element_type(0) != element::f32))
+            // workaround to use custom kernel in case of filter output NxCx1x1
+            bool proceed_with_custom_kernel = false;
+            const Shape& output_shape = op->get_output_shape(0);
+            if ((output_shape.size() == 4) && (output_shape.at(2) == 1) &&
+                (output_shape.at(3) == 1))
             {
-                do_convolution_operation(topology,
-                                         op->get_input_tensor_name(0),
-                                         op->get_input_shape(0),
-                                         op->get_input_tensor_name(1),
-                                         op->get_input_shape(1),
-                                         op->get_output_tensor_name(0),
-                                         op->get_output_shape(0),
-                                         op->get_output_element_type(0),
-                                         conv_op->get_padding_below_forward(),
-                                         win_stride,
-                                         win_dilation,
-                                         data_dilation,
-                                         1,
-                                         0,
-                                         0,
-                                         "input[input_channel][batch]",
-                                         "filter[input_channel][output_channel]",
-                                         "output[output_channel][batch]",
-                                         false);
+                proceed_with_custom_kernel = true;
+            }
+
+            if ((win_stride.size() != 2) || (win_stride.at(0) != 1) || (win_stride.at(1) != 1) ||
+                (pad_below.size() != 2) || (pad_above.size() != 2) || (data_dilation.size() != 2) ||
+                (data_dilation.at(0) != 1) || (data_dilation.at(1) != 1) ||
+                (win_dilation.size() != 2) || (op->get_output_element_type(0) != element::f32) ||
+                proceed_with_custom_kernel)
+            {
+                kern.emit<op::ConvolutionBackpropFilters>(conv_op);
             }
             else
             {
@@ -1776,32 +1661,14 @@ shared_ptr<runtime::Executable>
             const Strides& win_dilation = conv_op->get_window_dilation_strides_forward();
             const Strides& data_dilation = conv_op->get_window_movement_strides_forward();
 
-            if ((win_stride.size() > 2) || (win_stride.at(0) != 1) || (win_stride.at(1) != 1) ||
-                (pad_below.size() > 2) || (pad_above.size() > 2) || (data_dilation.size() > 2) ||
+            if ((win_stride.size() != 2) || (win_stride.at(0) != 1) || (win_stride.at(1) != 1) ||
+                (pad_below.size() != 2) || (pad_above.size() != 2) || (data_dilation.size() != 2) ||
                 (data_dilation.at(0) != 1) || (data_dilation.at(1) != 1) ||
-                (win_dilation.size() > 2) || (win_dilation.at(0) != 1) ||
+                (win_dilation.size() != 2) || (win_dilation.at(0) != 1) ||
                 (win_dilation.at(1) != 1) || (op->get_output_element_type(0) != element::f32) ||
                 ((pad_below.at(0) == pad_above.at(0)) && (pad_below.at(1) == pad_above.at(1))))
             {
-                do_convolution_operation(topology,
-                                         op->get_input_tensor_name(1),
-                                         op->get_input_shape(1),
-                                         op->get_input_tensor_name(0),
-                                         op->get_input_shape(0),
-                                         op->get_output_tensor_name(0),
-                                         op->get_output_shape(0),
-                                         op->get_output_element_type(0),
-                                         pad_below,
-                                         win_stride,
-                                         win_dilation,
-                                         data_dilation,
-                                         0,
-                                         1,
-                                         1,
-                                         "input[batch][input_channel]",
-                                         "filter[input_channel][output_channel]",
-                                         "output[batch][output_channel]",
-                                         true);
+                kern.emit<op::ConvolutionBackpropData>(conv_op);
             }
             else
             {
@@ -1847,34 +1714,14 @@ shared_ptr<runtime::Executable>
         {
             arguments_check(op, 1, 1);
 
-            const shared_ptr<op::Min> min_op = static_pointer_cast<op::Min>(op);
-            const AxisSet& axis = min_op->get_reduction_axes();
-
-            do_max_min_operation(topology,
-                                 op->get_input_tensor_name(0),
-                                 op->get_input_shape(0),
-                                 op->get_output_tensor_name(0),
-                                 op->get_output_shape(0),
-                                 op->get_output_element_type(0),
-                                 axis,
-                                 true);
+            kern.emit<op::Min>(static_pointer_cast<op::Min>(op));
             break;
         }
         case OP_TYPEID::Max:
         {
             arguments_check(op, 1, 1);
 
-            const shared_ptr<op::Max> max_op = static_pointer_cast<op::Max>(op);
-            const AxisSet& axis = max_op->get_reduction_axes();
-
-            do_max_min_operation(topology,
-                                 op->get_input_tensor_name(0),
-                                 op->get_input_shape(0),
-                                 op->get_output_tensor_name(0),
-                                 op->get_output_shape(0),
-                                 op->get_output_element_type(0),
-                                 axis,
-                                 false);
+            kern.emit<op::Max>(static_pointer_cast<op::Max>(op));
             break;
         }
         case OP_TYPEID::OneHot:
@@ -2067,6 +1914,8 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::DynReshape:
         case OP_TYPEID::DynSlice:
         case OP_TYPEID::Erf:
+        case OP_TYPEID::Gather:
+        case OP_TYPEID::GatherND:
         case OP_TYPEID::QuantizedAvgPool:
         case OP_TYPEID::QuantizedConvolutionBias:
         case OP_TYPEID::QuantizedConvolutionBiasAdd:
@@ -2086,6 +1935,8 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::DynBroadcast:
         case OP_TYPEID::Passthrough:
         case OP_TYPEID::DynPad:
+        case OP_TYPEID::PRelu:
+        default:
         {
             throw unsupported_op("Unsupported op '" + op->description() +
                                  "' in IntelGPU back end.");

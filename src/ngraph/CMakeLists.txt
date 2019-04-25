@@ -46,6 +46,7 @@ set (SRC
     coordinate_transform.cpp
     cpio.cpp
     cpio.hpp
+    deprecated.hpp
     descriptor/input.cpp
     descriptor/input.hpp
     descriptor/layout/dense_tensor_layout.cpp
@@ -73,10 +74,6 @@ set (SRC
     ngraph_visibility.hpp
     node.cpp
     node.hpp
-    node_input.cpp
-    node_input.hpp
-    node_output.cpp
-    node_output.hpp
     node_vector.hpp
     op/abs.cpp
     op/abs.hpp
@@ -168,6 +165,10 @@ set (SRC
     op/experimental/transpose.hpp
     op/floor.cpp
     op/floor.hpp
+    op/gather.cpp
+    op/gather.hpp
+    op/gather_nd.cpp
+    op/gather_nd.hpp
     op/get_output_element.cpp
     op/get_output_element.hpp
     op/greater.cpp
@@ -258,6 +259,8 @@ set (SRC
     op/tanh.hpp
     op/topk.cpp
     op/topk.hpp
+    op/fused/conv_fused.cpp
+    op/fused/conv_fused.hpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
     op/util/arithmetic_reduction.cpp
@@ -288,6 +291,7 @@ set (SRC
     pass/common_function_collection.hpp
     pass/constant_folding.cpp
     pass/constant_folding.hpp
+    pass/constant_to_broadcast.cpp
     pass/core_fusion.cpp
     pass/core_fusion.hpp
     pass/cse.cpp
@@ -351,6 +355,8 @@ set (SRC
     pattern/op/skip.hpp
     placement.cpp
     placement.hpp
+    provenance.cpp
+    provenance.hpp
     rank.hpp
     result_vector.hpp
     runtime/aligned_buffer.cpp

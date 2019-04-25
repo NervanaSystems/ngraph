@@ -15,11 +15,11 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/cpu/kernel/convolution.hpp"
+#include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
-#include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
@@ -602,6 +602,56 @@ namespace ngraph
                 }
             }
 
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::DeconvolutionBias)
+            {
+                auto& functors = external_function->get_functors();
+
+                auto arg0_shape = args[0].get_shape();
+                auto arg1_shape = args[1].get_shape();
+                auto arg2_shape = args[2].get_shape();
+                auto result_shape = out[0].get_shape();
+
+                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
+                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto deconvbias_desc =
+                        mkldnn_emitter
+                            ->get_deconvolutionbias_forward_data<ngraph::op::DeconvolutionBias>(
+                                node);
+                    auto weights_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+
+                    // DeconvolutionBias needs 5 primitives: weights, delta, bias, result,
+                    // and deconvolutionbias.
+                    auto conv_index = mkldnn_emitter->reserve_primitive_space(5);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+
+                    auto functor = [&, deconvbias_desc, conv_index, weights_desc](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        if (ctx->first_iteration)
+                        {
+                            mkldnn_emitter->build_deconvolutionbias_forward(
+                                deconvbias_desc, conv_index, weights_desc);
+                        }
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], arg2_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], out_tensor);
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+                    };
+                    functors.emplace_back(functor);
+                }
+                else
+                {
+                    throw ngraph_error("DeconvolutionBias is only supported with MKLDNN kernel");
+                }
+            }
+
             REGISTER_OP_BUILDER(Convolution);
             REGISTER_OP_BUILDER(ConvolutionRelu);
             REGISTER_OP_BUILDER(ConvolutionBias);
@@ -612,6 +662,7 @@ namespace ngraph
             REGISTER_OP_BUILDER(GroupConvolution);
             REGISTER_OP_BUILDER(ConvolutionAdd);
             REGISTER_OP_BUILDER(GroupConvolutionBias);
+            REGISTER_OP_BUILDER(DeconvolutionBias)
         } // namespace cpu
     }     // namespace runtime
 } // namespace ngraph

@@ -23,6 +23,7 @@
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/pass/manager_state.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -40,8 +41,18 @@ namespace ngraph
             // i.e. implement `generate_adjoints`
             DIFFERENTIABLE_FUSIONS = 0x1,
             REGULAR_FUSIONS = 0x2,
+            //`FOP_FUSIONS` produce ops in the FusedOps category that might
+            // not be supported by all backends
+            FOP_FUSIONS = 0x4,
             ALL_FUSIONS = 0xFFFFFFFF
         };
+        enum class PassProperty : uint32_t
+        {
+            REGULAR_FUSIONS = 1 << 1,
+            REQUIRE_STATIC_SHAPE = 1 << 2,
+            CHANGE_FUNCTION_STATE = 1 << 3
+        };
+        typedef EnumMask<PassProperty> PassPropertyMask;
     }
 }
 
@@ -50,12 +61,18 @@ class ngraph::pass::PassBase
     friend class Manager;
 
 public:
+    PassBase();
     virtual ~PassBase() {}
+    /// Check if this pass has all the pass properties.
+    bool get_property(const PassPropertyMask& prop_mask) const;
+
 protected:
     ManagerState& get_state();
     void set_state(ManagerState&);
+    void set_property(const PassPropertyMask& prop, bool value);
 
 private:
+    PassPropertyMask m_property;
     ManagerState* m_state;
 };
 

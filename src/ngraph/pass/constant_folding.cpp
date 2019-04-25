@@ -147,7 +147,7 @@ void pass::ConstantFolding::construct_constant_pad()
         if (!m_cfmap.empty())
         {
             auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Pad)));
-            NGRAPH_ASSERT(handler != m_cfmap.end()) << "constant folding map should have pad entry";
+            NGRAPH_CHECK(handler != m_cfmap.end(), "constant folding map should have pad entry");
             func = handler->second(pad_match.get());
         }
 
@@ -204,8 +204,8 @@ void pass::ConstantFolding::construct_constant_reshape()
         if (!m_cfmap.empty())
         {
             auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Reshape)));
-            NGRAPH_ASSERT(handler != m_cfmap.end())
-                << "constant folding map should have reshape entry";
+            NGRAPH_CHECK(handler != m_cfmap.end(),
+                         "constant folding map should have reshape entry");
             func = handler->second(reshape_match.get());
         }
 
@@ -292,8 +292,8 @@ void pass::ConstantFolding::construct_constant_broadcast()
         if (!m_cfmap.empty())
         {
             auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Broadcast)));
-            NGRAPH_ASSERT(handler != m_cfmap.end())
-                << "constant folding map should have broadcast entry";
+            NGRAPH_CHECK(handler != m_cfmap.end(),
+                         "constant folding map should have broadcast entry");
             func = handler->second(broadcast_match.get());
         }
 
@@ -384,8 +384,8 @@ shared_ptr<op::Constant> fold_constant_binary(shared_ptr<op::Constant> a,
         }
         else
         {
-            NGRAPH_ASSERT(false)
-                << "fold_constant_binary must be consistent with is_supported_binary_op";
+            NGRAPH_CHECK(false,
+                         "fold_constant_binary must be consistent with is_supported_binary_op");
         }
     }
 
@@ -429,8 +429,9 @@ void pass::ConstantFolding::construct_constant_binary()
         {
             auto& node = *binary_match;
             auto handler = m_cfmap.find(type_index(typeid(node)));
-            NGRAPH_ASSERT(handler != m_cfmap.end())
-                << "constant folding map should have an entry for " << binary_match->get_name();
+            NGRAPH_CHECK(handler != m_cfmap.end(),
+                         "constant folding map should have an entry for ",
+                         binary_match->get_name());
             func = handler->second(binary_match.get());
         }
 
@@ -525,7 +526,7 @@ shared_ptr<op::Constant> fold_constant_unary(shared_ptr<op::Constant> constant,
         }
         else
         {
-            NGRAPH_ASSERT(false) << "must be consistent with is_supported_unary_op";
+            NGRAPH_CHECK(false, "must be consistent with is_supported_unary_op");
         }
     }
 
@@ -559,8 +560,9 @@ void pass::ConstantFolding::construct_constant_unary()
         {
             auto& node = *unary_match;
             auto handler = m_cfmap.find(type_index(typeid(node)));
-            NGRAPH_ASSERT(handler != m_cfmap.end())
-                << "constant folding map should have an entry for " << unary_match->get_name();
+            NGRAPH_CHECK(handler != m_cfmap.end(),
+                         "constant folding map should have an entry for ",
+                         unary_match->get_name());
             func = handler->second(unary_match.get());
         }
 

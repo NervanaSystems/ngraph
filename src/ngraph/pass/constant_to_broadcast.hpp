@@ -14,13 +14,20 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/node_input.hpp"
-#include "ngraph/node_output.hpp"
+#pragma once
 
-using namespace ngraph;
+#include "ngraph/pass/pass.hpp"
 
-NodeOutput NodeInput::get_source_output() const
+namespace ngraph
 {
-    auto& output_descriptor = m_node->get_inputs().at(m_index).get_output();
-    return NodeOutput(output_descriptor.get_node(), output_descriptor.get_index());
+    namespace pass
+    {
+        class ConstantToBroadcast;
+    }
 }
+
+class ngraph::pass::ConstantToBroadcast : public NodePass
+{
+public:
+    bool run_on_node(std::shared_ptr<ngraph::Node>) override;
+};

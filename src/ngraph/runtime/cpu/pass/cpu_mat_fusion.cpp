@@ -261,7 +261,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
                     concated_data, data_order, Shape{data_shape[0] * data_shape[1], data_shape[2]});
             }
             auto new_input_node = data_shape.size() == 2 ? concated_data : input_reshape_node;
-            NGRAPH_ASSERT(new_input_node);
+            NGRAPH_CHECK(new_input_node);
             auto w_reshape_node = std::make_shared<op::Reshape>(
                 weights, AxisVector{1, 0}, Shape{w_shape[1], w_shape[0]});
             auto new_dot = std::make_shared<op::Dot>(new_input_node, w_reshape_node);
@@ -281,7 +281,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
 
                 if (matched_root_node->get_shape().size() != 2)
                 {
-                    NGRAPH_ASSERT(matched_root_node->get_shape().size() == 3);
+                    NGRAPH_CHECK(matched_root_node->get_shape().size() == 3);
                     slice_node = std::make_shared<op::Reshape>(
                         slice_node, AxisVector{0, 1}, matched_root_node->get_shape());
                 }
