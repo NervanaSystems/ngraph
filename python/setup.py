@@ -397,7 +397,7 @@ setup(
     install_requires=['onnx',
                       'six',
                       'numpy',
-                      'typing',],
+                      'typing'],
     zip_safe=False,
     extras_require={
         'plaidml': ['plaidml>=0.5.0'],
