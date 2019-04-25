@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <climits>
 #include <random>
 
 #include "gtest/gtest.h"
@@ -22,6 +23,7 @@
 #include "ngraph/type/bfloat16.hpp"
 #include "util/float_util.hpp"
 
+using namespace std;
 using namespace ngraph;
 
 template <typename T>
@@ -135,6 +137,19 @@ TEST(bfloat16, to_float)
     bf = test::bits_to_bfloat16(source_string);
     f = static_cast<float>(bf);
     EXPECT_EQ(f, 1.03125f);
+}
+
+TEST(bfloat16, numeric_limits)
+{
+    bfloat16 infinity = numeric_limits<bfloat16>::infinity();
+    bfloat16 neg_infinity = -numeric_limits<bfloat16>::infinity();
+    bfloat16 quiet_nan = numeric_limits<bfloat16>::quiet_NaN();
+    bfloat16 signaling_nan = numeric_limits<bfloat16>::signaling_NaN();
+
+    EXPECT_TRUE(isinf(infinity));
+    EXPECT_TRUE(isinf(neg_infinity));
+    EXPECT_TRUE(isnan(quiet_nan));
+    EXPECT_TRUE(isnan(signaling_nan));
 }
 
 TEST(benchmark, bfloat16)
