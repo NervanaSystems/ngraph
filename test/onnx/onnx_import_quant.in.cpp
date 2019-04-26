@@ -310,8 +310,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_qlinear_matmul)
     test_case.add_input(std::vector<float>{0.0107f}); // y_scale
     test_case.add_input(std::vector<uint8_t>{118});   // y_zero_point
 
-    //    test_case.add_expected_output({2, 3}, std::vector<uint8_t>{168, 115, 255, 1, 66, 151}); // T3
-    test_case.add_expected_output(std::vector<uint8_t>{168, 115, 255, 1, 66, 151}); // T3
+    test_case.add_expected_output({2, 3}, std::vector<uint8_t>{168, 115, 255, 1, 66, 151}); // T3
     test_case.run();
 }
 
@@ -334,9 +333,8 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_qlinear_matmul_3d)
     test_case.add_input(std::vector<float>{0.0107f}); // y_scale
     test_case.add_input(std::vector<uint8_t>{118});   // y_zero_point
 
-    //test_case.add_expected_output({2, 2, 3}, std::vector<uint8_t>{168, 115, 255, 1, 66, 151,
-    //                                                              168, 115, 255, 1, 66, 151}); // T3
     test_case.add_expected_output(
+        {2, 2, 3},
         std::vector<uint8_t>{168, 115, 255, 1, 66, 151, 168, 115, 255, 1, 66, 151}); // T3
     test_case.run();
 }
