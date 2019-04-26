@@ -66,7 +66,9 @@
 #include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/depth_to_space.hpp"
 #include "ngraph/op/fused/prelu.hpp"
+#include "ngraph/op/fused/space_to_depth.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/gather_nd.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -842,6 +844,12 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Cosh>(args[0]);
                 break;
             }
+            case OP_TYPEID::DepthToSpace:
+            {
+                auto block_size = node_js.at("block_size").get<int64_t>();
+                node = make_shared<op::DepthToSpace>(args[0], block_size);
+                break;
+            }
             case OP_TYPEID::Dequantize:
             {
                 auto type = read_element_type(node_js.at("type"));
@@ -1333,6 +1341,12 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Softmax>(args[0], softmax_axes);
                 break;
             }
+            case OP_TYPEID::SpaceToDepth:
+            {
+                auto block_size = node_js.at("block_size").get<int64_t>();
+                node = make_shared<op::SpaceToDepth>(args[0], block_size);
+                break;
+            }
             case OP_TYPEID::Sqrt:
             {
                 node = make_shared<op::Sqrt>(args[0]);
@@ -1706,6 +1720,13 @@ static json write(const Node& n, bool binary_constant_data)
         node["axes"] = tmp->get_axes();
         break;
     }
+    case OP_TYPEID::DepthToSpace:
+    {
+        auto tmp = dynamic_cast<const op::DepthToSpace*>(&n);
+        node["type"] = write_element_type(tmp->get_element_type());
+        node["block_size"] = tmp->get_block_size();
+        break;
+    }
     case OP_TYPEID::Divide: { break;
     }
     case OP_TYPEID::Dot:
@@ -1980,6 +2001,13 @@ static json write(const Node& n, bool binary_constant_data)
         node["lower_bounds"] = tmp->get_lower_bounds();
         node["upper_bounds"] = tmp->get_upper_bounds();
         node["strides"] = tmp->get_strides();
+        break;
+    }
+    case OP_TYPEID::SpaceToDepth:
+    {
+        auto tmp = dynamic_cast<const op::SpaceToDepth*>(&n);
+        node["type"] = write_element_type(tmp->get_element_type());
+        node["block_size"] = tmp->get_block_size();
         break;
     }
     case OP_TYPEID::Sqrt: { break;
