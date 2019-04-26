@@ -146,10 +146,13 @@ TEST(bfloat16, numeric_limits)
     bfloat16 quiet_nan = numeric_limits<bfloat16>::quiet_NaN();
     bfloat16 signaling_nan = numeric_limits<bfloat16>::signaling_NaN();
 
-    EXPECT_TRUE(isinf(infinity));
-    EXPECT_TRUE(isinf(neg_infinity));
-    EXPECT_TRUE(isnan(quiet_nan));
-    EXPECT_TRUE(isnan(signaling_nan));
+    // Would be nice if we could have bfloat16 overloads for these, but it would require adding
+    // overloads into ::std. So we just cast to float here. We can't rely on an implicit cast
+    // because it fails with some versions of AppleClang.
+    EXPECT_TRUE(isinf(static_cast<float>(infinity)));
+    EXPECT_TRUE(isinf(static_cast<float>(neg_infinity)));
+    EXPECT_TRUE(isnan(static_cast<float>(quiet_nan)));
+    EXPECT_TRUE(isnan(static_cast<float>(signaling_nan)));
 }
 
 TEST(benchmark, bfloat16)

@@ -19,51 +19,48 @@
 #include "gtest/gtest.h"
 #include "ngraph/assertion.hpp"
 
-namespace ngraph
+std::map<ngraph::element::Type_t, ngraph::test::NgraphTestCase::value_comparator_function>
+    ngraph::test::NgraphTestCase::m_value_comparators = {
+        {ngraph::element::Type_t::f32, NgraphTestCase::compare_values<float>},
+        {ngraph::element::Type_t::f64, NgraphTestCase::compare_values<double>},
+        {ngraph::element::Type_t::i8, NgraphTestCase::compare_values<int8_t>},
+        {ngraph::element::Type_t::i16, NgraphTestCase::compare_values<int16_t>},
+        {ngraph::element::Type_t::i32, NgraphTestCase::compare_values<int32_t>},
+        {ngraph::element::Type_t::i64, NgraphTestCase::compare_values<int64_t>},
+        {ngraph::element::Type_t::u8, NgraphTestCase::compare_values<uint8_t>},
+        {ngraph::element::Type_t::u16, NgraphTestCase::compare_values<uint16_t>},
+        {ngraph::element::Type_t::u32, NgraphTestCase::compare_values<uint32_t>},
+        {ngraph::element::Type_t::u64, NgraphTestCase::compare_values<uint64_t>}};
+
+void ngraph::test::NgraphTestCase::run()
 {
-    namespace test
+    const auto& function_results = m_function->get_results();
+    NGRAPH_CHECK(m_expected_outputs.size() == function_results.size(),
+                 "Expected number of outputs is different from the function's number of results.");
+
+    auto handle = m_backend->compile(m_function);
+    handle->call_with_validate(m_result_tensors, m_input_tensors);
+
+    for (int i = 0; i < m_expected_outputs.size(); ++i)
     {
-        std::map<ngraph::element::Type_t, NgraphTestCase::value_comparator_function>
-            NgraphTestCase::value_comparators = {
-                {ngraph::element::Type_t::f32, NgraphTestCase::compare_values<float>},
-                {ngraph::element::Type_t::f64, NgraphTestCase::compare_values<double>},
-                {ngraph::element::Type_t::i8, NgraphTestCase::compare_values<int8_t>},
-                {ngraph::element::Type_t::i16, NgraphTestCase::compare_values<int16_t>},
-                {ngraph::element::Type_t::i32, NgraphTestCase::compare_values<int32_t>},
-                {ngraph::element::Type_t::i64, NgraphTestCase::compare_values<int64_t>},
-                {ngraph::element::Type_t::u8, NgraphTestCase::compare_values<uint8_t>},
-                {ngraph::element::Type_t::u16, NgraphTestCase::compare_values<uint16_t>},
-                {ngraph::element::Type_t::u32, NgraphTestCase::compare_values<uint32_t>},
-                {ngraph::element::Type_t::u64, NgraphTestCase::compare_values<uint64_t>}};
+        const auto& result_tensor = m_result_tensors.at(i);
+        const auto& expected_result_constant = m_expected_outputs.at(i);
+        const auto& element_type = result_tensor->get_element_type();
 
-        void NgraphTestCase::run()
+        auto expected_shape = expected_result_constant->get_shape();
+        auto result_shape = result_tensor->get_shape();
+        EXPECT_EQ(expected_shape, result_shape);
+
+        if (m_value_comparators.count(element_type.get_type_enum()) == 0)
         {
-            const auto& function_results = m_function->get_results();
-            NGRAPH_CHECK(
-                m_expected_outputs.size() == function_results.size(),
-                "Expected number of outputs is different from the function's number of results.");
+            NGRAPH_FAIL() << "Please add support for " << element_type
+                          << " to ngraph::test::NgraphTestCase::run()";
+        }
+        else
+        {
+            auto values_match = m_value_comparators.at(element_type.get_type_enum());
 
-            auto handle = m_backend->compile(m_function);
-            handle->call_with_validate(m_result_tensors, m_input_tensors);
-
-            for (int i = 0; i < m_expected_outputs.size(); ++i)
-            {
-                const auto& result_tensor = m_result_tensors.at(i);
-                const auto& expected_result_constant = m_expected_outputs.at(i);
-                const auto& element_type = result_tensor->get_element_type();
-
-                if (value_comparators.count(element_type.get_type_enum()) == 0)
-                {
-                    NGRAPH_FAIL() << "Please add support for " << element_type
-                                  << " to ngraph::test::NgraphTestCase::run()";
-                }
-                else
-                {
-                    auto values_match = value_comparators.at(element_type.get_type_enum());
-
-                    EXPECT_TRUE(values_match(expected_result_constant, result_tensor));
-                }
-            }
+            EXPECT_TRUE(values_match(expected_result_constant, result_tensor));
         }
     }
 }
