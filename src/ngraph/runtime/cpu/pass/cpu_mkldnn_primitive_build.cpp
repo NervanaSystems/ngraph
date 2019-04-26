@@ -69,38 +69,17 @@ namespace ngraph
         {
             namespace pass
             {
-                // serialize memory descriptor and emit the code to deserialize memeory descriptors
-                static void
-                    serialize_and_deserialize_memory_descs(std::ofstream& desc_file,
-                                                           CodeWriter& writer,
-                                                           std::vector<mkldnn::memory::desc>& descs,
-                                                           std::vector<std::string>& desc_names)
+                // serialize memory descriptors
+                static void serialize_memory_descs(std::ofstream& desc_file,
+                                                   std::vector<mkldnn::memory::desc>& descs,
+                                                   size_t primitive_index)
                 {
-                    NGRAPH_CHECK(descs.size() == desc_names.size());
                     for (auto i = 0; i < descs.size(); i++)
                     {
+                        desc_file << primitive_index;
                         desc_file.write(reinterpret_cast<char*>(&descs[i]),
                                         sizeof(mkldnn::memory::desc));
-                        writer << "char " << desc_names[i] << "[sizeof(mkldnn::memory::desc)];\n";
-                        writer << "desc_file.read(" << desc_names[i]
-                               << ", sizeof(mkldnn::memory::desc));\n";
-                    }
-                }
-
-                // emit the code to build memory primitives
-                static void emit_memory_primitive_build(CodeWriter& writer,
-                                                        std::vector<std::string>& desc_names,
-                                                        std::vector<size_t>& deps,
-                                                        bool new_workspace = false)
-                {
-                    NGRAPH_CHECK(desc_names.size() == new_workspace ? deps.size()
-                                                                    : deps.size() - 1);
-                    for (auto i = 0; i < desc_names.size(); i++)
-                    {
-                        writer << "cg_ctx->mkldnn_primitives[" << std::to_string(deps[i])
-                               << "] = new "
-                                  "mkldnn::memory({*reinterpret_cast<mkldnn::memory::desc*>("
-                               << desc_names[i] << "), cg_ctx->global_cpu_engine}, nullptr);\n";
+                        primitive_index++;
                     }
                 }
 
@@ -119,30 +98,33 @@ namespace ngraph
 
                     CodeWriter writer;
 
-                    writer << "// read in memory descriptors\n";
+                    // Write memory descriptors to file
                     std::vector<mkldnn::memory::desc> descs = {
                         input0_data_desc, input1_data_desc, result_desc};
-                    std::vector<std::string> desc_names = {
-                        "input0_data_desc", "input1_data_desc", "result_desc"};
-                    serialize_and_deserialize_memory_descs(desc_file, writer, descs, desc_names);
+                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
 
                     writer << "std::vector<float> scale_vector(2, 1);\n";
                     writer << "std::vector<mkldnn::memory::primitive_desc> inputs_pd;\n";
-                    writer << "inputs_pd.push_back(mkldnn::memory::primitive_desc(*reinterpret_"
-                              "cast<mkldnn::memory::desc*>(input0_data_desc), "
-                              "cg_ctx->global_cpu_engine));\n";
-                    writer << "inputs_pd.push_back(mkldnn::memory::primitive_desc(*reinterpret_"
-                              "cast<mkldnn::memory::desc*>(input1_data_desc), "
-                              "cg_ctx->global_cpu_engine));\n";
+                    writer << "inputs_pd.push_back(mkldnn::memory::primitive_desc("
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "], "
+                                            "cg_ctx->global_cpu_engine));\n";
+                    writer << "inputs_pd.push_back(mkldnn::memory::primitive_desc("
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 1 << "], "
+                                                "cg_ctx->global_cpu_engine));\n";
 
                     // elementwise sum primitive descriptor
                     writer << "mkldnn::sum::primitive_desc sum_pd = "
-                              "mkldnn::sum::primitive_desc(*reinterpret_cast<mkldnn::memory::desc*>"
-                              "(result_desc), scale_vector, inputs_pd);\n";
+                              "mkldnn::sum::primitive_desc(*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 2 << "], "
+                                                "scale_vector, inputs_pd);\n";
 
                     writer << "\n// build sum primitive\n";
                     writer << "std::vector<mkldnn::memory::primitive::at> inputs_primitive;\n";
-                    emit_memory_primitive_build(writer, desc_names, deps);
+                    //emit_memory_primitive_build(writer, desc_names, deps);
                     writer << "inputs_primitive.push_back(*cg_ctx->mkldnn_primitives["
                            << std::to_string(deps[0]) << "]);\n";
                     writer << "inputs_primitive.push_back(*cg_ctx->mkldnn_primitives["
@@ -185,10 +167,12 @@ namespace ngraph
                     auto get_mkldnn_rnn_cell_type = [&]() {
                         switch (rnn_node->get_rnn_type())
                         {
-                        case rnn_utils::rnntype::vanilla_rnn: return mkldnn::algorithm::vanilla_rnn;
-                        case rnn_utils::rnntype::vanilla_gru: return mkldnn::algorithm::vanilla_gru;
+                        case rnn_utils::rnntype::vanilla_rnn:
+                            return std::string("mkldnn::algorithm::vanilla_rnn");
+                        case rnn_utils::rnntype::vanilla_gru:
+                            return std::string("mkldnn::algorithm::vanilla_gru");
                         case rnn_utils::rnntype::vanilla_lstm:
-                            return mkldnn::algorithm::vanilla_lstm;
+                            return std::string("mkldnn::algorithm::vanilla_lstm");
                         default: throw ngraph_error("unsupported mkldnn rnn algorithm");
                         }
                     };
@@ -196,8 +180,9 @@ namespace ngraph
                     auto get_mkldnn_rnn_direction = [&]() {
                         switch (direction)
                         {
-                        case 1: return mkldnn::rnn_direction::unidirectional_left2right;
-                        case 2: return mkldnn::rnn_direction::bidirectional_concat;
+                        case 1:
+                            return std::string("mkldnn::rnn_direction::unidirectional_left2right");
+                        case 2: return std::string("mkldnn::rnn_direction::bidirectional_concat");
                         default: throw ngraph_error("unsupported mkldnn rnn direction");
                         }
                     };
@@ -262,7 +247,7 @@ namespace ngraph
 
                     CodeWriter writer;
 
-                    writer << "// read in memory descriptors\n";
+                    // Write memory descriptors to file
                     std::vector<mkldnn::memory::desc> descs = {src_layer_md,
                                                                src_iter_md,
                                                                wei_layer_md,
@@ -270,39 +255,31 @@ namespace ngraph
                                                                bias_md,
                                                                dst_layer_md,
                                                                dst_iter_md};
-                    std::vector<std::string> desc_names = {"src_layer_desc",
-                                                           "src_iter_desc",
-                                                           "weights_layer_desc",
-                                                           "weights_iter_desc",
-                                                           "bias_desc",
-                                                           "dst_layer_desc",
-                                                           "dst_iter_desc"};
-                    serialize_and_deserialize_memory_descs(desc_file, writer, descs, desc_names);
+                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
 
-                    mkldnn::rnn_cell::desc rnn_cell_desc(get_mkldnn_rnn_cell_type());
-                    desc_file.write(reinterpret_cast<char*>(&rnn_cell_desc),
-                                    sizeof(mkldnn::rnn_cell::desc));
-                    writer << "char rnn_cell_desc[sizeof(mkldnn::rnn_cell::desc)];\n";
-                    writer << "desc_file.read(rnn_cell_desc, sizeof(mkldnn::rnn_cell::desc));\n";
-
-                    auto rnn_direction = get_mkldnn_rnn_direction();
-                    desc_file.write(reinterpret_cast<char*>(&rnn_direction),
-                                    sizeof(mkldnn::rnn_direction));
-                    writer << "char rnn_direction[sizeof(mkldnn::rnn_direction)];\n";
-                    writer << "desc_file.read(rnn_direction, sizeof(mkldnn::rnn_direction));\n";
-
+                    writer << "mkldnn::rnn_cell::desc rnn_cell_desc(" << get_mkldnn_rnn_cell_type()
+                           << ");\n";
                     writer << "\n// build lstm/rnn primitive descriptor\n";
                     writer << "auto rnn_desc = "
                               "mkldnn::rnn_forward::desc(mkldnn::prop_kind::forward_training, "
-                              "*reinterpret_cast<mkldnn::rnn_cell::desc*>(rnn_cell_desc), "
-                              "*reinterpret_cast<mkldnn::rnn_direction*>(rnn_direction), "
-                              "*reinterpret_cast<mkldnn::memory::desc*>(src_layer_desc), "
-                              "*reinterpret_cast<mkldnn::memory::desc*>(src_iter_desc), "
-                              "*reinterpret_cast<mkldnn::memory::desc*>(weights_layer_desc),"
-                              "*reinterpret_cast<mkldnn::memory::desc*>(weights_iter_desc), "
-                              "*reinterpret_cast<mkldnn::memory::desc*>(bias_desc), "
-                              "*reinterpret_cast<mkldnn::memory::desc*>(dst_layer_desc), "
-                              "*reinterpret_cast<mkldnn::memory::desc*>(dst_iter_desc));\n";
+                              "rnn_cell_desc, "
+                           << get_mkldnn_rnn_direction() << ", "
+                                                            "*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "], "
+                                            "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 1 << "], "
+                                                "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 2 << "], "
+                                                "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 3 << "], "
+                                                "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 4 << "], "
+                                                "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 5 << "], "
+                                                "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 6 << "]);\n";
 
                     writer << "auto rnn_prim_desc = mkldnn::rnn_forward::primitive_desc(rnn_desc, "
                               "cg_ctx->global_cpu_engine);\n";
@@ -322,8 +299,6 @@ namespace ngraph
                     deps[8] = mkldnn_emitter.reserve_workspace();
 
                     writer << "\n// build lstm/rnn primitive\n";
-                    emit_memory_primitive_build(writer, desc_names, deps, true);
-
                     // lstm/rnn primitive
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
                            << "] = new mkldnn::rnn_forward(rnn_prim_desc, "
@@ -429,26 +404,27 @@ namespace ngraph
                     auto batchnorm = static_cast<const OP*>(node);
                     auto eps = batchnorm->get_eps_value();
 
-                    writer << "\n// read in memory descriptors\n";
-                    std::vector<mkldnn::memory::desc> descs = {
-                        input_desc, weights_desc, result_desc, *mean_desc, *variance_desc};
-                    std::vector<std::string> desc_names = {
-                        "input_desc", "weights_desc", "result_desc", "mean_desc", "variance_desc"};
-                    serialize_and_deserialize_memory_descs(desc_file, writer, descs, desc_names);
-
                     writer << "mkldnn::primitive_attr bn_attr;\n";
                     writer << "bn_attr.set_post_ops(pops);\n";
 
                     writer << "\n// build batchnorm primitive descriptor\n";
                     if (use_global_stats)
                     {
+                        // Write memory descriptors to file;
+                        std::vector<mkldnn::memory::desc> descs = {
+                            input_desc, *mean_desc, *variance_desc, weights_desc, result_desc};
+                        auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                        mkldnn_emitter.reserve_descriptor_space(descs.size());
+                        serialize_memory_descs(desc_file, descs, deps[0]);
+
                         writer << "auto batchnorm_desc = "
                                   "mkldnn::batch_normalization_forward::desc(mkldnn::prop_kind::"
                                   "forward_training, "
-                                  "*reinterpret_cast<mkldnn::memory::desc*>(input_desc), "
-                               << eps << ", "
-                                         "mkldnn::batch_normalization_flag::use_scale_shift | "
-                                         "mkldnn::batch_normalization_flag::use_global_stats);\n";
+                                  "*cg_ctx->mkldnn_descriptors["
+                               << desc_index << "], " << eps
+                               << ", "
+                                  "mkldnn::batch_normalization_flag::use_scale_shift | "
+                                  "mkldnn::batch_normalization_flag::use_global_stats);\n";
 
                         writer << "auto batchnorm_prim_desc = "
                                   "mkldnn::batch_normalization_forward::primitive_desc(batchnorm_"
@@ -456,13 +432,6 @@ namespace ngraph
                                   "bn_attr, cg_ctx->global_cpu_engine);\n";
 
                         writer << "\n// build batchnorm primitive\n";
-                        desc_names = {"input_desc",
-                                      "mean_desc",
-                                      "variance_desc",
-                                      "weights_desc",
-                                      "result_desc"};
-                        emit_memory_primitive_build(writer, desc_names, deps);
-
                         // batchnorm primitive
                         writer
                             << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
@@ -484,12 +453,20 @@ namespace ngraph
                     }
                     else
                     {
+                        // Write memory descriptors to file;
+                        std::vector<mkldnn::memory::desc> descs = {
+                            input_desc, weights_desc, result_desc, *mean_desc, *variance_desc};
+                        auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                        mkldnn_emitter.reserve_descriptor_space(descs.size());
+                        serialize_memory_descs(desc_file, descs, deps[0]);
+
                         writer << "auto batchnorm_desc = "
                                   "mkldnn::batch_normalization_forward::desc(mkldnn::prop_kind::"
                                   "forward_training, "
-                                  "*reinterpret_cast<mkldnn::memory::desc*>(input_desc), "
-                               << eps << ", "
-                                         "mkldnn::batch_normalization_flag::use_scale_shift);\n";
+                                  "*cg_ctx->mkldnn_descriptors["
+                               << desc_index << "], " << eps
+                               << ", "
+                                  "mkldnn::batch_normalization_flag::use_scale_shift);\n";
 
                         writer << "auto batchnorm_prim_desc = "
                                   "mkldnn::batch_normalization_forward::primitive_desc(batchnorm_"
@@ -497,8 +474,6 @@ namespace ngraph
                                   "bn_attr, cg_ctx->global_cpu_engine);\n";
 
                         writer << "\n// build batchnorm primitive\n";
-                        emit_memory_primitive_build(writer, desc_names, deps);
-
                         // batchnorm primitive
                         writer
                             << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
@@ -606,7 +581,7 @@ namespace ngraph
 
                     CodeWriter writer;
 
-                    writer << "\n// read in memory descriptors\n";
+                    // Write memory descriptors to file;
                     std::vector<mkldnn::memory::desc> descs = {weights_desc,
                                                                input_desc,
                                                                mean_desc,
@@ -614,33 +589,29 @@ namespace ngraph
                                                                delta_desc,
                                                                dinput_desc,
                                                                dweights_desc};
-                    std::vector<std::string> desc_names = {"weights_desc",
-                                                           "input_desc",
-                                                           "mean_desc",
-                                                           "variance_desc",
-                                                           "delta_desc",
-                                                           "dinput_desc",
-                                                           "dweights_desc"};
-                    serialize_and_deserialize_memory_descs(desc_file, writer, descs, desc_names);
+                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
 
                     writer << "\n// build batchnorm primitives\n";
-                    emit_memory_primitive_build(writer, desc_names, deps);
-
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
                            << "] = new mkldnn::batch_normalization_backward("
                            << "{{mkldnn::prop_kind::backward, "
-                              "*reinterpret_cast<mkldnn::memory::desc*>(delta_desc), "
-                              "*reinterpret_cast<mkldnn::memory::desc*>(input_desc), "
-                           << eps << ", "
-                                     "mkldnn::batch_normalization_flag::use_scale_shift}, "
-                                     "cg_ctx->global_cpu_engine, "
-                                     "{{mkldnn::prop_kind::forward_training, "
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 4 << "], "
+                                                "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 1 << "], " << eps
+                           << ", "
+                              "mkldnn::batch_normalization_flag::use_scale_shift}, "
+                              "cg_ctx->global_cpu_engine, "
+                              "{{mkldnn::prop_kind::forward_training, "
 
-                                     "*reinterpret_cast<mkldnn::memory::desc*>(input_desc), "
-                           << eps << ", "
-                                     "mkldnn::batch_normalization_flag::use_scale_shift}, "
-                                     "cg_ctx->global_cpu_engine}}, "
-                                     "*cg_ctx->mkldnn_primitives["
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 1 << "], " << eps
+                           << ", "
+                              "mkldnn::batch_normalization_flag::use_scale_shift}, "
+                              "cg_ctx->global_cpu_engine}}, "
+                              "*cg_ctx->mkldnn_primitives["
                            << std::to_string(deps[1]) << "], "
                                                          "*cg_ctx->mkldnn_primitives["
                            << std::to_string(deps[2]) << "], "
@@ -671,55 +642,42 @@ namespace ngraph
 
                     CodeWriter writer;
 
-                    writer << "\n// read in memory descriptors\n";
+                    // Write memory descriptors to file;
+                    std::vector<mkldnn::memory::desc> descs;
                     for (size_t i = 0; i < nargs; i++)
                     {
-                        auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, i);
-                        desc_file.write(reinterpret_cast<char*>(&input_desc),
-                                        sizeof(mkldnn::memory::desc));
+                        descs.push_back(mkldnn_utils::get_input_mkldnn_md(node, i));
                     }
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+                    descs.push_back(result_desc);
+                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
+
                     writer << "std::vector<mkldnn::memory::primitive::at> inputs_primitive;\n";
                     writer << "std::vector<mkldnn::memory::primitive_desc> inputs_pd;\n";
-                    writer << "char inputs_desc[" << nargs << "][sizeof(mkldnn::memory::desc)];\n";
 
-                    writer << "for (size_t i = 0; i < " << nargs << "; i++)\n";
+                    writer << "for (size_t i = " << desc_index << "; i < " << desc_index + nargs
+                           << "; i++)\n";
                     writer.block_begin();
-                    writer << "desc_file.read(inputs_desc[i]"
-                           << ", sizeof(mkldnn::memory::desc));\n";
                     writer << "inputs_pd.push_back(mkldnn::memory::primitive_desc("
-                              "*reinterpret_cast<mkldnn::memory::desc*>(inputs_desc[i]), "
+                              "*cg_ctx->mkldnn_descriptors[i], "
                               "cg_ctx->global_cpu_engine));\n";
                     writer.block_end();
 
-                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    desc_file.write(reinterpret_cast<char*>(&result_desc),
-                                    sizeof(mkldnn::memory::desc));
-                    writer << "char result_desc[sizeof(mkldnn::memory::desc)];\n";
-                    writer << "desc_file.read(result_desc"
-                           << ", sizeof(mkldnn::memory::desc));\n";
+                    writer << "for (size_t i = " << deps[0] << "; i < " << deps[0] + nargs
+                           << "; i++)\n";
+                    writer.block_begin();
+                    writer << "inputs_primitive.push_back(*cg_ctx->mkldnn_primitives[i]);\n";
+                    writer.block_end();
+
                     writer << "auto concat_prim_desc = "
                               "mkldnn::concat::primitive_desc( "
-                              "*reinterpret_cast<mkldnn::memory::desc*>(result_desc), "
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + nargs << "], "
                            << std::to_string(static_cast<int>(concat_dim)) << ", inputs_pd);\n";
 
-                    writer << "\n// build concat primitives\n";
-                    for (size_t i = 0; i < nargs; i++)
-                    {
-                        writer << "cg_ctx->mkldnn_primitives[" << std::to_string(deps[i])
-                               << "] = new "
-                                  "mkldnn::memory({*reinterpret_cast<mkldnn::memory::desc*>(inputs_"
-                                  "desc["
-                               << std::to_string(i)
-                               << "]), cg_ctx->global_cpu_engine}, nullptr);\n";
-                        writer << "inputs_primitive.push_back(*cg_ctx->mkldnn_primitives["
-                               << std::to_string(deps[i]) << "]);\n";
-                    }
-
-                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(deps[nargs])
-                           << "] = new "
-                              "mkldnn::memory({*reinterpret_cast<mkldnn::memory::desc*>("
-                              "result_desc), cg_ctx->global_cpu_engine}, nullptr);\n";
-
+                    writer << "\n// build concat primitive\n";
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
                            << "] = new mkldnn::concat(concat_prim_desc, inputs_primitive, "
                               "*cg_ctx->mkldnn_primitives["
@@ -740,10 +698,11 @@ namespace ngraph
 
                     CodeWriter writer;
 
-                    writer << "// read in memory descriptors\n";
+                    // Write memory descriptors to file;
                     std::vector<mkldnn::memory::desc> descs = {input_desc, result_desc};
-                    std::vector<std::string> desc_names = {"input_desc", "result_desc"};
-                    serialize_and_deserialize_memory_descs(desc_file, writer, descs, desc_names);
+                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
 
                     const auto* lrn = static_cast<const LRN*>(node);
                     auto alpha = static_cast<float>(lrn->get_alpha());
@@ -754,16 +713,15 @@ namespace ngraph
                     writer << "auto lrn_desc = "
                               "mkldnn::lrn_forward::desc(mkldnn::prop_kind::forward_scoring, "
                               "mkldnn::algorithm::lrn_across_channels, "
-                              "*reinterpret_cast<mkldnn::memory::desc*>(input_desc), "
-                           << nsize << ", " << alpha << ", " << beta << ", " << bias << ");\n";
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "], " << nsize << ", " << alpha << ", " << beta << ", "
+                           << bias << ");\n";
 
                     writer << "auto lrn_prim_desc = "
                               "mkldnn::lrn_forward::primitive_desc(lrn_desc, "
                               "cg_ctx->global_cpu_engine);\n";
 
-                    writer << "\n// build lrn primitives\n";
-                    emit_memory_primitive_build(writer, desc_names, deps);
-
+                    writer << "\n// build lrn primitive\n";
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
                            << "] = new mkldnn::lrn_forward(lrn_prim_desc, "
                               "*cg_ctx->mkldnn_primitives["
@@ -1428,23 +1386,6 @@ bool MKLDNNPrimitiveBuildPass::run_on_call_graph(const std::list<std::shared_ptr
         }
 
         Node* node = shp_node.get();
-
-        // skip in place concat, relu, reshape, slice.
-        if (std::dynamic_pointer_cast<ngraph::op::Concat>(shp_node) ||
-            std::dynamic_pointer_cast<ngraph::op::Relu>(shp_node) ||
-            std::dynamic_pointer_cast<ngraph::op::Reshape>(shp_node) ||
-            std::dynamic_pointer_cast<ngraph::op::Slice>(shp_node))
-        {
-            auto op = static_cast<const ngraph::op::Op*>(node);
-            if (auto op_annotations = op->get_op_annotations())
-            {
-                auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
-                if (in_place_oi_pairs.size() > 0)
-                {
-                    continue;
-                }
-            }
-        }
 
         if (mkldnn_utils::use_mkldnn_kernel(node))
         {

@@ -126,7 +126,7 @@ namespace ngraph
                 }
 
                 // Return the tuple including the string to create mkldnn primitive, the deps and the index in CODEGEN
-                std::tuple<std::string, std::vector<size_t>, size_t>
+                const std::tuple<std::string, std::vector<size_t>, size_t>&
                     get_primitive_build_tuple(const Node* node) const
                 {
                     auto it = m_node_primitive_string_deps_index_map.find(node);
@@ -327,7 +327,7 @@ namespace ngraph
                                    std::tuple<std::string, std::vector<size_t>, size_t>>
                     m_node_primitive_string_deps_index_map;
                 /// Name of the file to store descriptors for mkldnn_primitives
-                std::string m_desc_filename = "desc_file";
+                const std::string m_desc_filename = "desc_file";
             };
         }
     }
