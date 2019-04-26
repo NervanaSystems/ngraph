@@ -266,6 +266,22 @@ namespace ngraph
                 return split(node, length_parts, axis_to_split);
             }
 
+            std::shared_ptr<ngraph::Node>
+                interpret_as_scalar(const std::shared_ptr<ngraph::Node>& node)
+            {
+                Shape node_shape = node->get_shape();
+                NGRAPH_CHECK((shape_size(node_shape) == 1),
+                             "Scalar value can't be derived from a node with ",
+                             node_shape);
+
+                // If node is already a scalar, return original
+                if (node_shape.empty())
+                {
+                    return node;
+                }
+                return reshape::reshape(node, Shape{});
+            }
+
         } // namespace  reshape
     }     // namespace onnx_import
 } // namespace ngraph
