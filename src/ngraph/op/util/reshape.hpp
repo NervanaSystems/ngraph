@@ -18,6 +18,7 @@
 
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -25,16 +26,6 @@ namespace ngraph
     {
         namespace util
         {
-            /// \brief      Prepares an AxisVector with monotonically increasing values.
-            ///
-            /// \param[in]  data_shape_rank  The number of entries (axes) in the output vector.
-            /// \param[in]  start_value      The first value for sequence. Defaults to 0.
-            ///
-            /// \return     The filled AxisVector.
-            ///
-            AxisVector get_default_axis_vector(std::size_t data_shape_rank,
-                                               std::size_t start_value = 0);
-
             /// \brief      Change shape of input tensor.
             ///
             /// \param[in]  node   The node which shape will be used as input to Reshape.
@@ -49,7 +40,7 @@ namespace ngraph
             inline std::shared_ptr<ngraph::Node> reshape(const std::shared_ptr<ngraph::Node>& node,
                                                          const Shape& shape)
             {
-                return reshape(node, get_default_axis_vector(node->get_shape().size()), shape);
+                return reshape(node, ngraph::get_default_order(node->get_shape().size()), shape);
             }
 
             /// \brief Permute axes according to specified axes_order parameter.

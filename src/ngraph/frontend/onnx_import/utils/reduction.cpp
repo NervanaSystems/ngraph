@@ -73,7 +73,7 @@ namespace ngraph
                 }
                 return std::make_shared<ngraph::op::Reshape>(
                     op_node,
-                    ngraph::op::util::get_default_axis_vector(op_node->get_shape().size()),
+                    ngraph::get_default_order(op_node->get_shape().size()),
                     Shape{output_shape});
             }
 

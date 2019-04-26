@@ -64,9 +64,7 @@ namespace ngraph
                     output_shape =
                         reshape::infer_dimensions(node.get_name(), data_shape, output_shape);
                     return {std::make_shared<ngraph::op::Reshape>(
-                        data,
-                        ngraph::op::util::get_default_axis_vector(data_shape.size()),
-                        Shape{output_shape})};
+                        data, ngraph::get_default_order(data_shape.size()), Shape{output_shape})};
                 }
 
             } // namespace set_1

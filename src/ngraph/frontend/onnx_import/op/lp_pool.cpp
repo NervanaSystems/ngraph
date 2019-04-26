@@ -24,6 +24,7 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/util/reshape.hpp"
+#include "ngraph/util.hpp"
 #include "utils/common.hpp"
 #include "utils/norm.hpp"
 #include "utils/reshape.hpp"
@@ -63,7 +64,7 @@ namespace ngraph
                         output_shape.at(0) = orig_shape.at(0);
                         slice = std::make_shared<ngraph::op::Reshape>(
                             slice,
-                            ngraph::op::util::get_default_axis_vector(slice->get_shape().size()),
+                            ngraph::get_default_order(slice->get_shape().size()),
                             output_shape);
                     }
 

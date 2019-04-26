@@ -81,7 +81,7 @@ namespace ngraph
 
                 return std::make_shared<ngraph::op::Reshape>(
                     node,
-                    ngraph::op::util::get_default_axis_vector(data_shape.size()),
+                    ngraph::get_default_order(data_shape.size()),
                     Shape{first_dim_size, last_dim_size});
             }
 
@@ -199,9 +199,7 @@ namespace ngraph
                 std::advance(empty_axis_it, axis);
                 output_shape.insert(empty_axis_it, 1);
                 return std::make_shared<ngraph::op::Reshape>(
-                    node,
-                    ngraph::op::util::get_default_axis_vector(node->get_shape().size()),
-                    output_shape);
+                    node, ngraph::get_default_order(node->get_shape().size()), output_shape);
             }
 
             NodeVector split(const std::shared_ptr<ngraph::Node>& node,
