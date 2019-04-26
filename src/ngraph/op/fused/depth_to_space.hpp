@@ -38,16 +38,16 @@ namespace ngraph
             ///
             /// \param data - Node producing the input tensor
             /// \param block_size - the size of the block of values to be moved
-            DepthToSpace(const std::shared_ptr<ngraph::Node>& data, const std::int64_t block_size);
+            DepthToSpace(const std::shared_ptr<ngraph::Node>& data, std::size_t block_size);
 
-            const std::int64_t& get_block_size() const { return m_blocksize; }
+            std::size_t get_block_size() const { return m_blocksize; }
             virtual NodeVector decompose_op() const override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
         protected:
-            std::int64_t m_blocksize;
+            std::size_t m_blocksize;
         };
     }
 }

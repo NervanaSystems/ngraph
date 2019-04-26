@@ -846,7 +846,7 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::DepthToSpace:
             {
-                auto block_size = node_js.at("block_size").get<int64_t>();
+                auto block_size = node_js.at("block_size").get<size_t>();
                 node = make_shared<op::DepthToSpace>(args[0], block_size);
                 break;
             }
@@ -1343,7 +1343,7 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::SpaceToDepth:
             {
-                auto block_size = node_js.at("block_size").get<int64_t>();
+                auto block_size = node_js.at("block_size").get<size_t>();
                 node = make_shared<op::SpaceToDepth>(args[0], block_size);
                 break;
             }

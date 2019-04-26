@@ -28,7 +28,7 @@ namespace ngraph
                 NodeVector depth_to_space(const Node& node)
                 {
                     auto data = node.get_ng_inputs().at(0);
-                    std::int64_t block_size{node.get_attribute_value<std::int64_t>("blocksize")};
+                    std::size_t block_size = node.get_attribute_value<std::int64_t>("blocksize");
                     return NodeVector{std::make_shared<ngraph::op::DepthToSpace>(data, block_size)};
                 }
             } // namespace set_1
