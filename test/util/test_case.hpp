@@ -38,6 +38,7 @@ namespace ngraph
             {
             }
 
+            void set_tolerance(int tolerance_bits) { m_tolerance_bits = tolerance_bits; }
             template <typename T>
             void add_input(const std::vector<T>& values)
             {
@@ -132,6 +133,7 @@ namespace ngraph
                 const auto expected = expected_results->get_vector<T>();
                 const auto result = read_vector<T>(results);
                 return ngraph::test::all_close_f(expected, result);
+                // return ngraph::test::all_close_f(expected, result, m_tolerance_bits);
             }
 
             template <typename T>
@@ -156,6 +158,7 @@ namespace ngraph
             std::vector<std::shared_ptr<ngraph::op::Constant>> m_expected_outputs;
             int m_input_index = 0;
             int m_output_index = 0;
+            int m_tolerance_bits = DEFAULT_DOUBLE_TOLERANCE_BITS;
             static std::map<ngraph::element::Type_t, value_comparator_function> m_value_comparators;
         };
     }
