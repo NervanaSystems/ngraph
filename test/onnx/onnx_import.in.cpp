@@ -30,6 +30,7 @@
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
 #include "util/ndarray.hpp"
+#include "util/test_case.hpp"
 #include "util/test_control.hpp"
 #include "util/test_tools.hpp"
 
@@ -41,7 +42,31 @@ using Inputs = std::vector<std::vector<float>>;
 using Outputs = std::vector<std::vector<float>>;
 
 // ############################################################################ CORE TESTS
-NGRAPH_TEST(onnx_${BACKEND_NAME}, model_output_names_check)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, test_test_case)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/add_abc.prototxt"));
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input(std::vector<float>{1});
+    test_case.add_input(std::vector<float>{2});
+    test_case.add_input(std::vector<float>{3});
+    test_case.add_expected_output(std::vector<float>{6});
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, test_test_case_mutliple_inputs)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/add_abc.prototxt"));
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_multiple_inputs(Inputs{{1}, {2}, {3}});
+    test_case.add_expected_output(std::vector<float>{6});
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, output_names_check)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/split_equal_parts_default.prototxt"));

@@ -53,6 +53,7 @@ set(SRC
     nop_elimination.cpp
     op.cpp
     partial_shape.cpp
+    pass.cpp
     pass_liveness.cpp
     pass_manager.cpp
     pass_memory_layout.cpp
@@ -85,8 +86,10 @@ if (NGRAPH_INTERPRETER_ENABLE)
     list(APPEND SRC
         backend_debug_api.cpp
         builder.cpp
-        backend_api.cpp
-        hybrid_backend.cpp)
+        backend_api.cpp)
+        if (NGRAPH_CPU_ENABLE)
+            list(APPEND SRC hybrid_backend.cpp)
+        endif()
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTERPRETER)
 endif()
 
