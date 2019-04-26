@@ -15,11 +15,22 @@
 //*****************************************************************************
 
 #include "test_case.hpp"
-#include "all_close.hpp"
-#include "all_close_f.hpp"
+
 #include "gtest/gtest.h"
 #include "ngraph/assertion.hpp"
-#include "test_tools.hpp"
+
+std::map<ngraph::element::Type_t, ngraph::test::NgraphTestCase::value_comparator_function>
+    ngraph::test::NgraphTestCase::m_value_comparators = {
+        {ngraph::element::Type_t::f32, NgraphTestCase::compare_values<float>},
+        {ngraph::element::Type_t::f64, NgraphTestCase::compare_values<double>},
+        {ngraph::element::Type_t::i8, NgraphTestCase::compare_values<int8_t>},
+        {ngraph::element::Type_t::i16, NgraphTestCase::compare_values<int16_t>},
+        {ngraph::element::Type_t::i32, NgraphTestCase::compare_values<int32_t>},
+        {ngraph::element::Type_t::i64, NgraphTestCase::compare_values<int64_t>},
+        {ngraph::element::Type_t::u8, NgraphTestCase::compare_values<uint8_t>},
+        {ngraph::element::Type_t::u16, NgraphTestCase::compare_values<uint16_t>},
+        {ngraph::element::Type_t::u32, NgraphTestCase::compare_values<uint32_t>},
+        {ngraph::element::Type_t::u64, NgraphTestCase::compare_values<uint64_t>}};
 
 void ngraph::test::NgraphTestCase::run()
 {
@@ -36,22 +47,20 @@ void ngraph::test::NgraphTestCase::run()
         const auto& expected_result_constant = m_expected_outputs.at(i);
         const auto& element_type = result_tensor->get_element_type();
 
-        if (element_type == ngraph::element::f32)
+        auto expected_shape = expected_result_constant->get_shape();
+        auto result_shape = result_tensor->get_shape();
+        EXPECT_EQ(expected_shape, result_shape);
+
+        if (m_value_comparators.count(element_type.get_type_enum()) == 0)
         {
-            const auto result = read_vector<float>(result_tensor);
-            const auto expected = expected_result_constant->get_vector<float>();
-            EXPECT_TRUE(test::all_close_f(expected, result));
-        }
-        else if (element_type == ngraph::element::u8)
-        {
-            const auto result = read_vector<uint8_t>(result_tensor);
-            const auto expected = expected_result_constant->get_vector<uint8_t>();
-            EXPECT_TRUE(test::all_close(expected, result));
+            NGRAPH_FAIL() << "Please add support for " << element_type
+                          << " to ngraph::test::NgraphTestCase::run()";
         }
         else
         {
-            NGRAPH_FAIL() << "Please add support for " << element_type
-                          << " to ngraph::test::NgraphTestCase::run().";
+            auto values_match = m_value_comparators.at(element_type.get_type_enum());
+
+            EXPECT_TRUE(values_match(expected_result_constant, result_tensor));
         }
     }
 }
