@@ -168,6 +168,30 @@ namespace ngraph
                              std::size_t split_parts,
                              int axis = 0);
 
+            /// \brief      Inplace reshape all nodes with shape [1] into scalars [].
+            ///
+            /// \param[in]  nodes   Nodes to reshape.
+            ///
+            /// \return     The vector containing reshaped nodes.
+            ///
+            inline NodeVector interpret_as_scalar(const NodeVector& nodes)
+            {
+                NodeVector result;
+                for (const auto& node : nodes)
+                {
+                    Shape node_shape = node->get_shape();
+                    if (node_shape.size() == 1 && node_shape[0] == 1)
+                    {
+                        result.emplace_back(reshape::reshape(node, Shape{}));
+                    }
+                    else
+                    {
+                        result.emplace_back(node);
+                    }
+                }
+                return result;
+            }
+
         } // namespace  reshape
     }     // namespace onnx_import
 } // namespace ngraph

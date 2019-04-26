@@ -39,7 +39,7 @@ namespace ngraph
             {
                 NodeVector dequantize_linear(const Node& node)
                 {
-                    NodeVector inputs{node.get_ng_inputs()};
+                    NodeVector inputs{reshape::interpret_as_scalar(node.get_ng_inputs())};
                     std::shared_ptr<ngraph::Node> x = inputs.at(0);
                     std::shared_ptr<ngraph::Node> x_scale = inputs.at(1);
                     std::shared_ptr<ngraph::Node> zero_point;
@@ -78,18 +78,6 @@ namespace ngraph
                     {
                         zero_point = std::make_shared<ngraph::op::Convert>(zero_point,
                                                                            x->get_element_type());
-                    }
-
-                    Shape zero_point_shape = zero_point->get_shape();
-                    if (zero_point_shape.size() == 1 && zero_point_shape[0] == 1)
-                    {
-                        zero_point = reshape::reshape(zero_point, Shape{});
-                    }
-
-                    Shape x_scale_shape = x_scale->get_shape();
-                    if (x_scale_shape.size() == 1 && x_scale_shape[0] == 1)
-                    {
-                        x_scale = reshape::reshape(x_scale, Shape{});
                     }
 
                     return {std::make_shared<ngraph::op::Dequantize>(

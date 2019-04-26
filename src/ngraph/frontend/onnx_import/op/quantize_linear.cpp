@@ -36,7 +36,7 @@ namespace ngraph
             {
                 NodeVector quantize_linear(const Node& node)
                 {
-                    NodeVector inputs{node.get_ng_inputs()};
+                    NodeVector inputs{reshape::interpret_as_scalar(node.get_ng_inputs())};
                     std::shared_ptr<ngraph::Node> x = inputs.at(0);
                     std::shared_ptr<ngraph::Node> y_scale = inputs.at(1);
                     std::shared_ptr<ngraph::Node> y_zero_point = inputs.at(2);
@@ -60,18 +60,6 @@ namespace ngraph
                         {
                             axes.insert(x->get_shape().size() + axis_0);
                         }
-                    }
-
-                    Shape y_zero_point_shape = y_zero_point->get_shape();
-                    if (y_zero_point_shape.size() == 1 && y_zero_point_shape[0] == 1)
-                    {
-                        y_zero_point = reshape::reshape(y_zero_point, Shape{});
-                    }
-
-                    Shape y_scale_shape = y_scale->get_shape();
-                    if (y_scale_shape.size() == 1 && y_scale_shape[0] == 1)
-                    {
-                        y_scale = reshape::reshape(y_scale, Shape{});
                     }
 
                     return {std::make_shared<ngraph::op::Quantize>(

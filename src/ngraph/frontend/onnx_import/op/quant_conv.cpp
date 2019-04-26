@@ -160,7 +160,7 @@ namespace ngraph
 
                 NodeVector quant_conv(const Node& node)
                 {
-                    const NodeVector& inputs = node.get_ng_inputs();
+                    const NodeVector& inputs = reshape::interpret_as_scalar(node.get_ng_inputs());
                     auto data = inputs.at(0);
                     auto data_scale = inputs.at(1);
                     auto data_zero_point = inputs.at(2);
@@ -171,39 +171,6 @@ namespace ngraph
                     auto output_zero_point = inputs.at(7);
 
                     int64_t groups{node.get_attribute_value<int64_t>("group", 1)};
-
-                    Shape data_scale_shape = data_scale->get_shape();
-                    if (data_scale_shape.size() == 1 && data_scale_shape[0] == 1)
-                    {
-                        data_scale = reshape::reshape(data_scale, Shape{});
-                    }
-                    Shape data_zero_point_shape = data_zero_point->get_shape();
-                    if (data_zero_point_shape.size() == 1 && data_zero_point_shape[0] == 1)
-                    {
-                        data_zero_point = reshape::reshape(data_zero_point, Shape{});
-                    }
-
-                    Shape filters_scale_shape = filters_scale->get_shape();
-                    if (filters_scale_shape.size() == 1 && filters_scale_shape[0] == 1)
-                    {
-                        filters_scale = reshape::reshape(filters_scale, Shape{});
-                    }
-                    Shape filters_zero_point_shape = filters_zero_point->get_shape();
-                    if (filters_zero_point_shape.size() == 1 && filters_zero_point_shape[0] == 1)
-                    {
-                        filters_zero_point = reshape::reshape(filters_zero_point, Shape{});
-                    }
-
-                    Shape output_scale_shape = output_scale->get_shape();
-                    if (output_scale_shape.size() == 1 && output_scale_shape[0] == 1)
-                    {
-                        output_scale = reshape::reshape(output_scale, Shape{});
-                    }
-                    Shape output_zero_point_shape = output_zero_point->get_shape();
-                    if (output_zero_point_shape.size() == 1 && output_zero_point_shape[0] == 1)
-                    {
-                        output_zero_point = reshape::reshape(output_zero_point, Shape{});
-                    }
 
                     ASSERT_VALID_ARGUMENT(node,
                                           ((groups >= 0) && (groups <= data->get_shape().at(1)) &&
