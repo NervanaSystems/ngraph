@@ -213,7 +213,6 @@ namespace ngraph
                     const std::unordered_map<const Node*, std::string>& node_cache);
                 std::string emit_op_as_function(const Node&, const std::string& function_name);
                 std::string strip_comments(const std::string&);
-                static bool is_codegen(const ngraph::pass::PassConfig& pc);
 
                 std::unique_ptr<codegen::Compiler> m_compiler;
                 std::unique_ptr<codegen::ExecutionEngine> m_execution_engine;
@@ -225,6 +224,7 @@ namespace ngraph
                 // so they don't get freed before we are done with them
                 std::vector<std::shared_ptr<Node>> m_active_constants;
 #endif
+                static bool is_codegen(const ngraph::pass::PassConfig& pc);
                 std::unordered_set<descriptor::Tensor*>&
                     get_tensor_set(descriptor::Tensor* output_tensor);
 
