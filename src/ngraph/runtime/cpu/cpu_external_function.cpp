@@ -1763,18 +1763,29 @@ void*& runtime::cpu::CPU_ExternalFunction::get_tensor_data(const std::string& na
     }
 }
 
+bool runtime::cpu::CPU_ExternalFunction::is_codegen(const ngraph::pass::PassConfig& pc)
+{
+    auto attrs = pc.get_pass_attributes();
+    auto it = attrs.find("CODEGEN");
+    if (it != attrs.end())
+    {
+        return it->second;
+    }
+    return false;
+}
+
 shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
     runtime::cpu::CPU_ExternalFunction::make_call_frame(ngraph::pass::PassConfig& pass_config)
 {
 #if defined(NGRAPH_DEX_ONLY)
-    if (pass_config.get_compilation_mode() == ngraph::pass::CompilationMode::CODEGEN)
+    if (is_codegen(pass_config))
     {
         NGRAPH_WARN << "CPU Backend: Requested unsupported compilation mode (CODEGEN). Falling "
                        "back to DEX instead";
     }
 #else
     // Override DEX if pass_config requests CODEGEN
-    if (pass_config.get_compilation_mode() == ngraph::pass::CompilationMode::CODEGEN)
+    if (is_codegen(pass_config))
     {
         m_direct_execution = false;
     }
