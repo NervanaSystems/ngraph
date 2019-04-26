@@ -40,8 +40,8 @@ using namespace ngraph;
 //       |            |
 //       N3[DynReshape]
 //
-// Neither N0 nor N1 be flagged as shape-relevant. (N1 does feed into the "shape" input of N3, but
-// only via the value-irrelevant input of ShapeOf.)
+// Neither N0 nor N1 will be flagged as shape-relevant. (N1 does feed into the "shape" input of N3,
+// but only via the value-irrelevant input of ShapeOf.)
 //
 bool pass::ShapeRelevance::run_on_function(std::shared_ptr<Function> f)
 {
