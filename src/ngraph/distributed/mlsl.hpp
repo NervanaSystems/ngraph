@@ -54,10 +54,8 @@ namespace ngraph
                 return static_cast<int>(MLSL::Environment::GetEnv().GetProcessIdx());
             }
 
-            void all_reduce(void* in,
-                            void* out,
-                            element::Type_t element_type,
-                            size_t count) override
+            void
+                all_reduce(void* in, void* out, element::Type_t element_type, size_t count) override
             {
                 auto data_type = MLSL::DT_FLOAT;
 
