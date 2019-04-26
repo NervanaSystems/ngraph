@@ -14,21 +14,29 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "distributed_setup.hpp"
+#pragma once
 
-void DistributedSetup::set_comm_size(int comm_size)
+#include "ngraph/distributed.hpp"
+#include "ngraph/except.hpp"
+
+namespace ngraph
 {
-    ngraph_dist_setup::distributed_comm_size = comm_size;
-}
-void DistributedSetup::set_comm_rank(int comm_rank)
-{
-    ngraph_dist_setup::distributed_comm_rank = comm_rank;
-}
-int DistributedSetup::get_comm_size()
-{
-    return ngraph_dist_setup::distributed_comm_size;
-}
-int DistributedSetup::get_comm_rank()
-{
-    return ngraph_dist_setup::distributed_comm_rank;
+    namespace distributed
+    {
+        class NullDistributedInterface : public DistributedInterface
+        {
+            int get_size() override { return 0; }
+            int get_rank() override { return 0; }
+            void
+                all_reduce(void* in, void* out, element::Type_t element_type, size_t count) override
+            {
+                throw ngraph_error("Distributed Library not supported/mentioned");
+            }
+
+            void broadcast(void* in, element::Type_t element_type, size_t count) override
+            {
+                throw ngraph_error("Distributed Library not supported/mentioned");
+            }
+        };
+    }
 }

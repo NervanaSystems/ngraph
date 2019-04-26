@@ -181,21 +181,6 @@ if (NGRAPH_CPU_ENABLE)
     endif()
     target_compile_definitions(cpu_backend PRIVATE CPU_BACKEND_DLL_EXPORTS)
 
-    if(NGRAPH_DISTRIBUTED_ENABLE)
-        if(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
-            target_include_directories(cpu_backend SYSTEM PRIVATE libmlsl)
-            target_link_libraries(cpu_backend PRIVATE libmlsl)
-        elseif(NGRAPH_DISTRIBUTED_OMPI_ENABLE)
-            find_package(MPI REQUIRED)
-            target_include_directories(cpu_backend
-                SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
-            target_link_libraries(cpu_backend
-                PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
-        else()
-            message(FATAL_ERROR "Distributed Library not supported/mentioned")
-        endif()
-    endif()
-
     add_dependencies(cpu_backend libmkldnn ext_eigen)
     target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libmkl libeigen libjson libtbb)
     if (NOT NGRAPH_DEX_ONLY)

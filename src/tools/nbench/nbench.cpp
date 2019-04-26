@@ -24,6 +24,7 @@
 #include <iomanip>
 
 #include "benchmark.hpp"
+#include "ngraph/distributed.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
@@ -34,10 +35,6 @@
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
-
-#if defined NGRAPH_DISTRIBUTED_ENABLE
-#include "ngraph/distributed.hpp"
-#endif
 
 using namespace std;
 using namespace ngraph;
@@ -303,14 +300,6 @@ OPTIONS
         return 1;
     }
 
-#if defined NGRAPH_DISTRIBUTED_ENABLE
-    unique_ptr<ngraph::Distributed> dist(new ngraph::Distributed());
-    if (dist->get_size() == 1)
-    {
-        dist.reset();
-    }
-#endif
-
     vector<string> models;
     if (!directory.empty())
     {
@@ -473,13 +462,6 @@ OPTIONS
         cout << "============================================================================\n";
         print_results(aggregate_perf_data, timing_detail);
     }
-
-#if defined NGRAPH_DISTRIBUTED_ENABLE
-    if (dist)
-    {
-        dist.reset();
-    }
-#endif
 
     return rc;
 }

@@ -69,6 +69,7 @@
 #include "ngraph/runtime/reference/acos.hpp"
 #include "ngraph/runtime/reference/add.hpp"
 #include "ngraph/runtime/reference/all.hpp"
+#include "ngraph/runtime/reference/allreduce.hpp"
 #include "ngraph/runtime/reference/and.hpp"
 #include "ngraph/runtime/reference/any.hpp"
 #include "ngraph/runtime/reference/argmax.hpp"
@@ -77,6 +78,7 @@
 #include "ngraph/runtime/reference/atan.hpp"
 #include "ngraph/runtime/reference/avg_pool.hpp"
 #include "ngraph/runtime/reference/batch_norm.hpp"
+#include "ngraph/runtime/reference/broadcast_distributed.hpp"
 #include "ngraph/runtime/reference/ceiling.hpp"
 #include "ngraph/runtime/reference/concat.hpp"
 #include "ngraph/runtime/reference/constant.hpp"
@@ -135,11 +137,6 @@
 #include "ngraph/runtime/reference/topk.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/state/rng_state.hpp"
-
-#ifdef NGRAPH_DISTRIBUTED_ENABLE
-#include "ngraph/runtime/reference/allreduce.hpp"
-#include "ngraph/runtime/reference/broadcast_distributed.hpp"
-#endif
 
 namespace ngraph
 {
@@ -234,13 +231,12 @@ private:
                            all->get_reduction_axes());
             break;
         }
-        case OP_TYPEID::AllReduce: {
-#ifdef NGRAPH_DISTRIBUTED_ENABLE
+        case OP_TYPEID::AllReduce:
+        {
             reference::allreduce<T>(static_cast<T*>(const_cast<void*>(args[0])),
                                     static_cast<T*>(out[0]),
                                     node.get_input_element_type(0),
                                     static_cast<int>(shape_size(node.get_input_shape(0))));
-#endif
             break;
         }
         case OP_TYPEID::And:
@@ -441,11 +437,9 @@ private:
                                        broadcast_axes);
             break;
         }
-        case OP_TYPEID::BroadcastDistributed: {
-#ifdef NGRAPH_DISTRIBUTED_ENABLE
-            Distributed dist;
-            int Rank_ID;
-            Rank_ID = dist.get_rank();
+        case OP_TYPEID::BroadcastDistributed:
+        {
+            int rank_ID = get_distributed_interface()->get_rank();
             if (Rank_ID == 0)
             {
                 reference::broadcastdistributed<T>(
@@ -463,8 +457,6 @@ private:
                     node.get_input_element_type(0),
                     static_cast<int>(shape_size(node.get_input_shape(0))));
             }
-            break;
-#endif
             break;
         }
         case OP_TYPEID::BroadcastLike: break;
