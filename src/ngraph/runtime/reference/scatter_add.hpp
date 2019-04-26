@@ -19,7 +19,6 @@
 #include <numeric>
 
 #include "ngraph/coordinate_transform.hpp"
-#include "ngraph/runtime/reference/gather_nd.hpp"
 
 namespace ngraph
 {
@@ -27,29 +26,15 @@ namespace ngraph
     {
         namespace reference
         {
-            // Implement gather by calling gather_nd on sub-problems
-            // # prepare constant shapes for tensors used for sub problems
-            // indices'.shape  = indices.shape[-1] + [1]
-            // params'.shape = params.shape[axis:]
-            // out'.shape = params'.shape
-            // out'.shape[0] = indices.shape[-1]
-            // # call sub-problems
-            // foreach (params_index, out_index) in outer "axis" dimensions
-            //     # params_prime is shared by inner loop
-            //     params' = param[params_index] # rank(params') == rank(params) - axis
-            //     foreach indices_index in outer N-1 dimensions
-            //         indices' = indices[indices_index] # rank(indices') == 2
-            //         out_index = out_index + indices_index
-            //         out' = out[out_index] # rank(out') == rank(params')
-            //         gather_nd(params', indices'', out')
             template <typename T, typename U>
-            void gather(T* params,
+            void scatter_add(T* inputs,
                         U* indices,
+                        T* updates,
                         T* out,
-                        const Shape& params_shape,
+                        const Shape& inputs_shape,
                         const Shape& indices_shape,
-                        const Shape& out_shape,
-                        size_t axis)
+                        const Shape& updates_shape,
+                        const Shape& out_shape)
             {
                 using namespace std;
                 // prepare shape of params_prime (remove first "axis" dimensions)
