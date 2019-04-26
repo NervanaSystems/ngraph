@@ -137,18 +137,6 @@ namespace ngraph
                     return it->second;
                 }
 
-                // Return the tuple including the string to create mkldnn primitive, the deps and the index in CODEGEN
-                std::tuple<std::string, std::vector<size_t>, size_t>
-                    get_primitive_build_tuple(const Node* node) const
-                {
-                    auto it = m_node_primitive_string_deps_index_map.find(node);
-                    NGRAPH_CHECK(it != m_node_primitive_string_deps_index_map.end(),
-                                 "Primitive build tuple not found for node ",
-                                 node->description());
-
-                    return it->second;
-                }
-
                 size_t add_state(ngraph::State* state)
                 {
                     m_states.push_back(state);
