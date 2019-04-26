@@ -18,6 +18,8 @@
 #include <cinttypes>
 #include <cmath>
 #include <cstdlib>
+#include <iterator>
+#include <limits>
 #include <random>
 #include <string>
 
@@ -56,6 +58,96 @@ NGRAPH_TEST(${BACKEND_NAME}, prelu)
     handle->call_with_validate({result0}, {a, b});
     vector<float> expected{0, 3, -1, 1, -1, 0};
     EXPECT_EQ(expected, read_vector<float>(result0));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, hardsigmoid_float)
+{
+    Shape shape{3, 5};
+    float alpha = 0.125f;
+    float beta = 0.642f;
+
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto hardsigmoid = make_shared<op::HardSigmoid>(A, alpha, beta);
+    auto f0 = make_shared<Function>(NodeVector{hardsigmoid}, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Prepare input and expected output data
+    std::vector<float> input_data{-1.f,
+                                  0.f,
+                                  1.f,
+                                  -100.f,
+                                  100.f,
+                                  -3.1234567f,
+                                  5.876543f,
+                                  7.13245364f,
+                                  std::numeric_limits<float>::max(),
+                                  std::numeric_limits<float>::lowest(),
+                                  std::numeric_limits<float>::min(),
+                                  -std::numeric_limits<float>::infinity(),
+                                  std::numeric_limits<float>::infinity(),
+                                  std::numeric_limits<float>::min() / 16.f,
+                                  -std::numeric_limits<float>::min() / 16.f};
+
+    auto impl = [alpha, beta](float val) {
+        return std::min(std::max(alpha * val + beta, 0.f), 1.f);
+    };
+    std::vector<float> expected_output;
+    std::transform(
+        std::begin(input_data), std::end(input_data), std::back_inserter(expected_output), impl);
+
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a, input_data);
+    auto result0 = backend->create_tensor(element::f32, shape);
+    auto handle = backend->compile(f0);
+    handle->call_with_validate({result0}, {a});
+
+    EXPECT_TRUE(test::all_close_f(expected_output, read_vector<float>(result0)));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, hardsigmoid_double)
+{
+    Shape shape{3, 5};
+    double alpha = 0.125;
+    double beta = 0.642;
+
+    auto A = make_shared<op::Parameter>(element::f64, shape);
+    auto hardsigmoid = make_shared<op::HardSigmoid>(A, alpha, beta);
+    auto f0 = make_shared<Function>(NodeVector{hardsigmoid}, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Prepare input and expected output data
+    std::vector<double> input_data{-1.,
+                                   0.,
+                                   1.,
+                                   -100.,
+                                   100.,
+                                   -3.1234567,
+                                   5.876543,
+                                   7.13245364,
+                                   std::numeric_limits<double>::max(),
+                                   std::numeric_limits<double>::lowest(),
+                                   std::numeric_limits<double>::min(),
+                                   -std::numeric_limits<double>::infinity(),
+                                   std::numeric_limits<double>::infinity(),
+                                   std::numeric_limits<double>::min() / 16.,
+                                   -std::numeric_limits<double>::min() / 16.};
+
+    auto impl = [alpha, beta](double val) {
+        return std::min(std::max(alpha * val + beta, 0.), 1.);
+    };
+    std::vector<double> expected_output;
+    std::transform(
+        std::begin(input_data), std::end(input_data), std::back_inserter(expected_output), impl);
+
+    auto a = backend->create_tensor(element::f64, shape);
+    copy_data(a, input_data);
+    auto result0 = backend->create_tensor(element::f64, shape);
+    auto handle = backend->compile(f0);
+    handle->call_with_validate({result0}, {a});
+
+    EXPECT_TRUE(test::all_close_f(expected_output, read_vector<double>(result0)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, prelu_shared_slope)
