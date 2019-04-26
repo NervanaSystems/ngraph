@@ -27,8 +27,8 @@
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
-#include "utils/reshape.hpp"
 #include "onehot.hpp"
+#include "utils/reshape.hpp"
 
 namespace ngraph
 {
