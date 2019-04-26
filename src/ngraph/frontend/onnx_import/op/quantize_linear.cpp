@@ -38,6 +38,7 @@ namespace ngraph
                 {
                     NodeVector inputs{node.get_ng_inputs()};
                     std::shared_ptr<ngraph::Node> x = inputs.at(0);
+                    std::shared_ptr<ngraph::Node> y_scale = inputs.at(1);
                     std::shared_ptr<ngraph::Node> y_zero_point = inputs.at(2);
 
                     // get axis twice with two default values to see if it is set
@@ -67,7 +68,6 @@ namespace ngraph
                         y_zero_point = reshape::reshape(y_zero_point, Shape{});
                     }
 
-                    std::shared_ptr<ngraph::Node> y_scale = inputs.at(1);
                     Shape y_scale_shape = y_scale->get_shape();
                     if (y_scale_shape.size() == 1 && y_scale_shape[0] == 1)
                     {
