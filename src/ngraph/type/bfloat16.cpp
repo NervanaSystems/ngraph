@@ -42,8 +42,6 @@ using namespace ngraph;
 
 static_assert(sizeof(bfloat16) == 2, "class bfloat16 must be exactly 2 bytes");
 
-uint16_t bfloat16::BF16_NAN_VALUE = 0x7FC0;
-
 bool float_isnan(const float& x)
 {
     return std::isnan(x);
@@ -108,11 +106,6 @@ bfloat16::operator float() const
     uint32_t tmp = (static_cast<uint32_t>(m_value) << 16);
     const float* f = reinterpret_cast<const float*>(&tmp);
     return *f;
-}
-
-bfloat16::operator double() const
-{
-    return static_cast<float>(m_value);
 }
 
 uint16_t bfloat16::to_bits() const

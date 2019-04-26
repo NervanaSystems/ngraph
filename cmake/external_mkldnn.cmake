@@ -105,9 +105,12 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
         if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 8.0 OR CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 8.0)
             set(MKLDNN_FLAG "-Wno-stringop-truncation -Wno-stringop-overflow")
         endif()
-    elseif(NGRAPH_MANYLINUX_ENABLE) #pragma GCC diagnostic ignored does not work on GCC used for manylinux1
-        set(MKLDNN_FLAG "-Wno-error=strict-overflow -Wno-error=unused-result -Wno-error=array-bounds")
-        set(MKLDNN_FLAG "${MKLDNN_FLAG} -Wno-unused-result -Wno-unused-value")
+    elseif(LINUX)
+        if(CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 4.8.2)
+            #pragma GCC diagnostic ignored does not work on GCC used for manylinux1
+            set(MKLDNN_FLAG "-Wno-error=strict-overflow -Wno-error=unused-result -Wno-error=array-bounds")
+            set(MKLDNN_FLAG "${MKLDNN_FLAG} -Wno-unused-result -Wno-unused-value")
+        endif()
     endif()
 endif()
 

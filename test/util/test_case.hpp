@@ -18,8 +18,11 @@
 
 #include <utility>
 
+#include "all_close.hpp"
+#include "all_close_f.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/ngraph.hpp"
+#include "test_tools.hpp"
 
 namespace ngraph
 {
@@ -53,6 +56,20 @@ namespace ngraph
             }
 
             template <typename T>
+            void add_input_from_file(const std::string& basepath, const std::string& filename)
+            {
+                auto filepath = ngraph::file_util::path_join(basepath, filename);
+                add_input_from_file<T>(filepath);
+            }
+
+            template <typename T>
+            void add_input_from_file(const std::string& filepath)
+            {
+                auto value = read_binary_file<T>(filepath);
+                add_input(value);
+            }
+
+            template <typename T>
             void add_multiple_inputs(const std::vector<std::vector<T>>& vector_of_values)
             {
                 for (const auto& value : vector_of_values)
@@ -62,7 +79,7 @@ namespace ngraph
             }
 
             template <typename T>
-            void add_expected_output(const std::vector<T>& values)
+            void add_expected_output(ngraph::Shape expected_shape, const std::vector<T>& values)
             {
                 auto results = m_function->get_results();
 
@@ -75,14 +92,63 @@ namespace ngraph
                     m_backend->create_tensor(function_output_type, function_output_shape));
 
                 m_expected_outputs.emplace_back(std::make_shared<ngraph::op::Constant>(
-                    function_output_type, function_output_shape, values));
+                    function_output_type, expected_shape, values));
 
                 ++m_output_index;
             }
 
+            template <typename T>
+            void add_expected_output(const std::vector<T>& values)
+            {
+                auto shape = m_function->get_results().at(m_output_index)->get_shape();
+                add_expected_output(shape, values);
+            }
+
+            template <typename T>
+            void add_expected_output_from_file(ngraph::Shape expected_shape,
+                                               const std::string& basepath,
+                                               const std::string& filename)
+            {
+                auto filepath = ngraph::file_util::path_join(basepath, filename);
+                add_expected_output_from_file<T>(expected_shape, filepath);
+            }
+
+            template <typename T>
+            void add_expected_output_from_file(ngraph::Shape expected_shape,
+                                               const std::string& filepath)
+            {
+                auto value = read_binary_file<T>(filepath);
+                add_expected_output(expected_shape, value);
+            }
             void run();
 
         protected:
+            template <typename T>
+            static typename std::enable_if<std::is_floating_point<T>::value,
+                                           ::testing::AssertionResult>::type
+                compare_values(const std::shared_ptr<ngraph::op::Constant>& expected_results,
+                               const std::shared_ptr<ngraph::runtime::Tensor>& results)
+            {
+                const auto expected = expected_results->get_vector<T>();
+                const auto result = read_vector<T>(results);
+                return ngraph::test::all_close_f(expected, result);
+            }
+
+            template <typename T>
+            static typename std::enable_if<std::is_integral<T>::value,
+                                           ::testing::AssertionResult>::type
+                compare_values(const std::shared_ptr<ngraph::op::Constant>& expected_results,
+                               const std::shared_ptr<ngraph::runtime::Tensor>& results)
+            {
+                const auto expected = expected_results->get_vector<T>();
+                const auto result = read_vector<T>(results);
+                return ngraph::test::all_close(expected, result);
+            }
+
+            using value_comparator_function = std::function<::testing::AssertionResult(
+                const std::shared_ptr<ngraph::op::Constant>&,
+                const std::shared_ptr<ngraph::runtime::Tensor>&)>;
+
             std::shared_ptr<Function> m_function;
             std::unique_ptr<runtime::Backend> m_backend;
             std::vector<std::shared_ptr<ngraph::runtime::Tensor>> m_input_tensors;
@@ -90,6 +156,7 @@ namespace ngraph
             std::vector<std::shared_ptr<ngraph::op::Constant>> m_expected_outputs;
             int m_input_index = 0;
             int m_output_index = 0;
+            static std::map<ngraph::element::Type_t, value_comparator_function> m_value_comparators;
         };
     }
 }

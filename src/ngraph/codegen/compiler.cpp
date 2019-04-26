@@ -227,6 +227,7 @@ void codegen::CompilerCore::initialize()
     auto LO = m_compiler->getInvocation().getLangOpts();
     LO->CPlusPlus = 1;
     LO->CPlusPlus11 = 1;
+    // Strange but need to manually disable c++14
     LO->CPlusPlus14 = 0;
     LO->Bool = 1;
     LO->Exceptions = 1;
