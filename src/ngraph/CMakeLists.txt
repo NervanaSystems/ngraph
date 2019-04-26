@@ -261,6 +261,8 @@ set (SRC
     op/topk.hpp
     op/fused/conv_fused.cpp
     op/fused/conv_fused.hpp
+    op/fused/hard_sigmoid.cpp
+    op/fused/hard_sigmoid.hpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
     op/util/arithmetic_reduction.cpp

@@ -95,6 +95,7 @@
 #include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/prelu.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/gather_nd.hpp"
