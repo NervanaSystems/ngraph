@@ -55,6 +55,7 @@ using namespace std;
 #define NGRAPH_OP(a, b) a,
 enum class OP_TYPEID
 {
+#include "ngraph/op/fused_op_tbl.hpp"
 #include "ngraph/op/op_tbl.hpp"
     UNDEFINED_OP
 };
@@ -68,6 +69,7 @@ static OP_TYPEID get_typeid(const string& s)
 // ...
 #define NGRAPH_OP(a, b) {#a, OP_TYPEID::a},
     static const unordered_map<string, OP_TYPEID> typeid_map{
+#include "ngraph/op/fused_op_tbl.hpp"
 #include "ngraph/op/op_tbl.hpp"
     };
 #undef NGRAPH_OP
@@ -329,6 +331,8 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
         break;
     }
     case OP_TYPEID::Convolution:
+    case OP_TYPEID::ConvolutionBias:
+    case OP_TYPEID::ConvolutionBiasAdd:
     {
         const shared_ptr<op::Convolution> conv_op = static_pointer_cast<op::Convolution>(node);
 
@@ -340,6 +344,7 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
         break;
     }
     case OP_TYPEID::ConvolutionBackpropFilters:
+    case OP_TYPEID::ConvolutionBiasBackpropFiltersBias:
     {
         const shared_ptr<op::ConvolutionBackpropFilters> conv_op_filt =
             static_pointer_cast<op::ConvolutionBackpropFilters>(node);
