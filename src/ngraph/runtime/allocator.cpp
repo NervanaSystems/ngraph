@@ -23,7 +23,7 @@ ngraph::runtime::Allocator::~Allocator()
 class ngraph::runtime::DefaultAllocator : public ngraph::runtime::Allocator
 {
 public:
-    void* Malloc(size_t size, size_t alignment)
+    void* malloc(size_t size, size_t alignment)
     {
         // If allocation succeeds, returns a pointer to the lowest (first) byte in the
         // allocated memory block that is suitably aligned for any scalar type.
@@ -40,7 +40,7 @@ public:
         return ptr;
     }
 
-    void Free(void* ptr)
+    void free(void* ptr)
     {
         if (ptr)
         {
@@ -51,6 +51,6 @@ public:
 
 ngraph::runtime::Allocator* ngraph::runtime::get_ngraph_allocator()
 {
-    auto allocator = new ngraph::runtime::DefaultAllocator();
+    static DefaultAllocator* allocator = new DefaultAllocator();
     return allocator;
 }
