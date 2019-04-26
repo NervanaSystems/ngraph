@@ -56,16 +56,16 @@ namespace ngraph
 
             void all_reduce(void* in,
                             void* out,
-                            const element::Type& element_type,
+                            element::Type_t element_type,
                             size_t count) override
             {
                 auto data_type = MLSL::DT_FLOAT;
 
-                if (element_type == element::f32)
+                if (element_type == element::Type_t::f32)
                 {
                     data_type = MLSL::DT_FLOAT;
                 }
-                else if (element_type == element::f64)
+                else if (element_type == element::Type_t::f64)
                 {
                     data_type = MLSL::DT_DOUBLE;
                 }
@@ -82,15 +82,15 @@ namespace ngraph
                 env.DeleteDistribution(distribution);
             }
 
-            void broadcast(void* in, const element::Type& element_type, size_t count) override
+            void broadcast(void* in, element::Type_t element_type, size_t count) override
             {
                 auto data_type = MLSL::DT_FLOAT;
 
-                if (element_type == element::f64)
+                if (element_type == element::Type_t::f64)
                 {
                     data_type = MLSL::DT_DOUBLE;
                 }
-                else if (element_type != element::f32)
+                else if (element_type != element::Type_t::f32)
                 {
                     throw std::runtime_error(
                         "BroadcastDistributed op supports only f32 and f64 types");
