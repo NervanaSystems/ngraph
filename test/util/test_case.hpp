@@ -123,22 +123,20 @@ namespace ngraph
             }
             void run();
 
-        protected:
+        private:
             template <typename T>
-            static typename std::enable_if<std::is_floating_point<T>::value,
-                                           ::testing::AssertionResult>::type
+            typename std::enable_if<std::is_floating_point<T>::value,
+                                    ::testing::AssertionResult>::type
                 compare_values(const std::shared_ptr<ngraph::op::Constant>& expected_results,
                                const std::shared_ptr<ngraph::runtime::Tensor>& results)
             {
                 const auto expected = expected_results->get_vector<T>();
                 const auto result = read_vector<T>(results);
-                return ngraph::test::all_close_f(expected, result);
-                // return ngraph::test::all_close_f(expected, result, m_tolerance_bits);
+                return ngraph::test::all_close_f(expected, result, m_tolerance_bits);
             }
 
             template <typename T>
-            static typename std::enable_if<std::is_integral<T>::value,
-                                           ::testing::AssertionResult>::type
+            typename std::enable_if<std::is_integral<T>::value, ::testing::AssertionResult>::type
                 compare_values(const std::shared_ptr<ngraph::op::Constant>& expected_results,
                                const std::shared_ptr<ngraph::runtime::Tensor>& results)
             {
@@ -151,6 +149,32 @@ namespace ngraph
                 const std::shared_ptr<ngraph::op::Constant>&,
                 const std::shared_ptr<ngraph::runtime::Tensor>&)>;
 
+#define REGISTER_COMPARATOR(element_type_, type_)                                                  \
+    {                                                                                              \
+        ngraph::element::Type_t::element_type_, std::bind(&NgraphTestCase::compare_values<type_>,  \
+                                                          this,                                    \
+                                                          std::placeholders::_1,                   \
+                                                          std::placeholders::_2)                   \
+    }
+
+            std::map<ngraph::element::Type_t,
+                     std::function<::testing::AssertionResult(
+                         const std::shared_ptr<ngraph::op::Constant>&,
+                         const std::shared_ptr<ngraph::runtime::Tensor>&)>>
+                m_value_comparators = {
+                    REGISTER_COMPARATOR(f32, float),
+                    REGISTER_COMPARATOR(f64, double),
+                    REGISTER_COMPARATOR(i8, int8_t),
+                    REGISTER_COMPARATOR(i16, int16_t),
+                    REGISTER_COMPARATOR(i32, int32_t),
+                    REGISTER_COMPARATOR(i64, int64_t),
+                    REGISTER_COMPARATOR(u8, uint8_t),
+                    REGISTER_COMPARATOR(u16, uint16_t),
+                    REGISTER_COMPARATOR(u32, uint32_t),
+                    REGISTER_COMPARATOR(u64, uint64_t),
+            };
+
+        protected:
             std::shared_ptr<Function> m_function;
             std::unique_ptr<runtime::Backend> m_backend;
             std::vector<std::shared_ptr<ngraph::runtime::Tensor>> m_input_tensors;
@@ -159,7 +183,6 @@ namespace ngraph
             int m_input_index = 0;
             int m_output_index = 0;
             int m_tolerance_bits = DEFAULT_DOUBLE_TOLERANCE_BITS;
-            static std::map<ngraph::element::Type_t, value_comparator_function> m_value_comparators;
         };
     }
 }
