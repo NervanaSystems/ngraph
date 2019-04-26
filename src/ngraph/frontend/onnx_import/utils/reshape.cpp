@@ -266,6 +266,20 @@ namespace ngraph
                 return split(node, length_parts, axis_to_split);
             }
 
+            std::shared_ptr<ngraph::Node>
+                interpret_as_scalar(const std::shared_ptr<ngraph::Node>& node)
+            {
+                Shape node_shape = node->get_shape();
+                if (node_shape.size() == 1 && node_shape[0] == 1)
+                {
+                    return reshape::reshape(node, Shape{});
+                }
+                else
+                {
+                    return node;
+                }
+            }
+
         } // namespace  reshape
     }     // namespace onnx_import
 } // namespace ngraph

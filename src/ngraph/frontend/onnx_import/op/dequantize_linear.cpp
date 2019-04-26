@@ -39,14 +39,15 @@ namespace ngraph
             {
                 NodeVector dequantize_linear(const Node& node)
                 {
-                    NodeVector inputs{reshape::interpret_as_scalar(node.get_ng_inputs())};
+                    NodeVector inputs = node.get_ng_inputs();
                     std::shared_ptr<ngraph::Node> x = inputs.at(0);
-                    std::shared_ptr<ngraph::Node> x_scale = inputs.at(1);
+                    std::shared_ptr<ngraph::Node> x_scale =
+                        reshape::interpret_as_scalar(inputs.at(1));
                     std::shared_ptr<ngraph::Node> zero_point;
 
                     if (inputs.size() == 3 && !inputs.at(2)->is_null())
                     {
-                        zero_point = inputs.at(2);
+                        zero_point = reshape::interpret_as_scalar(inputs.at(2));
                     }
                     else
                     {

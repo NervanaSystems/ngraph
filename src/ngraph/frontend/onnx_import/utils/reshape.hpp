@@ -168,29 +168,18 @@ namespace ngraph
                              std::size_t split_parts,
                              int axis = 0);
 
-            /// \brief      Inplace reshape all nodes with shape [1] into scalars [].
+            /// \brief      Handle a node which represents a scalar value.
             ///
-            /// \param[in]  nodes   Nodes to reshape.
+            /// \note       Some ONNX nodes, which should provide scalar values are given as
+            ///             tensors of shape {1}. This function will provide a reshape of
+            ///             such a node with Shape{1} into a scalar with Shape{}.
             ///
-            /// \return     The vector containing reshaped nodes.
+            /// \param[in]  node   Node to reshape.
             ///
-            inline NodeVector interpret_as_scalar(const NodeVector& nodes)
-            {
-                NodeVector result;
-                for (const auto& node : nodes)
-                {
-                    Shape node_shape = node->get_shape();
-                    if (node_shape.size() == 1 && node_shape[0] == 1)
-                    {
-                        result.emplace_back(reshape::reshape(node, Shape{}));
-                    }
-                    else
-                    {
-                        result.emplace_back(node);
-                    }
-                }
-                return result;
-            }
+            /// \return     Original node or a node representing a reshape of the original.
+            ///
+            std::shared_ptr<ngraph::Node>
+                interpret_as_scalar(const std::shared_ptr<ngraph::Node>& node);
 
         } // namespace  reshape
     }     // namespace onnx_import

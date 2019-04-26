@@ -160,15 +160,15 @@ namespace ngraph
 
                 NodeVector quant_conv(const Node& node)
                 {
-                    const NodeVector& inputs = reshape::interpret_as_scalar(node.get_ng_inputs());
+                    const NodeVector& inputs = node.get_ng_inputs();
                     auto data = inputs.at(0);
-                    auto data_scale = inputs.at(1);
-                    auto data_zero_point = inputs.at(2);
+                    auto data_scale = reshape::interpret_as_scalar(inputs.at(1));
+                    auto data_zero_point = reshape::interpret_as_scalar(inputs.at(2));
                     auto filters = inputs.at(3);
-                    auto filters_scale = inputs.at(4);
-                    auto filters_zero_point = inputs.at(5);
-                    auto output_scale = inputs.at(6);
-                    auto output_zero_point = inputs.at(7);
+                    auto filters_scale = reshape::interpret_as_scalar(inputs.at(4));
+                    auto filters_zero_point = reshape::interpret_as_scalar(inputs.at(5));
+                    auto output_scale = reshape::interpret_as_scalar(inputs.at(6));
+                    auto output_zero_point = reshape::interpret_as_scalar(inputs.at(7));
 
                     int64_t groups{node.get_attribute_value<int64_t>("group", 1)};
 
