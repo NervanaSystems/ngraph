@@ -1936,6 +1936,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::Passthrough:
         case OP_TYPEID::DynPad:
         case OP_TYPEID::PRelu:
+        case OP_TYPEID::GroupConvolution:
         default:
         {
             throw unsupported_op("Unsupported op '" + op->description() +
