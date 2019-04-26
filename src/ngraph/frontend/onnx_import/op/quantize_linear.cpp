@@ -36,7 +36,7 @@ namespace ngraph
             {
                 NodeVector quantize_linear(const Node& node)
                 {
-                    NodeVector inputs{node.get_ng_inputs()};
+                    const NodeVector inputs{node.get_ng_inputs()};
                     std::shared_ptr<ngraph::Node> x = inputs.at(0);
                     std::shared_ptr<ngraph::Node> y_scale =
                         reshape::interpret_as_scalar(inputs.at(1));

@@ -160,7 +160,7 @@ namespace ngraph
 
                 NodeVector quant_conv(const Node& node)
                 {
-                    NodeVector inputs{node.get_ng_inputs()};
+                    const NodeVector inputs{node.get_ng_inputs()};
                     auto data = inputs.at(0);
                     auto data_scale = reshape::interpret_as_scalar(inputs.at(1));
                     auto data_zero_point = reshape::interpret_as_scalar(inputs.at(2));
