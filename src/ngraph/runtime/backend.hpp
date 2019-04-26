@@ -78,6 +78,16 @@ public:
         return create_tensor(element::from<T>(), shape);
     }
 
+    /// \brief Create a dynamic tensor specific to this backend, if the backend supports dynamic
+    ///        tensors.
+    /// \param element_type The type of the tensor element
+    /// \param shape The shape of the tensor
+    /// \returns shared_ptr to a new backend-specific tensor
+    /// \throws std::invalid_argument if the requested shape or element type is dynamic and the
+    ///         backend does not support dynamic tensors
+    virtual std::shared_ptr<ngraph::runtime::Tensor>
+        create_dynamic_tensor(const ngraph::element::Type& element_type, const PartialShape& shape);
+
     /// \brief Compiles a Function.
     /// \param func The function to compile
     /// \returns compiled function or nullptr on failure

@@ -45,6 +45,20 @@ vector<string> runtime::Backend::get_registered_devices()
     return BackendManager::get_registered_backends();
 }
 
+std::shared_ptr<ngraph::runtime::Tensor>
+    runtime::Backend::create_dynamic_tensor(const ngraph::element::Type& element_type,
+                                            const PartialShape& shape)
+{
+    if (shape.is_static() && element_type.is_static())
+    {
+        return create_tensor(element_type, shape.to_shape());
+    }
+    else
+    {
+        throw std::invalid_argument("This backend does not support dynamic tensors");
+    }
+}
+
 std::shared_ptr<runtime::Executable>
     runtime::Backend::compile(std::shared_ptr<Function> func,
                               ngraph::pass::PassConfig& pass_config,
