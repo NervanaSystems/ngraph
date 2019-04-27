@@ -88,6 +88,7 @@
 #include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
+#include "ngraph/op/parameter.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -98,7 +99,6 @@
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/topk.hpp"
-#include "ngraph/parameter_vector.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;

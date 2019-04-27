@@ -56,4 +56,5 @@ namespace ngraph
             element::Type m_element_type;
         };
     }
+    using ParameterVector = std::vector<std::shared_ptr<op::Parameter>>;
 }

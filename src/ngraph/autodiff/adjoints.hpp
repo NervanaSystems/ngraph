@@ -21,7 +21,7 @@
 #include <unordered_map>
 
 #include "ngraph/coordinate.hpp"
-#include "ngraph/node_vector.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/strides.hpp"
 
 namespace ngraph
