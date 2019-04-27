@@ -28,9 +28,8 @@ using namespace std;
 runtime::intelgpu::IntelGPUTensorView::IntelGPUTensorView(const element::Type& element_type,
                                                           const Shape& shape,
                                                           const cldnn::engine& backend_engine,
-                                                          void* memory_pointer,
-                                                          const runtime::Backend* parent)
-    : runtime::Tensor(make_shared<descriptor::Tensor>(element_type, shape, "external"), parent)
+                                                          void* memory_pointer)
+    : runtime::Tensor(make_shared<descriptor::Tensor>(element_type, shape, ""))
 {
     const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(element_type, shape);
 

@@ -1442,7 +1442,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         enables.emplace_back(enable);
         enable_nodename_list.emplace_back(make_pair(enable, node->get_name()));
 
-        m_perf_counters.emplace_back(node->get_name().c_str(), 0, 0);
+        m_perf_counters.emplace_back(node, 0, 0);
     }
 
     if ((std::getenv("NGRAPH_DEX_DEBUG") != nullptr))
@@ -1809,10 +1809,15 @@ const vector<runtime::PerformanceCounter>& runtime::cpu::CPU_ExternalFunction::g
             size_t count = get_count();
             if (m_perf_counters.size() == 0)
             {
+                map<string, shared_ptr<const Node>> name_map;
+                for (auto n : m_function->get_ops())
+                {
+                    name_map.insert({n->get_name(), n});
+                }
                 for (size_t i = 0; i < count; i++)
                 {
-                    m_perf_counters.push_back(
-                        {get_name(i), get_microseconds(i), get_call_count(i)});
+                    shared_ptr<const Node> n = name_map[get_name(i)];
+                    m_perf_counters.push_back({n, get_microseconds(i), get_call_count(i)});
                 }
             }
             else

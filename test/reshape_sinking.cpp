@@ -37,7 +37,6 @@
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
-#include "nlohmann/json.hpp"
 #include "util/all_close.hpp"
 #include "util/autodiff/backprop_function.hpp"
 #include "util/autodiff/numeric_compare.hpp"
@@ -111,6 +110,7 @@ TEST(reshape_sinking, broadcast_swimming)
     ASSERT_EQ(add->get_argument(1), conv);
 }
 
+#ifdef NGRAPH_JSON_ENABLE
 TEST(reshape_sinking, mnist_conv)
 {
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "tf_conv_mnist_nhwc.json");
@@ -130,6 +130,7 @@ TEST(reshape_sinking, mnist_conv)
     size_t before_after = count_ops_of_type<op::Reshape>(func);
     ASSERT_LE(before_after, before_count);
 }
+#endif
 
 TEST(reshape_sinking, nasnet_pooladd)
 {

@@ -35,10 +35,8 @@ using namespace std;
 
 runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_type,
                                            const Shape& shape,
-                                           void* memory_pointer,
-                                           const runtime::Backend* parent)
-    : runtime::Tensor(std::make_shared<ngraph::descriptor::Tensor>(element_type, shape, "external"),
-                      parent)
+                                           void* memory_pointer)
+    : runtime::Tensor(std::make_shared<ngraph::descriptor::Tensor>(element_type, shape, ""))
     , buffer(nullptr)
     , aligned_buffer(nullptr)
 {
@@ -74,9 +72,8 @@ runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_
 }
 
 runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_type,
-                                           const Shape& shape,
-                                           const runtime::Backend* parent)
-    : CPUTensorView(element_type, shape, nullptr, parent)
+                                           const Shape& shape)
+    : CPUTensorView(element_type, shape, nullptr)
 {
 }
 
