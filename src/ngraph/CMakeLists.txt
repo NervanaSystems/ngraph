@@ -258,10 +258,14 @@ set (SRC
     op/topk.hpp
     op/fused/conv_fused.cpp
     op/fused/conv_fused.hpp
+    op/fused/depth_to_space.cpp
+    op/fused/depth_to_space.hpp
     op/fused/elu.cpp
     op/fused/elu.hpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
+    op/fused/space_to_depth.cpp
+    op/fused/space_to_depth.hpp
     op/util/arithmetic_reduction.cpp
     op/util/arithmetic_reduction.hpp
     op/util/binary_elementwise_arithmetic.cpp
@@ -278,6 +282,8 @@ set (SRC
     op/util/index_reduction.hpp
     op/util/logical_reduction.cpp
     op/util/logical_reduction.hpp
+    op/util/reshape.cpp
+    op/util/reshape.hpp
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise_arithmetic.hpp
     partial_shape.cpp
