@@ -106,7 +106,7 @@ namespace ngraph
             }
 
         protected:
-            std::string m_name{MLSL};
+            std::string m_name{"MLSL"};
         };
     }
 }
