@@ -6074,10 +6074,12 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_bprop_n4c3h2w2)
     auto df = make_shared<Function>(NodeVector{dinput, dgamma, dbeta},
                                     ParameterVector{mean, var, input, gamma, beta, C});
 
+#ifdef NGRAPH_JSON_ENABLE
     // roundtrip serialization
     string js = serialize(df, 4);
     istringstream in(js);
     df = deserialize(in);
+#endif
 
     shared_ptr<runtime::Tensor> _dinput = backend->create_tensor(element::f32, shape_r);
     shared_ptr<runtime::Tensor> _dgamma = backend->create_tensor(element::f32, gamma_shape);

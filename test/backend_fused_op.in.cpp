@@ -36,6 +36,36 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
+NGRAPH_TEST(${BACKEND_NAME}, elu)
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape{3, 2});
+    auto B = make_shared<op::Parameter>(element::f32, Shape{});
+    auto elu = make_shared<op::Elu>(A, B);
+    auto function = make_shared<Function>(NodeVector{elu}, ParameterVector{A, B});
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input(std::vector<float>{-2.f, 3.f, -2.f, 1.f, -1.f, 0.f});
+    test_case.add_input(std::vector<float>{0.5f});
+    test_case.add_expected_output(
+        std::vector<float>{-0.432332358f, 3.f, -0.432332358f, 1.f, -0.316060279f, 0.f});
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, elu_negative_alpha)
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape{3, 2});
+    auto B = make_shared<op::Parameter>(element::f32, Shape{});
+    auto elu = make_shared<op::Elu>(A, B);
+    auto function = make_shared<Function>(NodeVector{elu}, ParameterVector{A, B});
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input(std::vector<float>{-2.f, 3.f, -2.f, 1.f, -1.f, 0.f});
+    test_case.add_input(std::vector<float>{-1.f});
+    test_case.add_expected_output(
+        std::vector<float>{0.864664717f, 3.f, 0.864664717f, 1.f, 0.632120559f, 0.f});
+    test_case.run();
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, prelu)
 {
     Shape shape{3, 2};

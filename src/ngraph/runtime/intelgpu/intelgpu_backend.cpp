@@ -76,6 +76,7 @@
 #include "ngraph/op/erf.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/depth_to_space.hpp"
+#include "ngraph/op/fused/elu.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
@@ -355,14 +356,14 @@ shared_ptr<runtime::Tensor>
                                                       const Shape& shape)
 {
     return make_shared<runtime::intelgpu::IntelGPUTensorView>(
-        element_type, shape, *cldnn_engine, nullptr, this);
+        element_type, shape, *cldnn_engine, nullptr);
 }
 
 shared_ptr<runtime::Tensor> runtime::intelgpu::IntelGPUBackend::create_tensor(
     const element::Type& element_type, const Shape& shape, void* memory_pointer)
 {
     return make_shared<runtime::intelgpu::IntelGPUTensorView>(
-        element_type, shape, *cldnn_engine, memory_pointer, this);
+        element_type, shape, *cldnn_engine, memory_pointer);
 }
 
 shared_ptr<runtime::Executable>
@@ -1918,6 +1919,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::DynPad:
         case OP_TYPEID::DynReshape:
         case OP_TYPEID::DynSlice:
+        case OP_TYPEID::Elu:
         case OP_TYPEID::EmbeddingLookup:
         case OP_TYPEID::Erf:
         case OP_TYPEID::Gather:

@@ -67,6 +67,7 @@
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/depth_to_space.hpp"
+#include "ngraph/op/fused/elu.hpp"
 #include "ngraph/op/fused/prelu.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
 #include "ngraph/op/gather.hpp"
@@ -895,6 +896,11 @@ static shared_ptr<ngraph::Function>
             case OP_TYPEID::DynSlice:
             {
                 node = make_shared<op::DynSlice>(args[0], args[1], args[2], args[3]);
+                break;
+            }
+            case OP_TYPEID::Elu:
+            {
+                node = make_shared<op::Elu>(args[0], args[1]);
                 break;
             }
             case OP_TYPEID::EmbeddingLookup:
@@ -1742,6 +1748,8 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::DynReshape: { break;
     }
     case OP_TYPEID::DynSlice: { break;
+    }
+    case OP_TYPEID::Elu: { break;
     }
     case OP_TYPEID::EmbeddingLookup: { break;
     }
