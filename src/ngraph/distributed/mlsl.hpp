@@ -47,7 +47,7 @@ namespace ngraph
                 }
             }
 
-            const std::string& get_name() const override {}
+            const std::string& get_name() const override { return m_name; }
             int get_size() override
             {
                 return static_cast<int>(MLSL::Environment::GetEnv().GetProcessCount());
