@@ -13,12 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-
 #include <cstring>
 #include <memory>
 
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
-#include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/runtime/hybrid/hybrid_tensor.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
@@ -26,11 +25,10 @@ using namespace std;
 
 static const size_t alignment = 64;
 
-runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type,
-                                const Shape& shape,
-                                void* memory_pointer,
-                                const string& name)
-    : runtime::Tensor(std::make_shared<ngraph::descriptor::Tensor>(element_type, shape, name))
+runtime::HybridTensor::HybridTensor(const ngraph::element::Type& element_type,
+                                    const Shape& shape,
+                                    void* memory_pointer)
+    : runtime::Tensor(std::make_shared<ngraph::descriptor::Tensor>(element_type, shape, ""))
     , m_allocated_buffer_pool(nullptr)
     , m_aligned_buffer_pool(nullptr)
 
@@ -57,26 +55,12 @@ runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type,
     }
 }
 
-runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type,
-                                const Shape& shape,
-                                const string& name)
-    : HostTensor(element_type, shape, nullptr, name)
+runtime::HybridTensor::HybridTensor(const ngraph::element::Type& element_type, const Shape& shape)
+    : HybridTensor(element_type, shape, nullptr)
 {
 }
 
-runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type, const Shape& shape)
-    : HostTensor(element_type, shape, nullptr, "")
-{
-}
-
-runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type,
-                                const Shape& shape,
-                                void* memory_pointer)
-    : HostTensor(element_type, shape, memory_pointer, "")
-{
-}
-
-runtime::HostTensor::~HostTensor()
+runtime::HybridTensor::~HybridTensor()
 {
     if (m_allocated_buffer_pool != nullptr)
     {
@@ -84,27 +68,27 @@ runtime::HostTensor::~HostTensor()
     }
 }
 
-char* runtime::HostTensor::get_data_ptr()
+char* runtime::HybridTensor::get_data_ptr()
 {
     return m_aligned_buffer_pool;
 }
 
-const char* runtime::HostTensor::get_data_ptr() const
+const char* runtime::HybridTensor::get_data_ptr() const
 {
     return m_aligned_buffer_pool;
 }
 
-void runtime::HostTensor::write(const void* source, size_t tensor_offset, size_t n)
+void runtime::HybridTensor::write(const void* source, size_t tensor_offset, size_t n)
 {
     if (tensor_offset + n > m_buffer_size)
     {
         throw out_of_range("write access past end of tensor");
     }
     char* target = get_data_ptr();
-    memcpy(&target[tensor_offset], source, n);
+    memcpy(target, source, n);
 }
 
-void runtime::HostTensor::read(void* target, size_t tensor_offset, size_t n) const
+void runtime::HybridTensor::read(void* target, size_t tensor_offset, size_t n) const
 {
     if (tensor_offset + n > m_buffer_size)
     {
