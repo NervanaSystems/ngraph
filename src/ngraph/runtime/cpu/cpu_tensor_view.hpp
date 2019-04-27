@@ -33,13 +33,10 @@ namespace ngraph
             class CPUTensorView : public ngraph::runtime::Tensor
             {
             public:
+                CPUTensorView(const ngraph::element::Type& element_type, const Shape& shape);
                 CPUTensorView(const ngraph::element::Type& element_type,
                               const Shape& shape,
-                              const runtime::Backend* parent);
-                CPUTensorView(const ngraph::element::Type& element_type,
-                              const Shape& shape,
-                              void* memory_pointer,
-                              const runtime::Backend* parent);
+                              void* memory_pointer);
                 virtual ~CPUTensorView() override;
 
                 char* get_data_ptr();

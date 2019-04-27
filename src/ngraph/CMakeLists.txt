@@ -259,6 +259,8 @@ set (SRC
     op/topk.hpp
     op/fused/conv_fused.cpp
     op/fused/conv_fused.hpp
+    op/fused/elu.cpp
+    op/fused/elu.hpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
     op/util/arithmetic_reduction.cpp
@@ -392,6 +394,7 @@ set(SRC ${SRC}
     runtime/hybrid/hybrid_backend.hpp
     runtime/hybrid/hybrid_executable.cpp
     runtime/hybrid/hybrid_executable.hpp
+    runtime/hybrid/hybrid_tensor.cpp
     runtime/hybrid/hybrid_util.cpp
     runtime/hybrid/hybrid_util.hpp
     runtime/hybrid/op/function_call.cpp

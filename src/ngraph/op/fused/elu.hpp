@@ -16,34 +16,32 @@
 
 #pragma once
 
-#include <cstddef>
-#include <string>
-
 #include "ngraph/node.hpp"
+#include "ngraph/op/op.hpp"
+#include "ngraph/op/util/fused_op.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace op
     {
-        class PerformanceCounter
+        /// \brief Exponential Linear Unit
+        /// x <  0 => f(x) = alpha * (exp(x) - 1.)
+        /// x >= 0 => f(x) = x
+        ///
+        class Elu : public ngraph::op::util::FusedOp
         {
         public:
-            PerformanceCounter(const std::shared_ptr<const Node>& n, size_t us, size_t calls)
-                : m_node(n)
-                , m_total_microseconds(us)
-                , m_call_count(calls)
-            {
-            }
-            std::shared_ptr<const Node> get_node() const { return m_node; }
-            size_t total_microseconds() const { return m_total_microseconds; }
-            size_t microseconds() const
-            {
-                return m_call_count == 0 ? 0 : m_total_microseconds / m_call_count;
-            }
-            size_t call_count() const { return m_call_count; }
-            std::shared_ptr<const Node> m_node;
-            size_t m_total_microseconds;
-            size_t m_call_count;
+            /// \brief Constructs an Elu operation.
+            ///
+            /// \param data Input tensor
+            /// \param alpha Multiplier for negative values
+            Elu(const std::shared_ptr<ngraph::Node>& data,
+                const std::shared_ptr<ngraph::Node>& alpha);
+
+            virtual NodeVector decompose_op() const override;
+
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
         };
     }
 }

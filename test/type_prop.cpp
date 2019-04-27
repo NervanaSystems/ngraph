@@ -13371,6 +13371,16 @@ TEST(type_prop, prelu)
     ASSERT_EQ(prelu->get_shape(), prelu_shape);
 }
 
+TEST(type_prop, elu)
+{
+    Shape data_shape{2, 4};
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    auto alpha = make_shared<op::Parameter>(element::f32, Shape{});
+    auto elu = make_shared<op::Elu>(data, alpha);
+    ASSERT_EQ(elu->get_element_type(), element::f32);
+    ASSERT_EQ(elu->get_shape(), data_shape);
+}
+
 TEST(type_prop, gather_no_axis)
 {
     Shape params_shape{3, 2};
