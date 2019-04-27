@@ -782,13 +782,21 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedDotBias)
                 {
-                    runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
+                    if (node->get_input_element_type(0) == element::u8 &&
+                        node->get_input_element_type(1) == element::i8)
+                    {
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
+                    }
                 }
 
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedDot)
                 {
-                    runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
+                    if (node->get_input_element_type(0) == element::u8 &&
+                        node->get_input_element_type(1) == element::i8)
+                    {
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
+                    }
                 }
 
                 template <>
