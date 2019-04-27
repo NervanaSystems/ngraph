@@ -83,11 +83,18 @@ void Function::validate_nodes_and_infer_types()
 
 Function::~Function()
 {
-    std::deque<Node*> sorted_list;
+    // Nodes are linked in order from Results to Parameters or backwards through the graph.
+    // If you delete the nodes by simply releasing the results then the nodes recursively
+    // traverse the tree freeing each node's inputs. This will exceed a process's stack allocation
+    // for a sufficiently large graph.
+    // This deleter makes a list of nodes which can then be traversed in forward order to
+    // delete nodes. The only memory cost is the size of the list, but this is allocated on the
+    // heap.
+    std::list<Node*> list;
 
-    traverse_nodes(this, [&](shared_ptr<Node> n) { sorted_list.push_front(n.get()); });
+    traverse_nodes(this, [&](shared_ptr<Node> n) { list.push_front(n.get()); });
 
-    for (Node* n : sorted_list)
+    for (Node* n : list)
     {
         n->clear_inputs();
     }
