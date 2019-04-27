@@ -17,6 +17,8 @@
 #pragma once
 
 #ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
+#include <string>
+
 #include <mlsl.hpp>
 
 #include "ngraph/distributed.hpp"
@@ -28,7 +30,8 @@ namespace ngraph
         class MLSLDistributedInterface : public DistributedInterface
         {
         public:
-            MLSLDistributedInterface()
+            MLSLDistributedInterface(const std::string& name = "MLSL")
+                : m_name(name)
             {
                 if (!MLSL::Environment::GetEnv().IsInitialized())
                 {
@@ -44,6 +47,7 @@ namespace ngraph
                 }
             }
 
+            const std::string get_name() const override {}
             int get_size() override
             {
                 return static_cast<int>(MLSL::Environment::GetEnv().GetProcessCount());
@@ -100,6 +104,9 @@ namespace ngraph
                 env.Wait(req);
                 env.DeleteDistribution(distribution);
             }
+
+        protected:
+            std::string m_name{MLSL};
         };
     }
 }

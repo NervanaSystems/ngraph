@@ -18,6 +18,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <string>
 
 #include "ngraph/type/element_type.hpp"
 
@@ -27,6 +28,7 @@ namespace ngraph
     {
     public:
         virtual ~DistributedInterface() {}
+        virtual const std::string& get_name() const = 0;
         virtual int get_size() = 0;
         virtual int get_rank() = 0;
 

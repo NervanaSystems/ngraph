@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <string>
+
 #include "ngraph/distributed.hpp"
 #include "ngraph/except.hpp"
 
@@ -25,6 +27,7 @@ namespace ngraph
     {
         class NullDistributedInterface : public DistributedInterface
         {
+            const std::string& get_name() const override { return m_name; }
             int get_size() override { return 0; }
             int get_rank() override { return 0; }
             void
@@ -37,6 +40,9 @@ namespace ngraph
             {
                 throw ngraph_error("Distributed Library not supported/mentioned");
             }
+
+        protected:
+            std::string m_name{"NULL"};
         };
     }
 }

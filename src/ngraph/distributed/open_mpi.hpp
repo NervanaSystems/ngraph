@@ -21,6 +21,8 @@
 #include "ngraph/distributed.hpp"
 
 #ifdef NGRAPH_DISTRIBUTED_OMPI_ENABLE
+#include <string>
+
 #include <mpi.h>
 
 namespace ngraph
@@ -30,7 +32,8 @@ namespace ngraph
         class OpenMPIDistributedInterface : public DistributedInterface
         {
         public:
-            OpenMPIDistributedInterface()
+            OpenMPIDistributedInterface(const std::string& name = "OpenMPI")
+                : m_name(name)
             {
                 int flag = 0;
                 MPI_Initialized(&flag);
@@ -51,6 +54,7 @@ namespace ngraph
                 }
             }
 
+            const std::string& get_name() const override { return m_name; }
             int get_size() override
             {
                 int size;
@@ -101,6 +105,9 @@ namespace ngraph
                 }
                 MPI_Bcast(in, count, data_type, 0, MPI_COMM_WORLD);
             }
+
+        protected:
+            std::string m_name;
         };
     }
 }

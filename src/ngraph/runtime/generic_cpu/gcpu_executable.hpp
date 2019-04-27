@@ -440,7 +440,7 @@ private:
         case OP_TYPEID::BroadcastDistributed:
         {
             int rank_ID = get_distributed_interface()->get_rank();
-            if (Rank_ID == 0)
+            if (rank_ID == 0)
             {
                 reference::broadcastdistributed<T>(
                     static_cast<T*>(args[0]),
