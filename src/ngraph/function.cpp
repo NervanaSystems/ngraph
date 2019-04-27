@@ -81,6 +81,18 @@ void Function::validate_nodes_and_infer_types()
     ngraph::validate_nodes_and_infer_types(get_ops());
 }
 
+Function::~Function()
+{
+    std::deque<Node*> sorted_list;
+
+    traverse_nodes(this, [&](shared_ptr<Node> n) { sorted_list.push_front(n.get()); });
+
+    for (Node* n : sorted_list)
+    {
+        n->clear_inputs();
+    }
+}
+
 void Function::init()
 {
     validate_nodes_and_infer_types();

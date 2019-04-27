@@ -79,6 +79,8 @@ namespace ngraph
         template <typename NodeType>
         friend class Output;
 
+        friend class Function;
+
     protected:
         /// Throws if the node is invalid.
         virtual void validate_and_infer_types();
@@ -356,6 +358,7 @@ namespace ngraph
         void set_output_size(size_t n);
 
     private:
+        void clear_inputs() { m_inputs.clear(); }
         std::set<std::shared_ptr<Node>> m_control_dependencies;
 
         const std::string m_node_type;

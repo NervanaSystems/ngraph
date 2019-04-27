@@ -537,3 +537,20 @@ TEST(util, enum_mask_operators)
     EXPECT_EQ(false, n[Type::d]);
     EXPECT_EQ(true, n[Type::b]);
 }
+
+TEST(graph, huge)
+{
+    Function* f;
+
+    {
+        auto param = make_shared<op::Parameter>(element::f32, Shape{3, 3});
+        std::shared_ptr<Node> n = param;
+        for (size_t i = 0; i < 1000000; i++)
+        {
+            n = make_shared<op::Negative>(n);
+        }
+        f = new Function(NodeVector{n}, ParameterVector{param});
+    }
+
+    delete f;
+}
