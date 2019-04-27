@@ -32,7 +32,8 @@ namespace ngraph
         namespace dynamic_wrapper
         {
             class DynamicWrapperBackend;
-            class DynamicWrapperExecutable;
+            //class DynamicWrapperExecutable;
+            class DynamicTensor;
         }
     }
 }
@@ -54,7 +55,7 @@ public:
                                         bool enable_performance_data = false) override;
 
 private:
-    std::unique_ptr<ngraph::runtime::Backend> m_wrapped_backend;
+    std::shared_ptr<ngraph::runtime::Backend> m_wrapped_backend;
 };
 
 #if 0
@@ -66,3 +67,22 @@ public:
               const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
 };
 #endif
+
+class ngraph::runtime::dynamic_wrapper::DynamicTensor : public ngraph::runtime::Tensor
+{
+public:
+    DynamicTensor(const ngraph::element::Type& element_type,
+                  const PartialShape& shape,
+                  const runtime::Backend* parent,
+                  const std::shared_ptr<ngraph::runtime::Backend>& wrapped_backend);
+    virtual const ngraph::Shape& get_shape() const override;
+    virtual void write(const void* p, size_t offset, size_t n) override;
+    virtual void read(void* p, size_t offset, size_t n) const override;
+    virtual void copy_from(const ngraph::runtime::Tensor& source) override;
+    void set_type_and_shape(const element::Type& et, const Shape& shape);
+    void clear_type_and_shape();
+
+private:
+    std::shared_ptr<ngraph::runtime::Tensor> m_wrapped_tensor;
+    std::shared_ptr<ngraph::runtime::Backend> m_wrapped_backend;
+};

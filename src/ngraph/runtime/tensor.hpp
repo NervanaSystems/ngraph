@@ -52,7 +52,11 @@ namespace ngraph
 
             /// \brief Get tensor shape
             /// \return const reference to a Shape
-            const ngraph::Shape& get_shape() const;
+            virtual const ngraph::Shape& get_shape() const;
+
+            /// \brief Get tensor partial shape
+            /// \return const reference to a PartialShape
+            const ngraph::PartialShape& get_partial_shape() const;
 
             /// \brief Get tensor strides
             /// \return Strides
