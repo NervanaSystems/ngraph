@@ -63,36 +63,6 @@ namespace ngraph
                 return range;
             }
 
-            /// \brief      Makes a Constant Ngraph node.
-            ///
-            /// \param[in]  type   The node element type.
-            /// \param[in]  shape  The tensor data shape.
-            /// \param[in]  data   The data to initialize node with.
-            ///
-            /// \tparam     T      Input data value type.
-            ///
-            /// \return     The Ngraph node representing Constant data.
-            ///
-            template <typename T>
-            std::shared_ptr<ngraph::Node> make_constant_node(const ngraph::element::Type& type,
-                                                             const ngraph::Shape& shape,
-                                                             const std::vector<T>& data)
-            {
-                std::shared_ptr<ngraph::Node> node;
-                // Make constant node filled with single value.
-                if (data.size() == 1)
-                {
-                    node = std::make_shared<ngraph::op::Constant>(type, ngraph::Shape{}, data);
-                    node = ngraph::op::make_broadcast_node(node, shape);
-                }
-                else
-                {
-                    node = std::make_shared<ngraph::op::Constant>(type, shape, data);
-                }
-
-                return node;
-            }
-
             /// \brief      Handle negative axis value.
             ///
             /// \param[in]  axis        The requested axis value.
