@@ -13405,6 +13405,24 @@ TEST(type_prop, gather)
     ASSERT_EQ(G->get_shape(), out_shape);
 }
 
+TEST(type_prop, depth_to_space)
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape{1, 128, 8, 8});
+    auto space_to_depth = make_shared<op::DepthToSpace>(A, 8);
+
+    ASSERT_EQ(space_to_depth->get_element_type(), element::f32);
+    ASSERT_EQ(space_to_depth->get_shape(), (Shape{1, 2, 64, 64}));
+}
+
+TEST(type_prop, space_to_depth)
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape{1, 2, 64, 64});
+    auto space_to_depth = make_shared<op::SpaceToDepth>(A, 8);
+
+    ASSERT_EQ(space_to_depth->get_element_type(), element::f32);
+    ASSERT_EQ(space_to_depth->get_shape(), (Shape{1, 128, 8, 8}));
+}
+
 TEST(type_prop, gather_nd_scalar_from_2d)
 {
     Shape params_shape{2, 2};
