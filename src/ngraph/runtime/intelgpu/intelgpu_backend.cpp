@@ -75,6 +75,7 @@
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/erf.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/elu.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
@@ -1911,31 +1912,32 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::BatchMatMul:
         case OP_TYPEID::BroadcastDistributed:
         case OP_TYPEID::BroadcastLike:
+        case OP_TYPEID::DynBroadcast:
+        case OP_TYPEID::DynPad:
         case OP_TYPEID::DynReshape:
         case OP_TYPEID::DynSlice:
+        case OP_TYPEID::Elu:
+        case OP_TYPEID::EmbeddingLookup:
         case OP_TYPEID::Erf:
         case OP_TYPEID::Gather:
         case OP_TYPEID::GatherND:
+        case OP_TYPEID::GenerateMask:
+        case OP_TYPEID::PRelu:
+        case OP_TYPEID::Passthrough:
         case OP_TYPEID::QuantizedAvgPool:
+        case OP_TYPEID::QuantizedConvolution:
         case OP_TYPEID::QuantizedConvolutionBias:
         case OP_TYPEID::QuantizedConvolutionBiasAdd:
         case OP_TYPEID::QuantizedConvolutionBiasSignedAdd:
         case OP_TYPEID::QuantizedConvolutionRelu:
-        case OP_TYPEID::QuantizedConvolution:
         case OP_TYPEID::QuantizedDot:
         case OP_TYPEID::QuantizedDotBias:
         case OP_TYPEID::QuantizedMaxPool:
         case OP_TYPEID::ReplaceSlice:
-        case OP_TYPEID::GenerateMask:
         case OP_TYPEID::ScalarConstantLike:
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::StopGradient:
         case OP_TYPEID::Transpose:
-        case OP_TYPEID::EmbeddingLookup:
-        case OP_TYPEID::DynBroadcast:
-        case OP_TYPEID::Passthrough:
-        case OP_TYPEID::DynPad:
-        case OP_TYPEID::PRelu:
         default:
         {
             throw unsupported_op("Unsupported op '" + op->description() +

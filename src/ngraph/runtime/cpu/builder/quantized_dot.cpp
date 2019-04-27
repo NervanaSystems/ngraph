@@ -36,6 +36,12 @@ namespace ngraph
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
+                    if (node->get_input_element_type(0) == element::u8 &&
+                        node->get_input_element_type(1) == element::u8)
+                    {
+                        throw ngraph_error(
+                            "Unsupported data types for QuantizedDot MKLDNN kernel.");
+                    }
                     auto& functors = external_function->get_functors();
                     auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
                     auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
