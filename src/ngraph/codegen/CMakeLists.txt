@@ -38,7 +38,7 @@ endif()
 get_target_property(LLVM_INCLUDE_DIR libllvm INTERFACE_INCLUDE_DIRECTORIES)
 
 # find_file(HEADER_1 cmath HINTS /usr/include/c++/7)
-get_filename_component(CLANG_INCLUDE_DIR ${LLVM_INCLUDE_DIR}/../lib/clang/5.0.2/include ABSOLUTE)
+get_filename_component(CLANG_INCLUDE_DIR ${LLVM_INCLUDE_DIR}/../lib/clang/${NGRAPH_LLVM_VERSION}/include ABSOLUTE)
 
 if(NGRAPH_CPU_ENABLE)
     get_target_property(MKLDNN_INCLUDE_DIR libmkldnn INTERFACE_INCLUDE_DIRECTORIES)

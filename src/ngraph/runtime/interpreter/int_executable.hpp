@@ -174,7 +174,7 @@ private:
     bool m_is_compiled = false;
     bool m_nan_check_enabled = false;
     bool m_performance_counters_enabled = false;
-    std::unordered_map<const Node*, stopwatch> m_timer_map;
+    std::unordered_map<std::shared_ptr<const Node>, stopwatch> m_timer_map;
     std::vector<NodeWrapper> m_wrapped_nodes;
     std::unordered_map<const Node*, std::shared_ptr<RNGState>> m_states;
     std::set<std::string> m_unsupported_op_name_list;
@@ -192,7 +192,7 @@ private:
                    const std::vector<std::shared_ptr<HostTensor>>& out,
                    const std::vector<std::shared_ptr<HostTensor>>& args)
     {
-        const Node& node = node_wrapper.get_node();
+        const Node& node = *node_wrapper.get_node();
 
 // We want to check that every OP_TYPEID enumeration is included in the list.
 // These GCC flags enable compile-time checking so that if an enumeration
