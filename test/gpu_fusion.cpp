@@ -128,6 +128,7 @@ TEST(gpu_fusion, rnn_fprop_1_lstm_cell)
 }
 #endif
 
+#ifdef NGRAPH_JSON_ENABLE
 TEST(gpu_fusion, fuse_lstm_cells)
 {
     pass::Manager pass_manager;
@@ -182,6 +183,7 @@ TEST(DISABLED_gpu_fusion, fuse_1_layer_rnn)
         EXPECT_EQ(node->get_num_timesteps(), node->get_src_sequence_length());
     }
 }
+#endif
 
 TEST(gpu_fusion, lstm_analytic)
 {
@@ -419,6 +421,7 @@ TEST(gpu_fusion, fuse_2_layer_rnn_1lstm_analytic)
     EXPECT_TRUE(test::all_close(std::vector<float>{ct_val_second}, read_vector<float>(result_ct)));
 }
 
+#ifdef NGRAPH_JSON_ENABLE
 TEST(gpu_fusion, rnn_fusion_inter_vs_gpu_1lstm_cell)
 {
     const std::string file_name("mxnet/1_lstm_cell_forward.json");
@@ -528,3 +531,4 @@ TEST(gpu_fusion, fuse_rnn_across_2layer_1timestep)
         EXPECT_TRUE(test::all_close(gpu_results.at(1), int_results.at(1), 1.0e-4f, 1.0e-4f));
     }
 }
+#endif

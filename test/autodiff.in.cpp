@@ -875,7 +875,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_batchmatmul_tensor2_tensor2)
 }
 #endif
 
-#if defined(AUTODIFF_BACKEND_CPU)
+#if defined(AUTODIFF_BACKEND_CPU) && defined(NGRAPH_JSON_ENABLE)
 NGRAPH_TEST(${BACKEND_NAME}, backwards_batchmatmultranspose_tensor2_tensor2)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");

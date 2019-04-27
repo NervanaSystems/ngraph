@@ -60,8 +60,6 @@ set (SRC
     dimension.cpp
     dimension.hpp
     except.hpp
-    event_tracing.hpp
-    event_tracing.cpp
     file_util.cpp
     file_util.hpp
     function.cpp
@@ -372,8 +370,6 @@ set (SRC
     runtime/performance_counter.hpp
     runtime/tensor.cpp
     runtime/tensor.hpp
-    serializer.cpp
-    serializer.hpp
     shape.cpp
     shape.hpp
     shape_util.cpp
@@ -396,6 +392,7 @@ set(SRC ${SRC}
     runtime/hybrid/hybrid_backend.hpp
     runtime/hybrid/hybrid_executable.cpp
     runtime/hybrid/hybrid_executable.hpp
+    runtime/hybrid/hybrid_tensor.cpp
     runtime/hybrid/hybrid_util.cpp
     runtime/hybrid/hybrid_util.hpp
     runtime/hybrid/op/function_call.cpp
@@ -412,6 +409,9 @@ set(SRC ${SRC}
     runtime/hybrid/pass/memory_layout.hpp
     )
 
+if(NGRAPH_JSON_ENABLE)
+    list(APPEND SRC serializer.cpp serializer.hpp event_tracing.cpp event_tracing.hpp)
+endif()
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
     list(APPEND SRC distributed.cpp distributed.hpp)
@@ -461,7 +461,9 @@ if(NGRAPH_LIB_VERSIONING_ENABLE)
         VERSION ${NGRAPH_VERSION}
         SOVERSION ${NGRAPH_API_VERSION})
 endif()
-target_link_libraries(ngraph PRIVATE libjson)
+if(NGRAPH_JSON_ENABLE)
+    target_link_libraries(ngraph PRIVATE libjson)
+endif()
 target_compile_definitions(ngraph PUBLIC NGRAPH_VERSION="${NGRAPH_VERSION}")
 
 if (LINUX)
