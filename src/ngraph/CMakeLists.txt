@@ -392,6 +392,7 @@ set(SRC ${SRC}
     runtime/hybrid/hybrid_backend.hpp
     runtime/hybrid/hybrid_executable.cpp
     runtime/hybrid/hybrid_executable.hpp
+    runtime/hybrid/hybrid_tensor.cpp
     runtime/hybrid/hybrid_util.cpp
     runtime/hybrid/hybrid_util.hpp
     runtime/hybrid/op/function_call.cpp
