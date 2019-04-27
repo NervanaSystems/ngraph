@@ -122,6 +122,14 @@ using namespace std;
 using json = nlohmann::json;
 using const_data_callback_t = shared_ptr<Node>(const string&, const element::Type&, const Shape&);
 
+static bool s_serialize_output_shapes_enabled =
+    (std::getenv("NGRAPH_SERIALIZER_OUTPUT_SHAPES") != nullptr);
+
+void ngraph::set_serialize_output_shapes(bool enable)
+{
+    s_serialize_output_shapes_enabled = enable;
+}
+
 // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
 // Abs,
 // Acos,
@@ -279,6 +287,12 @@ void ngraph::serialize(const string& path, shared_ptr<ngraph::Function> func, si
 
 void ngraph::serialize(ostream& out, shared_ptr<ngraph::Function> func, size_t indent)
 {
+    out << ::serialize(func, indent, false);
+}
+
+#if defined ENABLE_CPIO_FILE
+static void serialize_to_cpio(ostream& out, shared_ptr<ngraph::Function> func, size_t indent)
+{
     string j = ::serialize(func, indent, true);
     cpio::Writer writer(out);
     writer.write(func->get_name(), j.c_str(), static_cast<uint32_t>(j.size()));
@@ -297,6 +311,7 @@ void ngraph::serialize(ostream& out, shared_ptr<ngraph::Function> func, size_t i
                        true);
     });
 }
+#endif
 
 static string serialize(shared_ptr<ngraph::Function> func, size_t indent, bool binary_constant_data)
 {
@@ -430,6 +445,18 @@ static json write(const Function& f, bool binary_constant_data)
     return function;
 }
 
+template <typename T>
+T get_value(nlohmann::json js, const string& key)
+{
+    T rc;
+    auto it = js.find(key);
+    if (it != js.end())
+    {
+        rc = it->get<T>();
+    }
+    return rc;
+}
+
 static shared_ptr<ngraph::Function>
     read_function(const json& func_js,
                   unordered_map<string, shared_ptr<Function>>& function_map,
@@ -446,20 +473,13 @@ static shared_ptr<ngraph::Function>
         try
         {
             string node_name = node_js.at("name").get<string>();
-            string friendly_name;
-            auto it = node_js.find("friendly_name");
-            if (it != node_js.end())
-            {
-                friendly_name = it->get<string>();
-            }
             string node_op = node_js.at("op").get<string>();
-            vector<string> node_inputs = node_js.at("inputs").get<vector<string>>();
-            vector<string> control_deps_inputs =
-                get_or_default<vector<string>>(node_js, "control_deps", vector<string>{});
-            vector<string> node_outputs = node_js.at("outputs").get<vector<string>>();
+            string friendly_name = get_value<string>(node_js, "friendly_name");
+            vector<string> node_inputs = get_value<vector<string>>(node_js, "inputs");
+            vector<string> control_deps_inputs = get_value<vector<string>>(node_js, "control_deps");
+            vector<string> node_outputs = get_value<vector<string>>(node_js, "outputs");
             shared_ptr<Node> node;
             vector<shared_ptr<Node>> args;
-            vector<shared_ptr<Node>> control_deps;
             for (const string& name : node_inputs)
             {
                 args.push_back(node_map.at(name));
@@ -540,12 +560,16 @@ static shared_ptr<ngraph::Function>
                 auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
                 auto include_padding_in_avg_computation =
                     node_js.at("include_padding_in_avg_computation").get<bool>();
+                op::PadType pad_type = node_js["pad_type"].empty()
+                                           ? op::PadType::EXPLICIT
+                                           : static_cast<op::PadType>(node_js.at("pad_type"));
                 node = make_shared<op::AvgPool>(args[0],
                                                 window_shape,
                                                 window_movement_strides,
                                                 padding_below,
                                                 padding_above,
-                                                include_padding_in_avg_computation);
+                                                include_padding_in_avg_computation,
+                                                pad_type);
                 break;
             }
             case OP_TYPEID::AvgPoolBackprop:
@@ -666,6 +690,10 @@ static shared_ptr<ngraph::Function>
                     data_dilation_strides_maybe = node_js["image_dilation_strides"];
                 }
 
+                op::PadType pad_type = node_js["pad_type"].empty()
+                                           ? op::PadType::EXPLICIT
+                                           : static_cast<op::PadType>(node_js.at("pad_type"));
+
                 if (data_dilation_strides_maybe.empty())
                 {
                     node = make_shared<op::Convolution>(args[0],
@@ -684,7 +712,8 @@ static shared_ptr<ngraph::Function>
                         window_dilation_strides,
                         padding_below,
                         padding_above,
-                        data_dilation_strides_maybe.get<std::vector<size_t>>());
+                        data_dilation_strides_maybe.get<std::vector<size_t>>(),
+                        pad_type);
                 }
                 break;
             }
@@ -961,6 +990,9 @@ static shared_ptr<ngraph::Function>
                 // omitted.
                 auto padding_below_maybe = node_js["padding_below"];
                 auto padding_above_maybe = node_js["padding_above"];
+                op::PadType pad_type = node_js["pad_type"].empty()
+                                           ? op::PadType::EXPLICIT
+                                           : static_cast<op::PadType>(node_js.at("pad_type"));
                 if (padding_below_maybe.empty() && !padding_above_maybe.empty())
                 {
                     throw runtime_error(
@@ -979,7 +1011,8 @@ static shared_ptr<ngraph::Function>
                                                     window_shape,
                                                     window_movement_strides,
                                                     padding_below,
-                                                    padding_above);
+                                                    padding_above,
+                                                    pad_type);
                 }
                 else
                 {
@@ -1071,15 +1104,11 @@ static shared_ptr<ngraph::Function>
                 // This is a legacy field whose functionality is no longer supported. The new
                 // behavior is equivalent to interior padding of 0, so we will accept it under
                 // those conditions.
-                auto padding_interior_maybe = node_js.find("padding_interior");
-                if (padding_interior_maybe != node_js.end())
-                {
-                    auto padding_interior = padding_interior_maybe->get<vector<size_t>>();
-                    NGRAPH_CHECK(std::all_of(padding_interior.begin(),
-                                             padding_interior.end(),
-                                             [](size_t s) { return s == 0; }),
-                                 "Legacy padding_interior field must be zero everywhere.");
-                }
+                auto padding_interior = get_value<vector<size_t>>(node_js, "padding_interior");
+                NGRAPH_CHECK(std::all_of(padding_interior.begin(),
+                                         padding_interior.end(),
+                                         [](size_t s) { return s == 0; }),
+                             "Legacy padding_interior field must be zero everywhere.");
 
                 auto pad_mode = node_js.count("pad_mode") == 0
                                     ? op::PadMode::CONSTANT
@@ -1449,11 +1478,20 @@ static json write(const Node& n, bool binary_constant_data)
         outputs.push_back(output.get_tensor().get_name());
     }
 
-    node["inputs"] = inputs;
-    node["control_deps"] = control_deps;
-    node["outputs"] = outputs;
+    if (!inputs.empty())
+    {
+        node["inputs"] = inputs;
+    }
+    if (!control_deps.empty())
+    {
+        node["control_deps"] = control_deps;
+    }
+    if (!outputs.empty())
+    {
+        node["outputs"] = outputs;
+    }
 
-    if (std::getenv("NGRAPH_SERIALIZER_OUTPUT_SHAPES") != nullptr)
+    if (s_serialize_output_shapes_enabled)
     {
         json output_shapes = json::array();
         for (size_t i = 0; i < n.get_output_size(); ++i)
@@ -1518,6 +1556,7 @@ static json write(const Node& n, bool binary_constant_data)
         node["padding_below"] = tmp->get_padding_below();
         node["padding_above"] = tmp->get_padding_above();
         node["include_padding_in_avg_computation"] = tmp->get_include_padding_in_avg_computation();
+        node["pad_type"] = tmp->get_pad_type();
         break;
     }
     case OP_TYPEID::AvgPoolBackprop:
@@ -1599,6 +1638,7 @@ static json write(const Node& n, bool binary_constant_data)
         node["padding_below"] = tmp->get_padding_below();
         node["padding_above"] = tmp->get_padding_above();
         node["data_dilation_strides"] = tmp->get_data_dilation_strides();
+        node["pad_type"] = tmp->get_pad_type();
         break;
     }
     case OP_TYPEID::ConvolutionBackpropData:
@@ -1747,6 +1787,7 @@ static json write(const Node& n, bool binary_constant_data)
         node["window_movement_strides"] = tmp->get_window_movement_strides();
         node["padding_below"] = tmp->get_padding_below();
         node["padding_above"] = tmp->get_padding_above();
+        node["pad_type"] = tmp->get_pad_type();
         break;
     }
     case OP_TYPEID::MaxPoolBackprop:

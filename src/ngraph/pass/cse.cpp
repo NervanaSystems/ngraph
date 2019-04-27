@@ -43,6 +43,7 @@
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
+#include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/relu.hpp"
@@ -129,6 +130,17 @@ static bool cse_reduction(shared_ptr<Node> a, shared_ptr<Node> b)
            ar_a->get_reduction_axes() == ar_b->get_reduction_axes();
 }
 
+static bool cse_one_hot(shared_ptr<Node> a, shared_ptr<Node> b)
+{
+    NGRAPH_DEBUG << "In cse_one_hot for " << a->get_name() << " and " << b->get_name();
+
+    auto one_hot_a = static_pointer_cast<ngraph::op::OneHot>(a);
+    auto one_hot_b = static_pointer_cast<ngraph::op::OneHot>(b);
+
+    return (a->get_argument(0) == b->get_argument(0)) &&
+           (one_hot_a->get_one_hot_axis() == one_hot_b->get_one_hot_axis()) &&
+           (a->get_shape() == b->get_shape());
+}
 static unordered_map<type_index, function<bool(shared_ptr<Node>, shared_ptr<Node>)>>
     initialize_ops_to_cse_handlers()
 {
@@ -145,6 +157,7 @@ static unordered_map<type_index, function<bool(shared_ptr<Node>, shared_ptr<Node
          {TI(op::Floor), cse_unarywise},
          {TI(op::Log), cse_unarywise},
          {TI(op::Negative), cse_unarywise},
+         {TI(op::OneHot), cse_one_hot},
          {TI(op::Relu), cse_unarywise},
          {TI(op::Sigmoid), cse_unarywise},
          {TI(op::Sign), cse_unarywise},
