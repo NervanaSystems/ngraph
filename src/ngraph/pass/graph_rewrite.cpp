@@ -134,6 +134,7 @@ void pass::GraphRewrite::add_matcher(shared_ptr<pattern::Matcher> m)
     if (is_enabled(m))
     {
         m_matchers.push_back(m);
+        set_property(get_property() | m->get_property());
     }
 }
 

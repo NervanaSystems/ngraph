@@ -65,6 +65,7 @@ public:
     virtual ~PassBase() {}
     /// Check if this pass has all the pass properties.
     bool get_property(const PassPropertyMask& prop_mask) const;
+    const PassPropertyMask& get_property() const;
 
 protected:
     ManagerState& get_state();

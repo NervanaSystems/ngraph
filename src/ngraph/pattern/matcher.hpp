@@ -113,7 +113,8 @@ namespace ngraph
                 return matched;
             }
 
-            bool get_property(const pass::PassPropertyMask& prop) const;
+            bool get_callback_property(const pass::PassPropertyMask& prop) const;
+            const pass::PassPropertyMask& get_callback_property() const;
             bool is_contained_match(const NodeVector& exclusions = {}, bool ignore_unused = true);
 
             bool process_match(graph_rewrite_callback callback = nullptr);

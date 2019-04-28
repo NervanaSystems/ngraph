@@ -39,7 +39,10 @@ bool pass::PassBase::get_property(const PassPropertyMask& prop) const
 {
     return m_property.is_set(prop);
 }
-
+const pass::PassPropertyMask& pass::PassBase::get_property() const
+{
+    return m_property;
+}
 void pass::PassBase::set_property(const PassPropertyMask& prop, bool value)
 {
     if (value)

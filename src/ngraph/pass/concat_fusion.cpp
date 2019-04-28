@@ -113,8 +113,16 @@ void pass::ConcatElimination::construct_concat_elimination()
         return false;
     };
 
-    auto m = std::make_shared<pattern::Matcher>(concat_label, callback);
+    pass::PassPropertyMask property{pass::PassProperty::REGULAR_FUSIONS,
+                                    pass::PassProperty::REQUIRE_STATIC_SHAPE};
+    auto m = std::make_shared<pattern::Matcher>(concat_label, callback, "ConcatElimination", property);
     this->add_matcher(m);
+}
+
+ngraph::pass::SelfConcatFusion::SelfConcatFusion()
+{
+    set_property(pass::PassProperty::REQUIRE_STATIC_SHAPE, true);
+    set_property(pass::PassProperty::CHANGE_FUNCTION_STATE, false);
 }
 
 bool ngraph::pass::SelfConcatFusion::run_on_function(std::shared_ptr<Function> function)
