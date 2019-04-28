@@ -4,7 +4,7 @@ Visualization Tools
 ###################
 
 One option for visualizing the graph or node structure of a graph is to compile 
-with :envvar:`-DNGRAPH_JSON_ENABLE` flags (see also ``CMakeLists.txt``) to 
+with :envvar:`-DNGRAPH_JSON_ENABLE` flags (see also `CMakeLists.txt`_) to 
 conditionally enable some kinds of serialization that can be converted to formats 
 like PDF. Note that large graphs cannot be viewed with formats like PDF.
 
@@ -24,6 +24,7 @@ aides for loading and analyzing large graphs.
 #. `TFBoard`_
 
 
+.. _CMakeLists.txt: https://github.com/NervanaSystems/ngraph/blob/master/CMakeLists.txt
 .. _ngraph_converter: https://github.com/NervanaSystems/ngraph/contrib/tools/ngraph_converter/ngc_util.py
 .. _Netron: https://github.com/lutzroeder/netron/blob/master/README.md
 .. _Gephi: https://gephi.org
