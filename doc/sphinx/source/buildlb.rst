@@ -44,8 +44,8 @@ compatible with a gcc 4.8-based build.)
 The ``default`` build
 ---------------------
 
-Running ``cmake`` with no build flags defaults to the following settings; adjust 
-as needed: 
+Running ``cmake`` with no build flags defaults to the following settings; see
+the ``CMakeLists.txt`` file for other experimental options' details: 
 
 .. code-block:: console 
 
@@ -67,6 +67,7 @@ as needed:
    -- NGRAPH_USE_PREBUILT_LLVM:        OFF
    -- NGRAPH_PLAIDML_ENABLE:           OFF
    -- NGRAPH_DISTRIBUTED_ENABLE:       OFF
+
 
 .. important:: The default :program:`cmake` procedure (no build flags) will  
    install ``ngraph_dist`` to an OS-level location like ``/usr/bin/ngraph_dist``
@@ -219,16 +220,11 @@ To perform unit tests on the install:
       $ make check
 
 
-
-
-.. For adding framework support see a section  
-
-
 .. _doxygen: https://www.stack.nl/~dimitri/doxygen/
 .. _Sphinx:  http://www.sphinx-doc.org/en/stable/
 .. _breathe: https://breathe.readthedocs.io/en/latest/
 .. _llvm.org: https://www.llvm.org 
 .. _NervanaSystems: https://github.com/NervanaSystems/ngraph/blob/master/README.md
 .. _ONNX: http://onnx.ai
-.. _website docs: http://ngraph.nervanasys.com/docs/latest/
+.. _website docs: https://ngraph.nervanasys.com/docs/latest/
 .. _googletest framework: https://github.com/google/googletest.git
