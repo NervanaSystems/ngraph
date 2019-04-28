@@ -77,6 +77,7 @@
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/depth_to_space.hpp"
 #include "ngraph/op/fused/elu.hpp"
+#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
@@ -1549,6 +1550,13 @@ shared_ptr<runtime::Executable>
                     topology.add(cldnn_conv);
                 }
             }
+            break;
+        }
+        case OP_TYPEID::GroupConvolution:
+        {
+            arguments_check(op, 2, 1);
+
+            kern.emit<op::GroupConvolution>(static_pointer_cast<op::GroupConvolution>(op));
             break;
         }
         case OP_TYPEID::ConvolutionBiasBackpropFiltersBias:
