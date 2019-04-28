@@ -2494,6 +2494,13 @@ namespace ngraph
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
+                    if (node->get_input_element_type(0) == element::u8 &&
+                        node->get_input_element_type(1) == element::u8)
+                    {
+                        throw ngraph_error(
+                            "Unsupported data types for QuantizedDot MKLDNN kernel.");
+                    }
+
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto qip_index = mkldnn_emitter->build_inner_product<ngraph::op::QuantizedDot>(
                         node, args, out);

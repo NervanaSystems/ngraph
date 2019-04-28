@@ -1364,7 +1364,7 @@ namespace ngraph
                     {
                         auto bias_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
                         return mkldnn::convolution_forward::desc(
-                            mkldnn::prop_kind::forward,
+                            mkldnn::prop_kind::forward_inference,
                             convolution_algo,
                             data_desc,
                             weights_desc,
@@ -1379,7 +1379,7 @@ namespace ngraph
                     else
                     {
                         return mkldnn::convolution_forward::desc(
-                            mkldnn::prop_kind::forward,
+                            mkldnn::prop_kind::forward_inference,
                             convolution_algo,
                             data_desc,
                             weights_desc,

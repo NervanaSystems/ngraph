@@ -13371,6 +13371,16 @@ TEST(type_prop, prelu)
     ASSERT_EQ(prelu->get_shape(), prelu_shape);
 }
 
+TEST(type_prop, elu)
+{
+    Shape data_shape{2, 4};
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    auto alpha = make_shared<op::Parameter>(element::f32, Shape{});
+    auto elu = make_shared<op::Elu>(data, alpha);
+    ASSERT_EQ(elu->get_element_type(), element::f32);
+    ASSERT_EQ(elu->get_shape(), data_shape);
+}
+
 TEST(type_prop, gather_no_axis)
 {
     Shape params_shape{3, 2};
@@ -13393,6 +13403,24 @@ TEST(type_prop, gather)
     auto G = make_shared<op::Gather>(P, I, 1);
     ASSERT_EQ(G->get_element_type(), element::f32);
     ASSERT_EQ(G->get_shape(), out_shape);
+}
+
+TEST(type_prop, depth_to_space)
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape{1, 128, 8, 8});
+    auto space_to_depth = make_shared<op::DepthToSpace>(A, 8);
+
+    ASSERT_EQ(space_to_depth->get_element_type(), element::f32);
+    ASSERT_EQ(space_to_depth->get_shape(), (Shape{1, 2, 64, 64}));
+}
+
+TEST(type_prop, space_to_depth)
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape{1, 2, 64, 64});
+    auto space_to_depth = make_shared<op::SpaceToDepth>(A, 8);
+
+    ASSERT_EQ(space_to_depth->get_element_type(), element::f32);
+    ASSERT_EQ(space_to_depth->get_shape(), (Shape{1, 128, 8, 8}));
 }
 
 TEST(type_prop, gather_nd_scalar_from_2d)

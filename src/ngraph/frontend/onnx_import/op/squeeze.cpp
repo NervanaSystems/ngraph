@@ -24,7 +24,9 @@
 #include "exceptions.hpp"
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/util/reshape.hpp"
 #include "ngraph/shape.hpp"
+#include "ngraph/util.hpp"
 #include "squeeze.hpp"
 #include "utils/reshape.hpp"
 
@@ -42,7 +44,7 @@ namespace ngraph
                     auto data = inputs.at(0);
                     auto data_shape = data->get_shape();
                     auto axes = node.get_attribute_value<std::vector<std::size_t>>("axes", {});
-                    AxisVector input_order{reshape::get_default_axis_vector(data_shape.size())};
+                    AxisVector input_order{ngraph::get_default_order(data_shape.size())};
 
                     // Prepare set of unique axes marked to be removed from input data.
                     if (axes.empty())
