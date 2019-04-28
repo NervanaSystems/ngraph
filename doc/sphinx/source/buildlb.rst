@@ -219,29 +219,9 @@ To perform unit tests on the install:
       $ make check
 
 
-Adding framework support
-========================
 
-After building and installing nGraph on your system, there are two likely 
-paths for what you'll want to do next: either compile a framework to run a DL 
-training model, or load an import of an "already-trained" model for inference 
-on an Intel nGraph-enabled backend.
 
-For the former case, this early |version|, :doc:`frameworks/index`, 
-can help you get started with a training a model with a supported framework or 
-companion tool. 
-
-* :doc:`MXNet<frameworks/tensorflow_integ>` framework,  
-* :doc:`TensorFlow<frameworks/mxnet_integ>` framework,
-* :doc:`PaddlePaddle<frameworks/paddle_integ>` framework, or
-* :doc:`ONNX<frameworks/onnx_integ>` and the ONNXIFI tool. 
-
-For the latter case, if you've followed a tutorial from `ONNX`_, and you have an 
-exported, serialized model, you can skip the section on frameworks and go 
-directly to our :doc:`core/constructing-graphs/import` documentation. 
-
-Please keep in mind that both of these are under continuous development, and will 
-be updated frequently in the coming months. Stay tuned!  
+.. For adding framework support see a section  
 
 
 .. _doxygen: https://www.stack.nl/~dimitri/doxygen/
