@@ -140,6 +140,8 @@ namespace ngraph
                 const std::vector<size_t>& get_primitive_deps(size_t index) const;
                 const std::vector<size_t>& get_primitive_deps_cg(size_t index) const;
                 size_t reserve_workspace();
+                void reserve_descriptor_space(size_t count);
+                size_t get_mkldnn_descriptors_size();
 
                 // TODO(jmenon): Get rid of TensorViewWrappers at some point
                 mkldnn::memory::desc build_memory_descriptor(const TensorViewWrapper& tvw,
@@ -1617,6 +1619,7 @@ namespace ngraph
                 std::vector<std::unique_ptr<MKLDNNWorkspace>> m_workspaces;
                 std::vector<char*> m_workspace_bufs;
                 size_t m_workspaces_size = 0;
+                size_t m_mkldnn_descriptors_size = 0;
             };
         }
     }

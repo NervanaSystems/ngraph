@@ -107,7 +107,17 @@ size_t MKLDNNEmitter::reserve_workspace()
 {
     m_workspaces_size++;
     return m_workspaces_size - 1;
-};
+}
+
+void MKLDNNEmitter::reserve_descriptor_space(size_t count)
+{
+    m_mkldnn_descriptors_size += count;
+}
+
+size_t MKLDNNEmitter::get_mkldnn_descriptors_size()
+{
+    return m_mkldnn_descriptors_size;
+}
 
 const std::vector<size_t>& MKLDNNEmitter::get_primitive_deps(size_t index) const
 {

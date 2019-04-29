@@ -756,6 +756,15 @@ using namespace ngraph::runtime;
         writer.indent++;
         writer << "std::ifstream desc_file (\"" << m_desc_filename << "\", std::ios::binary);\n";
 
+        //deserialize and build mkldnn primitives
+        writer << "if (ctx->first_iteration)\n";
+        writer.block_begin();
+        writer << "// read in memory descriptors and build mkldnn primitives\n";
+        writer << "deserialize_memory_descs_and_build_memory_primitives(" << m_desc_filename
+               << ", cg_ctx, " << to_string(m_mkldnn_emitter->get_mkldnn_descriptors_size())
+               << ");\n";
+        writer.block_end();
+
         // Execution tracing support
         if (runtime::cpu::IsTracingEnabled() && current_function->get_name() == m_function_name)
         {
