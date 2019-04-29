@@ -42,6 +42,7 @@ set(SRC
     core.cpp
     cpio.cpp
     cse.cpp
+    dynamic_wrapper.cpp
     element_type.cpp
     event_tracing.cpp
     file_util.cpp
@@ -91,11 +92,6 @@ if (NGRAPH_INTERPRETER_ENABLE)
             list(APPEND SRC hybrid_backend.cpp)
         endif()
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTERPRETER)
-endif()
-
-if (NGRAPH_DYNAMIC_WRAPPER_ENABLE)
-    list(APPEND SRC dynamic_wrapper.cpp)
-    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} DYNAMIC_WRAPPER)
 endif()
 
 if (NGRAPH_CPU_ENABLE)

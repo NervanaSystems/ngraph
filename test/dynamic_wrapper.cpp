@@ -23,15 +23,16 @@
 using namespace ngraph;
 using namespace std;
 
-TEST(dynamic_wrapper, create_from_config_string)
+TEST(dynamic_wrapper, create)
 {
-    auto backend = runtime::Backend::create("DYNAMIC_WRAPPER:INTERPRETER");
+    auto backend = runtime::Backend::create("INTERPRETER", true);
     ASSERT_NE(backend, nullptr);
+    ASSERT_TRUE(backend->supports_dynamic_tensors());
 }
 
 TEST(dynamic_wrapper, create_dynamic_tensor)
 {
-    auto backend = runtime::Backend::create("DYNAMIC_WRAPPER:INTERPRETER");
+    auto backend = runtime::Backend::create("INTERPRETER", true);
     auto t = backend->create_dynamic_tensor(element::f32, PartialShape{2, Dimension::dynamic(), 3});
     ASSERT_TRUE(t->get_partial_shape().same_scheme(PartialShape{2, Dimension::dynamic(), 3}));
 }
@@ -46,7 +47,7 @@ TEST(dynamic_wrapper, abc)
 
     auto f = make_shared<Function>(NodeVector{a_plus_b_times_c}, ParameterVector{a, b, c});
 
-    auto backend = runtime::Backend::create("DYNAMIC_WRAPPER:INTERPRETER");
+    auto backend = runtime::Backend::create("INTERPRETER", true);
 
     auto ex = backend->compile(f);
 

@@ -51,6 +51,7 @@ public:
     std::shared_ptr<Tensor> create_dynamic_tensor(const element::Type& type,
                                                   const PartialShape& shape) override;
 
+    bool supports_dynamic_tensors() override { return true; }
     std::shared_ptr<Executable> compile(std::shared_ptr<Function> function,
                                         bool enable_performance_data = false) override;
 

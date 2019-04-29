@@ -20,6 +20,7 @@
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
+#include "ngraph/runtime/dynamic_wrapper/dynamic_wrapper_backend.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -35,9 +36,19 @@ std::shared_ptr<ngraph::Node> runtime::Backend::get_backend_op(const std::string
     return dummy_node;
 }
 
-unique_ptr<runtime::Backend> runtime::Backend::create(const string& type)
+unique_ptr<runtime::Backend> runtime::Backend::create(const string& type, bool must_support_dynamic)
 {
-    return BackendManager::create_backend(type);
+    auto inner_backend = BackendManager::create_backend(type);
+
+    if (!must_support_dynamic || inner_backend->supports_dynamic_tensors())
+    {
+        return inner_backend;
+    }
+    else
+    {
+        return std::unique_ptr<runtime::Backend>(
+            new runtime::dynamic_wrapper::DynamicWrapperBackend(std::move(inner_backend)));
+    }
 }
 
 vector<string> runtime::Backend::get_registered_devices()

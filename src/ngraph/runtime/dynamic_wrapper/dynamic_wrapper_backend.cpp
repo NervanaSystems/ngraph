@@ -29,69 +29,6 @@
 using namespace std;
 using namespace ngraph;
 
-using descriptor::layout::DenseTensorLayout;
-
-// To silence warnings in vscode.
-#if !defined(NGRAPH_VERSION)
-#define NGRAPH_VERSION ""
-#endif
-
-extern "C" const char* get_ngraph_version_string()
-{
-    return NGRAPH_VERSION;
-}
-
-extern "C" runtime::Backend* new_backend(const char* configuration_string)
-{
-    std::unique_ptr<runtime::Backend> wrapped_backend = nullptr;
-
-    // Skip past the colon in the configuration string (or stop at the end if there isn't one).
-    while (*configuration_string != '\0' && *configuration_string != ':')
-    {
-        configuration_string++;
-    }
-
-    if (*configuration_string == ':')
-    {
-        configuration_string++;
-    }
-
-    // Figure out what wrapped backend to use.
-
-    // If something is specified in the configuration string, we will always try to use that and
-    // fail if we can't.
-    if (*configuration_string != '\0')
-    {
-        wrapped_backend = runtime::Backend::create(configuration_string);
-    }
-    // Otherwise we will check for the NGRAPH_DYNAMIC_WRAPPER_WRAPPED_BACKEND environment
-    // variable. If it is set, we will try to use that value; otherwise, we will defualt to
-    // INTERPRETER.
-    else
-    {
-        auto env_var_requested_backend = std::getenv("NGRAPH_DYNAMIC_WRAPPER_WRAPPED_BACKEND");
-
-        if (env_var_requested_backend != nullptr)
-        {
-            wrapped_backend = runtime::Backend::create(env_var_requested_backend);
-        }
-        else
-        {
-            wrapped_backend = runtime::Backend::create("INTERPRETER");
-        }
-    }
-
-    // If we were unable to create the wrapped backend, created of the wrapper backend fails.
-    if (wrapped_backend == nullptr)
-    {
-        return nullptr;
-    }
-    else
-    {
-        return new runtime::dynamic_wrapper::DynamicWrapperBackend(std::move(wrapped_backend));
-    }
-}
-
 runtime::dynamic_wrapper::DynamicWrapperBackend::DynamicWrapperBackend(
     unique_ptr<runtime::Backend> wrapped_backend)
     : m_wrapped_backend(std::move(wrapped_backend))

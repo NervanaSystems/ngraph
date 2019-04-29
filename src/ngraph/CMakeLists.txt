@@ -412,6 +412,10 @@ set(SRC ${SRC}
     runtime/hybrid/pass/memory_layout.hpp
     )
 
+set(SRC ${SRC}
+    runtime/dynamic_wrapper/dynamic_wrapper_backend.cpp
+    runtime/dynamic_wrapper/dynamic_wrapper_backend.hpp
+    )
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
     list(APPEND SRC distributed.cpp distributed.hpp)
