@@ -924,7 +924,7 @@ namespace ngraph
                                << " == 1 ? 0 : 2;\n";
                         writer << "conv_attr.set_int_output_round_mode(mkldnn::round_mode::round_"
                                   "nearest);\n";
-                        writer << "conv_attr.set_output_scales(0, dyn_scales);\n";
+                        writer << "conv_attr.set_output_scales(mask, dyn_scales);\n";
                     }
 
                     //emit_memory_primitive_build(writer, desc_names, deps);
@@ -1037,71 +1037,19 @@ namespace ngraph
                 }
 
                 template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(GroupConvolution)
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
+                    GroupConvolution)
                 {
-                    Strides window_dilation_strides_adjusted;
-                    auto convolution = static_cast<const ngraph::op::GroupConvolution*>(node);
-                    for (size_t s : convolution->get_window_dilation_strides())
-                    {
-                        window_dilation_strides_adjusted.push_back(s - 1);
-                    }
-
-                    auto input_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                    auto weights_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
-                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    auto padding_below = convolution->get_padding_below();
-                    auto padding_above = convolution->get_padding_above();
-                    auto filter_strides = convolution->get_window_movement_strides();
-
-                    return mkldnn_emitter.build_convolution_forward(
-                        input_data_desc,
-                        weights_desc,
-                        result_desc,
-                        filter_strides,
-                        window_dilation_strides_adjusted,
-                        padding_below,
-                        padding_above);
+                    construct_primitive_build_string_conv<GroupConvolution>(
+                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
                 }
 
                 template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(GroupConvolutionBias)
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
+                    GroupConvolutionBias)
                 {
-                    Strides window_dilation_strides_adjusted;
-                    auto convolution = static_cast<const ngraph::op::GroupConvolutionBias*>(node);
-                    for (size_t s : convolution->get_window_dilation_strides())
-                    {
-                        window_dilation_strides_adjusted.push_back(s - 1);
-                    }
-
-                    auto input_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                    auto weights_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
-                    auto bias_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
-                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    auto padding_below = convolution->get_padding_below();
-                    auto padding_above = convolution->get_padding_above();
-                    auto filter_strides = convolution->get_window_movement_strides();
-
-                    const float ops_scale = 1.f;
-                    const float ops_alpha = -0.f; // relu negative slope
-                    const float ops_beta = 0.f;
-
-                    mkldnn::post_ops ops;
-                    if (convolution->with_relu())
-                    {
-                        ops.append_eltwise(
-                            ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, ops_beta);
-                    }
-
-                    return mkldnn_emitter.build_convolution_forward(
-                        input_data_desc,
-                        weights_desc,
-                        bias_desc,
-                        result_desc,
-                        filter_strides,
-                        window_dilation_strides_adjusted,
-                        padding_below,
-                        padding_above,
-                        ops);
+                    construct_primitive_build_string_conv<GroupConvolutionBias>(
+                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
                 }
 
                 template <typename OpTy>
@@ -1499,7 +1447,6 @@ static const PrimitiveBuildOpMap prim_build_dispatcher{
     {TI(AvgPool), &MKLDNNPrimitiveBuildPass::build_primitive<AvgPool>},
     {TI(AvgPoolBackprop), &MKLDNNPrimitiveBuildPass::build_primitive<AvgPoolBackprop>},
     {TI(BoundedRelu), &MKLDNNPrimitiveBuildPass::build_primitive<BoundedRelu>},
-    {TI(GroupConvolution), &MKLDNNPrimitiveBuildPass::build_primitive<GroupConvolution>},
     {TI(ConvolutionBackpropData),
      &MKLDNNPrimitiveBuildPass::build_primitive<ConvolutionBackpropData>},
     {TI(ConvolutionBackpropFilters),
@@ -1522,7 +1469,6 @@ static const PrimitiveBuildOpMap prim_build_dispatcher{
     {TI(Slice), &MKLDNNPrimitiveBuildPass::build_primitive<Slice>},
     {TI(ReplaceSlice), &MKLDNNPrimitiveBuildPass::build_primitive<ReplaceSlice>},
     {TI(UpdateSlice), &MKLDNNPrimitiveBuildPass::build_primitive<UpdateSlice>},
-    {TI(GroupConvolutionBias), &MKLDNNPrimitiveBuildPass::build_primitive<GroupConvolutionBias>},
     {TI(Quantize), &MKLDNNPrimitiveBuildPass::build_primitive<Quantize>},
     {TI(Dequantize), &MKLDNNPrimitiveBuildPass::build_primitive<Dequantize>},
     {TI(QuantizedConcat), &MKLDNNPrimitiveBuildPass::build_primitive<QuantizedConcat>},
@@ -1554,6 +1500,10 @@ static const PrimitiveBuildStringConstructOpMap prim_build_string_construct_disp
      &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<ConvolutionBiasAdd>},
     {TI(ConvolutionAdd),
      &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<ConvolutionAdd>},
+    {TI(GroupConvolution),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<GroupConvolution>},
+    {TI(GroupConvolutionBias),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<GroupConvolutionBias>},
     {TI(QuantizedConvolution),
      &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<QuantizedConvolution>},
     {TI(QuantizedConvolutionRelu),
@@ -1590,7 +1540,9 @@ static bool in_new_map(const std::shared_ptr<Node>& node)
         std::dynamic_pointer_cast<ngraph::op::QuantizedConvolutionRelu>(node) ||
         std::dynamic_pointer_cast<ngraph::op::QuantizedConvolutionBias>(node) ||
         std::dynamic_pointer_cast<ngraph::op::QuantizedConvolutionBiasAdd>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::QuantizedConvolutionBiasSignedAdd>(node))
+        std::dynamic_pointer_cast<ngraph::op::QuantizedConvolutionBiasSignedAdd>(node) ||
+        std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(node) ||
+        std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(node))
     {
         return true;
     }
