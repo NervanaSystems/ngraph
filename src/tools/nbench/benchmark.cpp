@@ -179,7 +179,7 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
     }
 
     stopwatch t1;
-    for (size_t i = 0; i < iterations+warmup_iterations; i++)
+    for (size_t i = 0; i < iterations + warmup_iterations; i++)
     {
         if (i == warmup_iterations)
         {
