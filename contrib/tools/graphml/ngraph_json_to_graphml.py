@@ -161,16 +161,6 @@ def main():
             else:
                 data_type = "unknown_element_type"
 
-            # if 'shape' in node:
-            #     description = "Shape (" + format(node['shape']) + ")"
-            # if 'output_shape' in node:
-            #     description = "Output Shape (" + format(node['output_shape']) + ")"
-            # if 'output_shapes' in node:
-            #     description = "Output Shapes (" + format(node['output_shapes']) + ")"
-            # if 'lower_bounds' in node:
-            #     description  = "Lower bounds: " + format(node['lower_bounds']) + "\n"
-            #     description += "Stride: " + format(node['strides']) + "\n"
-            #     description += "Upper bounds: " + format(node['upper_bounds']) + "\n"
             for attr in node:
                 if attr not in common_attrs:
                     description += attr + ": " + format(node[attr]) + "\n"
