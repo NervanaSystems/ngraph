@@ -6,8 +6,8 @@ Visualization Tools
 nGraph provides serialization and deserialization facilities along with the 
 ability to create image formats. When visualization is enabled, a ``dot`` file 
 is generated, along with a ``png``. The default can be adjusted by setting the 
-``NGRAPH_VISUALIZE_TREE_OUTPUT_FORMAT`` flag to another format, like PDF, and 
-loaded and inspected with a third-party visualization tool such as: 
+``NGRAPH_VISUALIZE_TREE_OUTPUT_FORMAT`` flag to another format, like PDF. It
+can then be inspected with a third-party visualization tool such as:
 
 #. `Netron`_
 
