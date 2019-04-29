@@ -3,14 +3,14 @@
 Visualization Tools
 ###################
 
-One option for visualizing the graph or node structure of a graph is to compile 
-with :envvar:`-DNGRAPH_JSON_ENABLE` flags (see also `CMakeLists.txt`_) to 
-conditionally enable some kinds of serialization that can be converted to image 
-files, or to formats like PDF. Note that large graphs are usually not legible 
-with formats like PDF.
+nGraph provides serialization and deserialization facilities along with the 
+ability to create image formats. When visualization is enabled, a ``dot`` file 
+is generated, along with a ``png``. The default can be adjusted by setting the 
+``NGRAPH_VISUALIZE_TREE_OUTPUT_FORMAT`` flag to another format, like PDF. Note: 
+large graphs are usually not legible with formats like PDF.
 
 Large graphs may require additional work to get into a human-readable format. We 
-have provided a script to convert the `most common default output`_  to an 
+have provided a script to convert the `most common default output`_ to an 
 output that is better able to handle detailed graphs; however, we do not offer 
 user support for this script.
 
@@ -32,6 +32,3 @@ or aides for loading and analyzing large or highly-detailed graphs:
 .. _Gephi: https://gephi.org
 .. _Cytoscape: https://cytoscape.org
 .. _TFBoard: https://www.tensorflow.org/guide/summaries_and_tensorboard
-
-
-
