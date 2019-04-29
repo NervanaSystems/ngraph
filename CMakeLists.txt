@@ -166,7 +166,7 @@ option(NGRAPH_LIB_VERSIONING_ENABLE "Enable shared library versioning" FALSE)
 option(NGRAPH_PYTHON_BUILD_ENABLE "Enable build nGraph python package wheel" FALSE)
 option(NGRAPH_PLAIDML_ENABLE "Enable the PlaidML backend" ${PLAIDML_FOUND})
 option(NGRAPH_DISTRIBUTED_ENABLE "Enable distributed training using MLSL/OpenMPI" OFF)
-option(NGRAPH_DISABLE_FAST_MATH "Disable fast math" OFF)
+option(NGRAPH_FAST_MATH_ENABLE "Enable fast math" ON)
 
 if (NGRAPH_CPU_ENABLE
         AND
