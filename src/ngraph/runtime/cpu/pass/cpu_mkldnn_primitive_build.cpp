@@ -777,34 +777,46 @@ namespace ngraph
                     auto pad_below = convolution->get_padding_below();
                     auto pad_above = convolution->get_padding_above();
 
+                    if (mkldnn_emitter.has_bias<OP>())
+                    {
+                        index = mkldnn_emitter.reserve_primitive_space_cg(5);
+                    }
+                    else
+                    {
+                        index = mkldnn_emitter.reserve_primitive_space_cg(4);
+                    }
+                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+
                     CodeWriter writer;
 
-                    writer << "// read in memory descriptors\n";
+                    writer << "// Write in memory descriptors\n";
                     std::vector<mkldnn::memory::desc> descs = {
                         data_desc, weights_desc, result_desc};
-                    std::vector<std::string> desc_names = {
-                        "data_desc", "weights_desc", "result_desc"};
 
                     if (mkldnn_emitter.has_bias<OP>())
                     {
                         auto bias_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
                         descs.insert(descs.begin() + 2, bias_desc);
-                        desc_names.insert(desc_names.begin() + 2, "bias_desc");
                     }
 
-                    serialize_and_deserialize_memory_descs(desc_file, writer, descs, desc_names);
+                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
 
                     writer << "\n// build QConv primitive descriptor\n";
                     writer << "auto conv_desc = "
                               "mkldnn::convolution_forward::desc(mkldnn::prop_kind::forward,\n"
                               "mkldnn::algorithm::convolution_direct,\n"
-                              "(*reinterpret_cast<mkldnn::memory::desc*>(data_desc)),\n"
-                              "(*reinterpret_cast<mkldnn::memory::desc*>(weights_desc)),\n";
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "],\n"
+                                            "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 1 << "],\n";
                     if (mkldnn_emitter.has_bias<OP>())
                     {
-                        writer << "(*reinterpret_cast<mkldnn::memory::desc*>(bias_desc)),\n";
+                        writer << "*cg_ctx->mkldnn_descriptors[" << desc_index + 2 << "],\n";
                     }
-                    writer << "(*reinterpret_cast<mkldnn::memory::desc*>(result_desc)),\n"
+                    writer << "*cg_ctx->mkldnn_descriptors[" << desc_index + (descs.size() - 1)
+                           << "],\n"
                               "mkldnn::memory::dims{"
                            << std::to_string(strides[0]) << ", " << std::to_string(strides[1]);
                     if (strides.size() == 3)
@@ -915,17 +927,7 @@ namespace ngraph
                         writer << "conv_attr.set_output_scales(0, dyn_scales);\n";
                     }
 
-                    if (mkldnn_emitter.has_bias<OP>())
-                    {
-                        index = mkldnn_emitter.reserve_primitive_space_cg(5);
-                    }
-                    else
-                    {
-                        index = mkldnn_emitter.reserve_primitive_space_cg(4);
-                    }
-                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
-
-                    emit_memory_primitive_build(writer, desc_names, deps);
+                    //emit_memory_primitive_build(writer, desc_names, deps);
                     writer << "mkldnn::primitive* prim;\n";
                     if (mkldnn_emitter.has_bias<OP>())
                     {
