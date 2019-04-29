@@ -1942,6 +1942,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::SpaceToDepth:
         case OP_TYPEID::StopGradient:
         case OP_TYPEID::Transpose:
+        case OP_TYPEID::GroupConvolution:
         default:
         {
             throw unsupported_op("Unsupported op '" + op->description() +
