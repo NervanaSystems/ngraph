@@ -1,0 +1,265 @@
+//*****************************************************************************
+// Copyright 2017-2019 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
+
+#include "lowerer.hpp"
+#include <map>
+#include "llvm/ADT/DenseSet.h"
+#include "mlir/EDSC/Builders.h"
+#include "mlir/EDSC/Helpers.h"
+#include "mlir/EDSC/Intrinsics.h"
+#include "mlir/IR/MLIRContext.h"
+#include "mlir/IR/StandardTypes.h"
+#include "mlir/Transforms/DialectConversion.h"
+#include "ngraph/assertion.hpp"
+#include "ngraph/runtime/cpu/mlir/dialect/ops.hpp"
+#include "ngraph/runtime/cpu/mlir/dialect/type.hpp"
+
+using namespace ngraph::runtime::cpu;
+// anonymous namespace
+// no need to expose any of the following outside of this file
+namespace
+{
+    using namespace mlir;
+    using namespace mlir::edsc;
+    using namespace ngraph::runtime::cpu;
+
+    class DialectLoweringPass;
+#include "op_lowerers.inc"
+
+    /// Use Dialect Converson Framework
+    class DialectLowerer : public DialectConversion
+    {
+    public:
+        DialectLowerer(DialectLoweringPass& pass)
+            : DialectConversion()
+            , m_pass(pass)
+        {
+        }
+
+        Type convertType(Type t) override;
+
+    protected:
+        // Initialize the list of converters.
+        llvm::DenseSet<DialectOpConversion*> initConverters(MLIRContext* context) override
+        {
+            return ConversionListBuilder<NG_AddOpConversion, NG_ReturnOpConversion>::build(
+                &allocator, context, m_pass);
+        }
+
+    private:
+        DialectLoweringPass& m_pass;
+        llvm::BumpPtrAllocator allocator;
+    };
+
+    /// Dialect Lowering Pass to affine ops
+    class DialectLoweringPass : public ModulePass<DialectLoweringPass>
+    {
+    public:
+        DialectLoweringPass()
+            : m_dialectLowerer(*this)
+        {
+        }
+        void runOnModule() override;
+        std::map<Value*, unsigned>& getOutputValueMap() { return m_outputValueMap; };
+        SmallVector<Value*, 4> buildOutputDefs(Operation* op, FuncBuilder& rewriter);
+
+    private:
+        void findOutputValues();
+        void fixOutputs();
+
+    private:
+        DialectLowerer m_dialectLowerer;
+        // maps output ng dialect values to args pos
+        std::map<Value*, unsigned> m_outputValueMap;
+        // list of results values to add to func signature
+        SmallVector<Value*, 4> m_loweredOutputValues;
+    };
+
+    Type DialectLowerer::convertType(Type t)
+    {
+        if (auto tensor = t.cast<NGTensorType>())
+        {
+            return tensor.toMemref();
+        }
+        return t;
+    }
+
+    void DialectLoweringPass::runOnModule()
+    {
+        // capture output values by looking for the Return and grabbing the values
+        // the order of the returned values matches the order of the lowered func signature for
+        // results. This is used to find the arg_id that a defined value maps to if it is an output
+        findOutputValues();
+
+        if (failed(m_dialectLowerer.convert(&getModule())))
+        {
+            getModule().getContext()->emitError(mlir::UnknownLoc::get(getModule().getContext()),
+                                                "Error lowering dialect\n");
+            signalPassFailure();
+        }
+        if (std::getenv("NGRAPH_MLIR_DUMP_ALL") != nullptr)
+        {
+            getModule().dump();
+        }
+        fixOutputs();
+        if (std::getenv("NGRAPH_MLIR_DUMP_ALL") != nullptr)
+        {
+            getModule().dump();
+        }
+    }
+
+    void DialectLoweringPass::findOutputValues()
+    {
+        auto f = getModule().getNamedFunction("main");
+        SmallVector<Value*, 4> outputList;
+        unsigned outputCount = 0;
+
+        // we find out output values by looking at returned values
+        // any return should return all outputs of the subgraph
+        f->walk<NG_ReturnOp>([this, &outputCount](NG_ReturnOp ret) {
+            for (unsigned i = 0; i < ret.getNumOperands(); i++)
+            {
+                this->m_outputValueMap.insert(std::pair<Value*, unsigned>(ret.getOperand(i), i));
+            }
+            NGRAPH_ASSERT(outputCount == 0 || outputCount == ret.getNumOperands())
+                << "Inconsistent returns in function";
+            outputCount = ret.getNumOperands();
+        });
+        // will be populated with lowered output values later
+        m_loweredOutputValues.resize(outputCount, nullptr);
+    }
+
+    // NGDialect converters
+    // ADD
+    SmallVector<Value*, 4> NG_AddOpConversion::rewrite(Operation* op,
+                                                       ArrayRef<Value*> operands,
+                                                       FuncBuilder& rewriter) const
+    {
+        auto add = op->cast<NG_AddOp>();
+        auto loc = add.getLoc();
+        Value *origResult, *newResult;
+
+        auto result = m_pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_ASSERT(result->getType().isa<MemRefType>());
+        // NOte that builder's current function is still the original function body.
+        // use getBlock to get the new block instead.
+
+        // get new operands
+        Value* lhs = operands[0];
+        Value* rhs = operands[1];
+
+        ScopedContext scope(rewriter, loc);
+        // Views
+        MemRefView vRes(result), vLHS(lhs), vRHS(rhs);
+        // Index Values
+        IndexedValue iRes(result), iLHS(lhs), iRHS(rhs);
+        // Bounds Index Handles
+        auto lbs = vLHS.getLbs();
+        auto ubs = vLHS.getUbs();
+        // Loop induction vars
+        auto ivs = IndexHandle::makeIndexHandles(vLHS.rank());
+        auto pivs = IndexHandle::makeIndexHandlePointers(ivs);
+        // Steps
+        auto steps = vLHS.getSteps();
+
+        LoopNestBuilder(pivs, lbs, ubs, steps)({// single stmt body
+                                                iRes(ivs) = iLHS(ivs) + iRHS(ivs)});
+        // return result memref
+        return {result};
+    }
+
+    SmallVector<Value*, 4> NG_ReturnOpConversion::rewrite(Operation* op,
+                                                          ArrayRef<Value*> operands,
+                                                          FuncBuilder& rewriter) const
+    {
+        rewriter.create<ReturnOp>(op->getLoc());
+        return {};
+    }
+
+    SmallVector<Value*, 4> DialectLoweringPass::buildOutputDefs(Operation* op,
+                                                                FuncBuilder& rewriter)
+    {
+        auto& outputMap = getOutputValueMap();
+        SmallVector<Value*, 4> newResults;
+        for (auto origResult : op->getResults())
+        {
+            auto it = outputMap.find(origResult);
+            // create output def if this operation produces any sub-graph outputs
+            if (it != outputMap.end())
+            {
+                unsigned argId = (*it).second;
+                auto newResult = rewriter
+                                     .create<NG_FakeOutput>(
+                                         op->getLoc(),
+                                         m_dialectLowerer.convertType(
+                                             origResult->getType()) /* convert to lowered type */
+                                         )
+                                     .getResult();
+                newResults.push_back(newResult);
+                m_loweredOutputValues[argId] = newResult;
+            }
+        }
+        return newResults;
+    }
+
+    void DialectLoweringPass::fixOutputs()
+    {
+        auto context = getModule().getContext();
+        auto f = getModule().getNamedFunction("main");
+        mlir::Block* entryBlock = &*(f->begin());
+        auto oldFuncType = f->getType();
+        ArrayRef<mlir::Type> ipArgs = oldFuncType.getInputs();
+        ArrayRef<mlir::Type> opArgs = oldFuncType.getResults();
+        SmallVector<mlir::Type, 4> allArgs;
+
+        // Move all args as inputs in new type
+        for (auto type : ipArgs)
+        {
+            allArgs.push_back(type);
+        }
+        for (auto type : opArgs)
+        {
+            allArgs.push_back(type);
+            // add new value for result
+            entryBlock->addArgument(type);
+        }
+        // update type
+        auto newFuncType = mlir::FunctionType::get(allArgs, {}, context);
+        f->setType(newFuncType);
+
+        // RAUW fake outputs with result values
+        unsigned i = 0;
+        for (auto value : m_loweredOutputValues)
+        {
+            auto op = value->getDefiningOp();
+            NGRAPH_ASSERT(op->isa<NG_FakeOutput>()) << "output value not defined by fake output?";
+            value->replaceAllUsesWith(entryBlock->getArgument(oldFuncType.getNumInputs() + i));
+            op->erase();
+            i++;
+        }
+    }
+}
+
+namespace ngraph
+{
+    namespace runtime
+    {
+        namespace cpu
+        {
+            Pass* createDialectLoweringPass() { return new DialectLoweringPass(); }
+        }
+    }
+}

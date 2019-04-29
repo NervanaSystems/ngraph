@@ -16,6 +16,13 @@
 
 include(FindOpenMP)
 
+set(MLIR_SRC
+    mlir/dialect/dialect.cpp
+    mlir/dialect/type.cpp
+    mlir/dialect/ops.cpp
+    mlir/compiler.cpp
+    mlir/lowerer.cpp
+)
 set(SRC
     cpu_backend.cpp
     cpu_builder.cpp
@@ -123,6 +130,7 @@ set(SRC
     pass/cpu_rnn_fusion.cpp
     pass/cpu_workspace_insertion.cpp
     ngraph_version.cpp
+    ${MLIR_SRC}
 )
 
 if (NOT NGRAPH_DEX_ONLY)
@@ -197,11 +205,20 @@ if (NGRAPH_CPU_ENABLE)
     endif()
     target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)
 
+    if (NOT APPLE AND NOT MSVS)
+        # CPU backend uses third-party libraries like Eigen that might be linked in and
+        # exported by other DSOs as well. In the absence of versioning, this could lead to the
+        # CPU backend picking up the wrong version or even multiple versions of the
+        # third-party library. -Bsymbolic-functions tells the linker to prefer the internal
+        # version inside cpu_backend over what is available through the global symbol table
+        set_property(TARGET cpu_backend APPEND PROPERTY LINK_FLAGS "-Wl,-Bsymbolic-functions -Wl,--exclude-libs=ALL")
+    endif()
+
     # Link LLVM and MLIR
     find_package(LLVM REQUIRED CONFIG)
     message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
     message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
-    
+    message(STATUS "LLVM RTTI is ${LLVM_ENABLE_RTTI}")
     add_definitions(${LLVM_DEFINITIONS})
 
     target_include_directories(cpu_backend PRIVATE ${LLVM_INCLUDE_DIRS})
@@ -214,7 +231,7 @@ if (NGRAPH_CPU_ENABLE)
 
     # Link MLIR libs
     target_link_libraries(
-      cpu_backend PRIVATE 
+      cpu_backend PUBLIC 
       MLIRAnalysis
       MLIREDSC
       MLIRExecutionEngine
@@ -225,24 +242,36 @@ if (NGRAPH_CPU_ENABLE)
       MLIRTargetLLVMIR
       MLIRTransforms
       MLIRSupport
-      MLIRAffineOps
-      MLIRStandardOps
     )
+    # some libs need whole archive linkage because of Globals static initialization
+    # TODO: move this helper somewhere else. 
+    function(whole_archive_link target)
+      if("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
+        set(link_flags "-Llib -Wl,-all_load ")
+        FOREACH(LIB ${ARGN})
+          string(CONCAT link_flags ${link_flags} "${LIB}")
+        ENDFOREACH(LIB)
+      else()
+        set(link_flags "-Llib -Wl,--whole-archive,")
+        FOREACH(LIB ${ARGN})
+          string(CONCAT link_flags ${link_flags} "${LIB},")
+        ENDFOREACH(LIB)
+        string(CONCAT link_flags ${link_flags} "--no-whole-archive")
+      endif()
+      message(STATUS "MLIR Ops link flag: ${link_flags}" )
 
+      set_target_properties(${target} PROPERTIES LINK_FLAGS ${link_flags})
+    endfunction(whole_archive_link)
+
+    whole_archive_link(cpu_backend
+        ${LLVM_BUILD_LIBRARY_DIR}/libMLIRAffineOps.a
+        ${LLVM_BUILD_LIBRARY_DIR}/libMLIRStandardOps.a
+    )
     # Link LLVM libs
     target_link_libraries(
       cpu_backend PRIVATE 
       ${llvm_libs}
     )
-
-    if (NOT APPLE AND NOT MSVS)
-        # CPU backend uses third-party libraries like Eigen that might be linked in and
-        # exported by other DSOs as well. In the absence of versioning, this could lead to the
-        # CPU backend picking up the wrong version or even multiple versions of the
-        # third-party library. -Bsymbolic-functions tells the linker to prefer the internal
-        # version inside cpu_backend over what is available through the global symbol table
-        set_property(TARGET cpu_backend APPEND PROPERTY LINK_FLAGS "-Wl,-Bsymbolic-functions -Wl,--exclude-libs=ALL")
-    endif()
 
     install(TARGETS cpu_backend DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()

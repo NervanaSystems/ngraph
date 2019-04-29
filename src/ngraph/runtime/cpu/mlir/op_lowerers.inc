@@ -1,0 +1,35 @@
+//*****************************************************************************
+// Copyright 2017-2019 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
+
+
+// Add new dialect ops lowerers to this file
+
+#define DECL_OP_CONV(OP) \
+class OP##Conversion : public mlir::DialectOpConversion \
+{\
+public:\
+    explicit OP##Conversion(mlir::MLIRContext *context, DialectLoweringPass& pass)\
+    : mlir::DialectOpConversion(ngraph::runtime::cpu::OP::getOperationName(), 1, context),\
+      m_pass(pass)\
+    {} \
+    SmallVector<Value *, 4> rewrite(Operation *op, ArrayRef<Value *> operands, FuncBuilder &rewriter) const override; \
+    DialectLoweringPass& m_pass;\
+};
+
+DECL_OP_CONV(NG_AddOp)
+DECL_OP_CONV(NG_ReturnOp)
+
+#undef DECL_OP_CONV
