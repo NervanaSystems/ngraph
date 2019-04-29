@@ -42,15 +42,15 @@ static string s_manifest = "${MANIFEST}";
         auto input0 = test::make_floating_point_data<${DATA_TYPE}>();                              \
         auto input1 = test::make_floating_point_data<${DATA_TYPE}>();                              \
         Shape shape = Shape{input0.size()};                                                        \
-        auto A = make_shared<op::Parameter>(element::f32, shape);                                  \
-        auto B = make_shared<op::Parameter>(element::f32, shape);                                  \
+        auto A = make_shared<op::Parameter>(${ELEMENT_TYPE}, shape);                               \
+        auto B = make_shared<op::Parameter>(${ELEMENT_TYPE}, shape);                               \
         auto f = make_shared<Function>(make_shared<op__>(A, B), ParameterVector{A, B});            \
                                                                                                    \
         auto backend = runtime::Backend::create("${BACKEND_NAME}");                                \
                                                                                                    \
-        shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shape);               \
-        shared_ptr<runtime::Tensor> b = backend->create_tensor(element::f32, shape);               \
-        shared_ptr<runtime::Tensor> result = backend->create_tensor(element::f32, shape);          \
+        shared_ptr<runtime::Tensor> a = backend->create_tensor(${ELEMENT_TYPE}, shape);            \
+        shared_ptr<runtime::Tensor> b = backend->create_tensor(${ELEMENT_TYPE}, shape);            \
+        shared_ptr<runtime::Tensor> result = backend->create_tensor(${ELEMENT_TYPE}, shape);       \
                                                                                                    \
         copy_data(a, input0);                                                                      \
         copy_data(b, input1);                                                                      \
@@ -79,3 +79,9 @@ NGRAPH_TYPED_BINARY_TEST(maximum,
                          ngraph::op::Maximum,
                          (input0[i] > input1[i] ? input0[i] : input1[i]));
 NGRAPH_TYPED_BINARY_TEST(power, ngraph::op::Power, (pow(input0[i], input1[i])));
+
+// Maximum
+// Minimum
+// Power
+// ReluBackprop
+// SigmoidBackprop

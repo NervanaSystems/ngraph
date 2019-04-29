@@ -33,6 +33,7 @@ namespace ngraph
             if (0 >= min && 0 <= max)
             {
                 data.push_back(0);
+                data.push_back(-0);
             }
             for (int32_t e = 0; e < 255; e++)
             {
