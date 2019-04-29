@@ -888,9 +888,29 @@ namespace ngraph
                     if (std::is_same<OP, ngraph::op::QuantizedConvolutionBiasAdd>() ||
                         std::is_same<OP, ngraph::op::QuantizedConvolutionBiasSignedAdd>())
                     {
-                        auto sum_scale_val =
-                            extract_scale_value<ngraph::op::QuantizedConvolutionBiasAdd>(node, 5);
-                        writer << "ops.append_sum(" << std::to_string(sum_scale_val[0]) << ");\n";
+                        auto sum_scales_size = shape_size(convolution->get_input_shape(5));
+                        const element::Type& et = node->get_input_element_type(5);
+                        std::string type = et.c_type_string();
+                        std::stringstream ss;
+                        writer << "std::vector<float> dyn_post_op_scales;\n";
+                        auto c = std::dynamic_pointer_cast<ngraph::op::Constant>(
+                            node->get_arguments()[5]);
+                        if (c)
+                        {
+                            auto sum_scale_val =
+                                extract_scale_value<ngraph::op::QuantizedConvolutionBiasAdd>(node,
+                                                                                             5);
+                            writer << "dyn_post_op_scales.push_back("
+                                   << std::to_string(sum_scale_val[0]) << ");\n";
+                        }
+                        else
+                        {
+                            ss << "((" << type << "*)(pool_base_ptr + "
+                               << node->get_inputs()[5].get_tensor().get_pool_offset() << "))";
+                            writer << "dyn_post_op_scales.assign(" << ss.str() << ", " << ss.str()
+                                   << " + " << std::to_string(sum_scales_size) << ");\n";
+                        }
+                        writer << "ops.append_sum(dyn_post_op_scales[0]);\n";
                     }
 
                     if (has_relu<OP>(node))
@@ -908,10 +928,26 @@ namespace ngraph
 
                     if (mkldnn_emitter.is_quantized_conv<OP>())
                     {
-                        auto scales_size = shape_size(convolution->get_input_shape(2));
-                        auto scale = mkldnn_emitter.get_output_scale<OP, float>(node);
+                        auto scale_index = mkldnn_emitter.get_scale_index<OP>();
+                        auto c = std::dynamic_pointer_cast<ngraph::op::Constant>(
+                            node->get_arguments()[scale_index]);
+                        auto scales_size = shape_size(convolution->get_input_shape(scale_index));
+                        const element::Type& et = node->get_input_element_type(scale_index);
+                        std::string type = et.c_type_string();
+                        std::stringstream ss;
+                        if (c)
+                        {
+                            ss << "((" << type << "*)(" << c->get_data_ptr() << "))\n";
+                        }
+                        else
+                        {
+                            ss << "((" << type << "*)(pool_base_ptr + "
+                               << node->get_inputs()[scale_index].get_tensor().get_pool_offset()
+                               << "))";
+                        }
                         writer << "std::vector<float> dyn_scales;\n";
-                        writer << "dyn_scales.push_back(" << std::to_string(scale[0]) << ");\n";
+                        writer << "dyn_scales.assign(" << ss.str() << ", " << ss.str() << " + "
+                               << std::to_string(scales_size) << ");\n";
                         writer << "// use conv channelwise (dim 1, mask=2^1) if dyn_scales is a "
                                   "vector \n";
                         writer << "const int mask = " << std::to_string(scales_size)
