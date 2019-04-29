@@ -89,3 +89,24 @@ public:
 private:
     std::shared_ptr<ngraph::runtime::Tensor> m_wrapped_tensor;
 };
+
+class ngraph::runtime::dynamic_wrapper::WrappedDynamicTensor : public ngraph::runtime::Tensor
+{
+public:
+    WrappedDynamicTensor(const element::Type& element_type,
+                         const PartialShape& shape,
+                         const runtime::Backend* parent,
+                         const std::shared_ptr<runtime::Backend>& wrapped_backend);
+    virtual const ngraph::Shape& get_shape() const override;
+    virtual void write(const void* p, size_t offset, size_t n) override;
+    virtual void read(void* p, size_t offset, size_t n) const override;
+    virtual void copy_from(const ngraph::runtime::Tensor& source) override;
+    bool has_storage() const;
+    void release_storage();
+    void make_storage(const element::Type& element_type, const Shape& shape);
+    const std::shared_ptr<ngraph::runtime::Tensor>& get_wrapped_tensor() const;
+
+private:
+    std::shared_ptr<ngraph::runtime::Tensor> m_wrapped_tensor;
+    std::shared_ptr<ngraph::runtime::Backend> m_wrapped_backend;
+};

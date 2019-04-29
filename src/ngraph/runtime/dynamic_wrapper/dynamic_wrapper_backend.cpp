@@ -53,7 +53,7 @@ std::shared_ptr<runtime::Tensor>
     runtime::dynamic_wrapper::DynamicWrapperBackend::create_dynamic_tensor(
         const element::Type& type, const PartialShape& shape)
 {
-    throw std::invalid_argument("create_dynamic_tensor broken for now");
+    return make_shared<WrappedDynamicTensor>(type, shape, this, m_wrapped_backend);
 }
 
 shared_ptr<runtime::Executable>
@@ -72,6 +72,7 @@ runtime::dynamic_wrapper::WrappedExecutable::WrappedExecutable(
     , m_wrapped_backend(wrapped_backend)
     , m_enable_performance_collection(enable_performance_collection)
 {
+    // TODO: Run relevance analysis here.
     set_parameters_and_results(*wrapped_function);
 }
 
@@ -79,24 +80,36 @@ bool runtime::dynamic_wrapper::WrappedExecutable::call(
     const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
     const std::vector<std::shared_ptr<runtime::Tensor>>& inputs)
 {
+    // TODO: Get cached executable out if it exists.
+
+    // TODO: Run shape inference passes here.
+    // TODO: Put executable in the cache.
+    auto compiled_executable = m_wrapped_backend->compile(m_wrapped_function);
+
     std::vector<std::shared_ptr<runtime::Tensor>> real_outputs;
     std::vector<std::shared_ptr<runtime::Tensor>> real_inputs;
 
     for (auto& output : outputs)
     {
+        // TODO: If dynamic and no storage of suitable shape, make storage
+        NGRAPH_CHECK(
+            std::dynamic_pointer_cast<runtime::dynamic_wrapper::WrappedStaticTensor>(output));
+
         real_outputs.push_back(
             std::static_pointer_cast<runtime::dynamic_wrapper::WrappedStaticTensor>(output)
                 ->get_wrapped_tensor());
     }
     for (auto& input : inputs)
     {
+        // TODO: If dynamic and no storage, bail
+        NGRAPH_CHECK(
+            std::dynamic_pointer_cast<runtime::dynamic_wrapper::WrappedStaticTensor>(input));
+
         real_inputs.push_back(
             std::static_pointer_cast<runtime::dynamic_wrapper::WrappedStaticTensor>(input)
                 ->get_wrapped_tensor());
     }
 
-    // For now we cache nothing!
-    auto compiled_executable = m_wrapped_backend->compile(m_wrapped_function);
     auto result = compiled_executable->call(real_outputs, real_inputs);
 
     return result;
@@ -133,6 +146,69 @@ void runtime::dynamic_wrapper::WrappedStaticTensor::copy_from(const ngraph::runt
 
 const std::shared_ptr<ngraph::runtime::Tensor>&
     runtime::dynamic_wrapper::WrappedStaticTensor::get_wrapped_tensor() const
+{
+    return m_wrapped_tensor;
+}
+
+runtime::dynamic_wrapper::WrappedDynamicTensor::WrappedDynamicTensor(
+    const element::Type& element_type,
+    const PartialShape& shape,
+    const runtime::Backend* parent,
+    const std::shared_ptr<runtime::Backend>& wrapped_backend)
+    : Tensor(make_shared<descriptor::Tensor>(element_type, shape, "wrapped_dynamic"), parent)
+    , m_wrapped_tensor(nullptr)
+    , m_wrapped_backend(wrapped_backend)
+{
+}
+
+const ngraph::Shape& runtime::dynamic_wrapper::WrappedDynamicTensor::get_shape() const
+{
+    NGRAPH_CHECK(m_wrapped_tensor != nullptr,
+                 "asked for shape of a dynamic tensor with no allocated storage");
+    return m_wrapped_tensor->get_shape();
+}
+
+void runtime::dynamic_wrapper::WrappedDynamicTensor::write(const void* p, size_t offset, size_t n)
+{
+    NGRAPH_CHECK(m_wrapped_tensor != nullptr,
+                 "tried to write to a dynamic tensor with no allocated storage");
+    m_wrapped_tensor->write(p, offset, n);
+}
+
+void runtime::dynamic_wrapper::WrappedDynamicTensor::read(void* p, size_t offset, size_t n) const
+{
+    NGRAPH_CHECK(m_wrapped_tensor != nullptr,
+                 "tried to read from a dynamic tensor with no allocated storage");
+    m_wrapped_tensor->read(p, offset, n);
+}
+
+void runtime::dynamic_wrapper::WrappedDynamicTensor::copy_from(
+    const ngraph::runtime::Tensor& source)
+{
+    NGRAPH_CHECK(m_wrapped_tensor != nullptr,
+                 "tried to copy_from to a dynamic tensor with no allocated storage");
+    m_wrapped_tensor->copy_from(source);
+}
+
+bool runtime::dynamic_wrapper::WrappedDynamicTensor::has_storage() const
+{
+    return m_wrapped_tensor != nullptr;
+}
+
+void runtime::dynamic_wrapper::WrappedDynamicTensor::release_storage()
+{
+    m_wrapped_tensor = nullptr;
+}
+
+void runtime::dynamic_wrapper::WrappedDynamicTensor::make_storage(const element::Type& element_type,
+                                                                  const Shape& shape)
+{
+    NGRAPH_CHECK(element_type.is_static(), "make_storage requires a static element type");
+    m_wrapped_tensor = m_wrapped_backend->create_tensor(element_type, shape);
+}
+
+const std::shared_ptr<ngraph::runtime::Tensor>&
+    runtime::dynamic_wrapper::WrappedDynamicTensor::get_wrapped_tensor() const
 {
     return m_wrapped_tensor;
 }
