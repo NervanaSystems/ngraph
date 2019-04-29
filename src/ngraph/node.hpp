@@ -71,6 +71,9 @@ namespace ngraph
                                                          size_t i);
     const NodeVector& check_single_output_args(const NodeVector& args);
 
+    /// Alias useful for cloning
+    using NodeMap = std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>;
+
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
     /// or a (possibly empty) tuple of values.
