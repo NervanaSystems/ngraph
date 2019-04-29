@@ -187,6 +187,11 @@ static void do_cldnn_unary(cldnn::topology& topology,
     topology.add(cldnn_unary);
 }
 
+static bool has_non_zero(const Shape& shape)
+{
+    return accumulate(shape.begin(), shape.end(), 0);
+}
+
 static void
     do_custom_unary(cldnn::topology& topology, const shared_ptr<Node>& op, const string& operation)
 {
@@ -797,7 +802,8 @@ shared_ptr<runtime::Executable>
 
             if ((op->get_input_shape(0).size() > 4) ||
                 (op->get_output_element_type(0) != element::f32) ||
-                !max_pool->get_padding_below().empty() || !max_pool->get_padding_above().empty())
+                has_non_zero(max_pool->get_padding_below()) ||
+                has_non_zero(max_pool->get_padding_above()))
             {
                 const shared_ptr<Node> def_val = max_pool->get_default_value();
                 const shared_ptr<op::Constant> def_const =
@@ -864,7 +870,8 @@ shared_ptr<runtime::Executable>
             if ((op->get_input_shape(0).size() > 4) ||
                 (op->get_output_element_type(0) != element::f32) ||
                 avg_pool->get_include_padding_in_avg_computation() ||
-                !avg_pool->get_padding_below().empty() || !avg_pool->get_padding_above().empty())
+                has_non_zero(avg_pool->get_padding_below()) ||
+                has_non_zero(avg_pool->get_padding_above()))
             {
                 const shared_ptr<Node> def_val = avg_pool->get_default_value();
                 const shared_ptr<op::Constant> def_const =
@@ -1190,12 +1197,28 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::Ceiling:
         {
-            do_custom_unary(topology, op, "ceil(input_var)");
+            if (!op->get_input_element_type(0).is_real())
+            {
+                do_equal_propagation(
+                    topology, op->get_input_tensor_name(0), op->get_output_tensor_name(0));
+            }
+            else
+            {
+                do_custom_unary(topology, op, "ceil(input_var)");
+            }
             break;
         }
         case OP_TYPEID::Floor:
         {
-            do_custom_unary(topology, op, "floor(input_var)");
+            if (!op->get_input_element_type(0).is_real())
+            {
+                do_equal_propagation(
+                    topology, op->get_input_tensor_name(0), op->get_output_tensor_name(0));
+            }
+            else
+            {
+                do_custom_unary(topology, op, "floor(input_var)");
+            }
             break;
         }
         case OP_TYPEID::Sign:
