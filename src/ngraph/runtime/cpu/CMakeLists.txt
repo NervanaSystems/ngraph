@@ -95,7 +95,6 @@ set(SRC
     op/conv_relu.cpp
     op/convert_layout.cpp
     op/deconv.cpp
-    op/group_conv.cpp
     op/group_conv_bias.cpp
     op/halide_op.cpp
     op/leaky_relu.cpp
@@ -197,7 +196,10 @@ if (NGRAPH_CPU_ENABLE)
     endif()
 
     add_dependencies(cpu_backend libmkldnn ext_eigen)
-    target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libmkl libeigen libjson libtbb)
+    target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libmkl libeigen libtbb)
+    if (NGRAPH_JSON_ENABLE)
+        target_link_libraries(cpu_backend PUBLIC libjson)
+    endif()
     if (NOT NGRAPH_DEX_ONLY)
         target_link_libraries(cpu_backend PUBLIC codegen)
     endif()

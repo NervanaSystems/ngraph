@@ -29,7 +29,9 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
+#include "ngraph/op/util/reshape.hpp"
 #include "ngraph/shape.hpp"
+#include "ngraph/util.hpp"
 #include "utils/reshape.hpp"
 
 /// \brief      Slice the sub matrix from the input tensor.
@@ -200,7 +202,7 @@ namespace ngraph
                             std::begin(left_shape),
                             std::next(std::begin(left_shape), left_shape.size() - 2));
                         return {std::make_shared<ngraph::op::Reshape>(
-                            result, reshape::get_default_axis_vector(shape.size()), result_shape)};
+                            result, ngraph::get_default_order(shape.size()), result_shape)};
                     }
                 }
 

@@ -60,8 +60,6 @@ set (SRC
     dimension.cpp
     dimension.hpp
     except.hpp
-    event_tracing.hpp
-    event_tracing.cpp
     file_util.cpp
     file_util.hpp
     function.cpp
@@ -261,8 +259,16 @@ set (SRC
     op/topk.hpp
     op/fused/conv_fused.cpp
     op/fused/conv_fused.hpp
+    op/fused/depth_to_space.cpp
+    op/fused/depth_to_space.hpp
+    op/fused/elu.cpp
+    op/fused/elu.hpp
+    op/fused/group_conv.hpp
+    op/fused/group_conv.cpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
+    op/fused/space_to_depth.cpp
+    op/fused/space_to_depth.hpp
     op/util/arithmetic_reduction.cpp
     op/util/arithmetic_reduction.hpp
     op/util/binary_elementwise_arithmetic.cpp
@@ -279,6 +285,8 @@ set (SRC
     op/util/index_reduction.hpp
     op/util/logical_reduction.cpp
     op/util/logical_reduction.hpp
+    op/util/reshape.cpp
+    op/util/reshape.hpp
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise_arithmetic.hpp
     parameter_vector.hpp
@@ -287,6 +295,8 @@ set (SRC
     pass/algebraic_simplification.cpp
     pass/algebraic_simplification.hpp
     pass/assign_layout.hpp
+    pass/batch_fusion.hpp
+    pass/batch_fusion.cpp
     pass/common_function_collection.cpp
     pass/common_function_collection.hpp
     pass/constant_folding.cpp
@@ -332,6 +342,8 @@ set (SRC
     pass/reshape_sinking.hpp
     pass/serialize.cpp
     pass/serialize.hpp
+    pass/shape_relevance.cpp
+    pass/shape_relevance.hpp
     pass/shape_specialization.cpp
     pass/shape_specialization.hpp
     pass/validate_graph.cpp
@@ -372,8 +384,6 @@ set (SRC
     runtime/performance_counter.hpp
     runtime/tensor.cpp
     runtime/tensor.hpp
-    serializer.cpp
-    serializer.hpp
     shape.cpp
     shape.hpp
     shape_util.cpp
@@ -396,6 +406,7 @@ set(SRC ${SRC}
     runtime/hybrid/hybrid_backend.hpp
     runtime/hybrid/hybrid_executable.cpp
     runtime/hybrid/hybrid_executable.hpp
+    runtime/hybrid/hybrid_tensor.cpp
     runtime/hybrid/hybrid_util.cpp
     runtime/hybrid/hybrid_util.hpp
     runtime/hybrid/op/function_call.cpp
@@ -416,6 +427,10 @@ set(SRC ${SRC}
     runtime/dynamic_wrapper/dynamic_wrapper_backend.cpp
     runtime/dynamic_wrapper/dynamic_wrapper_backend.hpp
     )
+
+if(NGRAPH_JSON_ENABLE)
+    list(APPEND SRC serializer.cpp serializer.hpp event_tracing.cpp event_tracing.hpp)
+endif()
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
     list(APPEND SRC distributed.cpp distributed.hpp)
@@ -465,7 +480,9 @@ if(NGRAPH_LIB_VERSIONING_ENABLE)
         VERSION ${NGRAPH_VERSION}
         SOVERSION ${NGRAPH_API_VERSION})
 endif()
-target_link_libraries(ngraph PRIVATE libjson)
+if(NGRAPH_JSON_ENABLE)
+    target_link_libraries(ngraph PRIVATE libjson)
+endif()
 target_compile_definitions(ngraph PUBLIC NGRAPH_VERSION="${NGRAPH_VERSION}")
 
 if (LINUX)

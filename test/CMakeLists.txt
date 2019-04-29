@@ -39,12 +39,10 @@ set(SRC
     control_dependencies.cpp
     coordinate.cpp
     copy.cpp
-    core.cpp
     cpio.cpp
     cse.cpp
     dynamic_wrapper.cpp
     element_type.cpp
-    event_tracing.cpp
     file_util.cpp
     includes.cpp
     input_output_assign.cpp
@@ -58,12 +56,12 @@ set(SRC
     pass_liveness.cpp
     pass_manager.cpp
     pass_memory_layout.cpp
+    pass_shape_relevance.cpp
     pass_shape_specialization.cpp
     pattern.cpp
     provenance.cpp
     reshape_elimination.cpp
     reshape_sinking.cpp
-    serialize.cpp
     shape.cpp
     specialize_shapes.cpp
     tensor.cpp
@@ -71,6 +69,10 @@ set(SRC
     util.cpp
     zero_dim_tensor_elimination.cpp
 )
+
+if(NGRAPH_JSON_ENABLE)
+    list(APPEND SRC core.cpp event_tracing.cpp serialize.cpp)
+endif()
 
 if(NOT WIN32 AND NGRAPH_TOOLS_ENABLE)
     list(APPEND SRC tools.cpp)
@@ -230,7 +232,10 @@ if(NGRAPH_DISTRIBUTED_ENABLE)
 endif()
 
 target_link_libraries(unit-test PRIVATE ngraph_test_util)
-target_link_libraries(unit-test PRIVATE ngraph libgtest libjson)
+target_link_libraries(unit-test PRIVATE ngraph libgtest)
+if (NGRAPH_JSON_ENABLE)
+    target_link_libraries(unit-test PRIVATE libjson)
+endif()
 if(NOT WIN32)
     target_link_libraries(unit-test PRIVATE pthread)
 endif()

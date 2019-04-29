@@ -21,7 +21,9 @@
 #include <vector>
 
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
+#ifdef NGRAPH_JSON_ENABLE
 #include "nlohmann/json.hpp"
+#endif
 
 namespace ngraph
 {
@@ -65,8 +67,9 @@ namespace ngraph
                 {
                 }
             };
-
+#ifdef NGRAPH_JSON_ENABLE
             void to_json(nlohmann::json& json, const TraceEvent& event);
+#endif
 
             void GenerateTimeline(const std::vector<OpAttributes>& op_attrs,
                                   int64_t* op_durations,

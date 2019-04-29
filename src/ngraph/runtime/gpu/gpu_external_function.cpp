@@ -816,9 +816,15 @@ void runtime::gpu::GPUExternalFunction::get_performance_data(
         if (get_count && get_name && get_microseconds && get_call_count)
         {
             size_t count = get_count();
+            map<string, shared_ptr<const Node>> name_map;
+            for (auto n : m_function->get_ops())
+            {
+                name_map.insert({n->get_name(), n});
+            }
             for (size_t i = 0; i < count; i++)
             {
-                rc.push_back({get_name(i), get_microseconds(i), get_call_count(i)});
+                shared_ptr<const Node> n = name_map[get_name(i)];
+                rc.push_back({n, get_microseconds(i), get_call_count(i)});
             }
         }
     }
