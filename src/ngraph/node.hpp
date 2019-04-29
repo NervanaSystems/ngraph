@@ -28,6 +28,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/check.hpp"
 #include "ngraph/coordinate.hpp"
 #include "ngraph/deprecated.hpp"
