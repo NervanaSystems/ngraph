@@ -15,15 +15,10 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/dynamic_wrapper/dynamic_wrapper_backend.hpp"
-#include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
-#include "ngraph/except.hpp"
-#include "ngraph/op/convert.hpp"
-#include "ngraph/op/select.hpp"
-#include "ngraph/op/util/binary_elementwise_comparison.hpp"
-#include "ngraph/pass/assign_layout.hpp"
-#include "ngraph/pass/like_replacement.hpp"
-#include "ngraph/pass/liveness.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/shape_relevance.hpp"
+#include "ngraph/specialize_shapes.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -72,7 +67,10 @@ runtime::dynamic_wrapper::WrappedExecutable::WrappedExecutable(
     , m_wrapped_backend(wrapped_backend)
     , m_enable_performance_collection(enable_performance_collection)
 {
-    // TODO: Run relevance analysis here.
+    pass::Manager passes;
+    passes.register_pass<pass::ShapeRelevance>();
+    passes.run_passes(m_wrapped_function);
+
     set_parameters_and_results(*wrapped_function);
 }
 
@@ -81,36 +79,76 @@ bool runtime::dynamic_wrapper::WrappedExecutable::call(
     const std::vector<std::shared_ptr<runtime::Tensor>>& inputs)
 {
     // TODO: Get cached executable out if it exists.
+    // We will cache on:
+    // (1) all shapes;
+    // (2) all values of shape-relevant input tensors.
 
-    // TODO: Run shape inference passes here.
-    // TODO: Put executable in the cache.
-    auto compiled_executable = m_wrapped_backend->compile(m_wrapped_function);
+    std::vector<std::shared_ptr<runtime::Tensor>> wrapped_inputs;
+    std::vector<element::Type> arg_element_types;
+    std::vector<PartialShape> arg_shapes;
 
-    std::vector<std::shared_ptr<runtime::Tensor>> real_outputs;
-    std::vector<std::shared_ptr<runtime::Tensor>> real_inputs;
+    for (auto& input : inputs)
+    {
+        if (auto static_tensor =
+                std::dynamic_pointer_cast<runtime::dynamic_wrapper::WrappedStaticTensor>(input))
+        {
+            arg_element_types.push_back(static_tensor->get_wrapped_tensor()->get_element_type());
+            arg_shapes.push_back(static_tensor->get_wrapped_tensor()->get_shape());
+            wrapped_inputs.push_back(static_tensor->get_wrapped_tensor());
+        }
+        else if (auto dynamic_tensor =
+                     std::dynamic_pointer_cast<runtime::dynamic_wrapper::WrappedDynamicTensor>(
+                         input))
+        {
+            NGRAPH_CHECK(dynamic_tensor->has_storage());
+            arg_element_types.push_back(dynamic_tensor->get_wrapped_tensor()->get_element_type());
+            arg_shapes.push_back(dynamic_tensor->get_wrapped_tensor()->get_shape());
+            wrapped_inputs.push_back(dynamic_tensor->get_wrapped_tensor());
+        }
+        else
+        {
+            NGRAPH_CHECK(false,
+                         "Internal error: Tensor is neither a WrappedStaticTensor nor a "
+                         "WrappedDynamicTensor");
+        }
+    }
+
+    // TODO: specialize_shapes needs to fill in values of shape-relevant params.
+    auto clone = specialize_shapes(m_wrapped_function, arg_element_types, arg_shapes);
+    // TODO: run constant folding and de-dynification on clone.
+    const ResultVector& results = clone->get_results();
+    NGRAPH_CHECK(results.size() == outputs.size());
+
+    std::vector<std::shared_ptr<runtime::Tensor>> wrapped_outputs;
+
+    auto results_it = results.begin();
 
     for (auto& output : outputs)
     {
-        // TODO: If dynamic and no storage of suitable shape, make storage
-        NGRAPH_CHECK(
-            std::dynamic_pointer_cast<runtime::dynamic_wrapper::WrappedStaticTensor>(output));
-
-        real_outputs.push_back(
-            std::static_pointer_cast<runtime::dynamic_wrapper::WrappedStaticTensor>(output)
-                ->get_wrapped_tensor());
+        if (auto static_tensor =
+                std::dynamic_pointer_cast<runtime::dynamic_wrapper::WrappedStaticTensor>(output))
+        {
+            wrapped_outputs.push_back(static_tensor->get_wrapped_tensor());
+        }
+        else if (auto dynamic_tensor =
+                     std::dynamic_pointer_cast<runtime::dynamic_wrapper::WrappedDynamicTensor>(
+                         output))
+        {
+            dynamic_tensor->make_storage((*results_it)->get_output_element_type(0),
+                                         (*results_it)->get_output_shape(0));
+            wrapped_outputs.push_back(dynamic_tensor->get_wrapped_tensor());
+        }
+        else
+        {
+            NGRAPH_CHECK(false,
+                         "Internal error: Tensor is neither a WrappedStaticTensor nor a "
+                         "WrappedDynamicTensor");
+        }
     }
-    for (auto& input : inputs)
-    {
-        // TODO: If dynamic and no storage, bail
-        NGRAPH_CHECK(
-            std::dynamic_pointer_cast<runtime::dynamic_wrapper::WrappedStaticTensor>(input));
 
-        real_inputs.push_back(
-            std::static_pointer_cast<runtime::dynamic_wrapper::WrappedStaticTensor>(input)
-                ->get_wrapped_tensor());
-    }
-
-    auto result = compiled_executable->call(real_outputs, real_inputs);
+    // TODO: Put compiled executable in the cache.
+    auto compiled_executable = m_wrapped_backend->compile(clone);
+    auto result = compiled_executable->call(wrapped_outputs, wrapped_inputs);
 
     return result;
 }
@@ -202,6 +240,16 @@ void runtime::dynamic_wrapper::WrappedDynamicTensor::make_storage(const element:
                                                                   const Shape& shape)
 {
     NGRAPH_CHECK(element_type.is_static(), "make_storage requires a static element type");
+    NGRAPH_CHECK(get_element_type().is_dynamic() || get_element_type() == element_type,
+                 "tried to make storage with element type ",
+                 element_type,
+                 " which is incompatible with dynamic tensor element_type ",
+                 get_element_type());
+    NGRAPH_CHECK(get_partial_shape().relaxes(shape),
+                 "tried to make storage with shape ",
+                 shape,
+                 " which is incompatible with dynamic tensor shape ",
+                 get_partial_shape());
     m_wrapped_tensor = m_wrapped_backend->create_tensor(element_type, shape);
 }
 

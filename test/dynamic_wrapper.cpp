@@ -94,25 +94,36 @@ TEST(dynamic_wrapper, abc)
 
     auto ex = backend->compile(f);
 
-    auto t_a = backend->create_tensor(element::f32, Shape{2, 3, 3});
-    auto t_b = backend->create_tensor(element::f32, Shape{2, 3, 3});
-    auto t_c = backend->create_tensor(element::f32, Shape{2, 3, 3});
     auto t_r =
         backend->create_dynamic_tensor(element::f32, PartialShape{2, Dimension::dynamic(), 3});
 
-    copy_data(t_a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18});
-    copy_data(t_b, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18});
-    copy_data(t_c, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18});
-
-    ex->call_with_validate({t_r}, {t_a, t_b, t_c});
-
-    ASSERT_EQ(t_r->get_shape(), (Shape{2, 3, 3}));
-
-    vector<float> expected_values(2 * 3 * 3);
-    for (size_t i = 0; i < 2 * 3 * 3; i++)
+    for (size_t middle_dim = 0; middle_dim < 5; middle_dim++)
     {
-        expected_values[i] = ((i + 1) + (i + 1)) * (i + 1);
-    }
+        vector<float> inputs(2 * middle_dim * 3);
+        for (size_t i = 0; i < 2 * middle_dim * 3; i++)
+        {
+            inputs[i] = i + 1;
+        }
 
-    EXPECT_TRUE(test::all_close_f(read_vector<float>(t_r), expected_values));
+        auto t_a = backend->create_tensor(element::f32, Shape{2, middle_dim, 3});
+        auto t_b = backend->create_tensor(element::f32, Shape{2, middle_dim, 3});
+        auto t_c = backend->create_tensor(element::f32, Shape{2, middle_dim, 3});
+
+        copy_data(t_a, inputs);
+        copy_data(t_b, inputs);
+        copy_data(t_c, inputs);
+
+        ex->call({t_r}, {t_a, t_b, t_c});
+
+        ASSERT_EQ(t_r->get_shape(), (Shape{2, middle_dim, 3}));
+        auto results = read_vector<float>(t_r);
+
+        vector<float> expected_values(2 * middle_dim * 3);
+        for (size_t i = 0; i < 2 * middle_dim * 3; i++)
+        {
+            expected_values[i] = ((i + 1) + (i + 1)) * (i + 1);
+        }
+
+        EXPECT_TRUE(test::all_close_f(results, expected_values));
+    }
 }
