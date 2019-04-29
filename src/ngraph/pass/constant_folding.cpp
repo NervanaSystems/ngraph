@@ -236,8 +236,9 @@ void pass::ConstantFolding::construct_constant_reshape()
         }
         else if (type == element::bf16)
         {
-            replace_node(m.get_match_root(),
-                         fold_constant_reshape<int16_t>(constant_match, reshape_match, func));
+            replace_node(
+                m.get_match_root(),
+                fold_constant_reshape<ngraph::bfloat16>(constant_match, reshape_match, func));
             return true;
         }
 
@@ -330,8 +331,9 @@ void pass::ConstantFolding::construct_constant_broadcast()
         }
         else if (type == element::bf16)
         {
-            replace_node(m.get_match_root(),
-                         fold_constant_broadcast<int16_t>(constant_match, broadcast_match, func));
+            replace_node(
+                m.get_match_root(),
+                fold_constant_broadcast<ngraph::bfloat16>(constant_match, broadcast_match, func));
             return true;
         }
 
