@@ -63,6 +63,7 @@
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/gather_nd.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -118,7 +119,6 @@
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/deconv.hpp"
-#include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/loop_kernel.hpp"
@@ -2494,6 +2494,13 @@ namespace ngraph
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
+                    if (node->get_input_element_type(0) == element::u8 &&
+                        node->get_input_element_type(1) == element::u8)
+                    {
+                        throw ngraph_error(
+                            "Unsupported data types for QuantizedDot MKLDNN kernel.");
+                    }
+
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto qip_index = mkldnn_emitter->build_inner_product<ngraph::op::QuantizedDot>(
                         node, args, out);

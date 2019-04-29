@@ -15,18 +15,8 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/hybrid/hybrid_backend.hpp"
-#include "ngraph/graph_util.hpp"
-#include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/visualize_tree.hpp"
-#include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/hybrid/hybrid_executable.hpp"
-#include "ngraph/runtime/hybrid/hybrid_util.hpp"
-#include "ngraph/runtime/hybrid/pass/default_placement.hpp"
-#include "ngraph/runtime/hybrid/pass/dump.hpp"
-#include "ngraph/runtime/hybrid/pass/fix_get_output_element.hpp"
-#include "ngraph/runtime/hybrid/pass/liveness.hpp"
-#include "ngraph/runtime/hybrid/pass/memory_layout.hpp"
-#include "ngraph/runtime/tensor.hpp"
+#include "ngraph/runtime/hybrid/hybrid_tensor.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -41,17 +31,13 @@ shared_ptr<runtime::Tensor>
     runtime::hybrid::HybridBackend::create_tensor(const element::Type& element_type,
                                                   const Shape& shape)
 {
-    auto it = m_backend_list.begin();
-    NGRAPH_CHECK(it != m_backend_list.end());
-    return (*it)->create_tensor(element_type, shape);
+    return make_shared<HybridTensor>(element_type, shape);
 }
 
 shared_ptr<runtime::Tensor> runtime::hybrid::HybridBackend::create_tensor(
     const element::Type& element_type, const Shape& shape, void* memory_pointer)
 {
-    auto it = m_backend_list.begin();
-    NGRAPH_CHECK(it != m_backend_list.end());
-    return (*it)->create_tensor(element_type, shape, memory_pointer);
+    return make_shared<HybridTensor>(element_type, shape, memory_pointer);
 }
 
 shared_ptr<runtime::Executable>

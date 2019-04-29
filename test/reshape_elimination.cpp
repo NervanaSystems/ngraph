@@ -36,7 +36,6 @@
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "ngraph/util.hpp"
-#include "nlohmann/json.hpp"
 #include "util/all_close.hpp"
 #include "util/matcher.hpp"
 #include "util/random.hpp"
@@ -45,6 +44,7 @@
 using namespace ngraph;
 using namespace std;
 
+#ifdef NGRAPH_JSON_ENABLE
 TEST(reshape_elimination, remove_reshape)
 {
     pass::Manager pass_manager;
@@ -86,6 +86,7 @@ TEST(reshape_elimination, bn_bprop_rewrite)
     size_t count_after = count_ops_of_type<op::Reshape>(func);
     ASSERT_TRUE(count_after < count_before);
 }
+#endif
 
 TEST(reshape_elimination, dot_transpose_to_dot_w_transpose_args)
 {
