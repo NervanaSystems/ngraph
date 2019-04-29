@@ -113,7 +113,7 @@ TEST(dynamic_wrapper, abc)
         copy_data(t_b, inputs);
         copy_data(t_c, inputs);
 
-        ex->call({t_r}, {t_a, t_b, t_c});
+        ex->call_with_validate({t_r}, {t_a, t_b, t_c});
 
         ASSERT_EQ(t_r->get_shape(), (Shape{2, middle_dim, 3}));
         auto results = read_vector<float>(t_r);
