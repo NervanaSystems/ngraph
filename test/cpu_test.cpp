@@ -41,7 +41,6 @@
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
-#include "nlohmann/json.hpp"
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
 #include "util/autodiff/backprop_function.hpp"

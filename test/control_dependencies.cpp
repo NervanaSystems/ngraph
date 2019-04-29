@@ -35,7 +35,6 @@
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
-#include "nlohmann/json.hpp"
 #include "util/all_close.hpp"
 #include "util/autodiff/backprop_function.hpp"
 #include "util/autodiff/numeric_compare.hpp"
@@ -164,6 +163,7 @@ TEST(control_dependencies, clone_function_cdop_abs)
     }
 }
 
+#ifdef NGRAPH_JSON_ENABLE
 TEST(control_dependencies, serialize_cdop)
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{});
@@ -209,3 +209,4 @@ TEST(control_dependencies, serialize_cdop_abs)
         ASSERT_TRUE(std::dynamic_pointer_cast<op::Abs>(ccdep));
     }
 }
+#endif

@@ -107,7 +107,7 @@ bool pass::ShapeSpecialization::run_on_function(std::shared_ptr<Function> f)
 
             for (size_t i = 0; i < node->get_input_size(); i++)
             {
-                if (node->input(i).get_is_relevant_to_values())
+                if (!node->input(i).get_is_relevant_to_values())
                 {
                     continue;
                 }
