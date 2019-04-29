@@ -43,6 +43,7 @@
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/maximum.hpp"
@@ -70,7 +71,6 @@
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/deconv.hpp"
-#include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
@@ -1686,8 +1686,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_groupconv_batchnorm_global
                                                                CoordinateDiff{0, 0},
                                                                CoordinateDiff{0, 0},
                                                                Strides{1, 1},
-                                                               32,
-                                                               shape_r);
+                                                               32);
     auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
 
     auto mean = std::make_shared<pattern::op::Label>(element::f32, Shape{32});
