@@ -233,48 +233,6 @@ namespace ngraph
 
     bool is_equal_to_const_value(std::string const_value, std::shared_ptr<Node> reduce_constant);
 
-    // maps original to replacement nodes e.g. for clone utilities
-    // performs index checking on access
-    class NodeMap
-    {
-    public:
-        // map original node to replacement node
-        // throws ngraph_error if key already exists
-        void add(std::shared_ptr<ngraph::Node> orig, std::shared_ptr<ngraph::Node> replacement);
-
-        // get replacement node from original node
-        // throws ngrah_error if key does not exist
-        std::shared_ptr<ngraph::Node> get(std::shared_ptr<ngraph::Node> orig) const;
-
-        template <typename T>
-        T dynamic_get(const T& orig)
-        {
-            return std::dynamic_pointer_cast<typename T::element_type>(get(orig));
-        }
-
-        // returns true if original node is already mapped
-        bool exists(std::shared_ptr<ngraph::Node> orig) const
-        {
-            return (m_node_map.count(orig) != 0);
-        }
-
-        void update(std::shared_ptr<ngraph::Node> orig, std::shared_ptr<ngraph::Node> val);
-
-        const std::unordered_map<std::shared_ptr<ngraph::Node>, std::shared_ptr<ngraph::Node>>&
-            get_node_map() const
-        {
-            return m_node_map;
-        }
-        std::unordered_map<std::shared_ptr<ngraph::Node>, std::shared_ptr<ngraph::Node>>&
-            get_node_map()
-        {
-            return m_node_map;
-        }
-
-    private:
-        std::unordered_map<std::shared_ptr<ngraph::Node>, std::shared_ptr<ngraph::Node>> m_node_map;
-    };
-
     // input nodes are cloned and returned
     // NodeMap input may contain default node mapping i.e. pre-cloned nodes
     // NodeMap output (by reference) fully maps input and cloned nodes
