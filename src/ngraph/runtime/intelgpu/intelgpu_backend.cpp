@@ -42,6 +42,7 @@
 #include <CPP/topology.hpp>
 
 #include "ngraph/pass/algebraic_simplification.hpp"
+#include "ngraph/pass/batch_fusion.hpp"
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/cse.hpp"
 #include "ngraph/pass/get_output_element_elimination.hpp"
@@ -401,6 +402,7 @@ shared_ptr<runtime::Executable>
         ngraph::pass::Manager pass_manager;
 
         pass_manager.register_pass<ngraph::pass::NopElimination>();
+        pass_manager.register_pass<ngraph::pass::BatchFusion>();
         pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
         pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
         pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
