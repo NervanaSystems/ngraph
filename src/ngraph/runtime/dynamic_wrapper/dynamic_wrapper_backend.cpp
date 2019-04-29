@@ -39,21 +39,21 @@ shared_ptr<runtime::Tensor>
     runtime::dynamic_wrapper::DynamicWrapperBackend::create_tensor(const element::Type& type,
                                                                    const Shape& shape)
 {
-    return make_shared<WrappedStaticTensor>(m_wrapped_backend->create_tensor(type, shape), this);
+    return make_shared<WrappedStaticTensor>(m_wrapped_backend->create_tensor(type, shape));
 }
 
 shared_ptr<runtime::Tensor> runtime::dynamic_wrapper::DynamicWrapperBackend::create_tensor(
     const element::Type& type, const Shape& shape, void* memory_pointer)
 {
     return make_shared<WrappedStaticTensor>(
-        m_wrapped_backend->create_tensor(type, shape, memory_pointer), this);
+        m_wrapped_backend->create_tensor(type, shape, memory_pointer));
 }
 
 std::shared_ptr<runtime::Tensor>
     runtime::dynamic_wrapper::DynamicWrapperBackend::create_dynamic_tensor(
         const element::Type& type, const PartialShape& shape)
 {
-    return make_shared<WrappedDynamicTensor>(type, shape, this, m_wrapped_backend);
+    return make_shared<WrappedDynamicTensor>(type, shape, m_wrapped_backend);
 }
 
 shared_ptr<runtime::Executable>
@@ -116,10 +116,9 @@ bool runtime::dynamic_wrapper::WrappedExecutable::call(
 }
 
 runtime::dynamic_wrapper::WrappedStaticTensor::WrappedStaticTensor(
-    const std::shared_ptr<runtime::Tensor>& wrapped_tensor, const runtime::Backend* parent)
+    const std::shared_ptr<runtime::Tensor>& wrapped_tensor)
     : Tensor(make_shared<descriptor::Tensor>(
-                 wrapped_tensor->get_element_type(), wrapped_tensor->get_shape(), "wrapped_static"),
-             parent)
+          wrapped_tensor->get_element_type(), wrapped_tensor->get_shape(), "wrapped_static"))
     , m_wrapped_tensor(wrapped_tensor)
 {
 }
@@ -153,9 +152,8 @@ const std::shared_ptr<ngraph::runtime::Tensor>&
 runtime::dynamic_wrapper::WrappedDynamicTensor::WrappedDynamicTensor(
     const element::Type& element_type,
     const PartialShape& shape,
-    const runtime::Backend* parent,
     const std::shared_ptr<runtime::Backend>& wrapped_backend)
-    : Tensor(make_shared<descriptor::Tensor>(element_type, shape, "wrapped_dynamic"), parent)
+    : Tensor(make_shared<descriptor::Tensor>(element_type, shape, "wrapped_dynamic"))
     , m_wrapped_tensor(nullptr)
     , m_wrapped_backend(wrapped_backend)
 {
