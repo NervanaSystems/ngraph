@@ -79,6 +79,7 @@
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/depth_to_space.hpp"
 #include "ngraph/op/fused/elu.hpp"
+#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
@@ -1437,6 +1438,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::Convolution:
         case OP_TYPEID::ConvolutionBias:
         case OP_TYPEID::ConvolutionBiasAdd:
+        case OP_TYPEID::GroupConvolution:
         {
             // since bad inheritance design of these classes
             Strides win_stride;
@@ -1463,6 +1465,18 @@ shared_ptr<runtime::Executable>
 
                 const shared_ptr<op::ConvolutionBiasAdd> conv_op =
                     static_pointer_cast<op::ConvolutionBiasAdd>(op);
+                win_stride = conv_op->get_window_movement_strides();
+                win_dilation = conv_op->get_window_dilation_strides();
+                data_dilation = conv_op->get_data_dilation_strides();
+                pad_below = conv_op->get_padding_below();
+                pad_above = conv_op->get_padding_above();
+            }
+            else if (op_type_id == OP_TYPEID::GroupConvolution)
+            {
+                arguments_check(op, 2, 1);
+
+                const shared_ptr<op::GroupConvolution> conv_op =
+                    static_pointer_cast<op::GroupConvolution>(op);
                 win_stride = conv_op->get_window_movement_strides();
                 win_dilation = conv_op->get_window_dilation_strides();
                 data_dilation = conv_op->get_data_dilation_strides();
@@ -1497,6 +1511,10 @@ shared_ptr<runtime::Executable>
                 {
                     kern.emit<op::ConvolutionBiasAdd>(
                         static_pointer_cast<op::ConvolutionBiasAdd>(op));
+                }
+                else if (op_type_id == OP_TYPEID::GroupConvolution)
+                {
+                    kern.emit<op::GroupConvolution>(static_pointer_cast<op::GroupConvolution>(op));
                 }
                 else
                 {
@@ -1564,6 +1582,20 @@ shared_ptr<runtime::Executable>
                         cldnn::eltwise_mode::sum);
 
                     topology.add(cldnn_conv_bias_add);
+                }
+                else if (op_type_id == OP_TYPEID::GroupConvolution)
+                {
+                    const shared_ptr<op::GroupConvolution> conv_op =
+                        static_pointer_cast<op::GroupConvolution>(op);
+
+                    const cldnn::convolution cldnn_conv(op->get_output_tensor_name(0),
+                                                        op_input_name,
+                                                        {op->get_input_tensor_name(1)},
+                                                        conv_op->get_groups(),
+                                                        strides,
+                                                        input_offset,
+                                                        dilation);
+                    topology.add(cldnn_conv);
                 }
                 else
                 {
@@ -1969,7 +2001,6 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::SpaceToDepth:
         case OP_TYPEID::StopGradient:
         case OP_TYPEID::Transpose:
-        case OP_TYPEID::GroupConvolution:
         default:
         {
             throw unsupported_op("Unsupported op '" + op->description() +

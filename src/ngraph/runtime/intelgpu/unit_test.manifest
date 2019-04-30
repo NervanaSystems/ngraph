@@ -24,7 +24,6 @@ shape_of_vector
 prelu
 prelu_shared_slope
 prelu_negative_slope
-group_conv
 elu
 elu_negative_alpha
 space_to_depth
