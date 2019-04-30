@@ -27,6 +27,7 @@ using namespace std;
 NGRAPH_API const element::Type element::dynamic(element::Type_t::dynamic);
 NGRAPH_API const element::Type element::boolean(element::Type_t::boolean);
 NGRAPH_API const element::Type element::bf16(element::Type_t::bf16);
+NGRAPH_API const element::Type element::f16(element::Type_t::f16);
 NGRAPH_API const element::Type element::f32(element::Type_t::f32);
 NGRAPH_API const element::Type element::f64(element::Type_t::f64);
 NGRAPH_API const element::Type element::i8(element::Type_t::i8);
@@ -72,6 +73,7 @@ static const map<element::Type_t, const TypeInfo>& get_type_info_map()
         {element::Type_t::dynamic, TypeInfo(0, false, false, false, "dynamic", "dynamic")},
         {element::Type_t::boolean, TypeInfo(8, false, true, false, "char", "boolean")},
         {element::Type_t::bf16, TypeInfo(16, true, true, false, "bfloat16", "bf16")},
+        {element::Type_t::f16, TypeInfo(16, true, true, false, "float16", "f16")},
         {element::Type_t::f32, TypeInfo(32, true, true, false, "float", "f32")},
         {element::Type_t::f64, TypeInfo(64, true, true, false, "double", "f64")},
         {element::Type_t::i8, TypeInfo(8, false, true, true, "int8_t", "i8")},
@@ -91,6 +93,7 @@ std::vector<const element::Type*> element::Type::get_known_types()
     std::vector<const element::Type*> rc = {&element::dynamic,
                                             &element::boolean,
                                             &element::bf16,
+                                            &element::f16,
                                             &element::f32,
                                             &element::f64,
                                             &element::i8,
@@ -162,6 +165,11 @@ namespace ngraph
         const Type& from<bool>()
         {
             return boolean;
+        }
+        template <>
+        const Type& from<ngraph::float16>()
+        {
+            return f16;
         }
         template <>
         const Type& from<float>()
