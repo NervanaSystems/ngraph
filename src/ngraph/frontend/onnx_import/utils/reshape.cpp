@@ -25,6 +25,7 @@
 #include "exceptions.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
+#include "ngraph/op/util/reshape.hpp"
 #include "utils/common.hpp"
 #include "utils/reshape.hpp"
 
@@ -80,14 +81,8 @@ namespace ngraph
 
                 return std::make_shared<ngraph::op::Reshape>(
                     node,
-                    get_default_axis_vector(data_shape.size()),
+                    ngraph::get_default_order(data_shape.size()),
                     Shape{first_dim_size, last_dim_size});
-            }
-
-            AxisVector get_default_axis_vector(std::size_t data_shape_size, std::size_t start_value)
-            {
-                return AxisVector{
-                    common::get_monotonic_range<std::size_t>(data_shape_size, start_value)};
             }
 
             std::vector<std::size_t> infer_dimensions(const std::string& node_name,
@@ -145,33 +140,12 @@ namespace ngraph
                 return inferred_dims;
             }
 
-            std::shared_ptr<ngraph::Node> reorder_axes(const std::shared_ptr<ngraph::Node>& node,
-                                                       std::vector<std::size_t> axes_order = {})
-            {
-                Shape out_shape = node->get_shape();
-                if (axes_order.empty())
-                {
-                    axes_order.resize(out_shape.size());
-                    std::iota(std::begin(axes_order), std::end(axes_order), 0);
-                }
-                else
-                {
-                    for (std::size_t i = 0; i < axes_order.size(); ++i)
-                    {
-                        out_shape[i] = node->get_shape().at(axes_order.at(i));
-                    }
-                }
-
-                auto axis_vector = AxisVector{std::begin(axes_order), std::end(axes_order)};
-                return std::make_shared<ngraph::op::Reshape>(node, axis_vector, out_shape);
-            }
-
             std::shared_ptr<ngraph::Node> transpose(const std::shared_ptr<ngraph::Node>& node)
             {
                 std::vector<size_t> axes_order(node->get_shape().size());
                 std::iota(std::begin(axes_order), std::end(axes_order), 0);
                 std::reverse(std::begin(axes_order), std::end(axes_order));
-                return reorder_axes(node, axes_order);
+                return ngraph::op::util::reorder_axes(node, axes_order);
             }
 
             std::shared_ptr<ngraph::Node> squeeze(const std::shared_ptr<ngraph::Node>& node,
@@ -195,7 +169,7 @@ namespace ngraph
                         output_shape.push_back(axis);
                     }
                 }
-                return reshape(node, output_shape);
+                return ngraph::op::util::reshape(node, output_shape);
             }
 
             std::shared_ptr<ngraph::Node> collapse(const std::shared_ptr<ngraph::Node>& node,
@@ -213,15 +187,7 @@ namespace ngraph
                 output_shape.insert(std::end(output_shape),
                                     std::next(std::begin(shape), end_axis + 1),
                                     std::end(shape));
-                return reshape(node, output_shape);
-            }
-
-            std::shared_ptr<ngraph::Node> reshape(const std::shared_ptr<ngraph::Node>& node,
-                                                  const AxisVector& axis_order,
-                                                  const Shape& shape)
-            {
-                return std::make_shared<ngraph::op::Reshape>(
-                    node, get_default_axis_vector(node->get_shape().size()), shape);
+                return ngraph::op::util::reshape(node, output_shape);
             }
 
             std::shared_ptr<ngraph::Node> expand_dims(const std::shared_ptr<ngraph::Node>& node,
@@ -233,7 +199,7 @@ namespace ngraph
                 std::advance(empty_axis_it, axis);
                 output_shape.insert(empty_axis_it, 1);
                 return std::make_shared<ngraph::op::Reshape>(
-                    node, reshape::get_default_axis_vector(node->get_shape().size()), output_shape);
+                    node, ngraph::get_default_order(node->get_shape().size()), output_shape);
             }
 
             NodeVector split(const std::shared_ptr<ngraph::Node>& node,
