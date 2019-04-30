@@ -62,7 +62,7 @@ namespace ngraph
 
             /// \brief Get tensor element type
             /// \return element::Type
-            const element::Type& get_element_type() const;
+            virtual const element::Type& get_element_type() const;
 
             /// \brief Get number of elements in the tensor
             /// \return number of elements in the tensor

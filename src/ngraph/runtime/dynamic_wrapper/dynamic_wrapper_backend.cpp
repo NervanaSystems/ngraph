@@ -161,6 +161,11 @@ runtime::dynamic_wrapper::WrappedStaticTensor::WrappedStaticTensor(
 {
 }
 
+const element::Type& runtime::dynamic_wrapper::WrappedStaticTensor::get_element_type() const
+{
+    return m_wrapped_tensor->get_element_type();
+}
+
 const ngraph::Shape& runtime::dynamic_wrapper::WrappedStaticTensor::get_shape() const
 {
     return m_wrapped_tensor->get_shape();
@@ -195,6 +200,13 @@ runtime::dynamic_wrapper::WrappedDynamicTensor::WrappedDynamicTensor(
     , m_wrapped_tensor(nullptr)
     , m_wrapped_backend(wrapped_backend)
 {
+}
+
+const element::Type& runtime::dynamic_wrapper::WrappedDynamicTensor::get_element_type() const
+{
+    NGRAPH_CHECK(m_wrapped_tensor != nullptr,
+                 "asked for element type of a dynamic tensor with no allocated storage");
+    return m_wrapped_tensor->get_element_type();
 }
 
 const ngraph::Shape& runtime::dynamic_wrapper::WrappedDynamicTensor::get_shape() const

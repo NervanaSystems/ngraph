@@ -79,6 +79,7 @@ class ngraph::runtime::dynamic_wrapper::WrappedStaticTensor : public ngraph::run
 {
 public:
     WrappedStaticTensor(const std::shared_ptr<ngraph::runtime::Tensor>& wrapped_tensor);
+    virtual const element::Type& get_element_type() const override;
     virtual const ngraph::Shape& get_shape() const override;
     virtual void write(const void* p, size_t offset, size_t n) override;
     virtual void read(void* p, size_t offset, size_t n) const override;
@@ -95,6 +96,7 @@ public:
     WrappedDynamicTensor(const element::Type& element_type,
                          const PartialShape& shape,
                          const std::shared_ptr<runtime::Backend>& wrapped_backend);
+    virtual const element::Type& get_element_type() const override;
     virtual const ngraph::Shape& get_shape() const override;
     virtual void write(const void* p, size_t offset, size_t n) override;
     virtual void read(void* p, size_t offset, size_t n) const override;
