@@ -62,7 +62,7 @@ NGRAPH_TEST(${BACKEND_NAME}, prelu)
 
 NGRAPH_TEST(${BACKEND_NAME}, hardsigmoid_float)
 {
-    Shape shape{3, 5};
+    Shape shape{2, 7};
     float alpha = 0.125f;
     float beta = 0.642f;
 
@@ -73,28 +73,24 @@ NGRAPH_TEST(${BACKEND_NAME}, hardsigmoid_float)
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Prepare input and expected output data
-    std::vector<float> input_data{-1.f,
-                                  0.f,
-                                  1.f,
-                                  -100.f,
-                                  100.f,
-                                  -3.1234567f,
-                                  5.876543f,
-                                  7.13245364f,
-                                  std::numeric_limits<float>::max(),
-                                  std::numeric_limits<float>::lowest(),
-                                  std::numeric_limits<float>::min(),
-                                  -std::numeric_limits<float>::infinity(),
-                                  std::numeric_limits<float>::infinity(),
-                                  std::numeric_limits<float>::min() / 16.f,
-                                  -std::numeric_limits<float>::min() / 16.f};
+    vector<float> input_data{-1.f,
+                             0.f,
+                             1.f,
+                             -100.f,
+                             100.f,
+                             -3.1234567f,
+                             5.876543f,
+                             7.13245364f,
+                             numeric_limits<float>::max(),
+                             numeric_limits<float>::lowest(),
+                             numeric_limits<float>::min(),
+                             numeric_limits<float>::infinity(),
+                             numeric_limits<float>::min() / 16.f,
+                             -numeric_limits<float>::min() / 16.f};
 
-    auto impl = [alpha, beta](float val) {
-        return std::min(std::max(alpha * val + beta, 0.f), 1.f);
-    };
-    std::vector<float> expected_output;
-    std::transform(
-        std::begin(input_data), std::end(input_data), std::back_inserter(expected_output), impl);
+    auto impl = [alpha, beta](float val) { return min(max(alpha * val + beta, 0.f), 1.f); };
+    vector<float> expected_output;
+    transform(begin(input_data), end(input_data), back_inserter(expected_output), impl);
 
     auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, input_data);
@@ -118,28 +114,25 @@ NGRAPH_TEST(${BACKEND_NAME}, hardsigmoid_double)
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Prepare input and expected output data
-    std::vector<double> input_data{-1.,
-                                   0.,
-                                   1.,
-                                   -100.,
-                                   100.,
-                                   -3.1234567,
-                                   5.876543,
-                                   7.13245364,
-                                   std::numeric_limits<double>::max(),
-                                   std::numeric_limits<double>::lowest(),
-                                   std::numeric_limits<double>::min(),
-                                   -std::numeric_limits<double>::infinity(),
-                                   std::numeric_limits<double>::infinity(),
-                                   std::numeric_limits<double>::min() / 16.,
-                                   -std::numeric_limits<double>::min() / 16.};
+    vector<double> input_data{-1.,
+                              0.,
+                              1.,
+                              -100.,
+                              100.,
+                              -3.1234567,
+                              5.876543,
+                              7.13245364,
+                              numeric_limits<double>::max(),
+                              numeric_limits<double>::lowest(),
+                              numeric_limits<double>::min(),
+                              -numeric_limits<double>::infinity(),
+                              numeric_limits<double>::infinity(),
+                              numeric_limits<double>::min() / 16.,
+                              -numeric_limits<double>::min() / 16.};
 
-    auto impl = [alpha, beta](double val) {
-        return std::min(std::max(alpha * val + beta, 0.), 1.);
-    };
-    std::vector<double> expected_output;
-    std::transform(
-        std::begin(input_data), std::end(input_data), std::back_inserter(expected_output), impl);
+    auto impl = [alpha, beta](double val) { return min(max(alpha * val + beta, 0.), 1.); };
+    vector<double> expected_output;
+    transform(begin(input_data), end(input_data), back_inserter(expected_output), impl);
 
     auto a = backend->create_tensor(element::f64, shape);
     copy_data(a, input_data);
