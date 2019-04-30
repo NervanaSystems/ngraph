@@ -29,6 +29,10 @@ prelu
 prelu_shared_slope
 prelu_negative_slope
 group_conv
+elu
+elu_negative_alpha
+space_to_depth
+depth_to_space
 
 # Unsupported extra padding modes
 pad_edge_1d

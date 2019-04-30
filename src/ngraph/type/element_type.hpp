@@ -84,6 +84,8 @@ namespace ngraph
             bool is_signed() const;
             bool is_quantized() const;
             size_t bitwidth() const;
+            // The name of this type, the enum name of this type
+            const std::string& get_type_name() const;
             bool operator==(const Type& other) const;
             bool operator!=(const Type& other) const { return !(*this == other); }
             bool operator<(const Type& other) const;
