@@ -45,7 +45,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_lstm_fwd_with_clip)
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     test_case.add_input<float>({-0.455351, -0.276391, -0.185934, -0.269585}); // X
-    test_case.add_input<float>({-0.494659f,
+    test_case.add_input<float>({-0.494659f,                                   // W
                                 0.0453352f,
                                 -0.487793f,
                                 0.417264f,
@@ -60,8 +60,8 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_lstm_fwd_with_clip)
                                 -0.0888852f,
                                 -0.428709f,
                                 -0.283349f,
-                                0.208792f}); // W
-    test_case.add_input<float>({0.146626f,
+                                0.208792f});
+    test_case.add_input<float>({0.146626f, // R
                                 -0.0620289f,
                                 -0.0815302f,
                                 0.100482f,
@@ -76,9 +76,9 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_lstm_fwd_with_clip)
                                 -0.394864f,
                                 0.42111f,
                                 -0.386624f,
-                                -0.390225f}); // R
+                                -0.390225f});
 
-    test_case.add_input<float>({0.381619f,
+    test_case.add_input<float>({0.381619f, // B
                                 0.0323954f,
                                 -0.14449f,
                                 0.420804f,
@@ -93,7 +93,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_lstm_fwd_with_clip)
                                 0.0f,
                                 0.0f,
                                 0.0f,
-                                0.0f});                                                 // B
+                                0.0f});
     test_case.add_input<float>({0.2345f, 0.5235f, 0.4378f, 0.3475f, 0.8927f, 0.3456f}); // P
 
     test_case.add_expected_output<float>(
@@ -122,7 +122,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_lstm_fwd_mixed_seq)
     test_case.add_input<int>({1, 2});                                             // seq_lengths
 
     test_case.add_expected_output<float>(Shape{2, 1, 2, 3},
-                                         {0.28828835f,
+                                         {0.28828835f, // Y_data
                                           0.36581863f,
                                           0.45679406f,
                                           0.34526032f,
@@ -133,7 +133,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_lstm_fwd_mixed_seq)
                                           0.f,
                                           0.85882828f,
                                           0.90703777f,
-                                          0.92382453f}); // Y_data
+                                          0.92382453f});
     test_case.add_expected_output<float>(
         Shape{1, 2, 3},
         {0.28828835f, 0.36581863f, 0.45679406f, 0.85882828f, 0.90703777f, 0.92382453f}); // Y_h_data
