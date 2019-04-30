@@ -49,12 +49,6 @@ namespace ngraph
                 using type = long double;
             };
 
-            template <typename OUTPUT, typename INPUT>
-            OUTPUT identity_rescale(INPUT in)
-            {
-                return static_cast<OUTPUT>(in);
-            }
-
             // in: NC_I...
             // filter: C_OC_I...
             // out: NC_O...
