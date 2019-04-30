@@ -28,12 +28,12 @@
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
-#include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
@@ -500,8 +500,7 @@ std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
                                                            sconv->get_padding_below(),
                                                            sconv->get_padding_above(),
                                                            sconv->get_data_dilation_strides(),
-                                                           n->get_arguments().size(),
-                                                           n->get_shape());
+                                                           n->get_arguments().size());
 
     return new_conv;
 }
@@ -600,11 +599,13 @@ bool runtime::cpu::pass::CPUBatchFusion::run_on_function(std::shared_ptr<Functio
             }
             if (m_fusion_type & ngraph::pass::REGULAR_FUSIONS)
             {
+                /*
                 if (auto fused_conv = fuse_group_convolution(n))
                 {
                     func->replace_node(n, fused_conv);
                     modified = true;
                 }
+                */
             }
         }
     }

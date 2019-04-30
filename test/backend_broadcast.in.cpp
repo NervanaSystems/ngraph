@@ -462,6 +462,7 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_matrix_2)
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
 
+#ifdef NGRAPH_JSON_ENABLE
 NGRAPH_TEST(${BACKEND_NAME}, constant_broadcast)
 {
     const string js =
@@ -538,3 +539,4 @@ NGRAPH_TEST(${BACKEND_NAME}, constant_broadcast)
 
     // If this compiles it works
 }
+#endif

@@ -17,6 +17,7 @@
 #include <fstream>
 #include <map>
 #include <memory>
+#include <type_traits>
 
 #include "ngraph/runtime/intelgpu/visualize_tree.hpp"
 
@@ -33,6 +34,8 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max.hpp"
@@ -55,6 +58,7 @@ using namespace std;
 #define NGRAPH_OP(a, b) a,
 enum class OP_TYPEID
 {
+#include "ngraph/op/fused_op_tbl.hpp"
 #include "ngraph/op/op_tbl.hpp"
     UNDEFINED_OP
 };
@@ -68,6 +72,7 @@ static OP_TYPEID get_typeid(const string& s)
 // ...
 #define NGRAPH_OP(a, b) {#a, OP_TYPEID::a},
     static const unordered_map<string, OP_TYPEID> typeid_map{
+#include "ngraph/op/fused_op_tbl.hpp"
 #include "ngraph/op/op_tbl.hpp"
     };
 #undef NGRAPH_OP
@@ -335,6 +340,48 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
         writer << print_table_row_dims("win_stride", conv_op->get_window_movement_strides())
                << print_table_row_dims("win_dilation", conv_op->get_window_dilation_strides())
                << print_table_row_dims("data_dilation", conv_op->get_data_dilation_strides())
+               << print_table_row_value(
+                      "pad_type",
+                      static_cast<underlying_type<op::PadType>::type>(conv_op->get_pad_type()))
+               << print_table_row_dims("pad_above", conv_op->get_padding_above())
+               << print_table_row_dims("pad_below", conv_op->get_padding_below());
+        break;
+    }
+    case OP_TYPEID::GroupConvolution:
+    {
+        const shared_ptr<op::GroupConvolution> conv_op =
+            static_pointer_cast<op::GroupConvolution>(node);
+
+        writer << print_table_row_dims("win_stride", conv_op->get_window_movement_strides())
+               << print_table_row_dims("win_dilation", conv_op->get_window_dilation_strides())
+               << print_table_row_dims("data_dilation", conv_op->get_data_dilation_strides())
+               << print_table_row_value("groups_count", conv_op->get_groups())
+               << print_table_row_dims("pad_above", conv_op->get_padding_above())
+               << print_table_row_dims("pad_below", conv_op->get_padding_below());
+        break;
+    }
+    case OP_TYPEID::ConvolutionBias:
+    {
+        const shared_ptr<op::ConvolutionBias> conv_op =
+            static_pointer_cast<op::ConvolutionBias>(node);
+
+        writer << print_table_row_dims("win_stride", conv_op->get_window_movement_strides())
+               << print_table_row_dims("win_dilation", conv_op->get_window_dilation_strides())
+               << print_table_row_dims("data_dilation", conv_op->get_data_dilation_strides())
+               << print_table_row_value("with_relu", conv_op->with_relu())
+               << print_table_row_dims("pad_above", conv_op->get_padding_above())
+               << print_table_row_dims("pad_below", conv_op->get_padding_below());
+        break;
+    }
+    case OP_TYPEID::ConvolutionBiasAdd:
+    {
+        const shared_ptr<op::ConvolutionBiasAdd> conv_op =
+            static_pointer_cast<op::ConvolutionBiasAdd>(node);
+
+        writer << print_table_row_dims("win_stride", conv_op->get_window_movement_strides())
+               << print_table_row_dims("win_dilation", conv_op->get_window_dilation_strides())
+               << print_table_row_dims("data_dilation", conv_op->get_data_dilation_strides())
+               << print_table_row_value("with_relu", conv_op->with_relu())
                << print_table_row_dims("pad_above", conv_op->get_padding_above())
                << print_table_row_dims("pad_below", conv_op->get_padding_below());
         break;
@@ -343,6 +390,24 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
     {
         const shared_ptr<op::ConvolutionBackpropFilters> conv_op_filt =
             static_pointer_cast<op::ConvolutionBackpropFilters>(node);
+
+        writer << print_table_row_dims("filters_shape", conv_op_filt->get_filters_shape())
+               << print_table_row_dims("window_movement_strides_forward",
+                                       conv_op_filt->get_window_movement_strides_forward())
+               << print_table_row_dims("window_dilation_strides_forward",
+                                       conv_op_filt->get_window_dilation_strides_forward())
+               << print_table_row_dims("data_dilation_strides_forward",
+                                       conv_op_filt->get_data_dilation_strides_forward())
+               << print_table_row_dims("pad_above_forward",
+                                       conv_op_filt->get_padding_above_forward())
+               << print_table_row_dims("pad_below_forward",
+                                       conv_op_filt->get_padding_below_forward());
+        break;
+    }
+    case OP_TYPEID::ConvolutionBiasBackpropFiltersBias:
+    {
+        const shared_ptr<op::ConvolutionBiasBackpropFiltersBias> conv_op_filt =
+            static_pointer_cast<op::ConvolutionBiasBackpropFiltersBias>(node);
 
         writer << print_table_row_dims("filters_shape", conv_op_filt->get_filters_shape())
                << print_table_row_dims("window_movement_strides_forward",

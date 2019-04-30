@@ -13,14 +13,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-#include <pybind11/pybind11.h>
 
-#include "pyngraph/onnx_import/onnx_import.hpp"
+#pragma once
 
-namespace py = pybind11;
+#include "ngraph/pass/pass.hpp"
 
-PYBIND11_MODULE(_pyngraph_onnx_import, m)
+namespace ngraph
 {
-    m.doc() = "Package ngraph.impl that wraps ngraph::onnx_import";
-    regmodule_pyngraph_onnx_import(m);
+    namespace pass
+    {
+        class ShapeRelevance : public FunctionPass
+        {
+        public:
+            ShapeRelevance()
+                : FunctionPass()
+            {
+            }
+            virtual bool run_on_function(std::shared_ptr<ngraph::Function> f) override;
+        };
+    }
 }

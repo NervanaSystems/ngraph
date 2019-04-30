@@ -16,13 +16,7 @@
 
 #pragma once
 
-#ifdef NGRAPH_DISTRIBUTED_ENABLE
-#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
-#include <mlsl.hpp>
-#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
-#include <mpi.h>
-#endif
-#include "ngraph/type/element_type.hpp"
+#include "ngraph/distributed.hpp"
 
 namespace ngraph
 {
@@ -31,53 +25,10 @@ namespace ngraph
         namespace reference
         {
             template <typename T>
-            void allreduce(T* arg, T* out, const element::Type element_type, int count)
+            void allreduce(T* arg, T* out, const element::Type_t element_type, int count)
             {
-#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
-                auto data_type = MLSL::DT_FLOAT;
-
-                if (element_type == element::f32)
-                {
-                    data_type = MLSL::DT_FLOAT;
-                }
-                else if (element_type == element::f64)
-                {
-                    data_type = MLSL::DT_DOUBLE;
-                }
-                else
-                {
-                    throw std::runtime_error("AllReduce op supports only f32 and f64 types");
-                }
-
-                MLSL::Environment& env = MLSL::Environment::GetEnv();
-                MLSL::Distribution* distribution = env.CreateDistribution(env.GetProcessCount(), 1);
-                MLSL::CommReq* req = distribution->AllReduce(
-                    arg, out, count, data_type, MLSL::RT_SUM, MLSL::GT_DATA);
-                env.Wait(req);
-                env.DeleteDistribution(distribution);
-#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
-                auto data_type = MPI_FLOAT;
-
-                if (element_type == element::f32)
-                {
-                    data_type = MPI_FLOAT;
-                }
-                else if (element_type == element::f64)
-                {
-                    data_type = MPI_DOUBLE;
-                }
-                else
-                {
-                    throw std::runtime_error("AllReduce op supports only f32 and f64 types");
-                }
-
-                MPI_Allreduce(arg, out, count, data_type, MPI_SUM, MPI_COMM_WORLD);
-#else
-                throw ngraph_error("Distributed Library not supported/mentioned");
-#endif
+                get_distributed_interface()->all_reduce(arg, out, element_type, count);
             }
         }
     }
 }
-
-#endif
