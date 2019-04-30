@@ -40,7 +40,7 @@ namespace ngraph
             /// \param offset         Box offset relative to top center of image
             /// \param variances      Values to adjust prior boxes with
             /// \param scale_all      Scale all sizes
-            PriorBox(const std::shared_ptr<Node>& input_shape,
+            PriorBox(const std::shared_ptr<Node>& layer_shape,
                      const std::shared_ptr<Node>& image_shape,
                      const std::vector<float>& min_sizes,
                      const std::vector<float>& max_sizes,

@@ -39,7 +39,7 @@ namespace ngraph
             /// \param step_heights   Distance between prior box centers
             /// \param offset         Box offset relative to top center of image
             /// \param variances      Values to adjust prior boxes with
-            PriorBoxClustered(const std::shared_ptr<Node>& input_shape,
+            PriorBoxClustered(const std::shared_ptr<Node>& layer_shape,
                               const std::shared_ptr<Node>& image_shape,
                               const size_t num_priors,
                               const std::vector<float>& widths,

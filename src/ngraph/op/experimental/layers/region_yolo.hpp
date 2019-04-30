@@ -33,8 +33,8 @@ namespace ngraph
             /// \param num_regions    Number of regions
             /// \param do_softmax     Compute softmax
             /// \param mask           Mask
-            /// \param axis
-            /// \param end_axis
+            /// \param axis           Axis to begin softmax on
+            /// \param end_axis       Axis to end softmax on
             RegionYolo(const std::shared_ptr<Node>& input,
                        const size_t num_coords,
                        const size_t num_classes,

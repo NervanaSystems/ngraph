@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::PriorBoxClustered::PriorBoxClustered(const shared_ptr<Node>& input_shape,
+op::PriorBoxClustered::PriorBoxClustered(const shared_ptr<Node>& layer_shape,
                                          const shared_ptr<Node>& image_shape,
                                          const size_t num_priors,
                                          const std::vector<float>& widths,
@@ -31,7 +31,7 @@ op::PriorBoxClustered::PriorBoxClustered(const shared_ptr<Node>& input_shape,
                                          const float step_heights,
                                          const float offset,
                                          const std::vector<float>& variances)
-    : Op("PriorBoxClustered", check_single_output_args({input_shape, image_shape}))
+    : Op("PriorBoxClustered", check_single_output_args({layer_shape, image_shape}))
     , m_num_priors(num_priors)
     , m_widths(widths)
     , m_heights(heights)

@@ -37,7 +37,7 @@ namespace ngraph
             /// \param feature_stride  Feature stride
             /// \param min_size        Minimum box size
             /// \param anchor_ratios   Ratios for anchor generation
-            /// \param anchor scales   Scales for anchor generation
+            /// \param anchor_scales   Scales for anchor generation
             /// \param clip_before_nms Clip before NMs
             /// \param clip_after_nms  Clip after NMs
             /// \param normalize       Normalize boxes to [0,1]

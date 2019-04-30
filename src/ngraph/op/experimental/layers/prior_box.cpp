@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::PriorBox::PriorBox(const shared_ptr<Node>& input_shape,
+op::PriorBox::PriorBox(const shared_ptr<Node>& layer_shape,
                        const shared_ptr<Node>& image_shape,
                        const std::vector<float>& min_sizes,
                        const std::vector<float>& max_sizes,
@@ -32,7 +32,7 @@ op::PriorBox::PriorBox(const shared_ptr<Node>& input_shape,
                        const float offset,
                        const std::vector<float>& variances,
                        const bool scale_all)
-    : Op("PriorBox", check_single_output_args({input_shape, image_shape}))
+    : Op("PriorBox", check_single_output_args({layer_shape, image_shape}))
     , m_min_sizes(min_sizes)
     , m_max_sizes(max_sizes)
     , m_aspect_ratios(aspect_ratios)
