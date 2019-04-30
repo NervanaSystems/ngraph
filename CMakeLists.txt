@@ -166,6 +166,7 @@ option(NGRAPH_LIB_VERSIONING_ENABLE "Enable shared library versioning" FALSE)
 option(NGRAPH_PYTHON_BUILD_ENABLE "Enable build nGraph python package wheel" FALSE)
 option(NGRAPH_PLAIDML_ENABLE "Enable the PlaidML backend" ${PLAIDML_FOUND})
 option(NGRAPH_DISTRIBUTED_ENABLE "Enable distributed training using MLSL/OpenMPI" OFF)
+option(NGRAPH_JSON_ENABLE "Enable JSON based serialization and tracing features" TRUE)
 
 if (NGRAPH_CPU_ENABLE
         AND
@@ -202,6 +203,10 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
     option(NGRAPH_ONNXIFI_ENABLE "Enable ONNX Interface for Framework Integration" TRUE)
 endif()
 
+if (NOT NGRAPH_JSON_ENABLE)
+    set(NGRAPH_TOOLS_ENABLE FALSE)
+endif()
+
 macro (NORMALIZE_BOOL VAL)
     if (${VAL})
         set(${VAL} ON)
@@ -228,6 +233,7 @@ NORMALIZE_BOOL(NGRAPH_LIB_VERSIONING_ENABLE)
 NORMALIZE_BOOL(NGRAPH_PYTHON_BUILD_ENABLE)
 NORMALIZE_BOOL(NGRAPH_USE_PREBUILT_LLVM)
 NORMALIZE_BOOL(NGRAPH_PLAIDML_ENABLE)
+NORMALIZE_BOOL(NGRAPH_JSON_ENABLE)
 
 message(STATUS "NGRAPH_UNIT_TEST_ENABLE:        ${NGRAPH_UNIT_TEST_ENABLE}")
 message(STATUS "NGRAPH_TOOLS_ENABLE:            ${NGRAPH_TOOLS_ENABLE}")
@@ -248,6 +254,7 @@ message(STATUS "NGRAPH_PYTHON_BUILD_ENABLE:     ${NGRAPH_PYTHON_BUILD_ENABLE}")
 message(STATUS "NGRAPH_USE_PREBUILT_LLVM:       ${NGRAPH_USE_PREBUILT_LLVM}")
 message(STATUS "NGRAPH_PLAIDML_ENABLE:          ${NGRAPH_PLAIDML_ENABLE}")
 message(STATUS "NGRAPH_DISTRIBUTED_ENABLE:      ${NGRAPH_DISTRIBUTED_ENABLE}")
+message(STATUS "NGRAPH_JSON_ENABLE:             ${NGRAPH_JSON_ENABLE}")
 
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
@@ -452,7 +459,10 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
 endif()
 
 include(cmake/external_gtest.cmake)
-include(cmake/external_json.cmake)
+if(NGRAPH_JSON_ENABLE)
+    add_definitions(-DNGRAPH_JSON_ENABLE)
+    include(cmake/external_json.cmake)
+endif()
 if(NGRAPH_CPU_ENABLE OR NGRAPH_GENERIC_CPU_ENABLE)
     include(cmake/external_eigen.cmake)
 endif()

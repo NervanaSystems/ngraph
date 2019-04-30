@@ -19,7 +19,6 @@
 
 #include "gtest/gtest.h"
 
-#include "distributed_setup.hpp"
 #include "ngraph/distributed.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/ngraph.hpp"
@@ -32,8 +31,7 @@ using namespace ngraph;
 
 TEST(distributed_${BACKEND_NAME}, allreduce)
 {
-    DistributedSetup distsetup;
-    auto comm_size = distsetup.get_comm_size();
+    auto comm_size = get_distributed_interface()->get_size();
     if (comm_size > 1)
     {
         auto shape = Shape{2, 2};
@@ -69,8 +67,7 @@ TEST(distributed_${BACKEND_NAME}, broadcastdistributed)
     auto result = backend->create_tensor(element::f32, shape);
     copy_data(result, vector<float>(4, 0));
 
-    DistributedSetup distsetup;
-    auto processIdx = distsetup.get_comm_rank();
+    auto processIdx = get_distributed_interface()->get_rank();
     if (processIdx == 0)
     {
         copy_data(result, v);
