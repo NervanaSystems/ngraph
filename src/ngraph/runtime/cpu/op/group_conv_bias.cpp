@@ -16,7 +16,6 @@
 
 #include <numeric>
 
-#include "group_conv.hpp"
 #include "group_conv_bias.hpp"
 
 #include "ngraph/op/get_output_element.hpp"

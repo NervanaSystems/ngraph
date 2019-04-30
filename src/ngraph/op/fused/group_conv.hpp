@@ -18,25 +18,26 @@
 
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/op.hpp"
-#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
+#include "ngraph/op/util/attr_types.hpp"
+#include "ngraph/op/util/fused_op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Group Convolution
-        class GroupConvolution : public Op
+        class GroupConvolution : public ngraph::op::util::FusedOp
         {
         public:
-            CPU_BACKEND_API GroupConvolution(const std::shared_ptr<Node>& data_batch,
-                                             const std::shared_ptr<Node>& filters,
-                                             const Strides& window_movement_strides,
-                                             const Strides& window_dilation_strides,
-                                             const CoordinateDiff& padding_below,
-                                             const CoordinateDiff& padding_above,
-                                             const Strides& data_dilation_strides,
-                                             size_t groups,
-                                             const Shape& output_shape);
+            GroupConvolution(const std::shared_ptr<Node>& data_batch,
+                             const std::shared_ptr<Node>& filters,
+                             const Strides& window_movement_strides,
+                             const Strides& window_dilation_strides,
+                             const CoordinateDiff& padding_below,
+                             const CoordinateDiff& padding_above,
+                             const Strides& data_dilation_strides,
+                             const size_t groups,
+                             const PadType& pad_type = PadType::EXPLICIT);
 
             Shape get_weights_dimensions() const;
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
@@ -47,8 +48,14 @@ namespace ngraph
             std::shared_ptr<Node> get_filters() { return get_argument(1); }
             std::shared_ptr<Node> get_data_batch() { return get_argument(0); }
             size_t get_groups() const { return m_groups; }
+            const PadType& get_pad_type() const { return m_pad_type; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+
+            virtual NodeVector decompose_op() const override;
+
+            virtual void pre_validate_and_infer_types() override;
+            virtual void post_validate_and_infer_types() override;
 
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
@@ -59,7 +66,8 @@ namespace ngraph
             CoordinateDiff m_padding_below;
             CoordinateDiff m_padding_above;
             Strides m_data_dilation_strides;
-            size_t m_groups = 1;
+            size_t m_groups;
+            PadType m_pad_type;
         };
     }
 }
