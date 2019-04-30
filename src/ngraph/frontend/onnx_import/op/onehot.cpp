@@ -44,7 +44,7 @@ namespace ngraph
                     auto indices =
                         std::make_shared<ngraph::op::Convert>(inputs.at(0), element::i64);
                     auto indices_shape = indices->get_shape();
-                    auto depth = reshape::interpret_as_scalar(inputs.at(1));
+                    auto depth = inputs.at(1);
                     auto values = inputs.at(2);
                     std::shared_ptr<ngraph::Node> off_value =
                         std::make_shared<ngraph::op::Slice>(values, Coordinate{0}, Coordinate{1});

@@ -245,7 +245,7 @@ namespace ngraph
                 {
                     return node;
                 }
-                return reshape::reshape(node, Shape{});
+                return ngraph::op::util::reshape(node, Shape{});
             }
 
         } // namespace  reshape
