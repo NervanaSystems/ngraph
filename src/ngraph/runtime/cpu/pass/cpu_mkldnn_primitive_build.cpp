@@ -758,7 +758,6 @@ namespace ngraph
                     auto convolution = static_cast<const OP*>(node);
                     Strides window_dilation_strides_adjusted;
 
-                    mkldnn::algorithm convolution_algo = mkldnn_utils::get_conv_algo();
                     for (size_t s : convolution->get_window_dilation_strides())
                     {
                         window_dilation_strides_adjusted.push_back(s - 1);
@@ -768,9 +767,13 @@ namespace ngraph
                     auto weights_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
                     // MKLDNN relies on named formats for kernel selection
                     if (weights_desc.data.format == mkldnn_nchw)
+                    {
                         weights_desc.data.format = mkldnn_oihw;
+                    }
                     if (weights_desc.data.format == mkldnn_ncdhw)
+                    {
                         weights_desc.data.format = mkldnn_oidhw;
+                    }
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
                     auto strides = convolution->get_window_movement_strides();
