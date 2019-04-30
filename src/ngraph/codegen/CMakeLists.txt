@@ -38,7 +38,7 @@ endif()
 get_target_property(LLVM_INCLUDE_DIR libllvm INTERFACE_INCLUDE_DIRECTORIES)
 
 # find_file(HEADER_1 cmath HINTS /usr/include/c++/7)
-get_filename_component(CLANG_INCLUDE_DIR ${LLVM_INCLUDE_DIR}/../lib/clang/5.0.2/include ABSOLUTE)
+get_filename_component(CLANG_INCLUDE_DIR ${LLVM_INCLUDE_DIR}/../lib/clang/${NGRAPH_LLVM_VERSION}/include ABSOLUTE)
 
 if(NGRAPH_CPU_ENABLE)
     get_target_property(MKLDNN_INCLUDE_DIR libmkldnn INTERFACE_INCLUDE_DIRECTORIES)
@@ -49,21 +49,6 @@ endif()
 
 list(APPEND HEADER_SEARCH_DEFINES CLANG_BUILTIN_HEADERS_PATH="${CLANG_INCLUDE_DIR}")
 list(APPEND HEADER_SEARCH_DEFINES NGRAPH_HEADERS_PATH="${NGRAPH_INCLUDE_PATH}")
-
-if(NGRAPH_DISTRIBUTED_ENABLE)
-    if (NGRAPH_DISTRIBUTED_MLSL_ENABLE)
-        get_target_property(MLSL_INCLUDE_DIR libmlsl INTERFACE_INCLUDE_DIRECTORIES)
-        list(APPEND HEADER_SEARCH_DEFINES MLSL_HEADER_PATH="${MLSL_INCLUDE_DIR}")
-    elseif(NGRAPH_DISTRIBUTED_OMPI_ENABLE)
-        find_package(MPI REQUIRED)
-        # MPI_C_INCLUDE_PATH might have a list of directories separated by a semicolon
-        # Escape the semicolon to prevent cmake from interpreting the string as a list
-        string(REPLACE ";" "\\\;" MPI_C_INCLUDE_PATH_ESCAPED "${MPI_C_INCLUDE_PATH}")
-        list(APPEND HEADER_SEARCH_DEFINES MPI_HEADER_PATH="${MPI_C_INCLUDE_PATH_ESCAPED}")
-    else()
-        message(FATAL_ERROR "Distributed Library not supported/mentioned")
-    endif()
-endif()
 
 if(NGRAPH_GPU_ENABLE)
     find_package(CUDA 8 REQUIRED)

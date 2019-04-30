@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "exceptions.hpp"
+#include "ngraph/op/util/reshape.hpp"
 #include "reduction.hpp"
 #include "utils/common.hpp"
 
@@ -72,7 +73,7 @@ namespace ngraph
                 }
                 return std::make_shared<ngraph::op::Reshape>(
                     op_node,
-                    reshape::get_default_axis_vector(op_node->get_shape().size()),
+                    ngraph::get_default_order(op_node->get_shape().size()),
                     Shape{output_shape});
             }
 
