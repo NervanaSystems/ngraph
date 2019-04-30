@@ -202,7 +202,6 @@ namespace ngraph
                     size_t filter_in_channel_stride =
                         row_major_strides(filter_shape).at(filter_in_channel_axis);
 
-                    size_t out_idx = out_transform.index(out_coord);
                     while (in_it != in_it_end && filter_it != filter_it_end)
                     {
                         const Coordinate& in_coord = *in_it;

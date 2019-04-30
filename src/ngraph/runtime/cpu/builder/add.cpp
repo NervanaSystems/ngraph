@@ -44,19 +44,30 @@ namespace ngraph
                     size_t add_index = mkldnn_emitter->reserve_primitive_space(4);
                     auto& deps = mkldnn_emitter->get_primitive_deps(add_index);
 
-                    auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                    auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                    auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                    auto arg0_buffer_index =
+                        external_function->get_buffer_index(args[0].get_name());
+                    auto arg1_buffer_index =
+                        external_function->get_buffer_index(args[1].get_name());
+                    auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
-                    auto functor = [&, sum_pd, add_index](CPURuntimeContext* ctx,
-                                                          CPUExecutionContext* ectx) {
+                    auto functor = [&,
+                                    sum_pd,
+                                    add_index,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_elementwise_add(sum_pd, add_index);
+                            mkldnn_emitter->build_elementwise_add(
+                                ctx->mkldnn_primitives, sum_pd, deps, add_index);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[2], ctx->buffer_data[out_buffer_index]);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, add_index);
                     };
                     functors.emplace_back(functor);
