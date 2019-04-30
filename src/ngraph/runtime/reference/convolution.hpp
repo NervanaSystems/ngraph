@@ -79,8 +79,7 @@ namespace ngraph
                                      size_t filter_in_channel_axis,
                                      size_t out_batch_axis,
                                      size_t out_channel_axis,
-                                     std::function<OUTPUT(ACCUMULATION)> rescale =
-                                         identity_rescale<OUTPUT, ACCUMULATION>)
+                                     const float requant_scale = 1.0f)
             {
 #pragma STDC FENV_ACCESS ON
                 auto old_mode = std::fegetround();
@@ -230,7 +229,8 @@ namespace ngraph
                         ++in_it;
                         ++filter_it;
                     }
-                    out[out_transform.index(out_coord)] = rescale(result);
+                    out[out_transform.index(out_coord)] =
+                        static_cast<OUTPUT>(result * requant_scale);
                 }
                 std::fesetround(old_mode);
             }
@@ -249,7 +249,9 @@ namespace ngraph
                              const Strides& filter_dilation,
                              const CoordinateDiff& in_pad_below,
                              const CoordinateDiff& in_pad_above,
-                             const Strides& in_dilation)
+                             const Strides& in_dilation,
+                             const float requant_scale = 1.0f)
+
             {
                 general_convolution<INPUT, FILTER, OUTPUT, ACCUMULATION>(in,
                                                                          filter,
@@ -267,7 +269,8 @@ namespace ngraph
                                                                          0,
                                                                          1,
                                                                          0,
-                                                                         1);
+                                                                         1,
+                                                                         requant_scale);
             }
 
             template <typename INPUT,
