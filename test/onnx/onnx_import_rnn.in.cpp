@@ -157,21 +157,49 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_lstm_fwd_hardsigmoid_activation)
     // X
     test_case.add_input<float>({-0.455351f, -0.276391f, -0.185934f, -0.269585f});
     // W
-    test_case.add_input<float>({-0.494659f, 0.0453352f, -0.487793f, 0.417264f, -0.0175329f,
-         0.489074f, -0.446013f, 0.414029f, -0.0091708f, -0.255364f, -0.106952f, -0.266717f,
-        -0.0888852f, -0.428709f, -0.283349f, 0.208792f});
+    test_case.add_input<float>({-0.494659f,
+                                0.0453352f,
+                                -0.487793f,
+                                0.417264f,
+                                -0.0175329f,
+                                0.489074f,
+                                -0.446013f,
+                                0.414029f,
+                                -0.0091708f,
+                                -0.255364f,
+                                -0.106952f,
+                                -0.266717f,
+                                -0.0888852f,
+                                -0.428709f,
+                                -0.283349f,
+                                0.208792f});
     // R
-    test_case.add_input<float>({0.146626f, -0.0620289f, -0.0815302f, 0.100482f, -0.219535f,
-        -0.306635f, -0.28515f, -0.314112f, -0.228172f, 0.405972f, 0.31576f, 0.281487f, -0.394864f,
-         0.42111f, -0.386624f, -0.390225f});
+    test_case.add_input<float>({0.146626f,
+                                -0.0620289f,
+                                -0.0815302f,
+                                0.100482f,
+                                -0.219535f,
+                                -0.306635f,
+                                -0.28515f,
+                                -0.314112f,
+                                -0.228172f,
+                                0.405972f,
+                                0.31576f,
+                                0.281487f,
+                                -0.394864f,
+                                0.42111f,
+                                -0.386624f,
+                                -0.390225f});
 
     // Y
-    test_case.add_expected_output<float>(
-        Shape{2, 1, 1, 2}, {0.09086666f, 0.04378549f, 0.12914555f, 0.00257774f});
+    test_case.add_expected_output<float>(Shape{2, 1, 1, 2},
+                                         {0.09086666f, 0.04378549f, 0.12914555f, 0.00257774f});
     // Y_h
     test_case.add_expected_output<float>(Shape{1, 1, 2}, {0.12914555f, 0.00257774f});
     // Y_c
     test_case.add_expected_output<float>(Shape{1, 1, 2}, {0.19017234f, 0.00356848f});
 
+    // The discrepancies occur at most at 18th mantissa bit - 8th decimal position.
+    test_case.set_tolerance(6);
     test_case.run();
 }
