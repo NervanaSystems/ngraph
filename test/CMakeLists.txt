@@ -55,6 +55,7 @@ set(SRC
     pass_liveness.cpp
     pass_manager.cpp
     pass_memory_layout.cpp
+    pass_shape_relevance.cpp
     pass_shape_specialization.cpp
     pattern.cpp
     provenance.cpp
@@ -74,10 +75,6 @@ endif()
 
 if(NOT WIN32 AND NGRAPH_TOOLS_ENABLE)
     list(APPEND SRC tools.cpp)
-endif()
-
-if(NGRAPH_DISTRIBUTED_ENABLE)
-    list(APPEND SRC distributed_setup.cpp)
 endif()
 
 set_source_files_properties(includes.cpp PROPERTIES COMPILE_DEFINITIONS
@@ -214,19 +211,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DJSON_INCLUDES=\\\"${JSON_INCLUDE_DIR}\
 
 if(NGRAPH_ADDRESS_SANITIZER)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address -fno-omit-frame-pointer")
-endif()
-
-if(NGRAPH_DISTRIBUTED_ENABLE)
-    if(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
-        target_link_libraries(unit-test PRIVATE libmlsl)
-    elseif(NGRAPH_DISTRIBUTED_OMPI_ENABLE)
-        find_package(MPI REQUIRED)
-        target_include_directories(unit-test
-        SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
-        target_link_libraries(unit-test PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
-    else()
-            message(FATAL_ERROR "Distributed Library not supported/mentioned")
-    endif()
 endif()
 
 target_link_libraries(unit-test PRIVATE ngraph_test_util)

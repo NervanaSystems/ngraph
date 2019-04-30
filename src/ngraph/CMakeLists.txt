@@ -59,6 +59,8 @@ set (SRC
     descriptor/tensor.hpp
     dimension.cpp
     dimension.hpp
+    distributed.cpp 
+    distributed.hpp
     except.hpp
     file_util.cpp
     file_util.hpp
@@ -263,6 +265,8 @@ set (SRC
     op/fused/depth_to_space.hpp
     op/fused/elu.cpp
     op/fused/elu.hpp
+    op/fused/group_conv.hpp
+    op/fused/group_conv.cpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
     op/fused/space_to_depth.cpp
@@ -293,6 +297,8 @@ set (SRC
     pass/algebraic_simplification.cpp
     pass/algebraic_simplification.hpp
     pass/assign_layout.hpp
+    pass/batch_fusion.hpp
+    pass/batch_fusion.cpp
     pass/common_function_collection.cpp
     pass/common_function_collection.hpp
     pass/constant_folding.cpp
@@ -338,6 +344,8 @@ set (SRC
     pass/reshape_sinking.hpp
     pass/serialize.cpp
     pass/serialize.hpp
+    pass/shape_relevance.cpp
+    pass/shape_relevance.hpp
     pass/shape_specialization.cpp
     pass/shape_specialization.hpp
     pass/validate_graph.cpp
@@ -421,16 +429,11 @@ if(NGRAPH_JSON_ENABLE)
     list(APPEND SRC serializer.cpp serializer.hpp event_tracing.cpp event_tracing.hpp)
 endif()
 
-if(NGRAPH_DISTRIBUTED_ENABLE)
-    list(APPEND SRC distributed.cpp distributed.hpp)
-endif()
-
 configure_file(version.in.hpp version.hpp)
 
 add_library(ngraph SHARED ${SRC})
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
-    target_sources(ngraph PRIVATE distributed.cpp)
     if(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
         target_include_directories(ngraph SYSTEM PRIVATE libmlsl)
         target_link_libraries(ngraph PRIVATE libmlsl)
