@@ -147,7 +147,7 @@ bool runtime::dynamic_wrapper::WrappedExecutable::call(
     }
 
     // TODO: Put compiled executable in the cache.
-    auto compiled_executable = m_wrapped_backend->compile(clone);
+    auto compiled_executable = m_wrapped_backend->compile(clone, m_enable_performance_collection);
     auto result = compiled_executable->call(wrapped_outputs, wrapped_inputs);
 
     return result;
