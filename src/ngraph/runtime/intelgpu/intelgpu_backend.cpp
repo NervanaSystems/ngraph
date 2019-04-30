@@ -1564,7 +1564,6 @@ shared_ptr<runtime::Executable>
                     const cldnn::convolution cldnn_conv(op->get_output_tensor_name(0),
                                                         op_input_name,
                                                         {op->get_input_tensor_name(1)},
-                                                        {},
                                                         conv_op->get_groups(),
                                                         strides,
                                                         input_offset,
