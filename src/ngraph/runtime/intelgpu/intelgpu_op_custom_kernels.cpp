@@ -337,7 +337,12 @@ void runtime::intelgpu::do_pad_operation(cldnn::topology& topology,
     Shape pad_interior(pad_below.size(), 0);
 
     // The kernel name and parameters
-    gen_func_def(writer, entry_point_name, {2, "float"}, {input_shape, {1}}, "float", output_shape);
+    gen_func_def(writer,
+                 entry_point_name,
+                 {2, get_opencl_type_name(output_type)},
+                 {input_shape, {1}},
+                 get_opencl_type_name(output_type),
+                 output_shape);
 
     writer.block_begin();
     {
@@ -1677,6 +1682,31 @@ void runtime::intelgpu::do_one_hot_operation(cldnn::topology& topology,
     topology.add(op_one_hot);
 }
 
+static string emit_convert_bool(const string& input_type)
+{
+    CodeWriter writer;
+
+    writer << "bool convert_bool(const " << input_type << " input)";
+    writer.block_begin();
+    {
+        writer << "if (input)\n";
+        writer.block_begin();
+        {
+            writer << "return 1;\n";
+        }
+        writer.block_end();
+        writer << "else\n";
+        writer.block_begin();
+        {
+            writer << "return 0;\n";
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+
+    return writer.get_code();
+}
+
 void runtime::intelgpu::do_convert_operation(cldnn::topology& topology,
                                              const string& input_name,
                                              const Shape& input_shape,
@@ -1691,6 +1721,11 @@ void runtime::intelgpu::do_convert_operation(cldnn::topology& topology,
     const string& output_type_name = get_opencl_type_name(output_type);
     CodeWriter writer;
     vector<size_t> gws;
+
+    if (output_type == element::Type_t::boolean)
+    {
+        writer << emit_convert_bool(input_type_name);
+    }
 
     gen_func_def(
         writer, entry_point_name, {input_type_name}, {input_shape}, output_type_name, output_shape);
@@ -1764,8 +1799,12 @@ void runtime::intelgpu::do_sigmoid_backprop_operation(cldnn::topology& topology,
     CodeWriter writer;
     vector<size_t> gws;
 
-    gen_func_def(
-        writer, entry_point_name, {2, "float"}, {input_shape, delta_shape}, "float", output_shape);
+    gen_func_def(writer,
+                 entry_point_name,
+                 {2, get_opencl_type_name(output_type)},
+                 {input_shape, delta_shape},
+                 get_opencl_type_name(output_type),
+                 output_shape);
 
     writer.block_begin();
     {
@@ -1935,8 +1974,12 @@ void runtime::intelgpu::do_reshape_operation(cldnn::topology& topology,
 {
     const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
     const string entry_point_name = "reshape_" + output_name;
-    const string& input_type_name = get_opencl_type_name(input_type);
-    const string& output_type_name = get_opencl_type_name(output_type);
+
+    // Workaround on openCL bool datatype. Need to be the same as CPU
+    const string& input_type_name =
+        (input_type == element::Type_t::boolean) ? "char" : get_opencl_type_name(input_type);
+    const string& output_type_name =
+        (output_type == element::Type_t::boolean) ? "char" : get_opencl_type_name(output_type);
     const size_t dst_shape_size = shape_size(output_shape);
     CodeWriter writer;
 
