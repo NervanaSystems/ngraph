@@ -53,6 +53,7 @@
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/broadcast_distributed.hpp"
 #include "ngraph/op/ceiling.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
@@ -186,11 +187,6 @@
 #include "ngraph/runtime/cpu/pass/cpu_workspace_insertion.hpp"
 #include "ngraph/runtime/cpu/pass/halide_subgraph_extraction.hpp"
 
-#ifdef NGRAPH_DISTRIBUTED_ENABLE
-#include "ngraph/op/allreduce.hpp"
-#include "ngraph/op/broadcast_distributed.hpp"
-#endif
-
 using namespace std;
 using namespace ngraph;
 
@@ -297,11 +293,9 @@ static StaticInitializers s_static_initializers(s_output_dir);
 
 static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Add), &runtime::cpu::CPU_Emitter::emit<op::Add>},
-#ifdef NGRAPH_DISTRIBUTED_ENABLE
     {TI(ngraph::op::AllReduce), &runtime::cpu::CPU_Emitter::emit<op::AllReduce>},
     {TI(ngraph::op::BroadcastDistributed),
      &runtime::cpu::CPU_Emitter::emit<op::BroadcastDistributed>},
-#endif
     {TI(ngraph::op::MatmulBias), &runtime::cpu::CPU_Emitter::emit<op::MatmulBias>},
     {TI(ngraph::op::Dot), &runtime::cpu::CPU_Emitter::emit<op::Dot>},
     {TI(ngraph::op::Multiply), &runtime::cpu::CPU_Emitter::emit<op::Multiply>},
@@ -513,21 +507,10 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
         }
         writer << "#include <tbb/flow_graph.h>";
     }
-
-#ifdef NGRAPH_DISTRIBUTED_ENABLE
-    writer << "#define NGRAPH_DISTRIBUTED_ENABLE\n";
-#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
-    writer << "#include <mlsl.hpp>\n";
-    writer << "#define NGRAPH_DISTRIBUTED_MLSL_ENABLE\n";
-#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
-    writer << "#include <mpi.h>\n";
-    writer << "#define NGRAPH_DISTRIBUTED_OMPI_ENABLE\n";
-#endif
-#endif
-
     writer +=
         R"(
 #include <cmath>
+#include "ngraph/distributed.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_eigen_utils.hpp"

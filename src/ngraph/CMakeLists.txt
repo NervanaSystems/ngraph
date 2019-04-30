@@ -59,6 +59,8 @@ set (SRC
     descriptor/tensor.hpp
     dimension.cpp
     dimension.hpp
+    distributed.cpp 
+    distributed.hpp
     except.hpp
     file_util.cpp
     file_util.hpp
@@ -427,16 +429,11 @@ if(NGRAPH_JSON_ENABLE)
     list(APPEND SRC serializer.cpp serializer.hpp event_tracing.cpp event_tracing.hpp)
 endif()
 
-if(NGRAPH_DISTRIBUTED_ENABLE)
-    list(APPEND SRC distributed.cpp distributed.hpp)
-endif()
-
 configure_file(version.in.hpp version.hpp)
 
 add_library(ngraph SHARED ${SRC})
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
-    target_sources(ngraph PRIVATE distributed.cpp)
     if(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
         target_include_directories(ngraph SYSTEM PRIVATE libmlsl)
         target_link_libraries(ngraph PRIVATE libmlsl)
