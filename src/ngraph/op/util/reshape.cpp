@@ -26,18 +26,18 @@
 
 using namespace ngraph;
 
-std::shared_ptr<Node> op::util::reshape(const std::shared_ptr<Node>& node,
+std::shared_ptr<Node> op::util::reshape(const Output<Node>& source_output,
                                         const AxisVector& axis_order,
                                         const Shape& shape)
 {
     return std::make_shared<op::Reshape>(
-        node, ngraph::get_default_order(node->get_shape().size()), shape);
+        source_output, ngraph::get_default_order(source_output.get_shape().size()), shape);
 }
 
-std::shared_ptr<Node> op::util::reorder_axes(const std::shared_ptr<Node>& node,
+std::shared_ptr<Node> op::util::reorder_axes(const Output<Node>& source_output,
                                              std::vector<std::size_t> axes_order = {})
 {
-    Shape out_shape = node->get_shape();
+    Shape out_shape = source_output.get_shape();
     if (axes_order.empty())
     {
         axes_order.resize(out_shape.size());
@@ -47,10 +47,10 @@ std::shared_ptr<Node> op::util::reorder_axes(const std::shared_ptr<Node>& node,
     {
         for (std::size_t i = 0; i < axes_order.size(); ++i)
         {
-            out_shape[i] = node->get_shape().at(axes_order.at(i));
+            out_shape[i] = source_output.get_shape().at(axes_order.at(i));
         }
     }
 
     auto axis_vector = AxisVector{std::begin(axes_order), std::end(axes_order)};
-    return std::make_shared<op::Reshape>(node, axis_vector, out_shape);
+    return std::make_shared<op::Reshape>(source_output, axis_vector, out_shape);
 }

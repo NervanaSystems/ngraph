@@ -28,7 +28,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::Elu::Elu(const shared_ptr<Node>& data, const shared_ptr<Node>& alpha)
+op::Elu::Elu(const Output<Node>& data, const Output<Node>& alpha)
     : FusedOp("Elu", {data, alpha})
 {
     constructor_validate_and_infer_types();

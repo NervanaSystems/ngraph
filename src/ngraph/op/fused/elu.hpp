@@ -35,8 +35,7 @@ namespace ngraph
             ///
             /// \param data Input tensor
             /// \param alpha Multiplier for negative values
-            Elu(const std::shared_ptr<ngraph::Node>& data,
-                const std::shared_ptr<ngraph::Node>& alpha);
+            Elu(const Output<ngraph::Node>& data, const Output<ngraph::Node>& alpha);
 
             virtual NodeVector decompose_op() const override;
 

@@ -25,7 +25,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::DepthToSpace::DepthToSpace(const shared_ptr<Node>& data, const size_t block_size)
+op::DepthToSpace::DepthToSpace(const Output<Node>& data, const size_t block_size)
     : FusedOp("DepthToSpace", {data})
     , m_blocksize(block_size)
 {

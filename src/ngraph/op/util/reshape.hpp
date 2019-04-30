@@ -28,28 +28,30 @@ namespace ngraph
         {
             /// \brief      Change shape of input tensor.
             ///
-            /// \param[in]  node   The node which shape will be used as input to Reshape.
-            /// \param[in]  shape  The new shape for input tensor.
+            /// \param[in]  source_output The output which shape will be used as input to Reshape.
+            /// \param[in]  shape         The new shape for input tensor.
             ///
             /// \return     The node representing a Reshape operation.
             ///
-            std::shared_ptr<ngraph::Node> reshape(const std::shared_ptr<ngraph::Node>& node,
+            std::shared_ptr<ngraph::Node> reshape(const Output<ngraph::Node>& source_output,
                                                   const AxisVector& axis_order,
                                                   const Shape& shape);
 
-            inline std::shared_ptr<ngraph::Node> reshape(const std::shared_ptr<ngraph::Node>& node,
+            inline std::shared_ptr<ngraph::Node> reshape(const Output<ngraph::Node>& source_output,
                                                          const Shape& shape)
             {
-                return reshape(node, ngraph::get_default_order(node->get_shape().size()), shape);
+                return reshape(source_output,
+                               ngraph::get_default_order(source_output.get_shape().size()),
+                               shape);
             }
 
             /// \brief Permute axes according to specified axes_order parameter.
             ///
-            /// \param node The node which axes we want to permute.
+            /// \param source_output The output which axes we want to permute.
             /// \param axes_order The permutation of node tensor axes.
             ///
             /// \return: New node with permuted axes.
-            std::shared_ptr<ngraph::Node> reorder_axes(const std::shared_ptr<ngraph::Node>& node,
+            std::shared_ptr<ngraph::Node> reorder_axes(const Output<ngraph::Node>& source_output,
                                                        std::vector<std::size_t> axes_order);
         } // namespace util
     }     // namespace  op
