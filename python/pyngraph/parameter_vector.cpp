@@ -18,7 +18,6 @@
 #include <pybind11/stl.h>
 
 #include "ngraph/op/parameter.hpp" // ngraph::op::Parameter
-#include "ngraph/parameter_vector.hpp"
 #include "pyngraph/ops/parameter.hpp"
 #include "pyngraph/parameter_vector.hpp"
 

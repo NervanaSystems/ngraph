@@ -18,7 +18,6 @@
 #include <pybind11/stl.h>
 
 #include "ngraph/op/result.hpp" // ngraph::op::Result
-#include "ngraph/result_vector.hpp"
 #include "pyngraph/ops/result.hpp"
 #include "pyngraph/result_vector.hpp"
 
