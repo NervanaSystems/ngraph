@@ -58,7 +58,7 @@ namespace ngraph
                 }
             } // namespace detail
 
-            ActivationFunction::ActivationFunction(const ActivationFunctionType& f,
+            ActivationFunction::ActivationFunction(ActivationFunctionType f,
                                                    float alpha,
                                                    float beta)
                 : m_function{f}
@@ -67,12 +67,12 @@ namespace ngraph
             {
             }
 
-            ActivationFunction::ActivationFunction(const ActivationFunctionType& f, float alpha)
+            ActivationFunction::ActivationFunction(ActivationFunctionType f, float alpha)
                 : ActivationFunction(f, alpha, std::nanf(""))
             {
             }
 
-            ActivationFunction::ActivationFunction(const ActivationFunctionType& f)
+            ActivationFunction::ActivationFunction(ActivationFunctionType f)
                 : ActivationFunction(f, std::nanf(""), std::nanf(""))
             {
             }
@@ -89,11 +89,11 @@ namespace ngraph
                 using namespace std::placeholders;
 
                 static ActivationFunctionMap func_map{
-                    {"sigmoid", ActivationFunction{std::bind(detail::sigmoid, _1, _2, _3)}},
-                    {"tanh", ActivationFunction{std::bind(detail::tanh, _1, _2, _3)}},
-                    {"relu", ActivationFunction{std::bind(detail::relu, _1, _2, _3)}},
-                    {"hardsigmoid",
-                     ActivationFunction{std::bind(detail::hardsigmoid, _1, _2, _3), 0.2f, 0.5f}}};
+                    {"sigmoid", ActivationFunction{detail::sigmoid}},
+                    {"tanh", ActivationFunction{detail::tanh}},
+                    {"relu", ActivationFunction{detail::relu}},
+                    {"hardsigmoid", ActivationFunction{detail::hardsigmoid, 0.2f, 0.5f}},
+                };
 
                 auto func_it = func_map.find(func_name);
                 if (func_it == std::end(func_map))

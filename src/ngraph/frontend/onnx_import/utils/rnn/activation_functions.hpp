@@ -71,15 +71,15 @@ namespace ngraph
                     hardsigmoid(const std::shared_ptr<ngraph::Node>& arg, float alpha, float beta);
             }
 
-            using ActivationFunctionType = std::function<std::shared_ptr<ngraph::Node>(
-                const std::shared_ptr<ngraph::Node>&, float, float)>;
+            using ActivationFunctionType = std::shared_ptr<ngraph::Node> (*)(
+                const std::shared_ptr<ngraph::Node>&, float, float);
 
             class ActivationFunction
             {
             public:
-                ActivationFunction(const ActivationFunctionType& f, float alpha, float beta);
-                ActivationFunction(const ActivationFunctionType& f, float alpha);
-                ActivationFunction(const ActivationFunctionType& f);
+                ActivationFunction(ActivationFunctionType f, float alpha, float beta);
+                ActivationFunction(ActivationFunctionType f, float alpha);
+                ActivationFunction(ActivationFunctionType f);
 
                 std::shared_ptr<ngraph::Node>
                     operator()(const std::shared_ptr<ngraph::Node>& arg) const;
@@ -89,7 +89,7 @@ namespace ngraph
             private:
                 float m_alpha;
                 float m_beta;
-                const ActivationFunctionType& m_function;
+                ActivationFunctionType m_function;
             };
 
             /// \brief      Gets the activation function by name.
