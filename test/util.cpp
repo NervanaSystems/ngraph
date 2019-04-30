@@ -216,7 +216,7 @@ public:
         auto cloneit = clone.begin();
         while (origit != orig.end() && cloneit != clone.end())
         {
-            if (*cloneit != nm.get_node_map().at(*origit))
+            if (*cloneit != nm.at((*origit).get()))
             {
                 return false;
             }
@@ -232,11 +232,11 @@ TEST_F(CloneTest, clone_nodes_full)
     auto cloned_nodes = clone_nodes(nodes, node_map);
     ASSERT_TRUE(CompareNodeVector(nodes, cloned_nodes, node_map));
 
-    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Parameter>(node_map.get(A)));
-    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Parameter>(node_map.get(B)));
-    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Parameter>(node_map.get(C)));
-    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Add>(node_map.get(AplusB)));
-    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Multiply>(node_map.get(AplusBtimesC)));
+    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Parameter>(node_map.at(A.get())));
+    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Parameter>(node_map.at(B.get())));
+    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Parameter>(node_map.at(C.get())));
+    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Add>(node_map.at(AplusB.get())));
+    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Multiply>(node_map.at(AplusBtimesC.get())));
 
     auto sorted_nodes = topological_sort(nodes);
     auto sorted_cloned_nodes = topological_sort(cloned_nodes);
@@ -247,13 +247,13 @@ TEST_F(CloneTest, clone_nodes_partial)
 {
     // map A -> A' prior to clone
     auto Aprime = make_shared<op::Parameter>(element::f32, shape);
-    node_map.add(A, Aprime);
+    node_map[A.get()] = Aprime;
 
     auto cloned_nodes = clone_nodes(nodes, node_map);
     ASSERT_TRUE(CompareNodeVector(nodes, cloned_nodes, node_map));
 
     // ensure A -> A' after clone
-    ASSERT_EQ(Aprime, node_map.get(A));
+    ASSERT_EQ(Aprime, node_map.at(A.get()));
 }
 
 TEST_F(CloneTest, clone_function_full)

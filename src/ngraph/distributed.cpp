@@ -14,90 +14,36 @@
 // limitations under the License.
 //*****************************************************************************
 
-#ifdef NGRAPH_DISTRIBUTED_ENABLE
-
-#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
-#include <mlsl.hpp>
-#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
-#include <mpi.h>
-#endif
-
 #include "ngraph/distributed.hpp"
+#include "ngraph/distributed/mlsl.hpp"
+#include "ngraph/distributed/null.hpp"
+#include "ngraph/distributed/open_mpi.hpp"
 #include "ngraph/log.hpp"
 
 using namespace ngraph;
 
-ngraph::Distributed::Distributed()
+static std::unique_ptr<DistributedInterface> s_distributed_interface;
+
+void ngraph::set_distributed_interface(std::unique_ptr<DistributedInterface> distributed_interface)
 {
-#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
-    if (!MLSL::Environment::GetEnv().IsInitialized())
-    {
-        MLSL::Environment::GetEnv().Init(nullptr, nullptr);
-        m_init_comm = true;
-    }
-#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
-    int flag = 0;
-    MPI_Initialized(&flag);
-    if (!flag)
-    {
-        MPI_Init(NULL, NULL);
-        m_init_comm = true;
-    }
-#else
-    throw ngraph_error("Distributed Library not supported/mentioned");
-#endif
+    NGRAPH_DEBUG << "Setting distributed interfsce to: " << distributed_interface->get_name();
+    s_distributed_interface = std::move(distributed_interface);
 }
 
-ngraph::Distributed::~Distributed()
+DistributedInterface* ngraph::get_distributed_interface()
 {
-    if (m_init_comm == true)
+    if (0 == s_distributed_interface)
     {
-        finalize();
-    }
-}
-
-void ngraph::Distributed::finalize()
-{
-#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
-    if (MLSL::Environment::GetEnv().IsInitialized())
-    {
-        MLSL::Environment::GetEnv().Finalize();
-    }
-#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
-    int flag = 0;
-    MPI_Initialized(&flag);
-    if (flag)
-    {
-        MPI_Finalize();
-    }
+#ifdef NGRAPH_DISTRIBUTED_OMPI_ENABLE
+        set_distributed_interface(std::unique_ptr<DistributedInterface>(
+            new ngraph::distributed::OpenMPIDistributedInterface()));
+#elif defined(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
+        set_distributed_interface(std::unique_ptr<DistributedInterface>(
+            new ngraph::distributed::MLSLDistributedInterface()));
 #else
-    throw ngraph_error("Distributed Library not supported/mentioned");
+        set_distributed_interface(std::unique_ptr<DistributedInterface>(
+            new ngraph::distributed::NullDistributedInterface()));
 #endif
+    }
+    return s_distributed_interface.get();
 }
-
-int ngraph::Distributed::get_size() const
-{
-#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
-    return static_cast<int>(MLSL::Environment::GetEnv().GetProcessCount());
-#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
-    int size;
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
-    return size;
-#else
-    throw ngraph_error("Distributed Library not supported/mentioned");
-#endif
-}
-
-int ngraph::Distributed::get_rank() const
-{
-#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
-    return static_cast<int>(MLSL::Environment::GetEnv().GetProcessIdx());
-#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
-    int rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    return rank;
-#else
-    throw ngraph_error("Distributed Library not supported/mentioned");
-#endif
-}
-#endif

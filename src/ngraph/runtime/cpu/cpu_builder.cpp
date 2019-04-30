@@ -27,6 +27,7 @@
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/allreduce.hpp"
 #include "ngraph/op/and.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
@@ -106,11 +107,6 @@
 #include "ngraph/runtime/cpu/op/loop_kernel.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
-
-#ifdef NGRAPH_DISTRIBUTED_OMPI_ENABLE
-#include <mpi.h>
-#include "ngraph/op/allreduce.hpp"
-#endif
 
 using namespace std;
 using namespace ngraph;
