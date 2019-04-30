@@ -36,11 +36,8 @@ namespace ngraph
 class ngraph::runtime::gpu::GPUTensor : public ngraph::runtime::Tensor
 {
 public:
-    GPUTensor(const ngraph::element::Type& element_type, const Shape& shape, const Backend* parent);
-    GPUTensor(const ngraph::element::Type& element_type,
-              const Shape& shape,
-              void* memory_pointer,
-              const Backend* parent);
+    GPUTensor(const ngraph::element::Type& element_type, const Shape& shape);
+    GPUTensor(const ngraph::element::Type& element_type, const Shape& shape, void* memory_pointer);
     virtual ~GPUTensor() override;
 
     /// \brief Write bytes directly into the tensor

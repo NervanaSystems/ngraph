@@ -62,6 +62,9 @@ namespace ngraph
                                                          size_t i);
     const NodeVector& check_single_output_args(const NodeVector& args);
 
+    /// Alias useful for cloning
+    using NodeMap = std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>;
+
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
     /// or a (possibly empty) tuple of values.
@@ -146,8 +149,7 @@ namespace ngraph
         /// graph against the graph.
         bool is_same_op_type(const std::shared_ptr<Node>& node) const
         {
-            Node* n = node.get();
-            return std::type_index(typeid(*this)) == std::type_index(typeid(*n));
+            return description() == node->description();
         }
 
         /// \brief Marks an input as being relevant or irrelevant to the output shapes of this
@@ -187,6 +189,7 @@ namespace ngraph
         virtual bool is_null() const { return false; }
         virtual bool is_op() const { return false; }
         virtual bool is_commutative() { return false; }
+        virtual bool is_dynamic() const;
         size_t get_instance_id() const { return m_instance_id; }
         friend std::ostream& operator<<(std::ostream&, const Node&);
         virtual std::ostream& write_short_description(std::ostream&) const;

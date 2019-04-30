@@ -15,7 +15,7 @@
 //*****************************************************************************
 
 #pragma once
-#include "group_conv.hpp"
+#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/op.hpp"
 
 namespace ngraph

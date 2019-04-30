@@ -44,6 +44,8 @@ void op::DynReshape::validate_and_infer_types()
                           pattern_shape.rank(),
                           ".");
     Rank output_rank = pattern_shape.rank().is_dynamic() ? Rank::dynamic() : pattern_shape[0];
+
+    set_input_is_relevant_to_shape(1);
     set_output_type(0, get_input_element_type(0), PartialShape::dynamic(output_rank));
 }
 

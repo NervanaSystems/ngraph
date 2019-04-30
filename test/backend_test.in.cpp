@@ -6074,10 +6074,12 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_bprop_n4c3h2w2)
     auto df = make_shared<Function>(NodeVector{dinput, dgamma, dbeta},
                                     ParameterVector{mean, var, input, gamma, beta, C});
 
+#ifdef NGRAPH_JSON_ENABLE
     // roundtrip serialization
     string js = serialize(df, 4);
     istringstream in(js);
     df = deserialize(in);
+#endif
 
     shared_ptr<runtime::Tensor> _dinput = backend->create_tensor(element::f32, shape_r);
     shared_ptr<runtime::Tensor> _dgamma = backend->create_tensor(element::f32, gamma_shape);
@@ -7481,3 +7483,21 @@ TEST(${BACKEND_NAME}, batch_mat_mul_forward)
 #undef BACKEND_TEST_${BACKEND_NAME}
 #endif
 // clang-format on
+
+NGRAPH_TEST(${BACKEND_NAME}, validate_function_for_dynamic_shape)
+{
+    auto make_function = [&](bool dynmaic_shape) {
+
+        auto param1_shape =
+            dynmaic_shape ? PartialShape{Dimension::dynamic(), 2, 3} : Shape{5, 4, 2};
+        auto param2_shape = dynmaic_shape ? PartialShape::dynamic() : Shape{5, 2, 3};
+        auto param_1 = std::make_shared<op::Parameter>(element::f32, param1_shape);
+        auto param_2 = std::make_shared<op::Parameter>(element::f32, param2_shape);
+        auto batch_dot = make_shared<op::BatchMatMul>(param_1, param_2);
+        auto f = make_shared<Function>(NodeVector{batch_dot}, ParameterVector{param_1, param_2});
+        return f;
+    };
+
+    EXPECT_EQ(true, make_function(true)->is_dynamic());
+    EXPECT_EQ(false, make_function(false)->is_dynamic());
+}

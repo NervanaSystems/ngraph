@@ -28,6 +28,7 @@ op::Parameter::Parameter(const element::Type& element_type,
     , m_cacheable(cacheable)
     , m_partial_shape(pshape)
     , m_element_type(element_type)
+    , m_is_relevant_to_shapes(false)
 {
     constructor_validate_and_infer_types();
 }
@@ -47,4 +48,14 @@ shared_ptr<Node> op::Parameter::copy_with_new_args(const NodeVector& new_args) c
 void op::Parameter::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
     auto delta = deltas.at(0);
+}
+
+bool op::Parameter::is_relevant_to_shapes() const
+{
+    return m_is_relevant_to_shapes;
+}
+
+void op::Parameter::set_is_relevant_to_shapes(bool is_relevant)
+{
+    m_is_relevant_to_shapes = is_relevant;
 }

@@ -18,6 +18,7 @@
 #include <iostream>
 
 #include "ngraph/function.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/op/reshape.hpp"
 
 using namespace std;

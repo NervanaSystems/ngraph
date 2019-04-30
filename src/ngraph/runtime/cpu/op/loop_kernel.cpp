@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/cpu/op/loop_kernel.hpp"
-#include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/util.hpp"
 
@@ -35,7 +34,7 @@ shared_ptr<Node>
     NodeMap nm;
     for (size_t i = 0; i < args.size(); i++)
     {
-        nm.add(args.at(i), new_args.at(i));
+        nm[args.at(i).get()] = new_args.at(i);
     }
 
     NodeVector new_node_list;
@@ -44,17 +43,17 @@ shared_ptr<Node>
         NodeVector cur_args;
         for (auto a : n->get_arguments())
         {
-            cur_args.push_back(nm.get(a));
+            cur_args.push_back(nm.at(a.get()));
         }
         auto new_n = n->copy_with_new_args(cur_args);
-        nm.add(n, new_n);
+        nm[n.get()] = new_n;
         new_node_list.push_back(new_n);
     }
 
     NodeVector new_outputs;
     for (auto o : m_output_nodes)
     {
-        new_outputs.push_back(nm.get(o));
+        new_outputs.push_back(nm.at(o.get()));
     }
 
     return std::make_shared<LoopKernel>(new_node_list, new_outputs, new_args);

@@ -76,6 +76,9 @@ void op::DynSlice::validate_and_infer_types()
                           strides_shape.compatible(PartialShape{arg_shape.rank()}),
                           "Strides shape must have shape [n], where n is the rank of arg.");
 
+    set_input_is_relevant_to_shape(1);
+    set_input_is_relevant_to_shape(2);
+    set_input_is_relevant_to_shape(3);
     set_output_type(0, get_input_element_type(0), PartialShape::dynamic(arg_shape.rank()));
 }
 
