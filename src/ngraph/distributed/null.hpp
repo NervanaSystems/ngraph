@@ -16,21 +16,33 @@
 
 #pragma once
 
-#pragma once
+#include <string>
 
 #include "ngraph/distributed.hpp"
+#include "ngraph/except.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace distributed
     {
-        namespace reference
+        class NullDistributedInterface : public DistributedInterface
         {
-            template <typename T>
-            void broadcastdistributed(T* arg, const element::Type_t element_type, int count)
+            const std::string& get_name() const override { return m_name; }
+            int get_size() override { return 0; }
+            int get_rank() override { return 0; }
+            void
+                all_reduce(void* in, void* out, element::Type_t element_type, size_t count) override
             {
-                get_distributed_interface()->broadcast(arg, element_type, count);
+                throw ngraph_error("Distributed Library not supported/mentioned");
             }
-        }
+
+            void broadcast(void* in, element::Type_t element_type, size_t count) override
+            {
+                throw ngraph_error("Distributed Library not supported/mentioned");
+            }
+
+        protected:
+            std::string m_name{"NULL"};
+        };
     }
 }
