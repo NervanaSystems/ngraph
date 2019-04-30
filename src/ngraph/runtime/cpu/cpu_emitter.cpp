@@ -132,15 +132,6 @@
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
-#ifdef NGRAPH_DISTRIBUTED_ENABLE
-#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
-#include <mlsl.hpp>
-#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
-#include <mpi.h>
-#endif
-#include "ngraph/op/allreduce.hpp"
-#endif
-
 using namespace std;
 using namespace ngraph;
 
@@ -196,94 +187,23 @@ namespace ngraph
                 writer.block_end();
             }
 
-#ifdef NGRAPH_DISTRIBUTED_ENABLE
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::AllReduce)
             {
-                const element::Type& element_type = args[0].get_element_type();
-#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
-                auto data_type = "MLSL::DT_FLOAT";
-
-                if (element_type == element::f32)
-                {
-                    data_type = "MLSL::DT_FLOAT";
-                }
-                else if (element_type == element::f64)
-                {
-                    data_type = "MLSL::DT_DOUBLE";
-                }
-
-                writer.block_begin();
-                writer << "MLSL::CommReq* req = ctx->mlsl_dist->AllReduce(" << args[0].get_name()
-                       << ", " << out[0].get_name() << ", " << out[0].get_size() << ", "
-                       << data_type << ", MLSL::RT_SUM, MLSL::GT_DATA);\n";
-                writer << "ctx->mlsl_env->Wait(req);\n";
-                writer.block_end();
-#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
-                auto data_type = "MPI_FLOAT";
-
-                if (element_type == element::f32)
-                {
-                    data_type = "MPI_FLOAT";
-                }
-                else if (element_type == element::f64)
-                {
-                    data_type = "MPI_DOUBLE";
-                }
-
-                writer.block_begin();
-                writer << "MPI_Allreduce(" << args[0].get_name() << ", " << out[0].get_name()
-                       << ", " << out[0].get_size() << ", " << data_type
-                       << ", MPI_SUM, MPI_COMM_WORLD);\n";
-                writer.block_end();
-#else
-                throw ngraph_error("Distributed Library not supported/mentioned");
-#endif
+                writer << "ngraph::get_distributed_interface()->all_reduce(" << args[0].get_name()
+                       << ", " << out[0].get_name() << ", "
+                       << "ngraph::element::Type_t::" << args[0].get_element_type().get_type_name()
+                       << ", " << out[0].get_size() << ");\n";
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::BroadcastDistributed)
             {
-                const element::Type& element_type = args[0].get_element_type();
-#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
-                auto data_type = "MLSL::DT_FLOAT";
-
-                if (element_type == element::f32)
-                {
-                    data_type = "MLSL::DT_FLOAT";
-                }
-                else if (element_type == element::f64)
-                {
-                    data_type = "MLSL::DT_DOUBLE";
-                }
-
-                writer.block_begin();
-                writer << "MLSL::CommReq* req = ctx->mlsl_dist->Bcast(" << args[0].get_name()
-                       << ", " << args[0].get_size() << ", " << data_type
-                       << ", 0, MLSL::GT_DATA);\n";
-                writer << "ctx->mlsl_env->Wait(req);\n";
-                writer.block_end();
-#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
-                auto data_type = "MPI_FLOAT";
-
-                if (element_type == element::f32)
-                {
-                    data_type = "MPI_FLOAT";
-                }
-                else if (element_type == element::f64)
-                {
-                    data_type = "MPI_DOUBLE";
-                }
-
-                writer.block_begin();
-                writer << "MPI_Bcast(" << args[0].get_name() << ", " << args[0].get_size() << ", "
-                       << data_type << ", 0, MPI_COMM_WORLD);\n";
-                writer.block_end();
-#else
-                throw ngraph_error("Distributed Library not supported/mentioned");
-#endif
+                writer << "ngraph::get_distributed_interface()->broadcast(" << args[0].get_name()
+                       << ", "
+                       << "ngraph::element::Type_t::" << args[0].get_element_type().get_type_name()
+                       << ", " << args[0].get_size() << ");\n;";
             }
-#endif
 
             static void emitCblasSgemmBatch(CodeWriter& writer,
                                             const Shape& shape_a,
