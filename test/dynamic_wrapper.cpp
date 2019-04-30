@@ -44,42 +44,6 @@ TEST(dynamic_wrapper, create_dynamic_tensor)
     ASSERT_TRUE(t->get_partial_shape().same_scheme(PartialShape{2, Dimension::dynamic(), 3}));
 }
 
-TEST(dynamic_wrapper, abc_static)
-{
-    auto a = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
-    auto b = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
-    auto c = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
-
-    auto a_plus_b_times_c = (a + b) * c;
-
-    auto f = make_shared<Function>(NodeVector{a_plus_b_times_c}, ParameterVector{a, b, c});
-
-    auto backend = runtime::Backend::create("INTERPRETER", true);
-
-    auto ex = backend->compile(f);
-
-    auto t_a = backend->create_tensor(element::f32, Shape{2, 3, 3});
-    auto t_b = backend->create_tensor(element::f32, Shape{2, 3, 3});
-    auto t_c = backend->create_tensor(element::f32, Shape{2, 3, 3});
-    auto t_r = backend->create_tensor(element::f32, Shape{2, 3, 3});
-
-    copy_data(t_a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18});
-    copy_data(t_b, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18});
-    copy_data(t_c, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18});
-
-    ex->call_with_validate({t_r}, {t_a, t_b, t_c});
-
-    ASSERT_EQ(t_r->get_shape(), (Shape{2, 3, 3}));
-
-    vector<float> expected_values(2 * 3 * 3);
-    for (size_t i = 0; i < 2 * 3 * 3; i++)
-    {
-        expected_values[i] = ((i + 1) + (i + 1)) * (i + 1);
-    }
-
-    EXPECT_TRUE(test::all_close_f(read_vector<float>(t_r), expected_values));
-}
-
 TEST(dynamic_wrapper, abc)
 {
     auto a = make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 3});
@@ -102,7 +66,7 @@ TEST(dynamic_wrapper, abc)
         vector<float> inputs(2 * middle_dim * 3);
         for (size_t i = 0; i < 2 * middle_dim * 3; i++)
         {
-            inputs[i] = i + 1;
+            inputs[i] = i;
         }
 
         auto t_a = backend->create_tensor(element::f32, Shape{2, middle_dim, 3});
@@ -121,7 +85,7 @@ TEST(dynamic_wrapper, abc)
         vector<float> expected_values(2 * middle_dim * 3);
         for (size_t i = 0; i < 2 * middle_dim * 3; i++)
         {
-            expected_values[i] = ((i + 1) + (i + 1)) * (i + 1);
+            expected_values[i] = (i + i) * i;
         }
 
         EXPECT_TRUE(test::all_close_f(results, expected_values));
