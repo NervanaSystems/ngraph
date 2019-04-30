@@ -35,8 +35,9 @@ namespace ngraph
                 auto count = static_cast<int>(args[0].get_size());
                 auto data_type = args[0].get_element_type().get_type_enum();
                 auto functor = [&, count, data_type, arg_buffer_index](CPURuntimeContext* ctx,
-                                                     CPUExecutionContext* ectx) {
-                    get_distributed_interface()->broadcast(ctx->buffer_data[arg_buffer_index], data_type, count);
+                                                                       CPUExecutionContext* ectx) {
+                    get_distributed_interface()->broadcast(
+                        ctx->buffer_data[arg_buffer_index], data_type, count);
                 };
                 functors.emplace_back(functor);
             }

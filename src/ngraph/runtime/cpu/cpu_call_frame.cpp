@@ -230,7 +230,7 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
             const auto parallelism = envParallelism == nullptr ? 1 : std::atoi(envParallelism);
             ctx->c =
                 new tbb::global_control(tbb::global_control::max_allowed_parallelism, parallelism);
-         }
+        }
     }
     m_num_ctx_available = m_num_ctx;
 }
