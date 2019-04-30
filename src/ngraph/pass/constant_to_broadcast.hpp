@@ -14,19 +14,20 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <iostream>
+#pragma once
 
-namespace ngraph_dist_setup
+#include "ngraph/pass/pass.hpp"
+
+namespace ngraph
 {
-    static int distributed_comm_size;
-    static int distributed_comm_rank;
+    namespace pass
+    {
+        class ConstantToBroadcast;
+    }
 }
 
-class DistributedSetup
+class ngraph::pass::ConstantToBroadcast : public NodePass
 {
 public:
-    int get_comm_size();
-    int get_comm_rank();
-    void set_comm_size(int comm_size);
-    void set_comm_rank(int comm_rank);
+    bool run_on_node(std::shared_ptr<ngraph::Node>) override;
 };

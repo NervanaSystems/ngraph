@@ -1,4 +1,3 @@
-all_2x2x3_eliminate_dims_0_1
 backwards_batch_norm_training
 backwards_dot_scalar_tensor
 backwards_dot_tensor_scalar
@@ -22,9 +21,13 @@ shape_of_5d
 shape_of_matrix
 shape_of_scalar
 shape_of_vector
-floor_int32
-convert_int32_bool
-convert_float32_bool
+prelu
+prelu_shared_slope
+prelu_negative_slope
+elu
+elu_negative_alpha
+space_to_depth
+depth_to_space
 
 # Unsupported extra padding modes
 pad_edge_1d

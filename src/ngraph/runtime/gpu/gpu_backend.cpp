@@ -109,7 +109,7 @@ runtime::gpu::GPU_Backend::BackendContext::~BackendContext()
 shared_ptr<runtime::Tensor>
     runtime::gpu::GPU_Backend::create_tensor(const element::Type& element_type, const Shape& shape)
 {
-    return make_shared<runtime::gpu::GPUTensor>(element_type, shape, this);
+    return make_shared<runtime::gpu::GPUTensor>(element_type, shape);
 }
 
 shared_ptr<runtime::Tensor> runtime::gpu::GPU_Backend::create_tensor(
@@ -119,7 +119,7 @@ shared_ptr<runtime::Tensor> runtime::gpu::GPU_Backend::create_tensor(
     {
         throw ngraph_error("The pointer passed to create_tensor is not a device pointer.");
     }
-    return make_shared<runtime::gpu::GPUTensor>(element_type, shape, memory_pointer, this);
+    return make_shared<runtime::gpu::GPUTensor>(element_type, shape, memory_pointer);
 }
 
 shared_ptr<runtime::Executable> runtime::gpu::GPU_Backend::compile(shared_ptr<Function> func,

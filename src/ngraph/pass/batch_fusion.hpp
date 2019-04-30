@@ -14,21 +14,26 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "distributed_setup.hpp"
+#pragma once
 
-void DistributedSetup::set_comm_size(int comm_size)
+#include "ngraph/pass/pass.hpp"
+
+namespace ngraph
 {
-    ngraph_dist_setup::distributed_comm_size = comm_size;
-}
-void DistributedSetup::set_comm_rank(int comm_rank)
-{
-    ngraph_dist_setup::distributed_comm_rank = comm_rank;
-}
-int DistributedSetup::get_comm_size()
-{
-    return ngraph_dist_setup::distributed_comm_size;
-}
-int DistributedSetup::get_comm_rank()
-{
-    return ngraph_dist_setup::distributed_comm_rank;
+    namespace pass
+    {
+        class BatchFusion : public ngraph::pass::FunctionPass
+        {
+        public:
+            BatchFusion(ngraph::pass::FusionType type = ngraph::pass::ALL_FUSIONS)
+                : FunctionPass()
+                , m_fusion_type(type)
+            {
+            }
+            virtual bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+
+        private:
+            ngraph::pass::FusionType m_fusion_type;
+        };
+    }
 }

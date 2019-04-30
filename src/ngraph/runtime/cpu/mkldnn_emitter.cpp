@@ -306,7 +306,7 @@ mkldnn::memory::format MKLDNNEmitter::query_convolution_forward_weight_format(
     mkldnn::algorithm convolution_algo = mkldnn_utils::get_conv_algo();
     mkldnn::engine cpu_engine(mkldnn::engine::cpu, 0);
     mkldnn::convolution_forward::desc conv_desc_layout(
-        mkldnn::prop_kind::forward,
+        mkldnn::prop_kind::forward_inference,
         convolution_algo,
         input_data_desc,
         weights_desc_any, // this needs to be in default format

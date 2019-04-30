@@ -30,6 +30,8 @@
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/equal.hpp"
+#include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
 #include "ngraph/op/less.hpp"
@@ -78,6 +80,7 @@ public:
         m_entry_point = entry_point;
         m_gws = gws;
         m_lws = lws;
+        kernel = nullptr;
     }
 
     std::string m_name;
@@ -88,6 +91,7 @@ public:
     std::string m_entry_point;
     std::vector<size_t> m_gws;
     std::vector<size_t> m_lws;
+    void* kernel;
 };
 
 class ngraph::runtime::intelgpu::CustomKernels
@@ -109,8 +113,6 @@ public:
         krnl_info = build_krnl(op);
 
         queue_krnl(krnl_info, op);
-
-        ++m_count_krnls;
     }
 
     size_t get_custom_kernel_count() const { return m_count_krnls; }
@@ -125,8 +127,12 @@ private:
     krnl_info build_krnl(const std::shared_ptr<op::BatchNormTrainingBackprop>& op) const;
     krnl_info build_krnl(const std::shared_ptr<op::Broadcast>& op) const;
     krnl_info build_krnl(const std::shared_ptr<op::Convolution>& op) const;
+    krnl_info build_krnl(const std::shared_ptr<op::GroupConvolution>& op) const;
     krnl_info build_krnl(const std::shared_ptr<op::ConvolutionBackpropData>& op) const;
     krnl_info build_krnl(const std::shared_ptr<op::ConvolutionBackpropFilters>& op) const;
+    krnl_info build_krnl(const std::shared_ptr<op::ConvolutionBias>& op) const;
+    krnl_info build_krnl(const std::shared_ptr<op::ConvolutionBiasAdd>& op) const;
+    krnl_info build_krnl(const std::shared_ptr<op::ConvolutionBiasBackpropFiltersBias>& op) const;
     krnl_info build_krnl(const std::shared_ptr<op::Equal>& op) const;
     krnl_info build_krnl(const std::shared_ptr<op::Greater>& op) const;
     krnl_info build_krnl(const std::shared_ptr<op::GreaterEq>& op) const;
