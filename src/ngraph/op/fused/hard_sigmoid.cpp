@@ -53,8 +53,8 @@ NodeVector op::HardSigmoid::decompose_op() const
     std::shared_ptr<ngraph::Node> zero_node = ngraph::op::Constant::create<double>(
         data->get_element_type(), data_shape, std::vector<double>(elem_count, 0.0));
 
-    return {std::make_shared<op::Maximum>(
-        zero_node, std::make_shared<op::Minimum>(one_node, alpha_node * data + beta_node))};
+    return {std::make_shared<op::Minimum>(
+        std::make_shared<op::Maximum>(alpha_node * data + beta_node, zero_node), one_node)};
 }
 
 shared_ptr<Node> op::HardSigmoid::copy_with_new_args(const NodeVector& new_args) const
