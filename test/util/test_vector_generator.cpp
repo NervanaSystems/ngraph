@@ -52,6 +52,11 @@ namespace ngraph
                 }
             }
             sort(data.begin(), data.end());
+            size_t i=0;
+            for (float f : data)
+            {
+                NGRAPH_INFO << "input[" << i++ << "] = " << f << " sin=" << sin(f);
+            }
             return data;
         }
 

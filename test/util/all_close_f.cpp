@@ -37,6 +37,26 @@ constexpr uint32_t FLOAT_MAX_DIFF = UINT_MAX - 1;
 constexpr uint64_t DOUBLE_BELOW_MIN_SIGNAL = ULLONG_MAX;
 constexpr uint64_t DOUBLE_MAX_DIFF = ULLONG_MAX - 1;
 
+static float denorm_to_zero(float x)
+{
+    FloatUnion u{x};
+    if ((u.i & 0x7F800000) == 0)
+    {
+        x = 0;
+    }
+    return x;
+}
+
+static double denorm_to_zero(double x)
+{
+    DoubleUnion u{x};
+    if ((u.i & 0x7FF0000000000000) == 0)
+    {
+        x = 0;
+    }
+    return x;
+}
+
 uint32_t test::float_distance(float a, float b, float min_signal)
 {
     if (isnan(a) && isnan(b))
@@ -55,6 +75,8 @@ uint32_t test::float_distance(float a, float b, float min_signal)
         }
         return FLOAT_MAX_DIFF;
     }
+    a = denorm_to_zero(a);
+    b = denorm_to_zero(b);
 
     FloatUnion a_fu{a};
     FloatUnion b_fu{b};
@@ -110,6 +132,8 @@ uint64_t test::float_distance(double a, double b, double min_signal)
         }
         return DOUBLE_MAX_DIFF;
     }
+    a = denorm_to_zero(a);
+    b = denorm_to_zero(b);
 
     DoubleUnion a_du{a};
     DoubleUnion b_du{b};
@@ -165,6 +189,8 @@ bool test::close_f(float a, float b, int tolerance_bits, float min_signal)
         }
         return false;
     }
+    a = denorm_to_zero(a);
+    b = denorm_to_zero(b);
 
     uint32_t distance = float_distance(a, b, min_signal);
 
@@ -195,6 +221,8 @@ bool test::close_f(double a, double b, int tolerance_bits, double min_signal)
         }
         return false;
     }
+    a = denorm_to_zero(a);
+    b = denorm_to_zero(b);
 
     uint64_t distance = float_distance(a, b, min_signal);
 
@@ -318,6 +346,10 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
                                              int tolerance_bits,
                                              float min_signal)
 {
+    for (size_t i=0; i<a.size(); i++)
+    {
+        NGRAPH_INFO << a[i] << ", " << b[i];
+    }
     if (tolerance_bits < MIN_FLOAT_TOLERANCE_BITS)
     {
         tolerance_bits = MIN_FLOAT_TOLERANCE_BITS;

@@ -39,7 +39,6 @@ static string s_manifest = "${MANIFEST}";
     NGRAPH_TEST(${BACKEND_NAME}, c_func__##_${DATA_TYPE})                                          \
     {                                                                                              \
         auto input = test::make_floating_point_data<${DATA_TYPE}>(min__, max__);                   \
-        auto output = vector<${DATA_TYPE}>(input.size());                                          \
         Shape shape = Shape{input.size()};                                                         \
         auto A = make_shared<op::Parameter>(${ELEMENT_TYPE}, shape);                               \
         auto f = make_shared<Function>(make_shared<op__>(A), ParameterVector{A});                  \
@@ -54,13 +53,14 @@ static string s_manifest = "${MANIFEST}";
         handle->call_with_validate({result}, {a});                                                 \
         auto output_data = read_vector<${DATA_TYPE}>(result);                                      \
                                                                                                    \
-        vector<${DATA_TYPE}> expected;                                                             \
+        vector<${DATA_TYPE}> expected; size_t i=0;                                                             \
         for (auto x : input)                                                                       \
         {                                                                                          \
-            expected.push_back(c_func__(x));                                                       \
+            expected.push_back(c_func__(x));\
+            NGRAPH_INFO << x << ", " << c_func__(x) << ", " << output_data[i++];                                                       \
         }                                                                                          \
                                                                                                    \
-        EXPECT_TRUE(test::all_close_f(expected, output_data, MIN_FLOAT_TOLERANCE_BITS));           \
+        EXPECT_TRUE(test::all_close_f(expected, output_data, MIN_FLOAT_TOLERANCE_BITS+2));           \
     }
 
 // clang-format off

@@ -19,6 +19,8 @@
 #include <cmath>
 #include <cstddef>
 
+#include "ngraph/log.hpp"
+
 namespace ngraph
 {
     namespace runtime
@@ -31,6 +33,7 @@ namespace ngraph
                 for (size_t i = 0; i < count; i++)
                 {
                     out[i] = std::sin(arg[i]);
+                    NGRAPH_INFO << "sin[" << arg[i] << "] = " << out[i];
                 }
             }
         }
