@@ -14,21 +14,22 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "distributed_setup.hpp"
+#pragma once
 
-void DistributedSetup::set_comm_size(int comm_size)
+#include "ngraph/pass/pass.hpp"
+
+namespace ngraph
 {
-    ngraph_dist_setup::distributed_comm_size = comm_size;
-}
-void DistributedSetup::set_comm_rank(int comm_rank)
-{
-    ngraph_dist_setup::distributed_comm_rank = comm_rank;
-}
-int DistributedSetup::get_comm_size()
-{
-    return ngraph_dist_setup::distributed_comm_size;
-}
-int DistributedSetup::get_comm_rank()
-{
-    return ngraph_dist_setup::distributed_comm_rank;
+    namespace pass
+    {
+        class ShapeRelevance : public FunctionPass
+        {
+        public:
+            ShapeRelevance()
+                : FunctionPass()
+            {
+            }
+            virtual bool run_on_function(std::shared_ptr<ngraph::Function> f) override;
+        };
+    }
 }
