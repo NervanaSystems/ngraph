@@ -746,96 +746,310 @@ namespace ngraph
                         input_desc, result_desc, lower_bounds, out_shape);
                 }
 
-                template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(ConvolutionRelu)
+                template <typename OP>
+                void construct_primitive_build_string_conv(
+                    ngraph::runtime::cpu::MKLDNNEmitter& mkldnn_emitter,
+                    ngraph::Node* node,
+                    std::string& construct_string,
+                    std::vector<size_t>& deps,
+                    size_t& index,
+                    std::ofstream& desc_file)
                 {
-                    return mkldnn_emitter.build_convolution<ConvolutionRelu>(node);
-                }
-
-                template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(QuantizedConvolutionRelu)
-                {
-                    return mkldnn_emitter.build_convolution<QuantizedConvolutionRelu>(node);
-                }
-
-                template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(QuantizedConvolution)
-                {
-                    return mkldnn_emitter.build_convolution<QuantizedConvolution>(node);
-                }
-
-                template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(GroupConvolution)
-                {
+                    auto convolution = static_cast<const OP*>(node);
                     Strides window_dilation_strides_adjusted;
-                    auto convolution = static_cast<const ngraph::op::GroupConvolution*>(node);
+
+                    mkldnn::algorithm convolution_algo = mkldnn_utils::get_conv_algo();
                     for (size_t s : convolution->get_window_dilation_strides())
                     {
                         window_dilation_strides_adjusted.push_back(s - 1);
                     }
 
-                    auto input_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto weights_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
+                    // MKLDNN relies on named formats for kernel selection
+                    if (weights_desc.data.format == mkldnn_nchw)
+                        weights_desc.data.format = mkldnn_oihw;
+                    if (weights_desc.data.format == mkldnn_ncdhw)
+                        weights_desc.data.format = mkldnn_oidhw;
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    auto padding_below = convolution->get_padding_below();
-                    auto padding_above = convolution->get_padding_above();
-                    auto filter_strides = convolution->get_window_movement_strides();
 
-                    return mkldnn_emitter.build_convolution_forward(
-                        input_data_desc,
-                        weights_desc,
-                        result_desc,
-                        filter_strides,
-                        window_dilation_strides_adjusted,
-                        padding_below,
-                        padding_above);
+                    auto strides = convolution->get_window_movement_strides();
+                    auto pad_below = convolution->get_padding_below();
+                    auto pad_above = convolution->get_padding_above();
+
+                    if (mkldnn_emitter.has_bias<OP>())
+                    {
+                        index = mkldnn_emitter.reserve_primitive_space_cg(5);
+                    }
+                    else
+                    {
+                        index = mkldnn_emitter.reserve_primitive_space_cg(4);
+                    }
+                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+
+                    CodeWriter writer;
+
+                    writer << "// Write in memory descriptors\n";
+                    std::vector<mkldnn::memory::desc> descs = {
+                        data_desc, weights_desc, result_desc};
+
+                    if (mkldnn_emitter.has_bias<OP>())
+                    {
+                        auto bias_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
+                        descs.insert(descs.begin() + 2, bias_desc);
+                    }
+
+                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
+
+                    writer << "\n// build QConv primitive descriptor\n";
+                    writer << "auto conv_desc = "
+                              "mkldnn::convolution_forward::desc(mkldnn::prop_kind::forward,\n"
+                              "mkldnn::algorithm::convolution_direct,\n"
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "],\n"
+                                            "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 1 << "],\n";
+                    if (mkldnn_emitter.has_bias<OP>())
+                    {
+                        writer << "*cg_ctx->mkldnn_descriptors[" << desc_index + 2 << "],\n";
+                    }
+                    writer << "*cg_ctx->mkldnn_descriptors[" << desc_index + (descs.size() - 1)
+                           << "],\n"
+                              "mkldnn::memory::dims{"
+                           << std::to_string(strides[0]) << ", " << std::to_string(strides[1]);
+                    if (strides.size() == 3)
+                    {
+                        writer << ", " << std::to_string(strides[2]);
+                    }
+                    writer << "},\n"
+                              "mkldnn::memory::dims{"
+                           << std::to_string(window_dilation_strides_adjusted[0]) << ", "
+                           << std::to_string(window_dilation_strides_adjusted[1]);
+                    if (window_dilation_strides_adjusted.size() == 3)
+                    {
+                        writer << ", " << std::to_string(window_dilation_strides_adjusted[2]);
+                    }
+                    writer << "},\n"
+                              "mkldnn::memory::dims{"
+                           << std::to_string(pad_below[0]) << ", " << std::to_string(pad_below[1]);
+                    if (pad_below.size() == 3)
+                    {
+                        writer << ", " << std::to_string(pad_below[2]);
+                    }
+                    writer << "},\n"
+                              "mkldnn::memory::dims{"
+                           << std::to_string(pad_above[0]) << ", " << std::to_string(pad_above[1]);
+                    if (pad_above.size() == 3)
+                    {
+                        writer << ", " << std::to_string(pad_above[2]);
+                    }
+                    writer << "},\n"
+                              "mkldnn::padding_kind::zero);\n";
+
+                    writer << "mkldnn::post_ops ops;\n";
+                    if (std::is_same<OP, ngraph::op::ConvolutionBiasAdd>() ||
+                        std::is_same<OP, ngraph::op::ConvolutionAdd>())
+                    {
+                        writer << "ops.append_sum(1.f);\n";
+                    }
+
+                    if (std::is_same<OP, ngraph::op::QuantizedConvolutionBiasAdd>() ||
+                        std::is_same<OP, ngraph::op::QuantizedConvolutionBiasSignedAdd>())
+                    {
+                        auto sum_scales_size = shape_size(convolution->get_input_shape(5));
+                        const element::Type& et = node->get_input_element_type(5);
+                        std::string type = et.c_type_string();
+                        std::stringstream ss;
+                        writer << "std::vector<float> dyn_post_op_scales;\n";
+                        auto c = std::dynamic_pointer_cast<ngraph::op::Constant>(
+                            node->get_arguments()[5]);
+                        if (c)
+                        {
+                            auto sum_scale_val =
+                                extract_scale_value<ngraph::op::QuantizedConvolutionBiasAdd>(node,
+                                                                                             5);
+                            writer << "dyn_post_op_scales.push_back("
+                                   << std::to_string(sum_scale_val[0]) << ");\n";
+                        }
+                        else
+                        {
+                            ss << "((" << type << "*)(pool_base_ptr + "
+                               << node->get_inputs()[5].get_tensor().get_pool_offset() << "))";
+                            writer << "dyn_post_op_scales.assign(" << ss.str() << ", " << ss.str()
+                                   << " + " << std::to_string(sum_scales_size) << ");\n";
+                        }
+                        writer << "ops.append_sum(dyn_post_op_scales[0]);\n";
+                    }
+
+                    if (has_relu<OP>(node))
+                    {
+                        writer << "const float ops_scale = 1.f;\n";
+                        writer << "const float ops_alpha = -0.f; // relu negative slope\n";
+                        writer << "const float ops_beta = 0.f;\n";
+                        writer << "ops.append_eltwise("
+                                  "ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, "
+                                  "ops_beta);\n";
+                    }
+
+                    writer << "mkldnn::primitive_attr conv_attr;\n";
+                    writer << "conv_attr.set_post_ops(ops);\n";
+
+                    if (mkldnn_emitter.is_quantized_conv<OP>())
+                    {
+                        auto scale_index = mkldnn_emitter.get_scale_index<OP>();
+                        auto c = std::dynamic_pointer_cast<ngraph::op::Constant>(
+                            node->get_arguments()[scale_index]);
+                        auto scales_size = shape_size(convolution->get_input_shape(scale_index));
+                        const element::Type& et = node->get_input_element_type(scale_index);
+                        std::string type = et.c_type_string();
+                        std::stringstream ss;
+                        if (c)
+                        {
+                            ss << "((" << type << "*)(" << c->get_data_ptr() << "))\n";
+                        }
+                        else
+                        {
+                            ss << "((" << type << "*)(pool_base_ptr + "
+                               << node->get_inputs()[scale_index].get_tensor().get_pool_offset()
+                               << "))";
+                        }
+                        writer << "std::vector<float> dyn_scales;\n";
+                        writer << "dyn_scales.assign(" << ss.str() << ", " << ss.str() << " + "
+                               << std::to_string(scales_size) << ");\n";
+                        writer << "// use conv channelwise (dim 1, mask=2^1) if dyn_scales is a "
+                                  "vector \n";
+                        writer << "const int mask = " << std::to_string(scales_size)
+                               << " == 1 ? 0 : 2;\n";
+                        writer << "conv_attr.set_int_output_round_mode(mkldnn::round_mode::round_"
+                                  "nearest);\n";
+                        writer << "conv_attr.set_output_scales(mask, dyn_scales);\n";
+                    }
+
+                    //emit_memory_primitive_build(writer, desc_names, deps);
+                    writer << "mkldnn::primitive* prim;\n";
+                    if (mkldnn_emitter.has_bias<OP>())
+                    {
+                        writer << "prim = new mkldnn::convolution_forward({conv_desc, conv_attr, "
+                                  "cg_ctx->global_cpu_engine},"
+                                  "*cg_ctx->mkldnn_primitives["
+                               << std::to_string(deps[0]) << "],\n"
+                                                             "*cg_ctx->mkldnn_primitives["
+                               << std::to_string(deps[1]) << "],\n"
+                                                             "*cg_ctx->mkldnn_primitives["
+                               << std::to_string(deps[2]) << "],\n"
+                                                             "*cg_ctx->mkldnn_primitives["
+                               << std::to_string(deps[3]) << "]);\n";
+                    }
+                    else
+                    {
+                        writer << "prim = new mkldnn::convolution_forward({conv_desc, conv_attr, "
+                                  "cg_ctx->global_cpu_engine},"
+                                  "*cg_ctx->mkldnn_primitives["
+                               << std::to_string(deps[0]) << "],\n"
+                                                             "*cg_ctx->mkldnn_primitives["
+                               << std::to_string(deps[1]) << "],\n"
+                                                             "*cg_ctx->mkldnn_primitives["
+                               << std::to_string(deps[2]) << "]);\n";
+                    }
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = prim;\n";
+                    construct_string = writer.get_code();
                 }
 
                 template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(GroupConvolutionBias)
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(Convolution)
                 {
-                    Strides window_dilation_strides_adjusted;
-                    auto convolution = static_cast<const ngraph::op::GroupConvolutionBias*>(node);
-                    for (size_t s : convolution->get_window_dilation_strides())
-                    {
-                        window_dilation_strides_adjusted.push_back(s - 1);
-                    }
-
-                    auto input_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                    auto weights_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
-                    auto bias_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
-                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    auto padding_below = convolution->get_padding_below();
-                    auto padding_above = convolution->get_padding_above();
-                    auto filter_strides = convolution->get_window_movement_strides();
-
-                    const float ops_scale = 1.f;
-                    const float ops_alpha = -0.f; // relu negative slope
-                    const float ops_beta = 0.f;
-
-                    mkldnn::post_ops ops;
-                    if (convolution->with_relu())
-                    {
-                        ops.append_eltwise(
-                            ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, ops_beta);
-                    }
-
-                    return mkldnn_emitter.build_convolution_forward(
-                        input_data_desc,
-                        weights_desc,
-                        bias_desc,
-                        result_desc,
-                        filter_strides,
-                        window_dilation_strides_adjusted,
-                        padding_below,
-                        padding_above,
-                        ops);
+                    construct_primitive_build_string_conv<Convolution>(
+                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
                 }
 
                 template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Convolution)
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
+                    QuantizedConvolution)
                 {
-                    return mkldnn_emitter.build_convolution<Convolution>(node);
+                    construct_primitive_build_string_conv<QuantizedConvolution>(
+                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
+                }
+
+                template <>
+                void
+                    MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(ConvolutionRelu)
+                {
+                    construct_primitive_build_string_conv<ConvolutionRelu>(
+                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
+                }
+
+                template <>
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
+                    QuantizedConvolutionRelu)
+                {
+                    construct_primitive_build_string_conv<QuantizedConvolutionRelu>(
+                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
+                }
+
+                template <>
+                void
+                    MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(ConvolutionBias)
+                {
+                    construct_primitive_build_string_conv<ConvolutionBias>(
+                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
+                }
+
+                template <>
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
+                    QuantizedConvolutionBias)
+                {
+                    construct_primitive_build_string_conv<QuantizedConvolutionBias>(
+                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
+                }
+
+                template <>
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
+                    ConvolutionBiasAdd)
+                {
+                    construct_primitive_build_string_conv<ConvolutionBiasAdd>(
+                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
+                }
+
+                template <>
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
+                    QuantizedConvolutionBiasAdd)
+                {
+                    construct_primitive_build_string_conv<QuantizedConvolutionBiasAdd>(
+                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
+                }
+
+                template <>
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(ConvolutionAdd)
+                {
+                    construct_primitive_build_string_conv<ConvolutionAdd>(
+                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
+                }
+
+                template <>
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
+                    QuantizedConvolutionBiasSignedAdd)
+                {
+                    construct_primitive_build_string_conv<QuantizedConvolutionBiasSignedAdd>(
+                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
+                }
+
+                template <>
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
+                    GroupConvolution)
+                {
+                    construct_primitive_build_string_conv<GroupConvolution>(
+                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
+                }
+
+                template <>
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
+                    GroupConvolutionBias)
+                {
+                    construct_primitive_build_string_conv<GroupConvolutionBias>(
+                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
                 }
 
                 template <typename OpTy>
@@ -916,44 +1130,6 @@ namespace ngraph
                 {
                     return build_convolution_backward<ConvolutionBackpropData>(mkldnn_emitter,
                                                                                node);
-                }
-
-                template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(QuantizedConvolutionBias)
-                {
-                    return mkldnn_emitter.build_convolution<QuantizedConvolutionBias>(node);
-                }
-
-                template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(QuantizedConvolutionBiasAdd)
-                {
-                    return mkldnn_emitter.build_convolution<QuantizedConvolutionBiasAdd>(node);
-                }
-
-                template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(
-                    QuantizedConvolutionBiasSignedAdd)
-                {
-                    return mkldnn_emitter.build_convolution<QuantizedConvolutionBiasSignedAdd>(
-                        node);
-                }
-
-                template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(ConvolutionBias)
-                {
-                    return mkldnn_emitter.build_convolution<ConvolutionBias>(node);
-                }
-
-                template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(ConvolutionBiasAdd)
-                {
-                    return mkldnn_emitter.build_convolution<ConvolutionBiasAdd>(node);
-                }
-
-                template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(ConvolutionAdd)
-                {
-                    return mkldnn_emitter.build_convolution<ConvolutionAdd>(node);
                 }
 
                 template <>
@@ -1271,10 +1447,6 @@ static const PrimitiveBuildOpMap prim_build_dispatcher{
     {TI(AvgPool), &MKLDNNPrimitiveBuildPass::build_primitive<AvgPool>},
     {TI(AvgPoolBackprop), &MKLDNNPrimitiveBuildPass::build_primitive<AvgPoolBackprop>},
     {TI(BoundedRelu), &MKLDNNPrimitiveBuildPass::build_primitive<BoundedRelu>},
-    {TI(Convolution), &MKLDNNPrimitiveBuildPass::build_primitive<Convolution>},
-    {TI(GroupConvolution), &MKLDNNPrimitiveBuildPass::build_primitive<GroupConvolution>},
-    {TI(ConvolutionRelu), &MKLDNNPrimitiveBuildPass::build_primitive<ConvolutionRelu>},
-    {TI(ConvolutionBiasAdd), &MKLDNNPrimitiveBuildPass::build_primitive<ConvolutionBiasAdd>},
     {TI(ConvolutionBackpropData),
      &MKLDNNPrimitiveBuildPass::build_primitive<ConvolutionBackpropData>},
     {TI(ConvolutionBackpropFilters),
@@ -1284,8 +1456,6 @@ static const PrimitiveBuildOpMap prim_build_dispatcher{
     {TI(MaxPoolBackprop), &MKLDNNPrimitiveBuildPass::build_primitive<MaxPoolBackprop>},
     {TI(MaxPoolWithIndicesBackprop),
      &MKLDNNPrimitiveBuildPass::build_primitive<MaxPoolWithIndicesBackprop>},
-    {TI(ConvolutionBias), &MKLDNNPrimitiveBuildPass::build_primitive<ConvolutionBias>},
-    {TI(QuantizedConvolution), &MKLDNNPrimitiveBuildPass::build_primitive<QuantizedConvolution>},
     {TI(ConvolutionBiasBackpropFiltersBias),
      &MKLDNNPrimitiveBuildPass::build_primitive<ConvolutionBiasBackpropFiltersBias>},
     {TI(Relu), &MKLDNNPrimitiveBuildPass::build_primitive<Relu>},
@@ -1299,16 +1469,6 @@ static const PrimitiveBuildOpMap prim_build_dispatcher{
     {TI(Slice), &MKLDNNPrimitiveBuildPass::build_primitive<Slice>},
     {TI(ReplaceSlice), &MKLDNNPrimitiveBuildPass::build_primitive<ReplaceSlice>},
     {TI(UpdateSlice), &MKLDNNPrimitiveBuildPass::build_primitive<UpdateSlice>},
-    {TI(ConvolutionAdd), &MKLDNNPrimitiveBuildPass::build_primitive<ConvolutionAdd>},
-    {TI(QuantizedConvolutionRelu),
-     &MKLDNNPrimitiveBuildPass::build_primitive<QuantizedConvolutionRelu>},
-    {TI(QuantizedConvolutionBias),
-     &MKLDNNPrimitiveBuildPass::build_primitive<QuantizedConvolutionBias>},
-    {TI(QuantizedConvolutionBiasAdd),
-     &MKLDNNPrimitiveBuildPass::build_primitive<QuantizedConvolutionBiasAdd>},
-    {TI(QuantizedConvolutionBiasSignedAdd),
-     &MKLDNNPrimitiveBuildPass::build_primitive<QuantizedConvolutionBiasSignedAdd>},
-    {TI(GroupConvolutionBias), &MKLDNNPrimitiveBuildPass::build_primitive<GroupConvolutionBias>},
     {TI(Quantize), &MKLDNNPrimitiveBuildPass::build_primitive<Quantize>},
     {TI(Dequantize), &MKLDNNPrimitiveBuildPass::build_primitive<Dequantize>},
     {TI(QuantizedConcat), &MKLDNNPrimitiveBuildPass::build_primitive<QuantizedConcat>},
@@ -1331,6 +1491,30 @@ static const PrimitiveBuildStringConstructOpMap prim_build_string_construct_disp
     {TI(LRN), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<LRN>},
     {TI(Lstm), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Lstm>},
     {TI(Rnn), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Rnn>},
+    {TI(Convolution), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Convolution>},
+    {TI(ConvolutionRelu),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<ConvolutionRelu>},
+    {TI(ConvolutionBias),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<ConvolutionBias>},
+    {TI(ConvolutionBiasAdd),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<ConvolutionBiasAdd>},
+    {TI(ConvolutionAdd),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<ConvolutionAdd>},
+    {TI(GroupConvolution),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<GroupConvolution>},
+    {TI(GroupConvolutionBias),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<GroupConvolutionBias>},
+    {TI(QuantizedConvolution),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<QuantizedConvolution>},
+    {TI(QuantizedConvolutionRelu),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<QuantizedConvolutionRelu>},
+    {TI(QuantizedConvolutionBias),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<QuantizedConvolutionBias>},
+    {TI(QuantizedConvolutionBiasAdd),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<QuantizedConvolutionBiasAdd>},
+    {TI(QuantizedConvolutionBiasSignedAdd),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<
+         QuantizedConvolutionBiasSignedAdd>},
 };
 
 // Check if the node builds primitives at first iteration.
@@ -1346,7 +1530,19 @@ static bool in_new_map(const std::shared_ptr<Node>& node)
         std::dynamic_pointer_cast<ngraph::op::BatchNormTrainingBackprop>(node) ||
         std::dynamic_pointer_cast<ngraph::op::LRN>(node) ||
         std::dynamic_pointer_cast<ngraph::op::Lstm>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::Rnn>(node))
+        std::dynamic_pointer_cast<ngraph::op::Rnn>(node) ||
+        std::dynamic_pointer_cast<ngraph::op::Convolution>(node) ||
+        std::dynamic_pointer_cast<ngraph::op::ConvolutionRelu>(node) ||
+        std::dynamic_pointer_cast<ngraph::op::ConvolutionBias>(node) ||
+        std::dynamic_pointer_cast<ngraph::op::ConvolutionBiasAdd>(node) ||
+        std::dynamic_pointer_cast<ngraph::op::ConvolutionAdd>(node) ||
+        std::dynamic_pointer_cast<ngraph::op::QuantizedConvolution>(node) ||
+        std::dynamic_pointer_cast<ngraph::op::QuantizedConvolutionRelu>(node) ||
+        std::dynamic_pointer_cast<ngraph::op::QuantizedConvolutionBias>(node) ||
+        std::dynamic_pointer_cast<ngraph::op::QuantizedConvolutionBiasAdd>(node) ||
+        std::dynamic_pointer_cast<ngraph::op::QuantizedConvolutionBiasSignedAdd>(node) ||
+        std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(node) ||
+        std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(node))
     {
         return true;
     }
