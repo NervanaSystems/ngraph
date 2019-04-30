@@ -82,9 +82,8 @@ namespace ngraph
                     std::unordered_map<const Node*, size_t>& m_node_primitive_idx_map;
 
                     /// External map to store each node with mkldnn implementation and its mkldnn
-                    /// creation string and the deps.
-                    std::unordered_map<const Node*,
-                                       std::tuple<std::string, std::vector<size_t>, size_t>>&
+                    /// creation string, deps, and mkldnn primitive index.
+                    std::map<const Node*, std::tuple<std::string, std::vector<size_t>, size_t>>&
                         m_node_primitive_string_deps_index_map;
 
                 public:
@@ -92,8 +91,7 @@ namespace ngraph
                         std::string filename,
                         ngraph::runtime::cpu::MKLDNNEmitter& mkldnn_emitter,
                         std::unordered_map<const Node*, size_t>& node_primitive_idx_map,
-                        std::unordered_map<const Node*,
-                                           std::tuple<std::string, std::vector<size_t>, size_t>>&
+                        std::map<const Node*, std::tuple<std::string, std::vector<size_t>, size_t>>&
                             node_primitive_string_deps_index_map)
                         : m_desc_filename(filename)
                         , m_mkldnn_emitter(mkldnn_emitter)

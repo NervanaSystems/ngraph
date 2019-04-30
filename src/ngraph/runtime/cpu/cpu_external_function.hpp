@@ -322,9 +322,8 @@ namespace ngraph
 
                 /// Map each node with mkldnn implementation to its mkldnn primitive index.
                 std::unordered_map<const Node*, size_t> m_node_primitive_idx_map;
-                /// Map each node with mkldnn implementation to its mkldnn primitive creating string and the deps.
-                std::unordered_map<const Node*,
-                                   std::tuple<std::string, std::vector<size_t>, size_t>>
+                /// Map each node with mkldnn implementation to its mkldnn primitive creating string, deps, and mkldnn primitive index.
+                std::map<const Node*, std::tuple<std::string, std::vector<size_t>, size_t>>
                     m_node_primitive_string_deps_index_map;
                 /// Name of the file to store descriptors for mkldnn_primitives
                 const std::string m_desc_filename = "desc_file";
