@@ -89,8 +89,7 @@ public:
     /// \param element_type The type of the tensor element
     /// \param shape The shape of the tensor
     /// \returns shared_ptr to a new backend-specific tensor
-    /// \throws std::invalid_argument if the requested shape or element type is dynamic and the
-    ///         backend does not support dynamic tensors
+    /// \throws std::invalid_argument if the backend does not support dynamic tensors
     virtual std::shared_ptr<ngraph::runtime::Tensor>
         create_dynamic_tensor(const ngraph::element::Type& element_type, const PartialShape& shape);
 

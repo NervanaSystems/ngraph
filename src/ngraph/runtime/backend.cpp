@@ -60,14 +60,7 @@ std::shared_ptr<ngraph::runtime::Tensor>
     runtime::Backend::create_dynamic_tensor(const ngraph::element::Type& element_type,
                                             const PartialShape& shape)
 {
-    if (shape.is_static() && element_type.is_static())
-    {
-        return create_tensor(element_type, shape.to_shape());
-    }
-    else
-    {
-        throw std::invalid_argument("This backend does not support dynamic tensors");
-    }
+    throw std::invalid_argument("This backend does not support dynamic tensors");
 }
 
 std::shared_ptr<runtime::Executable>
