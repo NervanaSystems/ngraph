@@ -20,6 +20,7 @@
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
+#include "ngraph/runtime/cpu/kernel/convolution.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
@@ -35,19 +36,24 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::QuantizedConvolution)
             {
+                auto qconvolution = static_cast<const ngraph::op::QuantizedConvolution*>(node);
+
+                auto& functors = external_function->get_functors();
+
+                auto arg0_shape = args[0].get_shape();
+                auto arg1_shape = args[1].get_shape();
+                auto result_shape = out[0].get_shape();
+
+                auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
+                auto arg2_buffer_index = external_function->get_buffer_index(args[2].get_name());
+                auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
+
+                auto scales_size = shape_size(args[2].get_shape());
+
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto& functors = external_function->get_functors();
-                    auto arg0_buffer_index =
-                        external_function->get_buffer_index(args[0].get_name());
-                    auto arg1_buffer_index =
-                        external_function->get_buffer_index(args[1].get_name());
-                    auto arg2_buffer_index =
-                        external_function->get_buffer_index(args[2].get_name());
-                    auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
-
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto scales_size = shape_size(args[2].get_shape());
 
                     auto conv_desc =
                         mkldnn_emitter
@@ -101,7 +107,51 @@ namespace ngraph
                 }
                 else
                 {
-                    throw ngraph_error("unsupported parameters for QuantizedConvolution via DEX");
+                    std::function<decltype(
+                        runtime::cpu::kernel::convolution<uint8_t, uint8_t, uint8_t, int32_t>)>
+                        kernel;
+                    kernel = runtime::cpu::kernel::convolution<uint8_t, uint8_t, uint8_t, int32_t>;
+
+                    auto window_movement_strides = qconvolution->get_window_movement_strides();
+                    auto window_dilation_strides = qconvolution->get_window_dilation_strides();
+                    auto padding_below = qconvolution->get_padding_below();
+                    auto padding_above = qconvolution->get_padding_above();
+                    auto data_dilation_strides = qconvolution->get_data_dilation_strides();
+
+                    auto functor = [&,
+                                    kernel,
+                                    arg0_shape,
+                                    arg1_shape,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    arg2_buffer_index,
+                                    out0_buffer_index,
+                                    result_shape,
+                                    window_movement_strides,
+                                    window_dilation_strides,
+                                    padding_below,
+                                    padding_above,
+                                    data_dilation_strides,
+                                    scales_size](CPURuntimeContext* ctx,
+                                                 CPUExecutionContext* ectx) {
+                        vector<float> dyn_scales;
+                        dyn_scales.assign(static_cast<float*>(ctx->buffer_data[arg2_buffer_index]),
+                                          static_cast<float*>(ctx->buffer_data[arg2_buffer_index]) +
+                                              scales_size);
+                        kernel(ctx->buffer_data[arg0_buffer_index],
+                               ctx->buffer_data[arg1_buffer_index],
+                               ctx->buffer_data[out0_buffer_index],
+                               arg0_shape,
+                               arg1_shape,
+                               result_shape,
+                               window_movement_strides,
+                               window_dilation_strides,
+                               padding_below,
+                               padding_above,
+                               data_dilation_strides,
+                               dyn_scales[0]);
+                    };
+                    functors.emplace_back(functor);
                 }
             }
 

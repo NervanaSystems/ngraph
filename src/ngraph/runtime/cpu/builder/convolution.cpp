@@ -88,10 +88,10 @@ namespace ngraph
                 }
                 else
                 {
-                    std::function<decltype(runtime::cpu::kernel::convolution<float>)> kernel;
+                    std::function<decltype(runtime::cpu::kernel::convolution<float, float, float>)>
+                        kernel;
 
-                    SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::convolution);
+                    kernel = runtime::cpu::kernel::convolution<float, float, float>;
 
                     auto window_movement_strides = convolution->get_window_movement_strides();
                     auto window_dilation_strides = convolution->get_window_dilation_strides();
@@ -123,7 +123,8 @@ namespace ngraph
                                window_dilation_strides,
                                padding_below,
                                padding_above,
-                               data_dilation_strides);
+                               data_dilation_strides,
+                               1.0f);
                     };
                     functors.emplace_back(functor);
                 }
