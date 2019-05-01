@@ -30,12 +30,13 @@
 
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/check.hpp"
+#include "ngraph/coordinate.hpp"
 #include "ngraph/deprecated.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/descriptor/tensor.hpp"
-#include "ngraph/node_vector.hpp"
 #include "ngraph/placement.hpp"
+#include "ngraph/strides.hpp"
 
 namespace ngraph
 {
@@ -45,10 +46,20 @@ namespace ngraph
     template <typename NodeType>
     class Output;
 
+    class Node;
+    using NodeVector = std::vector<std::shared_ptr<Node>>;
+
+    class Function;
+
     namespace op
     {
         class Constant;
     } // namespace op
+
+    namespace autodiff
+    {
+        class Adjoints;
+    }
 
     std::string node_validation_failure_loc_string(const Node* node);
 

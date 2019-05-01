@@ -397,6 +397,11 @@ namespace ngraph
             return is_match;
         }
 
+        bool Matcher::get_property(const ngraph::pass::PassPropertyMask& prop) const
+        {
+            return m_property.is_set(prop);
+        }
+
         bool RecurrentMatcher::match(std::shared_ptr<Node> graph)
         {
             bool matched = false;
@@ -454,5 +459,9 @@ namespace ngraph
         }
 
         bool RecurrentMatcher::process_match() { return m_callback(*this); }
+        bool RecurrentMatcher::get_property(const ngraph::pass::PassPropertyMask& prop) const
+        {
+            return m_property.is_set(prop);
+        }
     }
 }
