@@ -68,7 +68,7 @@ void ngraph::Distributed::finalize()
     MPI_Initialized(&flag);
     if (flag)
     {
-        MPI_Finalize();
+       // MPI_Finalize();
     }
 #else
     throw ngraph_error("Distributed Library not supported/mentioned");
