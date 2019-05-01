@@ -744,7 +744,7 @@ namespace ngraph
                                        std::vector<size_t>& deps,
                                        size_t rnn_idx);
 
-              size_t build_concat(const std::vector<mkldnn::memory::desc>& inputs_data_desc,
+                size_t build_concat(const std::vector<mkldnn::memory::desc>& inputs_data_desc,
                                     const mkldnn::memory::desc& result_desc,
                                     const size_t concat_dim);
 

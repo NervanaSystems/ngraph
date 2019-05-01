@@ -1576,7 +1576,7 @@ bool MKLDNNPrimitiveBuildPass::run_on_call_graph(const std::list<std::shared_ptr
         }
     }
 
-    std::ofstream desc_file = std::ofstream(m_desc_filename, std::ios::out | std::ios::binary);
+    std::ofstream desc_file(m_desc_filename, std::ios::out | std::ios::binary);
     for (const auto& shp_node : nodes)
     {
         if (!in_new_map(shp_node))

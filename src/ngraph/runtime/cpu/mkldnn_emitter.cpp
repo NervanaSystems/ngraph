@@ -1483,7 +1483,7 @@ void MKLDNNEmitter::build_batchnorm_backward(
         *mkldnn_primitives[dinput_index],
         *mkldnn_primitives[dweights_index]);
 }
-  
+
 void MKLDNNEmitter::build_rnn_forward(std::vector<mkldnn::primitive*>& mkldnn_primitives,
                                       std::vector<char*>& mkldnn_workspaces,
                                       const mkldnn::rnn_forward::desc& rnn_desc,
