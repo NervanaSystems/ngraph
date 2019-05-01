@@ -34,10 +34,10 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
 
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                 auto update_slice = static_cast<const ngraph::op::UpdateSlice*>(node);
 
@@ -51,8 +51,11 @@ namespace ngraph
                 if (!arg0_shape.size())
                 {
                     size_t size = args[0].get_element_type().size();
-                    auto functor = [&, size](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        memcpy(out_tensor, arg1_tensor, size);
+                    auto functor = [&, size, arg1_buffer_index, out_buffer_index](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        memcpy(ctx->buffer_data[out_buffer_index],
+                               ctx->buffer_data[arg1_buffer_index],
+                               size);
                     };
                     functors.emplace_back(functor);
                     return;
@@ -68,19 +71,27 @@ namespace ngraph
                                           arg0_shape.size(),
                                           runtime::cpu::kernel::strided_update_slice);
 
-                    auto functor =
-                        [&, kernel, arg0_shape, arg1_shape, lower_bounds, upper_bounds, strides](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                            kernel(arg0_tensor,
-                                   arg1_tensor,
-                                   out_tensor,
-                                   arg0_shape,
-                                   arg1_shape,
-                                   lower_bounds,
-                                   upper_bounds,
-                                   strides,
-                                   ectx->arena);
-                        };
+                    auto functor = [&,
+                                    kernel,
+                                    arg0_shape,
+                                    arg1_shape,
+                                    lower_bounds,
+                                    upper_bounds,
+                                    strides,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* ectx) {
+                        kernel(ctx->buffer_data[arg0_buffer_index],
+                               ctx->buffer_data[arg1_buffer_index],
+                               ctx->buffer_data[out_buffer_index],
+                               arg0_shape,
+                               arg1_shape,
+                               lower_bounds,
+                               upper_bounds,
+                               strides,
+                               ectx->arena);
+                    };
                     functors.emplace_back(functor);
                 }
                 else
@@ -92,11 +103,18 @@ namespace ngraph
                                           arg0_shape.size(),
                                           runtime::cpu::kernel::update_slice);
 
-                    auto functor = [&, kernel, arg0_shape, arg1_shape, lower_bounds](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        kernel(arg0_tensor,
-                               arg1_tensor,
-                               out_tensor,
+                    auto functor = [&,
+                                    kernel,
+                                    arg0_shape,
+                                    arg1_shape,
+                                    lower_bounds,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* ectx) {
+                        kernel(ctx->buffer_data[arg0_buffer_index],
+                               ctx->buffer_data[arg1_buffer_index],
+                               ctx->buffer_data[out_buffer_index],
                                arg0_shape,
                                arg1_shape,
                                lower_bounds,
