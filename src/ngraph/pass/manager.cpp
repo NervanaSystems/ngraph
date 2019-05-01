@@ -37,12 +37,12 @@ using namespace ngraph;
 
 pass::Manager::Manager()
 {
-    static const auto nevt = std::getenv("NGRAPH_ENABLE_DEBUG_VISUALIZE_TRACING");
+    static const auto nevt = std::getenv("NGRAPH_ENABLE_VISUALIZE_TRACING");
     if (nevt)
     {
         m_visualize = true;
     }
-    static const auto nest = std::getenv("NGRAPH_ENABLE_DEBUG_SERIALIZE_TRACING");
+    static const auto nest = std::getenv("NGRAPH_ENABLE_SERIALIZE_TRACING");
     if (nest)
     {
         m_serialize = true;
