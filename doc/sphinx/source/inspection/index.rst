@@ -6,12 +6,7 @@ Visualization Tools
 nGraph provides serialization and deserialization facilities along with the 
 ability to create image formats. When visualization is enabled, a ``dot`` file 
 is generated, along with a ``png``. The default can be adjusted by setting the 
-``NGRAPH_VISUALIZE_TREE_OUTPUT_FORMAT`` flag to another format, like PDF. It
-can then be inspected with a third-party visualization tool such as:
-
-.. #. `Netron`_ support tentatively planned to come soon
-
-#. `TensorBoard`_
+``NGRAPH_VISUALIZE_TREE_OUTPUT_FORMAT`` flag to another format, like PDF. 
 
 Note: Large graphs are usually not legible with formats like PDF.  
 
@@ -25,6 +20,7 @@ offer user support for this script. After running the script, you should have a
 
 #. `Cytoscape`_
 
+.. #. `Netron`_ support tentatively planned to come soon
 
 
 .. _CMakeLists.txt: https://github.com/NervanaSystems/ngraph/blob/master/CMakeLists.txt
@@ -32,4 +28,4 @@ offer user support for this script. After running the script, you should have a
 .. _Netron: https://github.com/lutzroeder/netron/blob/master/README.md
 .. _Gephi: https://gephi.org
 .. _Cytoscape: https://cytoscape.org
-.. _TensorBoard: https://www.tensorflow.org/guide/summaries_and_tensorboard
+
