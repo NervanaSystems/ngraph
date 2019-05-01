@@ -640,7 +640,7 @@ def test_constant():
 
     element_type = Type.f32
     parameter_list = []
-    function = Function([Constant(element_type, Shape([3, 3], list(range(9)))]),
+    function = Function([Constant(element_type, Shape([3, 3]), list(range(9)))],
                         parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
