@@ -37,21 +37,23 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
                 auto reduce = static_cast<const ngraph::op::Any*>(node);
-                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                 auto arg0_shape = args[0].get_shape();
                 auto out_shape = out[0].get_shape();
 
                 auto reduction_axes = reduce->get_reduction_axes();
-                auto functor = [&, arg0_shape, out_shape, reduction_axes](
-                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                    runtime::reference::any(static_cast<char*>(arg0_tensor),
-                                            static_cast<char*>(out_tensor),
-                                            arg0_shape,
-                                            out_shape,
-                                            reduction_axes);
-                };
+                auto functor =
+                    [&, arg0_shape, out_shape, reduction_axes, arg0_buffer_index, out_buffer_index](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        runtime::reference::any(
+                            static_cast<char*>(ctx->buffer_data[arg0_buffer_index]),
+                            static_cast<char*>(ctx->buffer_data[out_buffer_index]),
+                            arg0_shape,
+                            out_shape,
+                            reduction_axes);
+                    };
                 functors.emplace_back(functor);
             }
 
@@ -60,21 +62,23 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
                 auto reduce = static_cast<const ngraph::op::All*>(node);
-                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                 auto arg0_shape = args[0].get_shape();
                 auto out_shape = out[0].get_shape();
 
                 auto reduction_axes = reduce->get_reduction_axes();
-                auto functor = [&, arg0_shape, out_shape, reduction_axes](
-                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                    runtime::reference::all(static_cast<char*>(arg0_tensor),
-                                            static_cast<char*>(out_tensor),
-                                            arg0_shape,
-                                            out_shape,
-                                            reduction_axes);
-                };
+                auto functor =
+                    [&, arg0_shape, out_shape, reduction_axes, arg0_buffer_index, out_buffer_index](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        runtime::reference::all(
+                            static_cast<char*>(ctx->buffer_data[arg0_buffer_index]),
+                            static_cast<char*>(ctx->buffer_data[out_buffer_index]),
+                            arg0_shape,
+                            out_shape,
+                            reduction_axes);
+                    };
                 functors.emplace_back(functor);
             }
 

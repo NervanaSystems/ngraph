@@ -35,9 +35,9 @@ namespace ngraph
                 auto& functors = external_function->get_functors();
                 CPUKernelFunctor functor;
 
-                auto& params_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& indices_tensor = external_function->get_tensor_data(args[1].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto params_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto indices_buffer_index = external_function->get_buffer_index(args[1].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
                 if (args[1].get_element_type() != element::i64 &&
                     args[1].get_element_type() != element::i32)
                 {
@@ -52,12 +52,18 @@ namespace ngraph
                 {
                     if (is_int64)
                     {
-                        functor = [&, params_shape, indices_shape, out_shape](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        functor = [&,
+                                   params_shape,
+                                   indices_shape,
+                                   out_shape,
+                                   params_buffer_index,
+                                   indices_buffer_index,
+                                   out_buffer_index](CPURuntimeContext* ctx,
+                                                     CPUExecutionContext* ectx) {
                             ngraph::runtime::reference::gather_nd<float, int64_t>(
-                                static_cast<float*>(params_tensor),
-                                static_cast<int64_t*>(indices_tensor),
-                                static_cast<float*>(out_tensor),
+                                static_cast<float*>(ctx->buffer_data[params_buffer_index]),
+                                static_cast<int64_t*>(ctx->buffer_data[indices_buffer_index]),
+                                static_cast<float*>(ctx->buffer_data[out_buffer_index]),
                                 params_shape,
                                 indices_shape,
                                 out_shape);
@@ -65,12 +71,18 @@ namespace ngraph
                     }
                     else
                     {
-                        functor = [&, params_shape, indices_shape, out_shape](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        functor = [&,
+                                   params_shape,
+                                   indices_shape,
+                                   out_shape,
+                                   params_buffer_index,
+                                   indices_buffer_index,
+                                   out_buffer_index](CPURuntimeContext* ctx,
+                                                     CPUExecutionContext* ectx) {
                             ngraph::runtime::reference::gather_nd<float, int32_t>(
-                                static_cast<float*>(params_tensor),
-                                static_cast<int32_t*>(indices_tensor),
-                                static_cast<float*>(out_tensor),
+                                static_cast<float*>(ctx->buffer_data[params_buffer_index]),
+                                static_cast<int32_t*>(ctx->buffer_data[indices_buffer_index]),
+                                static_cast<float*>(ctx->buffer_data[out_buffer_index]),
                                 params_shape,
                                 indices_shape,
                                 out_shape);
@@ -81,12 +93,18 @@ namespace ngraph
                 {
                     if (is_int64)
                     {
-                        functor = [&, params_shape, indices_shape, out_shape](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        functor = [&,
+                                   params_shape,
+                                   indices_shape,
+                                   out_shape,
+                                   params_buffer_index,
+                                   indices_buffer_index,
+                                   out_buffer_index](CPURuntimeContext* ctx,
+                                                     CPUExecutionContext* ectx) {
                             ngraph::runtime::reference::gather_nd<double, int64_t>(
-                                static_cast<double*>(params_tensor),
-                                static_cast<int64_t*>(indices_tensor),
-                                static_cast<double*>(out_tensor),
+                                static_cast<double*>(ctx->buffer_data[params_buffer_index]),
+                                static_cast<int64_t*>(ctx->buffer_data[indices_buffer_index]),
+                                static_cast<double*>(ctx->buffer_data[out_buffer_index]),
                                 params_shape,
                                 indices_shape,
                                 out_shape);
@@ -94,12 +112,18 @@ namespace ngraph
                     }
                     else
                     {
-                        functor = [&, params_shape, indices_shape, out_shape](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        functor = [&,
+                                   params_shape,
+                                   indices_shape,
+                                   out_shape,
+                                   params_buffer_index,
+                                   indices_buffer_index,
+                                   out_buffer_index](CPURuntimeContext* ctx,
+                                                     CPUExecutionContext* ectx) {
                             ngraph::runtime::reference::gather_nd<double, int32_t>(
-                                static_cast<double*>(params_tensor),
-                                static_cast<int32_t*>(indices_tensor),
-                                static_cast<double*>(out_tensor),
+                                static_cast<double*>(ctx->buffer_data[params_buffer_index]),
+                                static_cast<int32_t*>(ctx->buffer_data[indices_buffer_index]),
+                                static_cast<double*>(ctx->buffer_data[out_buffer_index]),
                                 params_shape,
                                 indices_shape,
                                 out_shape);

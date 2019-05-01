@@ -155,6 +155,7 @@
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
 #include "ngraph/runtime/cpu/cpu_visualize_tree.hpp"
+#include "ngraph/runtime/cpu/mkldnn_emitter.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
@@ -473,7 +474,10 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
 
     // Build mkldnn primitives for codegen.
     pass_manager.register_pass<runtime::cpu::pass::MKLDNNPrimitiveBuildPass>(
-        *m_mkldnn_emitter, m_node_primitive_idx_map);
+        m_desc_filename,
+        *m_mkldnn_emitter,
+        m_node_primitive_idx_map,
+        m_node_primitive_string_deps_index_map);
 
     unordered_map<Node*, Node*> node_function_map;
     string common_function_string;
@@ -510,13 +514,17 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
     writer +=
         R"(
 #include <cmath>
+#include <fstream>
+#include <mkldnn.hpp>
 #include "ngraph/distributed.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_eigen_utils.hpp"
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
 #include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
+#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/reference/all.hpp"
 #include "ngraph/runtime/reference/and.hpp"
 #include "ngraph/runtime/reference/any.hpp"
@@ -668,6 +676,14 @@ using namespace ngraph::runtime;
 
     writer << common_function_string << "\n";
 
+    //initiate mkldnn_primitives for CPURuntimeContextCG
+    writer << "void inline CPURuntimeContextCG::init_mkldnn_primitives()\n";
+    writer.block_begin();
+    writer << "mkldnn_primitives = std::vector<mkldnn::primitive*>("
+           << to_string(m_mkldnn_emitter->get_mkldnn_primitives_cg().size()) << ");\n";
+    writer.block_end();
+    writer << "\n";
+
     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
     {
         auto ordered_ops = function_ordered_ops.at(current_function);
@@ -722,6 +738,16 @@ using namespace ngraph::runtime;
         writer << "extern \"C\" void " << current_function->get_name() << func_params << "\n";
         writer << "{\n";
         writer.indent++;
+        writer << "std::ifstream desc_file (\"" << m_desc_filename << "\", std::ios::binary);\n";
+
+        //deserialize and build mkldnn primitives
+        writer << "if (ctx->first_iteration)\n";
+        writer.block_begin();
+        writer << "// read in memory descriptors and build mkldnn primitives\n";
+        writer << "deserialize_memory_descs_and_build_memory_primitives(" << m_desc_filename
+               << ", cg_ctx, " << to_string(m_mkldnn_emitter->get_mkldnn_descriptors_size())
+               << ");\n";
+        writer.block_end();
 
         // Execution tracing support
         if (runtime::cpu::IsTracingEnabled() && current_function->get_name() == m_function_name)
@@ -1261,6 +1287,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
     }
 
     // Build executor
+    size_t buffer_index = 0;
     // Temporaries
     if (m_function->get_temporary_pool_size())
     {
@@ -1271,9 +1298,11 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             {
                 for (auto& ele_t : ele.second.second)
                 {
-                    intermediates_offsets.emplace_back(tensor_data[ele_t->get_name()],
+                    m_buffer_indices[ele_t->get_name()] = buffer_index;
+                    intermediates_offsets.emplace_back(m_buffer_indices[ele_t->get_name()],
                                                        ele_t->get_pool_offset());
                     m_tensor_roles[ele_t->get_name()] = CPUTensorRole::INTERMEDIATE;
+                    buffer_index++;
                 }
             }
         }
@@ -1285,16 +1314,22 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         if (node->is_constant())
         {
             auto output_tensor = &node->get_output_tensor();
-            tensor_data[output_tensor->get_name()] =
-                const_cast<void*>(static_pointer_cast<ngraph::op::Constant>(node)->get_data_ptr());
+            m_buffer_indices[output_tensor->get_name()] = buffer_index;
+            constant_tensor_data.emplace_back(
+                buffer_index,
+                const_cast<void*>(static_pointer_cast<ngraph::op::Constant>(node)->get_data_ptr()));
             auto tensor_set = get_tensor_set(output_tensor);
             // process all tensors in the set containing the output tensor of the constant
             for (auto& ele_t : tensor_set)
             {
                 NGRAPH_CHECK(ele_t->get_pool_offset() == 0, "no offset set for constants");
                 m_tensor_roles[ele_t->get_name()] = CPUTensorRole::CONSTANT;
-                tensor_alias[ele_t->get_name()] = output_tensor->get_name();
+                if (ele_t->get_name() != output_tensor->get_name())
+                {
+                    tensor_alias[ele_t->get_name()] = output_tensor->get_name();
+                }
             }
+            buffer_index++;
         }
     }
 
@@ -1312,8 +1347,12 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             for (auto& ele_t : tensor_set)
             {
                 m_tensor_roles[ele_t->get_name()] = CPUTensorRole::INPUT;
-                function_input_index_offset.emplace_back(
-                    tensor_data[ele_t->get_name()], arg_index, ele_t->get_pool_offset(), stale);
+                m_buffer_indices[ele_t->get_name()] = buffer_index;
+                function_input_index_offset.emplace_back(m_buffer_indices[ele_t->get_name()],
+                                                         arg_index,
+                                                         ele_t->get_pool_offset(),
+                                                         stale);
+                buffer_index++;
             }
         }
         arg_index++;
@@ -1330,10 +1369,15 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         for (auto& ele_t : tensor_set)
         {
             m_tensor_roles[ele_t->get_name()] = CPUTensorRole::OUTPUT;
+            m_buffer_indices[ele_t->get_name()] = buffer_index;
             function_output_index_offset.emplace_back(
-                tensor_data[ele_t->get_name()], i, ele_t->get_pool_offset());
+                m_buffer_indices[ele_t->get_name()], i, ele_t->get_pool_offset());
+            buffer_index++;
         }
     }
+
+    // After processing inputs, outputs, constants, and intermediates, set the buffer size.
+    m_buffer_size = buffer_index;
 
     for (shared_ptr<Node> node : m_function->get_ordered_ops())
     {
@@ -1486,7 +1530,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             {
                 const descriptor::Output& output = input.get_output();
                 shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-                temp << &tensor_data[tv->get_name()];
+                temp << &m_buffer_indices[tv->get_name()];
                 node_inputs.push_back(tv->get_name() + "(" + temp.str() + ")");
                 temp.str("");
             }
@@ -1494,7 +1538,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             for (const descriptor::Output& output : node->get_outputs())
             {
                 shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-                temp << &tensor_data[tv->get_name()];
+                temp << &m_buffer_indices[tv->get_name()];
                 node_outputs.push_back(tv->get_name() + "(" + temp.str() + ")");
                 temp.str("");
             }
@@ -1518,19 +1562,25 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         {
             for (auto& p : intermediates_offsets)
             {
-                p.first.get() = static_cast<uint8_t*>(ctx->memory_buffers[0]->get_ptr()) + p.second;
+                ctx->buffer_data[p.first] =
+                    static_cast<uint8_t*>(ctx->memory_buffers[0]->get_ptr()) + p.second;
+            }
+
+            for (auto& p : constant_tensor_data)
+            {
+                ctx->buffer_data[p.first] = p.second;
             }
         }
 
         for (const auto& p : function_input_index_offset)
         {
-            get<0>(p).get() = static_cast<uint8_t*>(inputs[get<1>(p)]) + get<2>(p);
+            ctx->buffer_data[get<0>(p)] = static_cast<uint8_t*>(inputs[get<1>(p)]) + get<2>(p);
             get<3>(p).get() = ctx->p_en[get<1>(p)];
         }
 
         for (const auto& p : function_output_index_offset)
         {
-            get<0>(p).get() = static_cast<uint8_t*>(outputs[get<1>(p)]) + get<2>(p);
+            ctx->buffer_data[get<0>(p)] = static_cast<uint8_t*>(outputs[get<1>(p)]) + get<2>(p);
         }
 
         auto functor = functors.begin();
@@ -1656,12 +1706,14 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
                         ss << op_names.at(i) << " will be executed with the following inputs:\n";
                         for (auto& is : this->m_op_attrs.at(i).Inputs)
                         {
-                            ss << "\t" << is << " = " << this->get_tensor_data(is) << std::endl;
+                            ss << "\t" << is << " = "
+                               << ctx->buffer_data[this->get_buffer_index(is)] << std::endl;
                         }
                         ss << "and outputs :\n";
                         for (auto& os : this->m_op_attrs.at(i).Outputs)
                         {
-                            ss << "\t" << os << " = " << this->get_tensor_data(os) << std::endl;
+                            ss << "\t" << os << " = "
+                               << ctx->buffer_data[this->get_buffer_index(os)] << std::endl;
                         }
                     }
                     write_to_file(ss.str(), s_debug_dir, filename);
@@ -1736,30 +1788,43 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
     }
 }
 
-void*& runtime::cpu::CPU_ExternalFunction::get_tensor_data(const std::string& name)
+size_t runtime::cpu::CPU_ExternalFunction::get_buffer_index(const std::string& name)
 {
     if (tensor_alias.count(name))
     {
-        return tensor_data[tensor_alias[name]];
+        NGRAPH_CHECK(m_buffer_indices.count(tensor_alias[name]));
+        return m_buffer_indices[tensor_alias[name]];
     }
     else
     {
-        return tensor_data[name];
+        NGRAPH_CHECK(m_buffer_indices.count(name));
+        return m_buffer_indices[name];
     }
+}
+
+bool runtime::cpu::CPU_ExternalFunction::is_codegen(const ngraph::pass::PassConfig& pc)
+{
+    auto attrs = pc.get_pass_attributes();
+    auto it = attrs.find("CODEGEN");
+    if (it != attrs.end())
+    {
+        return it->second;
+    }
+    return false;
 }
 
 shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
     runtime::cpu::CPU_ExternalFunction::make_call_frame(ngraph::pass::PassConfig& pass_config)
 {
 #if defined(NGRAPH_DEX_ONLY)
-    if (pass_config.get_compilation_mode() == ngraph::pass::CompilationMode::CODEGEN)
+    if (is_codegen(pass_config))
     {
         NGRAPH_WARN << "CPU Backend: Requested unsupported compilation mode (CODEGEN). Falling "
                        "back to DEX instead";
     }
 #else
     // Override DEX if pass_config requests CODEGEN
-    if (pass_config.get_compilation_mode() == ngraph::pass::CompilationMode::CODEGEN)
+    if (is_codegen(pass_config))
     {
         m_direct_execution = false;
     }

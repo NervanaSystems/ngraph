@@ -28,5 +28,5 @@ void regclass_pyngraph_op_Concat(py::module m)
     py::class_<ngraph::op::Concat, std::shared_ptr<ngraph::op::Concat>, ngraph::op::Op> concat(
         m, "Concat");
     concat.doc() = "ngraph.impl.op.Concat wraps ngraph::op::Concat";
-    concat.def(py::init<const ngraph::NodeVector&, size_t>());
+    concat.def(py::init<const std::vector<std::shared_ptr<ngraph::Node>>&, size_t>());
 }

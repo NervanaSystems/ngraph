@@ -60,4 +60,5 @@ namespace ngraph
             bool m_is_relevant_to_shapes;
         };
     }
+    using ParameterVector = std::vector<std::shared_ptr<op::Parameter>>;
 }

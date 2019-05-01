@@ -49,6 +49,11 @@ op::QuantizedConvolution::QuantizedConvolution(const shared_ptr<Node>& data_batc
 
     auto output_et = requantize ? element::i8 : element::i32;
 
+    if (data_batch->get_element_type() == element::u8 && filters->get_element_type() == element::u8)
+    {
+        output_et = element::u8;
+    }
+
     set_output_type(0,
                     output_et,
                     util::infer_convolution_output_shape(this,
