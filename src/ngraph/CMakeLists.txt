@@ -408,7 +408,7 @@ set (SRC
     type/bfloat16.cpp
     type/bfloat16.hpp
     type/float16.cpp
-    type/float16.cpp
+    type/float16.hpp
     type/element_type.cpp
     util.cpp
     util.hpp
