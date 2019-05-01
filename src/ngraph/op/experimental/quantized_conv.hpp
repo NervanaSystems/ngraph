@@ -23,20 +23,17 @@ namespace ngraph
 {
     namespace op
     {
-        // TODO(amprocte): Convert this to use Output<Node>, including things like get_bias(),
-        // get_filters().
-
         class QuantizedConvolution : public Op
         {
         public:
-            QuantizedConvolution(const std::shared_ptr<Node>& data_batch,
-                                 const std::shared_ptr<Node>& filters,
+            QuantizedConvolution(const Output<Node>& data_batch,
+                                 const Output<Node>& filters,
                                  const Strides& window_movement_strides,
                                  const Strides& window_dilation_strides,
                                  const CoordinateDiff& padding_below,
                                  const CoordinateDiff& padding_above,
                                  const Strides& data_dilation_strides,
-                                 const std::shared_ptr<Node> scale,
+                                 const Output<Node> scale,
                                  const bool requantize = true);
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
             const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }

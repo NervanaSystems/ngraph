@@ -60,8 +60,8 @@ static const vector<element::Type> s_known_element_types = {element::from<float>
 class UnhandledOp : public ngraph::op::Op
 {
 public:
-    UnhandledOp(const std::shared_ptr<Node>& arg)
-        : Op("Unsupported_op", check_single_output_args({arg}))
+    UnhandledOp(const Output<Node>& arg)
+        : Op("UnhandledOp", {arg})
     {
         constructor_validate_and_infer_types();
     }

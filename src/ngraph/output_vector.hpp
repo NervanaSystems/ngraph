@@ -41,6 +41,11 @@ namespace ngraph
         {
         }
 
+        explicit OutputVector(const std::vector<Output<Node>>& outputs)
+            : std::vector<Output<Node>>(outputs)
+        {
+        }
+
         OutputVector& operator=(const OutputVector& other) = default;
 
         OutputVector() {}

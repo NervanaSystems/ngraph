@@ -23,26 +23,23 @@ namespace ngraph
 {
     namespace op
     {
-        // TODO(amprocte): Convert this to use Output<Node>, including things like get_bias(),
-        // get_filters().
-
         /// \brief Convolution + bias forward prop for batched convolution operation.
         class QuantizedConvolutionBias : public Op
         {
         public:
             QuantizedConvolutionBias(const std::shared_ptr<op::QuantizedConvolution>& qconv,
-                                     const std::shared_ptr<Node>& bias,
+                                     const Output<Node>& bias,
                                      const bool with_relu = false);
 
-            QuantizedConvolutionBias(const std::shared_ptr<Node>& data_batch,
-                                     const std::shared_ptr<Node>& filters,
-                                     const std::shared_ptr<Node>& bias,
+            QuantizedConvolutionBias(const Output<Node>& data_batch,
+                                     const Output<Node>& filters,
+                                     const Output<Node>& bias,
                                      const Strides& window_movement_strides,
                                      const Strides& window_dilation_strides,
                                      const CoordinateDiff& padding_below,
                                      const CoordinateDiff& padding_above,
                                      const Strides& data_dilation_strides,
-                                     const std::shared_ptr<Node> scale,
+                                     const Output<Node> scale,
                                      const bool with_relu = false);
 
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
@@ -69,17 +66,17 @@ namespace ngraph
         class QuantizedConvolutionBiasAdd : public Op
         {
         public:
-            QuantizedConvolutionBiasAdd(const std::shared_ptr<Node>& data_batch,
-                                        const std::shared_ptr<Node>& filters,
-                                        const std::shared_ptr<Node>& bias,
-                                        const std::shared_ptr<Node>& sum_input,
+            QuantizedConvolutionBiasAdd(const Output<Node>& data_batch,
+                                        const Output<Node>& filters,
+                                        const Output<Node>& bias,
+                                        const Output<Node>& sum_input,
                                         const Strides& window_movement_strides,
                                         const Strides& window_dilation_strides,
                                         const CoordinateDiff& padding_below,
                                         const CoordinateDiff& padding_above,
                                         const Strides& data_dilation_strides,
-                                        const std::shared_ptr<Node> scale,
-                                        const std::shared_ptr<Node> sum_scale,
+                                        const Output<Node> scale,
+                                        const Output<Node> sum_scale,
                                         const bool with_relu = false);
 
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
@@ -106,17 +103,17 @@ namespace ngraph
         class QuantizedConvolutionBiasSignedAdd : public Op
         {
         public:
-            QuantizedConvolutionBiasSignedAdd(const std::shared_ptr<Node>& data_batch,
-                                              const std::shared_ptr<Node>& filters,
-                                              const std::shared_ptr<Node>& bias,
-                                              const std::shared_ptr<Node>& sum_input,
+            QuantizedConvolutionBiasSignedAdd(const Output<Node>& data_batch,
+                                              const Output<Node>& filters,
+                                              const Output<Node>& bias,
+                                              const Output<Node>& sum_input,
                                               const Strides& window_movement_strides,
                                               const Strides& window_dilation_strides,
                                               const CoordinateDiff& padding_below,
                                               const CoordinateDiff& padding_above,
                                               const Strides& data_dilation_strides,
-                                              const std::shared_ptr<Node> scale,
-                                              const std::shared_ptr<Node> sum_scale,
+                                              const Output<Node> scale,
+                                              const Output<Node> sum_scale,
                                               const bool with_relu = false);
 
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }

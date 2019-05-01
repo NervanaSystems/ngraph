@@ -24,19 +24,19 @@
 using namespace std;
 using namespace ngraph;
 
-op::QuantizedDot::QuantizedDot(const shared_ptr<Node>& data,
-                               const shared_ptr<Node>& weights,
-                               const shared_ptr<Node>& scale,
+op::QuantizedDot::QuantizedDot(const Output<Node>& data,
+                               const Output<Node>& weights,
+                               const Output<Node>& scale,
                                bool requantize,
                                bool with_relu)
-    : Op("QuantizedDot", check_single_output_args({data, weights, scale}))
+    : Op("QuantizedDot", {data, weights, scale})
     , m_requantize(requantize)
     , m_with_relu(with_relu)
 {
     constructor_validate_and_infer_types();
 
-    auto& data_shape = data->get_shape();
-    auto& weights_shape = weights->get_shape();
+    auto& data_shape = data.get_shape();
+    auto& weights_shape = weights.get_shape();
     // QuantizedDot does [n, ic] * [oc, ic] = [n, oc]
     NODE_VALIDATION_CHECK(this,
                           data_shape.size() == 2 && weights_shape.size() == 2 &&

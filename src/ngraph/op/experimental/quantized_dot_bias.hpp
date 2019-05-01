@@ -27,10 +27,10 @@ namespace ngraph
         class QuantizedDotBias : public Op
         {
         public:
-            QuantizedDotBias(const std::shared_ptr<Node>& data,
-                             const std::shared_ptr<Node>& weights,
-                             const std::shared_ptr<Node>& bias,
-                             const std::shared_ptr<Node>& scale,
+            QuantizedDotBias(const Output<Node>& data,
+                             const Output<Node>& weights,
+                             const Output<Node>& bias,
+                             const Output<Node>& scale,
                              bool requantize = true,
                              bool with_relu = false);
 

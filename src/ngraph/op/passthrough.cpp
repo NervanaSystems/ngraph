@@ -21,7 +21,7 @@
 ngraph::op::Passthrough::Passthrough(const std::string& logical_type,
                                      const std::string& language,
                                      const std::string& function,
-                                     const NodeVector& args,
+                                     const OutputVector& args,
                                      std::vector<std::tuple<element::Type, PartialShape>> outputs)
     : Op{"Passthrough", args}
     , m_logical_type{logical_type}

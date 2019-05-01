@@ -54,7 +54,7 @@ public:
         return clone;
     }
 
-    ControlDependencyOp(const NodeVector& args, const std::set<std::shared_ptr<Node>>& deps)
+    ControlDependencyOp(const OutputVector& args, const std::set<std::shared_ptr<Node>>& deps)
         : Op("ControlDependencyOp", args)
     {
         if (args.size() == 0 && deps.size() == 0)
@@ -69,7 +69,7 @@ public:
 
         if (args.size() != 0)
         {
-            set_output_type(0, args.at(0)->get_element_type(), args.at(0)->get_shape());
+            set_output_type(0, args.at(0).get_element_type(), args.at(0).get_shape());
         }
         else
         {
