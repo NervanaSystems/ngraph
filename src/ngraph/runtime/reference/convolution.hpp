@@ -75,7 +75,6 @@ namespace ngraph
                                      size_t out_channel_axis,
                                      const float requant_scale = 1.0f)
             {
-#pragma STDC FENV_ACCESS ON
                 auto old_mode = std::fegetround();
                 std::fesetround(FE_TONEAREST);
                 // Comments throughout assume without loss of generality that:
