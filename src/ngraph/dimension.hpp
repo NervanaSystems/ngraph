@@ -124,7 +124,7 @@ namespace ngraph
         /// \return A dynamic dimension.
         static Dimension dynamic() { return Dimension(); }
         /// \brief Constant for the value used internally to represent a dynamic dimension.
-        static const size_t s_dynamic_val{std::numeric_limits<size_t>::max()};
+        static const size_t s_dynamic_val{(std::numeric_limits<size_t>::max())};
 
         /// \brief Addition operator for Dimension.
         /// \param dim Right operand for addition.

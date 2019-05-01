@@ -18,7 +18,7 @@
 
 #include "core/node.hpp"
 #include "ngraph/frontend/onnx_import/op/matmul.hpp"
-#include "ngraph/node_vector.hpp"
+#include "ngraph/node.hpp"
 
 namespace ngraph
 {

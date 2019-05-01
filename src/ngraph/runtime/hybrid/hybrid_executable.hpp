@@ -27,6 +27,8 @@ namespace ngraph
 {
     namespace runtime
     {
+        class Backend;
+
         namespace hybrid
         {
             class HybridExecutable;

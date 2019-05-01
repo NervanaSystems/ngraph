@@ -74,7 +74,6 @@ set (SRC
     ngraph_visibility.hpp
     node.cpp
     node.hpp
-    node_vector.hpp
     op/abs.cpp
     op/abs.hpp
     op/acos.cpp
@@ -301,7 +300,6 @@ set (SRC
     op/util/reshape.hpp
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise_arithmetic.hpp
-    parameter_vector.hpp
     partial_shape.cpp
     partial_shape.hpp
     pass/algebraic_simplification.cpp
@@ -382,7 +380,6 @@ set (SRC
     provenance.cpp
     provenance.hpp
     rank.hpp
-    result_vector.hpp
     runtime/aligned_buffer.cpp
     runtime/aligned_buffer.hpp
     runtime/backend.cpp
