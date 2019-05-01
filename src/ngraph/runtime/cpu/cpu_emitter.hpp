@@ -19,14 +19,14 @@
 #include <string>
 #include <vector>
 
-#include "ngraph/codegen/code_writer.hpp"
+#include "ngraph/code_writer.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 
 #define EMITTER_DECL(op_name)                                                                      \
     emit<op_name>(CPU_ExternalFunction * external_function,                                        \
-                  codegen::CodeWriter & writer,                                                    \
+                  CodeWriter & writer,                                                             \
                   const ngraph::Node* node,                                                        \
                   const std::vector<TensorViewWrapper>& args,                                      \
                   const std::vector<TensorViewWrapper>& out)
@@ -42,7 +42,7 @@ namespace ngraph
             public:
                 template <typename OP>
                 static void emit(CPU_ExternalFunction* external_function,
-                                 codegen::CodeWriter& writer,
+                                 CodeWriter& writer,
                                  const ngraph::Node* node,
                                  const std::vector<TensorViewWrapper>& args,
                                  const std::vector<TensorViewWrapper>& out)
@@ -52,7 +52,7 @@ namespace ngraph
                 }
 
                 static void nop(CPU_ExternalFunction* external_function,
-                                codegen::CodeWriter& writer,
+                                CodeWriter& writer,
                                 const ngraph::Node* node,
                                 const std::vector<TensorViewWrapper>& args,
                                 const std::vector<TensorViewWrapper>& out)
@@ -61,7 +61,7 @@ namespace ngraph
 
                 template <typename T>
                 static void emitBatchNorm(CPU_ExternalFunction* external_function,
-                                          codegen::CodeWriter& writer,
+                                          CodeWriter& writer,
                                           const ngraph::Node* node,
                                           const std::vector<TensorViewWrapper>& args,
                                           const std::vector<TensorViewWrapper>& out,

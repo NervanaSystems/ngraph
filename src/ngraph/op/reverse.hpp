@@ -48,7 +48,7 @@ namespace ngraph
         public:
             /// \brief Constructs a reverse operation.
             ///
-            /// \param arg The input tensor view, some of whose axes are to be reversed.
+            /// \param arg The input tensor, some of whose axes are to be reversed.
             /// \param reversed_axes The axes to reverse.
             Reverse(const std::shared_ptr<Node>& arg, const AxisSet& reversed_axes);
 

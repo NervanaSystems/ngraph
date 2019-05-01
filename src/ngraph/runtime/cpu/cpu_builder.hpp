@@ -208,11 +208,15 @@
     SELECT_KERNEL(kernel, args[0].get_element_type(), OP);                                         \
                                                                                                    \
     auto element_count = out[0].get_size();                                                        \
-    auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());                    \
-    auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());                     \
+    auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());              \
+    auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());               \
                                                                                                    \
-    auto functor = [&, kernel, element_count](CPURuntimeContext* ctx, CPUExecutionContext* ectx) { \
-        kernel(arg0_tensor, out0_tensor, element_count, ectx->arena);                              \
+    auto functor = [&, kernel, element_count, arg0_buffer_index, out0_buffer_index](               \
+        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {                                       \
+        kernel(ctx->buffer_data[arg0_buffer_index],                                                \
+               ctx->buffer_data[out0_buffer_index],                                                \
+               element_count,                                                                      \
+               ectx->arena);                                                                       \
     };                                                                                             \
     functors.emplace_back(functor);
 
@@ -223,14 +227,46 @@
     SELECT_KERNEL(kernel, args[0].get_element_type(), OP);                                         \
                                                                                                    \
     auto element_count = out[0].get_size();                                                        \
-    auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());                    \
-    auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());                    \
-    auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());                     \
+    auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());              \
+    auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());              \
+    auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());               \
                                                                                                    \
-    auto functor = [&, kernel, element_count](CPURuntimeContext* ctx, CPUExecutionContext* ectx) { \
-        kernel(arg0_tensor, arg1_tensor, out0_tensor, element_count, ectx->arena);                 \
-    };                                                                                             \
+    auto functor =                                                                                 \
+        [&, kernel, element_count, arg0_buffer_index, arg1_buffer_index, out0_buffer_index](       \
+            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {                                   \
+            kernel(ctx->buffer_data[arg0_buffer_index],                                            \
+                   ctx->buffer_data[arg1_buffer_index],                                            \
+                   ctx->buffer_data[out0_buffer_index],                                            \
+                   element_count,                                                                  \
+                   ectx->arena);                                                                   \
+        };                                                                                         \
     functors.emplace_back(functor);
+
+#define BUILD_UNARY_ELEMWISE_CF_FUNCTOR(OP)                                                        \
+    std::function<void(void*, void*, size_t, int)> kernel;                                         \
+                                                                                                   \
+    SELECT_KERNEL(kernel, node->get_input_element_type(0), OP);                                    \
+                                                                                                   \
+    auto element_count = shape_size(node->get_shape());                                            \
+                                                                                                   \
+    auto functor = [&, kernel, element_count](const std::vector<void*>& inputs,                    \
+                                              std::vector<void*>& outputs) {                       \
+        kernel(inputs[0], outputs[0], element_count, 0);                                           \
+    };                                                                                             \
+    return functor;
+
+#define BUILD_BINARY_ELEMWISE_CF_FUNCTOR(OP)                                                       \
+    std::function<void(void*, void*, void*, size_t, int)> kernel;                                  \
+                                                                                                   \
+    SELECT_KERNEL(kernel, node->get_input_element_type(0), OP);                                    \
+                                                                                                   \
+    auto element_count = shape_size(node->get_shape());                                            \
+                                                                                                   \
+    auto functor = [&, kernel, element_count](const std::vector<void*>& inputs,                    \
+                                              std::vector<void*>& outputs) {                       \
+        kernel(inputs[0], inputs[1], outputs[0], element_count, 0);                                \
+    };                                                                                             \
+    return functor;
 
 #define REGISTER_OP_BUILDER(OP)                                                                    \
     static struct __register_##OP##_builder                                                        \
@@ -241,6 +277,40 @@
                                                &runtime::cpu::Builder::build<ngraph::op::OP>});    \
         }                                                                                          \
     } __register_##OP##_builder_instance;
+
+#define REGISTER_CPU_OP_BUILDER(OP)                                                                \
+    static struct __register_##OP##_builder                                                        \
+    {                                                                                              \
+        __register_##OP##_builder()                                                                \
+        {                                                                                          \
+            GetGlobalBuildDispatcher().insert(                                                     \
+                {type_index(typeid(ngraph::runtime::cpu::op::OP)),                                 \
+                 &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::OP>});                    \
+        }                                                                                          \
+    } __register_##OP##_builder_instance;
+
+#define BUILDER_CF_DECL(op_name) CFbuild<op_name>(const ngraph::Node* node)
+
+#define REGISTER_CF_BUILDER(OP)                                                                    \
+    static struct __register_##OP##_cf_builder                                                     \
+    {                                                                                              \
+        __register_##OP##_cf_builder()                                                             \
+        {                                                                                          \
+            GetGlobalCFDispatcherCPU().insert({type_index(typeid(ngraph::op::OP)),                 \
+                                               &runtime::cpu::Builder::CFbuild<ngraph::op::OP>});  \
+        }                                                                                          \
+    } __register_##OP##_cf_builder_instance;
+
+#define REGISTER_CPU_CF_BUILDER(OP)                                                                \
+    static struct __register_##OP##_cf_builder                                                     \
+    {                                                                                              \
+        __register_##OP##_cf_builder()                                                             \
+        {                                                                                          \
+            GetGlobalCFDispatcherCPU().insert(                                                     \
+                {type_index(typeid(ngraph::runtime::cpu::op::OP)),                                 \
+                 &runtime::cpu::Builder::CFbuild<ngraph::runtime::cpu::op::OP>});                  \
+        }                                                                                          \
+    } __register_##OP##_cf_builder_instance;
 
 namespace ngraph
 {
@@ -258,6 +328,9 @@ namespace ngraph
 
             BuildOpMap& GetGlobalBuildDispatcher();
 
+            // build the map to use cpu kernel for node execution
+            CPU_BACKEND_API BuildNodeExecutorMap& GetGlobalCFDispatcherCPU();
+
             class Builder
             {
             public:
@@ -269,6 +342,13 @@ namespace ngraph
                 {
                     throw unsupported_op("Unimplemented op '" + node->description() +
                                          "' in CPU builder");
+                }
+
+                template <typename OP>
+                static NodeExecutorTy CFbuild(const ngraph::Node* node)
+                {
+                    throw unsupported_op("Unimplemented op '" + node->description() +
+                                         "' for constant folding in CPU builder");
                 }
 
                 static void nop(CPU_ExternalFunction* external_function,

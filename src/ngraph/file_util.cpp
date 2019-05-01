@@ -14,7 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cassert>
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -306,7 +305,24 @@ void file_util::iterate_files(const string& path,
     {
         do
         {
-            func(data.cFileName, (data.dwFileAttributes == FILE_ATTRIBUTE_DIRECTORY));
+            bool is_dir = data.dwFileAttributes == FILE_ATTRIBUTE_DIRECTORY;
+            if (is_dir)
+            {
+                if (string(data.cFileName) != "." && string(data.cFileName) != "..")
+                {
+                    string dir_path = path_join(path, data.cFileName);
+                    if (recurse)
+                    {
+                        iterate_files(dir_path, func, recurse);
+                    }
+                    func(dir_path, true);
+                }
+            }
+            else
+            {
+                string file_name = path_join(path, data.cFileName);
+                func(file_name, false);
+            }
         } while (FindNextFile(hFind, &data));
         FindClose(hFind);
     }

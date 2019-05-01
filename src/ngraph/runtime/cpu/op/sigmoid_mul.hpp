@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 #include "ngraph/util.hpp"
 
 #include <array>
@@ -39,10 +40,10 @@ namespace ngraph
             };
             /// Input nodes are expected to be actual inputs where the corresponding input
             /// FunctionType will be applied to those inputs in the fused operation.
-            SigmoidMultiply(std::shared_ptr<Node> input_0,
-                            std::shared_ptr<Node> input_1,
-                            const FunctionType input_0_type,
-                            const FunctionType input_1_type);
+            CPU_BACKEND_API SigmoidMultiply(std::shared_ptr<Node> input_0,
+                                            std::shared_ptr<Node> input_1,
+                                            const FunctionType input_0_type,
+                                            const FunctionType input_1_type);
             /// WARNING: copy_with_new_args() implicitly expects new args must match the original input function types.
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -53,7 +54,8 @@ namespace ngraph
                 return m_input_type[index];
             }
             /// Identifies the corresponding FunctionType for the input node.
-            static FunctionType identify_node_type(const std::shared_ptr<ngraph::Node>& node);
+            static CPU_BACKEND_API FunctionType
+                identify_node_type(const std::shared_ptr<ngraph::Node>& node);
 
         private:
             std::array<FunctionType, 2> m_input_type;

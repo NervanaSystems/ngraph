@@ -42,11 +42,12 @@ shared_ptr<Node> op::GenerateMask::copy_with_new_args(const NodeVector& new_args
 
 void ngraph::op::GenerateMask::validate_and_infer_types()
 {
-    NODE_VALIDATION_ASSERT(this, get_input_partial_shape(0).compatible(PartialShape{}))
-        << "Training node should be a scalar flag indicating a mode";
+    NODE_VALIDATION_CHECK(this,
+                          get_input_partial_shape(0).compatible(PartialShape{}),
+                          "Training node should be a scalar flag indicating a mode");
 
-    NODE_VALIDATION_ASSERT(this, m_element_type.is_static())
-        << "Output element type must not be dynamic.";
+    NODE_VALIDATION_CHECK(
+        this, m_element_type.is_static(), "Output element type must not be dynamic.");
 
     set_output_type(0, m_element_type, m_shape);
 }

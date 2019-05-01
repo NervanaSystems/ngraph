@@ -14,7 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <dirent.h>
+#endif
 #include <fcntl.h>
 #include <fstream>
 #include <iomanip>
@@ -126,6 +130,7 @@ std::string read_file_to_string(const std::string& path)
     return ss.str();
 }
 
+#ifndef _WIN32
 void iterate_files_worker(const string& path,
                           std::function<void(const string& file, bool is_dir)> func,
                           bool recurse)
@@ -165,6 +170,7 @@ void iterate_files_worker(const string& path,
         closedir(dir);
     }
 }
+#endif
 
 void iterate_files(const string& path,
                    std::function<void(const string& file, bool is_dir)> func,
@@ -172,6 +178,36 @@ void iterate_files(const string& path,
 {
     vector<string> files;
     vector<string> dirs;
+#ifdef _WIN32
+    string file_match = path_join(path, "*");
+    WIN32_FIND_DATA data;
+    HANDLE hFind = FindFirstFile(file_match.c_str(), &data);
+    if (hFind != INVALID_HANDLE_VALUE)
+    {
+        do
+        {
+            bool is_dir = data.dwFileAttributes == FILE_ATTRIBUTE_DIRECTORY;
+            if (is_dir)
+            {
+                if (string(data.cFileName) != "." && string(data.cFileName) != "..")
+                {
+                    string dir_path = path_join(path, data.cFileName);
+                    if (recurse)
+                    {
+                        iterate_files(dir_path, func, recurse);
+                    }
+                    func(dir_path, true);
+                }
+            }
+            else
+            {
+                string file_name = path_join(path, data.cFileName);
+                func(file_name, false);
+            }
+        } while (FindNextFile(hFind, &data));
+        FindClose(hFind);
+    }
+#else
     iterate_files_worker(path,
                          [&files, &dirs](const string& file, bool is_dir) {
                              if (is_dir)
@@ -180,7 +216,7 @@ void iterate_files(const string& path,
                                  files.push_back(file);
                          },
                          recurse);
-
+#endif
     for (auto f : files)
     {
         func(f, false);

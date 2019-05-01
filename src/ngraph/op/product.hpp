@@ -31,7 +31,7 @@ namespace ngraph
         public:
             /// \brief Constructs a product reduction operation.
             ///
-            /// \param arg The tensor view to be reduced.
+            /// \param arg The tensor to be reduced.
             /// \param reduction_axes The axis positions (0-based) to be eliminated.
             Product(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes);
 

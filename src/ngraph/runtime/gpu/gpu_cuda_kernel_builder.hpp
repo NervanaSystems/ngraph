@@ -35,49 +35,49 @@ namespace ngraph
             class CudaKernelBuilder
             {
             public:
-                static void get_elementwise_op(codegen::CodeWriter& writer,
+                static void get_elementwise_op(CodeWriter& writer,
                                                const std::string& name,
                                                const std::string& op,
                                                const std::vector<std::string>& data_types);
 
-                static void get_memset_op(codegen::CodeWriter& writer,
+                static void get_memset_op(CodeWriter& writer,
                                           const std::string& name,
                                           const std::string& data_type,
                                           runtime::gpu::GPUKernelArgs& args);
 
-                static void get_cudnn_bn_inv_var_op(codegen::CodeWriter& writer,
+                static void get_cudnn_bn_inv_var_op(CodeWriter& writer,
                                                     const std::string& name,
                                                     runtime::gpu::GPUKernelArgs& args);
 
-                static void get_broadcast_op(codegen::CodeWriter& writer,
+                static void get_broadcast_op(CodeWriter& writer,
                                              const std::string& name,
                                              const std::string& data_type,
                                              GPUKernelArgs& args,
                                              const size_t rank);
 
-                static void get_concat_op(codegen::CodeWriter& writer,
+                static void get_concat_op(CodeWriter& writer,
                                           const std::string& name,
                                           const std::string& data_type,
                                           size_t num_inputs);
 
-                static void get_onehot_op(codegen::CodeWriter& writer,
+                static void get_onehot_op(CodeWriter& writer,
                                           const std::string& name,
                                           const std::array<std::string, 2>& data_types);
 
-                static void get_reshape_op(codegen::CodeWriter& writer,
+                static void get_reshape_op(CodeWriter& writer,
                                            const std::string& name,
                                            runtime::gpu::GPUKernelArgs& args,
                                            const std::array<std::string, 2>& data_types,
                                            size_t rank);
 
-                static void get_reshape_op_3d(codegen::CodeWriter& writer,
+                static void get_reshape_op_3d(CodeWriter& writer,
                                               const std::string& name,
                                               runtime::gpu::GPUKernelArgs& args,
                                               const std::string& data_type,
                                               const std::vector<uint32_t>& order,
                                               const std::vector<uint32_t>& block_size);
 
-                static void get_reshape_op_2d(codegen::CodeWriter& writer,
+                static void get_reshape_op_2d(CodeWriter& writer,
                                               const std::string& name,
                                               runtime::gpu::GPUKernelArgs& args,
                                               const std::string& data_type,
@@ -87,7 +87,7 @@ namespace ngraph
                 /// stable kahan sum is been used for float point sum.
                 /// no initial value needed since we load one input value as initial
                 /// not support 0 sized input
-                static void get_reduce_to_nd_op(codegen::CodeWriter& writer,
+                static void get_reduce_to_nd_op(CodeWriter& writer,
                                                 const std::string& name,
                                                 runtime::gpu::GPUKernelArgs& args,
                                                 const std::vector<std::string>& data_types,
@@ -101,7 +101,7 @@ namespace ngraph
                 /// stable kahan sum is been used for float point sum.
                 /// no initial value needed since we load one input value as initial
                 /// not support 0 sized input
-                static void get_reduce_to_scalar_acc_op(codegen::CodeWriter& writer,
+                static void get_reduce_to_scalar_acc_op(CodeWriter& writer,
                                                         const std::string& name,
                                                         runtime::gpu::GPUKernelArgs& args,
                                                         const std::vector<std::string>& data_types,
@@ -111,57 +111,57 @@ namespace ngraph
                 /// stable kahan sum is been used for float point sum.
                 /// no initial value needed since we load one input value as initial
                 /// not support 0 sized input
-                static void get_reduce_to_scalar_op(codegen::CodeWriter& writer,
+                static void get_reduce_to_scalar_op(CodeWriter& writer,
                                                     const std::string& name,
                                                     runtime::gpu::GPUKernelArgs& args,
                                                     const std::vector<std::string>& data_types,
                                                     const std::string& reduce_op,
                                                     uint32_t block_size_x);
 
-                static void get_topk(codegen::CodeWriter& writer,
+                static void get_topk(CodeWriter& writer,
                                      const std::string& name,
                                      const std::vector<std::string>& dtypes,
                                      bool compute_max,
                                      runtime::gpu::GPUKernelArgs& args,
                                      bool use_malloc);
 
-                static void get_slice_op(codegen::CodeWriter& writer,
+                static void get_slice_op(CodeWriter& writer,
                                          const std::string& name,
                                          const std::array<std::string, 2>& data_types,
                                          size_t rank);
 
-                static void get_reverse_op(codegen::CodeWriter& writer,
+                static void get_reverse_op(CodeWriter& writer,
                                            const std::string& name,
                                            const std::array<std::string, 2>& data_types);
 
-                static void get_replace_slice_op(codegen::CodeWriter& writer,
+                static void get_replace_slice_op(CodeWriter& writer,
                                                  const std::string& name,
                                                  GPUKernelArgs& args,
                                                  const size_t rank);
 
-                static void get_reverse_sequence_op(codegen::CodeWriter& writer,
+                static void get_reverse_sequence_op(CodeWriter& writer,
                                                     const std::string& name,
                                                     const std::array<std::string, 3>& data_types,
                                                     const size_t batch_axis,
                                                     const size_t sequence_axis,
                                                     const size_t rank);
 
-                static void get_device_helper(codegen::CodeWriter& writer,
+                static void get_device_helper(CodeWriter& writer,
                                               const std::string& name,
                                               const std::string& math_kernel,
                                               const std::vector<std::string>& data_types);
 
-                static void get_pad_op(codegen::CodeWriter& writer,
+                static void get_pad_op(CodeWriter& writer,
                                        const std::string& name,
                                        GPUKernelArgs& args,
                                        size_t rank);
 
-                static void get_pad_fill_op(codegen::CodeWriter& writer,
+                static void get_pad_fill_op(CodeWriter& writer,
                                             const std::string& name,
                                             GPUKernelArgs& args,
                                             size_t rank);
 
-                static void get_ew_collective_op(codegen::CodeWriter& writer,
+                static void get_ew_collective_op(CodeWriter& writer,
                                                  const std::string& name,
                                                  GPUKernelArgs& args,
                                                  const std::string& op,
@@ -171,7 +171,7 @@ namespace ngraph
                                                  bool save_elementwise,
                                                  size_t rank);
 
-                static void get_max_pool_1d(codegen::CodeWriter& writer,
+                static void get_max_pool_1d(CodeWriter& writer,
                                             const std::string& name,
                                             const std::array<std::string, 2>& data_types,
                                             size_t input_width,
@@ -179,12 +179,12 @@ namespace ngraph
                                             size_t window_width,
                                             size_t window_stride);
 
-                static void get_avg_pool(codegen::CodeWriter& writer,
+                static void get_avg_pool(CodeWriter& writer,
                                          const std::string& name,
                                          const std::array<std::string, 2>& data_types,
                                          bool include_pad);
 
-                static void get_convolution_forward(codegen::CodeWriter& writer,
+                static void get_convolution_forward(CodeWriter& writer,
                                                     const std::string& name,
                                                     const std::array<std::string, 3>& data_types,
                                                     GPUKernelArgs& args,
@@ -195,14 +195,14 @@ namespace ngraph
                                                     int sm_tile_size = 8,
                                                     int reg_tile_size = 1);
 
-                static void get_softmax_op(codegen::CodeWriter& writer,
+                static void get_softmax_op(CodeWriter& writer,
                                            const std::string& name,
                                            runtime::gpu::GPUKernelArgs& args,
                                            const std::vector<std::string>& data_types,
                                            size_t out_rank,
                                            size_t reduce_rank);
 
-                static void get_softmax_block_reduce_op(codegen::CodeWriter& writer,
+                static void get_softmax_block_reduce_op(CodeWriter& writer,
                                                         const std::string& name,
                                                         runtime::gpu::GPUKernelArgs& args,
                                                         const std::vector<std::string>& data_types,
@@ -210,9 +210,9 @@ namespace ngraph
                                                         size_t reduce_rank,
                                                         size_t block_size_x);
 
-                static void add_pod_typedefs(codegen::CodeWriter& writer);
+                static void add_pod_typedefs(CodeWriter& writer);
 
-                static void coordinate_transform_to_multi_d(codegen::CodeWriter& writer,
+                static void coordinate_transform_to_multi_d(CodeWriter& writer,
                                                             std::string i_strides,
                                                             std::string i_stride_magic,
                                                             std::string i_stride_shift,
@@ -224,7 +224,7 @@ namespace ngraph
                 /// \brief Given kernel input variables i_* produce register variables o_coordinates{i}
                 ///        of the non-reduced tensor and return the string name of integer index into reduced tensor
                 static std::string
-                    collective_coordinate_transform_helper(codegen::CodeWriter& writer,
+                    collective_coordinate_transform_helper(CodeWriter& writer,
                                                            std::string i_thread_index,
                                                            std::string i_strides,
                                                            std::string i_stride_magic,

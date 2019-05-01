@@ -30,32 +30,31 @@
 #include "ngraph/op/sum.hpp"
 #include "zero_dim_tensor_elimination.hpp"
 
+using namespace std;
 using namespace ngraph;
 
-static bool has_zero_dim(std::shared_ptr<Node> node)
+static bool has_zero_dim(const Output<Node>& output)
 {
-    if (node->get_output_size() != 1)
-    {
-        throw ngraph_error("has_zero_dim is called on multi-output op");
-    }
-
-    const auto& shape = node->get_shape();
-    return std::find(shape.begin(), shape.end(), 0) != shape.end();
+    const auto& shape = output.get_shape();
+    return find(shape.begin(), shape.end(), 0) != shape.end();
 }
 
-static bool verify_no_internal_zero_length_ops(std::shared_ptr<ngraph::Function> f)
+static bool verify_no_internal_zero_length_ops(shared_ptr<Function> f)
 {
-    std::set<std::shared_ptr<Node>> zero_length_nodes;
+    set<Output<Node>> zero_length_source_outputs;
     for (auto n : f->get_ordered_ops())
     {
-        if (n->is_output() || n->is_parameter() || n->get_outputs().size() > 1)
+        if (n->is_output() || n->is_parameter() || n->get_output_size() > 1)
         {
             continue;
         }
 
-        if (has_zero_dim(n))
+        for (auto& output : n->outputs())
         {
-            zero_length_nodes.insert(n);
+            if (has_zero_dim(output))
+            {
+                zero_length_source_outputs.insert(output);
+            }
         }
     }
 
@@ -66,20 +65,22 @@ static bool verify_no_internal_zero_length_ops(std::shared_ptr<ngraph::Function>
     // zero-length nodes (which violates our assumption)
     for (auto r : f->get_results())
     {
-        auto n = r->get_argument(0);
-        if (zero_length_nodes.count(n) != 0)
+        for (auto& input : r->inputs())
         {
-            zero_length_nodes.erase(n);
+            if (zero_length_source_outputs.count(input.get_source_output()) != 0)
+            {
+                zero_length_source_outputs.erase(input.get_source_output());
+            }
         }
     }
 
-    return zero_length_nodes.size() > 0;
+    return zero_length_source_outputs.size() > 0;
 }
 
-bool ngraph::pass::ZeroDimTensorElimination::run_on_function(std::shared_ptr<ngraph::Function> f)
+bool pass::ZeroDimTensorElimination::run_on_function(shared_ptr<Function> f)
 {
     bool replaced = false;
-    auto cvals = std::vector<std::string>(0);
+    auto cvals = vector<string>(0);
     // we need to go over all nodes since we could have sum or any other 0-length-tensor-to scalar op
     // as an internal node (i.e. a node that isn't an argument to `op::Result`)
     for (auto n : f->get_ordered_ops())
@@ -89,7 +90,7 @@ bool ngraph::pass::ZeroDimTensorElimination::run_on_function(std::shared_ptr<ngr
         // if any `GetOutputElement` is zero-length
         // we replace it w/ a signalling constant
         // so we don't have to deal w/ multi-output nodes directly
-        if (n->is_output() || n->is_parameter() || n->get_outputs().size() > 1)
+        if (n->is_output() || n->is_parameter() || n->get_output_size() > 1)
         {
             continue;
         }
@@ -98,20 +99,19 @@ bool ngraph::pass::ZeroDimTensorElimination::run_on_function(std::shared_ptr<ngr
         {
             // we don't have to create constants every time but this is the easiest
             // and it's CSE's job to eliminate the same ones
-            auto constant =
-                std::make_shared<op::Constant>(n->get_element_type(), n->get_shape(), cvals);
+            auto constant = make_shared<op::Constant>(n->get_element_type(), n->get_shape(), cvals);
             replace_node(n, constant);
             NGRAPH_DEBUG << " Replacing " << n->get_name() << " with " << constant->get_name();
             replaced = true;
             continue;
         }
 
-        if (n->get_inputs().size() == 0)
+        if (n->get_input_size() == 0)
         {
             continue;
         }
 
-        if (auto concat = std::dynamic_pointer_cast<op::Concat>(n))
+        if (auto concat = dynamic_pointer_cast<op::Concat>(n))
         {
             NodeVector non_zero_dim_args;
             for (auto arg : concat->get_arguments())
@@ -122,19 +122,19 @@ bool ngraph::pass::ZeroDimTensorElimination::run_on_function(std::shared_ptr<ngr
                 }
             }
 
-            if (non_zero_dim_args.size() < concat->get_inputs().size())
+            if (non_zero_dim_args.size() < concat->get_input_size())
             {
                 auto new_concat = concat->copy_with_new_args(non_zero_dim_args);
                 NGRAPH_DEBUG << " Replacing " << n->get_name() << " with "
                              << new_concat->get_name();
-                ngraph::replace_node(concat, new_concat);
+                replace_node(concat, new_concat);
                 continue;
             }
         }
 
-        auto arg = n->get_inputs().at(0).get_output().get_node();
+        auto source_output = n->input(0).get_source_output();
 
-        if (arg->get_outputs().size() != 1 || !has_zero_dim(arg))
+        if (source_output.get_node()->get_output_size() != 1 || !has_zero_dim(source_output))
         {
             continue;
         }

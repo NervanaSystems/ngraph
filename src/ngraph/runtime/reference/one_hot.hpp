@@ -27,8 +27,6 @@ namespace ngraph
     {
         namespace reference
         {
-            // NOTE: Execution throws `std::range_error` if either a non-integral value or an out-of-bounds
-            // value is detected in the input tensor.
             template <typename T>
             void one_hot(const T* arg,
                          T* out,
@@ -54,14 +52,14 @@ namespace ngraph
 
                     if (std::floor(val) < val || std::floor(val) > val)
                     {
-                        throw(std::range_error("One-hot: non-integral value in input"));
+                        continue;
                     }
 
                     size_t one_hot_pos = static_cast<size_t>(val);
 
                     if (one_hot_pos >= out_shape[one_hot_axis])
                     {
-                        throw(std::range_error("One-hot: value is out of category range"));
+                        continue;
                     }
 
                     Coordinate one_hot_coord = inject(input_coord, one_hot_axis, one_hot_pos);

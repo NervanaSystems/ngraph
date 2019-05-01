@@ -36,24 +36,25 @@ namespace ngraph
 class ngraph::runtime::gpu::GPUTensor : public ngraph::runtime::Tensor
 {
 public:
-    GPUTensor(const ngraph::element::Type& element_type, const Shape& shape, const Backend* parent);
-    GPUTensor(const ngraph::element::Type& element_type,
-              const Shape& shape,
-              void* memory_pointer,
-              const Backend* parent);
+    GPUTensor(const ngraph::element::Type& element_type, const Shape& shape);
+    GPUTensor(const ngraph::element::Type& element_type, const Shape& shape, void* memory_pointer);
     virtual ~GPUTensor() override;
 
     /// \brief Write bytes directly into the tensor
     /// \param p Pointer to source of data
     /// \param tensor_offset Offset into tensor storage to begin writing. Must be element-aligned.
-    /// \param n Number of bytes to write, must be integral number of elements.
-    void write(const void* p, size_t tensor_offset, size_t n) override;
+    /// \param n_bytes Number of bytes to write, must be integral number of elements.
+    void write(const void* p, size_t tensor_offset, size_t n_bytes) override;
 
     /// \brief Read bytes directly from the tensor
     /// \param p Pointer to destination for data
     /// \param tensor_offset Offset into tensor storage to begin reading. Must be element-aligned.
-    /// \param n Number of bytes to read, must be integral number of elements.
-    void read(void* p, size_t tensor_offset, size_t n) const override;
+    /// \param n_bytes Number of bytes to read, must be integral number of elements.
+    void read(void* p, size_t tensor_offset, size_t n_bytes) const override;
+
+    /// \brief Copy directly from the another GPU tensor
+    /// \param source Another GPU tensor
+    void copy_from(const runtime::Tensor& source) override;
 
     void* m_allocated_buffer_pool = nullptr;
     size_t m_buffer_size;

@@ -35,7 +35,7 @@ shared_ptr<runtime::Tensor>
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
     auto result = backend->create_tensor(element::f32, shape_rt);
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
 
     return result;
 }
@@ -53,7 +53,7 @@ shared_ptr<runtime::Tensor> make_reduce_result_true(
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
     auto result = backend->create_tensor(element::f32, shape_rt);
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
 
     return result;
 }
@@ -71,7 +71,7 @@ shared_ptr<runtime::Tensor> make_reduce_result_false(
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
     auto result = backend->create_tensor(element::f32, shape_rt);
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
 
     return result;
 }
@@ -152,7 +152,7 @@ TEST(builder, tensor_mask)
     auto result = backend->create_tensor(element::boolean, mask_shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {sequence_lengths_data});
+    handle->call_with_validate({result}, {sequence_lengths_data});
     vector<char> expected{1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0};
 
     EXPECT_EQ(expected, read_vector<char>(result));

@@ -114,8 +114,8 @@ TEST(gpu_fusion, rnn_fprop_1_lstm_cell)
     copy_data(params_t, vector<float>(shape_size(params->get_shape()), 1));
 
     auto handle = backend->compile(func);
-    backend->call_with_validate(
-        handle, {result_ht, result_ct}, {src_layer_t, src_iter_t, params_t, state_iter_t});
+    handle->call_with_validate({result_ht, result_ct},
+                               {src_layer_t, src_iter_t, params_t, state_iter_t});
     vector<float> expected_ht(10 * 100, 0.964028f);
     vector<float> expected_ct;
     for (size_t i = 0; i < 10 * 100; i++)
@@ -128,6 +128,7 @@ TEST(gpu_fusion, rnn_fprop_1_lstm_cell)
 }
 #endif
 
+#ifdef NGRAPH_JSON_ENABLE
 TEST(gpu_fusion, fuse_lstm_cells)
 {
     pass::Manager pass_manager;
@@ -182,6 +183,7 @@ TEST(DISABLED_gpu_fusion, fuse_1_layer_rnn)
         EXPECT_EQ(node->get_num_timesteps(), node->get_src_sequence_length());
     }
 }
+#endif
 
 TEST(gpu_fusion, lstm_analytic)
 {
@@ -264,9 +266,8 @@ TEST(gpu_fusion, lstm_analytic)
         backend->create_tensor(element::f32, ct->get_shape());
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle,
-                                {result_ht, result_ct},
-                                {input_xt_t, weights_i2h_t, weights_h2h_t, bias_i2h_t, bias_h2h_t});
+    handle->call_with_validate({result_ht, result_ct},
+                               {input_xt_t, weights_i2h_t, weights_h2h_t, bias_i2h_t, bias_h2h_t});
 
     auto sig = [](float x) { return 1.0f / (1.0f + std::exp(-x)); };
     float ct_val = -sig(-4.0f) + sig(-4.0f) * std::tanh(-4.0f);
@@ -404,7 +405,7 @@ TEST(gpu_fusion, fuse_2_layer_rnn_1lstm_analytic)
         backend->create_tensor(element::f32, ct->get_shape());
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result_ht, result_ct}, arg_tensors);
+    handle->call_with_validate({result_ht, result_ct}, arg_tensors);
     //EXPECT_EQ(1, count_ops_of_type<op::gpu::Rnn>(f));
 
     auto sig = [](float x) { return 1.0f / (1.0f + std::exp(-x)); };
@@ -420,6 +421,7 @@ TEST(gpu_fusion, fuse_2_layer_rnn_1lstm_analytic)
     EXPECT_TRUE(test::all_close(std::vector<float>{ct_val_second}, read_vector<float>(result_ct)));
 }
 
+#ifdef NGRAPH_JSON_ENABLE
 TEST(gpu_fusion, rnn_fusion_inter_vs_gpu_1lstm_cell)
 {
     const std::string file_name("mxnet/1_lstm_cell_forward.json");
@@ -529,3 +531,4 @@ TEST(gpu_fusion, fuse_rnn_across_2layer_1timestep)
         EXPECT_TRUE(test::all_close(gpu_results.at(1), int_results.at(1), 1.0e-4f, 1.0e-4f));
     }
 }
+#endif

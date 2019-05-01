@@ -28,12 +28,15 @@ namespace ngraph
         public:
             /// \brief Constructs a max-reduction operation.
             ///
-            /// \param arg The tensor view to be reduced.
+            /// \param arg The tensor to be reduced.
             /// \param reduction_axes The axis positions (0-based) to be eliminated.
             Max(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+
+            /// \return The default value for Max.
+            virtual std::shared_ptr<Node> get_default_value() const override;
         };
     }
 }

@@ -41,20 +41,31 @@ void op::ReverseSequence::validate_and_infer_types()
     auto input_shape = get_input_partial_shape(0);
     auto input_rank = input_shape.rank();
 
-    NODE_VALIDATION_ASSERT(this, input_rank.is_dynamic() || m_batch_axis < size_t(input_rank))
-        << "Batch axis index (" << m_batch_axis
-        << ") is out of bounds (argument shape: " << input_shape << ").";
+    NODE_VALIDATION_CHECK(this,
+                          input_rank.is_dynamic() || m_batch_axis < size_t(input_rank),
+                          "Batch axis index (",
+                          m_batch_axis,
+                          ") is out of bounds (argument shape: ",
+                          input_shape,
+                          ").");
 
-    NODE_VALIDATION_ASSERT(this, input_rank.is_dynamic() || m_seq_axis < size_t(input_rank))
-        << "Sequence axis index (" << m_seq_axis
-        << ") is out of bounds (argument shape: " << input_shape << ").";
+    NODE_VALIDATION_CHECK(this,
+                          input_rank.is_dynamic() || m_seq_axis < size_t(input_rank),
+                          "Sequence axis index (",
+                          m_seq_axis,
+                          ") is out of bounds (argument shape: ",
+                          input_shape,
+                          ").");
 
     auto indices_shape = get_input_partial_shape(1);
     auto indices_rank = indices_shape.rank();
 
-    NODE_VALIDATION_ASSERT(this, indices_rank.is_dynamic() || size_t(indices_rank) == 1)
-        << "Sequence indices must be a 1-dimensional tensor (sequence indices shape: "
-        << get_input_partial_shape(1) << ").";
+    NODE_VALIDATION_CHECK(
+        this,
+        indices_rank.is_dynamic() || size_t(indices_rank) == 1,
+        "Sequence indices must be a 1-dimensional tensor (sequence indices shape: ",
+        get_input_partial_shape(1),
+        ").");
 
     PartialShape output_shape{input_shape};
 
@@ -62,12 +73,19 @@ void op::ReverseSequence::validate_and_infer_types()
     {
         Dimension merged_sequence_length;
 
-        NODE_VALIDATION_ASSERT(
+        NODE_VALIDATION_CHECK(
             this,
-            Dimension::merge(merged_sequence_length, input_shape[m_batch_axis], indices_shape[0]))
-            << "Sequence length (" << indices_shape[0] << ") is not equal to batch axis "
-            << "dimension (" << input_shape[m_batch_axis] << ") (argument shape: " << input_shape
-            << ", sequence indices shape: " << indices_shape << ").";
+            Dimension::merge(merged_sequence_length, input_shape[m_batch_axis], indices_shape[0]),
+            "Sequence length (",
+            indices_shape[0],
+            ") is not equal to batch axis ",
+            "dimension (",
+            input_shape[m_batch_axis],
+            ") (argument shape: ",
+            input_shape,
+            ", sequence indices shape: ",
+            indices_shape,
+            ").");
         output_shape[m_batch_axis] = merged_sequence_length;
     }
 

@@ -15,6 +15,8 @@
 //*****************************************************************************
 
 #include <fstream>
+#include <google/protobuf/io/zero_copy_stream_impl.h>
+#include <google/protobuf/text_format.h>
 #include <memory>
 
 #include "core/graph.hpp"
@@ -35,7 +37,7 @@ namespace ngraph
                 struct file_open : ngraph_error
                 {
                     explicit file_open(const std::string& path)
-                        : ngraph_error{"failure opening file:" + path}
+                        : ngraph_error{"Failure opening file: " + path}
                     {
                     }
                 };
@@ -43,7 +45,7 @@ namespace ngraph
                 struct stream_parse : ngraph_error
                 {
                     explicit stream_parse(std::istream&)
-                        : ngraph_error{"failure parsing data from the stream"}
+                        : ngraph_error{"Failure parsing data from the provided input stream"}
                     {
                     }
                 };
@@ -54,17 +56,27 @@ namespace ngraph
         std::shared_ptr<Function> import_onnx_model(std::istream& sin, const Weights& weights)
         {
             onnx::ModelProto model_proto;
+            // Try parsing input as a binary protobuf message
             if (!model_proto.ParseFromIstream(&sin))
             {
-                throw detail::error::stream_parse{sin};
+                // Rewind to the beginning and clear stream state.
+                sin.clear();
+                sin.seekg(0);
+                google::protobuf::io::IstreamInputStream iistream(&sin);
+                // Try parsing input as a prototxt message
+                if (!google::protobuf::TextFormat::Parse(&iistream, &model_proto))
+                {
+                    throw detail::error::stream_parse{sin};
+                }
             }
+
             Model model{model_proto};
             Graph graph{model_proto.graph(), model, weights};
             auto function = std::make_shared<Function>(
                 graph.get_ng_outputs(), graph.get_ng_parameters(), graph.get_name());
             for (std::size_t i{0}; i < function->get_output_size(); ++i)
             {
-                function->get_output_op(i)->set_name(graph.get_outputs().at(i).get_name());
+                function->get_output_op(i)->set_friendly_name(graph.get_outputs().at(i).get_name());
             }
             return function;
         }

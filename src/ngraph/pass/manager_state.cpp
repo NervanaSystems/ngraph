@@ -25,7 +25,7 @@
 using namespace std;
 using namespace ngraph;
 
-const vector<shared_ptr<Function>>& ngraph::pass::ManagerState::get_functions()
+const vector<shared_ptr<Function>>& pass::ManagerState::get_functions()
 {
     return m_function_list;
 }

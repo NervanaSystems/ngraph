@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ void regclass_pyngraph_Function(py::module m)
 {
     py::class_<ngraph::Function, std::shared_ptr<ngraph::Function>> function(m, "Function");
     function.doc() = "ngraph.impl.Function wraps ngraph::Function";
-    function.def(py::init<const ngraph::NodeVector&,
+    function.def(py::init<const std::vector<std::shared_ptr<ngraph::Node>>&,
                           const std::vector<std::shared_ptr<ngraph::op::Parameter>>&,
                           const std::string&>());
     function.def(py::init<const std::shared_ptr<ngraph::Node>&,
@@ -42,7 +42,7 @@ void regclass_pyngraph_Function(py::module m)
     function.def("get_result", &ngraph::Function::get_result);
     function.def("get_unique_name", &ngraph::Function::get_name);
     function.def("get_name", &ngraph::Function::get_friendly_name);
-    function.def("set_name", &ngraph::Function::set_name);
+    function.def("set_friendly_name", &ngraph::Function::set_friendly_name);
     function.def("__repr__", [](const ngraph::Function& self) {
         std::string class_name = py::cast(self).get_type().attr("__name__").cast<std::string>();
         std::string shape =

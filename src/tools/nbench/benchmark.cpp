@@ -136,8 +136,7 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
     stopwatch timer;
     timer.start();
     auto backend = runtime::Backend::create(backend_name);
-    backend->enable_performance_data(f, timing_detail);
-    auto compiled_func = backend->compile(f);
+    auto compiled_func = backend->compile(f, timing_detail);
     timer.stop();
     cout.imbue(locale(""));
     cout << "compile time: " << timer.get_milliseconds() << "ms" << endl;
@@ -179,18 +178,13 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
         }
     }
 
-    if (warmup_iterations)
-    {
-        for (int i = 0; i < warmup_iterations; i++)
-        {
-            backend->call(compiled_func, results, args);
-        }
-    }
-
     stopwatch t1;
-    t1.start();
-    for (size_t i = 0; i < iterations; i++)
+    for (size_t i = 0; i < iterations + warmup_iterations; i++)
     {
+        if (i == warmup_iterations)
+        {
+            t1.start();
+        }
         if (copy_data)
         {
             for (size_t arg_index = 0; arg_index < args.size(); arg_index++)
@@ -205,7 +199,7 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
                 }
             }
         }
-        backend->call(compiled_func, results, args);
+        compiled_func->call(results, args);
         if (copy_data)
         {
             for (size_t result_index = 0; result_index < results.size(); result_index++)
@@ -222,6 +216,6 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
     float time = t1.get_milliseconds();
     cout << time / iterations << "ms per iteration" << endl;
 
-    vector<runtime::PerformanceCounter> perf_data = backend->get_performance_data(f);
+    vector<runtime::PerformanceCounter> perf_data = compiled_func->get_performance_data();
     return perf_data;
 }

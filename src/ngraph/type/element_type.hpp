@@ -29,6 +29,7 @@
 #include "ngraph/except.hpp"
 #include "ngraph/ngraph_visibility.hpp"
 #include "ngraph/type/bfloat16.hpp"
+#include "ngraph/type/float16.hpp"
 
 namespace ngraph
 {
@@ -40,6 +41,7 @@ namespace ngraph
             dynamic,
             boolean,
             bf16,
+            f16,
             f32,
             f64,
             i8,
@@ -78,9 +80,14 @@ namespace ngraph
             bool is_static() const;
             bool is_dynamic() const { return !is_static(); }
             bool is_real() const;
+            // TODO: We may want to revisit this definition when we do a more general cleanup of
+            // element types:
+            bool is_integral() const { return !is_real(); }
             bool is_signed() const;
             bool is_quantized() const;
             size_t bitwidth() const;
+            // The name of this type, the enum name of this type
+            const std::string& get_type_name() const;
             bool operator==(const Type& other) const;
             bool operator!=(const Type& other) const { return !(*this == other); }
             bool operator<(const Type& other) const;
@@ -113,12 +120,13 @@ namespace ngraph
             static bool merge(element::Type& dst, const element::Type& t1, const element::Type& t2);
 
         private:
-            Type_t m_type;
+            Type_t m_type{Type_t::undefined};
         };
 
         extern NGRAPH_API const Type dynamic;
         extern NGRAPH_API const Type boolean;
         extern NGRAPH_API const Type bf16;
+        extern NGRAPH_API const Type f16;
         extern NGRAPH_API const Type f32;
         extern NGRAPH_API const Type f64;
         extern NGRAPH_API const Type i8;
@@ -161,6 +169,8 @@ namespace ngraph
         const Type& from<uint64_t>();
         template <>
         const Type& from<ngraph::bfloat16>();
+        template <>
+        const Type& from<ngraph::float16>();
 
         std::ostream& operator<<(std::ostream& out, const ngraph::element::Type& obj);
     }

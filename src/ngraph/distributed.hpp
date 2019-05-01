@@ -17,15 +17,26 @@
 #pragma once
 
 #include <cstddef>
+#include <memory>
+#include <string>
+
+#include "ngraph/type/element_type.hpp"
 
 namespace ngraph
 {
-    class Distributed
+    class DistributedInterface
     {
     public:
-        Distributed();
-        ~Distributed();
-        size_t get_size() const;
-        size_t get_rank() const;
+        virtual ~DistributedInterface() {}
+        virtual const std::string& get_name() const = 0;
+        virtual int get_size() = 0;
+        virtual int get_rank() = 0;
+
+        virtual void
+            all_reduce(void* in, void* out, element::Type_t element_type, size_t count) = 0;
+        virtual void broadcast(void* in, element::Type_t element_type, size_t count) = 0;
     };
+
+    void set_distributed_interface(std::unique_ptr<DistributedInterface> distributed_interface);
+    DistributedInterface* get_distributed_interface();
 }

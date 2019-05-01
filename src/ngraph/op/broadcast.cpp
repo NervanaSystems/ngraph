@@ -44,9 +44,16 @@ void op::Broadcast::validate_and_infer_types()
 
     for (auto axis : m_broadcast_axes)
     {
-        NODE_VALIDATION_ASSERT(this, axis < m_shape.size())
-            << "Broadcast axis index (" << axis << ") exceeds specified output shape rank "
-            << "(broadcast axes: " << m_broadcast_axes << ", output shape: " << m_shape << ").";
+        NODE_VALIDATION_CHECK(this,
+                              axis < m_shape.size(),
+                              "Broadcast axis index (",
+                              axis,
+                              ") exceeds specified output shape rank ",
+                              "(broadcast axes: ",
+                              m_broadcast_axes,
+                              ", output shape: ",
+                              m_shape,
+                              ").");
     }
 
     Shape required_input_shape = m_shape;
@@ -59,10 +66,17 @@ void op::Broadcast::validate_and_infer_types()
     // There are two things that can go wrong, which are being picked up in
     // one fell swoop by this check: either the number of broadcast axes is not
     // enough, or there is a mismatch with one of the pre-broadcast axis lengths.
-    NODE_VALIDATION_ASSERT(this, get_input_partial_shape(0).compatible(required_input_shape))
-        << "Broadcast argument shape, specified output shape, and axes are incompatible "
-        << "(argument shape: " << get_input_partial_shape(0) << ", output shape: " << m_shape
-        << ", broadcast axes: " << m_broadcast_axes << ").";
+    NODE_VALIDATION_CHECK(
+        this,
+        get_input_partial_shape(0).compatible(required_input_shape),
+        "Broadcast argument shape, specified output shape, and axes are incompatible ",
+        "(argument shape: ",
+        get_input_partial_shape(0),
+        ", output shape: ",
+        m_shape,
+        ", broadcast axes: ",
+        m_broadcast_axes,
+        ").");
 
     set_output_type(0, get_input_element_type(0), m_shape);
 }

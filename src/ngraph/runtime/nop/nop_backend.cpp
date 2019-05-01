@@ -54,14 +54,25 @@ shared_ptr<runtime::Tensor> runtime::nop::NOPBackend::create_tensor(const elemen
     return make_shared<runtime::HostTensor>(type, shape, memory_pointer, "external");
 }
 
-runtime::Handle runtime::nop::NOPBackend::compile(shared_ptr<Function> function)
+shared_ptr<runtime::Executable>
+    runtime::nop::NOPBackend::compile(shared_ptr<Function> function,
+                                      bool enable_performance_collection)
 {
-    return function;
+    return make_shared<NOPExecutable>(function, enable_performance_collection);
 }
 
-bool runtime::nop::NOPBackend::call(shared_ptr<Function> function,
-                                    const vector<shared_ptr<runtime::Tensor>>& outputs,
-                                    const vector<shared_ptr<runtime::Tensor>>& inputs)
+runtime::nop::NOPExecutable::NOPExecutable(shared_ptr<Function> function,
+                                           bool enable_performance_collection)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
+    pass_manager.run_passes(function);
+
+    set_parameters_and_results(*function);
+}
+
+bool runtime::nop::NOPExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                       const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     return true;
 }

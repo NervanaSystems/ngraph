@@ -26,6 +26,8 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"
+#include "ngraph/op/add.hpp"
+#include "ngraph/op/allreduce.hpp"
 #include "ngraph/op/and.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
@@ -53,6 +55,7 @@
 #include "ngraph/op/or.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/power.hpp"
+#include "ngraph/op/relu.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/op/sign.hpp"
 #include "ngraph/op/sin.hpp"
@@ -65,6 +68,7 @@
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/kernel/abs.hpp"
 #include "ngraph/runtime/cpu/kernel/acos.hpp"
+#include "ngraph/runtime/cpu/kernel/add.hpp"
 #include "ngraph/runtime/cpu/kernel/and.hpp"
 #include "ngraph/runtime/cpu/kernel/asin.hpp"
 #include "ngraph/runtime/cpu/kernel/atan.hpp"
@@ -89,6 +93,7 @@
 #include "ngraph/runtime/cpu/kernel/not.hpp"
 #include "ngraph/runtime/cpu/kernel/not_equal.hpp"
 #include "ngraph/runtime/cpu/kernel/or.hpp"
+#include "ngraph/runtime/cpu/kernel/relu.hpp"
 #include "ngraph/runtime/cpu/kernel/result.hpp"
 #include "ngraph/runtime/cpu/kernel/sign.hpp"
 #include "ngraph/runtime/cpu/kernel/sin.hpp"
@@ -172,15 +177,19 @@ namespace ngraph
                 auto& functors = external_function->get_functors();
 
                 auto element_count = out[0].get_size();
-                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
+                auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
-                auto functor = [&, element_count](CPURuntimeContext* ctx,
-                                                  CPUExecutionContext* ectx) {
-                    runtime::cpu::kernel::logical_and(
-                        arg0_tensor, arg1_tensor, out0_tensor, element_count, ectx->arena);
-                };
+                auto functor =
+                    [&, element_count, arg0_buffer_index, arg1_buffer_index, out0_buffer_index](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        runtime::cpu::kernel::logical_and(ctx->buffer_data[arg0_buffer_index],
+                                                          ctx->buffer_data[arg1_buffer_index],
+                                                          ctx->buffer_data[out0_buffer_index],
+                                                          element_count,
+                                                          ectx->arena);
+                    };
                 functors.emplace_back(functor);
             }
 
@@ -190,15 +199,19 @@ namespace ngraph
                 auto& functors = external_function->get_functors();
 
                 auto element_count = out[0].get_size();
-                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
+                auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
-                auto functor = [&, element_count](CPURuntimeContext* ctx,
-                                                  CPUExecutionContext* ectx) {
-                    runtime::cpu::kernel::logical_or(
-                        arg0_tensor, arg1_tensor, out0_tensor, element_count, ectx->arena);
-                };
+                auto functor =
+                    [&, element_count, arg0_buffer_index, arg1_buffer_index, out0_buffer_index](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        runtime::cpu::kernel::logical_or(ctx->buffer_data[arg0_buffer_index],
+                                                         ctx->buffer_data[arg1_buffer_index],
+                                                         ctx->buffer_data[out0_buffer_index],
+                                                         element_count,
+                                                         ectx->arena);
+                    };
                 functors.emplace_back(functor);
             }
 
@@ -338,26 +351,86 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                vector<void**> dest;
+                vector<size_t> dest_indices;
                 for (auto& result : external_function->get_function()->get_results())
                 {
                     if (result.get() == node)
                     {
-                        dest.push_back(&external_function->get_tensor_data(
+                        dest_indices.push_back(external_function->get_buffer_index(
                             result->get_output_tensor(0).get_name()));
                     }
                 }
-                auto& src =
-                    external_function->get_tensor_data(node->get_output_tensor(0).get_name());
+                auto src_index =
+                    external_function->get_buffer_index(node->get_output_tensor(0).get_name());
                 auto size = node->get_output_tensor(0).size();
-                auto functor = [&, dest, src, size](CPURuntimeContext* ctx,
-                                                    CPUExecutionContext* ectx) {
-                    for (auto p : dest)
+                auto functor = [&, dest_indices, src_index, size](CPURuntimeContext* ctx,
+                                                                  CPUExecutionContext* ectx) {
+                    for (auto p : dest_indices)
                     {
-                        memcpy(*p, src, size);
+                        memcpy(ctx->buffer_data[p], ctx->buffer_data[src_index], size);
                     }
                 };
                 functors.emplace_back(functor);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Add)
+            {
+                BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::add);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Subtract)
+            {
+                BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::subtract);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Multiply)
+            {
+                BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::multiply);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Divide)
+            {
+                BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::divide);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Minimum)
+            {
+                BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::minimum);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Maximum)
+            {
+                BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::maximum);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Abs)
+            {
+                BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::abs);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Negative)
+            {
+                BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::negative);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Relu)
+            {
+                BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::relu);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Sqrt)
+            {
+                BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::sqrt);
             }
 
 #define TI(x) type_index(typeid(x))
@@ -366,14 +439,18 @@ namespace ngraph
             {
                 static BuildOpMap build_dispatcher{
                     {TI(ngraph::op::Parameter), &runtime::cpu::Builder::nop},
-                    {TI(ngraph::runtime::cpu::op::ConvertLayout),
-                     &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::ConvertLayout>},
                     {TI(ngraph::runtime::cpu::op::LoopKernel),
                      &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::LoopKernel>},
                     {TI(ngraph::runtime::cpu::op::HalideOp),
                      &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::HalideOp>}};
 
                 return build_dispatcher;
+            }
+
+            BuildNodeExecutorMap& GetGlobalCFDispatcherCPU()
+            {
+                static BuildNodeExecutorMap build_cf_dispatcher_cpu{};
+                return build_cf_dispatcher_cpu;
             }
 
             REGISTER_OP_BUILDER(Constant);
@@ -411,6 +488,17 @@ namespace ngraph
             REGISTER_OP_BUILDER(Minimum);
             REGISTER_OP_BUILDER(And);
             REGISTER_OP_BUILDER(Or);
+
+            REGISTER_CF_BUILDER(Add);
+            REGISTER_CF_BUILDER(Subtract);
+            REGISTER_CF_BUILDER(Multiply);
+            REGISTER_CF_BUILDER(Divide);
+            REGISTER_CF_BUILDER(Minimum);
+            REGISTER_CF_BUILDER(Maximum);
+            REGISTER_CF_BUILDER(Abs);
+            REGISTER_CF_BUILDER(Negative);
+            REGISTER_CF_BUILDER(Relu);
+            REGISTER_CF_BUILDER(Sqrt);
         }
     }
 }

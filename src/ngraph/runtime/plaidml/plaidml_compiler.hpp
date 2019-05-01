@@ -21,8 +21,8 @@
 #include <plaidml/plaidml++.h>
 
 #include "ngraph/function.hpp"
-#include "ngraph/runtime/plaidml/plaidml_compiled_function.hpp"
 #include "ngraph/runtime/plaidml/plaidml_config.hpp"
+#include "ngraph/runtime/plaidml/plaidml_executable.hpp"
 
 namespace ngraph
 {
@@ -42,10 +42,12 @@ class ngraph::runtime::plaidml::Compiler final
 public:
     Compiler(Config* config);
 
-    std::shared_ptr<CompiledFunction> compile(std::shared_ptr<Function> func);
+    std::shared_ptr<PlaidML_Executable> compile(std::shared_ptr<Function> func);
 
-    void build(std::shared_ptr<Function> func, Build* build);
+    bool is_supported(const Node& node) const;
 
 private:
+    void build(std::shared_ptr<Function> func, Build* build);
+
     Config* m_config;
 };

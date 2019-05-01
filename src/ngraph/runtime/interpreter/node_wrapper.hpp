@@ -40,6 +40,7 @@ namespace ngraph
 enum class ngraph::runtime::interpreter::OP_TYPEID
 {
 #include "ngraph/op/op_tbl.hpp"
+#include "ngraph/runtime/hybrid/op/op_tbl.hpp"
 };
 #undef NGRAPH_OP
 
@@ -51,7 +52,7 @@ class ngraph::runtime::interpreter::NodeWrapper
 public:
     NodeWrapper(const std::shared_ptr<const ngraph::Node>& node);
 
-    const Node& get_node() const { return *m_node; }
+    std::shared_ptr<const Node> get_node() const { return m_node; }
     ngraph::runtime::interpreter::OP_TYPEID get_typeid() const { return m_typeid; }
 private:
     std::shared_ptr<const ngraph::Node> m_node;

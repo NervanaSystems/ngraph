@@ -24,7 +24,7 @@
 #include <string>
 #include <tuple>
 
-#include "ngraph/codegen/code_writer.hpp"
+#include "ngraph/code_writer.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/file_util.hpp"
@@ -168,7 +168,7 @@ std::string runtime::gpu::GPUExternalFunction::add_to_runtime(
     const std::vector<runtime::gpu::GPUTensorWrapper>& args,
     const std::vector<runtime::gpu::GPUTensorWrapper>& out)
 {
-    codegen::CodeWriter writer;
+    CodeWriter writer;
     writer.block_begin();
     {
         writer << "void* input[] = {" << node_names(args) << "};\n";
@@ -185,7 +185,7 @@ std::string runtime::gpu::GPUExternalFunction::add_call_to_runtime(
     const std::vector<runtime::gpu::GPUTensorWrapper>& args,
     const std::vector<runtime::gpu::GPUTensorWrapper>& out)
 {
-    codegen::CodeWriter writer;
+    CodeWriter writer;
     writer.block_begin();
     {
         writer << "void* input[] = {" << node_names(args) << "};\n";
@@ -618,7 +618,7 @@ void runtime::gpu::GPUExternalFunction::emit_debug_function_exit(Node* node)
 string runtime::gpu::GPUExternalFunction::emit_op_as_function(const Node& node,
                                                               const string& function_name)
 {
-    codegen::CodeWriter writer;
+    CodeWriter writer;
     writer << "static void " << function_name << "(";
     writer.indent++;
     vector<GPUTensorWrapper> in;
@@ -816,9 +816,15 @@ void runtime::gpu::GPUExternalFunction::get_performance_data(
         if (get_count && get_name && get_microseconds && get_call_count)
         {
             size_t count = get_count();
+            map<string, shared_ptr<const Node>> name_map;
+            for (auto n : m_function->get_ops())
+            {
+                name_map.insert({n->get_name(), n});
+            }
             for (size_t i = 0; i < count; i++)
             {
-                rc.push_back({get_name(i), get_microseconds(i), get_call_count(i)});
+                shared_ptr<const Node> n = name_map[get_name(i)];
+                rc.push_back({n, get_microseconds(i), get_call_count(i)});
             }
         }
     }

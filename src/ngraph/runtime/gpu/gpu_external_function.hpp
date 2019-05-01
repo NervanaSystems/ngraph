@@ -24,7 +24,7 @@
 #include <typeinfo>
 #include <unordered_map>
 
-#include "ngraph/codegen/code_writer.hpp"
+#include "ngraph/code_writer.hpp"
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/codegen/execution_engine.hpp"
 #include "ngraph/function.hpp"
@@ -106,7 +106,7 @@ namespace ngraph
                 // internal ops
                 virtual void propagate_in_place_output(ngraph::descriptor::Output* res_src_output,
                                                        const std::string& output_name) override;
-                codegen::CodeWriter m_writer;
+                CodeWriter m_writer;
                 std::string m_common_function_string;
                 std::unique_ptr<codegen::Compiler> m_compiler;
                 std::unique_ptr<codegen::ExecutionEngine> m_execution_engine;

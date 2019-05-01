@@ -13,8 +13,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+#include "cpu_backend_visibility.h"
 
-extern "C" const char* get_ngraph_version_string()
+extern "C" CPU_BACKEND_API const char* get_ngraph_version_string()
 {
     return NGRAPH_VERSION;
 }

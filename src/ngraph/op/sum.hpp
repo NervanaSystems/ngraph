@@ -76,7 +76,7 @@ namespace ngraph
         public:
             /// \brief Constructs a summation operation.
             ///
-            /// \param arg The tensor view to be summed.
+            /// \param arg The tensor to be summed.
             /// \param reduction_axes The axis positions (0-based) to be eliminated.
             Sum(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes);
 

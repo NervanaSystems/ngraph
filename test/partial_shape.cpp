@@ -82,8 +82,7 @@ TEST(partial_shape, dim_conversion_dynamic)
 {
     EXPECT_ANY_THROW({
         size_t s{Dimension::dynamic()};
-
-        s = 0; // Silence compiler warning about unused s
+        (void)s; // Silence compiler warning about unused s
     });
 }
 
@@ -884,7 +883,7 @@ TEST(partial_shape, infer_windowed_reduction_rank_dynamic_rank_dynamic_zero_data
                                                       window_dilation,
                                                       is_window_all_in_padding_allowed);
         },
-        NodeValidationError);
+        NodeValidationFailure);
 }
 
 TEST(partial_shape, infer_windowed_reduction_rank_dynamic_rank_dynamic_zero_window_dilation)
@@ -911,7 +910,7 @@ TEST(partial_shape, infer_windowed_reduction_rank_dynamic_rank_dynamic_zero_wind
                                                       window_dilation,
                                                       is_window_all_in_padding_allowed);
         },
-        NodeValidationError);
+        NodeValidationFailure);
 }
 
 TEST(partial_shape, infer_windowed_reduction_rank_dynamic_rank_dynamic_zero_window_strides)
@@ -938,7 +937,7 @@ TEST(partial_shape, infer_windowed_reduction_rank_dynamic_rank_dynamic_zero_wind
                                                       window_dilation,
                                                       is_window_all_in_padding_allowed);
         },
-        NodeValidationError);
+        NodeValidationFailure);
 }
 
 TEST(partial_shape, infer_windowed_reduction_rank_static_dynamic_rank_dynamic_ok)
@@ -992,7 +991,7 @@ TEST(partial_shape,
                                                       window_dilation,
                                                       is_window_all_in_padding_allowed);
         },
-        NodeValidationError);
+        NodeValidationFailure);
 }
 
 TEST(partial_shape, infer_windowed_reduction_rank_static_dynamic_rank_dynamic_neg_padding_ok)
@@ -1071,7 +1070,7 @@ TEST(partial_shape, infer_windowed_reduction_rank_dynamic_rank_static_dynamic_wi
                                                       window_dilation,
                                                       is_window_all_in_padding_allowed);
         },
-        NodeValidationError);
+        NodeValidationFailure);
 }
 
 TEST(partial_shape,
@@ -1100,7 +1099,7 @@ TEST(partial_shape,
                                                       window_dilation,
                                                       is_window_all_in_padding_allowed);
         },
-        NodeValidationError);
+        NodeValidationFailure);
 }
 
 TEST(partial_shape,
@@ -1156,7 +1155,7 @@ TEST(partial_shape,
                                                       window_dilation,
                                                       is_window_all_in_padding_allowed);
         },
-        NodeValidationError);
+        NodeValidationFailure);
 }
 
 TEST(partial_shape,
@@ -1294,7 +1293,7 @@ TEST(partial_shape, infer_windowed_reduction_rank_static_dynamic_rank_static_dyn
                                                       window_dilation,
                                                       is_window_all_in_padding_allowed);
         },
-        NodeValidationError);
+        NodeValidationFailure);
 }
 
 TEST(partial_shape,
@@ -1351,5 +1350,5 @@ TEST(partial_shape,
                                                       window_dilation,
                                                       is_window_all_in_padding_allowed);
         },
-        NodeValidationError);
+        NodeValidationFailure);
 }

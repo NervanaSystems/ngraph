@@ -16,24 +16,12 @@
 
 #include "ngraph/runtime/plaidml/plaidml_compilation_cache.hpp"
 
-std::shared_ptr<ngraph::runtime::plaidml::CompiledFunction>
-    ngraph::runtime::plaidml::CompilationCache::try_lookup(std::shared_ptr<Function> func)
-{
-    std::lock_guard<std::mutex> lock{m_mu};
-    auto it = m_cache.find(func);
-    if (it != m_cache.end())
-    {
-        return it->second;
-    }
-    return std::shared_ptr<CompiledFunction>{};
-}
-
-std::shared_ptr<ngraph::runtime::plaidml::CompiledFunction>
+std::shared_ptr<ngraph::runtime::plaidml::PlaidML_Executable>
     ngraph::runtime::plaidml::CompilationCache::compile(std::shared_ptr<Function> func,
                                                         Compiler* compiler)
 {
     std::lock_guard<std::mutex> lock{m_mu};
-    auto it_inserted = m_cache.insert(std::make_pair(func, std::shared_ptr<CompiledFunction>{}));
+    auto it_inserted = m_cache.insert(std::make_pair(func, std::shared_ptr<PlaidML_Executable>{}));
     if (it_inserted.second)
     {
         try
@@ -49,8 +37,8 @@ std::shared_ptr<ngraph::runtime::plaidml::CompiledFunction>
     return it_inserted.first->second;
 }
 
-void ngraph::runtime::plaidml::CompilationCache::forget(std::shared_ptr<Function> func)
+void ngraph::runtime::plaidml::CompilationCache::forget(std::shared_ptr<PlaidML_Executable> exec)
 {
     std::lock_guard<std::mutex> lock{m_mu};
-    m_cache.erase(func);
+    m_cache.erase(exec->src_func());
 }

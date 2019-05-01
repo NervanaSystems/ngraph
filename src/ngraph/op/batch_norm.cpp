@@ -205,21 +205,26 @@ void ngraph::op::BatchNormTrainingBackprop::validate_and_infer_types()
 {
     PartialShape input_and_delta_shape{get_input_partial_shape(INPUT_DATA)};
 
-    NODE_VALIDATION_ASSERT(
-        this, PartialShape::merge_into(input_and_delta_shape, get_input_partial_shape(INPUT_DELTA)))
-        << "Shape of delta does not match the shape of the input data (input data shape: "
-        << get_input_partial_shape(INPUT_DATA)
-        << ", delta shape: " << get_input_partial_shape(INPUT_DELTA) << ").";
+    NODE_VALIDATION_CHECK(
+        this,
+        PartialShape::merge_into(input_and_delta_shape, get_input_partial_shape(INPUT_DELTA)),
+        "Shape of delta does not match the shape of the input data (input data shape: ",
+        get_input_partial_shape(INPUT_DATA),
+        ", delta shape: ",
+        get_input_partial_shape(INPUT_DELTA),
+        ").");
 
     element::Type input_and_delta_et;
 
-    NODE_VALIDATION_ASSERT(this,
-                           element::Type::merge(input_and_delta_et,
-                                                get_input_element_type(INPUT_DATA),
-                                                get_input_element_type(INPUT_DELTA)))
-        << "Element type for input (" << get_input_element_type(INPUT_DATA)
-        << ") does not match element type for delta (" << get_input_element_type(INPUT_DATA)
-        << ").";
+    NODE_VALIDATION_CHECK(this,
+                          element::Type::merge(input_and_delta_et,
+                                               get_input_element_type(INPUT_DATA),
+                                               get_input_element_type(INPUT_DELTA)),
+                          "Element type for input (",
+                          get_input_element_type(INPUT_DATA),
+                          ") does not match element type for delta (",
+                          get_input_element_type(INPUT_DATA),
+                          ").");
 
     element::Type result_et;
     PartialShape result_batch_shape;

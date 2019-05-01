@@ -40,7 +40,7 @@ pass::MemoryLayout::MemoryLayout(size_t alignment, bool disable_memory_sharing)
     }
 }
 
-bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
+bool pass::MemoryLayout::run_on_function(shared_ptr<Function> function)
 {
     MemoryManager mm(m_alignment, m_disable_memory_sharing);
     for (shared_ptr<Node> node : function->get_ordered_ops())
@@ -59,10 +59,9 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
                 {
                     for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
                     {
-                        auto output = &node->get_outputs().at(oi_pair.output).get_tensor();
-                        auto input = &node->get_inputs().at(oi_pair.input).get_tensor();
-                        auto input_node =
-                            node->get_inputs().at(oi_pair.input).get_output().get_node();
+                        auto output = &node->output(oi_pair.output).get_tensor();
+                        auto input = &node->input(oi_pair.input).get_tensor();
+                        auto input_node = node->input(oi_pair.input).get_source_output().get_node();
 
                         // For destructive kernel, this should be the last use
                         // Non-destructive kernels can pass through if memory sharing is disabled

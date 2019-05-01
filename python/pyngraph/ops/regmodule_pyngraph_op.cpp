@@ -37,6 +37,7 @@ void regmodule_pyngraph_op(py::module m_op)
     regclass_pyngraph_op_BatchNormTraining(m_op);
     regclass_pyngraph_op_BatchNormTrainingBackprop(m_op);
     regclass_pyngraph_op_Broadcast(m_op);
+    regclass_pyngraph_op_BroadcastDistributed(m_op);
     regclass_pyngraph_op_Ceiling(m_op);
     regclass_pyngraph_op_Concat(m_op);
     regclass_pyngraph_op_Constant(m_op);
@@ -72,6 +73,7 @@ void regmodule_pyngraph_op(py::module m_op)
     regclass_pyngraph_op_Or(m_op);
     regclass_pyngraph_op_Pad(m_op);
     regclass_pyngraph_op_Parameter(m_op);
+    regclass_pyngraph_op_Passthrough(m_op);
     regclass_pyngraph_op_Power(m_op);
     regclass_pyngraph_op_Product(m_op);
     regclass_pyngraph_op_Relu(m_op);

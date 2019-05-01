@@ -37,13 +37,18 @@ void op::util::IndexReduction::validate_and_infer_types()
     const PartialShape& arg_shape = get_input_partial_shape(0);
     Rank rank = arg_shape.rank();
 
-    NODE_VALIDATION_ASSERT(this, rank.is_dynamic() || size_t(rank) >= 1)
-        << "Argument rank is zero.";
-    NODE_VALIDATION_ASSERT(this, rank.is_dynamic() || m_axis < size_t(rank))
-        << "Reduction axis (" << m_axis << ") is not less than argument rank (" << rank << ").";
-    NODE_VALIDATION_ASSERT(
-        this, m_index_element_type == element::i32 || m_index_element_type == element::i64)
-        << "Index element is neither i64 or i32.";
+    NODE_VALIDATION_CHECK(this, rank.is_dynamic() || size_t(rank) >= 1, "Argument rank is zero.");
+    NODE_VALIDATION_CHECK(this,
+                          rank.is_dynamic() || m_axis < size_t(rank),
+                          "Reduction axis (",
+                          m_axis,
+                          ") is not less than argument rank (",
+                          rank,
+                          ").");
+    NODE_VALIDATION_CHECK(this,
+                          m_index_element_type == element::i32 ||
+                              m_index_element_type == element::i64,
+                          "Index element is neither i64 or i32.");
 
     PartialShape output_shape{PartialShape::dynamic()};
 

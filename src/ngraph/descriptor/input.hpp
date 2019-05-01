@@ -31,7 +31,7 @@ namespace ngraph
         // Describes a tensor that is an input to an op, directly or indirectly via a tuple
         class Input
         {
-            friend class Node;
+            friend class ngraph::Node;
 
         public:
             /// \param node The node that owns this input
@@ -59,6 +59,16 @@ namespace ngraph
             void replace_output(std::shared_ptr<Node> node, size_t i);
             void replace_output(Output& output);
 
+            /// \return true if the value of this input is relevant to the output shapes of the
+            ///         corresponding node. (Usually this is false.)
+            ///
+            /// See Node::set_input_is_relevant_to_shape for more details.
+            bool get_is_relevant_to_shape() const { return m_is_relevant_to_shape; }
+            /// \return true if the value of this input is relevant to the output value of the
+            ///         corresponding node. (Usually this is true.)
+            ///
+            /// See Node::set_input_is_relevant_to_value for more details.
+            bool get_is_relevant_to_value() const { return m_is_relevant_to_value; }
         protected:
             /// \return the tensor for the connected output
             std::shared_ptr<const Tensor> get_tensor_ptr() const;
@@ -84,6 +94,8 @@ namespace ngraph
             Output* m_output;
 
         private:
+            bool m_is_relevant_to_shape;
+            bool m_is_relevant_to_value;
             Input(const Input&) = delete;
             Input(Input&&) = delete;
             Input& operator=(const Input&) = delete;

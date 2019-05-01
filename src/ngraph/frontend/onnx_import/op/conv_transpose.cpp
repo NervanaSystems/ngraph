@@ -23,7 +23,6 @@
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/frontend/onnx_import/exceptions.hpp"
 #include "ngraph/frontend/onnx_import/op/conv_transpose.hpp"
-#include "ngraph/frontend/onnx_import/utils/broadcasting.hpp"
 #include "ngraph/frontend/onnx_import/utils/convpool.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/broadcast.hpp"
@@ -33,6 +32,7 @@
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/subtract.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
 
@@ -171,15 +171,19 @@ namespace ngraph
                         }
                         for (int i = 0; i < num_spatial_dims; ++i)
                         {
-                            padding_below[i] = (strides[i] * (data_shape[i + 2] - 1) +
-                                                dilations[i] * (weights_shape[i + 2] - 1) -
-                                                data_dilation_strides[i] *
-                                                    (output_shape[i] - output_padding[i] - 1)) /
-                                               2;
-                            if (static_cast<int>(padding_below[i]) < 0)
+                            padding_below[i] = strides[i] * (data_shape[i + 2] - 1) +
+                                               dilations[i] * (weights_shape[i + 2] - 1) -
+                                               data_dilation_strides[i] *
+                                                   (output_shape[i] - output_padding[i] - 1);
+                            if (padding_below[i] < 0)
                             {
-                                output_padding[i] = -static_cast<int>(padding_below[i]);
-                                padding_below[i] = 0;
+                                // (int) -9 / 2 = -5 but we need -4
+                                // (int) -9 --> 9 / 2 = 4 --> -4
+                                padding_below[i] = -(-padding_below[i] / 2);
+                            }
+                            else
+                            {
+                                padding_below[i] /= 2;
                             }
                             padding_above[i] = padding_below[i];
                             data_batch_shape[i + 2] = output_shape[i];
@@ -187,7 +191,7 @@ namespace ngraph
                     }
                     else
                     {
-                        for (int i = 0; i < num_spatial_dims && output_shape.empty(); ++i)
+                        for (int i = 0; i < num_spatial_dims; ++i)
                         {
                             // Calculating spatial dims of data output shape for ngraph conv backprop op
                             // | s(ds-1) + d(ws-1) - pb - pa |
@@ -230,7 +234,8 @@ namespace ngraph
                     auto bias = inputs.at(2);
 
                     return {std::make_shared<ngraph::op::Add>(
-                        conv_node, make_broadcast_node(bias, conv_node->get_shape(), 1))};
+                        conv_node,
+                        ngraph::op::make_broadcast_node(bias, conv_node->get_shape(), 1))};
                 }
 
             } // namespace set_1

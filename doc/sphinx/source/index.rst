@@ -17,125 +17,96 @@
 .. This documentation is available online at
 .. https://ngraph.nervanasys.com/docs/latest
 
-
-Welcome
-=======
-
-See the latest :doc:`project/release-notes`.
-
-nGraph is an open-source C++ library, compiler stack, and runtime accelerator
-for software and neural network engineering within the :abbr:`Deep Learning (DL)`
-ecosystem. nGraph simplifies development and makes it possible to design, write,
-compile, and deploy :abbr:`Deep Neural Network (DNN)`-based solutions that can
-be adapted and deployed across many frameworks and backends. See our project
-:doc:`project/about` and `ecosystem`_ for more details.
-
-.. figure:: graphics/ngcompiler-ecosystem.png
-   :width: 650px
-   :alt: ecosystem
-
-   The Intel nGraph Compiler stack supports a broad ecosystem of frameworks and backends.
+######################
+nGraph Compiler stack 
+######################
 
 
-.. _quickstart:
+nGraph is an open-source graph compiler for :abbr:`Artificial Neural Networks (ANNs)`. 
+The nGraph Compiler stack provides an inherently efficient graph-based compilation 
+infrastructure designed to be compatible with many upcoming 
+:abbr:`Application-Specific Integrated Circuits (ASICs)`, like the Intel® Nervana™ 
+Neural Network Processor (Intel® Nervana™ NNP), while also unlocking a massive 
+performance boost on any existing hardware targets for your neural network: both 
+GPUs and CPUs. Using its flexible infrastructure, you will find it becomes much 
+easier to create Deep Learning (DL) models that can adhere to the "write once, 
+run anywhere" mantra that enables your AI solutions to easily go from concept to 
+production to scale.
 
-Quick Start
-===========
-
-We have many documentation pages to help you get started.
-
-* **TensorFlow or MXNet users** can get started with
-  :doc:`framework-integration-guides`.
-
-   * `TensorFlow bridge to nGraph`_
-   * `Compiling MXNet with nGraph`_
-
-   .. note:: Note that the ``pip`` package option works only with Ubuntu 16.04
-      or greater and Intel® Xeon® CPUs. CPUs without Intel® Advanced Vector Extensions
-      512 (Intel® AVX-512) will not run these packages; the alternative is to
-      build from source. Wider support for other CPUs will be offered starting
-      in early 2019.
-
-* **Data scientists** interested in the `ONNX`_ format will find the
-  `nGraph ONNX companion tool`_ of interest.
-
-* **Framework authors and architects** will likely want to :doc:`buildlb`
-  and learn how nGraph can be used to :doc:`howto/execute`. For examples
-  of generic configurations or optimizations available when designing or
-  bridging a framework directly with nGraph, see :doc:`frameworks/index`.
-
-* To start learning about nGraph's set of **Core ops** and how they can
-  be used with Ops from other frameworks, go to :doc:`ops/index`.
-
-* **Optimization pass writers** will find :doc:`fusion/index` useful. Also
-  look for our upcoming documentation on :term:`quantization`.
-
-* For details about **PlaidML integration** and other nGraph runtime APIs,
-  see the section :doc:`programmable/index`.
-
-.. csv-table::
-   :header: "Framework", "Bridge Available?", "ONNX Support?"
-   :widths: 27, 10, 10
-
-   TensorFlow, Yes, Yes
-   MXNet, Yes, Yes
-   PaddlePaddle, Coming Soon, Yes
-   PyTorch, No, Yes
-   Other, Write your own, Custom
-
-
-.. csv-table::
-   :header: "Backend", "Current support", "Future nGraph support"
-   :widths: 35, 10, 10
-
-   Intel® Architecture Processors (CPUs), Yes, Yes
-   Intel® Nervana™ Neural Network Processor (NNPs), Yes, Yes
-   Intel® Architecture GPUs, Yes, Yes
-   AMD\* GPUs, via PlaidML, Yes
-   :abbr:`Field Programmable Gate Arrays (FPGA)` (FPGAs), Coming soon, Yes
-   NVIDIA\* GPUs, via PlaidML, Some
-   Intel Movidius™ Myriad™ 2 (VPU), Coming soon, Yes
-
-
-.. note:: The code in this repo is under active development as we're continually
-   adding support for more kinds of DL models and ops, compiler optimizations,
-   and backend optimizations.
-
-
-=======
-
-Contents
-========
+Frameworks using nGraph to execute workloads have shown `up to 45X`_ performance 
+boost compared to native implementations. For a high-level overview, see the 
+:doc:`project/introduction` and our latest :doc:`project/release-notes`.
 
 .. toctree::
    :maxdepth: 1
-   :caption: Python Ops for ONNX
+   :caption: Connecting Frameworks
+   
+   frameworks/index.rst
+   frameworks/validated/list.rst
+   frameworks/generic-configs.rst
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: nGraph Core
+
+   buildlb.rst
+   core/overview.rst
+   core/fusion/index.rst
+   nGraph Core Ops <ops/index.rst>
+   core/constructing-graphs/index.rst
+   core/passes/passes.rst
+   
+.. toctree::
+   :maxdepth: 1
+   :caption: nGraph Python API
 
    python_api/index.rst
 
+   
 .. toctree::
    :maxdepth: 1
-   :caption: Core Documentation
+   :caption: Backend Support
 
-   buildlb.rst
-   framework-integration-guides.rst
-   frameworks/validation.rst
-   frameworks/index.rst
-   graph-basics.rst
-   howto/index.rst
-   ops/about.rst
-   ops/index.rst
-   fusion/index.rst
-   programmable/index.rst
-   distr/index.rst
+   backend-support/index.rst
+   backend-support/cpp-api.rst
+
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
+   :caption: Distributed Training
+
+   distr/index.rst
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Inspecting Graphs
+
+   inspection/index.rst
+   inspection/performance-profile.rst
+   inspection/debug.rst 
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Tutorials
+
+   tutorials/index.rst
+
+
+.. toctree::
+   :maxdepth: 1
    :caption: Project Metadata
 
+   project/introduction.rst
+   project/release-notes.rst
+   project/contribution-guide.rst
+   project/governance.rst
+   project/doc-contributor-README.rst
    project/index.rst
+   project/extras.rst 
    glossary.rst
-
 
 Indices and tables
 ==================
@@ -145,10 +116,6 @@ Indices and tables
 
 
 
-.. _nGraph ONNX companion tool: https://github.com/NervanaSystems/ngraph-onnx
-.. _ONNX: http://onnx.ai
-.. _Movidius: https://www.movidius.com/
-.. _contributions: https://github.com/NervanaSystems/ngraph#how-to-contribute
-.. _TensorFlow bridge to nGraph: https://github.com/NervanaSystems/ngraph-tf/blob/master/README.md
-.. _Compiling MXNet with nGraph: https://github.com/NervanaSystems/ngraph-mxnet/blob/master/README.md
-.. _ecosystem: https://github.com/NervanaSystems/ngraph/blob/master/ecosystem-overview.md
+
+.. nGraph: https://www.ngraph.ai
+.. _up to 45X: https://ai.intel.com/ngraph-compiler-stack-beta-release/

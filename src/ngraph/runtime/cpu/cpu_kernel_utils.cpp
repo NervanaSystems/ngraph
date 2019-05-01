@@ -15,7 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/cpu/cpu_kernel_utils.hpp"
-#include "ngraph/codegen/code_writer.hpp"
+#include "ngraph/code_writer.hpp"
 #include "ngraph/coordinate_transform.hpp"
 #include "ngraph/util.hpp"
 
@@ -182,7 +182,7 @@ string ngraph::runtime::cpu::kernel::emit_nd_index(CoordinateTransform& trans,
 // Emits a pointwise copy from source_buffer mediated by in_trans, to
 // dest_buffer mediated by dest_trans.
 //
-void ngraph::runtime::cpu::kernel::emit_pointwise_copy(codegen::CodeWriter& writer,
+void ngraph::runtime::cpu::kernel::emit_pointwise_copy(CodeWriter& writer,
                                                        const string& element_type,
                                                        const string& source_buffer,
                                                        const string& dest_buffer,

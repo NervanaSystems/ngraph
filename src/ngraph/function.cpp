@@ -118,7 +118,7 @@ const std::string& Function::get_name() const
     return m_unique_name;
 }
 
-void Function::set_name(const string& name)
+void Function::set_friendly_name(const string& name)
 {
     if (m_name.empty())
     {
@@ -200,17 +200,43 @@ size_t Function::get_graph_size() const
         total_size += sizeof(*node);
         if (node->description() == "Constant")
         {
-            const Shape& shape = node->get_outputs()[0].get_shape();
-            size_t const_size = node->get_outputs()[0].get_element_type().size();
+            const Shape& shape = node->output(0).get_shape();
+            size_t const_size = node->output(0).get_element_type().size();
             if (shape.size() == 0)
             {
                 total_size += const_size;
             }
             else
             {
-                total_size += (const_size * shape_size(node->get_outputs()[0].get_shape()));
+                total_size += (const_size * shape_size(node->output(0).get_shape()));
             }
         }
     }
     return total_size;
+}
+
+size_t Function::get_placement() const
+{
+    return m_placement;
+}
+
+void Function::set_placement(size_t placement)
+{
+    m_placement = placement;
+}
+
+// TODO(pthoreho) this will be expensive, since we will be traversing all the nodes in
+// the graph, figure out if their is a way to cache the result and invalidate/update
+// the result if the function is modified
+bool Function::is_dynamic() const
+{
+    auto list_of_nodes = this->get_ops();
+    for (auto& node : list_of_nodes)
+    {
+        if (node->get_output_partial_shape(0).is_dynamic())
+        {
+            return true;
+        }
+    }
+    return false;
 }

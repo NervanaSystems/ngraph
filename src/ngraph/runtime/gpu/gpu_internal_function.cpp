@@ -24,7 +24,7 @@
 #include <string>
 #include <tuple>
 
-#include "ngraph/codegen/code_writer.hpp"
+#include "ngraph/code_writer.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/descriptor/output.hpp"
@@ -203,7 +203,7 @@ std::string runtime::gpu::GPUInternalFunction::add_call_to_runtime(
     const std::vector<runtime::gpu::GPUTensorWrapper>& out)
 {
     m_runtime_constructor->add_call(caller, callee, args, out);
-    codegen::CodeWriter writer;
+    CodeWriter writer;
     writer.block_begin();
     {
         for (auto const& tensor : args)
@@ -225,7 +225,7 @@ std::string runtime::gpu::GPUInternalFunction::compose_manifest(
     const std::vector<runtime::gpu::GPUTensorWrapper>& args,
     const std::vector<runtime::gpu::GPUTensorWrapper>& out) const
 {
-    codegen::CodeWriter writer;
+    CodeWriter writer;
     writer.block_begin();
     {
         for (auto const& tensor : args)
@@ -389,7 +389,7 @@ void runtime::gpu::GPUInternalFunction::emit()
 
     if (std::getenv("NGRAPH_GPU_TRACE"))
     {
-        m_trace = std::make_shared<codegen::CodeWriter>();
+        m_trace = std::make_shared<CodeWriter>();
     }
 
     // build and emit functions

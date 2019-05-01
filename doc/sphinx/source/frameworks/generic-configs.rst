@@ -1,69 +1,12 @@
 .. frameworks/generic-configs.rst:
 
-
-Configurations available to any framework
-#########################################
-
-
-Enabling Deep Learning paradigms  
-================================
-
-Framework architects or engineers who can't quite find what they need among 
-the existing DL tools may need to build something new off a "stock" framework, 
-or someting entirely from scratch. For this category of developer, we have 
-:doc:`documented several ways <../howto/index>` you can incorporate built-in 
-compiler support for users of your framework; this includes out-of-box support 
-for things like Intel® MKL-DNN and PlaidML when your framework supports nGraph 
-as a "backend" or engine. 
-
-   .. important:: nGraph does not provide an interface for "users" of frameworks 
-      (for example, we cannot dictate or control how Tensorflow* or MXNet* presents 
-      interfaces to users). Please keep in mind that designing and documenting 
-      the :abbr:`User Interface (UI)` of step 3 above is entirely in the realm 
-      of the framework owner or developer and beyond the scope of the nGraph 
-      Compiler stack. However, any framework can be designed to make direct use 
-      of nGraph Compiler stack-based features and then expose an accompanying UI, 
-      output message, or other detail to a user.
- 
-The nGraph :abbr:`IR Intermediate Representation` is format that can understand 
-inputs from a framework. Today, there are two primary tasks that can be accomplished 
-in the “bridge code” space of the nGraph IR: 
-
-#. Compiling a dataflow graph 
-#. Executing a pre-compiled graph. 
-
-See the :doc:`../framework-integration-guides` for how we built bridges with our 
-initially-supported frameworks. For more in-depth help in writing things like 
-graph optimizations and bridge code, we provide articles on how to 
-:doc:`../fusion/index`, and programmatically :doc:`../howto/execute` that can 
-target various compute resources using nGraph when a framework provides some 
-inputs to be computed.
-
-.. note:: Configuration options can be added manually on the command line or via 
-   scripting. Please keep in mind that fine-tuning of parameters is as much of 
-   an art as it is a science; there are virtually limitless ways to do so and 
-   our documentation provides only a sampling.  
-
-
-Integrating nGraph with new frameworks
-======================================
+Integrating new frameworks
+==========================
 
 This section details some of the *configuration options* and some of the 
 *environment variables* that can be used to tune for optimal performance when 
 your system already has a version of nGraph installed with one of our supported
 backends. 
-
-.. csv-table::
-   :header: "Backend", "Current nGraph support", "Future nGraph support"
-   :widths: 35, 10, 10
-
-   Intel® Architecture Processors (CPUs), Yes, Yes
-   Intel® Nervana™ Neural Network Processor™ (NNPs), Yes, Yes
-   NVIDIA\* CUDA (GPUs), Yes, Some 
-   :abbr:`Field Programmable Gate Arrays (FPGA)` (FPGAs), Coming soon, Yes
-   `Movidius`_, Not yet, Yes
-   Other, Not yet, Ask
-
 
 Regardless of the framework, after the :doc:`../buildlb` step, a good place 
 to start usually involves making the libraries available to the framework. On 
@@ -78,7 +21,7 @@ something like:
 
 
 FMV
-===
+---
 
 FMV stands for :abbr:`Function Multi-Versioning`, and it can also provide a 
 number of generic ways to patch or bring architecture-based optimizations to 
@@ -90,9 +33,8 @@ for Intel® Architecture, and it includes at least one older CPU, the
 `following article may be helpful`_.
 
 
-
 Training Deep Neural Networks
-==============================
+-----------------------------
 
 Before tweaking various environment variables, be aware that how the computation 
 gets executed depends upon the ordering of the data format that the model is 
@@ -108,6 +50,7 @@ For CPU (and most cuDNN) backends, the preferred layout is currently ``NCHW``.
 * **H** -- Height of the image
 * **W** -- Width of the image
 
+
 Intel® Math Kernel Library for Deep Neural Networks 
 ---------------------------------------------------
 
@@ -120,14 +63,15 @@ additional component to be able to use these configuration settings.
 * ``KMP_BLOCKTIME`` Sets the time, in milliseconds, that a thread should wait 
   after completing the execution of a parallel region, before sleeping.
 * ``KMP_AFFINITY`` Enables the runtime library to bind threads to physical 
-  processing units. 
+  processing units. A useful article that explains more about how to use this 
+  option for various CPU backends is here: https://web.archive.org/web/20190401182248/https://www.nas.nasa.gov/hecc/support/kb/Using-Intel-OpenMP-Thread-Affinity-for-Pinning_285.html
 * ``KMP_SETTINGS`` Enables (``true``) or disables (``false``) the printing of 
   OpenMP\* runtime library environment variables during program execution.
 * ``OMP_NUM_THREADS`` Specifies the number of threads to use.
 
 
 nGraph-enabled Intel® Xeon® 
-============================
+---------------------------
 
 The list below includes recommendations on data layout, parameters, and 
 application configuration to achieve best performance running DNN workloads on 
@@ -219,9 +163,8 @@ Compiler stack runs on transformers handled by Intel® Architecture (IA), and
 thus can make more efficient use of the underlying hardware.
 
 
-
-
-.. _KMP options: https://software.intel.com/en-us/node/522691
+.. _KMP options: https://software.intel.com/en-us/cpp-compiler-developer-guide-and-reference-controlling-thread-allocation
+.. KMP options: https://software.intel.com/en-us/node/522691
 .. _MKL-DNN: https://github.com/intel/mkl-dnn
 .. _gnu.org site: https://gcc.gnu.org/onlinedocs/libgomp/Environment-Variables.html
 .. _Movidius: https://www.movidius.com/

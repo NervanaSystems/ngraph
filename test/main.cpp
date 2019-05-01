@@ -22,15 +22,8 @@
 
 using namespace std;
 
-#ifdef NGRAPH_DISTRIBUTED
-#include "ngraph/distributed.hpp"
-#endif
-
 int main(int argc, char** argv)
 {
-#ifdef NGRAPH_DISTRIBUTED
-    ngraph::Distributed dist;
-#endif
     const char* exclude = "--gtest_filter=-benchmark.*";
     vector<char*> argv_vector;
     argv_vector.push_back(argv[0]);
@@ -42,7 +35,11 @@ int main(int argc, char** argv)
     argc++;
 
     ::testing::InitGoogleTest(&argc, argv_vector.data());
+    auto start = std::chrono::system_clock::now();
     int rc = RUN_ALL_TESTS();
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now() - start);
+    NGRAPH_DEBUG_PRINT("[MAIN] Tests finished: Time: %d ms Exit code: %d", elapsed.count(), rc);
 
     return rc;
 }

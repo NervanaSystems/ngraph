@@ -19,8 +19,8 @@
 #include <memory>
 
 #include "ngraph/node.hpp"
-#include "ngraph/node_vector.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 #include "ngraph/util.hpp"
 
 namespace ngraph
@@ -30,10 +30,10 @@ namespace ngraph
         class BatchNormTrainingRelu : public Op
         {
         public:
-            BatchNormTrainingRelu(double eps,
-                                  std::shared_ptr<Node> gamma,
-                                  std::shared_ptr<Node> beta,
-                                  std::shared_ptr<Node> input);
+            CPU_BACKEND_API BatchNormTrainingRelu(double eps,
+                                                  std::shared_ptr<Node> gamma,
+                                                  std::shared_ptr<Node> beta,
+                                                  std::shared_ptr<Node> input);
 
             double get_eps_value() const { return m_epsilon; }
             virtual std::shared_ptr<Node>

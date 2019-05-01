@@ -16,7 +16,6 @@
 
 #pragma once
 
-#include <cassert>
 #include <functional>
 #include <memory.h>
 
@@ -26,6 +25,7 @@
 #include "ngraph/pattern/op/any_of.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -68,10 +68,12 @@ namespace ngraph
             /// \param strict_mode forces a matcher to consider shapes and ET of nodes
             Matcher(const std::shared_ptr<Node> pattern_node = nullptr,
                     const std::string& name = "Unnamed",
+                    pass::PassPropertyMask property = pass::PassProperty::REGULAR_FUSIONS,
                     bool strict_mode = false)
                 : m_pattern_node(pattern_node)
                 , m_depth(0)
                 , m_name(name)
+                , m_property(property)
                 , m_strict_mode(strict_mode)
             {
             }
@@ -109,6 +111,7 @@ namespace ngraph
                 return matched;
             }
 
+            bool get_property(const pass::PassPropertyMask& prop) const;
             bool is_contained_match(const NodeVector& exclusions = {}, bool ignore_unused = true);
             NodeVector get_matched_nodes() { return m_matched_list; }
             void reset() {}
@@ -168,6 +171,7 @@ namespace ngraph
 
             size_t m_depth;
             std::string m_name;
+            pass::PassPropertyMask m_property;
             bool m_strict_mode;
         };
 
@@ -184,11 +188,13 @@ namespace ngraph
             RecurrentMatcher(std::shared_ptr<Node> pattern,
                              std::shared_ptr<op::Label> rpattern,
                              const std::set<std::shared_ptr<op::Label>>& correlated_patterns,
-                             recurrent_graph_rewrite_callback callback)
+                             recurrent_graph_rewrite_callback callback,
+                             pass::PassPropertyMask property = pass::PassProperty::REGULAR_FUSIONS)
                 : m_pattern(pattern)
                 , m_recurrent_pattern(rpattern)
                 , m_correlated_patterns(correlated_patterns)
                 , m_callback(callback)
+                , m_property(property)
             {
             }
 
@@ -221,6 +227,8 @@ namespace ngraph
             /// \brief Invoked by a pass to process a successful match
             bool process_match();
 
+            bool get_property(const pass::PassPropertyMask& prop) const;
+
             std::shared_ptr<Node> get_match_root() { return m_match_root; }
         private:
             std::shared_ptr<Node> m_pattern;
@@ -228,6 +236,7 @@ namespace ngraph
             const std::set<std::shared_ptr<op::Label>> m_correlated_patterns;
             RPatternMap m_matches;
             recurrent_graph_rewrite_callback m_callback;
+            pass::PassPropertyMask m_property;
             std::shared_ptr<Node> m_match_root;
         };
     }

@@ -17,6 +17,7 @@
 #include <fstream>
 #include <map>
 #include <memory>
+#include <type_traits>
 
 #include "ngraph/runtime/intelgpu/visualize_tree.hpp"
 
@@ -31,7 +32,10 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max.hpp"
@@ -40,9 +44,12 @@
 #include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
+#include "ngraph/op/quantize.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
+#include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/op/topk.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
@@ -51,6 +58,7 @@ using namespace std;
 #define NGRAPH_OP(a, b) a,
 enum class OP_TYPEID
 {
+#include "ngraph/op/fused_op_tbl.hpp"
 #include "ngraph/op/op_tbl.hpp"
     UNDEFINED_OP
 };
@@ -64,6 +72,7 @@ static OP_TYPEID get_typeid(const string& s)
 // ...
 #define NGRAPH_OP(a, b) {#a, OP_TYPEID::a},
     static const unordered_map<string, OP_TYPEID> typeid_map{
+#include "ngraph/op/fused_op_tbl.hpp"
 #include "ngraph/op/op_tbl.hpp"
     };
 #undef NGRAPH_OP
@@ -277,6 +286,28 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
                << print_table_row_value("transpose", op_reshape->get_is_transpose());
         break;
     }
+    case OP_TYPEID::Quantize:
+    {
+        const shared_ptr<op::Quantize> quant_op = static_pointer_cast<op::Quantize>(node);
+
+        writer << print_table_row_dims("axes", quant_op->get_axes())
+               << print_table_row_value("rounding mode", (int)quant_op->get_round_mode());
+        break;
+    }
+    case OP_TYPEID::Dequantize:
+    {
+        const shared_ptr<op::Dequantize> quant_op = static_pointer_cast<op::Dequantize>(node);
+
+        writer << print_table_row_dims("axes", quant_op->get_axes());
+        break;
+    }
+    case OP_TYPEID::Softmax:
+    {
+        const shared_ptr<op::Softmax> softmax_op = static_pointer_cast<op::Softmax>(node);
+
+        writer << print_table_row_dims("axes", softmax_op->get_axes());
+        break;
+    }
     case OP_TYPEID::Concat:
     {
         const shared_ptr<op::Concat> concat_op = static_pointer_cast<op::Concat>(node);
@@ -289,8 +320,7 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
         const shared_ptr<op::Pad> pad = static_pointer_cast<op::Pad>(node);
 
         writer << print_table_row_dims("pad_above", pad->get_padding_above())
-               << print_table_row_dims("pad_below", pad->get_padding_below())
-               << print_table_row_dims("pad_interior", pad->get_padding_interior());
+               << print_table_row_dims("pad_below", pad->get_padding_below());
         break;
     }
     case OP_TYPEID::Slice:
@@ -310,6 +340,48 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
         writer << print_table_row_dims("win_stride", conv_op->get_window_movement_strides())
                << print_table_row_dims("win_dilation", conv_op->get_window_dilation_strides())
                << print_table_row_dims("data_dilation", conv_op->get_data_dilation_strides())
+               << print_table_row_value(
+                      "pad_type",
+                      static_cast<underlying_type<op::PadType>::type>(conv_op->get_pad_type()))
+               << print_table_row_dims("pad_above", conv_op->get_padding_above())
+               << print_table_row_dims("pad_below", conv_op->get_padding_below());
+        break;
+    }
+    case OP_TYPEID::GroupConvolution:
+    {
+        const shared_ptr<op::GroupConvolution> conv_op =
+            static_pointer_cast<op::GroupConvolution>(node);
+
+        writer << print_table_row_dims("win_stride", conv_op->get_window_movement_strides())
+               << print_table_row_dims("win_dilation", conv_op->get_window_dilation_strides())
+               << print_table_row_dims("data_dilation", conv_op->get_data_dilation_strides())
+               << print_table_row_value("groups_count", conv_op->get_groups())
+               << print_table_row_dims("pad_above", conv_op->get_padding_above())
+               << print_table_row_dims("pad_below", conv_op->get_padding_below());
+        break;
+    }
+    case OP_TYPEID::ConvolutionBias:
+    {
+        const shared_ptr<op::ConvolutionBias> conv_op =
+            static_pointer_cast<op::ConvolutionBias>(node);
+
+        writer << print_table_row_dims("win_stride", conv_op->get_window_movement_strides())
+               << print_table_row_dims("win_dilation", conv_op->get_window_dilation_strides())
+               << print_table_row_dims("data_dilation", conv_op->get_data_dilation_strides())
+               << print_table_row_value("with_relu", conv_op->with_relu())
+               << print_table_row_dims("pad_above", conv_op->get_padding_above())
+               << print_table_row_dims("pad_below", conv_op->get_padding_below());
+        break;
+    }
+    case OP_TYPEID::ConvolutionBiasAdd:
+    {
+        const shared_ptr<op::ConvolutionBiasAdd> conv_op =
+            static_pointer_cast<op::ConvolutionBiasAdd>(node);
+
+        writer << print_table_row_dims("win_stride", conv_op->get_window_movement_strides())
+               << print_table_row_dims("win_dilation", conv_op->get_window_dilation_strides())
+               << print_table_row_dims("data_dilation", conv_op->get_data_dilation_strides())
+               << print_table_row_value("with_relu", conv_op->with_relu())
                << print_table_row_dims("pad_above", conv_op->get_padding_above())
                << print_table_row_dims("pad_below", conv_op->get_padding_below());
         break;
@@ -329,17 +401,25 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
                << print_table_row_dims("pad_above_forward",
                                        conv_op_filt->get_padding_above_forward())
                << print_table_row_dims("pad_below_forward",
-                                       conv_op_filt->get_padding_below_forward())
-               << print_table_row_dims("window_movement_strides_backward",
-                                       conv_op_filt->get_window_movement_strides_backward())
-               << print_table_row_dims("window_dilation_strides_backward",
-                                       conv_op_filt->get_window_dilation_strides_backward())
-               << print_table_row_dims("data_dilation_strides_backward",
-                                       conv_op_filt->get_data_dilation_strides_backward())
-               << print_table_row_dims("padding_above_backward",
-                                       conv_op_filt->get_padding_above_backward())
-               << print_table_row_dims("padding_below_backward",
-                                       conv_op_filt->get_padding_below_backward());
+                                       conv_op_filt->get_padding_below_forward());
+        break;
+    }
+    case OP_TYPEID::ConvolutionBiasBackpropFiltersBias:
+    {
+        const shared_ptr<op::ConvolutionBiasBackpropFiltersBias> conv_op_filt =
+            static_pointer_cast<op::ConvolutionBiasBackpropFiltersBias>(node);
+
+        writer << print_table_row_dims("filters_shape", conv_op_filt->get_filters_shape())
+               << print_table_row_dims("window_movement_strides_forward",
+                                       conv_op_filt->get_window_movement_strides_forward())
+               << print_table_row_dims("window_dilation_strides_forward",
+                                       conv_op_filt->get_window_dilation_strides_forward())
+               << print_table_row_dims("data_dilation_strides_forward",
+                                       conv_op_filt->get_data_dilation_strides_forward())
+               << print_table_row_dims("pad_above_forward",
+                                       conv_op_filt->get_padding_above_forward())
+               << print_table_row_dims("pad_below_forward",
+                                       conv_op_filt->get_padding_below_forward());
         break;
     }
     case OP_TYPEID::ConvolutionBackpropData:
@@ -357,17 +437,18 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
                << print_table_row_dims("pad_above_forward",
                                        conv_op_data->get_padding_above_forward())
                << print_table_row_dims("pad_below_forward",
-                                       conv_op_data->get_padding_below_forward())
-               << print_table_row_dims("window_movement_strides_backward",
-                                       conv_op_data->get_window_movement_strides_backward())
-               << print_table_row_dims("window_dilation_strides_backward",
-                                       conv_op_data->get_window_dilation_strides_backward())
-               << print_table_row_dims("data_dilation_strides_backward",
-                                       conv_op_data->get_data_dilation_strides_backward())
-               << print_table_row_dims("padding_above_backward",
-                                       conv_op_data->get_padding_above_backward())
-               << print_table_row_dims("padding_below_backward",
-                                       conv_op_data->get_padding_below_backward());
+                                       conv_op_data->get_padding_below_forward());
+        break;
+    }
+    case OP_TYPEID::TopK:
+    {
+        const shared_ptr<op::TopK> topk_op = static_pointer_cast<op::TopK>(node);
+
+        writer << print_table_row_value("top_k_axis", topk_op->get_top_k_axis())
+               << print_table_row_value("index_element_type", topk_op->get_index_element_type())
+               << print_table_row_value("k", topk_op->get_k())
+               << print_table_row_value("compute_max", topk_op->get_compute_max());
+
         break;
     }
     case OP_TYPEID::UNDEFINED_OP:
@@ -403,9 +484,14 @@ void print_node(ostringstream& writer, const shared_ptr<Node>& node)
         size_t arg_idx = 0;
         for (const descriptor::Input& op_input : node->get_inputs())
         {
-            writer << table_row_begin() << font_small_begin
-                   << op_input.get_element_type().c_type_string() << " input" << arg_idx
-                   << vector_to_string(op_input.get_shape()) << font_end << table_row_end;
+            writer << print_table_row_dims(op_input.get_element_type().c_type_string() + " input" +
+                                               to_string(arg_idx),
+                                           op_input.get_shape());
+            if (arg_idx >= 9)
+            {
+                writer << print_table_row_value("... total inputs", node->get_inputs().size());
+                break;
+            }
             ++arg_idx;
         }
     }
@@ -415,9 +501,9 @@ void print_node(ostringstream& writer, const shared_ptr<Node>& node)
         size_t arg_idx = 0;
         for (const descriptor::Output& op_output : node->get_outputs())
         {
-            writer << table_row_begin() << font_small_begin
-                   << op_output.get_element_type().c_type_string() << " output" << arg_idx
-                   << vector_to_string(op_output.get_shape()) << font_end << table_row_end;
+            writer << print_table_row_dims(op_output.get_element_type().c_type_string() +
+                                               " output" + to_string(arg_idx),
+                                           op_output.get_shape());
             ++arg_idx;
         }
     }

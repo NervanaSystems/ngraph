@@ -30,7 +30,7 @@ namespace ngraph
         public:
             /// \brief Constructs a tensor slice operation.
             ///
-            /// \param arg The tensor view to be sliced.
+            /// \param arg The tensor to be sliced.
             /// \param lower_bounds The axiswise lower bounds of the slice (inclusive).
             /// \param upper_bounds The axiswise upper bounds of the slice (exclusive).
             /// \param strides The slicing strides; for example, strides of `{n,m}` means to take
@@ -42,7 +42,7 @@ namespace ngraph
 
             /// \brief Constructs a tensor slice operation with unit strides; i.e., every element inside the bounding box will be copied to the output slice.
             ///
-            /// \param arg The tensor view to be sliced.
+            /// \param arg The tensor to be sliced.
             /// \param lower_bounds The axiswise lower bounds of the slice (inclusive).
             /// \param upper_bounds The axiswise upper bounds of the slice (exclusive).
             Slice(const std::shared_ptr<Node>& arg,

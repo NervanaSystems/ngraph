@@ -143,17 +143,14 @@ sources = [
     'pyngraph/function.cpp',
     'pyngraph/serializer.cpp',
     'pyngraph/node.cpp',
-    'pyngraph/node_vector.cpp',
     'pyngraph/shape.cpp',
     'pyngraph/strides.cpp',
     'pyngraph/coordinate_diff.cpp',
     'pyngraph/axis_set.cpp',
     'pyngraph/axis_vector.cpp',
     'pyngraph/coordinate.cpp',
-    'pyngraph/parameter_vector.cpp',
     'pyngraph/pyngraph.cpp',
     'pyngraph/util.cpp',
-    'pyngraph/result_vector.cpp',
     'pyngraph/ops/util/arithmetic_reduction.cpp',
     'pyngraph/ops/util/binary_elementwise_comparison.cpp',
     'pyngraph/ops/util/op_annotations.cpp',
@@ -172,6 +169,7 @@ sources = [
     'pyngraph/ops/atan.cpp',
     'pyngraph/ops/avg_pool.cpp',
     'pyngraph/ops/broadcast.cpp',
+    'pyngraph/ops/broadcast_distributed.cpp',
     'pyngraph/ops/concat.cpp',
     'pyngraph/ops/constant.cpp',
     'pyngraph/ops/convert.cpp',
@@ -204,6 +202,7 @@ sources = [
     'pyngraph/ops/or.cpp',
     'pyngraph/ops/pad.cpp',
     'pyngraph/ops/parameter.cpp',
+    'pyngraph/ops/passthrough.cpp',
     'pyngraph/ops/power.cpp',
     'pyngraph/ops/regmodule_pyngraph_op.cpp',
     'pyngraph/ops/relu.cpp',
@@ -228,6 +227,7 @@ sources = [
     'pyngraph/ops/softmax.cpp',
     'pyngraph/ops/result.cpp',
     'pyngraph/runtime/backend.cpp',
+    'pyngraph/runtime/executable.cpp',
     'pyngraph/runtime/regmodule_pyngraph_runtime.cpp',
     'pyngraph/runtime/tensor.cpp',
     'pyngraph/passes/manager.cpp',
@@ -264,6 +264,8 @@ library_dirs = [NGRAPH_CPP_LIBRARY_DIR]
 libraries = ['ngraph']
 
 extra_compile_args = []
+if NGRAPH_ONNX_IMPORT_ENABLE in ['TRUE', 'ON', True]:
+    extra_compile_args.append('-DNGRAPH_ONNX_IMPORT_ENABLE')
 
 extra_link_args = []
 
@@ -288,6 +290,18 @@ data_files = [
     ),
 ]
 
+if NGRAPH_ONNX_IMPORT_ENABLE in ['TRUE', 'ON', True]:
+    onnx_sources = [
+        'pyngraph/onnx_import/onnx_import.cpp',
+    ]
+    onnx_sources = [PYNGRAPH_ROOT_DIR + '/' + source for source in onnx_sources]
+    sources = sources + onnx_sources
+
+    package_dir['ngraph.impl.onnx_import'] = (
+        PYNGRAPH_ROOT_DIR + '/ngraph/impl/onnx_import'
+    )
+    packages.append('ngraph.impl.onnx_import')
+
 ext_modules = [
     Extension(
         '_pyngraph',
@@ -296,35 +310,11 @@ ext_modules = [
         define_macros=[('VERSION_INFO', __version__)],
         library_dirs=library_dirs,
         libraries=libraries,
+        extra_compile_args=extra_compile_args,
         extra_link_args=extra_link_args,
         language='c++',
     ),
 ]
-
-if NGRAPH_ONNX_IMPORT_ENABLE in ['TRUE', 'ON', True]:
-    onnx_sources = [
-        'pyngraph/pyngraph_onnx_import.cpp',
-        'pyngraph/onnx_import/onnx_import.cpp',
-    ]
-    onnx_sources = [PYNGRAPH_ROOT_DIR + '/' + source for source in onnx_sources]
-
-    package_dir['ngraph.impl.onnx_import'] = (
-        PYNGRAPH_ROOT_DIR + '/ngraph/impl/onnx_import'
-    )
-    packages.append('ngraph.impl.onnx_import')
-
-    ext_modules.append(
-        Extension(
-            '_pyngraph_onnx_import',
-            sources=onnx_sources,
-            include_dirs=include_dirs,
-            define_macros=[('VERSION_INFO', __version__)],
-            library_dirs=library_dirs,
-            libraries=libraries,
-            extra_link_args=extra_link_args,
-            language='c++',
-        ),
-    )
 
 
 def add_platform_specific_link_args(link_args):
@@ -373,18 +363,14 @@ class BuildExt(build_ext):
         build_ext.build_extensions(self)
 
 
-if sys.platform == 'darwin':
-    # This turns out to be needed when building using Anaconda python on macOS.
-    os.environ['MACOSX_DEPLOYMENT_TARGET'] = '10.9'
-
 with open(os.path.join(PYNGRAPH_ROOT_DIR, 'requirements.txt')) as req:
     requirements = req.read().splitlines()
 
 setup(
     name='ngraph-core',
-    description='nGraph - Intel\'s graph compiler and runtime for Neural Networks',
+    description="nGraph - Intel's graph compiler and runtime for Neural Networks",
     version=__version__,
-    author='Intel',
+    author='Intel Corporation',
     author_email='intelnervana@intel.com',
     url='https://github.com/NervanaSystems/ngraph/',
     license='License :: OSI Approved :: Apache Software License',
@@ -398,4 +384,7 @@ setup(
     setup_requires=['numpy'],
     install_requires=requirements,
     zip_safe=False,
+    extras_require={
+        'plaidml': ['plaidml>=0.5.0'],
+    },
 )

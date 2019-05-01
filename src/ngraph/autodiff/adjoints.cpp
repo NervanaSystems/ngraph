@@ -14,7 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cassert>
 #include <list>
 #include <memory>
 #include <unordered_map>
@@ -35,7 +34,7 @@
 
 using namespace ngraph;
 
-std::shared_ptr<Node> make_zero(const std::shared_ptr<Node>& node)
+std::shared_ptr<Node> make_broadcast_zero(const std::shared_ptr<Node>& node)
 {
     std::shared_ptr<Node> zero = std::make_shared<op::ScalarConstantLike>(node, 0.0);
     std::shared_ptr<Node> bzero = std::make_shared<op::BroadcastLike>(zero, node, AxisSet{});
@@ -45,17 +44,17 @@ std::shared_ptr<Node> make_zero(const std::shared_ptr<Node>& node)
 NodeVector make_zeros(std::shared_ptr<Node> x)
 {
     NodeVector zeros;
-    if (x->get_outputs().size() > 1)
+    if (x->get_output_size() > 1)
     {
         auto goes = op::get_output_elements(x);
         for (size_t i = 0; i < goes.size(); ++i)
         {
-            zeros.push_back(make_zero(goes.at(i)));
+            zeros.push_back(make_broadcast_zero(goes.at(i)));
         }
     }
     else
     {
-        zeros.push_back(make_zero(x));
+        zeros.push_back(make_broadcast_zero(x));
     }
     return zeros;
 }
@@ -69,7 +68,7 @@ autodiff::Adjoints::Adjoints(const NodeVector& ys, const NodeVector& cs)
 
     for (size_t i = 0; i < ys.size(); i++)
     {
-        if (ys.at(i)->get_outputs().size() > 1 || cs.at(i)->get_outputs().size() > 1)
+        if (ys.at(i)->get_output_size() > 1 || cs.at(i)->get_output_size() > 1)
         {
             throw ngraph_error(
                 "Adjoints for multi-output ops aren't supported directly.\nProvide deltas for "
@@ -188,7 +187,7 @@ void autodiff::Adjoints::add_delta_to_slice(const std::shared_ptr<Node>& x,
     auto adjoint_it = m_adjoint_map.find(x.get());
     if (m_adjoint_map.end() == adjoint_it)
     {
-        auto zero = make_zero(x);
+        auto zero = make_broadcast_zero(x);
         NodeVector zeros{
             std::make_shared<op::ReplaceSlice>(zero, delta, lower_bounds, upper_bounds, strides)};
         m_adjoint_map.insert({x.get(), zeros});

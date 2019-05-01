@@ -36,9 +36,12 @@ void op::LRN::validate_and_infer_types()
 
     const PartialShape& input_shape = get_input_partial_shape(0);
 
-    NODE_VALIDATION_ASSERT(
-        this, input_shape.rank().is_dynamic() || static_cast<size_t>(input_shape.rank()) >= 3)
-        << "Argument must have rank >= 3 (argument shape: " << input_shape << ").";
+    NODE_VALIDATION_CHECK(this,
+                          input_shape.rank().is_dynamic() ||
+                              static_cast<size_t>(input_shape.rank()) >= 3,
+                          "Argument must have rank >= 3 (argument shape: ",
+                          input_shape,
+                          ").");
 }
 
 shared_ptr<Node> op::LRN::copy_with_new_args(const NodeVector& new_args) const

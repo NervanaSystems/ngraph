@@ -28,12 +28,12 @@
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
-#include "ngraph/runtime/cpu/op/batch_dot.hpp"
-#include "ngraph/runtime/cpu/op/group_conv.hpp"
+#include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
@@ -261,7 +261,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
                     concated_data, data_order, Shape{data_shape[0] * data_shape[1], data_shape[2]});
             }
             auto new_input_node = data_shape.size() == 2 ? concated_data : input_reshape_node;
-            NGRAPH_ASSERT(new_input_node);
+            NGRAPH_CHECK(new_input_node);
             auto w_reshape_node = std::make_shared<op::Reshape>(
                 weights, AxisVector{1, 0}, Shape{w_shape[1], w_shape[0]});
             auto new_dot = std::make_shared<op::Dot>(new_input_node, w_reshape_node);
@@ -281,7 +281,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
 
                 if (matched_root_node->get_shape().size() != 2)
                 {
-                    NGRAPH_ASSERT(matched_root_node->get_shape().size() == 3);
+                    NGRAPH_CHECK(matched_root_node->get_shape().size() == 3);
                     slice_node = std::make_shared<op::Reshape>(
                         slice_node, AxisVector{0, 1}, matched_root_node->get_shape());
                 }
@@ -306,28 +306,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
             NodeVector params = p.first;
             NodeVector& op_nodes = p.second;
 
-            auto data_node = params.at(Type::DATA);
-            auto weights_node = params.at(Type::WEIGHTS);
-            auto bias_node = params.at(Type::BIAS);
-
-            const auto& data_shape = data_node->get_shape();
-            // construct new op nodes
-            auto data_order = ngraph::get_default_order(data_node->get_shape());
-            auto data_reshape_node = std::make_shared<op::Reshape>(
-                data_node, data_order, Shape{data_shape[0] * data_shape[1], data_shape[2]});
-
-            auto old_weights_reshape_node = op_seg_map.at(op_nodes.at(0)).at(Type::WEIGHTS);
-            auto weights_reshape_node =
-                old_weights_reshape_node->copy_with_new_args({weights_node});
-            auto dot_node = std::make_shared<op::Dot>(data_reshape_node, weights_reshape_node);
-            const auto& dot_shape = dot_node->get_shape();
-
-            auto bias_broadcast_node =
-                std::make_shared<op::Broadcast>(bias_node, dot_shape, AxisSet{0});
-            auto add_node = std::make_shared<op::Add>(dot_node, bias_broadcast_node);
-            const auto& add_shape = add_node->get_shape();
-
-            // we will sort the captured Add(Dot(X, W) + B) as per the the slice ordering of X
+            // we will sort the captured Add(Dot(X, W) + B) as per the slice ordering of X
             // this will simplify the replace_node logic
             auto compare_slices = [&](const std::shared_ptr<Node> node1,
                                       const std::shared_ptr<Node> node2) {
@@ -342,15 +321,48 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
             };
             std::sort(op_nodes.begin(), op_nodes.end(), compare_slices);
 
+            // we fuse all the data slices captured in the pattern to make bigger GEMM call
+            auto fuse_data_slices = [&]() {
+                NodeVector data_slices;
+                for (auto& op : op_nodes)
+                {
+                    auto data_node = op_seg_map.at(op).at(Type::DATA);
+                    data_slices.push_back(data_node);
+                }
+                return std::make_shared<op::Concat>(data_slices, 0);
+            };
+            auto data_node = op_nodes.size() > 1 ? fuse_data_slices() : params.at(Type::DATA);
+            auto weights_node = params.at(Type::WEIGHTS);
+            auto bias_node = params.at(Type::BIAS);
+            auto& data_shape = data_node->get_shape();
+
+            // construct new op nodes
+            auto data_reshape_node =
+                std::make_shared<op::Reshape>(data_node,
+                                              AxisVector{0, 1, 2},
+                                              Shape{data_shape[0] * data_shape[1], data_shape[2]});
+
+            auto old_weights_reshape_node = op_seg_map.at(op_nodes.at(0)).at(Type::WEIGHTS);
+            auto weights_reshape_node =
+                old_weights_reshape_node->copy_with_new_args({weights_node});
+            auto dot_node = std::make_shared<op::Dot>(data_reshape_node, weights_reshape_node);
+            const auto& dot_shape = dot_node->get_shape();
+
+            auto bias_broadcast_node =
+                std::make_shared<op::Broadcast>(bias_node, dot_shape, AxisSet{0});
+            auto add_node = std::make_shared<op::Add>(dot_node, bias_broadcast_node);
+            const auto& add_shape = add_node->get_shape();
+
             size_t num_timesteps = op_nodes.size();
             size_t batch_size = add_shape[0] / num_timesteps;
+            size_t feature_size = add_shape[1];
             // create a slice for each user of the dot op matching the original dot op's output
             for (size_t i = 0, start_index = 0; i < op_nodes.size(); i++, start_index += batch_size)
             {
                 // calculate the lower and upper bounds for the slice of the new fused node
                 // ((<x0 | x1..|xt>*W)+b), which will used to replace the nodes matched in the pattern
                 const Coordinate lower_bounds{start_index, 0};
-                const Coordinate upper_bounds{start_index + batch_size, add_shape[1]};
+                const Coordinate upper_bounds{start_index + batch_size, feature_size};
 
                 auto slice_node = std::make_shared<op::Slice>(add_node, lower_bounds, upper_bounds);
 
@@ -488,13 +500,12 @@ std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
                                                            sconv->get_padding_below(),
                                                            sconv->get_padding_above(),
                                                            sconv->get_data_dilation_strides(),
-                                                           n->get_arguments().size(),
-                                                           n->get_shape());
+                                                           n->get_arguments().size());
 
     return new_conv;
 }
 
-std::shared_ptr<Node> fuse_batch_dot(const std::shared_ptr<Node>& n)
+std::shared_ptr<Node> fuse_batch_mat_mul_transpose(const std::shared_ptr<Node>& n)
 {
     const int num_op_branches = 2;
     std::shared_ptr<pattern::op::Label> input[num_op_branches];
@@ -563,7 +574,7 @@ std::shared_ptr<Node> fuse_batch_dot(const std::shared_ptr<Node>& n)
     }
     if (fuse_input[0] && fuse_input[1])
     {
-        return std::make_shared<op::BatchDot>(
+        return std::make_shared<op::BatchMatMulTranspose>(
             fuse_input[0], fuse_input[1], transpose[0], transpose[1]);
     }
     return {nullptr};
@@ -580,7 +591,7 @@ bool runtime::cpu::pass::CPUBatchFusion::run_on_function(std::shared_ptr<Functio
         {
             if (m_fusion_type & ngraph::pass::DIFFERENTIABLE_FUSIONS)
             {
-                if (auto fused_node = fuse_batch_dot(n))
+                if (auto fused_node = fuse_batch_mat_mul_transpose(n))
                 {
                     func->replace_node(n, fused_node);
                     modified = true;
@@ -588,11 +599,13 @@ bool runtime::cpu::pass::CPUBatchFusion::run_on_function(std::shared_ptr<Functio
             }
             if (m_fusion_type & ngraph::pass::REGULAR_FUSIONS)
             {
+                /*
                 if (auto fused_conv = fuse_group_convolution(n))
                 {
                     func->replace_node(n, fused_conv);
                     modified = true;
                 }
+                */
             }
         }
     }

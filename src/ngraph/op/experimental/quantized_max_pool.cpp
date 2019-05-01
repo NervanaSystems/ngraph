@@ -64,36 +64,58 @@ void op::QuantizedMaxPool::validate_and_infer_types()
     // Make sure batch size and channel count are not zero, and that we have at least one spatial
     // dimension (in other words, that arg has shape NCDi for some Di of rank>0, N != 0, C != 0).
     //
-    NODE_VALIDATION_ASSERT(this, arg_shape.size() >= 3)
-        << "Data input shape does not have rank of at least 3 (data input shape: " << arg_shape
-        << ").";
+    NODE_VALIDATION_CHECK(this,
+                          arg_shape.size() >= 3,
+                          "Data input shape does not have rank of at least 3 (data input shape: ",
+                          arg_shape,
+                          ").");
 
     size_t batch_size = arg_shape[0];
-    NODE_VALIDATION_ASSERT(this, batch_size != 0)
-        << "Data batch size is zero (data input shape: " << arg_shape << ").";
+    NODE_VALIDATION_CHECK(
+        this, batch_size != 0, "Data batch size is zero (data input shape: ", arg_shape, ").");
 
     size_t channel_count = arg_shape[1];
-    NODE_VALIDATION_ASSERT(this, channel_count != 0)
-        << "Channel count is zero (data input shape: " << arg_shape << ").";
+    NODE_VALIDATION_CHECK(
+        this, channel_count != 0, "Channel count is zero (data input shape: ", arg_shape, ").");
 
     size_t spatial_dimension_count = arg_shape.size() - 2;
 
     //
     // Make sure window shape, window movement strides, and padding have same rank as Di.
     //
-    NODE_VALIDATION_ASSERT(this, m_window_shape.size() == spatial_dimension_count)
-        << "Window shape rank does not match number of spatial dimensions (window shape: "
-        << m_window_shape << ", data input shape: " << arg_shape << ").";
-    NODE_VALIDATION_ASSERT(this, m_window_movement_strides.size() == spatial_dimension_count)
-        << "Window movement stride rank does not match number of spatial dimensions (window "
-           "movement strides: "
-        << m_window_movement_strides << ", data input shape: " << arg_shape << ").";
-    NODE_VALIDATION_ASSERT(this, m_padding_below.size() == spatial_dimension_count)
-        << "Below-padding rank does not match number of spatial dimensions (padding below: "
-        << m_padding_below << ", data input shape: " << arg_shape << ").";
-    NODE_VALIDATION_ASSERT(this, m_padding_above.size() == spatial_dimension_count)
-        << "Above-padding rank does not match number of spatial dimensions (padding above: "
-        << m_padding_above << ", data input shape: " << arg_shape << ").";
+    NODE_VALIDATION_CHECK(
+        this,
+        m_window_shape.size() == spatial_dimension_count,
+        "Window shape rank does not match number of spatial dimensions (window shape: ",
+        m_window_shape,
+        ", data input shape: ",
+        arg_shape,
+        ").");
+    NODE_VALIDATION_CHECK(
+        this,
+        m_window_movement_strides.size() == spatial_dimension_count,
+        "Window movement stride rank does not match number of spatial dimensions (window "
+        "movement strides: ",
+        m_window_movement_strides,
+        ", data input shape: ",
+        arg_shape,
+        ").");
+    NODE_VALIDATION_CHECK(
+        this,
+        m_padding_below.size() == spatial_dimension_count,
+        "Below-padding rank does not match number of spatial dimensions (padding below: ",
+        m_padding_below,
+        ", data input shape: ",
+        arg_shape,
+        ").");
+    NODE_VALIDATION_CHECK(
+        this,
+        m_padding_above.size() == spatial_dimension_count,
+        "Above-padding rank does not match number of spatial dimensions (padding above: ",
+        m_padding_above,
+        ", data input shape: ",
+        arg_shape,
+        ").");
 
     //
     // Extract input item shape Di and make sure all dimensions are larger than 0.
@@ -109,10 +131,13 @@ void op::QuantizedMaxPool::validate_and_infer_types()
 
     for (size_t i = 0; i < spatial_dimension_count; i++)
     {
-        NODE_VALIDATION_ASSERT(this, input_item_virtual_shape[i] != 0)
-            << "Data input spatial dimension " << i
-            << " has zero length even after padding (virtual shape of input item: "
-            << input_item_virtual_shape << ").";
+        NODE_VALIDATION_CHECK(this,
+                              input_item_virtual_shape[i] != 0,
+                              "Data input spatial dimension ",
+                              i,
+                              " has zero length even after padding (virtual shape of input item: ",
+                              input_item_virtual_shape,
+                              ").");
     }
 
     //
@@ -120,9 +145,13 @@ void op::QuantizedMaxPool::validate_and_infer_types()
     //
     for (size_t i = 0; i < spatial_dimension_count; i++)
     {
-        NODE_VALIDATION_ASSERT(this, m_window_shape[i] != 0)
-            << "Window shape dimension " << i
-            << " has zero length (window shape: " << m_window_shape << ").";
+        NODE_VALIDATION_CHECK(this,
+                              m_window_shape[i] != 0,
+                              "Window shape dimension ",
+                              i,
+                              " has zero length (window shape: ",
+                              m_window_shape,
+                              ").");
     }
 
     //
@@ -130,10 +159,14 @@ void op::QuantizedMaxPool::validate_and_infer_types()
     //
     for (size_t i = 0; i < spatial_dimension_count; i++)
     {
-        NODE_VALIDATION_ASSERT(this, m_window_shape[i] <= input_item_virtual_shape[i])
-            << "Window shape after padding is larger than the spatial dimensions (window shape: "
-            << m_window_shape << ", virtual shape of input item: " << input_item_virtual_shape
-            << ").";
+        NODE_VALIDATION_CHECK(
+            this,
+            m_window_shape[i] <= input_item_virtual_shape[i],
+            "Window shape after padding is larger than the spatial dimensions (window shape: ",
+            m_window_shape,
+            ", virtual shape of input item: ",
+            input_item_virtual_shape,
+            ").");
     }
 
     //
@@ -143,9 +176,13 @@ void op::QuantizedMaxPool::validate_and_infer_types()
 
     for (size_t i = 0; i < spatial_dimension_count; i++)
     {
-        NODE_VALIDATION_ASSERT(this, m_window_movement_strides[i] != 0)
-            << "Window movement strides dimension " << i
-            << " has zero length (window movement strides: " << m_window_movement_strides << ").";
+        NODE_VALIDATION_CHECK(this,
+                              m_window_movement_strides[i] != 0,
+                              "Window movement strides dimension ",
+                              i,
+                              " has zero length (window movement strides: ",
+                              m_window_movement_strides,
+                              ").");
         output_item_shape.push_back(ceil_div(input_item_virtual_shape[i] - m_window_shape[i] + 1,
                                              m_window_movement_strides[i]));
     }

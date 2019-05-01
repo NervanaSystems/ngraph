@@ -55,7 +55,8 @@ int main()
     t_c->write(&v_c, 0, sizeof(v_c));
 
     // Invoke the function
-    backend->call(f, {t_result}, {t_a, t_b, t_c});
+    auto exec = backend->compile(f);
+    exec->call({t_result}, {t_a, t_b, t_c});
 
     // Get the result
     float r[2][3];

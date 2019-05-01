@@ -208,7 +208,7 @@ TEST(gpu_test, topk_fanout_graph_transform)
     auto r3 = backend->create_tensor(element::f32, out_shape);
 
     auto handle = backend->compile(gpu_f);
-    backend->call_with_validate(handle, {r0, r1, r2, r3}, {a, b, c, d, e});
+    handle->call_with_validate({r0, r1, r2, r3}, {a, b, c, d, e});
 
     EXPECT_EQ((vector<int32_t>{2, 1, 1, 2, 1, 2, 0, 1}), read_vector<int32_t>(r0));
     EXPECT_EQ((vector<int32_t>{2, 1, 1, 2, 1, 2, 0, 1}), read_vector<int32_t>(r1));
@@ -287,7 +287,7 @@ TEST(gpu_test, maxpool_bprop_larger_than_cache)
     // create result deltas tensor and run the backward max pooling operation
     auto dx_t = backend->create_tensor(element::f32, shape_x);
     auto handle = backend->compile(bprop);
-    backend->call_with_validate(handle, {dx_t}, {x_t, dy_t});
+    handle->call_with_validate({dx_t}, {x_t, dy_t});
 
     // expected values should be dy with 0s left inserted
     // for each delta, see test description above for details

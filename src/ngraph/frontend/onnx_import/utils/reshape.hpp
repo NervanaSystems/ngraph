@@ -23,7 +23,7 @@
 
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/node_vector.hpp"
+#include "ngraph/op/util/reshape.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
@@ -40,17 +40,6 @@ namespace ngraph
             /// \return The new node being a 2D matrix representing flattened input node.
             std::shared_ptr<ngraph::Node> flatten(const std::shared_ptr<ngraph::Node>& node,
                                                   int axis);
-
-            /// \brief      Gets the AxisVector filled with monotonic increasing
-            ///             sequence.
-            ///
-            /// \param[in]  data_shape_size  The data shape size.
-            /// \param[in]  start_value      The start_value for sequence. Default equals 0.
-            ///
-            /// \return     The filled AxisVector.
-            ///
-            AxisVector get_default_axis_vector(std::size_t data_shape_size,
-                                               std::size_t start_value = 0);
 
             /// \brief      Infer `output_shape` dimension values.
             ///
@@ -69,15 +58,6 @@ namespace ngraph
             std::vector<std::size_t> infer_dimensions(const std::string& node_name,
                                                       const std::vector<std::size_t>& input_shape,
                                                       const std::vector<std::size_t>& output_shape);
-
-            /// \brief Permute axes according to specified axes_order parameter.
-            ///
-            /// \param node The node which axes we want to permute.
-            /// \param axes_order The permutation of node tensor axes.
-            ///
-            /// \return: New node with permuted axes.
-            std::shared_ptr<ngraph::Node> reorder_axes(const std::shared_ptr<ngraph::Node>& node,
-                                                       std::vector<std::size_t> axes_order);
 
             /// \brief Return transposed tensor (with axes in reversed order).
             ///
@@ -110,36 +90,17 @@ namespace ngraph
                                                    const std::size_t start_axis,
                                                    const std::size_t end_axis);
 
-            /// \brief      Change shape of input tensor.
+            /// \brief      Expands node tensor shape with empty axis at
+            ///             specified position.
             ///
-            /// \param[in]  node   The node which shape will be changed.
-            /// \param[in]  shape  The new shape for input tensor.
+            /// \param[in]  node  The node to be expanded.
+            /// \param[in]  axis  The position in the expanded axes where the
+            ///                   new axis is placed.
             ///
-            /// \return     The node representing reshaped input tensor.
+            /// \return     The node with added empty axis.
             ///
-            std::shared_ptr<ngraph::Node> reshape(const std::shared_ptr<ngraph::Node>& node,
-                                                  const AxisVector& axis_order,
-                                                  const Shape& shape);
-
-            inline std::shared_ptr<ngraph::Node> reshape(const std::shared_ptr<ngraph::Node>& node,
-                                                         const Shape& shape)
-            {
-                return reshape(node, get_default_axis_vector(node->get_shape().size()), shape);
-            }
-
-            /// \brief      Expands node tensor shape with empty axes.
-            ///
-            /// \param[in]  node                  The node to be expanded.
-            /// \param[in]  outermost_axes_count  The number of added outermost axes.
-            ///                                   At the front of the shape.
-            /// \param[in]  innermost_axes_count  The number of added innermost axes.
-            ///                                   At the end of the shape.
-            ///
-            /// \return     The node with added empty axes.
-            ///
-            std::shared_ptr<ngraph::Node> add_empty_axes(const std::shared_ptr<ngraph::Node>& node,
-                                                         std::size_t outermost_axes_count = 1,
-                                                         std::size_t innermost_axes_count = 0);
+            std::shared_ptr<ngraph::Node> expand_dims(const std::shared_ptr<ngraph::Node>& node,
+                                                      std::size_t axis = 0);
 
             /// \brief      Split node on specified axis into multiple parts.
             ///

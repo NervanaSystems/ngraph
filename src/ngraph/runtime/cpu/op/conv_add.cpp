@@ -29,9 +29,14 @@ void op::util::validate_conv_shapes(const Node* node,
                                     const Shape& data_shape,
                                     const Shape& filters_shape)
 {
-    NODE_VALIDATION_ASSERT(node, data_shape[1] == filters_shape[1])
-        << "Number of channels for data and filters do not match (data num channels: "
-        << data_shape[1] << ", filters num channels: " << filters_shape[1] << ").";
+    NODE_VALIDATION_CHECK(
+        node,
+        data_shape[1] == filters_shape[1],
+        "Number of channels for data and filters do not match (data num channels: ",
+        data_shape[1],
+        ", filters num channels: ",
+        filters_shape[1],
+        ").");
 }
 
 op::ConvolutionAdd::ConvolutionAdd(const std::shared_ptr<op::Convolution>& conv,
@@ -79,9 +84,14 @@ op::ConvolutionAdd::ConvolutionAdd(const std::shared_ptr<Node>& data_batch,
     //
     // Make sure data batch and filter element types match.
     //
-    NODE_VALIDATION_ASSERT(this, data_batch_et == filters_et)
-        << "Element types for data_batch and filters do not match (data batch element type: "
-        << data_batch_et << ", filters element type: " << filters_et << ").";
+    NODE_VALIDATION_CHECK(
+        this,
+        data_batch_et == filters_et,
+        "Element types for data_batch and filters do not match (data batch element type: ",
+        data_batch_et,
+        ", filters element type: ",
+        filters_et,
+        ").");
 
     util::validate_conv_shapes(this, data_batch_shape, filters_shape);
     set_output_type(0,
@@ -105,8 +115,11 @@ op::ConvolutionAdd::ConvolutionAdd(const std::shared_ptr<Node>& data_batch,
 
 std::shared_ptr<Node> op::ConvolutionAdd::copy_with_new_args(const NodeVector& new_args) const
 {
-    NODE_VALIDATION_ASSERT(this, new_args.size() == 3)
-        << "New arg size is not 3 (new args size: " << new_args.size() << ").";
+    NODE_VALIDATION_CHECK(this,
+                          new_args.size() == 3,
+                          "New arg size is not 3 (new args size: ",
+                          new_args.size(),
+                          ").");
 
     return std::shared_ptr<Node>(new ConvolutionAdd(new_args.at(0),
                                                     new_args.at(1),

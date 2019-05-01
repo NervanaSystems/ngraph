@@ -30,27 +30,26 @@
 #include "ngraph/op/sum.hpp"
 #include "ngraph/util.hpp"
 
-#define TI(x) std::type_index(typeid(x))
+using namespace std;
+using namespace ngraph;
 
-#define HANDLER_DECL(x) static bool x(const std::shared_ptr<ngraph::Node>& node)
+#define TI(x) type_index(typeid(x))
 
-HANDLER_DECL(replace_broadcast_like)
+static bool replace_broadcast_like(const std::shared_ptr<ngraph::Node>& node)
 {
     // Replace a broadcast like with the broadcast to eliminate the pseudo-dependency on the "like" argument
-    auto broadcast_like = std::static_pointer_cast<ngraph::op::BroadcastLike>(node);
-    ngraph::replace_node(
-        node,
-        std::make_shared<ngraph::op::Broadcast>(broadcast_like->get_argument(0),
-                                                broadcast_like->get_broadcast_shape(),
-                                                broadcast_like->get_broadcast_axes()));
+    auto broadcast_like = static_pointer_cast<op::BroadcastLike>(node);
+    replace_node(node,
+                 make_shared<op::Broadcast>(broadcast_like->get_argument(0),
+                                            broadcast_like->get_broadcast_shape(),
+                                            broadcast_like->get_broadcast_axes()));
     return true;
 }
 
-static const std::unordered_map<std::type_index,
-                                std::function<bool(const std::shared_ptr<ngraph::Node>&)>>
-    dispatcher{{TI(ngraph::op::BroadcastLike), &replace_broadcast_like}};
+static const unordered_map<type_index, function<bool(const shared_ptr<Node>&)>> dispatcher{
+    {TI(op::BroadcastLike), &replace_broadcast_like}};
 
-bool ngraph::pass::LikeReplacement::run_on_function(std::shared_ptr<ngraph::Function> function)
+bool pass::LikeReplacement::run_on_function(shared_ptr<Function> function)
 {
     bool clobbered = false;
 
@@ -66,10 +65,10 @@ bool ngraph::pass::LikeReplacement::run_on_function(std::shared_ptr<ngraph::Func
 
         // Here we're checking on a common base class of a family of template classes,
         // which is more than type info can handle.
-        auto sclb = std::dynamic_pointer_cast<ngraph::op::ScalarConstantLikeBase>(n);
+        auto sclb = dynamic_pointer_cast<op::ScalarConstantLikeBase>(n);
         if (sclb != nullptr)
         {
-            ngraph::replace_node(sclb, sclb->as_constant());
+            replace_node(sclb, sclb->as_constant());
             clobbered = true;
         }
     }

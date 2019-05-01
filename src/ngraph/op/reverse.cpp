@@ -40,9 +40,13 @@ void op::Reverse::validate_and_infer_types()
         // Make sure all reversed axis indices are valid.
         for (size_t axis : m_reversed_axes)
         {
-            NODE_VALIDATION_ASSERT(this, axis < size_t(input_rank))
-                << "Reverse axis (" << axis << ") is out of bounds (argument shape: " << input_shape
-                << ").";
+            NODE_VALIDATION_CHECK(this,
+                                  axis < size_t(input_rank),
+                                  "Reverse axis (",
+                                  axis,
+                                  ") is out of bounds (argument shape: ",
+                                  input_shape,
+                                  ").");
         }
     }
 

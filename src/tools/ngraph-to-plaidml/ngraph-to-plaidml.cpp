@@ -142,7 +142,9 @@ OPTIONS
         return EXIT_FAILURE;
     }
 
-    backend->save(f, output, format);
+    auto exec = backend->compile(f);
+    static_cast<ngraph::runtime::plaidml::PlaidML_Executable*>(exec.get())->save(output, format);
     std::cerr << "Wrote output to " << output << "\n";
+
     return EXIT_SUCCESS;
 }

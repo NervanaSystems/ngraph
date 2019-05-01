@@ -47,24 +47,10 @@ namespace ngraph
             }
 
             const std::string& get_type() const { return m_type; }
-            runtime::Handle compile(const std::shared_ptr<Function>& function) const
+            std::shared_ptr<runtime::Executable>
+                compile(const std::shared_ptr<Function>& function) const
             {
                 return get().compile(function);
-            }
-
-            bool call(const std::shared_ptr<Function>& function,
-                      const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                      const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) const
-            {
-                return get().call(function, outputs, inputs);
-            }
-
-            bool call_with_validate(
-                const std::shared_ptr<Function>& function,
-                const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) const
-            {
-                return get().call_with_validate(function, outputs, inputs);
             }
 
         private:

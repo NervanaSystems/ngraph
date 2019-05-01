@@ -40,10 +40,16 @@ void op::util::LogicalReduction::validate_and_infer_types()
 
         for (auto axis : m_reduction_axes)
         {
-            NODE_VALIDATION_ASSERT(this, axis < size_t(input_rank))
-                << "Reduction axis (" << axis << ") is out of bounds "
-                << "(argument shape: " << input_shape << ", reduction axes: " << m_reduction_axes
-                << ")";
+            NODE_VALIDATION_CHECK(this,
+                                  axis < size_t(input_rank),
+                                  "Reduction axis (",
+                                  axis,
+                                  ") is out of bounds ",
+                                  "(argument shape: ",
+                                  input_shape,
+                                  ", reduction axes: ",
+                                  m_reduction_axes,
+                                  ")");
         }
 
         for (size_t i = 0; i < size_t(input_rank); i++)
@@ -57,8 +63,9 @@ void op::util::LogicalReduction::validate_and_infer_types()
         result_shape = PartialShape(dims);
     }
 
-    NODE_VALIDATION_ASSERT(this, get_input_element_type(0).compatible(element::boolean))
-        << "Input element type must be boolean.";
+    NODE_VALIDATION_CHECK(this,
+                          get_input_element_type(0).compatible(element::boolean),
+                          "Input element type must be boolean.");
 
     set_output_type(0, element::boolean, result_shape);
 }

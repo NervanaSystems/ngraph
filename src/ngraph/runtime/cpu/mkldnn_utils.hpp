@@ -17,7 +17,6 @@
 #pragma once
 
 #include <mkldnn.hpp>
-
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/batch_norm.hpp"
@@ -34,7 +33,9 @@ namespace ngraph
             namespace mkldnn_utils
             {
                 extern mkldnn::engine global_cpu_engine;
-
+#ifndef _WIN32
+                extern "C" void mkl_serv_free_buffers();
+#endif
                 mkldnn::memory::format
                     CreateNativeDataFormat(const ngraph::runtime::cpu::LayoutDescriptor& layout);
                 mkldnn::memory::format CreateNativeDataFormat(const Shape& shape);
@@ -50,6 +51,7 @@ namespace ngraph
                                                               bool is_output,
                                                               mkldnn::memory::format format);
                 bool is_perm_sorted(const Strides& a, const AxisVector& perm);
+                bool can_create_mkldnn_md(const ngraph::element::Type type);
                 bool can_create_mkldnn_md(const Shape& dims,
                                           const Strides& strides,
                                           const ngraph::element::Type type);
@@ -74,6 +76,17 @@ namespace ngraph
                 bool can_use_mkldnn_batchnorm_fprop(const ngraph::Node* node);
                 bool can_use_mkldnn_batchnorm_bprop(const ngraph::Node* node);
 
+                /*  
+                Intel(R) MKL-DNN supports the Winograd algorithm for convolutions with the following sizes:
+                2D convolution (i.e. spatial depth d=1), kernel sizes kh=3,kw=3. strides sh=sw=1.
+                Inference - Based on convolution sizes, MKLDNN chooses between two different tile sizes F(2x2, 3x3) or 
+                F(4x4, 3x3)(refer to Winograd paper for more informartion on tile sizes). Training - Uses F(4x4, 3x3) winograd.
+                */
+                mkldnn::algorithm get_conv_algo();
+
+                // Placeholder for when "auto" support is added for deconv
+                mkldnn::algorithm get_deconv_algo();
+
                 bool use_mkldnn_kernel(const ngraph::Node* node);
                 void assign_mkldnn_kernel(Node* node);
 
@@ -82,7 +95,6 @@ namespace ngraph
                 std::map<element::Type, const std::string>& get_mkldnn_data_type_string_map();
                 std::map<mkldnn::memory::format, const std::string>& get_mkldnn_format_string_map();
                 std::set<mkldnn::memory::format>& get_filter_formats();
-
                 template <typename T>
                 bool can_use_mkldnn_conv(ngraph::Node* node)
                 {
@@ -94,15 +106,48 @@ namespace ngraph
                         if (s != 1)
                             return false;
                     }
-                    if (arg0_rank != 4 && arg0_rank != 5)
+                    // MKLDNN doesnt support negative padding
+                    for (auto s : convolution->get_padding_above())
                     {
-                        return false;
-                    }
-                    if (node->get_input_element_type(0) != element::f32)
-                    {
-                        return false;
+                        if (s < 0)
+                        {
+                            return false;
+                        }
                     }
 
+                    for (auto s : convolution->get_padding_below())
+                    {
+                        if (s < 0)
+                        {
+                            return false;
+                        }
+                    }
+
+                    if (arg0_rank != 3 && arg0_rank != 4 && arg0_rank != 5)
+                    {
+                        return false;
+                    }
+                    // Data
+                    if (node->get_input_element_type(0) != element::f32 &&
+                        node->get_input_element_type(0) != element::i8 &&
+                        node->get_input_element_type(0) != element::u8)
+                    {
+                        return false;
+                    }
+                    // Weights
+                    if (node->get_input_element_type(1) != element::f32 &&
+                        node->get_input_element_type(1) != element::i8)
+                    {
+                        return false;
+                    }
+                    // Outputs
+                    if (node->get_output_element_type(0) != element::f32 &&
+                        node->get_output_element_type(0) != element::i8 &&
+                        node->get_output_element_type(0) != element::u8 &&
+                        node->get_output_element_type(0) != element::i32)
+                    {
+                        return false;
+                    }
                     return true;
                 }
             }

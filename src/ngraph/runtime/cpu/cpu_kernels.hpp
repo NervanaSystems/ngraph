@@ -127,6 +127,7 @@ namespace ngraph
     class AxisSet;
     class AxisVector;
     class Coordinate;
+    class CoordinateDiff;
     class Shape;
     class Strides;
 
@@ -141,8 +142,8 @@ namespace ngraph
                                     float* pad_value,
                                     const Shape& input_shape,
                                     const Shape& output_shape,
-                                    const Shape& padding_below,
-                                    const Shape& padding_above,
+                                    const CoordinateDiff& padding_below,
+                                    const CoordinateDiff& padding_above,
                                     int arena);
 
                 void reduce_sum_all_1d_float32(float* input,
@@ -217,6 +218,12 @@ namespace ngraph
                                           const Coordinate& upper_bounds,
                                           const Strides& slice_strides,
                                           int arena);
+
+                template <typename ElementType>
+                void erf(void* input0, void* output, size_t count, int arena);
+
+                template <typename ElementType>
+                void reference_erf(void* arg, void* out, size_t count);
             }
         }
     }

@@ -30,94 +30,93 @@
 #include "ngraph/util.hpp"
 #include "nop_elimination.hpp"
 
+using namespace std;
+using namespace ngraph;
+
 #define TI(x) std::type_index(typeid(x))
 
-#define HANDLER_DECL(x) static bool x(const std::shared_ptr<ngraph::Node>& node)
-
-HANDLER_DECL(eliminate_pad)
+static bool eliminate_pad(const std::shared_ptr<Node>& node)
 {
-    auto pad = std::static_pointer_cast<ngraph::op::Pad>(node);
+    auto pad = std::static_pointer_cast<op::Pad>(node);
     if (pad->get_input_shape(0) == pad->get_output_shape(0))
     {
-        ngraph::replace_node(node, node->get_argument(0));
+        replace_node(node, node->get_argument(0));
         return true;
     }
     return false;
 }
 
-HANDLER_DECL(eliminate_sum)
+static bool eliminate_sum(const std::shared_ptr<Node>& node)
 {
-    auto sum = std::static_pointer_cast<ngraph::op::Sum>(node);
+    auto sum = std::static_pointer_cast<op::Sum>(node);
     if (sum->get_reduction_axes().empty())
     {
-        ngraph::replace_node(node, node->get_argument(0));
+        replace_node(node, node->get_argument(0));
         return true;
     }
     return false;
 }
 
-HANDLER_DECL(eliminate_convert)
+static bool eliminate_convert(const std::shared_ptr<Node>& node)
 {
-    auto convert = std::static_pointer_cast<ngraph::op::Convert>(node);
+    auto convert = std::static_pointer_cast<op::Convert>(node);
     if (convert->get_convert_element_type() == convert->get_argument(0)->get_element_type())
     {
-        ngraph::replace_node(node, node->get_argument(0));
+        replace_node(node, node->get_argument(0));
         return true;
     }
     return false;
 }
 
-HANDLER_DECL(eliminate_slice)
+static bool eliminate_slice(const std::shared_ptr<Node>& node)
 {
-    auto slice = std::static_pointer_cast<ngraph::op::Slice>(node);
+    auto slice = std::static_pointer_cast<op::Slice>(node);
     if (slice->get_input_shape(0) == slice->get_output_shape(0))
     {
-        ngraph::replace_node(node, node->get_argument(0));
+        replace_node(node, node->get_argument(0));
         return true;
     }
     return false;
 }
 
-HANDLER_DECL(replace_broadcast_like)
+static bool replace_broadcast_like(const std::shared_ptr<Node>& node)
 {
     // Replace a broadcast like with the broadcast to eliminate the pseudo-dependency on the "like" argument
-    auto broadcast_like = std::static_pointer_cast<ngraph::op::BroadcastLike>(node);
-    ngraph::replace_node(
-        node,
-        std::make_shared<ngraph::op::Broadcast>(broadcast_like->get_argument(0),
-                                                broadcast_like->get_broadcast_shape(),
-                                                broadcast_like->get_broadcast_axes()));
+    auto broadcast_like = std::static_pointer_cast<op::BroadcastLike>(node);
+    replace_node(node,
+                 std::make_shared<op::Broadcast>(broadcast_like->get_argument(0),
+                                                 broadcast_like->get_broadcast_shape(),
+                                                 broadcast_like->get_broadcast_axes()));
     return true;
 }
 
-HANDLER_DECL(eliminate_broadcast)
+static bool eliminate_broadcast(const std::shared_ptr<Node>& node)
 {
-    auto broadcast = std::static_pointer_cast<ngraph::op::Broadcast>(node);
+    auto broadcast = std::static_pointer_cast<op::Broadcast>(node);
     if (broadcast->get_input_shape(0) == broadcast->get_output_shape(0))
     {
-        ngraph::replace_node(node, node->get_argument(0));
+        replace_node(node, node->get_argument(0));
         return true;
     }
     return false;
 }
 
-HANDLER_DECL(eliminate_stop_gradient)
+static bool eliminate_stop_gradient(const std::shared_ptr<Node>& node)
 {
-    ngraph::replace_node(node, node->get_argument(0));
+    replace_node(node, node->get_argument(0));
     return true;
 }
 
-static const std::unordered_map<std::type_index,
-                                std::function<bool(const std::shared_ptr<ngraph::Node>&)>>
-    dispatcher{{TI(ngraph::op::Pad), &eliminate_pad},
-               {TI(ngraph::op::Sum), &eliminate_sum},
-               {TI(ngraph::op::Convert), &eliminate_convert},
-               {TI(ngraph::op::Slice), &eliminate_slice},
-               {TI(ngraph::op::StopGradient), &eliminate_stop_gradient},
-               {TI(ngraph::op::BroadcastLike), &replace_broadcast_like},
-               {TI(ngraph::op::Broadcast), &eliminate_broadcast}};
+static const std::unordered_map<std::type_index, std::function<bool(const std::shared_ptr<Node>&)>>
+    dispatcher{{TI(op::Pad), &eliminate_pad},
+               {TI(op::Sum), &eliminate_sum},
+               {TI(op::Convert), &eliminate_convert},
+               {TI(op::Slice), &eliminate_slice},
+               {TI(op::StopGradient), &eliminate_stop_gradient},
+               {TI(op::BroadcastLike), &replace_broadcast_like},
+               {TI(op::Broadcast), &eliminate_broadcast}};
 
-bool ngraph::pass::NopElimination::run_on_function(std::shared_ptr<ngraph::Function> function)
+bool pass::NopElimination::run_on_function(std::shared_ptr<Function> function)
 {
     bool clobbered = false;
 
@@ -133,10 +132,10 @@ bool ngraph::pass::NopElimination::run_on_function(std::shared_ptr<ngraph::Funct
 
         // Here we're checking on a common base class of a family of template classes,
         // which is more than type info can handle.
-        auto sclb = std::dynamic_pointer_cast<ngraph::op::ScalarConstantLikeBase>(n);
+        auto sclb = std::dynamic_pointer_cast<op::ScalarConstantLikeBase>(n);
         if (sclb != nullptr)
         {
-            ngraph::replace_node(sclb, sclb->as_constant());
+            replace_node(sclb, sclb->as_constant());
             clobbered = true;
         }
     }

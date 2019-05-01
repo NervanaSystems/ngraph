@@ -51,7 +51,7 @@ NGRAPH_TEST(${BACKEND_NAME}, argmin_trivial)
     auto result = backend->create_tensor(element::i32, rshape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<int>{3, 2, 1}), read_vector<int>(result));
 }
 
@@ -88,7 +88,7 @@ NGRAPH_TEST(${BACKEND_NAME}, argmin_4D_axis_3_i64)
                   .get_vector());
     auto result = backend->create_tensor(element::i64, rshape);
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((test::NDArray<int64_t, 3>({{{0, 4, 1, 1, 3},   // ch0
                                            {4, 1, 3, 2, 1}},  //
                                           {{0, 1, 0, 2, 0},   // ch1
@@ -130,7 +130,7 @@ NGRAPH_TEST(${BACKEND_NAME}, argmin_4D_axis_3)
                   .get_vector());
     auto result = backend->create_tensor(element::i32, rshape);
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((test::NDArray<int, 3>({{{0, 4, 1, 1, 3},   // ch0
                                        {4, 1, 3, 2, 1}},  //
                                       {{0, 1, 0, 2, 0},   // ch1
@@ -154,7 +154,7 @@ NGRAPH_TEST(${BACKEND_NAME}, argmax_trivial)
     auto result = backend->create_tensor(element::i32, rshape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<int>{1, 3, 0}), read_vector<int>(result));
 }
 
@@ -189,7 +189,7 @@ NGRAPH_TEST(${BACKEND_NAME}, argmax_3D_axis_0) // Along Channels
     auto result = backend->create_tensor(element::i32, rshape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((test::NDArray<int, 2>({{0, 1},  //r0
                                       {0, 0},  //r1
                                       {1, 0},  //r2
@@ -228,7 +228,7 @@ NGRAPH_TEST(${BACKEND_NAME}, argmax_3D_axis_1) // Along Height
     auto result = backend->create_tensor(element::i32, rshape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((test::NDArray<int, 2>({{1, 1}, //
                                       {1, 3}, //
                                       {3, 3}})
@@ -266,7 +266,7 @@ NGRAPH_TEST(${BACKEND_NAME}, argmax_3D_axis_2) // Along Width
     auto result = backend->create_tensor(element::i32, rshape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((test::NDArray<int, 2>({{0, 0, 1, 1},  //
                                       {1, 0, 0, 1},  //
                                       {0, 0, 0, 0}}) //
@@ -313,7 +313,7 @@ NGRAPH_TEST(${BACKEND_NAME}, argmax_4D_axis_3)
     auto result = backend->create_tensor(element::i32, rshape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((test::NDArray<int, 3>({{{3, 1, 0, 0, 1}, {3, 2, 0, 0, 0}},  //ch0
                                       {{1, 2, 4, 3, 0}, {0, 1, 2, 0, 4}}}) //ch1
                    .get_vector()),
@@ -335,7 +335,7 @@ NGRAPH_TEST(${BACKEND_NAME}, argmin_trivial_in_i32)
     auto result = backend->create_tensor(element::i32, rshape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<int>{3, 2, 1}), read_vector<int>(result));
 }
 
@@ -376,7 +376,7 @@ NGRAPH_TEST(${BACKEND_NAME}, argmax_4D_axis_3_i64_in_i32)
     auto result = backend->create_tensor(element::i64, rshape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((test::NDArray<int64_t, 3>({{{3, 1, 0, 0, 1}, {3, 2, 0, 0, 0}},  //ch0
                                           {{1, 2, 4, 3, 0}, {0, 1, 2, 0, 4}}}) //ch1
                    .get_vector()),
@@ -398,6 +398,6 @@ NGRAPH_TEST(${BACKEND_NAME}, argmin_trivial_in_double)
     auto result = backend->create_tensor(element::i32, rshape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<int32_t>{3, 2, 1}), read_vector<int32_t>(result));
 }

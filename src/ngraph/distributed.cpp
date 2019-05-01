@@ -14,37 +14,36 @@
 // limitations under the License.
 //*****************************************************************************
 
-#ifdef NGRAPH_DISTRIBUTED
-
-#include <mlsl.hpp>
-
 #include "ngraph/distributed.hpp"
+#include "ngraph/distributed/mlsl.hpp"
+#include "ngraph/distributed/null.hpp"
+#include "ngraph/distributed/open_mpi.hpp"
+#include "ngraph/log.hpp"
 
 using namespace ngraph;
 
-ngraph::Distributed::Distributed()
+static std::unique_ptr<DistributedInterface> s_distributed_interface;
+
+void ngraph::set_distributed_interface(std::unique_ptr<DistributedInterface> distributed_interface)
 {
-    if (!MLSL::Environment::GetEnv().IsInitialized())
+    NGRAPH_DEBUG << "Setting distributed interfsce to: " << distributed_interface->get_name();
+    s_distributed_interface = std::move(distributed_interface);
+}
+
+DistributedInterface* ngraph::get_distributed_interface()
+{
+    if (0 == s_distributed_interface)
     {
-        MLSL::Environment::GetEnv().Init(nullptr, nullptr);
-    }
-}
-
-ngraph::Distributed::~Distributed()
-{
-    if (MLSL::Environment::GetEnv().IsInitialized())
-    {
-        MLSL::Environment::GetEnv().Finalize();
-    }
-}
-
-size_t ngraph::Distributed::get_size() const
-{
-    return MLSL::Environment::GetEnv().GetProcessCount();
-}
-
-size_t ngraph::Distributed::get_rank() const
-{
-    return MLSL::Environment::GetEnv().GetProcessIdx();
-}
+#ifdef NGRAPH_DISTRIBUTED_OMPI_ENABLE
+        set_distributed_interface(std::unique_ptr<DistributedInterface>(
+            new ngraph::distributed::OpenMPIDistributedInterface()));
+#elif defined(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
+        set_distributed_interface(std::unique_ptr<DistributedInterface>(
+            new ngraph::distributed::MLSLDistributedInterface()));
+#else
+        set_distributed_interface(std::unique_ptr<DistributedInterface>(
+            new ngraph::distributed::NullDistributedInterface()));
 #endif
+    }
+    return s_distributed_interface.get();
+}

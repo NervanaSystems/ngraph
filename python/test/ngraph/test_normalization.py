@@ -21,7 +21,7 @@ import ngraph as ng
 from test.ngraph.util import get_runtime
 
 
-@pytest.config.gpu_skip(reason='Not implemented')
+@pytest.mark.skip_on_gpu
 def test_lrn():
     input_image_shape = (2, 3, 2, 1)
     input_image = np.arange(int(np.prod(input_image_shape))).reshape(input_image_shape).astype('f')
