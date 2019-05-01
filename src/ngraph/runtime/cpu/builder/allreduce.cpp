@@ -33,8 +33,8 @@ namespace ngraph
                 static int call_seq = 0;
 
                 auto& functors = external_function->get_functors();
-                auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
                 auto count = static_cast<int>(out[0].get_size());
                 auto data_type = args[0].get_element_type().get_type_enum();
 
@@ -48,10 +48,12 @@ namespace ngraph
                     node->get_friendly_name().c_str(),
                     count);
 
-                auto functor = [&, count, data_type](CPURuntimeContext* ctx,
-                                                     CPUExecutionContext* ectx) {
-                    get_distributed_interface()->all_reduce(
-                        arg_tensor, out_tensor, data_type, count);
+                auto functor = [&, count, data_type, arg_buffer_index, out_buffer_index](
+                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    get_distributed_interface()->all_reduce(ctx->buffer_data[arg_buffer_index],
+                                                            ctx->buffer_data[out_buffer_index],
+                                                            data_type,
+                                                            count);
                 };
                 functors.emplace_back(functor);
             }
