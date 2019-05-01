@@ -53,7 +53,6 @@ namespace ngraph
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto& functors = external_function->get_functors();
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
 
                     auto conv_desc =
