@@ -18,7 +18,7 @@
 import numpy as np
 
 from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Function, Node, \
-    NodeVector, Shape, Strides
+    Shape, Strides
 
 from ngraph.impl.op import Abs, Acos, Add, And, Asin, ArgMax, ArgMin, Atan, AvgPool, \
     BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Concat, Constant, Convert, \
@@ -779,7 +779,7 @@ def concat(nodes, axis, name=None):  # type: (List[Node], int, str) -> Node
     :param name: The optional new name for output node.
     :return: Return new node that is a concatenation of input nodes.
     """
-    return Concat(NodeVector(nodes), axis)
+    return Concat(nodes, axis)
 
 
 @nameable_op

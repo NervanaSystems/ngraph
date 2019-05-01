@@ -16,7 +16,6 @@
 
 #include "null_node.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/node_vector.hpp"
 
 namespace ngraph
 {

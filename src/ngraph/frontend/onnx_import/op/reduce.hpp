@@ -19,7 +19,7 @@
 #include <memory>
 
 #include "core/node.hpp"
-#include "ngraph/node_vector.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/log.hpp"
