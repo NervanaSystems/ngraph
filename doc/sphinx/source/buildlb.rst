@@ -44,8 +44,8 @@ compatible with a gcc 4.8-based build.)
 The ``default`` build
 ---------------------
 
-Running ``cmake`` with no build flags defaults to the following settings; adjust 
-as needed: 
+Running ``cmake`` with no build flags defaults to the following settings; see
+the ``CMakeLists.txt`` file for other experimental options' details: 
 
 .. code-block:: console 
 
@@ -68,6 +68,7 @@ as needed:
    -- NGRAPH_PLAIDML_ENABLE:           OFF
    -- NGRAPH_DISTRIBUTED_ENABLE:       OFF
 
+
 .. important:: The default :program:`cmake` procedure (no build flags) will  
    install ``ngraph_dist`` to an OS-level location like ``/usr/bin/ngraph_dist``
    or ``/usr/lib/ngraph_dist``. Here we specify how to build locally to the
@@ -80,29 +81,16 @@ paths on that system. See the :file:`ngraph/CMakeLists.txt` file to change or
 customize the default CMake procedure.
 
 
-Install steps
--------------
+Build steps
+-----------
 
 .. _ubuntu:
 
-Ubuntu 16.04
-~~~~~~~~~~~~
+Ubuntu LTS
+~~~~~~~~~~
 
 The process documented here will work on Ubuntu\* 16.04 (LTS) or on Ubuntu 
 18.04 (LTS).
-
-#. (Optional) Create something like ``/opt/libraries`` and (with sudo), 
-   give ownership of that directory to your user. Creating such a placeholder 
-   can be useful if you'd like to have a local reference for APIs and 
-   documentation, or if you are a developer who wants to experiment with 
-   how to :doc:`core/constructing-graphs/execute` using resources available through the 
-   code base.
-
-   .. code-block:: console
-
-      $ sudo mkdir -p /opt/libraries
-      $ sudo chown -R username:username /opt/libraries
-      $ cd /opt/libraries
 
 #. Clone the `NervanaSystems` ``ngraph`` repo:
 
@@ -160,18 +148,6 @@ CentOS 7.4
 ~~~~~~~~~~
 
 The process documented here will work on CentOS 7.4.
-
-#. (Optional) Create something like ``/opt/libraries`` and (with sudo), 
-   give ownership of that directory to your user. Creating such a placeholder 
-   can be useful if you'd like to have a local reference for APIs and 
-   documentation, or if you are a developer who wants to experiment with 
-   how to :doc:`core/constructing-graphs/execute` using resources available through the 
-   code base.
-
-   .. code-block:: console
-
-      $ sudo mkdir -p /opt/libraries
-      $ sudo chown -R username:username /opt/libraries
 
 #. Update the system with :command:`yum` and issue the following commands: 
    
@@ -244,36 +220,11 @@ To perform unit tests on the install:
       $ make check
 
 
-Adding framework support
-========================
-
-After building and installing nGraph on your system, there are two likely 
-paths for what you'll want to do next: either compile a framework to run a DL 
-training model, or load an import of an "already-trained" model for inference 
-on an Intel nGraph-enabled backend.
-
-For the former case, this early |version|, :doc:`frameworks/index`, 
-can help you get started with a training a model with a supported framework or 
-companion tool. 
-
-* :doc:`MXNet<frameworks/tensorflow_integ>` framework,  
-* :doc:`TensorFlow<frameworks/mxnet_integ>` framework,
-* :doc:`PaddlePaddle<frameworks/paddle_integ>` framework, or
-* :doc:`ONNX<frameworks/onnx_integ>` and the ONNXIFI tool. 
-
-For the latter case, if you've followed a tutorial from `ONNX`_, and you have an 
-exported, serialized model, you can skip the section on frameworks and go 
-directly to our :doc:`core/constructing-graphs/import` documentation. 
-
-Please keep in mind that both of these are under continuous development, and will 
-be updated frequently in the coming months. Stay tuned!  
-
-
 .. _doxygen: https://www.stack.nl/~dimitri/doxygen/
 .. _Sphinx:  http://www.sphinx-doc.org/en/stable/
 .. _breathe: https://breathe.readthedocs.io/en/latest/
 .. _llvm.org: https://www.llvm.org 
 .. _NervanaSystems: https://github.com/NervanaSystems/ngraph/blob/master/README.md
 .. _ONNX: http://onnx.ai
-.. _website docs: http://ngraph.nervanasys.com/docs/latest/
+.. _website docs: https://ngraph.nervanasys.com/docs/latest/
 .. _googletest framework: https://github.com/google/googletest.git

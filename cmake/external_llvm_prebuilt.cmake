@@ -21,17 +21,34 @@ find_package(ZLIB REQUIRED)
 # Override default LLVM binaries
 if(NOT DEFINED LLVM_TARBALL_URL)
     if(APPLE)
-        set(LLVM_TARBALL_URL https://releases.llvm.org/5.0.2/clang+llvm-5.0.2-x86_64-apple-darwin.tar.xz)
+        set(NGRAPH_LLVM_VERSION 8.0.0)
+        set(LLVM_TARBALL_URL http://releases.llvm.org/${NGRAPH_LLVM_VERSION}/clang+llvm-${NGRAPH_LLVM_VERSION}-x86_64-apple-darwin.tar.xz)
+        set(LLVM_SHA1_HASH a5674f2ce5b9ed1b67d92689d319ed3b46d66e29)
+    elseif(LINUX)
+        set(NGRAPH_LLVM_VERSION 8.0.0)
+        if(EXISTS /etc/lsb-release)
+            execute_process(COMMAND grep DISTRIB_RELEASE /etc/lsb-release OUTPUT_VARIABLE UBUNTU_VER_LINE)
+            string(REGEX MATCH "[0-9.]+" UBUNTU_VER ${UBUNTU_VER_LINE})
+            message(STATUS "Ubuntu version: ${UBUNTU_VER} detected.")
+            set(LLVM_TARBALL_URL http://releases.llvm.org/${NGRAPH_LLVM_VERSION}/clang+llvm-${NGRAPH_LLVM_VERSION}-x86_64-linux-gnu-ubuntu-${UBUNTU_VER}.tar.xz)
+            if(UBUNTU_VER MATCHES "14.04")
+                set(LLVM_SHA1_HASH 552ea458b70961b7922a4bbe9de1434688342dbf)
+            elseif(UBUNTU_VER MATCHES "16.04")
+                set(LLVM_SHA1_HASH 2be69be355b012ae206dbc0ea7d84b831d77dc27)
+            elseif(UBUNTU_VER MATCHES "18.04")
+                set(LLVM_SHA1_HASH 6aeb8aa0998d37be67d886b878f27de5e5ccc5e4)
+            else()
+                message(FATAL_ERROR "No prebuilt LLVM available for Ubuntu ${UBUNTU_VER} on llvm.org, please set LLVM_TARBALL_URL manually.")
+            endif()
+        else()
+            message(FATAL_ERROR "Prebuilt LLVM: Only Ubuntu Linux is supported.")
+        endif()
     else()
-        set(LLVM_TARBALL_URL https://releases.llvm.org/5.0.2/clang+llvm-5.0.2-x86_64-linux-gnu-ubuntu-16.04.tar.xz)
+        message(FATAL_ERROR "Prebuilt LLVM: unsupported OS.")
     endif()
-endif()
-
-if(NOT DEFINED LLVM_SHA1_HASH)
-    if(APPLE)
-        set(LLVM_SHA1_HASH 8c8ce5cb5e057aa6806275c3f28cd09b09f48b9b)
-    else()
-        set(LLVM_SHA1_HASH d16c7bfaa67b82042bedd5891809a608733cfc0e)
+else()
+    if(NOT DEFINED LLVM_SHA1_HASH)
+        message(FATAL_ERROR "Prebuilt LLVM: please provide LLVM_SHA_HASH.")
     endif()
 endif()
 
@@ -52,19 +69,17 @@ ExternalProject_Get_Property(ext_llvm SOURCE_DIR)
 set(INSTALL_DIR ${SOURCE_DIR})
 
 set(LLVM_LINK_LIBS
+    # Do not change order of libraries !!!
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangTooling${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangCodeGen${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangFrontendTool${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangFrontend${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangDriver${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangSerialization${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangCodeGen${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangParse${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangSema${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangStaticAnalyzerFrontend${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangStaticAnalyzerCheckers${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangStaticAnalyzerCore${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangCrossTU${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangAnalysis${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangARCMigrate${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangRewriteFrontend${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangEdit${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangAST${CMAKE_STATIC_LIBRARY_SUFFIX}
@@ -106,6 +121,7 @@ set(LLVM_LINK_LIBS
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMTarget${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMCoroutines${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMipo${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMAggressiveInstCombine${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMInstrumentation${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMVectorize${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMScalarOpts${CMAKE_STATIC_LIBRARY_SUFFIX}

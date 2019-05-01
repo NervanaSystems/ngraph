@@ -48,4 +48,5 @@ namespace ngraph
             bool m_needs_default_layout{false};
         };
     }
+    using ResultVector = std::vector<std::shared_ptr<op::Result>>;
 }

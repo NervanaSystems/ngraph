@@ -29,10 +29,8 @@ using namespace std;
 
 runtime::gpu::GPUTensor::GPUTensor(const ngraph::element::Type& element_type,
                                    const Shape& shape,
-                                   void* memory_pointer,
-                                   const Backend* backend)
-    : runtime::Tensor(std::make_shared<ngraph::descriptor::Tensor>(element_type, shape, "external"),
-                      backend)
+                                   void* memory_pointer)
+    : runtime::Tensor(std::make_shared<ngraph::descriptor::Tensor>(element_type, shape, ""))
     , m_custom_memory(false)
 {
     m_descriptor->set_tensor_layout(
@@ -57,10 +55,8 @@ runtime::gpu::GPUTensor::GPUTensor(const ngraph::element::Type& element_type,
     }
 }
 
-runtime::gpu::GPUTensor::GPUTensor(const ngraph::element::Type& element_type,
-                                   const Shape& shape,
-                                   const Backend* backend)
-    : GPUTensor(element_type, shape, nullptr, backend)
+runtime::gpu::GPUTensor::GPUTensor(const ngraph::element::Type& element_type, const Shape& shape)
+    : GPUTensor(element_type, shape, nullptr)
 {
 }
 
