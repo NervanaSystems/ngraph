@@ -1923,7 +1923,7 @@ DOT_FONTSIZE           = 10
 # the path where dot can find it using this tag.
 # This tag requires that the tag HAVE_DOT is set to YES.
 
-DOT_FONTPATH           = sphinx/ngraph_theme/static/fonts/
+DOT_FONTPATH           = ../sphinx/ngraph_theme/static/fonts/
 
 # If the CLASS_GRAPH tag is set to YES then doxygen will generate a graph for
 # each documented class showing the direct and indirect inheritance relations.
