@@ -117,6 +117,7 @@ void MKLDNNEmitter::reserve_descriptor_space(size_t count)
 size_t MKLDNNEmitter::get_mkldnn_descriptors_size()
 {
     return m_mkldnn_descriptors_size;
+}
 
 size_t MKLDNNEmitter::insert_workspace(std::vector<char*>& mkldnn_workspaces,
                                        std::unique_ptr<MKLDNNWorkspace>& workspace)
@@ -134,6 +135,7 @@ const std::vector<size_t>& MKLDNNEmitter::get_primitive_deps(size_t index) const
 const std::vector<size_t>& MKLDNNEmitter::get_primitive_deps_cg(size_t index) const
 {
     return m_primitive_deps_cg.at(index);
+}
 
 std::vector<size_t>& MKLDNNEmitter::get_primitive_deps(size_t index)
 {
