@@ -42,8 +42,9 @@
 #include <CPP/topology.hpp>
 
 #include "ngraph/pass/algebraic_simplification.hpp"
+#include "ngraph/pass/batch_fusion.hpp"
+#include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/cse.hpp"
-#include "ngraph/pass/fused_op_decomposition.hpp"
 #include "ngraph/pass/get_output_element_elimination.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
@@ -75,6 +76,11 @@
 #include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/erf.hpp"
+#include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/depth_to_space.hpp"
+#include "ngraph/op/fused/elu.hpp"
+#include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/fused/space_to_depth.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
@@ -88,6 +94,7 @@
 #include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
+#include "ngraph/op/parameter.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -98,7 +105,6 @@
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/topk.hpp"
-#include "ngraph/parameter_vector.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -113,6 +119,7 @@ using intelgpu_space = runtime::intelgpu::IntelGPULayout;
 #define NGRAPH_OP(a, b) a,
 enum class OP_TYPEID
 {
+#include "ngraph/op/fused_op_tbl.hpp"
 #include "ngraph/op/op_tbl.hpp"
 };
 #undef NGRAPH_OP
@@ -125,6 +132,7 @@ static OP_TYPEID get_typeid(const string& s)
 // ...
 #define NGRAPH_OP(a, b) {#a, OP_TYPEID::a},
     static const unordered_map<string, OP_TYPEID> typeid_map{
+#include "ngraph/op/fused_op_tbl.hpp"
 #include "ngraph/op/op_tbl.hpp"
     };
 #undef NGRAPH_OP
@@ -180,6 +188,11 @@ static void do_cldnn_unary(cldnn::topology& topology,
     const cldnn::activation cldnn_unary(
         op->get_output_tensor_name(0), op->get_input_tensor_name(0), mode, param);
     topology.add(cldnn_unary);
+}
+
+static bool has_non_zero(const Shape& shape)
+{
+    return accumulate(shape.begin(), shape.end(), 0);
 }
 
 static void
@@ -351,14 +364,14 @@ shared_ptr<runtime::Tensor>
                                                       const Shape& shape)
 {
     return make_shared<runtime::intelgpu::IntelGPUTensorView>(
-        element_type, shape, *cldnn_engine, nullptr, this);
+        element_type, shape, *cldnn_engine, nullptr);
 }
 
 shared_ptr<runtime::Tensor> runtime::intelgpu::IntelGPUBackend::create_tensor(
     const element::Type& element_type, const Shape& shape, void* memory_pointer)
 {
     return make_shared<runtime::intelgpu::IntelGPUTensorView>(
-        element_type, shape, *cldnn_engine, memory_pointer, this);
+        element_type, shape, *cldnn_engine, memory_pointer);
 }
 
 shared_ptr<runtime::Executable>
@@ -394,11 +407,12 @@ shared_ptr<runtime::Executable>
     {
         ngraph::pass::Manager pass_manager;
 
-        pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>();
         pass_manager.register_pass<ngraph::pass::NopElimination>();
+        pass_manager.register_pass<ngraph::pass::BatchFusion>();
         pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
         pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
         pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
+        pass_manager.register_pass<ngraph::pass::CoreFusion>(ngraph::pass::ALL_FUSIONS);
 
         // GetOutputElementElimination must be after CommonSubexpressionElimination
         pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
@@ -413,13 +427,14 @@ shared_ptr<runtime::Executable>
 
     for (shared_ptr<Node> op : func->get_ops())
     {
+        const OP_TYPEID op_type_id = get_typeid(op->description());
 // We want to check that every OP_TYPEID enumeration is included in the list.
 // These GCC flags enable compile-time checking so that if an enumeration
 // is not in the list an error is generated.
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
-        switch (get_typeid(op->description()))
+        switch (op_type_id)
         {
         case OP_TYPEID::Parameter:
         {
@@ -792,7 +807,8 @@ shared_ptr<runtime::Executable>
 
             if ((op->get_input_shape(0).size() > 4) ||
                 (op->get_output_element_type(0) != element::f32) ||
-                !max_pool->get_padding_below().empty() || !max_pool->get_padding_above().empty())
+                has_non_zero(max_pool->get_padding_below()) ||
+                has_non_zero(max_pool->get_padding_above()))
             {
                 const shared_ptr<Node> def_val = max_pool->get_default_value();
                 const shared_ptr<op::Constant> def_const =
@@ -859,7 +875,8 @@ shared_ptr<runtime::Executable>
             if ((op->get_input_shape(0).size() > 4) ||
                 (op->get_output_element_type(0) != element::f32) ||
                 avg_pool->get_include_padding_in_avg_computation() ||
-                !avg_pool->get_padding_below().empty() || !avg_pool->get_padding_above().empty())
+                has_non_zero(avg_pool->get_padding_below()) ||
+                has_non_zero(avg_pool->get_padding_above()))
             {
                 const shared_ptr<Node> def_val = avg_pool->get_default_value();
                 const shared_ptr<op::Constant> def_const =
@@ -1185,12 +1202,28 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::Ceiling:
         {
-            do_custom_unary(topology, op, "ceil(input_var)");
+            if (!op->get_input_element_type(0).is_real())
+            {
+                do_equal_propagation(
+                    topology, op->get_input_tensor_name(0), op->get_output_tensor_name(0));
+            }
+            else
+            {
+                do_custom_unary(topology, op, "ceil(input_var)");
+            }
             break;
         }
         case OP_TYPEID::Floor:
         {
-            do_custom_unary(topology, op, "floor(input_var)");
+            if (!op->get_input_element_type(0).is_real())
+            {
+                do_equal_propagation(
+                    topology, op->get_input_tensor_name(0), op->get_output_tensor_name(0));
+            }
+            else
+            {
+                do_custom_unary(topology, op, "floor(input_var)");
+            }
             break;
         }
         case OP_TYPEID::Sign:
@@ -1403,15 +1436,65 @@ shared_ptr<runtime::Executable>
             break;
         }
         case OP_TYPEID::Convolution:
+        case OP_TYPEID::ConvolutionBias:
+        case OP_TYPEID::ConvolutionBiasAdd:
+        case OP_TYPEID::GroupConvolution:
         {
-            arguments_check(op, 2, 1);
+            // since bad inheritance design of these classes
+            Strides win_stride;
+            Strides win_dilation;
+            Strides data_dilation;
+            CoordinateDiff pad_below;
+            CoordinateDiff pad_above;
 
-            const shared_ptr<op::Convolution> conv_op = static_pointer_cast<op::Convolution>(op);
-            const Strides& win_stride = conv_op->get_window_movement_strides();
-            const Strides& win_dilation = conv_op->get_window_dilation_strides();
-            const Strides& data_dilation = conv_op->get_data_dilation_strides();
-            const CoordinateDiff& pad_below = conv_op->get_padding_below();
-            const CoordinateDiff& pad_above = conv_op->get_padding_above();
+            if (op_type_id == OP_TYPEID::ConvolutionBias)
+            {
+                arguments_check(op, 3, 1);
+
+                const shared_ptr<op::ConvolutionBias> conv_op =
+                    static_pointer_cast<op::ConvolutionBias>(op);
+                win_stride = conv_op->get_window_movement_strides();
+                win_dilation = conv_op->get_window_dilation_strides();
+                data_dilation = conv_op->get_data_dilation_strides();
+                pad_below = conv_op->get_padding_below();
+                pad_above = conv_op->get_padding_above();
+            }
+            else if (op_type_id == OP_TYPEID::ConvolutionBiasAdd)
+            {
+                arguments_check(op, 4, 1);
+
+                const shared_ptr<op::ConvolutionBiasAdd> conv_op =
+                    static_pointer_cast<op::ConvolutionBiasAdd>(op);
+                win_stride = conv_op->get_window_movement_strides();
+                win_dilation = conv_op->get_window_dilation_strides();
+                data_dilation = conv_op->get_data_dilation_strides();
+                pad_below = conv_op->get_padding_below();
+                pad_above = conv_op->get_padding_above();
+            }
+            else if (op_type_id == OP_TYPEID::GroupConvolution)
+            {
+                arguments_check(op, 2, 1);
+
+                const shared_ptr<op::GroupConvolution> conv_op =
+                    static_pointer_cast<op::GroupConvolution>(op);
+                win_stride = conv_op->get_window_movement_strides();
+                win_dilation = conv_op->get_window_dilation_strides();
+                data_dilation = conv_op->get_data_dilation_strides();
+                pad_below = conv_op->get_padding_below();
+                pad_above = conv_op->get_padding_above();
+            }
+            else
+            {
+                arguments_check(op, 2, 1);
+
+                const shared_ptr<op::Convolution> conv_op =
+                    static_pointer_cast<op::Convolution>(op);
+                win_stride = conv_op->get_window_movement_strides();
+                win_dilation = conv_op->get_window_dilation_strides();
+                data_dilation = conv_op->get_data_dilation_strides();
+                pad_below = conv_op->get_padding_below();
+                pad_above = conv_op->get_padding_above();
+            }
 
             // clDNN has quite limited support for Convolution operation
             // following are the checks to go with workaround
@@ -1420,7 +1503,23 @@ shared_ptr<runtime::Executable>
                 (data_dilation.at(0) != 1) || (data_dilation.at(1) != 1) ||
                 (op->get_output_element_type(0) != element::f32))
             {
-                kern.emit<op::Convolution>(conv_op);
+                if (op_type_id == OP_TYPEID::ConvolutionBias)
+                {
+                    kern.emit<op::ConvolutionBias>(static_pointer_cast<op::ConvolutionBias>(op));
+                }
+                else if (op_type_id == OP_TYPEID::ConvolutionBiasAdd)
+                {
+                    kern.emit<op::ConvolutionBiasAdd>(
+                        static_pointer_cast<op::ConvolutionBiasAdd>(op));
+                }
+                else if (op_type_id == OP_TYPEID::GroupConvolution)
+                {
+                    kern.emit<op::GroupConvolution>(static_pointer_cast<op::GroupConvolution>(op));
+                }
+                else
+                {
+                    kern.emit<op::Convolution>(static_pointer_cast<op::Convolution>(op));
+                }
             }
             else
             {
@@ -1450,14 +1549,73 @@ shared_ptr<runtime::Executable>
                 const cldnn::tensor strides(1, 1, win_stride.at(1), win_stride.at(0));
                 const cldnn::tensor dilation(1, 1, win_dilation.at(1), win_dilation.at(0));
 
-                const cldnn::convolution cldnn_conv(op->get_output_tensor_name(0),
-                                                    op_input_name,
-                                                    {op->get_input_tensor_name(1)},
-                                                    strides,
-                                                    input_offset,
-                                                    dilation);
-                topology.add(cldnn_conv);
+                if (op_type_id == OP_TYPEID::ConvolutionBias)
+                {
+                    const cldnn::convolution cldnn_conv_bias(op->get_output_tensor_name(0),
+                                                             op_input_name,
+                                                             {op->get_input_tensor_name(1)},
+                                                             {op->get_input_tensor_name(2)},
+                                                             strides,
+                                                             input_offset,
+                                                             dilation);
+                    topology.add(cldnn_conv_bias);
+                }
+                else if (op_type_id == OP_TYPEID::ConvolutionBiasAdd)
+                {
+                    // Do not understand which cldnn::convolution::ctor() should be called
+                    // make it clear by two operations
+                    const string intermediate_name =
+                        op_input_name + op->get_output_tensor_name(0) + "_intermediate";
+
+                    const cldnn::convolution cldnn_conv_bias(intermediate_name,
+                                                             op_input_name,
+                                                             {op->get_input_tensor_name(1)},
+                                                             {op->get_input_tensor_name(2)},
+                                                             strides,
+                                                             input_offset,
+                                                             dilation);
+                    topology.add(cldnn_conv_bias);
+
+                    const cldnn::eltwise cldnn_conv_bias_add(
+                        op->get_output_tensor_name(0),
+                        {intermediate_name, op->get_input_tensor_name(3)},
+                        cldnn::eltwise_mode::sum);
+
+                    topology.add(cldnn_conv_bias_add);
+                }
+                else if (op_type_id == OP_TYPEID::GroupConvolution)
+                {
+                    const shared_ptr<op::GroupConvolution> conv_op =
+                        static_pointer_cast<op::GroupConvolution>(op);
+
+                    const cldnn::convolution cldnn_conv(op->get_output_tensor_name(0),
+                                                        op_input_name,
+                                                        {op->get_input_tensor_name(1)},
+                                                        conv_op->get_groups(),
+                                                        strides,
+                                                        input_offset,
+                                                        dilation);
+                    topology.add(cldnn_conv);
+                }
+                else
+                {
+                    const cldnn::convolution cldnn_conv(op->get_output_tensor_name(0),
+                                                        op_input_name,
+                                                        {op->get_input_tensor_name(1)},
+                                                        strides,
+                                                        input_offset,
+                                                        dilation);
+                    topology.add(cldnn_conv);
+                }
             }
+            break;
+        }
+        case OP_TYPEID::ConvolutionBiasBackpropFiltersBias:
+        {
+            arguments_check(op, 2, 2);
+
+            kern.emit<op::ConvolutionBiasBackpropFiltersBias>(
+                static_pointer_cast<op::ConvolutionBiasBackpropFiltersBias>(op));
             break;
         }
         case OP_TYPEID::ConvolutionBackpropFilters:
@@ -1815,30 +1973,35 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::BatchMatMul:
         case OP_TYPEID::BroadcastDistributed:
         case OP_TYPEID::BroadcastLike:
+        case OP_TYPEID::DepthToSpace:
+        case OP_TYPEID::DynBroadcast:
+        case OP_TYPEID::DynPad:
         case OP_TYPEID::DynReshape:
         case OP_TYPEID::DynSlice:
+        case OP_TYPEID::Elu:
+        case OP_TYPEID::EmbeddingLookup:
         case OP_TYPEID::Erf:
         case OP_TYPEID::Gather:
         case OP_TYPEID::GatherND:
+        case OP_TYPEID::GenerateMask:
+        case OP_TYPEID::PRelu:
+        case OP_TYPEID::Passthrough:
         case OP_TYPEID::QuantizedAvgPool:
+        case OP_TYPEID::QuantizedConvolution:
         case OP_TYPEID::QuantizedConvolutionBias:
         case OP_TYPEID::QuantizedConvolutionBiasAdd:
         case OP_TYPEID::QuantizedConvolutionBiasSignedAdd:
         case OP_TYPEID::QuantizedConvolutionRelu:
-        case OP_TYPEID::QuantizedConvolution:
         case OP_TYPEID::QuantizedDot:
         case OP_TYPEID::QuantizedDotBias:
         case OP_TYPEID::QuantizedMaxPool:
         case OP_TYPEID::ReplaceSlice:
-        case OP_TYPEID::GenerateMask:
         case OP_TYPEID::ScalarConstantLike:
         case OP_TYPEID::ShapeOf:
+        case OP_TYPEID::SpaceToDepth:
         case OP_TYPEID::StopGradient:
         case OP_TYPEID::Transpose:
-        case OP_TYPEID::EmbeddingLookup:
-        case OP_TYPEID::DynBroadcast:
-        case OP_TYPEID::Passthrough:
-        case OP_TYPEID::DynPad:
+        default:
         {
             throw unsupported_op("Unsupported op '" + op->description() +
                                  "' in IntelGPU back end.");

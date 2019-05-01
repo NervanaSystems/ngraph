@@ -13371,6 +13371,16 @@ TEST(type_prop, prelu)
     ASSERT_EQ(prelu->get_shape(), prelu_shape);
 }
 
+TEST(type_prop, elu)
+{
+    Shape data_shape{2, 4};
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    auto alpha = make_shared<op::Parameter>(element::f32, Shape{});
+    auto elu = make_shared<op::Elu>(data, alpha);
+    ASSERT_EQ(elu->get_element_type(), element::f32);
+    ASSERT_EQ(elu->get_shape(), data_shape);
+}
+
 TEST(type_prop, gather_no_axis)
 {
     Shape params_shape{3, 2};
@@ -13393,6 +13403,24 @@ TEST(type_prop, gather)
     auto G = make_shared<op::Gather>(P, I, 1);
     ASSERT_EQ(G->get_element_type(), element::f32);
     ASSERT_EQ(G->get_shape(), out_shape);
+}
+
+TEST(type_prop, depth_to_space)
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape{1, 128, 8, 8});
+    auto space_to_depth = make_shared<op::DepthToSpace>(A, 8);
+
+    ASSERT_EQ(space_to_depth->get_element_type(), element::f32);
+    ASSERT_EQ(space_to_depth->get_shape(), (Shape{1, 2, 64, 64}));
+}
+
+TEST(type_prop, space_to_depth)
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape{1, 2, 64, 64});
+    auto space_to_depth = make_shared<op::SpaceToDepth>(A, 8);
+
+    ASSERT_EQ(space_to_depth->get_element_type(), element::f32);
+    ASSERT_EQ(space_to_depth->get_shape(), (Shape{1, 128, 8, 8}));
 }
 
 TEST(type_prop, gather_nd_scalar_from_2d)
@@ -13690,4 +13718,111 @@ TEST(type_prop, conv_bias_bprop_2d_deduce)
     EXPECT_EQ(conv->get_output_element_type(1), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), filters->get_shape());
     EXPECT_EQ(conv->get_output_shape(1), bias->get_shape());
+}
+
+TEST(type_prop, group_conv)
+{
+    // Deduce type
+    auto data = make_shared<op::Parameter>(element::f32, Shape{64, 4, 100, 150});
+    auto filters = make_shared<op::Parameter>(element::f32, Shape{128, 2, 10, 20});
+    auto conv = make_shared<op::GroupConvolution>(data,
+                                                  filters,
+                                                  Strides{1, 1},
+                                                  Strides{1, 1},
+                                                  CoordinateDiff{0, 0},
+                                                  CoordinateDiff{0, 0},
+                                                  Strides{1, 1},
+                                                  2);
+    EXPECT_EQ(conv->get_shape(), (Shape{64, 128, 91, 131}));
+}
+
+TEST(type_prop, group_conv_auto)
+{
+    // Deduce type
+    auto data = make_shared<op::Parameter>(element::f32, Shape{64, 4, 100, 150});
+    auto filters = make_shared<op::Parameter>(element::f32, Shape{128, 2, 10, 20});
+    auto conv = make_shared<op::GroupConvolution>(data,
+                                                  filters,
+                                                  Strides{1, 1},
+                                                  Strides{1, 1},
+                                                  CoordinateDiff{0, 0},
+                                                  CoordinateDiff{0, 0},
+                                                  Strides{1, 1},
+                                                  2,
+                                                  op::PadType::AUTO);
+    EXPECT_EQ(conv->get_shape(), (Shape{64, 128, 100, 150}));
+    EXPECT_EQ(conv->get_padding_below(), (CoordinateDiff{4, 9}));
+    EXPECT_EQ(conv->get_padding_above(), (CoordinateDiff{5, 10}));
+}
+
+TEST(type_prop, group_conv_invalid_groups)
+{
+    // Deduce type
+    try
+    {
+        auto conv = make_shared<op::GroupConvolution>(
+            make_shared<op::Parameter>(element::f32, Shape{64, 20, 100, 150}),
+            make_shared<op::Parameter>(element::f32, Shape{30, 10, 10, 20}),
+            Strides{1, 1},
+            Strides{1, 1},
+            CoordinateDiff{0, 0},
+            CoordinateDiff{0, 0},
+            Strides{1, 1},
+            3);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid group conv";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data channels not a multiple of group size"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+    try
+    {
+        auto conv = make_shared<op::GroupConvolution>(
+            make_shared<op::Parameter>(element::f32, Shape{64, 30, 100, 150}),
+            make_shared<op::Parameter>(element::f32, Shape{20, 10, 10, 20}),
+            Strides{1, 1},
+            Strides{1, 1},
+            CoordinateDiff{0, 0},
+            CoordinateDiff{0, 0},
+            Strides{1, 1},
+            3);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid group conv";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("# Filters not a multiple of group size"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+    try
+    {
+        auto conv = make_shared<op::GroupConvolution>(
+            make_shared<op::Parameter>(element::f32, Shape{64, 30, 100, 150}),
+            make_shared<op::Parameter>(element::f32, Shape{30, 20, 10, 20}),
+            Strides{1, 1},
+            Strides{1, 1},
+            CoordinateDiff{0, 0},
+            CoordinateDiff{0, 0},
+            Strides{1, 1},
+            3);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid group conv";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Incorrect number of channels per filter"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
 }

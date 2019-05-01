@@ -25,15 +25,14 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/node_vector.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
+#include "ngraph/op/result.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/provenance.hpp"
-#include "ngraph/result_vector.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -211,34 +210,6 @@ bool ngraph::is_post_dominated(Node* X, Node* Y)
     return true;
 }
 
-void ngraph::NodeMap::update(std::shared_ptr<ngraph::Node> orig, std::shared_ptr<ngraph::Node> val)
-{
-    if (!exists(orig))
-    {
-        throw ngraph_error("Node doesn't exist!");
-    }
-    m_node_map[orig] = val;
-}
-
-void ngraph::NodeMap::add(std::shared_ptr<ngraph::Node> orig,
-                          std::shared_ptr<ngraph::Node> replacement)
-{
-    if (exists(orig))
-    {
-        throw ngraph_error("NodeMap: key already exists");
-    }
-    m_node_map[orig] = replacement;
-}
-
-std::shared_ptr<ngraph::Node> ngraph::NodeMap::get(std::shared_ptr<ngraph::Node> orig) const
-{
-    if (!exists(orig))
-    {
-        throw ngraph_error("NodeMap: key does not exist");
-    }
-    return m_node_map.at(orig);
-}
-
 std::list<std::shared_ptr<ngraph::Node>>
     ngraph::clone_nodes(const std::list<std::shared_ptr<ngraph::Node>>& nodes, NodeMap& node_map)
 {
@@ -246,22 +217,22 @@ std::list<std::shared_ptr<ngraph::Node>>
     auto sorted_nodes = topological_sort(nodes, true);
     for (auto node : sorted_nodes)
     {
-        if (!node_map.exists(node))
+        if (node_map.count(node.get()) == 0)
         {
             // get (already) cloned arguments and clone the node
             NodeVector cloned_args;
             for (auto arg : node->get_arguments())
             {
-                cloned_args.push_back(node_map.get(arg));
+                cloned_args.push_back(node_map.at(arg.get()));
             }
             auto cloned_node = node->copy_with_new_args(cloned_args);
 
             //copy control dependencies
             for (auto cdep : node->get_control_dependencies())
             {
-                cloned_node->add_control_dependency(node_map.get(cdep));
+                cloned_node->add_control_dependency(node_map.at(cdep.get()));
             }
-            node_map.add(node, cloned_node);
+            node_map[node.get()] = cloned_node;
         }
     }
 
@@ -270,7 +241,7 @@ std::list<std::shared_ptr<ngraph::Node>>
     std::list<std::shared_ptr<ngraph::Node>> cloned_nodes;
     for (auto node : nodes)
     {
-        cloned_nodes.push_back(node_map.get(node));
+        cloned_nodes.push_back(node_map.at(node.get()));
     }
     return cloned_nodes;
 }
@@ -291,7 +262,7 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(const ngraph::Function&
     ResultVector cloned_results;
     for (shared_ptr<Node> node : func.get_results())
     {
-        auto result = std::dynamic_pointer_cast<op::Result>(node_map.get(node));
+        auto result = std::dynamic_pointer_cast<op::Result>(node_map.at(node.get()));
         if (!result)
         {
             throw ngraph_error("Results should be of type op::Result");
@@ -301,7 +272,7 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(const ngraph::Function&
     std::vector<std::shared_ptr<op::Parameter>> cloned_params;
     for (auto param : func.get_parameters())
     {
-        cloned_params.push_back(std::dynamic_pointer_cast<op::Parameter>(node_map.get(param)));
+        cloned_params.push_back(std::dynamic_pointer_cast<op::Parameter>(node_map.at(param.get())));
     }
 
     // create and return cloned function

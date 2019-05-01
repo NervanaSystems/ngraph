@@ -21,6 +21,7 @@
 
 using namespace std;
 using namespace ngraph;
+using namespace ngraph::runtime::intelgpu;
 
 // this is duplication of the runtime::intelgpu::access_dims
 // needs to be merged but not at the same time as this new code
@@ -86,59 +87,77 @@ static string array_dim(const Shape& dimentions, const string& var = "i", bool i
 //           data[         batch,   data_channel, 2, 4 ]
 //         filter[  data_channel, output_channel, 2, 2 ]
 //         output[         batch, output_channel, 3, 5 ]
-static runtime::intelgpu::CustomKernels::krnl_info
-    do_convolution_operation(const string& input_name,
-                             const Shape& input_shape,
-                             const string& filter_name,
-                             const Shape& filter_shape,
-                             const string& output_name,
-                             const Shape& output_shape,
-                             const element::Type& output_type,
-                             const CoordinateDiff& pad_below,
-                             const Strides& win_stride,
-                             const Strides& win_dilation,
-                             const Strides& data_dilation,
-                             size_t batch_axis_data,
-                             size_t input_channel_axis_data,
-                             size_t output_channel_axis_result,
-                             const string& input_order,
-                             const string& filter_order,
-                             const string& output_order,
-                             bool reverse_filter)
+static CustomKernels::krnl_info do_convolution_operation(const string& input_name,
+                                                         const Shape& input_shape,
+                                                         const string& filter_name,
+                                                         const Shape& filter_shape,
+                                                         const string& bias_name,
+                                                         const Shape& bias_shape,
+                                                         const string& shift_name,
+                                                         const Shape& shift_shape,
+                                                         const string& output_name,
+                                                         const Shape& output_shape,
+                                                         const element::Type& output_type,
+                                                         const CoordinateDiff& pad_below,
+                                                         const Strides& win_stride,
+                                                         const Strides& win_dilation,
+                                                         const Strides& data_dilation,
+                                                         size_t batch_axis_data,
+                                                         size_t input_channel_axis_data,
+                                                         size_t output_channel_axis_result,
+                                                         const string& input_order,
+                                                         const string& filter_order,
+                                                         const string& output_order,
+                                                         bool reverse_filter,
+                                                         size_t group_count)
 {
-    const string kernel_type_name = runtime::intelgpu::get_opencl_type_name(output_type);
+    const string kernel_type_name = get_opencl_type_name(output_type);
     const string entry_point_name = "convolution_" + output_name;
     const Shape input_data(input_shape.cbegin() + 2, input_shape.cend());
     const Shape filter_data(filter_shape.cbegin() + 2, filter_shape.cend());
     const Shape output_data(output_shape.cbegin() + 2, output_shape.cend());
+    string acc_init = "0.0";
     CodeWriter writer;
     vector<size_t> gws;
 
     writer << "__kernel void " << entry_point_name << "(const __global " << kernel_type_name
-           << " input" << runtime::intelgpu::array_dims(input_shape) << ", const __global "
-           << kernel_type_name << " filter" << runtime::intelgpu::array_dims(filter_shape)
-           << ", __global " << kernel_type_name << " output"
-           << runtime::intelgpu::array_dims(output_shape) << ")\n";
+           << " input" << array_dims(input_shape) << ", const __global " << kernel_type_name
+           << " filter" << array_dims(filter_shape);
+
+    if (!bias_name.empty())
+    {
+        writer << ", const __global " << kernel_type_name << " bias" << array_dims(bias_shape);
+    }
+
+    if (!shift_name.empty())
+    {
+        writer << ", const __global " << kernel_type_name << " shift" << array_dims(shift_shape);
+    }
+
+    writer << ", __global " << kernel_type_name << " output" << array_dims(output_shape);
+
+    writer << ")\n";
 
     writer.block_begin();
     { // Main function body
 
-        writer << "const unsigned batch = get_global_id(0);\n";
+        writer << "const unsigned group_size = " << input_shape.at(input_channel_axis_data) << " / "
+               << group_count << " /*group_count*/;\n";
+        writer << "const unsigned batch = get_global_id(0); /*batch trip count: "
+               << output_shape.at(batch_axis_data) << "*/\n";
         gws.push_back(output_shape.at(batch_axis_data));
-        writer << "// for (uint batch = 0; batch < " << output_shape.at(batch_axis_data)
-               << "; ++batch)\n";
         writer.block_begin();
         {
-            writer << "const unsigned output_channel = get_global_id(1);\n";
+            writer
+                << "const unsigned output_channel = get_global_id(1); /*output_channel trip count: "
+                << output_shape.at(output_channel_axis_result) << "*/\n";
             gws.push_back(output_shape.at(output_channel_axis_result));
-            writer << "// for (uint output_channel = 0; output_channel < "
-                   << output_shape.at(output_channel_axis_result) << "; ++output_channel)\n";
             writer.block_begin();
             {
                 // The first loop over output dimensions
-                writer << "const unsigned i0 = get_global_id(2);\n";
+                writer << "const unsigned i0 = get_global_id(2); /*i0 trip count: "
+                       << output_data.at(0) << "*/\n";
                 gws.push_back(output_data.at(0));
-                writer << "// for (uint i0 = 0; i0 < " << output_data.at(0) << "; ++i0)\n";
                 writer.block_begin();
                 {
                     // Loops over other output dimensions
@@ -152,10 +171,14 @@ static runtime::intelgpu::CustomKernels::krnl_info
                         ++var_idx;
                     }
 
-                    writer << kernel_type_name << " result = 0.0;\n\n"
+                    if (!bias_name.empty())
+                    {
+                        acc_init = "bias[output_channel]";
+                    }
+                    writer << kernel_type_name << " result = " << acc_init << ";\n\n"
                            << "// Loop over input_channel\n"
-                           << "for (uint input_channel = 0; input_channel < "
-                           << input_shape.at(input_channel_axis_data) << "; ++input_channel)\n";
+                           << "for (uint input_channel = 0; input_channel < group_size; "
+                              "++input_channel)\n";
                     writer.block_begin();
                     {
                         // Loop over filter
@@ -243,8 +266,12 @@ static runtime::intelgpu::CustomKernels::krnl_info
                     writer.block_end();
                     writer << "// End input_channel loop\n";
 
-                    writer << output_order << runtime::intelgpu::access_dims(output_data)
-                           << " = result;\n";
+                    writer << output_order << access_dims(output_data) << " = result";
+                    if (!shift_name.empty())
+                    {
+                        writer << " + shift[batch][output_channel]" << access_dims(output_data);
+                    }
+                    writer << ";\n";
 
                     // Closing brackets for other output dimensions
                     for (auto i = output_data.begin() + 1; i != output_data.end(); ++i)
@@ -261,24 +288,34 @@ static runtime::intelgpu::CustomKernels::krnl_info
     } // Main function body
     writer.block_end();
 
-    const runtime::intelgpu::CustomKernelInfo krn_ret(output_name,
-                                                      output_shape,
-                                                      output_type,
-                                                      {input_name, filter_name},
-                                                      {writer.get_code()},
-                                                      entry_point_name,
-                                                      gws);
+    vector<string> inputs = {input_name, filter_name};
+
+    if (!bias_name.empty())
+    {
+        inputs.push_back(bias_name);
+    }
+
+    if (!shift_name.empty())
+    {
+        inputs.push_back(shift_name);
+    }
+
+    const CustomKernelInfo krn_ret(
+        output_name, output_shape, output_type, inputs, {writer.get_code()}, entry_point_name, gws);
 
     return {krn_ret};
 }
 
-runtime::intelgpu::CustomKernels::krnl_info
-    runtime::intelgpu::CustomKernels::build_krnl(const shared_ptr<op::Convolution>& op) const
+CustomKernels::krnl_info CustomKernels::build_krnl(const shared_ptr<op::Convolution>& op) const
 {
     return do_convolution_operation(op->get_input_tensor_name(0),
                                     op->get_input_shape(0),
                                     op->get_input_tensor_name(1),
                                     op->get_input_shape(1),
+                                    string(),
+                                    {},
+                                    string(),
+                                    {},
                                     op->get_output_tensor_name(0),
                                     op->get_output_shape(0),
                                     op->get_output_element_type(0),
@@ -292,16 +329,103 @@ runtime::intelgpu::CustomKernels::krnl_info
                                     "input[batch][input_channel]",
                                     "filter[output_channel][input_channel]",
                                     "output[batch][output_channel]",
-                                    false);
+                                    false,
+                                    1);
 }
 
-runtime::intelgpu::CustomKernels::krnl_info runtime::intelgpu::CustomKernels::build_krnl(
-    const shared_ptr<op::ConvolutionBackpropFilters>& op) const
+CustomKernels::krnl_info CustomKernels::build_krnl(const shared_ptr<op::GroupConvolution>& op) const
 {
     return do_convolution_operation(op->get_input_tensor_name(0),
                                     op->get_input_shape(0),
                                     op->get_input_tensor_name(1),
                                     op->get_input_shape(1),
+                                    string(),
+                                    {},
+                                    string(),
+                                    {},
+                                    op->get_output_tensor_name(0),
+                                    op->get_output_shape(0),
+                                    op->get_output_element_type(0),
+                                    op->get_padding_below(),
+                                    op->get_window_movement_strides(),
+                                    op->get_window_dilation_strides(),
+                                    op->get_data_dilation_strides(),
+                                    0,
+                                    1,
+                                    1,
+                                    "input[batch][(output_channel * group_size) + input_channel]",
+                                    "filter[output_channel][input_channel]",
+                                    "output[batch][output_channel]",
+                                    false,
+                                    op->get_groups());
+}
+
+CustomKernels::krnl_info CustomKernels::build_krnl(const shared_ptr<op::ConvolutionBias>& op) const
+{
+    return do_convolution_operation(op->get_input_tensor_name(0),
+                                    op->get_input_shape(0),
+                                    op->get_input_tensor_name(1),
+                                    op->get_input_shape(1),
+                                    op->get_input_tensor_name(2),
+                                    op->get_input_shape(2),
+                                    string(),
+                                    {},
+                                    op->get_output_tensor_name(0),
+                                    op->get_output_shape(0),
+                                    op->get_output_element_type(0),
+                                    op->get_padding_below(),
+                                    op->get_window_movement_strides(),
+                                    op->get_window_dilation_strides(),
+                                    op->get_data_dilation_strides(),
+                                    0,
+                                    1,
+                                    1,
+                                    "input[batch][input_channel]",
+                                    "filter[output_channel][input_channel]",
+                                    "output[batch][output_channel]",
+                                    false,
+                                    1);
+}
+
+CustomKernels::krnl_info
+    CustomKernels::build_krnl(const shared_ptr<op::ConvolutionBiasAdd>& op) const
+{
+    return do_convolution_operation(op->get_input_tensor_name(0),
+                                    op->get_input_shape(0),
+                                    op->get_input_tensor_name(1),
+                                    op->get_input_shape(1),
+                                    op->get_input_tensor_name(2),
+                                    op->get_input_shape(2),
+                                    op->get_input_tensor_name(3),
+                                    op->get_input_shape(3),
+                                    op->get_output_tensor_name(0),
+                                    op->get_output_shape(0),
+                                    op->get_output_element_type(0),
+                                    op->get_padding_below(),
+                                    op->get_window_movement_strides(),
+                                    op->get_window_dilation_strides(),
+                                    op->get_data_dilation_strides(),
+                                    0,
+                                    1,
+                                    1,
+                                    "input[batch][input_channel]",
+                                    "filter[output_channel][input_channel]",
+                                    "output[batch][output_channel]",
+                                    false,
+                                    1);
+}
+
+CustomKernels::krnl_info
+    CustomKernels::build_krnl(const shared_ptr<op::ConvolutionBackpropFilters>& op) const
+{
+    return do_convolution_operation(op->get_input_tensor_name(0),
+                                    op->get_input_shape(0),
+                                    op->get_input_tensor_name(1),
+                                    op->get_input_shape(1),
+                                    string(),
+                                    {},
+                                    string(),
+                                    {},
                                     op->get_output_tensor_name(0),
                                     op->get_output_shape(0),
                                     op->get_output_element_type(0),
@@ -315,16 +439,67 @@ runtime::intelgpu::CustomKernels::krnl_info runtime::intelgpu::CustomKernels::bu
                                     "input[input_channel][batch]",
                                     "filter[input_channel][output_channel]",
                                     "output[output_channel][batch]",
-                                    false);
+                                    false,
+                                    1);
 }
 
-runtime::intelgpu::CustomKernels::krnl_info runtime::intelgpu::CustomKernels::build_krnl(
-    const shared_ptr<op::ConvolutionBackpropData>& op) const
+CustomKernels::krnl_info
+    CustomKernels::build_krnl(const shared_ptr<op::ConvolutionBiasBackpropFiltersBias>& op) const
+{
+    CustomKernels::krnl_info result;
+
+    CustomKernels::krnl_info filter =
+        do_convolution_operation(op->get_input_tensor_name(0),
+                                 op->get_input_shape(0),
+                                 op->get_input_tensor_name(1),
+                                 op->get_input_shape(1),
+                                 string(),
+                                 {},
+                                 string(),
+                                 {},
+                                 op->get_output_tensor_name(0),
+                                 op->get_output_shape(0),
+                                 op->get_output_element_type(0),
+                                 op->get_padding_below_forward(),
+                                 op->get_window_dilation_strides_forward(),
+                                 op->get_window_movement_strides_forward(),
+                                 op->get_data_dilation_strides_forward(),
+                                 1,
+                                 0,
+                                 0,
+                                 "input[input_channel][batch]",
+                                 "filter[input_channel][output_channel]",
+                                 "output[output_channel][batch]",
+                                 false,
+                                 1);
+    result.insert(result.end(), filter.begin(), filter.end());
+
+    AxisSet reduce_axes;
+    reduce_axes.insert(0);
+    for (size_t i = 2; i < op->get_output_shape(0).size(); i++)
+    {
+        reduce_axes.insert(i);
+    }
+
+    shared_ptr<op::Sum> bias_bprop_op = make_shared<op::Sum>(op->get_argument(1), reduce_axes);
+    CustomKernels::krnl_info bias_bprop = build_krnl(bias_bprop_op);
+    bias_bprop.at(0).m_name = op->get_output_tensor_name(1);
+    result.insert(result.end(), bias_bprop.begin(), bias_bprop.end());
+
+    return result;
+}
+
+CustomKernels::krnl_info
+    CustomKernels::build_krnl(const shared_ptr<op::ConvolutionBackpropData>& op) const
 {
     return do_convolution_operation(op->get_input_tensor_name(1),
                                     op->get_input_shape(1),
                                     op->get_input_tensor_name(0),
                                     op->get_input_shape(0),
+                                    string(),
+                                    {},
+                                    string(),
+                                    {},
                                     op->get_output_tensor_name(0),
                                     op->get_output_shape(0),
                                     op->get_output_element_type(0),
@@ -338,5 +513,6 @@ runtime::intelgpu::CustomKernels::krnl_info runtime::intelgpu::CustomKernels::bu
                                     "input[batch][input_channel]",
                                     "filter[input_channel][output_channel]",
                                     "output[batch][output_channel]",
-                                    true);
+                                    true,
+                                    1);
 }

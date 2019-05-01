@@ -38,9 +38,9 @@ namespace ngraph
 
                 auto& functors = external_function->get_functors();
 
-                auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& padding_value = external_function->get_tensor_data(args[1].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto padding_value_index = external_function->get_buffer_index(args[1].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                 auto pad = static_cast<const ngraph::op::Pad*>(node);
 
@@ -59,11 +59,19 @@ namespace ngraph
                                           arg_shape.size(),
                                           runtime::cpu::kernel::pad_and_slice);
 
-                    auto functor = [&, kernel, arg_shape, out_shape, padding_below, padding_above](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        kernel(arg_tensor,
-                               out_tensor,
-                               padding_value,
+                    auto functor = [&,
+                                    kernel,
+                                    arg_shape,
+                                    out_shape,
+                                    padding_below,
+                                    padding_above,
+                                    arg_buffer_index,
+                                    padding_value_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* ectx) {
+                        kernel(ctx->buffer_data[arg_buffer_index],
+                               ctx->buffer_data[out_buffer_index],
+                               ctx->buffer_data[padding_value_index],
                                arg_shape,
                                out_shape,
                                CoordinateDiff(padding_below.begin(), padding_below.end()),
@@ -79,19 +87,27 @@ namespace ngraph
                     SELECT_KERNEL(
                         kernel, args[0].get_element_type(), runtime::cpu::kernel::pad_ref);
 
-                    auto functor =
-                        [&, kernel, arg_shape, out_shape, padding_below, padding_above, pad_mode](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                            kernel(arg_tensor,
-                                   padding_value,
-                                   out_tensor,
-                                   arg_shape,
-                                   out_shape,
-                                   padding_below,
-                                   padding_above,
-                                   pad_mode,
-                                   ectx->arena);
-                        };
+                    auto functor = [&,
+                                    kernel,
+                                    arg_shape,
+                                    out_shape,
+                                    padding_below,
+                                    padding_above,
+                                    pad_mode,
+                                    arg_buffer_index,
+                                    padding_value_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* ectx) {
+                        kernel(ctx->buffer_data[arg_buffer_index],
+                               ctx->buffer_data[padding_value_index],
+                               ctx->buffer_data[out_buffer_index],
+                               arg_shape,
+                               out_shape,
+                               padding_below,
+                               padding_above,
+                               pad_mode,
+                               ectx->arena);
+                    };
                     functors.emplace_back(functor);
                 }
             }

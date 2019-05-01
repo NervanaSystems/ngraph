@@ -69,6 +69,7 @@
 #include "ngraph/runtime/reference/acos.hpp"
 #include "ngraph/runtime/reference/add.hpp"
 #include "ngraph/runtime/reference/all.hpp"
+#include "ngraph/runtime/reference/allreduce.hpp"
 #include "ngraph/runtime/reference/and.hpp"
 #include "ngraph/runtime/reference/any.hpp"
 #include "ngraph/runtime/reference/argmax.hpp"
@@ -79,6 +80,7 @@
 #include "ngraph/runtime/reference/batch_mat_mul.hpp"
 #include "ngraph/runtime/reference/batch_norm.hpp"
 #include "ngraph/runtime/reference/broadcast.hpp"
+#include "ngraph/runtime/reference/broadcast_distributed.hpp"
 #include "ngraph/runtime/reference/ceiling.hpp"
 #include "ngraph/runtime/reference/concat.hpp"
 #include "ngraph/runtime/reference/constant.hpp"
@@ -142,11 +144,6 @@
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/state/rng_state.hpp"
 
-#ifdef NGRAPH_DISTRIBUTED_ENABLE
-#include "ngraph/runtime/reference/allreduce.hpp"
-#include "ngraph/runtime/reference/broadcast_distributed.hpp"
-#endif
-
 namespace ngraph
 {
     namespace runtime
@@ -177,7 +174,7 @@ private:
     bool m_is_compiled = false;
     bool m_nan_check_enabled = false;
     bool m_performance_counters_enabled = false;
-    std::unordered_map<const Node*, stopwatch> m_timer_map;
+    std::unordered_map<std::shared_ptr<const Node>, stopwatch> m_timer_map;
     std::vector<NodeWrapper> m_wrapped_nodes;
     std::unordered_map<const Node*, std::shared_ptr<RNGState>> m_states;
     std::set<std::string> m_unsupported_op_name_list;
@@ -195,7 +192,7 @@ private:
                    const std::vector<std::shared_ptr<HostTensor>>& out,
                    const std::vector<std::shared_ptr<HostTensor>>& args)
     {
-        const Node& node = node_wrapper.get_node();
+        const Node& node = *node_wrapper.get_node();
 
 // We want to check that every OP_TYPEID enumeration is included in the list.
 // These GCC flags enable compile-time checking so that if an enumeration
@@ -239,13 +236,12 @@ private:
                            all->get_reduction_axes());
             break;
         }
-        case OP_TYPEID::AllReduce: {
-#ifdef NGRAPH_DISTRIBUTED_ENABLE
+        case OP_TYPEID::AllReduce:
+        {
             reference::allreduce<T>(args[0]->get_data_ptr<T>(),
                                     out[0]->get_data_ptr<T>(),
-                                    node.get_input_element_type(0),
+                                    node.get_input_element_type(0).get_type_enum(),
                                     static_cast<int>(shape_size(node.get_input_shape(0))));
-#endif
             break;
         }
         case OP_TYPEID::And:
@@ -456,30 +452,26 @@ private:
                                     broadcast_axes);
             break;
         }
-        case OP_TYPEID::BroadcastDistributed: {
-#ifdef NGRAPH_DISTRIBUTED_ENABLE
-            Distributed dist;
-            int Rank_ID;
-            Rank_ID = dist.get_rank();
-            if (Rank_ID == 0)
+        case OP_TYPEID::BroadcastDistributed:
+        {
+            int rank_ID;
+            rank_ID = get_distributed_interface()->get_rank();
+            if (rank_ID == 0)
             {
                 reference::broadcastdistributed<T>(
                     args[0]->get_data_ptr<T>(),
-                    node.get_input_element_type(0),
+                    node.get_input_element_type(0).get_type_enum(),
                     static_cast<int>(shape_size(node.get_input_shape(0))));
-                auto memSize = static_cast<int>(shape_size(node.get_input_shape(0))) *
-                               sizeof(node.get_input_element_type(0));
+                auto memSize = static_cast<int>(shape_size(node.get_input_shape(0))) * sizeof(T);
                 memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), memSize);
             }
             else
             {
                 reference::broadcastdistributed<T>(
                     out[0]->get_data_ptr<T>(),
-                    node.get_input_element_type(0),
+                    node.get_input_element_type(0).get_type_enum(),
                     static_cast<int>(shape_size(node.get_input_shape(0))));
             }
-            break;
-#endif
             break;
         }
         case OP_TYPEID::BroadcastLike: break;
@@ -579,6 +571,7 @@ private:
             case element::Type_t::undefined:
             case element::Type_t::dynamic:
             case element::Type_t::bf16:
+            case element::Type_t::f16:
                 ss << "unsupported element type " << type << " op Convert";
                 throw std::runtime_error(ss.str());
             }
