@@ -74,7 +74,6 @@ set (SRC
     ngraph_visibility.hpp
     node.cpp
     node.hpp
-    node_vector.hpp
     op/abs.cpp
     op/abs.hpp
     op/acos.cpp
@@ -163,6 +162,16 @@ set (SRC
     op/experimental/quantized_dot_bias.hpp
     op/experimental/transpose.cpp
     op/experimental/transpose.hpp
+    op/experimental/layers/prior_box.cpp
+    op/experimental/layers/prior_box.hpp
+    op/experimental/layers/prior_box_clustered.cpp
+    op/experimental/layers/prior_box_clustered.hpp
+    op/experimental/layers/proposal.hpp
+    op/experimental/layers/proposal.cpp
+    op/experimental/layers/region_yolo.hpp
+    op/experimental/layers/region_yolo.cpp
+    op/experimental/layers/reorg_yolo.hpp
+    op/experimental/layers/reorg_yolo.cpp
     op/floor.cpp
     op/floor.hpp
     op/gather.cpp
@@ -291,7 +300,6 @@ set (SRC
     op/util/reshape.hpp
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise_arithmetic.hpp
-    parameter_vector.hpp
     partial_shape.cpp
     partial_shape.hpp
     pass/algebraic_simplification.cpp
@@ -372,7 +380,6 @@ set (SRC
     provenance.cpp
     provenance.hpp
     rank.hpp
-    result_vector.hpp
     runtime/aligned_buffer.cpp
     runtime/aligned_buffer.hpp
     runtime/backend.cpp

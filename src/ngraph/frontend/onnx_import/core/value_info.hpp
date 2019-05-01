@@ -19,7 +19,7 @@
 #include <onnx-ml.pb.h>
 
 #include "ngraph/op/constant.hpp"
-#include "ngraph/parameter_vector.hpp"
+#include "ngraph/op/parameter.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "node.hpp"
