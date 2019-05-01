@@ -42,9 +42,47 @@ using namespace ngraph;
 
 static_assert(sizeof(float16) == 2, "class float16 must be exactly 2 bytes");
 
-static bool float_isnan(const float& x)
+float16::float16(float value)
 {
-    return std::isnan(x);
+    union {
+        float fv;
+        uint32_t iv;
+    };
+    fv = value;
+    uint32_t sign = iv & 0x80000000;
+    uint32_t biased_exp = (iv & 0x7F800000) >> 23;
+    uint32_t raw_frac = (iv & 0x007FFFFF);
+    int32_t exp = biased_exp - 127;
+    int32_t min_exp = -14 - frac_size;
+    if (biased_exp == 0 || exp < min_exp)
+    {
+        // Goes to 0
+        biased_exp = 0;
+    }
+    else if (biased_exp == 0xFF)
+    {
+        // Infinity or NAN.
+        biased_exp = 0x1F;
+        raw_frac = raw_frac >> (23 - frac_size);
+    }
+    else if (exp < -14)
+    {
+        // denorm or 0
+        biased_exp = 0;
+        raw_frac |= 0x00800000;
+        raw_frac = raw_frac >> (exp + 16);
+    }
+    else if (exp > 15)
+    {
+        biased_exp = 0x1F;
+        raw_frac = 0;
+    }
+    else
+    {
+        raw_frac = raw_frac >> (23 - frac_size);
+        biased_exp = exp + exp_bias;
+    }
+    m_value = (sign >> 16) | (biased_exp << frac_size) | raw_frac;
 }
 
 std::string float16::to_string() const
@@ -91,9 +129,9 @@ float16::operator float() const
         uint32_t i_val;
         float f_val;
     };
-    unsigned exp = 0x1F & (m_value >> 10);
-    unsigned fexp = exp + 127 - 15;
-    unsigned frac = m_value & 0x03FF;
+    uint32_t exp = 0x1F & (m_value >> frac_size);
+    uint32_t fexp = exp + 127 - 15;
+    uint32_t frac = m_value & 0x03FF;
     if (exp == 0)
     {
         if (frac == 0)
@@ -112,12 +150,12 @@ float16::operator float() const
             frac &= 0x03FF;
         }
     }
-    else if (frac == 0x1F)
+    else if (exp == 0x1F)
     {
         fexp = 0xFF;
     }
-    frac = frac << (24 - 8);
-    i_val = (m_value & 0x8000) << 31 | (fexp << 24) | frac;
+    frac = frac << (23 - frac_size);
+    i_val = static_cast<uint32_t>((m_value & 0x8000)) << 16 | (fexp << 23) | frac;
     return f_val;
 }
 

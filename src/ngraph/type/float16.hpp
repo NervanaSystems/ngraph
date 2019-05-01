@@ -35,6 +35,17 @@ namespace ngraph
         {
         }
 
+        static uint32_t constexpr frac_size = 10;
+        static uint32_t constexpr exp_size = 5;
+        static uint32_t constexpr exp_bias = 15;
+
+        float16(uint32_t sign, uint32_t biased_exponent, uint32_t fraction)
+            : m_value((sign & 0x01) << 15 | (biased_exponent & 0x1F) << 10 | (fraction & 0x03FF))
+        {
+        }
+
+        float16(float value);
+
         std::string to_string() const;
         size_t size() const;
         bool operator==(const float16& other) const;

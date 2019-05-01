@@ -43,6 +43,7 @@ set(SRC
     cse.cpp
     element_type.cpp
     file_util.cpp
+    float16.cpp
     includes.cpp
     input_output_assign.cpp
     main.cpp
