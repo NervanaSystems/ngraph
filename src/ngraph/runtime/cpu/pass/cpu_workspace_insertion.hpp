@@ -15,7 +15,7 @@
 
 #pragma once
 
-#include "ngraph/node_vector.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/pass/pass.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/runtime/cpu/cpu_backend_visibility.h"

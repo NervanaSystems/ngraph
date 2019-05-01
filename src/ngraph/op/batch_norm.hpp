@@ -19,7 +19,6 @@
 #include <memory>
 
 #include "ngraph/node.hpp"
-#include "ngraph/node_vector.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/util.hpp"
 
