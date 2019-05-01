@@ -23,8 +23,18 @@ using namespace ngraph;
 op::DynSlice::DynSlice(const shared_ptr<Node>& arg,
                        const shared_ptr<Node>& lower_bounds,
                        const shared_ptr<Node>& upper_bounds,
-                       const shared_ptr<Node>& strides)
+                       const shared_ptr<Node>& strides,
+                       const AxisSet& lower_bounds_mask,
+                       const AxisSet& upper_bounds_mask,
+                       const AxisSet& new_axis,
+                       const AxisSet& shrink_axis,
+                       const AxisSet& ellipsis_mask)
     : Op("DynSlice", check_single_output_args({arg, lower_bounds, upper_bounds, strides}))
+    , m_lower_bounds_mask(lower_bounds_mask)
+    , m_upper_bounds_mask(upper_bounds_mask)
+    , m_new_axis(new_axis)
+    , m_shrink_axis(shrink_axis)
+    , m_ellipsis_mask(ellipsis_mask)
 {
     constructor_validate_and_infer_types();
 }
