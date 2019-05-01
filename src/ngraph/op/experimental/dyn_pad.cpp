@@ -94,6 +94,8 @@ void op::DynPad::validate_and_infer_types()
 
     auto out_shape = PartialShape::dynamic(output_rank);
 
+    set_input_is_relevant_to_shape(1);
+    set_input_is_relevant_to_shape(2);
     set_output_type(0, arg_t, out_shape);
 }
 

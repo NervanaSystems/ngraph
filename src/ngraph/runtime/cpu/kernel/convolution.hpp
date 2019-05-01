@@ -27,7 +27,11 @@ namespace ngraph
         {
             namespace kernel
             {
-                template <typename ElementType>
+                template <typename INPUT,
+                          typename FILTER,
+                          typename OUTPUT,
+                          typename ACCUMULATION =
+                              typename ngraph::runtime::reference::widen<OUTPUT>::type>
                 void convolution(void* input0,
                                  void* input1,
                                  void* output,
@@ -38,19 +42,22 @@ namespace ngraph
                                  const Strides& window_dilation_strides,
                                  const CoordinateDiff& padding_below,
                                  const CoordinateDiff& padding_above,
-                                 const Strides& data_dilation_strides)
+                                 const Strides& data_dilation_strides,
+                                 const float requant_scale)
                 {
-                    reference::convolution<ElementType>(static_cast<const ElementType*>(input0),
-                                                        static_cast<const ElementType*>(input1),
-                                                        static_cast<ElementType*>(output),
-                                                        arg0_shape,
-                                                        arg1_shape,
-                                                        result_shape,
-                                                        window_movement_strides,
-                                                        window_dilation_strides,
-                                                        padding_below,
-                                                        padding_above,
-                                                        data_dilation_strides);
+                    reference::convolution<INPUT, FILTER, OUTPUT, ACCUMULATION>(
+                        static_cast<const INPUT*>(input0),
+                        static_cast<const FILTER*>(input1),
+                        static_cast<OUTPUT*>(output),
+                        arg0_shape,
+                        arg1_shape,
+                        result_shape,
+                        window_movement_strides,
+                        window_dilation_strides,
+                        padding_below,
+                        padding_above,
+                        data_dilation_strides,
+                        requant_scale);
                 }
 
                 template <typename ElementType>

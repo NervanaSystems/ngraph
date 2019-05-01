@@ -14,21 +14,30 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "distributed_setup.hpp"
+#pragma once
 
-void DistributedSetup::set_comm_size(int comm_size)
+#include "ngraph/op/op.hpp"
+
+namespace ngraph
 {
-    ngraph_dist_setup::distributed_comm_size = comm_size;
-}
-void DistributedSetup::set_comm_rank(int comm_rank)
-{
-    ngraph_dist_setup::distributed_comm_rank = comm_rank;
-}
-int DistributedSetup::get_comm_size()
-{
-    return ngraph_dist_setup::distributed_comm_size;
-}
-int DistributedSetup::get_comm_rank()
-{
-    return ngraph_dist_setup::distributed_comm_rank;
+    namespace op
+    {
+        class ReorgYolo : public Op
+        {
+        public:
+            /// \brief Constructs a ReorgYolo operation
+            ///
+            /// \param input          Input
+            /// \param stride         Stride to reorganize input by
+            ReorgYolo(const std::shared_ptr<Node>& input, const Strides& stride);
+
+            void validate_and_infer_types() override;
+
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+
+        private:
+            Strides m_stride;
+        };
+    }
 }
