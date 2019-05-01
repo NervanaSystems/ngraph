@@ -62,7 +62,7 @@ namespace ngraph
                 auto lstm_desc =
                     mkldnn_emitter->get_rnn_forward_desc<ngraph::op::Lstm>(node, args, out);
                 // Lstm needs 9 primitives: src_layer, src_iter, weights_layer, weights_iter, bias,
-                // dst_layer, dst_iter, and rnn_forward.
+                // dst_layer, dst_iter, workspace, and rnn_forward.
                 // It needs a new workspace.
                 auto lstm_index =
                     mkldnn_emitter->reserve_primitive_space(9, true /* new workspace */);
