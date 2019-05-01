@@ -225,6 +225,7 @@ namespace ngraph
                 // so they don't get freed before we are done with them
                 std::vector<std::shared_ptr<Node>> m_active_constants;
 #endif
+                static bool is_codegen(const ngraph::pass::PassConfig& pc);
                 std::unordered_set<descriptor::Tensor*>&
                     get_tensor_set(descriptor::Tensor* output_tensor);
 
