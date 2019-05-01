@@ -183,14 +183,8 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         std::make_shared<ngraph::op::Multiply>(ot, std::make_shared<ngraph::op::Tanh>(ct_label));
 
     // Define a call back that needs to called once the DFG matches the pattern
-    auto callback = [ct_label,
-                                                w_i2h,
-                                                bias_i2h,
-                                                w_h2h,
-                                                bias_h2h,
-                                                xt,
-                                                ht_1,
-                                                ct_1](pattern::Matcher& m) {
+    auto callback = [ct_label, w_i2h, bias_i2h, w_h2h, bias_h2h, xt, ht_1, ct_1](
+        pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_fprop_lstm pattern against "
                      << m.get_match_root()->get_name();
 
@@ -812,8 +806,7 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
         NodeVector{rnn_ltor_goe0_reshape_tnc, skip_reverse_seq}, 0);
 
     // Define a call back that needs to called once the DFG matches the pattern
-    ngraph::pattern::graph_rewrite_callback callback = [rnn_left_to_right,
-                                                        rnn_right_to_left](pattern::Matcher& m) {
+    auto callback = [rnn_left_to_right, rnn_right_to_left](pattern::Matcher& m) {
 
         auto pattern_map = m.get_pattern_map();
         auto rnn_ltor_node =
@@ -913,6 +906,6 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
         return true;
     };
 
-    auto m = std::make_shared<ngraph::pattern::Matcher>(concat, callback);
-    this->add_matcher(m);
+    auto m = std::make_shared<ngraph::pattern::Matcher>(concat, "BiDirectionalRnn");
+    this->add_matcher(m, callback);
 }

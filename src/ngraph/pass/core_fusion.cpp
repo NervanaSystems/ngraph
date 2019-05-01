@@ -342,7 +342,7 @@ void pass::CoreFusion::construct_conv_affine_folding()
             if (bcast->get_argument(0)->get_shape().size() == 2)
             {
                 Shape bshape{bcast->get_argument(0)->get_shape()[1]};
-                    return static_pointer_cast<Node>(std::make_shared<op::Reshape>(
+                return static_pointer_cast<Node>(std::make_shared<op::Reshape>(
                     bcast->get_argument(0), AxisVector{0, 1}, bshape));
             }
             throw ngraph_error("Unexpected shape for bcast input");
@@ -366,7 +366,7 @@ void pass::CoreFusion::construct_conv_affine_folding()
                                                         conv_m->get_padding_above(),
                                                         conv_m->get_data_dilation_strides());
         auto convbias_n = conv_n + B_m;
-            replace_node(m.get_match_root(), convbias_n);
+        replace_node(m.get_match_root(), convbias_n);
 
         return true;
 
@@ -759,7 +759,7 @@ void ngraph::pass::CoreFusion::construct_conv_bias()
                                                             Strides{1, 1});
     auto p_conv_bias = pbroadcast + pconv1;
 
-    ngraph::pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
+    auto callback = [](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_conv_bias against node = "
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
@@ -813,8 +813,7 @@ void ngraph::pass::CoreFusion::construct_conv_bias()
         return true;
     };
 
-    auto m =
-        std::make_shared<ngraph::pattern::Matcher>(p_conv_bias, "CoreFusion.ConvBias");
+    auto m = std::make_shared<ngraph::pattern::Matcher>(p_conv_bias, "CoreFusion.ConvBias");
     this->add_matcher(m, callback);
 }
 
@@ -836,7 +835,7 @@ void ngraph::pass::CoreFusion::construct_conv_bias_add()
     auto add_input = std::make_shared<pattern::op::Label>(element::f32, pconv->get_shape());
     auto padd = std::make_shared<ngraph::op::Add>(add_input, pconv);
 
-    pattern::graph_rewrite_callback callback = [data_batch, filters](pattern::Matcher& m) {
+    auto callback = [data_batch, filters](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_conv_sum against "
                      << m.get_match_root()->get_name();
 

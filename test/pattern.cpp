@@ -447,7 +447,7 @@ TEST(pattern, matcher)
 
     // strict mode
     {
-        TestMatcher sm(nullptr, nullptr, "TestMatcher", pass::PassProperty::REGULAR_FUSIONS, true);
+        TestMatcher sm(nullptr, "TestMatcher", true);
         // exact shape and type
         auto scalar_param = make_shared<op::Parameter>(element::i32, Shape{});
         auto label_dynamic_shape =

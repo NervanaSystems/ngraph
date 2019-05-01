@@ -72,7 +72,7 @@ void pass::ReshapeElimination::construct_identity_reshape_pattern()
         return true;
     };
 
-    auto m = make_shared<ngraph::pattern::Matcher>(reshape1);
+    auto m = make_shared<pattern::Matcher>(reshape1);
     this->add_matcher(m, callback);
 }
 
@@ -131,7 +131,7 @@ void pass::ReshapeElimination::construct_reshapex2_pattern()
 
         return false;
     };
-    auto m = make_shared<ngraph::pattern::Matcher>(reshape2);
+    auto m = make_shared<pattern::Matcher>(reshape2);
     this->add_matcher(m, callback);
 }
 
