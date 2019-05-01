@@ -37,7 +37,7 @@ class ngraph::runtime::hybrid::op::FunctionCall : public ngraph::op::Op
 {
 public:
     FunctionCall(const NodeVector& outputs,
-                 const NodeVector& inputs,
+                 const OutputVector& args,
                  const Function& function,
                  std::shared_ptr<Backend> backend);
 

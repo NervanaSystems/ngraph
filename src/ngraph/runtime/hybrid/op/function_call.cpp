@@ -22,10 +22,10 @@ using namespace std;
 using namespace ngraph;
 
 runtime::hybrid::op::FunctionCall::FunctionCall(const NodeVector& outputs,
-                                                const NodeVector& inputs,
+                                                const OutputVector& args,
                                                 const Function& function,
                                                 shared_ptr<Backend> backend)
-    : Op("FunctionCall", inputs)
+    : Op("FunctionCall", args)
     , m_function_outputs{outputs}
     , m_function{ngraph::clone_function(function)}
     , m_backend{backend}
