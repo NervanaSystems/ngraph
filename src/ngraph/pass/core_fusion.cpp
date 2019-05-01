@@ -767,10 +767,10 @@ void ngraph::pass::CoreFusion::construct_conv_bias()
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
-        // Pattern matcher ensures these are the right classes
         auto conv_m =
-            std::static_pointer_cast<ngraph::op::Convolution>(m.get_match_root()->get_argument(0));
-        auto bcast_m = std::static_pointer_cast<op::Broadcast>(m.get_match_root()->get_argument(1));
+            std::dynamic_pointer_cast<ngraph::op::Convolution>(m.get_match_root()->get_argument(0));
+        auto bcast_m =
+            std::dynamic_pointer_cast<op::Broadcast>(m.get_match_root()->get_argument(1));
 
         if (conv_m == nullptr || bcast_m == nullptr)
         {
