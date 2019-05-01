@@ -193,11 +193,13 @@ namespace ngraph
             RecurrentMatcher(std::shared_ptr<Node> pattern,
                              std::shared_ptr<op::Label> rpattern,
                              const std::set<std::shared_ptr<op::Label>>& correlated_patterns,
-                             recurrent_graph_rewrite_callback callback)
+                             recurrent_graph_rewrite_callback callback,
+                             pass::PassPropertyMask property = pass::PassProperty::REGULAR_FUSIONS)
                 : m_pattern(pattern)
                 , m_recurrent_pattern(rpattern)
                 , m_correlated_patterns(correlated_patterns)
                 , m_callback(callback)
+                , m_property(property)
             {
             }
 
@@ -230,6 +232,8 @@ namespace ngraph
             /// \brief Invoked by a pass to process a successful match
             bool process_match();
 
+            bool get_property(const pass::PassPropertyMask& prop) const;
+
             std::shared_ptr<Node> get_match_root() { return m_match_root; }
         private:
             std::shared_ptr<Node> m_pattern;
@@ -237,6 +241,7 @@ namespace ngraph
             const std::set<std::shared_ptr<op::Label>> m_correlated_patterns;
             RPatternMap m_matches;
             recurrent_graph_rewrite_callback m_callback;
+            pass::PassPropertyMask m_property;
             std::shared_ptr<Node> m_match_root;
         };
     }
