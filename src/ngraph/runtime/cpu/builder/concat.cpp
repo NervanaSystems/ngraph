@@ -37,7 +37,7 @@ namespace ngraph
 
                 auto& functors = external_function->get_functors();
 
-                vector<reference_wrapper<void*>> arg_tensors;
+                vector<size_t> arg_buffer_indices;
                 vector<Shape> arg_shapes;
                 vector<size_t> arg_sizes;
                 auto element_size = concat->get_input_element_type(0).size();
@@ -45,15 +45,15 @@ namespace ngraph
                 {
                     if (shape_size(arg.get_shape()))
                     {
-                        arg_tensors.emplace_back(
-                            external_function->get_tensor_data(arg.get_name()));
+                        arg_buffer_indices.emplace_back(
+                            external_function->get_buffer_index(arg.get_name()));
                         arg_shapes.emplace_back(arg.get_shape());
                         arg_sizes.emplace_back(shape_size(arg.get_shape()) * element_size);
                     }
                 }
                 auto nargs = args.size();
 
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
                 auto out_shape = out[0].get_shape();
 
                 if (auto op_annotations = concat->get_op_annotations())
@@ -63,26 +63,32 @@ namespace ngraph
                     {
                         auto out_size = shape_size(out_shape) * element_size;
 
-                        auto functor = [&, arg_tensors, nargs, out_size, arg_sizes](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                            auto offset = 0;
-                            for (size_t i = 0; i < nargs; i++)
-                            {
-                                // if the argument pointer does not fall within the concat output buffer
-                                // (caused by propagate_in_place_output or propagate_in_place_input), we need to copy the data;
-                                // otherwise, we can skip the copy.
-                                if (arg_tensors[i] < out_tensor ||
-                                    arg_tensors[i] >=
-                                        reinterpret_cast<char*>(out_tensor) + out_size)
+                        auto functor =
+                            [&, arg_buffer_indices, nargs, out_size, arg_sizes, out_buffer_index](
+                                CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                                auto offset = 0;
+                                for (size_t i = 0; i < nargs; i++)
                                 {
-                                    memcpy(reinterpret_cast<char*>(out_tensor) + offset,
-                                           arg_tensors[i],
-                                           arg_sizes[i]);
+                                    // if the argument pointer does not fall within the concat output buffer
+                                    // (caused by propagate_in_place_output or propagate_in_place_input), we need to copy the data;
+                                    // otherwise, we can skip the copy.
+                                    if (ctx->buffer_data[arg_buffer_indices[i]] <
+                                            ctx->buffer_data[out_buffer_index] ||
+                                        ctx->buffer_data[arg_buffer_indices[i]] >=
+                                            reinterpret_cast<char*>(
+                                                ctx->buffer_data[out_buffer_index]) +
+                                                out_size)
+                                    {
+                                        memcpy(reinterpret_cast<char*>(
+                                                   ctx->buffer_data[out_buffer_index]) +
+                                                   offset,
+                                               ctx->buffer_data[arg_buffer_indices[i]],
+                                               arg_sizes[i]);
+                                    }
+                                    offset += arg_sizes[i];
                                 }
-                                offset += arg_sizes[i];
-                            }
 
-                        };
+                            };
 
                         functors.emplace_back(functor);
                         return;
@@ -92,7 +98,8 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto concat_pd = mkldnn_emitter->get_concat_desc(node, nargs);
+                    auto concat_pd =
+                        mkldnn_emitter->get_concat_desc<ngraph::op::Concat>(node, nargs);
                     std::vector<mkldnn::memory::desc> inputs_data_desc;
                     for (size_t i = 0; i < nargs; i++)
                     {
@@ -102,21 +109,31 @@ namespace ngraph
                     auto concat_index = mkldnn_emitter->reserve_primitive_space(nargs + 2);
                     auto& deps = mkldnn_emitter->get_primitive_deps(concat_index);
 
-                    auto functor =
-                        [&, concat_pd, inputs_data_desc, arg_tensors, nargs, concat_index](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                            if (ctx->first_iteration)
-                            {
-                                mkldnn_emitter->build_concat(
-                                    concat_pd, inputs_data_desc, concat_index);
-                            }
-                            for (size_t i = 0; i < nargs; i++)
-                            {
-                                cpu::mkldnn_utils::set_memory_ptr(ctx, deps[i], arg_tensors[i]);
-                            }
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[nargs], out_tensor);
-                            cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, concat_index);
-                        };
+                    auto functor = [&,
+                                    concat_pd,
+                                    inputs_data_desc,
+                                    arg_buffer_indices,
+                                    nargs,
+                                    concat_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* ectx) {
+                        if (ctx->first_iteration)
+                        {
+                            mkldnn_emitter->build_concat(ctx->mkldnn_primitives,
+                                                         concat_pd,
+                                                         inputs_data_desc,
+                                                         deps,
+                                                         concat_index);
+                        }
+                        for (size_t i = 0; i < nargs; i++)
+                        {
+                            cpu::mkldnn_utils::set_memory_ptr(
+                                ctx, deps[i], ctx->buffer_data[arg_buffer_indices[i]]);
+                        }
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[nargs], ctx->buffer_data[out_buffer_index]);
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, concat_index);
+                    };
 
                     functors.emplace_back(functor);
                 }
@@ -129,9 +146,24 @@ namespace ngraph
                                           out[0].get_shape().size(),
                                           runtime::cpu::kernel::concat);
 
-                    auto functor = [&, kernel, arg_tensors, arg_shapes, out_shape, axis](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        kernel(arg_tensors, arg_shapes, out_tensor, out_shape, axis);
+                    auto functor = [&,
+                                    kernel,
+                                    arg_buffer_indices,
+                                    arg_shapes,
+                                    out_shape,
+                                    axis,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* ectx) {
+                        std::vector<void*> arg_tensors;
+                        for (auto& arg_buffer_index : arg_buffer_indices)
+                        {
+                            arg_tensors.push_back(ctx->buffer_data[arg_buffer_index]);
+                        }
+                        kernel(arg_tensors,
+                               arg_shapes,
+                               ctx->buffer_data[out_buffer_index],
+                               out_shape,
+                               axis);
                     };
                     functors.emplace_back(functor);
                 }
