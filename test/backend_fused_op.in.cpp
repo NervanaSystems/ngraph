@@ -337,3 +337,23 @@ NGRAPH_TEST(${BACKEND_NAME}, depth_to_space)
                             22.f, 23.f, 24.f, 25.f, 26.f, 27.f, 28.f, 29.f, 30.f, 31.f});
     test_case.run();
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, gemm)
+{
+    auto A = make_shared<op::Parameter>(element::f64, Shape{3, 6});
+    auto B = make_shared<op::Parameter>(element::f64, Shape{6, 4});
+    auto C = make_shared<op::Parameter>(element::f64, Shape{3, 4});
+
+    auto gemm_func = make_shared<op::Gemm>(A, B, C);
+    auto function = make_shared<Function>(NodeVector{gemm_func}, ParameterVector{A, B, C});
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    // A
+    test_case.add_input<double>(vector<double>(18, 1));
+    // B
+    test_case.add_input<double>(vector<double>(24, 2));
+    // C
+    test_case.add_input<double>(vector<double>(12, 0));
+    //output
+    test_case.add_expected_output<double>(Shape{3, 4}, vector<double>(12, 12));
+    test_case.run();
+}

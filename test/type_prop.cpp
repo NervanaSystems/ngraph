@@ -13829,14 +13829,10 @@ TEST(type_prop, group_conv_invalid_groups)
 
 TEST(type_prop, gemm)
 {
-    double alpha = 0;
-    double beta = 0;
-    bool transA = false;
-    bool transB = false;
     auto A = make_shared<op::Parameter>(element::f32, Shape{3, 6});
     auto B = make_shared<op::Parameter>(element::f32, Shape{6, 4});
     auto C = make_shared<op::Parameter>(element::f32, Shape{3, 4});
-    auto gemm_func = make_shared<op::Gemm>(A, B, C, alpha, beta, transA, transB);
+    auto gemm_func = make_shared<op::Gemm>(A, B, C);
     EXPECT_EQ(gemm_func->get_element_type(), element::f32);
     EXPECT_EQ(gemm_func->get_shape(), (Shape{3, 4}));
 }
