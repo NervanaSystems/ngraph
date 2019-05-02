@@ -56,7 +56,7 @@ namespace ngraph
             /// \param aux_box_preds		Auxilary box predictions
             /// \param attrs				Detection Output attributes
             DetectionOutput(const std::shared_ptr<Node>& box_logits,
-                            const std::shared_ptr<Node>& class_logits,
+                            const std::shared_ptr<Node>& class_preds,
                             const std::shared_ptr<Node>& proposals,
                             const std::shared_ptr<Node>& aux_class_preds,
                             const std::shared_ptr<Node>& aux_box_preds,

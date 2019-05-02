@@ -22,14 +22,14 @@ using namespace std;
 using namespace ngraph;
 
 op::DetectionOutput::DetectionOutput(const std::shared_ptr<Node>& box_logits,
-                                     const std::shared_ptr<Node>& class_logits,
+                                     const std::shared_ptr<Node>& class_preds,
                                      const std::shared_ptr<Node>& proposals,
                                      const std::shared_ptr<Node>& aux_class_preds,
                                      const std::shared_ptr<Node>& aux_box_preds,
                                      const DetectionOutputAttrs& attrs)
     : Op("DetectionOutput",
          check_single_output_args(
-             {box_logits, class_logits, proposals, aux_class_preds, aux_box_preds}))
+             {box_logits, class_preds, proposals, aux_class_preds, aux_box_preds}))
     , m_attrs(attrs)
 {
     constructor_validate_and_infer_types();
