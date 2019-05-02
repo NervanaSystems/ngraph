@@ -41,10 +41,10 @@ namespace ngraph
             Gemm(const std::shared_ptr<ngraph::Node>& A,
                  const std::shared_ptr<ngraph::Node>& B,
                  const std::shared_ptr<ngraph::Node>& C,
-                 double alpha,
-                 double beta,
-                 bool transA,
-                 bool transB);
+                 double alpha = 1.0,
+                 double beta = 1.0,
+                 bool transA = false,
+                 bool transB = false);
 
             virtual NodeVector decompose_op() const override;
 
