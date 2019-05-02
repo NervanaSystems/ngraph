@@ -432,7 +432,5 @@ namespace ngraph
 
             return matched;
         }
-
-        bool RecurrentMatcher::process_match() { return m_callback(*this); }
     }
 }

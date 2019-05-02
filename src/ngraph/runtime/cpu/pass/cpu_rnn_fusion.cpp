@@ -371,13 +371,12 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
     auto lstm_goe_slice =
         std::make_shared<ngraph::op::Slice>(lstm_goe_label, Coordinate{10, 0}, Coordinate{20, 100});
 
-    pattern::recurrent_graph_rewrite_callback callback = [lstm_goe_label,
-                                                          lstm_src_layer,
-                                                          lstm_src_iter_label,
-                                                          lstm_weights_layer_label,
-                                                          lstm_weights_iter_label,
-                                                          lstm_bias_label](
-        pattern::RecurrentMatcher& m) {
+    auto callback = [lstm_goe_label,
+                     lstm_src_layer,
+                     lstm_src_iter_label,
+                     lstm_weights_layer_label,
+                     lstm_weights_iter_label,
+                     lstm_bias_label](pattern::RecurrentMatcher& m) {
 
         NGRAPH_DEBUG << " In recurrent RNN fusion callback";
 
@@ -561,9 +560,8 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         std::set<std::shared_ptr<pattern::op::Label>>{lstm_weights_layer_shared,
                                                       lstm_weights_iter_shared,
                                                       lstm_bias_layer_shared,
-                                                      lstm_bias_iter_shared},
-        callback);
-    this->add_matcher(m);
+                                                      lstm_bias_iter_shared});
+    this->add_matcher(m, callback);
 }
 
 static std::shared_ptr<Node> stack_rnn_inputs(NodeVector rnn_input_nodes)
@@ -606,13 +604,12 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
     auto rnn_goe0_label =
         std::make_shared<pattern::op::Label>(rnn_goe0, nullptr, NodeVector{rnn_goe0});
 
-    pattern::recurrent_graph_rewrite_callback callback = [rnn_src_layer,
-                                                          rnn_src_iter,
-                                                          rnn_weights_layer,
-                                                          rnn_weights_iter,
-                                                          rnn_bias,
-                                                          rnn_goe0_label](
-        pattern::RecurrentMatcher& m) {
+    auto callback = [rnn_src_layer,
+                     rnn_src_iter,
+                     rnn_weights_layer,
+                     rnn_weights_iter,
+                     rnn_bias,
+                     rnn_goe0_label](pattern::RecurrentMatcher& m) {
         auto number_of_rnn_cell_matched = m.get_number_of_recurrent_matches();
         NGRAPH_DEBUG << " In Recurrent multi layer RNN fusion callback ";
         NGRAPH_DEBUG << " Number of RNN's Matched: " << number_of_rnn_cell_matched;
@@ -768,8 +765,8 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
 
     std::set<std::shared_ptr<pattern::op::Label>> empty_correlated_matches;
     auto m = std::make_shared<pattern::RecurrentMatcher>(
-        rnn_goe0_label, rnn_src_layer, empty_correlated_matches, callback);
-    this->add_matcher(m);
+        rnn_goe0_label, rnn_src_layer, empty_correlated_matches);
+    this->add_matcher(m, callback);
 }
 
 void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()

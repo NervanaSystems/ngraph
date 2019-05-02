@@ -289,7 +289,7 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
         return modify_graph;
     };
     std::set<std::shared_ptr<pattern::op::Label>> empty_correlated_matches;
-    auto m = std::make_shared<pattern::RecurrentMatcher>(
-        reshape_label, op, empty_correlated_matches, callback);
-    this->add_matcher(m);
+    auto m =
+        std::make_shared<pattern::RecurrentMatcher>(reshape_label, op, empty_correlated_matches);
+    this->add_matcher(m, callback);
 }

@@ -541,7 +541,7 @@ TEST(pattern, recurrent_pattern)
     auto add3 = iconst0 + add2;
     auto padd = iconst0 + rpattern;
     std::set<std::shared_ptr<pattern::op::Label>> empty_correlated_matches;
-    RecurrentMatcher rm(padd, rpattern, empty_correlated_matches, nullptr);
+    RecurrentMatcher rm(padd, rpattern, empty_correlated_matches);
     ASSERT_TRUE(rm.match(add3));
     ASSERT_EQ(rm.get_number_of_bound_labels(), 1);
     auto recurrent_matches = rm.get_bound_nodes_for_pattern(rpattern);
@@ -555,7 +555,7 @@ TEST(pattern, recurrent_pattern)
     auto add2_2 = iconst1 + add1;
     auto add3_2 = iconst0 + add2_2;
     auto padd2 = iconst_label + rpattern;
-    RecurrentMatcher rm2(padd2, rpattern, empty_correlated_matches, nullptr);
+    RecurrentMatcher rm2(padd2, rpattern, empty_correlated_matches);
     ASSERT_TRUE(rm2.match(add3_2));
     ASSERT_EQ(rm2.get_number_of_bound_labels(), 2);
     recurrent_matches = rm2.get_bound_nodes_for_pattern(rpattern);
@@ -570,7 +570,7 @@ TEST(pattern, recurrent_pattern)
     // Non-matching correlated labels
     std::set<std::shared_ptr<pattern::op::Label>> correlated_matches;
     correlated_matches.insert(iconst_label);
-    RecurrentMatcher rm3(padd2, rpattern, correlated_matches, nullptr);
+    RecurrentMatcher rm3(padd2, rpattern, correlated_matches);
     ASSERT_TRUE(rm3.match(add3_2));
     ASSERT_EQ(rm3.get_number_of_bound_labels(), 2);
     iconst_matches = rm3.get_bound_nodes_for_pattern(iconst_label);
@@ -603,8 +603,7 @@ public:
         auto rpattern = std::make_shared<pattern::op::Label>(element::i32, shape);
         auto padd = iconst_label + rpattern;
 
-        ngraph::pattern::recurrent_graph_rewrite_callback callback = [iconst_label, rpattern](
-            pattern::RecurrentMatcher& rm) {
+        auto callback = [iconst_label, rpattern](pattern::RecurrentMatcher& rm) {
             NGRAPH_DEBUG << "In a callback for construct_recurrent_add against "
                          << rm.get_match_root()->get_name();
 
@@ -635,9 +634,8 @@ public:
         };
 
         std::set<std::shared_ptr<pattern::op::Label>> empty_correlated_matches;
-        auto rm = make_shared<pattern::RecurrentMatcher>(
-            padd, rpattern, empty_correlated_matches, callback);
-        this->add_matcher(rm);
+        auto rm = make_shared<pattern::RecurrentMatcher>(padd, rpattern, empty_correlated_matches);
+        this->add_matcher(rm, callback);
     }
 
     TestRecurrentGraphRewrite()
