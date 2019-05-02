@@ -89,7 +89,7 @@ namespace ngraph
 
                 std::mutex m_mutex;
                 std::condition_variable m_cv;
-                size_t m_num_ctx_available = 0;
+                volatile size_t m_num_ctx_available = 0;
                 size_t m_prev_ctx = 0;
                 size_t m_num_ctx = 1;
                 std::unordered_map<size_t, bool> m_id_pool;
