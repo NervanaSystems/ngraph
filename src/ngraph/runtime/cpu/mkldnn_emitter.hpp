@@ -638,19 +638,12 @@ namespace ngraph
                                        const std::vector<size_t>& deps,
                                        size_t lrn_index);
 
-                size_t build_relu_forward(const mkldnn::memory::desc& input_desc,
-                                          const mkldnn::memory::desc& result_desc);
-
                 mkldnn::eltwise_forward::desc get_relu_forward_desc(const ngraph::Node* node);
 
                 void build_relu_forward(std::vector<mkldnn::primitive*>& mkldnn_primitives,
                                         const mkldnn::eltwise_forward::desc& relu_desc,
                                         const std::vector<size_t>& deps,
                                         size_t relu_index);
-
-                size_t build_relu_backward(const mkldnn::memory::desc& input_desc,
-                                           const mkldnn::memory::desc& delta_desc,
-                                           const mkldnn::memory::desc& result_desc);
 
                 mkldnn::eltwise_backward::desc get_relu_backward_desc(const ngraph::Node* node);
 
@@ -660,9 +653,6 @@ namespace ngraph
                                          const std::vector<size_t>& deps,
                                          size_t relu_index);
 
-                size_t build_sigmoid_forward(const mkldnn::memory::desc& input_desc,
-                                             const mkldnn::memory::desc& result_desc);
-
                 mkldnn::eltwise_forward::desc get_sigmoid_forward_desc(const ngraph::Node* node,
                                                                        bool backward_op);
 
@@ -670,10 +660,6 @@ namespace ngraph
                                            const mkldnn::eltwise_forward::desc& sigmoid_desc,
                                            const std::vector<size_t>& deps,
                                            size_t sigmoid_index);
-
-                size_t build_sigmoid_backward(const mkldnn::memory::desc& input_desc,
-                                              const mkldnn::memory::desc& delta_desc,
-                                              const mkldnn::memory::desc& result_desc);
 
                 mkldnn::eltwise_backward::desc get_sigmoid_backward_desc(const ngraph::Node* node);
 
@@ -776,22 +762,12 @@ namespace ngraph
                                   const std::vector<size_t>& deps,
                                   size_t concat_index);
 
-                size_t build_slice(const mkldnn::memory::desc& input_desc,
-                                   const mkldnn::memory::desc& result_desc,
-                                   const ngraph::Coordinate& lower_bounds,
-                                   const ngraph::Shape& result_shape);
-
-                void build_slice(std::vector<mkldnn::primitive*>& mkldnn_primitives,
-                                 const mkldnn::memory::desc& input_desc,
+                void build_slice(const mkldnn::memory::desc& input_desc,
                                  const mkldnn::memory::desc& result_desc,
                                  const ngraph::Coordinate& lower_bounds,
                                  const ngraph::Shape& result_shape,
                                  const std::vector<size_t>& deps,
                                  size_t slice_index);
-
-                size_t build_softmax_forward(const mkldnn::memory::desc& input_desc,
-                                             const mkldnn::memory::desc& result_desc,
-                                             int softmax_axis);
 
                 mkldnn::softmax_forward::desc get_softmax_forward_desc(const ngraph::Node* node);
 
@@ -800,20 +776,12 @@ namespace ngraph
                                            const std::vector<size_t>& deps,
                                            size_t softmax_index);
 
-                size_t build_leaky_relu(const mkldnn::memory::desc& input_desc,
-                                        const mkldnn::memory::desc& result_desc,
-                                        float alpha);
-
                 mkldnn::eltwise_forward::desc get_leaky_relu_desc(const ngraph::Node* node);
 
                 void build_leaky_relu(std::vector<mkldnn::primitive*>& mkldnn_primitives,
                                       const mkldnn::eltwise_forward::desc& leaky_relu_desc,
                                       const std::vector<size_t>& deps,
                                       size_t leaky_relu_index);
-
-                size_t build_bounded_relu(const mkldnn::memory::desc& input_desc,
-                                          const mkldnn::memory::desc& result_desc,
-                                          float alpha);
 
                 mkldnn::eltwise_forward::desc get_bounded_relu_desc(const ngraph::Node* node);
 
