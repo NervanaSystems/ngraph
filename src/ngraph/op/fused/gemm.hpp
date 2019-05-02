@@ -51,6 +51,10 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
+            double get_alpha() const { return m_alpha; }
+            double get_beta() const { return m_beta; }
+            bool get_transA() const { return m_transA; }
+            bool get_transB() const { return m_transB; }
         private:
             double m_alpha;
             double m_beta;
