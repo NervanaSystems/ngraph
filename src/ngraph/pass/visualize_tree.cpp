@@ -33,11 +33,37 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
 {
     for (shared_ptr<Function> f : functions)
     {
+        map<Node*, size_t> height_map;
+
+        for (auto& node : reverse_topological_sort(f->get_ops()))
+        {
+            size_t my_height = 0;
+
+            for (auto output : node->outputs())
+            {
+                for (auto input : output.get_target_inputs())
+                {
+                    auto target_node = input.get_node();
+                    my_height = std::max(my_height, height_map[target_node]+1);
+                }
+            }
+
+            height_map[node.get()] = my_height;
+
+            std::cout << "[" << my_height << "] " << *node << std::endl;
+        }
+
         // map<size_t, list<node_ptr>> dependent_nodes;
         traverse_nodes(f, [&](shared_ptr<Node> node) {
             size_t i = 0;
             for (auto arg : node->get_arguments())
             {
+                size_t jump_distance = height_map[arg.get()] - height_map[node.get()];
+
+                if (jump_distance > 200 || arg->description() == "Constant" || arg->description() == "Parameter")
+                {
+                    continue;
+                }
                 m_ss << add_attributes(arg);
                 m_ss << add_attributes(node);
                 m_ss << "    " << arg->get_name() << " -> " << node->get_name();
@@ -52,6 +78,16 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
                     stringstream label_edge;
                     label_edge << "[label=\" " << output << " -> " << i << " \"]";
                     m_ss << label_edge.str();
+                }
+
+                if (getenv("NGRAPH_VISUALIZE_EDGE_JUMP") != nullptr)
+                {
+                    if (jump_distance > 1)
+                    {
+                        stringstream label_edge;
+                        label_edge << "[label=\"jump=" << jump_distance << "\"]";
+                        m_ss << label_edge.str();
+                    }
                 }
 
                 m_ss << ";\n";

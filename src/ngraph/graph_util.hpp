@@ -141,6 +141,50 @@ namespace ngraph
         return result_list;
     }
 
+    template <typename T>
+    std::list<std::shared_ptr<Node>> reverse_topological_sort(const T& nodes)
+    {
+        std::deque<ngraph::Node*> independent_nodes;
+        std::unordered_map<const ngraph::Node*, size_t> node_users_count;
+        std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>> node_map;
+
+        for (auto node : nodes)
+        {
+            node_map[node.get()] = node;
+            size_t users_count = node->get_users().size();
+            node_users_count[node.get()] = users_count;
+            std::cout << *node << " has " << users_count << " users" << std::endl;
+            if (users_count == 0)
+            {
+                independent_nodes.push_back(node.get());
+            }
+        }
+
+        std::list<std::shared_ptr<ngraph::Node>> result_list;
+        while (independent_nodes.size() > 0)
+        {
+            auto independent_node = independent_nodes.front();
+            std::cout << *independent_node << " is on deck" << std::endl;
+            result_list.push_back(node_map[independent_node]);
+            independent_nodes.pop_front();
+
+            for (auto input : independent_node->inputs())
+            {
+                auto arg = input.get_source_output().get_node();
+
+                if (--node_users_count[arg] == 0)
+                {
+                    std::cout << *arg << " is ready" << std::endl;
+                    independent_nodes.push_back(arg);
+                }
+            }
+        }
+
+        std::cout << nodes.size() << " vs " << result_list.size() << std::endl;
+        NGRAPH_CHECK(nodes.size() == result_list.size());
+        return result_list;
+    }
+
     // For cases, where `nodes` is a subset of the entire graph
     template <typename T>
     std::list<std::shared_ptr<Node>> subgraph_topological_sort(const T& nodes,
