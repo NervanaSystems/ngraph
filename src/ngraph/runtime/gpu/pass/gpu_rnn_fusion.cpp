@@ -70,7 +70,7 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_sigmoid()
     auto divide_1_over_exp = std::make_shared<op::Divide>(broadcast_constant, add_exp);
 
     //Define a call back that needs to called once the DFG matches the pattern
-    ngraph::pattern::graph_rewrite_callback callback = [input](pattern::Matcher& m) {
+    auto callback = [input](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_fprop_sigmoid pattern against "
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
@@ -94,8 +94,8 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_sigmoid()
         return true;
     };
 
-    auto m = std::make_shared<ngraph::pattern::Matcher>(divide_1_over_exp, callback);
-    this->add_matcher(m);
+    auto m = std::make_shared<ngraph::pattern::Matcher>(divide_1_over_exp);
+    this->add_matcher(m, callback);
 }
 
 static std::shared_ptr<Node> compute_lstm_params(const std::shared_ptr<Node>& w_x,
@@ -177,14 +177,14 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
     auto ht_label = std::make_shared<pattern::op::Label>(ht, nullptr, NodeVector{ht});
 
     //Define a call back that needs to called once the DFG matches the pattern
-    pattern::graph_rewrite_callback callback = [ct_label,
-                                                input_xt,
-                                                weights_i2h,
-                                                hidden_ht,
-                                                weights_h2h,
-                                                bias_i2h,
-                                                bias_h2h,
-                                                ct_1](pattern::Matcher& m) {
+    auto callback = [ct_label,
+                     input_xt,
+                     weights_i2h,
+                     hidden_ht,
+                     weights_h2h,
+                     bias_i2h,
+                     bias_h2h,
+                     ct_1](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_fprop_lstm pattern against "
                      << m.get_match_root()->get_name();
 
@@ -335,8 +335,8 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
         ngraph::replace_node(m.get_match_root(), ht_output);
         return true;
     };
-    auto m = std::make_shared<pattern::Matcher>(ht, callback);
-    this->add_matcher(m);
+    auto m = std::make_shared<pattern::Matcher>(ht);
+    this->add_matcher(m, callback);
 }
 
 static std::shared_ptr<ngraph::Node>
