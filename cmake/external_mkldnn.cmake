@@ -64,6 +64,9 @@ if(MKLDNN_INCLUDE_DIR AND MKLDNN_LIB_DIR)
         set_property(TARGET libmkl PROPERTY IMPORTED_LOCATION ${MKLML_LIB_DIR}/${MKLML_LIB})
         set_target_properties(libmkl PROPERTIES
             IMPORTED_LINK_INTERFACE_LIBRARIES ${MKLML_LIB_DIR}/${OMP_LIB})
+        if(LINUX)
+            set_property(TARGET libmkl PROPERTY IMPORTED_NO_SONAME 1)
+        endif()
     endif()
 
     if(WIN32)
