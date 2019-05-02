@@ -762,7 +762,8 @@ namespace ngraph
                                   const std::vector<size_t>& deps,
                                   size_t concat_index);
 
-                void build_slice(const mkldnn::memory::desc& input_desc,
+                void build_slice(std::vector<mkldnn::primitive*>& mkldnn_primitives,
+                                 const mkldnn::memory::desc& input_desc,
                                  const mkldnn::memory::desc& result_desc,
                                  const ngraph::Coordinate& lower_bounds,
                                  const ngraph::Shape& result_shape,

@@ -877,33 +877,70 @@ namespace ngraph
                     }
                     writer << "*cg_ctx->mkldnn_descriptors[" << desc_index + (descs.size() - 1)
                            << "],\n"
-                              "mkldnn::memory::dims{"
-                           << std::to_string(strides[0]) << ", " << std::to_string(strides[1]);
-                    if (strides.size() == 3)
+                              "mkldnn::memory::dims{";
+                    if (strides.size() == 1)
                     {
-                        writer << ", " << std::to_string(strides[2]);
+                        writer << std::to_string(strides[0]);
+                    }
+                    else if (strides.size() == 2)
+                    {
+                        writer << std::to_string(strides[0]) << ", " << std::to_string(strides[1]);
+                    }
+                    else if (strides.size() == 3)
+                    {
+                        writer << std::to_string(strides[0]) << ", " << std::to_string(strides[1])
+                               << ", " << std::to_string(strides[2]);
                     }
                     writer << "},\n"
-                              "mkldnn::memory::dims{"
-                           << std::to_string(window_dilation_strides_adjusted[0]) << ", "
-                           << std::to_string(window_dilation_strides_adjusted[1]);
-                    if (window_dilation_strides_adjusted.size() == 3)
+                              "mkldnn::memory::dims{";
+                    if (window_dilation_strides_adjusted.size() == 1)
                     {
-                        writer << ", " << std::to_string(window_dilation_strides_adjusted[2]);
+                        writer << std::to_string(window_dilation_strides_adjusted[0]);
+                    }
+                    else if (window_dilation_strides_adjusted.size() == 2)
+                    {
+                        writer << std::to_string(window_dilation_strides_adjusted[0]) << ", "
+                               << std::to_string(window_dilation_strides_adjusted[1]);
+                    }
+                    else if (window_dilation_strides_adjusted.size() == 3)
+                    {
+                        writer << std::to_string(window_dilation_strides_adjusted[0]) << ", "
+                               << std::to_string(window_dilation_strides_adjusted[1]) << ", "
+                               << std::to_string(window_dilation_strides_adjusted[2]);
                     }
                     writer << "},\n"
-                              "mkldnn::memory::dims{"
-                           << std::to_string(pad_below[0]) << ", " << std::to_string(pad_below[1]);
-                    if (pad_below.size() == 3)
+                              "mkldnn::memory::dims{";
+                    if (pad_below.size() == 1)
                     {
-                        writer << ", " << std::to_string(pad_below[2]);
+                        writer << std::to_string(pad_below[0]);
+                    }
+                    else if (pad_below.size() == 2)
+                    {
+                        writer << std::to_string(pad_below[0]) << ", "
+                               << std::to_string(pad_below[1]);
+                    }
+                    else if (pad_below.size() == 3)
+                    {
+                        writer << std::to_string(pad_below[0]) << ", "
+                               << std::to_string(pad_below[1]) << ", "
+                               << std::to_string(pad_below[2]);
                     }
                     writer << "},\n"
-                              "mkldnn::memory::dims{"
-                           << std::to_string(pad_above[0]) << ", " << std::to_string(pad_above[1]);
-                    if (pad_above.size() == 3)
+                              "mkldnn::memory::dims{";
+                    if (pad_above.size() == 1)
                     {
-                        writer << ", " << std::to_string(pad_above[2]);
+                        writer << std::to_string(pad_above[0]);
+                    }
+                    else if (pad_above.size() == 2)
+                    {
+                        writer << std::to_string(pad_above[0]) << ", "
+                               << std::to_string(pad_above[1]);
+                    }
+                    else if (pad_above.size() == 3)
+                    {
+                        writer << std::to_string(pad_above[0]) << ", "
+                               << std::to_string(pad_above[1]) << ", "
+                               << std::to_string(pad_above[2]);
                     }
                     writer << "},\n"
                               "mkldnn::padding_kind::zero);\n";
@@ -1868,7 +1905,7 @@ static bool in_new_map(const std::shared_ptr<Node>& node)
         std::dynamic_pointer_cast<ngraph::op::QuantizedConvolutionBiasAdd>(node) ||
         std::dynamic_pointer_cast<ngraph::op::QuantizedConvolutionBiasSignedAdd>(node) ||
         std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(node))
+        std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(node) ||
         std::dynamic_pointer_cast<ngraph::op::Relu>(node) ||
         std::dynamic_pointer_cast<ngraph::op::ReluBackprop>(node) ||
         std::dynamic_pointer_cast<ngraph::op::Sigmoid>(node) ||

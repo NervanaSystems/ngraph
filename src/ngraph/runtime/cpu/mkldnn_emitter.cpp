@@ -1494,7 +1494,8 @@ void MKLDNNEmitter::build_concat(std::vector<mkldnn::primitive*>& mkldnn_primiti
         new mkldnn::concat(concat_pd, inputs_primitive, *mkldnn_primitives[result_index]);
 }
 
-void MKLDNNEmitter::build_slice(const mkldnn::memory::desc& input_desc,
+void MKLDNNEmitter::build_slice(std::vector<mkldnn::primitive*>& mkldnn_primitives,
+                                const mkldnn::memory::desc& input_desc,
                                 const mkldnn::memory::desc& result_desc,
                                 const ngraph::Coordinate& lower_bounds,
                                 const ngraph::Shape& result_shape,
