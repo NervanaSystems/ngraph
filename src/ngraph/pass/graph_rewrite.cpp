@@ -23,6 +23,9 @@
 #include "graph_rewrite.hpp"
 #include "ngraph/log.hpp"
 
+using namespace std;
+using namespace ngraph;
+
 // GraphRewrite algorithm:
 // GraphRewrite processes an input graph in an topological order(i.e. args before users)
 // Given the following graph:          Abs2
@@ -55,25 +58,24 @@
 // c) there's no linear order of fusions which will give
 //    the correct final fusion. i.e. the same fusion needs to occur before and after some other fusion
 
-bool ngraph::pass::GraphRewrite::run_on_function(std::shared_ptr<ngraph::Function> f)
+bool pass::GraphRewrite::run_on_function(shared_ptr<Function> f)
 {
     bool rewritten = false;
     const size_t NUM_TRIES = 10;
     size_t tries = NUM_TRIES;
-    std::vector<std::tuple<std::shared_ptr<pattern::Matcher>, ngraph::graph_rewrite_callback>>
-        original_matchers{m_matchers};
+    vector<tuple<shared_ptr<pattern::Matcher>, graph_rewrite_callback>> original_matchers{
+        m_matchers};
     do
     {
         rewritten = false;
-        std::vector<std::tuple<std::shared_ptr<pattern::Matcher>, ngraph::graph_rewrite_callback>>
-            matchers{m_matchers};
+        vector<tuple<shared_ptr<pattern::Matcher>, graph_rewrite_callback>> matchers{m_matchers};
         m_matchers.clear();
         for (auto node : f->get_ordered_ops())
         {
             for (auto tuple : matchers)
             {
-                auto matcher = std::get<0>(tuple);
-                auto callback = std::get<1>(tuple);
+                auto matcher = get<0>(tuple);
+                auto callback = get<1>(tuple);
                 NGRAPH_DEBUG << "Running matcher " << matcher->get_name() << "("
                              << matcher->get_pattern()->get_name() << ") on " << node->get_name();
                 if (matcher->match(node))
@@ -95,31 +97,31 @@ bool ngraph::pass::GraphRewrite::run_on_function(std::shared_ptr<ngraph::Functio
     return (NUM_TRIES - tries) > 1; //this means a graph was transformed
 }
 
-static const std::vector<std::regex> initialize_fusion_regexes()
+static const vector<regex> initialize_fusion_regexes()
 {
-    const char* cnsf = std::getenv("NGRAPH_DISABLED_FUSIONS");
-    std::vector<std::regex> regexes;
+    const char* cnsf = getenv("NGRAPH_DISABLED_FUSIONS");
+    vector<regex> regexes;
     if (cnsf)
     {
-        const std::string nsf = cnsf;
-        const auto sregexes = ngraph::split(nsf, ';');
+        const string nsf = cnsf;
+        const auto sregexes = split(nsf, ';');
 
-        std::transform(sregexes.begin(),
-                       sregexes.end(),
-                       std::back_inserter(regexes),
-                       [](const std::string& c) -> std::regex { return std::regex(c); });
+        transform(sregexes.begin(),
+                  sregexes.end(),
+                  back_inserter(regexes),
+                  [](const string& c) -> regex { return regex(c); });
     }
     return regexes;
 }
 
-bool ngraph::pass::GraphRewrite::is_enabled(std::shared_ptr<pattern::Matcher> m)
+bool pass::GraphRewrite::is_enabled(shared_ptr<pattern::Matcher> m)
 {
     //note, regexes are static to avoid re-initialization
     static const auto regexes = initialize_fusion_regexes();
 
     for (const auto& regex : regexes)
     {
-        if (std::regex_match(m->get_name(), regex))
+        if (regex_match(m->get_name(), regex))
         {
             NGRAPH_DEBUG << "Disabling matcher " << m->get_name();
             return false;
@@ -129,17 +131,17 @@ bool ngraph::pass::GraphRewrite::is_enabled(std::shared_ptr<pattern::Matcher> m)
     return true;
 }
 
-void ngraph::pass::GraphRewrite::add_matcher(std::shared_ptr<pattern::Matcher> m,
-                                             const ngraph::graph_rewrite_callback& callback)
+void pass::GraphRewrite::add_matcher(shared_ptr<pattern::Matcher> m,
+                                     const graph_rewrite_callback& callback)
 {
     if (is_enabled(m))
     {
-        auto tuple = std::make_tuple(m, callback);
+        auto tuple = make_tuple(m, callback);
         m_matchers.push_back(tuple);
     }
 }
 
-bool ngraph::pass::RecurrentGraphRewrite::run_on_function(std::shared_ptr<ngraph::Function> f)
+bool pass::RecurrentGraphRewrite::run_on_function(shared_ptr<Function> f)
 {
     bool changed = false;
     size_t i = 0;
