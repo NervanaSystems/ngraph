@@ -33,7 +33,6 @@ namespace ngraph
             ///
             /// \return     The node representing a Reshape operation.
             ///
-
             std::shared_ptr<ngraph::Node> reshape(const std::shared_ptr<ngraph::Node>& node,
                                                   const Shape& shape);
 
