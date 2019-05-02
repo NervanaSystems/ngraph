@@ -88,11 +88,6 @@ shared_ptr<Node> op::Gemm::copy_with_new_args(const NodeVector& new_args) const
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return make_shared<Gemm>(new_args.at(0),
-                             new_args.at(1),
-                             new_args.at(2),
-                             m_alpha,
-                             m_beta,
-                             m_transA,
-                             m_transB);
+    return make_shared<Gemm>(
+        new_args.at(0), new_args.at(1), new_args.at(2), m_alpha, m_beta, m_transA, m_transB);
 }
