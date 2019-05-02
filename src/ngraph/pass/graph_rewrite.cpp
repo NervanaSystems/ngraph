@@ -114,7 +114,7 @@ static vector<regex> initialize_fusion_regexes()
     return regexes;
 }
 
-bool pass::GraphRewrite::is_enabled(const shared_ptr<pattern::Matcher>& m)
+bool pass::GraphRewrite::is_enabled(const shared_ptr<pattern::Matcher>& m) const
 {
     //note, regexes are static to avoid re-initialization
     static const auto regexes = initialize_fusion_regexes();
