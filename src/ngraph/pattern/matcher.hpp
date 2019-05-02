@@ -25,7 +25,6 @@
 #include "ngraph/pattern/op/any_of.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
-#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -60,15 +59,32 @@ namespace ngraph
         {
         public:
             using PatternMap = std::map<std::shared_ptr<op::Label>, std::shared_ptr<Node>>;
+            // Avoid implicit string construction
+            Matcher(const std::shared_ptr<Node> pattern_node, std::nullptr_t name) = delete;
 
+            Matcher(const std::shared_ptr<Node> pattern_node)
+                : m_pattern_node{pattern_node}
+                , m_depth{0}
+                , m_name{"Unnamed"}
+                , m_strict_mode{false}
+            {
+            }
+
+            Matcher(const std::shared_ptr<Node> pattern_node, const std::string& name)
+                : m_pattern_node(pattern_node)
+                , m_depth{0}
+                , m_name{name}
+                , m_strict_mode{false}
+            {
+            }
             /// \brief Constructs a Matcher object
             ///
             /// \param pattern_node is a pattern sub graph that will be matched against input graphs
             /// \param name is a string which is used for logging and disabling a matcher
             /// \param strict_mode forces a matcher to consider shapes and ET of nodes
-            Matcher(const std::shared_ptr<Node> pattern_node = nullptr,
-                    const std::string& name = "Unnamed",
-                    bool strict_mode = false)
+            Matcher(const std::shared_ptr<Node> pattern_node,
+                    const std::string& name,
+                    bool strict_mode)
                 : m_pattern_node(pattern_node)
                 , m_depth(0)
                 , m_name(name)
