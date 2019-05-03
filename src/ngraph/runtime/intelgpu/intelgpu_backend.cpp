@@ -2000,6 +2000,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::SpaceToDepth:
         case OP_TYPEID::StopGradient:
+        case OP_TYPEID::Tile:
         case OP_TYPEID::Transpose:
         default:
         {
