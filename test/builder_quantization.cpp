@@ -23,7 +23,7 @@
 #include "gtest/gtest.h"
 #include "ngraph/builder/quantization.hpp"
 #include "ngraph/builder/quantization/quantized_linear_convolution.hpp"
-#include "ngraph/builder/quantization/quantized_linear_dot.hpp"
+#include "ngraph/builder/quantization/quantized_linear_matmul.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/pass/constant_folding.hpp"
@@ -1227,7 +1227,7 @@ TEST(builder, scaled_QDotInteger)
     auto B = make_shared<op::Parameter>(element::i8, shape_b);
 
     Shape shape_r{1, 3}; // output shape
-    auto QD = ngraph::builder::quantization::QuantizedDotInteger(A, B);
+    auto QD = ngraph::builder::quantization::QuantizedLinearMatmulInteger(A, B);
     auto f = make_shared<Function>(NodeVector{QD}, ParameterVector{A, B});
     constant_fold(f);
     auto backend = runtime::Backend::create("CPU");
