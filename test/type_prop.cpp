@@ -13088,12 +13088,12 @@ struct DynSliceParams
     std::vector<std::vector<int64_t>> vals;
     std::vector<AxisSet> attrs;
 
-    DynSliceParams(const std::vector<Shape>& shapes,
-                   const std::vector<std::vector<int64_t>>& vals,
-                   const std::vector<AxisSet>& attrs)
-        : shapes(shapes)
-        , vals(vals)
-        , attrs(attrs)
+    DynSliceParams(const std::vector<Shape>& shape,
+                   const std::vector<std::vector<int64_t>>& val,
+                   const std::vector<AxisSet>& attr)
+        : shapes(shape)
+        , vals(val)
+        , attrs(attr)
     {
     }
 };
