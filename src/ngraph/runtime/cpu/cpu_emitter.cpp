@@ -2494,8 +2494,6 @@ namespace ngraph
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
                            << args[1].get_name() << ");\n";
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
-                           << args[2].get_name() << ");\n";
-                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[3]) << ", "
                            << out[0].get_name() << ");\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index) << ");\n";
                 }
