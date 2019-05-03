@@ -64,7 +64,7 @@ void pass::CoreFusion::construct_relu()
         std::make_shared<pattern::op::Skip>(zero, pattern::has_class<op::Broadcast>());
     auto max = make_shared<op::Maximum>(skip_broadcast, val);
 
-    pattern::graph_rewrite_callback callback = [val, zero](pattern::Matcher& m) {
+    auto callback = [val, zero](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_relu against "
                      << m.get_match_root()->get_name();
 
@@ -82,8 +82,8 @@ void pass::CoreFusion::construct_relu()
         return true;
     };
 
-    auto m = make_shared<pattern::Matcher>(max, callback, "CoreFusion.Relu");
-    this->add_matcher(m);
+    auto m = make_shared<pattern::Matcher>(max, "CoreFusion.Relu");
+    this->add_matcher(m, callback);
 }
 
 void pass::CoreFusion::construct_sigmoid()
@@ -101,7 +101,7 @@ void pass::CoreFusion::construct_sigmoid()
     auto divide_1_over_exp = std::make_shared<op::Divide>(skip_broadcast, add_exp);
 
     // Define a call back that needs to called once the DFG matches the pattern
-    pattern::graph_rewrite_callback callback = [input, constant](pattern::Matcher& m) {
+    auto callback = [input, constant](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_fprop_sigmoid pattern against "
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
@@ -130,8 +130,8 @@ void pass::CoreFusion::construct_sigmoid()
         return true;
     };
 
-    auto m = std::make_shared<pattern::Matcher>(divide_1_over_exp, callback, "CoreFusion.Sigmoid");
-    this->add_matcher(m);
+    auto m = std::make_shared<ngraph::pattern::Matcher>(divide_1_over_exp, "CoreFusion.Sigmoid");
+    this->add_matcher(m, callback);
 }
 
 void pass::CoreFusion::construct_sigmoid_bprop()
@@ -159,7 +159,7 @@ void pass::CoreFusion::construct_sigmoid_bprop()
     auto negative_2 = std::make_shared<op::Negative>(multiply_2);
 
     // Define a call back that needs to called once the DFG matches the pattern
-    pattern::graph_rewrite_callback callback = [input, delta](pattern::Matcher& m) {
+    auto callback = [input, delta](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_bprop_sigmoid pattern against "
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
@@ -182,8 +182,8 @@ void pass::CoreFusion::construct_sigmoid_bprop()
         return true;
     };
 
-    auto m = std::make_shared<pattern::Matcher>(negative_2, callback, "CoreFusion.SigmoidBprop");
-    this->add_matcher(m);
+    auto m = std::make_shared<ngraph::pattern::Matcher>(negative_2, "CoreFusion.SigmoidBprop");
+    this->add_matcher(m, callback);
 }
 
 void pass::CoreFusion::construct_folded_batch_norm()
@@ -211,8 +211,7 @@ void pass::CoreFusion::construct_folded_batch_norm()
     auto shape_r = Shape{1, 2, 2, 2};
     auto bn = std::make_shared<op::BatchNormInference>(eps, gamma, beta, pconv, mean, var);
 
-    pattern::graph_rewrite_callback callback = [input, filters, mean, var, gamma, beta](
-        pattern::Matcher& m) {
+    auto callback = [input, filters, mean, var, gamma, beta](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for folded batch norm against node = "
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
@@ -263,8 +262,8 @@ void pass::CoreFusion::construct_folded_batch_norm()
 
     };
 
-    auto m = std::make_shared<pattern::Matcher>(bn, callback, "CoreFusion.FoldedBatchNorm");
-    this->add_matcher(m);
+    auto m = std::make_shared<ngraph::pattern::Matcher>(bn, "CoreFusion.FoldedBatchNorm");
+    this->add_matcher(m, callback);
 }
 
 void pass::CoreFusion::construct_conv_affine_folding()
@@ -292,90 +291,89 @@ void pass::CoreFusion::construct_conv_affine_folding()
     auto multiply = std::make_shared<op::Multiply>(conv_label, A_label);
     auto add = std::make_shared<op::Add>(multiply, B_label);
 
-    pattern::graph_rewrite_callback callback =
-        [input, filters, conv_label, A_label, B_label](pattern::Matcher& m) {
-            NGRAPH_DEBUG << "In callback for conv affine folding against node = "
-                         << m.get_match_root()->get_name();
-            auto pattern_map = m.get_pattern_map();
+    auto callback = [input, filters, conv_label, A_label, B_label](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for conv affine folding against node = "
+                     << m.get_match_root()->get_name();
+        auto pattern_map = m.get_pattern_map();
 
-            auto conv_m = std::static_pointer_cast<op::Convolution>(pattern_map[conv_label]);
+        auto conv_m = std::static_pointer_cast<op::Convolution>(pattern_map[conv_label]);
 
-            if (conv_m->get_users().size() > 1)
+        if (conv_m->get_users().size() > 1)
+        {
+            return false;
+        }
+
+        if (conv_m->get_shape().size() != 4)
+        {
+            return false;
+        }
+
+        auto A_m = std::static_pointer_cast<op::Broadcast>(pattern_map[A_label]);
+        auto B_m = std::static_pointer_cast<op::Broadcast>(pattern_map[B_label]);
+
+        // Check if values are being broadcast along channel (2nd) dimension
+        auto is_channel_bcast = [](const shared_ptr<op::Broadcast>& bcast) {
+
+            if (bcast->get_argument(0)->get_shape().size() == 1 &&
+                bcast->get_broadcast_axes() == AxisSet{0, 2, 3})
             {
-                return false;
+                return true;
             }
 
-            if (conv_m->get_shape().size() != 4)
+            if (bcast->get_argument(0)->get_shape().size() == 2)
             {
-                return false;
-            }
-
-            auto A_m = std::static_pointer_cast<op::Broadcast>(pattern_map[A_label]);
-            auto B_m = std::static_pointer_cast<op::Broadcast>(pattern_map[B_label]);
-
-            // Check if values are being broadcast along channel (2nd) dimension
-            auto is_channel_bcast = [](const shared_ptr<op::Broadcast>& bcast) {
-
-                if (bcast->get_argument(0)->get_shape().size() == 1 &&
-                    bcast->get_broadcast_axes() == AxisSet{0, 2, 3})
-                {
+                auto input_shape = bcast->get_argument(0)->get_shape();
+                if (input_shape[0] == 1 && bcast->get_broadcast_axes() == AxisSet{2, 3})
                     return true;
-                }
-
-                if (bcast->get_argument(0)->get_shape().size() == 2)
-                {
-                    auto input_shape = bcast->get_argument(0)->get_shape();
-                    if (input_shape[0] == 1 && bcast->get_broadcast_axes() == AxisSet{2, 3})
-                        return true;
-                }
-                return false;
-            };
-
-            if (!is_channel_bcast(A_m) || !is_channel_bcast(B_m))
-            {
-                return false;
             }
-
-            auto get_bcast_input = [](const shared_ptr<op::Broadcast>& bcast) {
-                if (bcast->get_argument(0)->get_shape().size() == 1)
-                {
-                    return bcast->get_argument(0);
-                }
-                if (bcast->get_argument(0)->get_shape().size() == 2)
-                {
-                    Shape bshape{bcast->get_argument(0)->get_shape()[1]};
-                    return static_pointer_cast<Node>(std::make_shared<op::Reshape>(
-                        bcast->get_argument(0), AxisVector{0, 1}, bshape));
-                }
-                throw ngraph_error("Unexpected shape for bcast input");
-            };
-
-            auto Ac_m = get_bcast_input(A_m);
-
-            // new weights = old weights * Ac_m
-            // new biases = Bc_m
-
-            auto filters_n = std::make_shared<op::Multiply>(
-                pattern_map[filters],
-                std::make_shared<op::Broadcast>(
-                    Ac_m, pattern_map[filters]->get_shape(), AxisSet{1, 2, 3}));
-
-            auto conv_n = std::make_shared<op::Convolution>(pattern_map[input],
-                                                            filters_n,
-                                                            conv_m->get_window_movement_strides(),
-                                                            conv_m->get_window_dilation_strides(),
-                                                            conv_m->get_padding_below(),
-                                                            conv_m->get_padding_above(),
-                                                            conv_m->get_data_dilation_strides());
-            auto convbias_n = conv_n + B_m;
-            replace_node(m.get_match_root(), convbias_n);
-
-            return true;
-
+            return false;
         };
 
-    auto m = std::make_shared<pattern::Matcher>(add, callback, "CoreFusion.ConvAffineFolding");
-    this->add_matcher(m);
+        if (!is_channel_bcast(A_m) || !is_channel_bcast(B_m))
+        {
+            return false;
+        }
+
+        auto get_bcast_input = [](const shared_ptr<op::Broadcast>& bcast) {
+            if (bcast->get_argument(0)->get_shape().size() == 1)
+            {
+                return bcast->get_argument(0);
+            }
+            if (bcast->get_argument(0)->get_shape().size() == 2)
+            {
+                Shape bshape{bcast->get_argument(0)->get_shape()[1]};
+                return static_pointer_cast<Node>(std::make_shared<op::Reshape>(
+                    bcast->get_argument(0), AxisVector{0, 1}, bshape));
+            }
+            throw ngraph_error("Unexpected shape for bcast input");
+        };
+
+        auto Ac_m = get_bcast_input(A_m);
+
+        // new weights = old weights * Ac_m
+        // new biases = Bc_m
+
+        auto filters_n = std::make_shared<op::Multiply>(
+            pattern_map[filters],
+            std::make_shared<op::Broadcast>(
+                Ac_m, pattern_map[filters]->get_shape(), AxisSet{1, 2, 3}));
+
+        auto conv_n = std::make_shared<op::Convolution>(pattern_map[input],
+                                                        filters_n,
+                                                        conv_m->get_window_movement_strides(),
+                                                        conv_m->get_window_dilation_strides(),
+                                                        conv_m->get_padding_below(),
+                                                        conv_m->get_padding_above(),
+                                                        conv_m->get_data_dilation_strides());
+        auto convbias_n = conv_n + B_m;
+        replace_node(m.get_match_root(), convbias_n);
+
+        return true;
+
+    };
+
+    auto m = make_shared<pattern::Matcher>(add, "CoreFusion.ConvAffineFolding");
+    this->add_matcher(m, callback);
 }
 
 static bool is_trivial_convolution(std::shared_ptr<op::Convolution> conv,
@@ -445,7 +443,7 @@ void pass::CoreFusion::construct_reshape_broadcast()
     auto reshape1 = make_shared<op::Reshape>(input, AxisVector{0}, Shape{10, 1});
     auto broadcast = make_shared<op::Broadcast>(reshape1, Shape{10, 1, 20}, AxisSet{2});
 
-    pattern::graph_rewrite_callback callback = [input](pattern::Matcher& m) {
+    auto callback = [input](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_reshape_broadcast against "
                      << m.get_match_root()->get_name();
 
@@ -504,8 +502,8 @@ void pass::CoreFusion::construct_reshape_broadcast()
         return true;
     };
 
-    auto m = make_shared<pattern::Matcher>(broadcast, callback, "CoreFusion.ReshapeBroadcast");
-    this->add_matcher(m);
+    auto m = make_shared<pattern::Matcher>(broadcast, "CoreFusion.ReshapeBroadcast");
+    this->add_matcher(m, callback);
 }
 
 //   conv(56w3s1)                        conv(28w3s2)
@@ -550,13 +548,13 @@ void pass::CoreFusion::construct_optimized_strided_conv()
     auto weights_eltwise = std::make_shared<pattern::op::Label>(element::f32, win_size_1);
     auto eltwise_conv = std::make_shared<op::Convolution>(eltwise_label, weights_eltwise);
 
-    pattern::graph_rewrite_callback callback = [win_size_1,
-                                                eltwise_label,
-                                                conv_stride1_label,
-                                                conv_stride3_label,
-                                                eltwise_arg_label,
-                                                broadcast_w3_label,
-                                                broadcast_w1_label](pattern::Matcher& m) {
+    auto callback = [win_size_1,
+                     eltwise_label,
+                     conv_stride1_label,
+                     conv_stride3_label,
+                     eltwise_arg_label,
+                     broadcast_w3_label,
+                     broadcast_w1_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_conv_skip against "
                      << m.get_match_root()->get_name();
 
@@ -692,9 +690,8 @@ void pass::CoreFusion::construct_optimized_strided_conv()
         return true;
     };
 
-    auto m =
-        make_shared<pattern::Matcher>(eltwise_conv, callback, "CoreFusion.OptimizedStridedConv");
-    this->add_matcher(m);
+    auto m = make_shared<pattern::Matcher>(eltwise_conv, "CoreFusion.OptimizedStridedConv");
+    this->add_matcher(m, callback);
 }
 
 void pass::CoreFusion::construct_reshape_softmax_reshape()
@@ -706,7 +703,7 @@ void pass::CoreFusion::construct_reshape_softmax_reshape()
     auto softmax = make_shared<op::Softmax>(reshape1, AxisSet{1});
     auto reshape2 = make_shared<op::Reshape>(softmax, io, input_shape);
 
-    pattern::graph_rewrite_callback callback = [input](pattern::Matcher& m) {
+    auto callback = [input](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_reshape_softmax_reshape against "
                      << m.get_match_root()->get_name();
 
@@ -740,8 +737,8 @@ void pass::CoreFusion::construct_reshape_softmax_reshape()
         return true;
     };
 
-    auto m = make_shared<pattern::Matcher>(reshape2, callback, "CoreFusion.ReshapeSoftmaxReshape");
-    this->add_matcher(m);
+    auto m = make_shared<pattern::Matcher>(reshape2, "CoreFusion.ReshapeSoftmaxReshape");
+    this->add_matcher(m, callback);
 }
 
 void ngraph::pass::CoreFusion::construct_conv_bias()
@@ -762,7 +759,7 @@ void ngraph::pass::CoreFusion::construct_conv_bias()
                                                             Strides{1, 1});
     auto p_conv_bias = pbroadcast + pconv1;
 
-    ngraph::pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
+    auto callback = [](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_conv_bias against node = "
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
@@ -816,9 +813,8 @@ void ngraph::pass::CoreFusion::construct_conv_bias()
         return true;
     };
 
-    auto m =
-        std::make_shared<ngraph::pattern::Matcher>(p_conv_bias, callback, "CoreFusion.ConvBias");
-    this->add_matcher(m);
+    auto m = std::make_shared<ngraph::pattern::Matcher>(p_conv_bias, "CoreFusion.ConvBias");
+    this->add_matcher(m, callback);
 }
 
 void ngraph::pass::CoreFusion::construct_conv_bias_add()
@@ -839,7 +835,7 @@ void ngraph::pass::CoreFusion::construct_conv_bias_add()
     auto add_input = std::make_shared<pattern::op::Label>(element::f32, pconv->get_shape());
     auto padd = std::make_shared<ngraph::op::Add>(add_input, pconv);
 
-    pattern::graph_rewrite_callback callback = [data_batch, filters](pattern::Matcher& m) {
+    auto callback = [data_batch, filters](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_conv_sum against "
                      << m.get_match_root()->get_name();
 
@@ -867,6 +863,6 @@ void ngraph::pass::CoreFusion::construct_conv_bias_add()
         return true;
     };
 
-    auto m = std::make_shared<pattern::Matcher>(padd, callback, "CoreFusion.ConvBiasAdd");
-    this->add_matcher(m);
+    auto m = std::make_shared<pattern::Matcher>(padd, "CoreFusion.ConvBiasAdd");
+    this->add_matcher(m, callback);
 }
