@@ -24,8 +24,8 @@
 #include <vector>
 
 #include "ngraph/node.hpp"
-#include "ngraph/parameter_vector.hpp"
-#include "ngraph/result_vector.hpp"
+#include "ngraph/op/parameter.hpp"
+#include "ngraph/op/result.hpp"
 
 namespace ngraph
 {
@@ -104,6 +104,9 @@ namespace ngraph
 
         size_t get_placement() const;
         void set_placement(size_t placement);
+
+        /// \brief Returns true if any of the op's defined in the function contains partial shape
+        bool is_dynamic() const;
 
     protected:
         ResultVector m_results;

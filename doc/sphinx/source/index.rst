@@ -22,7 +22,7 @@ nGraph Compiler stack
 ######################
 
 
-`nGraph`_ is an open-source graph compiler for :abbr:`Artificial Neural Networks (ANNs)`. 
+nGraph is an open-source graph compiler for :abbr:`Artificial Neural Networks (ANNs)`. 
 The nGraph Compiler stack provides an inherently efficient graph-based compilation 
 infrastructure designed to be compatible with many upcoming 
 :abbr:`Application-Specific Integrated Circuits (ASICs)`, like the Intel® Nervana™ 
@@ -81,18 +81,18 @@ boost compared to native implementations. For a high-level overview, see the
 
 .. toctree::
    :maxdepth: 1
-   :caption: Diagnostics and Visualization
+   :caption: Inspecting Graphs
 
-   diagnostics/nbench.rst
-   diagnostics/performance-profile.rst
-   diagnostics/visualize.rst
-   diagnostics/debug.rst 
+   inspection/index.rst
+   inspection/performance-profile.rst
+   inspection/debug.rst 
+
 
 .. toctree::
    :maxdepth: 1
    :caption: Tutorials
 
-   nGraph.ai Tutorials <https://www.ngraph.ai/tutorials>   
+   tutorials/index.rst
 
 
 .. toctree::
@@ -104,7 +104,8 @@ boost compared to native implementations. For a high-level overview, see the
    project/contribution-guide.rst
    project/governance.rst
    project/doc-contributor-README.rst
-   project/index.rst 
+   project/index.rst
+   project/extras.rst 
    glossary.rst
 
 Indices and tables
@@ -116,5 +117,5 @@ Indices and tables
 
 
 
-.. _nGraph: https://www.ngraph.ai
+.. nGraph: https://www.ngraph.ai
 .. _up to 45X: https://ai.intel.com/ngraph-compiler-stack-beta-release/

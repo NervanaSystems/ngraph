@@ -15,9 +15,13 @@
 //*****************************************************************************
 
 #include <numeric>
+#include <set>
+#include <vector>
 
 #include "exceptions.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/util/reshape.hpp"
+#include "ngraph/util.hpp"
 #include "unsqueeze.hpp"
 #include "utils/reshape.hpp"
 
@@ -34,13 +38,18 @@ namespace ngraph
                     NodeVector inputs{node.get_ng_inputs()};
                     auto data = inputs.at(0);
                     auto data_shape = data->get_shape();
-                    auto axes = node.get_attribute_value<std::vector<int64_t>>("axes");
+                    auto axes = node.get_attribute_value<std::vector<std::int64_t>>("axes");
 
                     ASSERT_VALID_ARGUMENT(node, !axes.empty()) << "'axes' attribute is mandatory.";
+                    ASSERT_VALID_ARGUMENT(
+                        node,
+                        axes.size() ==
+                            std::set<std::int64_t>(std::begin(axes), std::end(axes)).size())
+                        << "'axes' has a duplicate axis.";
 
                     std::sort(std::begin(axes), std::end(axes), std::less<int64_t>());
 
-                    AxisVector input_order{reshape::get_default_axis_vector(data_shape.size())};
+                    AxisVector input_order{ngraph::get_default_order(data_shape.size())};
 
                     for (auto axis : axes)
                     {

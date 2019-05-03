@@ -92,16 +92,6 @@ namespace ngraph
                                   const element::Type& output_type,
                                   size_t reduction_axes_count);
 
-            void do_slice_operation(cldnn::topology& topology,
-                                    const std::string& input_name,
-                                    const Shape& input_shape,
-                                    const std::string& output_name,
-                                    const Shape& output_shape,
-                                    const element::Type& output_type,
-                                    const Coordinate& lower_bounds,
-                                    const Coordinate& uppper_bounds,
-                                    const Strides& strides);
-
             void do_concat_operation(cldnn::topology& topology,
                                      const std::vector<std::string>& input_names,
                                      const std::vector<Shape>& input_shapes,
@@ -109,28 +99,6 @@ namespace ngraph
                                      const Shape& output_shape,
                                      const element::Type& output_type,
                                      size_t concat_axis);
-
-            void do_select_operation(cldnn::topology& topology,
-                                     const std::string& input0_name,
-                                     const Shape& input0_shape,
-                                     const std::string& input1_name,
-                                     const Shape& input1_shape,
-                                     const std::string& input2_name,
-                                     const Shape& input2_shape,
-                                     const std::string& output_name,
-                                     const Shape& output_shape,
-                                     const element::Type& output_type);
-
-            void do_logic_kernel(cldnn::topology& topology,
-                                 const std::string& input0_name,
-                                 const Shape& input0_shape,
-                                 const element::Type& input0_type,
-                                 const std::string& input1_name,
-                                 const Shape& input1_shape,
-                                 const std::string& output_name,
-                                 const Shape& output_shape,
-                                 const element::Type& output_type,
-                                 const std::string& operation);
 
             void do_eltwise_kernel(cldnn::topology& topology,
                                    const std::string& input0_name,
@@ -265,6 +233,19 @@ namespace ngraph
                                          const Shape& output_shape,
                                          const element::Type& output_type,
                                          const AxisSet& axis);
+
+            void do_topk_operation(cldnn::topology& topology,
+                                   const std::string& input_name,
+                                   const Shape& input_shape,
+                                   const element::Type& input_type,
+                                   const std::string& output_name,
+                                   const Shape& output_shape,
+                                   const element::Type& output_type,
+                                   const element::Type& index_elem_type,
+                                   const size_t top_k_axis,
+                                   const size_t k,
+                                   const bool compute_max,
+                                   const bool find_indices);
 
             // Helper functions used in cldnn::custom_gpu_primitive kernels
             std::string get_opencl_type_name(const element::Type& ngraph_type);

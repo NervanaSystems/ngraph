@@ -173,6 +173,11 @@ vector<runtime::PerformanceCounter>
     {
         const map<cldnn::primitive_id, cldnn::event>& primitives =
             m_cldnn_network->get_executed_primitives();
+        map<string, shared_ptr<const Node>> name_map;
+        for (auto n : m_function->get_ops())
+        {
+            name_map.insert({n->get_name(), n});
+        }
         for (const auto& p : primitives)
         {
             // Let's generate the primitive name that matches to the name in Function
@@ -188,7 +193,8 @@ vector<runtime::PerformanceCounter>
                                 .count();
                 }
             }
-            const runtime::PerformanceCounter perf_counter(primitive_name.c_str(), usec, 1);
+            shared_ptr<const Node> n = name_map[primitive_name];
+            const runtime::PerformanceCounter perf_counter(n, usec, 1);
             rc.push_back(perf_counter);
         }
     }

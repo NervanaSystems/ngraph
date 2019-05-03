@@ -1,4 +1,3 @@
-all_2x2x3_eliminate_dims_0_1
 backwards_batch_norm_training
 backwards_dot_scalar_tensor
 backwards_dot_tensor_scalar
@@ -22,30 +21,13 @@ shape_of_5d
 shape_of_matrix
 shape_of_scalar
 shape_of_vector
-topk_1d_max_all
-topk_1d_max_one
-topk_1d_max_partial
-topk_1d_min_all
-topk_1d_min_one
-topk_1d_min_partial
-topk_2d_max_all
-topk_2d_max_one
-topk_2d_max_partial
-topk_2d_min_all
-topk_2d_min_one
-topk_2d_min_partial
-topk_3d_large_input_max
-topk_3d_large_input_min
-topk_3d_max_all
-topk_3d_max_one
-topk_3d_max_partial
-topk_3d_min_all
-topk_3d_min_one
-topk_3d_min_partial
-topk_3d_single_output
-topk_5d_max_partial
-topk_int64
-floor_int32
+prelu
+prelu_shared_slope
+prelu_negative_slope
+elu
+elu_negative_alpha
+space_to_depth
+depth_to_space
 
 # Unsupported extra padding modes
 pad_edge_1d
@@ -67,3 +49,18 @@ pad_reflect_2d_with_neg
 # Not implemented
 erf
 zero_sized_erf
+gather_no_axis
+gather
+gather_nd_scalar_from_2d
+gather_nd_1d_from_2d
+gather_nd_scalar_from_3d
+gather_nd_1d_from_3d
+gather_nd_2d_from_3d
+gather_nd_batch_scalar_from_2d
+gather_nd_batch_1d_from_2d
+gather_nd_batch_scalar_from_3d
+gather_nd_batch_1d_from_3d
+gather_nd_batch_2d_from_3d
+gather_scalar_indices_no_axis
+gather_scalar_indices
+gather_nd_single_indices

@@ -19,7 +19,7 @@
 #include <memory>
 
 #include "core/node.hpp"
-#include "ngraph/node_vector.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/log.hpp"
@@ -28,7 +28,7 @@
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/sum.hpp"
-#include "utils/broadcasting.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 #include "utils/norm.hpp"
 #include "utils/reduction.hpp"
 

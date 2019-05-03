@@ -227,6 +227,8 @@ void codegen::CompilerCore::initialize()
     auto LO = m_compiler->getInvocation().getLangOpts();
     LO->CPlusPlus = 1;
     LO->CPlusPlus11 = 1;
+    // Strange but need to manually disable c++14
+    LO->CPlusPlus14 = 0;
     LO->Bool = 1;
     LO->Exceptions = 1;
     LO->CXXExceptions = 1;
@@ -239,7 +241,7 @@ void codegen::CompilerCore::initialize()
     // CodeGen options
     auto& CGO = m_compiler->getInvocation().getCodeGenOpts();
     CGO.OptimizationLevel = 3;
-    CGO.RelocationModel = "static";
+    CGO.RelocationModel = llvm::Reloc::Model::Static;
     // CGO.CodeModel = "medium";
     CGO.ThreadModel = "posix";
     CGO.FloatABI = "hard";
@@ -556,28 +558,13 @@ void codegen::CompilerCore::configure_search_path()
     // Only needed for GPU backend
     add_header_search_path(CUDNN_HEADER_PATHS);
 #endif
-
-#ifdef NGRAPH_DISTRIBUTED_ENABLE
-#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
-    add_header_search_path(MLSL_HEADER_PATH);
-#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
-    add_header_search_path(MPI_HEADER_PATH);
-#else
-    throw ngraph_error("Distributed Library not supported/mentioned");
-#endif
-#endif
 }
 
 void codegen::CompilerCore::load_headers_from_resource()
 {
     const std::string builtin_root = "";
-    HeaderSearchOptions& hso = m_compiler->getInvocation().getHeaderSearchOpts();
     PreprocessorOptions& preprocessor_options = m_compiler->getInvocation().getPreprocessorOpts();
-// for (const std::string& search_path : builtin_search_paths)
-// {
-//     std::string builtin = builtin_root + search_path;
-//     hso.AddPath(builtin, clang::frontend::System, false, false);
-// }
+
 #ifdef _WIN32
     for (const pair<std::string, vector<std::string>>& header_info : builtin_headers)
     {

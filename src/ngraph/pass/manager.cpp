@@ -61,17 +61,26 @@ void pass::Manager::run_passes(shared_ptr<Function> func, bool transitive)
 {
     bool profile_enabled = getenv("NGRAPH_PROFILE_PASS_ENABLE") != nullptr;
 
-    vector<shared_ptr<Function>> fs;
+    vector<std::pair<shared_ptr<Function>, bool>> fs;
     if (transitive)
     {
         // find all functions
-        traverse_functions(func, [&](shared_ptr<Function> f) { fs.push_back(f); });
+        traverse_functions(func, [&](shared_ptr<Function> f) {
+            fs.push_back(std::make_pair(f, f->is_dynamic()));
+        });
     }
     else
     {
-        fs = {func};
+        fs = {std::make_pair(func, func->is_dynamic())};
     }
-    set<shared_ptr<Function>> tfs(begin(fs), end(fs));
+    set<shared_ptr<Function>> tfs;
+    std::vector<shared_ptr<Function>> f_array;
+    for (auto f_pair : fs)
+    {
+        shared_ptr<Function> f = f_pair.first;
+        tfs.insert(f);
+        f_array.push_back(f);
+    }
     get_state().set_functions(tfs);
 
     size_t index = 0;
@@ -92,19 +101,30 @@ void pass::Manager::run_passes(shared_ptr<Function> func, bool transitive)
             {
                 vt_pass->set_ops_to_details(get_state().get_visualize_tree_ops_map());
             }
-            module_pass->run_on_module(fs);
+            module_pass->run_on_module(f_array);
         }
         else if (function_pass)
         {
-            for (shared_ptr<Function> f : fs)
+            for (auto f_pair : fs)
             {
-                function_pass->run_on_function(f);
+                shared_ptr<Function> f = f_pair.first;
+                // This checks is to skip the graph optimization when the graph pass relies on static shape
+                // but the function state is dynamic.
+                // we update the function dynamic state only if we run the graph pass successfully.
+                if (function_pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE) &&
+                    f_pair.second)
+                {
+                    continue;
+                }
+                bool function_modified = function_pass->run_on_function(f);
+                f_pair.second = (function_modified == true) ? f->is_dynamic() : f_pair.second;
             }
         }
         else if (node_pass)
         {
-            for (shared_ptr<Function> f : fs)
+            for (auto f_pair : fs)
             {
+                shared_ptr<Function> f = f_pair.first;
                 for (shared_ptr<Node> n : f->get_ops())
                 {
                     node_pass->run_on_node(n);
@@ -113,15 +133,23 @@ void pass::Manager::run_passes(shared_ptr<Function> func, bool transitive)
         }
         else if (call_graph_pass)
         {
-            for (shared_ptr<Function> f : fs)
+            for (auto f_pair : fs)
             {
-                call_graph_pass->run_on_call_graph(f->get_ordered_ops());
+                shared_ptr<Function> f = f_pair.first;
+                if (call_graph_pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE) &&
+                    f_pair.second)
+                {
+                    continue;
+                }
+                bool function_modified = call_graph_pass->run_on_call_graph(f->get_ordered_ops());
+                f_pair.second = (function_modified == true) ? f->is_dynamic() : f_pair.second;
             }
         }
 
         // Better to do this in node replacement but this will do for now
-        for (auto f : fs)
+        for (auto f_pair : fs)
         {
+            shared_ptr<Function> f = f_pair.first;
             f->validate_nodes_and_infer_types();
         }
 
@@ -131,21 +159,21 @@ void pass::Manager::run_passes(shared_ptr<Function> func, bool transitive)
             const size_t num_digits_in_pass_index = 3;
             std::string index_str = std::to_string(index);
             index_str = std::string(num_digits_in_pass_index - index_str.length(), '0') + index_str;
-            auto base_filename = fs.at(0)->get_name() + std::string("_") + index_str +
+            auto base_filename = f_array.at(0)->get_name() + std::string("_") + index_str +
                                  std::string("_") + m_pass_names.at(index) + std::string(".");
 
             if (m_visualize)
             {
                 pass::VisualizeTree vt(base_filename + pass::VisualizeTree::get_file_ext());
                 vt.set_ops_to_details(get_state().get_visualize_tree_ops_map());
-                vt.run_on_module(fs);
+                vt.run_on_module(f_array);
             }
 
             if (m_serialize)
             {
                 // no "." in the extension
                 pass::Serialization st(base_filename + "json");
-                st.run_on_module(fs);
+                st.run_on_module(f_array);
             }
         }
         index++;

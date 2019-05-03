@@ -53,18 +53,8 @@ namespace
 
     bool check_concat_has_no_fan_out(const std::shared_ptr<Node>& op)
     {
-        auto users = op->get_users(true);
-        std::set<std::shared_ptr<Node>> user_set(users.begin(), users.end());
-        size_t num_unique_users = user_set.size();
-        if (num_unique_users == 1)
-        {
-            return true;
-        }
-        else
-        {
-            NGRAPH_DEBUG << "self_concat_fusion: " << op->get_name() << " has fan out\n";
-            return false;
-        }
+        auto no_fan_out = ngraph::pass::get_no_fan_out_function();
+        return no_fan_out(op);
     }
 
     bool valid_self_concat(const std::shared_ptr<Node>& Op)
@@ -123,8 +113,8 @@ void pass::ConcatElimination::construct_concat_elimination()
         return false;
     };
 
-    auto m = std::make_shared<pattern::Matcher>(concat_label, callback);
-    this->add_matcher(m);
+    auto m = std::make_shared<pattern::Matcher>(concat_label, "ConcatElimination");
+    this->add_matcher(m, callback);
 }
 
 bool ngraph::pass::SelfConcatFusion::run_on_function(std::shared_ptr<Function> function)

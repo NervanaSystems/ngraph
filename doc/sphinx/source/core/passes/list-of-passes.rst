@@ -101,7 +101,7 @@ Maintenance Passes
 ----------------------------
 
 .. figure:: ../../graphics/algebraic-simpl.png
-   :width: 650px
+   :width: 450 px
 
    Algebraic simplification
 
@@ -152,7 +152,7 @@ can be.
 The pass also called **Reshape/Transpose Elimination** will find and optimize where 
 we can "push" two ``Transpose`` ops through a matrix multiplication. For example, 
 if you have two matrices (say, *foo* and *bar*), both of these matrices will be 
-transposed (to produce *foo.t* and *bar.t*, respectively), aftew which *foo.t* 
+transposed (to produce *foo.t* and *bar.t*, respectively), after which *foo.t* 
 and *bar.t* get multiplied together.
 
 Often a more efficient way to implement this is to switch the order of the 
@@ -160,14 +160,13 @@ arguments *foo* and *bar*, multiply them together, and then transpose the output
 of the matmul. Effectively, this cuts two `Transpose` operations down to just 
 one, where the **Reshape/Transpose** elimination will do that rewrite for you.
 
-Another common pattern can be optimized via nGraph is the case where two 
+Another common pattern that can be optimized via nGraph is the case where two 
 transpositions cancel each other out. One example of this is taking the 
 "Transpose" of the transpose of a matrix, though actually a more common case is 
 when the graph is translating among different batch formats. We can often move 
 these operations around through a process called **Reshape sinking/swimming**, 
 and in cases where two transposes wind up canceling each other out, we can cut 
 them both out of the graph.
-
 
 
 .. _reshape_transpose_sink:

@@ -19,6 +19,7 @@
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 
 namespace ngraph
 {
@@ -45,6 +46,8 @@ namespace ngraph
             /// `[f]`
             /// \param data_dilation_strides The data dilation strides.<br>
             /// `[f]`
+            /// \param pad_type The pad type for automatically computing padding sizes.<br>
+            /// `[f]`
             ///
             /// Output `[N, C_OUT, R1, ... Rf]`
             ///
@@ -54,7 +57,8 @@ namespace ngraph
                         const Strides& window_dilation_strides,
                         const CoordinateDiff& padding_below,
                         const CoordinateDiff& padding_above,
-                        const Strides& data_dilation_strides);
+                        const Strides& data_dilation_strides,
+                        const PadType& pad_type = PadType::EXPLICIT);
 
             /// \brief Constructs a batched convolution operation with no data dilation (i.e., all data dilation strides are 1).
             ///
@@ -141,6 +145,8 @@ namespace ngraph
             const CoordinateDiff& get_padding_above() const { return m_padding_above; }
             /// \return The input data dilation strides.
             const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
+            /// \return The pad type for convolution.
+            const PadType& get_pad_type() const { return m_pad_type; }
             /// \return The default value for Convolution.
             virtual std::shared_ptr<Node> get_default_value() const override
             {
@@ -153,14 +159,7 @@ namespace ngraph
             CoordinateDiff m_padding_below;
             CoordinateDiff m_padding_above;
             Strides m_data_dilation_strides;
-
-        private:
-            static Strides default_strides(const Node* node,
-                                           const PartialShape& data_batch_shape,
-                                           const PartialShape& filters_shape);
-            static CoordinateDiff default_padding(const Node* node,
-                                                  const PartialShape& data_batch_shape,
-                                                  const PartialShape& filters_shape);
+            PadType m_pad_type;
         };
 
         /// \brief Data batch backprop for batched convolution operation.

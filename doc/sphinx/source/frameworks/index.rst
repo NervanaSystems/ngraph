@@ -6,7 +6,7 @@ Current framework integrations
 .. toctree::
    :maxdepth: 1
    
-   tensorflow_integ.rst
+   tensorflow_connect.rst
    mxnet_integ.rst
    onnx_integ.rst
    paddle_integ.rst
@@ -17,6 +17,9 @@ A framework is "supported" when there is a framework :term:`bridge` that can be
 cloned from one of our GitHub repos and built to connect to nGraph device 
 backends while maintaining the framework's programmatic or user interface. Bridges 
 currently exist for the TensorFlow\* and MXNet\* frameworks. 
+
+ONNX is not a framework; however, it can be used with nGraph's :doc:`../python_api/index` 
+to import and execute ONNX models.   
 
 .. figure:: ../graphics/whole-stack.png
     :width: 733px
@@ -46,7 +49,7 @@ like TensorFlow and PyTorch.
    :width: 725px
    :alt: Translation flow to nGraph function graph
 
-
-
 .. _tune the workload to extract best performance: https://ai.intel.com/accelerating-deep-learning-training-inference-system-level-optimizations
 .. _a few small: https://software.intel.com/en-us/articles/boosting-deep-learning-training-inference-performance-on-xeon-and-xeon-phi
+
+

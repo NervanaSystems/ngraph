@@ -71,7 +71,7 @@ void ngraph::runtime::plaidml::pass::ExplicitLogicals::construct_logical_to_data
         },
         NodeVector{producer_op});
 
-    pattern::graph_rewrite_callback callback = [producer_op](pattern::Matcher& m) {
+    auto callback = [producer_op](pattern::Matcher& m) {
         auto consumer = m.get_match_root();
         auto producer = m.get_pattern_map()[producer_op];
         NGRAPH_DEBUG << "Adding conversion for " << producer->description() << " -> "
@@ -89,6 +89,6 @@ void ngraph::runtime::plaidml::pass::ExplicitLogicals::construct_logical_to_data
         return true;
     };
 
-    auto m = std::make_shared<pattern::Matcher>(data_consumer_op, callback);
-    add_matcher(m);
+    auto m = std::make_shared<pattern::Matcher>(data_consumer_op);
+    add_matcher(m, callback);
 }

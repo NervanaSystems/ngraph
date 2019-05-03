@@ -30,18 +30,20 @@ set(SRC
     algebraic_simplification.cpp
     all_close_f.cpp
     assertion.cpp
+    bfloat16.cpp
     build_graph.cpp
     builder_autobroadcast.cpp
+    check.cpp
     constant_folding.cpp
     concat_fusion.cpp
     control_dependencies.cpp
     coordinate.cpp
     copy.cpp
-    core.cpp
     cpio.cpp
     cse.cpp
     element_type.cpp
     file_util.cpp
+    float16.cpp
     includes.cpp
     input_output_assign.cpp
     main.cpp
@@ -50,29 +52,31 @@ set(SRC
     nop_elimination.cpp
     op.cpp
     partial_shape.cpp
+    pass.cpp
     pass_liveness.cpp
     pass_manager.cpp
     pass_memory_layout.cpp
+    pass_shape_relevance.cpp
     pass_shape_specialization.cpp
     pattern.cpp
+    provenance.cpp
     reshape_elimination.cpp
     reshape_sinking.cpp
-    serialize.cpp
     shape.cpp
     specialize_shapes.cpp
     tensor.cpp
     type_prop.cpp
+    type_prop_layers.cpp
     util.cpp
-    uuid.cpp
     zero_dim_tensor_elimination.cpp
 )
 
-if(NOT WIN32 AND NGRAPH_TOOLS_ENABLE)
-    list(APPEND SRC tools.cpp)
+if(NGRAPH_JSON_ENABLE)
+    list(APPEND SRC core.cpp event_tracing.cpp serialize.cpp)
 endif()
 
-if(NGRAPH_DISTRIBUTED_ENABLE)
-    list(APPEND SRC distributed_setup.cpp)
+if(NOT WIN32 AND NGRAPH_TOOLS_ENABLE)
+    list(APPEND SRC tools.cpp)
 endif()
 
 set_source_files_properties(includes.cpp PROPERTIES COMPILE_DEFINITIONS
@@ -82,8 +86,10 @@ if (NGRAPH_INTERPRETER_ENABLE)
     list(APPEND SRC
         backend_debug_api.cpp
         builder.cpp
-        backend_api.cpp
-        hybrid_backend.cpp)
+        backend_api.cpp)
+        if (NGRAPH_CPU_ENABLE)
+            list(APPEND SRC hybrid_backend.cpp)
+        endif()
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTERPRETER)
 endif()
 
@@ -140,6 +146,8 @@ set(MULTI_TEST_SRC
     backend_comparison.in.cpp
     backend_dot.in.cpp
     backend_embedding_lookup.in.cpp
+    backend_fused_op.in.cpp
+    backend_gather.in.cpp
     backend_one_hot.in.cpp
     backend_pool.in.cpp
     backend_reshape.in.cpp
@@ -160,9 +168,14 @@ if (NGRAPH_CPU_ENABLE)
 endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
-    list(APPEND MULTI_TEST_SRC onnx_import.in.cpp)
+    list(APPEND MULTI_TEST_SRC
+            onnx/onnx_import.in.cpp
+            onnx/onnx_import_convpool.in.cpp
+            onnx/onnx_import_reshape.in.cpp
+            onnx/onnx_import_rnn.in.cpp
+            onnx/onnx_import_quant.in.cpp)
     if (NGRAPH_ONNXIFI_ENABLE)
-        list(APPEND SRC onnxifi.cpp onnxifi_span.cpp)
+        list(APPEND SRC onnx/onnxifi.cpp onnx/onnxifi_span.cpp)
     endif()
 endif()
 
@@ -202,21 +215,11 @@ if(NGRAPH_ADDRESS_SANITIZER)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address -fno-omit-frame-pointer")
 endif()
 
-if(NGRAPH_DISTRIBUTED_ENABLE)
-    if(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
-        target_link_libraries(unit-test PRIVATE libmlsl)
-    elseif(NGRAPH_DISTRIBUTED_OMPI_ENABLE)
-        find_package(MPI REQUIRED)
-        target_include_directories(unit-test
-        SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
-        target_link_libraries(unit-test PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
-    else()
-            message(FATAL_ERROR "Distributed Library not supported/mentioned")
-    endif()
-endif()
-
 target_link_libraries(unit-test PRIVATE ngraph_test_util)
-target_link_libraries(unit-test PRIVATE ngraph libgtest libjson)
+target_link_libraries(unit-test PRIVATE ngraph libgtest)
+if (NGRAPH_JSON_ENABLE)
+    target_link_libraries(unit-test PRIVATE libjson)
+endif()
 if(NOT WIN32)
     target_link_libraries(unit-test PRIVATE pthread)
 endif()
