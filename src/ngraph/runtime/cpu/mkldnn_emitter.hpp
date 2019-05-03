@@ -1173,18 +1173,35 @@ namespace ngraph
                     mkldnn::primitive* prim;
                     if (with_bias)
                     {
-                        prim = new mkldnn::convolution_forward({desc, attr, engine},
-                                                               *mkldnn_primitives[input_idx],
-                                                               *mkldnn_primitives[weights_idx],
-                                                               *mkldnn_primitives[bias_idx],
-                                                               *mkldnn_primitives[results_idx]);
+                        try
+                        {
+                            prim = new mkldnn::convolution_forward({desc, attr, engine},
+                                                                   *mkldnn_primitives[input_idx],
+                                                                   *mkldnn_primitives[weights_idx],
+                                                                   *mkldnn_primitives[bias_idx],
+                                                                   *mkldnn_primitives[results_idx]);
+                        }
+                        catch (const mkldnn::error& e)
+                        {
+                            throw ngraph_error(
+                                "Could not create mkldnn convolution_forward with bias " +
+                                e.message);
+                        }
                     }
                     else
                     {
-                        prim = new mkldnn::convolution_forward({desc, attr, engine},
-                                                               *mkldnn_primitives[input_idx],
-                                                               *mkldnn_primitives[weights_idx],
-                                                               *mkldnn_primitives[results_idx]);
+                        try
+                        {
+                            prim = new mkldnn::convolution_forward({desc, attr, engine},
+                                                                   *mkldnn_primitives[input_idx],
+                                                                   *mkldnn_primitives[weights_idx],
+                                                                   *mkldnn_primitives[results_idx]);
+                        }
+                        catch (const mkldnn::error& e)
+                        {
+                            throw ngraph_error("Could not create mkldnn convolution_forward " +
+                                               e.message);
+                        }
                     }
 
                     mkldnn_primitives[conv_idx] = prim;
