@@ -60,7 +60,6 @@ using namespace ngraph;
 
 bool pass::GraphRewrite::run_on_function(shared_ptr<Function> f)
 {
-    using pass::PassProperty;
     bool rewritten = false;
     const size_t NUM_TRIES = 10;
     size_t tries = NUM_TRIES;
@@ -144,7 +143,7 @@ bool pass::GraphRewrite::is_enabled(const shared_ptr<pattern::Matcher>& m) const
 
 void pass::GraphRewrite::add_matcher(const shared_ptr<pattern::Matcher>& m,
                                      const graph_rewrite_callback& callback,
-                                     const pass::PassPropertyMask& property)
+                                     const PassPropertyMask& property)
 {
     if (is_enabled(m))
     {
@@ -155,7 +154,6 @@ void pass::GraphRewrite::add_matcher(const shared_ptr<pattern::Matcher>& m,
 void pass::GraphRewrite::add_matcher(const shared_ptr<pattern::Matcher>& m,
                                      const graph_rewrite_callback& callback)
 {
-    using pass::PassProperty;
     // TODO: before deprecate this function, by default expect the
     // callback require static shape.
     add_matcher(m, callback, {PassProperty::REQUIRE_STATIC_SHAPE});
@@ -164,7 +162,7 @@ void pass::GraphRewrite::add_matcher(const shared_ptr<pattern::Matcher>& m,
 void pass::RecurrentGraphRewrite::add_matcher(
     const std::shared_ptr<pattern::RecurrentMatcher>& m,
     const ngraph::recurrent_graph_rewrite_callback& callback,
-    const pass::PassPropertyMask& property)
+    const PassPropertyMask& property)
 {
     m_matchers.push_back({m, callback, property});
 }

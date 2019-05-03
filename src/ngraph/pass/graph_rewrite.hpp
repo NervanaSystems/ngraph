@@ -54,12 +54,12 @@ public:
     {
         // Setting REQUIRE_STATIC_SHAPE to false because we will check if each
         // callbacks need static shape during run_on_function().
-        set_property(pass::PassProperty::REQUIRE_STATIC_SHAPE, false);
+        set_property(PassProperty::REQUIRE_STATIC_SHAPE, false);
     }
 
     void add_matcher(const std::shared_ptr<pattern::Matcher>& m,
                      const ngraph::graph_rewrite_callback& callback,
-                     const pass::PassPropertyMask& property);
+                     const PassPropertyMask& property);
 
     // TODO: This interface may deprecate after all passes are refactored.
     void add_matcher(const std::shared_ptr<pattern::Matcher>& m,
@@ -75,7 +75,7 @@ private:
     {
         std::shared_ptr<pattern::Matcher> matcher;
         ngraph::graph_rewrite_callback callback;
-        pass::PassPropertyMask property;
+        PassPropertyMask property;
     };
     std::vector<MatchClosure> m_matchers;
 };
@@ -89,12 +89,12 @@ public:
     {
         // Setting REQUIRE_STATIC_SHAPE to false because we will check if each
         // callbacks need static shape during run_on_function().
-        set_property(pass::PassProperty::REQUIRE_STATIC_SHAPE, false);
+        set_property(PassProperty::REQUIRE_STATIC_SHAPE, false);
     }
 
     void add_matcher(const std::shared_ptr<pattern::RecurrentMatcher>& m,
                      const ngraph::recurrent_graph_rewrite_callback& callback,
-                     const pass::PassPropertyMask& property);
+                     const PassPropertyMask& property);
 
     // TODO: This interface may deprecate after all passes are refactored.
     void add_matcher(const std::shared_ptr<pattern::RecurrentMatcher>& m,
@@ -109,7 +109,7 @@ private:
     {
         std::shared_ptr<pattern::RecurrentMatcher> matcher;
         ngraph::recurrent_graph_rewrite_callback callback;
-        pass::PassPropertyMask property;
+        PassPropertyMask property;
     };
     std::vector<MatchClosure> m_matchers;
 };
