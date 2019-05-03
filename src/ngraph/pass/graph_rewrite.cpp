@@ -184,8 +184,7 @@ bool pass::RecurrentGraphRewrite::run_on_function(shared_ptr<Function> f)
     size_t i = 0;
     bool is_dyn_func = f->is_dynamic();
 
-    auto run_matchers = [&]()->bool
-    {
+    auto run_matchers = [&]() -> bool {
         for (auto node : f->get_ops())
         {
             for (auto& closure : m_matchers)
@@ -201,7 +200,8 @@ bool pass::RecurrentGraphRewrite::run_on_function(shared_ptr<Function> f)
                 NGRAPH_DEBUG << "Running matcher " << closure.matcher << " on " << node->get_name();
                 if (closure.matcher->match(node))
                 {
-                    NGRAPH_DEBUG << "Matcher " << closure.matcher << " matched " << node->get_name();
+                    NGRAPH_DEBUG << "Matcher " << closure.matcher << " matched "
+                                 << node->get_name();
                     if (closure.callback(*closure.matcher.get()))
                     {
                         is_dyn_func = f->is_dynamic();
