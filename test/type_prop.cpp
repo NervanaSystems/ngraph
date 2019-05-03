@@ -13660,6 +13660,38 @@ TEST(type_prop, gather_nd_fail_indices_element_type)
     }
 }
 
+TEST(type_prop, scatter_add_fail_indices_element_type)
+{
+}
+
+TEST(type_prop, scatter_add_fail_updates_element_type)
+{
+}
+
+TEST(type_prop, scatter_add_fail_updates_rank)
+{
+}
+
+TEST(type_prop, scatter_nd_add_fail_indices_element_type)
+{
+}
+
+TEST(type_prop, scatter_nd_add_fail_indices_rank)
+{
+}
+
+TEST(type_prop, scatter_nd_add_fail_indices_last_dim)
+{
+}
+
+TEST(type_prop, scatter_nd_add_fail_updates_element_type)
+{
+}
+
+TEST(type_prop, scatter_nd_add_fail_updates_rank)
+{
+}
+
 TEST(type_prop, conv_bias_2d_deduce)
 {
     // Deduce type

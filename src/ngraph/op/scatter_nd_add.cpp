@@ -52,11 +52,6 @@ void op::GatherND::validate_and_infer_types()
                               static_cast<size_t>(indices_shape.rank()) >= 1,
                           "indices rank is expected to be at least 1");
 
-    NODE_VALIDATION_CHECK(this,
-                          inputs_shape.rank().is_dynamic() ||
-                              static_cast<size_t>(inputs_shape.rank()) >= 1,
-                          "inputs rank is expected to be at least 1");
-
     NODE_VALIDATION_CHECK(
         this,
         inputs_shape.rank().is_dynamic() || indices_shape.rank().is_dynamic() ||
