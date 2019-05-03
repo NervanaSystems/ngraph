@@ -821,70 +821,46 @@ namespace ngraph
                     writer << "*cg_ctx->mkldnn_descriptors[" << desc_index + (descs.size() - 1)
                            << "],\n"
                               "mkldnn::memory::dims{";
-                    if (strides.size() == 1)
+                    if (strides.size() > 1)
                     {
-                        writer << std::to_string(strides[0]);
+                        for (auto i = 0; i < strides.size() - 1; i++)
+                        {
+                            writer << std::to_string(strides[i]) << ", ";
+                        }
                     }
-                    else if (strides.size() == 2)
-                    {
-                        writer << std::to_string(strides[0]) << ", " << std::to_string(strides[1]);
-                    }
-                    else if (strides.size() == 3)
-                    {
-                        writer << std::to_string(strides[0]) << ", " << std::to_string(strides[1])
-                               << ", " << std::to_string(strides[2]);
-                    }
+                    writer << std::to_string(strides[strides.size() - 1]);
                     writer << "},\n"
                               "mkldnn::memory::dims{";
-                    if (window_dilation_strides_adjusted.size() == 1)
+                    if (window_dilation_strides_adjusted.size() > 1)
                     {
-                        writer << std::to_string(window_dilation_strides_adjusted[0]);
+                        for (auto i = 0; i < window_dilation_strides_adjusted.size() - 1; i++)
+                        {
+                            writer << std::to_string(window_dilation_strides_adjusted[i]) << ", ";
+                        }
                     }
-                    else if (window_dilation_strides_adjusted.size() == 2)
-                    {
-                        writer << std::to_string(window_dilation_strides_adjusted[0]) << ", "
-                               << std::to_string(window_dilation_strides_adjusted[1]);
-                    }
-                    else if (window_dilation_strides_adjusted.size() == 3)
-                    {
-                        writer << std::to_string(window_dilation_strides_adjusted[0]) << ", "
-                               << std::to_string(window_dilation_strides_adjusted[1]) << ", "
-                               << std::to_string(window_dilation_strides_adjusted[2]);
-                    }
+                    writer << std::to_string(
+                        window_dilation_strides_adjusted[window_dilation_strides_adjusted.size() -
+                                                         1]);
                     writer << "},\n"
                               "mkldnn::memory::dims{";
-                    if (pad_below.size() == 1)
+                    if (pad_below.size() > 1)
                     {
-                        writer << std::to_string(pad_below[0]);
+                        for (auto i = 0; i < pad_below.size() - 1; i++)
+                        {
+                            writer << std::to_string(pad_below[i]) << ", ";
+                        }
                     }
-                    else if (pad_below.size() == 2)
-                    {
-                        writer << std::to_string(pad_below[0]) << ", "
-                               << std::to_string(pad_below[1]);
-                    }
-                    else if (pad_below.size() == 3)
-                    {
-                        writer << std::to_string(pad_below[0]) << ", "
-                               << std::to_string(pad_below[1]) << ", "
-                               << std::to_string(pad_below[2]);
-                    }
+                    writer << std::to_string(pad_below[pad_below.size() - 1]);
                     writer << "},\n"
                               "mkldnn::memory::dims{";
-                    if (pad_above.size() == 1)
+                    if (pad_above.size() > 1)
                     {
-                        writer << std::to_string(pad_above[0]);
+                        for (auto i = 0; i < pad_above.size() - 1; i++)
+                        {
+                            writer << std::to_string(pad_above[i]) << ", ";
+                        }
                     }
-                    else if (pad_above.size() == 2)
-                    {
-                        writer << std::to_string(pad_above[0]) << ", "
-                               << std::to_string(pad_above[1]);
-                    }
-                    else if (pad_above.size() == 3)
-                    {
-                        writer << std::to_string(pad_above[0]) << ", "
-                               << std::to_string(pad_above[1]) << ", "
-                               << std::to_string(pad_above[2]);
-                    }
+                    writer << std::to_string(pad_above[pad_above.size() - 1]);
                     writer << "},\n"
                               "mkldnn::padding_kind::zero);\n";
 
