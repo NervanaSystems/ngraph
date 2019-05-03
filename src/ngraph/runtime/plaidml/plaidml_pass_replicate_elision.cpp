@@ -43,7 +43,7 @@ ngraph::runtime::plaidml::pass::ReplicateElision::ReplicateElision()
         },
         NodeVector{skip_op});
 
-    pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
+    auto callback = [](pattern::Matcher& m) {
         bool replaced_any = false;
         auto nodes = m.get_matched_nodes();
         std::size_t dim_limit = nodes.at(1)->get_shape().size();
@@ -81,5 +81,5 @@ ngraph::runtime::plaidml::pass::ReplicateElision::ReplicateElision()
         return replaced_any;
     };
 
-    add_matcher(std::make_shared<pattern::Matcher>(target_op, callback));
+    add_matcher(std::make_shared<pattern::Matcher>(target_op), callback);
 }
