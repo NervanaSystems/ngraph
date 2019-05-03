@@ -13069,6 +13069,19 @@ TEST(type_prop, dynslice_arg_rank_static_dynamic_params_rank_dynamic_ok)
     EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
 }
 
+TEST(type_prop, dynslice_static_shape)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5, 6});
+    auto lower_bounds = op::Constant::create(element::i64, Shape{5}, {0, 1, 2, 3, 1});
+    auto upper_bounds = op::Constant::create(element::i64, Shape{5}, {1, 3, 3, 5, 6});
+    auto strides = op::Constant::create(element::i64, Shape{5}, {1, 1, 1, 2, 2});
+
+    auto r = make_shared<op::DynSlice>(arg, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_EQ(r->get_shape(), (Shape{1, 2, 1, 1, 3}));
+}
+
 void DynSlice_Test_Shape_Except(const shared_ptr<Node>& param_0,
                                 const shared_ptr<Node>& param_1,
                                 const shared_ptr<Node>& param_2,

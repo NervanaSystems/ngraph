@@ -126,6 +126,9 @@ namespace ngraph
                 set_output_type(0, m_element_type, m_shape);
             }
 
+            Shape get_shape_val() const;
+            Strides get_strides_val() const;
+
             /// \brief Wrapper around constructing a shared_ptr of a Constant
             ///
             /// \param type The element type of the tensor constant.
