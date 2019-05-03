@@ -66,6 +66,32 @@ namespace ngraph
                 using Op::Op;
             };
 
+            // TODO(dcab): Doc
+            // TODO(dcab): Increase operands to 3 when supporting bias.
+            class NG_MatmulBiasOp : public mlir::Op<NG_MatmulBiasOp,
+                                                    mlir::OpTrait::NOperands<2>::Impl,
+                                                    mlir::OpTrait::OneResult,
+                                                    mlir::OpTrait::HasNoSideEffect>
+            {
+            public:
+                static llvm::StringRef getOperationName() { return "ng.matmul.bias"; }
+                /// Custom verification.
+                mlir::LogicalResult verify();
+                static void build(mlir::Builder* builder,
+                                  mlir::OperationState* state,
+                                  mlir::Value* lhs,
+                                  mlir::Value* rhs);
+
+                /// Convenience accessor for LHS of the expression.
+                mlir::Value* getLHS() { return getOperand(0); }
+                /// Convenience accessor for RHS of the expression.
+                mlir::Value* getRHS() { return getOperand(1); }
+                /// Convenience accessor for bias operand.
+                mlir::Value* getBias() { return nullptr; } // TODO
+                /// Inherit constructor.
+                using Op::Op;
+            };
+
             /// Return operations terminate blocks (and functions as well). They take a
             /// single argument and the type must match the function return type.
             class NG_ReturnOp : public mlir::Op<NG_ReturnOp,

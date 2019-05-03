@@ -49,8 +49,8 @@ namespace ngraph
                 }
 
                 static void init_mlir();
-                // compiles and runs a subgraph in MLIR
-                void compile();
+                /// Compiles and runs a subgraph in MLIR.
+                void compile_and_run();
 
             private:
                 struct TensorInfo

@@ -55,8 +55,9 @@ namespace
         // Initialize the list of converters.
         llvm::DenseSet<DialectOpConversion*> initConverters(MLIRContext* context) override
         {
-            return ConversionListBuilder<NG_AddOpConversion, NG_ReturnOpConversion>::build(
-                &allocator, context, m_pass);
+            return ConversionListBuilder<NG_AddOpConversion,
+                                         NG_MatmulBiasOpConversion,
+                                         NG_ReturnOpConversion>::build(&allocator, context, m_pass);
         }
 
     private:
@@ -154,7 +155,7 @@ namespace
 
         auto result = m_pass.buildOutputDefs(op, rewriter)[0];
         NGRAPH_ASSERT(result->getType().isa<MemRefType>());
-        // NOte that builder's current function is still the original function body.
+        // Note that builder's current function is still the original function body.
         // use getBlock to get the new block instead.
 
         // get new operands
@@ -178,6 +179,73 @@ namespace
         LoopNestBuilder(pivs, lbs, ubs, steps)({// single stmt body
                                                 iRes(ivs) = iLHS(ivs) + iRHS(ivs)});
         // return result memref
+        return {result};
+    }
+
+    SmallVector<Value*, 4> NG_MatmulBiasOpConversion::rewrite(Operation* op,
+                                                              ArrayRef<Value*> operands,
+                                                              FuncBuilder& rewriter) const
+    {
+        auto matmul = op->cast<NG_MatmulBiasOp>();
+        auto loc = matmul.getLoc();
+
+        NGRAPH_ASSERT(!matmul.getBias() && operands.size() == 2)
+            << "Bias is not supported yet in MatmulBias operation";
+
+        // Retrieve/generate Values for operands and result.
+        ScopedContext scope(rewriter, loc);
+        Value* lhs = operands[0];
+        Value* rhs = operands[1];
+        Value* result = m_pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_ASSERT(lhs && rhs && result) << "Unexpected null values in MatmulBiasOp";
+
+        auto result_ty = result->getType().dyn_cast<MemRefType>();
+        auto lhs_ty = lhs->getType().dyn_cast<MemRefType>();
+        auto rhs_ty = rhs->getType().dyn_cast<MemRefType>();
+        NGRAPH_ASSERT(result_ty) << "Unexpected non-memref result type";
+        NGRAPH_ASSERT(lhs_ty) << "Unexpected non-memref LHS type";
+        NGRAPH_ASSERT(rhs_ty) << "Unexpected non-memref RHS type";
+
+        Type elem_ty = result_ty.getElementType();
+        NGRAPH_ASSERT(elem_ty == lhs_ty.getElementType() && elem_ty == rhs_ty.getElementType())
+            << "Types mismatch in MatmulBiasOp";
+
+        // Create the following loop nest for matmul operation:
+        //   for(n, N, 1)
+        //     for(m, M, 1)
+        //       for(k, K, 1)
+        //         res[n, k] += lhs[n, m] * rhs[m, k]
+        // TODO (dcab): We currently generate a super naive loop nest. Improve loop nest layout.
+
+        MemRefView v_res(result), v_lhs(lhs), v_rhs(rhs);
+        IndexedValue i_res(result), i_lhs(lhs), i_rhs(rhs);
+
+        NGRAPH_ASSERT(v_lhs.rank() == 2 && v_rhs.rank() == 2 && v_res.rank() == 2)
+            << "MatmulBias operation is only supported for 2D tensors";
+
+        // Induction variables, lower bounds, upper bounds and steps of the loop nest.
+        IndexHandle n, m, k;
+        IndexHandle n_lb(v_lhs.lb(1)), m_lb(v_lhs.lb(0)), k_lb(v_rhs.lb(0));
+        IndexHandle n_ub(v_lhs.ub(1)), m_ub(v_lhs.ub(0)), k_ub(v_rhs.ub(0));
+        int64_t n_step = v_lhs.step(1), m_step = v_lhs.step(0), k_step = v_rhs.step(0);
+        // TODO (dcab): Assert on dims
+
+        // Constants, indexed values and indexes to be used inside the loop nest.
+        IndexedValue ires(result), ilhs(lhs), irhs(rhs);
+        ValueHandle zero_init(rewriter.create<ConstantOp>(loc, rewriter.getZeroAttr(elem_ty)));
+
+        // clang-format off
+        LoopBuilder(&n, n_lb, n_ub, n_step)({
+            LoopBuilder(&k, k_lb, k_ub, k_step)({
+                i_res(n, k) = zero_init,
+                LoopBuilder(&m, m_lb, m_ub, m_step)({
+                    i_res(n, k) += i_lhs(n, m) * i_rhs(m, k)
+                })
+            }),
+        });
+        // clang-format on
+
+        // Return result memref.
         return {result};
     }
 

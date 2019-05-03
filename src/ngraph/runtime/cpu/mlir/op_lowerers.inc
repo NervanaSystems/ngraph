@@ -30,6 +30,7 @@ public:\
 };
 
 DECL_OP_CONV(NG_AddOp)
+DECL_OP_CONV(NG_MatmulBiasOp)
 DECL_OP_CONV(NG_ReturnOp)
 
 #undef DECL_OP_CONV

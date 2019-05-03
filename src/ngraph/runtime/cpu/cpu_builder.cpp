@@ -102,6 +102,7 @@
 #include "ngraph/runtime/cpu/kernel/subtract.hpp"
 #include "ngraph/runtime/cpu/kernel/tan.hpp"
 #include "ngraph/runtime/cpu/kernel/tanh.hpp"
+#include "ngraph/runtime/cpu/mlir/compiler.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/halide_op.hpp"
 #include "ngraph/runtime/cpu/op/loop_kernel.hpp"
@@ -501,4 +502,29 @@ namespace ngraph
             REGISTER_CF_BUILDER(Sqrt);
         }
     }
+}
+
+using namespace ngraph::runtime::cpu;
+
+CPUKernelFunctor Builder::build_mlir_single_output_binary_op(const ngraph::Node* node,
+                                                             void*& arg0_tensor,
+                                                             void*& arg1_tensor,
+                                                             void*& out_tensor)
+{
+    // TODO: Remove m_ip/op_list construction out of MLIRCompiler.
+
+    auto functor = [&, node](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+        std::vector<const Node*> nodelist = {node};
+
+        // MLIR requires a list of type-erased pointer to arguments. Our arguments
+        // are already pointers, so we need to pass a double pointer.
+        std::vector<void*> ptr_args = {arg0_tensor, arg1_tensor, out_tensor};
+
+        MLIRCompiler mlirc(nodelist, ptr_args);
+        // TODO: Decouple 'compile' and 'run' APIs. We want to be able to run the
+        // same jitted code on different arguments.
+        mlirc.compile_and_run();
+    };
+
+    return functor;
 }

@@ -29,6 +29,7 @@ namespace ngraph
     {
         addTypes<NGTensorType>();
         addOperations<NG_AddOp>();
+        addOperations<NG_MatmulBiasOp>();
         addOperations<NG_ReturnOp>();
         addOperations<NG_FakeOutput>();
     }

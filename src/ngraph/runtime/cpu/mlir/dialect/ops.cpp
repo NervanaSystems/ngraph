@@ -99,6 +99,53 @@ namespace ngraph
         return mlir::success();
     }
 
+    void runtime::cpu::NG_MatmulBiasOp::build(mlir::Builder* builder,
+                                              mlir::OperationState* state,
+                                              mlir::Value* lhs,
+                                              mlir::Value* rhs)
+    {
+        state->types.push_back(lhs->getType());
+        state->operands.push_back(lhs);
+        state->operands.push_back(rhs);
+    }
+
+    mlir::LogicalResult runtime::cpu::NG_MatmulBiasOp::verify()
+    {
+        // Verify that we have 3 operands
+        if (getNumOperands() != 3)
+        {
+            std::stringstream ss;
+            ss << "Unexpected MatmulBiasOp with " << getNumOperands()
+               << " operands. 3 operands expected";
+            return emitOpError(ss.str());
+        }
+
+        // Bias operand must be null for now (not implemented).
+        if (getOperand(2) != nullptr)
+        {
+            return emitOpError("Bias operand is not null in MatmulBiasOp");
+        }
+
+        // Verify that operand types are supported.
+        auto op0_tensor_ty = getOperand(0)->getType().dyn_cast<NGTensorType>();
+        auto op1_tensor_ty = getOperand(1)->getType().dyn_cast<NGTensorType>();
+        if (!op0_tensor_ty || !op1_tensor_ty)
+        {
+            return emitOpError("Unsupported non-tensor type in MatmulBiasOp");
+        }
+
+        // Verify that operand shapes are supported.
+        if (op0_tensor_ty.getRank() == 2 && op1_tensor_ty.getRank() == 2)
+        {
+            return emitOpError(
+                "Unsupported number of dimensions. Only 2D tensors are supported in MatmulBiasOp");
+        }
+
+        // TODO(dcab): Improve verification: matching types, proper shapes, etc.
+
+        return mlir::success();
+    }
+
     void runtime::cpu::NG_ReturnOp::build(mlir::Builder* builder,
                                           mlir::OperationState* state,
                                           std::vector<mlir::Value*> value_list)

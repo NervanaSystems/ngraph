@@ -23,6 +23,7 @@
 #include "ngraph/runtime/cpu/mlir/dialect/ops.hpp"
 #include "ngraph/runtime/cpu/mlir/dialect/type.hpp"
 #include "ngraph/runtime/cpu/mlir/lowerer.hpp"
+#include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/type/element_type.hpp"
 
 #include <llvm/ADT/STLExtras.h>
@@ -58,7 +59,7 @@ namespace ngraph
         // Register any LLVM command line options
         llvm::cl::ParseEnvironmentOptions("ngraph", "MLIR_LLVM_OPTIONS", "");
     }
-    void MLIRCompiler::compile()
+    void MLIRCompiler::compile_and_run()
     {
         build_module(); // MLIR gen
         lower_dialect();
@@ -277,8 +278,20 @@ namespace ngraph
         return compiler.create_binary_op<NG_AddOp>(ng_node);
     }
 
+    template <>
+    mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::MatmulBias)
+    {
+        // TODO(dcab): Implement all the variants of a Matmul/MatmulBias op.
+        // Keeping it simple for now.
+        NGRAPH_ASSERT(ng_node->get_arguments().size() == 2)
+            << "Bias is not supported in MatmulBias operation";
+
+        return compiler.create_binary_op<NG_MatmulBiasOp>(ng_node);
+    }
+
     const MLIRCompiler::MLIRCompOpMap MLIRCompiler::op_dispatcher{
-        {TI(ngraph::op::Add), &MLIRCompiler::create_op<ngraph::op::Add>}};
+        {TI(ngraph::op::Add), &MLIRCompiler::create_op<ngraph::op::Add>},
+        {TI(ngraph::op::MatmulBias), &MLIRCompiler::create_op<ngraph::op::MatmulBias>}};
 
     template <typename BinOp>
     mlir::Value* MLIRCompiler::create_binary_op(const ngraph::Node* ng_node)
@@ -342,6 +355,11 @@ namespace ngraph
         // Initialize LLVM targets.
         llvm::InitializeNativeTarget();
         llvm::InitializeNativeTargetAsmPrinter();
+
+        // Create an MLIR execution engine. Note that it takes a null pass manager
+        // to make sure it won't run "default" passes on the MLIR that would trigger
+        // a second conversion to LLVM IR.  The execution engine eagerly JIT-compiles
+        // the module.
 
         // Create an MLIR execution engine. Note that it takes a null pass manager
         // to make sure it won't run "default" passes on the MLIR that would trigger
