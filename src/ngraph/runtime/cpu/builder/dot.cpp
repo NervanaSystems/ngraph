@@ -230,9 +230,9 @@ namespace ngraph
                     return;
                 }
 
-                std::function<decltype(runtime::cpu::kernel::dot_ref<float>)> kernel;
+                std::function<decltype(runtime::cpu::kernel::dot_ref<float, float, float>)> kernel;
 
-                SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_ref);
+                kernel = runtime::cpu::kernel::dot_ref<float, float, float>;
 
                 auto functor = [&,
                                 kernel,
@@ -250,7 +250,8 @@ namespace ngraph
                            arg0_shape,
                            arg1_shape,
                            result_shape,
-                           reduction_axes_count);
+                           reduction_axes_count,
+                           1.0f);
                 };
                 functors.emplace_back(functor);
             }

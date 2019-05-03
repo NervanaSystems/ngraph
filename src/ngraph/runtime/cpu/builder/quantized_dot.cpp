@@ -19,6 +19,7 @@
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
+#include "ngraph/runtime/cpu/kernel/dot.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
@@ -114,19 +115,22 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::QuantizedDot)
             {
+                auto& functors = external_function->get_functors();
+
+                auto arg0_shape = args[0].get_shape();
+                auto arg1_shape = args[1].get_shape();
+                auto result_shape = out[0].get_shape();
+
+                auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
+                auto arg2_buffer_index = external_function->get_buffer_index(args[2].get_name());
+                auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
+
+                auto scales_size = shape_size(args[2].get_shape());
+
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto& functors = external_function->get_functors();
-                    auto arg0_buffer_index =
-                        external_function->get_buffer_index(args[0].get_name());
-                    auto arg1_buffer_index =
-                        external_function->get_buffer_index(args[1].get_name());
-                    auto arg2_buffer_index =
-                        external_function->get_buffer_index(args[2].get_name());
-                    auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
-
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto scales_size = shape_size(args[2].get_shape());
 
                     auto ip_desc =
                         mkldnn_emitter->get_inner_product_forward_desc<ngraph::op::QuantizedDot>(
@@ -176,7 +180,39 @@ namespace ngraph
                 }
                 else
                 {
-                    throw ngraph_error("unsupported parameters for QuantizedDot via DEX");
+                    std::function<decltype(
+                        runtime::cpu::kernel::dot_ref<uint8_t, uint8_t, uint8_t, int32_t>)>
+                        kernel;
+
+                    kernel = runtime::cpu::kernel::dot_ref<uint8_t, uint8_t, uint8_t, int32_t>;
+
+                    auto functor = [&,
+                                    kernel,
+                                    arg0_shape,
+                                    arg1_shape,
+                                    result_shape,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    arg2_buffer_index,
+                                    out0_buffer_index,
+                                    scales_size](CPURuntimeContext* ctx,
+                                                 CPUExecutionContext* ectx) {
+
+                        vector<float> dyn_scales;
+                        dyn_scales.assign(static_cast<float*>(ctx->buffer_data[arg2_buffer_index]),
+                                          static_cast<float*>(ctx->buffer_data[arg2_buffer_index]) +
+                                              scales_size);
+
+                        kernel(ctx->buffer_data[arg0_buffer_index],
+                               ctx->buffer_data[arg1_buffer_index],
+                               ctx->buffer_data[out0_buffer_index],
+                               arg0_shape,
+                               arg1_shape,
+                               result_shape,
+                               1,
+                               dyn_scales[0]);
+                    };
+                    functors.emplace_back(functor);
                 }
             }
             REGISTER_OP_BUILDER(QuantizedDotBias);

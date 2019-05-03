@@ -45,17 +45,21 @@ namespace ngraph
             {
                 auto requantization_scale = (input_scale * filter_scale) / output_scale;
 
+                // Since u8u8 goes to ref reshape the filter so that the ref dot can do a matmul
+                // which requires [m, n] * [n, k] order where as mkldnn requires [m, n] * [k, n]
                 if (input->get_element_type() == element::u8 &&
                     filter->get_element_type() == element::u8)
                 {
-                    filter =
-                        make_shared<op::Reshape>(filter, AxisVector{1, 0}, filter->get_shape());
+                    filter = make_shared<op::Reshape>(
+                        filter,
+                        AxisVector{1, 0},
+                        Shape{filter->get_shape()[1], filter->get_shape()[0]});
                 }
 
                 return make_shared<op::QuantizedDot>(input, filter, requantization_scale);
             }
 
-            // TODO: this code is falling back to fp32 convolution
+            // TODO: this code is falling back to fp32 dot
             //       1) add support in reference kernel for zero point
             shared_ptr<Node> QuantizedLinearMatmul(shared_ptr<Node> input,
                                                    shared_ptr<Node> filter,

@@ -39,13 +39,29 @@ op::QuantizedDot::QuantizedDot(const shared_ptr<Node>& data,
     auto& weights_shape = weights->get_shape();
     // QuantizedDot does [n, ic] * [oc, ic] = [n, oc]
     NODE_VALIDATION_CHECK(this,
-                          data_shape.size() == 2 && weights_shape.size() == 2 &&
-                              data_shape[1] == weights_shape[1],
+                          data_shape.size() == 2 && weights_shape.size() == 2,
                           "only valid tensors of rank 2 supported. data shape ",
                           data_shape,
                           " weights shape ",
                           weights_shape);
 
+    // Mkldnn requirement. So skip when it goes to reference::dot
+    if (weights->get_element_type() != element::u8)
+    {
+        NODE_VALIDATION_CHECK(
+            this,
+            data_shape[1] == weights_shape[1],
+            "second dim of data and first dim of weights should be same. mkldnn requirement");
+    }
+
     auto output_et = requantize ? (with_relu ? element::u8 : element::i8) : element::i32;
-    set_output_type(0, output_et, Shape{data_shape[0], weights_shape[0]});
+    if (data->get_element_type() == element::u8 && weights->get_element_type() == element::u8)
+    {
+        output_et = element::u8;
+        set_output_type(0, output_et, Shape{data_shape[0], weights_shape[1]});
+    }
+    else
+    {
+        set_output_type(0, output_et, Shape{data_shape[0], weights_shape[0]});
+    }
 }
