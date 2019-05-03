@@ -112,47 +112,50 @@ void runtime::cpu::CPU_CallFrame::inner_call(
                          m_ctx_vec[id]->op_durations,
                          m_external_function->get_function_name() + ".timeline.json");
     }
-    std::unique_lock<std::mutex> lck(m_mutex);
-    m_id_pool[id] = true;
-    m_num_ctx_available++;
-    m_cv.notify_all();
 }
 
 void runtime::cpu::CPU_CallFrame::call(
     const std::vector<std::shared_ptr<runtime::Tensor>>& output_tvs,
     const std::vector<std::shared_ptr<runtime::Tensor>>& input_tvs)
 {
-    std::unique_lock<std::mutex> lck(m_mutex);
-    while (m_num_ctx_available == 0)
-    {
-        m_cv.wait(lck);
-    }
-
     auto id = 0;
-    for (auto i = 0; i < m_num_ctx; i++)
-    {
-        if (m_id_pool[i])
-        {
-            id = i;
-            break;
-        }
-    }
-    NGRAPH_CHECK(id != m_num_ctx);
-    m_id_pool[id] = false;
     auto disable_caching = false;
-    if (id != m_prev_ctx)
     {
-        // Disable caching since staleness hints are no longer
-        // applicable to this context
-        disable_caching = true;
+        std::unique_lock<std::mutex> lck(m_mutex);
+        while (m_num_ctx_available == 0)
+        {
+            m_cv.wait(lck);
+        }
+
+        for (auto i = 0; i < m_num_ctx; i++)
+        {
+            if (m_id_pool[i])
+            {
+                id = i;
+                break;
+            }
+        }
+        NGRAPH_CHECK(id != m_num_ctx);
+        m_id_pool[id] = false;
+        if (id != m_prev_ctx)
+        {
+            // Disable caching since staleness hints are no longer
+            // applicable to this context
+            disable_caching = true;
+        }
+        m_prev_ctx = id;
+        m_num_ctx_available--;
     }
-    m_prev_ctx = id;
-    m_num_ctx_available--;
-    m_mutex.unlock();
 
     m_ctx_vec[id]->pc = 0;
     propagate_layouts(output_tvs, m_external_function->get_result_layout_descriptors());
     inner_call(output_tvs, input_tvs, id, disable_caching);
+
+    m_mutex.lock();
+    m_id_pool[id] = true;
+    m_num_ctx_available++;
+    m_mutex.unlock();
+    m_cv.notify_one();
 }
 
 void runtime::cpu::CPU_CallFrame::propagate_layouts(
