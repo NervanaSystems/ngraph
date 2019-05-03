@@ -53,7 +53,7 @@ public:
         : FunctionPass()
     {
         // Setting REQUIRE_STATIC_SHAPE to false because we will check if each
-        // callbacks need static shape during run_on_function().
+        // callback needs static shape during run_on_function().
         set_property(PassProperty::REQUIRE_STATIC_SHAPE, false);
     }
 
@@ -88,7 +88,7 @@ public:
         , m_num_iters(num_iters)
     {
         // Setting REQUIRE_STATIC_SHAPE to false because we will check if each
-        // callbacks need static shape during run_on_function().
+        // callback needs static shape during run_on_function().
         set_property(PassProperty::REQUIRE_STATIC_SHAPE, false);
     }
 
