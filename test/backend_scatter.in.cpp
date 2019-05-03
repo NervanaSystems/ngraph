@@ -37,128 +37,151 @@ static string s_manifest = "${MANIFEST}";
 
 NGRAPH_TEST(${BACKEND_NAME}, scatter_add_2d_indices)
 {
-    Shape params_shape{3, 3};
-    Shape indices_shape{1, 2};
-    Shape out_shape{3, 1, 2};
-    auto P = make_shared<op::Parameter>(element::f32, params_shape);
+    Shape ref_shape{2, 3, 3};
+    Shape indices_shape{2, 2};
+    Shape updates_shape{2, 2, 3, 3};
+    Shape out_shape{2, 3, 3};
+    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
     auto I = make_shared<op::Parameter>(element::i32, indices_shape);
-    auto G = make_shared<op::Gather>(P, I, 1);
-    auto f = make_shared<Function>(make_shared<op::GetOutputElement>(G, 0), ParameterVector{P, I});
+    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    auto G = make_shared<op::ScatterAdd>(R, I, U);
+    auto f = make_shared<Function>(make_shared<op::GetOutputElement>(G, 0), ParameterVector{R, I, U});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto p = backend->create_tensor(element::f32, params_shape);
-    copy_data(p, vector<float>{1.0, 1.1, 1.2, 2.0, 2.1, 2.2, 3.0, 3.1, 3.2});
+    auto r = backend->create_tensor(element::f32, ref_shape);
+    copy_data(r, vector<float>{0, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 9});
     auto i = backend->create_tensor(element::i32, indices_shape);
-    copy_data(i, vector<int32_t>{0, 2});
+    copy_data(i, vector<int32_t>{0, 1, 1, 0});
+    auto u = backend->create_tensor(element::f32, updates_shape);
+    copy_data(u, vector<float>{0, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8});
     auto result = backend->create_tensor(element::f32, out_shape);
 
     auto c = backend->compile(f);
-    c->call_with_validate({result}, {p, i});
-    EXPECT_TRUE(test::all_close_f((vector<float>{1.0, 1.2, 2.0, 2.2, 3.0, 3.2}),
+    c->call_with_validate({result}, {r, i, u});
+    EXPECT_TRUE(test::all_close_f((vector<float>{0, 3, 6, 9, 12, 15, 18, 21, 24, 3, 6, 9, 12, 15, 18, 21, 24, 27}),
                                   read_vector<float>(result),
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, scatter_add_1d_indices)
 {
-    Shape params_shape{3, 3};
-    Shape indices_shape{1, 2};
-    Shape out_shape{3, 1, 2};
-    auto P = make_shared<op::Parameter>(element::f32, params_shape);
+    Shape ref_shape{2, 3, 3};
+    Shape indices_shape{2};
+    Shape updates_shape{2, 3, 3};
+    Shape out_shape{2, 3, 3};
+    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
     auto I = make_shared<op::Parameter>(element::i32, indices_shape);
-    auto G = make_shared<op::Gather>(P, I, 1);
-    auto f = make_shared<Function>(make_shared<op::GetOutputElement>(G, 0), ParameterVector{P, I});
+    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    auto G = make_shared<op::ScatterAdd>(R, I, U);
+    auto f = make_shared<Function>(make_shared<op::GetOutputElement>(G, 0), ParameterVector{R, I, U});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto p = backend->create_tensor(element::f32, params_shape);
-    copy_data(p, vector<float>{1.0, 1.1, 1.2, 2.0, 2.1, 2.2, 3.0, 3.1, 3.2});
+    auto r = backend->create_tensor(element::f32, ref_shape);
+    copy_data(r, vector<float>{0, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 9});
     auto i = backend->create_tensor(element::i32, indices_shape);
-    copy_data(i, vector<int32_t>{0, 2});
+    copy_data(i, vector<int32_t>{1, 0});
+    auto u = backend->create_tensor(element::f32, updates_shape);
+    copy_data(u, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8});
     auto result = backend->create_tensor(element::f32, out_shape);
 
     auto c = backend->compile(f);
-    c->call_with_validate({result}, {p, i});
-    EXPECT_TRUE(test::all_close_f((vector<float>{1.0, 1.2, 2.0, 2.2, 3.0, 3.2}),
+    c->call_with_validate({result}, {r, i, u});
+    EXPECT_TRUE(test::all_close_f((vector<float>{0, 2, 4, 6, 8, 10, 12, 14, 16, 2, 4, 6, 8, 10, 12, 14, 16, 18}),
                                   read_vector<float>(result),
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, scatter_add_scalar_indices)
 {
-    Shape params_shape{3, 3};
+    Shape ref_shape{2, 3, 3};
     Shape indices_shape{};
-    Shape out_shape{3};
-    auto P = make_shared<op::Parameter>(element::f32, params_shape);
+    Shape updates_shape{3, 3};
+    Shape out_shape{2, 3, 3};
+    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
     auto I = make_shared<op::Parameter>(element::i32, indices_shape);
-    auto G = make_shared<op::Gather>(P, I, 1);
-    auto f = make_shared<Function>(make_shared<op::GetOutputElement>(G, 0), ParameterVector{P, I});
+    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    auto G = make_shared<op::ScatterAdd>(R, I, U);
+    auto f = make_shared<Function>(make_shared<op::GetOutputElement>(G, 0), ParameterVector{R, I, U});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto p = backend->create_tensor(element::f32, params_shape);
-    copy_data(p, vector<float>{1.0, 1.1, 1.2, 2.0, 2.1, 2.2, 3.0, 3.1, 3.2});
+    auto r = backend->create_tensor(element::f32, ref_shape);
+    copy_data(r, vector<float>{0, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 9});
     auto i = backend->create_tensor(element::i32, indices_shape);
-    copy_data(i, vector<int32_t>{0});
+    copy_data(i, vector<int32_t>{1});
+    auto u = backend->create_tensor(element::f32, updates_shape);
+    copy_data(u, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9});
     auto result = backend->create_tensor(element::f32, out_shape);
 
     auto c = backend->compile(f);
-    c->call_with_validate({result}, {p, i});
-    EXPECT_TRUE(test::all_close_f(
-        (vector<float>{1.0, 2.0, 3.0}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+    c->call_with_validate({result}, {r, i, u});
+    EXPECT_TRUE(test::all_close_f((vector<float>{0, 1, 2, 3, 4, 5, 6, 7, 8, 2, 4, 6, 8, 10, 12, 14, 16, 18}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, scatter_nd_add_batch_2d_to_3d)
 {
-    Shape params_shape{3, 3};
-    Shape indices_shape{2};
-    Shape out_shape{};
-    auto P = make_shared<op::Parameter>(element::f32, params_shape);
+    Shape ref_shape{3, 3, 3};
+    Shape indices_shape{2, 1};
+    Shape update_shape{2, 3, 3};
+    Shape out_shape{3, 3, 3};
+    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
     auto I = make_shared<op::Parameter>(element::i32, indices_shape);
-    auto G = make_shared<op::GatherND>(P, I);
-    auto f = make_shared<Function>(make_shared<op::GetOutputElement>(G, 0), ParameterVector{P, I});
+    auto U = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto G = make_shared<op::ScatterNDAdd>(R, I , U);
+    auto f = make_shared<Function>(make_shared<op::GetOutputElement>(G, 0), ParameterVector{R, I, U});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto p = backend->create_tensor(element::f32, params_shape);
-    copy_data(p, vector<float>{1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8});
+    auto r = backend->create_tensor(element::f32, params_shape);
+    copy_data(r, vector<float>{1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 6, 7, 7, 7, 8, 8, 8, 9, 9, 9});
     auto i = backend->create_tensor(element::i32, indices_shape);
-    copy_data(i, vector<int32_t>{1, 2});
+    copy_data(i, vector<int32_t>{0, 2});
+    auto u = backend->create_tensor(element::f32, params_shape);
+    copy_data(u, vector<float>{1, 1, 1, 2, 2, 2, 3, 3, 3, 7, 7, 7, 8, 8, 8, 9, 9, 9});
     auto result = backend->create_tensor(element::f32, out_shape);
 
     auto c = backend->compile(f);
-    c->call_with_validate({result}, {p, i});
+    c->call_with_validate({result}, {r, i, u});
     EXPECT_TRUE(test::all_close_f(
-        (vector<float>{1.5}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+        (vector<float>{2, 2, 2, 4, 4, 4, 6, 6, 6, 4, 4, 4, 5, 5, 5, 6, 6, 6, 14, 14, 14, 16, 16, 16, 18, 18 ,18}),
+        read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, scatter_nd_add_2d_to_3d)
 {
-    Shape params_shape{2, 2};
-    Shape indices_shape{2, 1};
-    Shape out_shape{2, 2};
-    auto P = make_shared<op::Parameter>(element::f32, params_shape);
+    Shape ref_shape{3, 3, 3};
+    Shape indices_shape{1};
+    Shape update_shape{3, 3};
+    Shape out_shape{3, 3, 3};
+    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
     auto I = make_shared<op::Parameter>(element::i32, indices_shape);
-    auto G = make_shared<op::GatherND>(P, I);
-    auto f = make_shared<Function>(make_shared<op::GetOutputElement>(G, 0), ParameterVector{P, I});
+    auto U = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto G = make_shared<op::ScatterNDAdd>(R, I , U);
+    auto f = make_shared<Function>(make_shared<op::GetOutputElement>(G, 0), ParameterVector{R, I, U});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto p = backend->create_tensor(element::f32, params_shape);
-    copy_data(p, vector<float>{1.0, 1.1, 1.2, 1.3});
+    auto r = backend->create_tensor(element::f32, params_shape);
+    copy_data(r, vector<float>{1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 6, 7, 7, 7, 8, 8, 8, 9, 9, 9});
     auto i = backend->create_tensor(element::i32, indices_shape);
-    copy_data(i, vector<int32_t>{1, 0});
+    copy_data(i, vector<int32_t>{0});
+    auto u = backend->create_tensor(element::f32, params_shape);
+    copy_data(u, vector<float>{1, 1, 1, 2, 2, 2, 3, 3, 3});
     auto result = backend->create_tensor(element::f32, out_shape);
 
     auto c = backend->compile(f);
-    c->call_with_validate({result}, {p, i});
+    c->call_with_validate({result}, {r, i, u});
     EXPECT_TRUE(test::all_close_f(
-        (vector<float>{1.2, 1.3, 1.0, 1.1}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+        (vector<float>{2, 2, 2, 4, 4, 4, 6, 6, 6, 4, 4, 4, 5, 5, 5, 6, 6, 6, 7, 7, 7, 8, 8, 8, 9, 9, 9}),
+        read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
