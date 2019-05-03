@@ -155,7 +155,7 @@ void runtime::cpu::CPU_CallFrame::call(
     m_id_pool[id] = true;
     m_num_ctx_available++;
     m_mutex.unlock();
-    m_cv.notify_all();
+    m_cv.notify_one();
 }
 
 void runtime::cpu::CPU_CallFrame::propagate_layouts(
