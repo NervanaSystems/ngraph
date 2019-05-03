@@ -29,69 +29,174 @@ using namespace std;
 
 #define TI(x) type_index(typeid(x))
 
+class HeightMap
+{
+public:
+    HeightMap() {}
+    HeightMap(std::set<Node*> initials)
+    {
+        for (auto& n : initials)
+        {
+            m_heights[n] = 0;
+        }
+    }
+    void absorb(const HeightMap& other)
+    {
+        for (auto& p : other.m_heights)
+        {
+            auto k = p.first;
+            auto v = p.second;
+            m_heights[k] = std::max(m_heights[k], v + 1);
+        }
+    }
+    void print()
+    {
+        bool first = true;
+        std::cout << "{";
+        for (auto& p : m_heights)
+        {
+            if (!first)
+            {
+                std::cout << ", ";
+            }
+            std::cout << p.first->get_name() << ": " << p.second;
+            first = false;
+        }
+        std::cout << "}";
+    }
+    int64_t max_jump_to(const HeightMap& target)
+    {
+        int64_t result = 0;
+        for (auto& p : m_heights)
+        {
+            auto k = p.first;
+            auto v = p.second;
+            if (target.m_heights.count(k) != 0)
+            {
+                result = std::max(result, std::abs(target.m_heights.at(k) - v));
+            }
+        }
+        return result;
+    }
+
+private:
+    std::unordered_map<Node*, int64_t> m_heights;
+};
+
+static std::string label_edge(const std::shared_ptr<Node>& src,
+                              const std::shared_ptr<Node>& dst,
+                              size_t arg_index,
+                              int64_t jump_distance)
+{
+    std::stringstream ss;
+    if (getenv("NGRAPH_VISUALIZE_EDGE_LABELS") != nullptr)
+    {
+        size_t output = 0;
+        if (auto goe = dynamic_pointer_cast<op::GetOutputElement>(dst))
+        {
+            output = goe->get_n();
+        }
+        stringstream label_edge;
+        label_edge << "[label=\" " << output << " -> " << arg_index << " \"]";
+        ss << label_edge.str();
+    }
+
+    else if (getenv("NGRAPH_VISUALIZE_EDGE_JUMP") != nullptr)
+    {
+        if (jump_distance > 1)
+        {
+            stringstream label_edge;
+            label_edge << "[label=\"jump=" << jump_distance << "\"]";
+            ss << label_edge.str();
+        }
+    }
+    return ss.str();
+}
+
 bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
 {
     for (shared_ptr<Function> f : functions)
     {
-        map<Node*, size_t> height_map;
+        unordered_map<Node*, HeightMap> height_maps;
+
+        for (auto& node : f->get_ops())
+        {
+            if (node->description() == "Result")
+            {
+                height_maps[node.get()] = HeightMap({node.get()});
+            }
+            else
+            {
+                height_maps[node.get()] = HeightMap();
+            }
+        }
 
         for (auto& node : reverse_topological_sort(f->get_ops()))
         {
-            size_t my_height = 0;
-
-            for (auto output : node->outputs())
+            for (auto& output : node->outputs())
             {
-                for (auto input : output.get_target_inputs())
+                for (auto& input : output.get_target_inputs())
                 {
                     auto target_node = input.get_node();
-                    my_height = std::max(my_height, height_map[target_node]+1);
+                    height_maps[node.get()].absorb(height_maps[target_node]);
                 }
             }
-
-            height_map[node.get()] = my_height;
-
-            std::cout << "[" << my_height << "] " << *node << std::endl;
         }
 
+        for (auto& p : height_maps)
+        {
+            std::cout << p.first->get_name() << ": ";
+            p.second.print();
+            std::cout << std::endl;
+        }
+
+        size_t warp_idx = 0;
         // map<size_t, list<node_ptr>> dependent_nodes;
         traverse_nodes(f, [&](shared_ptr<Node> node) {
-            size_t i = 0;
+            size_t arg_index = 0;
             for (auto arg : node->get_arguments())
             {
-                size_t jump_distance = height_map[arg.get()] - height_map[node.get()];
+                size_t jump_distance = height_maps[arg.get()].max_jump_to(height_maps[node.get()]);
 
-                if (jump_distance > 200 || arg->description() == "Constant" || arg->description() == "Parameter")
+                if (arg->description() == "Constant" || arg->description() == "Parameter")
                 {
-                    continue;
+                    auto clone_name = "CLONE_" + to_string(warp_idx);
+                    auto color = (arg->description() == "Parameter" ? "blue" : "black");
+                    m_ss << "    " << clone_name
+                         << "[shape=\"box\" style=\"dashed,filled\" color=\"" << color
+                         << "\" fillcolor=\"white\" label=\"" << arg->get_name() << "\"];\n";
+                    m_ss << clone_name << " -> " << node->get_name()
+                         << label_edge(arg, node, arg_index, jump_distance);
+                    warp_idx++;
                 }
-                m_ss << add_attributes(arg);
-                m_ss << add_attributes(node);
-                m_ss << "    " << arg->get_name() << " -> " << node->get_name();
-
-                if (getenv("NGRAPH_VISUALIZE_EDGE_LABELS") != nullptr)
+                else if (jump_distance > 20)
                 {
-                    size_t output = 0;
-                    if (auto goe = dynamic_pointer_cast<op::GetOutputElement>(node))
-                    {
-                        output = goe->get_n();
-                    }
-                    stringstream label_edge;
-                    label_edge << "[label=\" " << output << " -> " << i << " \"]";
-                    m_ss << label_edge.str();
-                }
+                    m_ss << add_attributes(arg);
+                    m_ss << add_attributes(node);
+                    auto recv_node_name = "RECV_" + to_string(warp_idx);
+                    auto send_node_name = "SEND_" + to_string(warp_idx);
 
-                if (getenv("NGRAPH_VISUALIZE_EDGE_JUMP") != nullptr)
+                    m_ss << "    " << recv_node_name << "[shape=\"box\" style=\"solid,filled\" "
+                                                        "fillcolor=\"#ffcccc\" label=\"Receive["
+                         << arg->get_name() << "]\"];\n";
+                    m_ss << "    " << send_node_name << "[shape=\"box\" style=\"solid,filled\" "
+                                                        "fillcolor=\"#ccffcc\" label=\"Send["
+                         << node->get_name() << "]\"];\n";
+
+                    m_ss << "    " << arg->get_name() << " -> " << send_node_name
+                         << label_edge(arg, node, arg_index, jump_distance) << ";\n";
+                    m_ss << "    " << recv_node_name << " -> " << node->get_name()
+                         << label_edge(arg, node, arg_index, jump_distance) << ";\n";
+                    warp_idx++;
+                }
+                else
                 {
-                    if (jump_distance > 1)
-                    {
-                        stringstream label_edge;
-                        label_edge << "[label=\"jump=" << jump_distance << "\"]";
-                        m_ss << label_edge.str();
-                    }
+                    m_ss << add_attributes(arg);
+                    m_ss << add_attributes(node);
+                    m_ss << "    " << arg->get_name() << " -> " << node->get_name()
+                         << label_edge(arg, node, arg_index, jump_distance) << ";\n";
                 }
-
-                m_ss << ";\n";
-                i++;
+                arg_index++;
             }
         });
     }
@@ -138,7 +243,7 @@ string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
     }
     else
     {
-        attributes.push_back("shape=ellipse");
+        attributes.push_back("shape=box");
         attributes.push_back("color=black");
     }
 

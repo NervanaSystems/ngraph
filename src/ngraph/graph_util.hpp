@@ -153,7 +153,6 @@ namespace ngraph
             node_map[node.get()] = node;
             size_t users_count = node->get_users().size();
             node_users_count[node.get()] = users_count;
-            std::cout << *node << " has " << users_count << " users" << std::endl;
             if (users_count == 0)
             {
                 independent_nodes.push_back(node.get());
@@ -164,7 +163,6 @@ namespace ngraph
         while (independent_nodes.size() > 0)
         {
             auto independent_node = independent_nodes.front();
-            std::cout << *independent_node << " is on deck" << std::endl;
             result_list.push_back(node_map[independent_node]);
             independent_nodes.pop_front();
 
@@ -174,13 +172,11 @@ namespace ngraph
 
                 if (--node_users_count[arg] == 0)
                 {
-                    std::cout << *arg << " is ready" << std::endl;
                     independent_nodes.push_back(arg);
                 }
             }
         }
 
-        std::cout << nodes.size() << " vs " << result_list.size() << std::endl;
         NGRAPH_CHECK(nodes.size() == result_list.size());
         return result_list;
     }
