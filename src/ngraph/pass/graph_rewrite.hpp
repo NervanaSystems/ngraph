@@ -52,10 +52,19 @@ public:
     GraphRewrite()
         : FunctionPass()
     {
+        // Setting REQUIRE_STATIC_SHAPE to false because we will check if each
+        // callbacks need static shape during run_on_function().
+        set_property(pass::PassProperty::REQUIRE_STATIC_SHAPE, false);
     }
 
     void add_matcher(const std::shared_ptr<pattern::Matcher>& m,
+                     const ngraph::graph_rewrite_callback& callback,
+                     const pass::PassPropertyMask& property);
+
+    // TODO: This interface may deprecate after all passes are refactored.
+    void add_matcher(const std::shared_ptr<pattern::Matcher>& m,
                      const ngraph::graph_rewrite_callback& callback);
+
     virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
 
 protected:
@@ -66,6 +75,7 @@ private:
     {
         std::shared_ptr<pattern::Matcher> matcher;
         ngraph::graph_rewrite_callback callback;
+        pass::PassPropertyMask property;
     };
     std::vector<MatchClosure> m_matchers;
 };
@@ -77,10 +87,19 @@ public:
         : FunctionPass()
         , m_num_iters(num_iters)
     {
+        // Setting REQUIRE_STATIC_SHAPE to false because we will check if each
+        // callbacks need static shape during run_on_function().
+        set_property(pass::PassProperty::REQUIRE_STATIC_SHAPE, false);
     }
 
     void add_matcher(const std::shared_ptr<pattern::RecurrentMatcher>& m,
+                     const ngraph::recurrent_graph_rewrite_callback& callback,
+                     const pass::PassPropertyMask& property);
+
+    // TODO: This interface may deprecate after all passes are refactored.
+    void add_matcher(const std::shared_ptr<pattern::RecurrentMatcher>& m,
                      const ngraph::recurrent_graph_rewrite_callback& callback);
+
     virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
 
 private:
@@ -90,6 +109,7 @@ private:
     {
         std::shared_ptr<pattern::RecurrentMatcher> matcher;
         ngraph::recurrent_graph_rewrite_callback callback;
+        pass::PassPropertyMask property;
     };
     std::vector<MatchClosure> m_matchers;
 };
