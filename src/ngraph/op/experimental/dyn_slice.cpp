@@ -51,9 +51,9 @@ Shape op::DynSlice::compute_output_shape() const
 
     if (lower_bounds && upper_bounds && strides)
     {
-        auto lb = lower_bounds->get_shape_val();
-        auto ub = upper_bounds->get_shape_val();
-        auto str = strides->get_strides_val();
+        auto lb = lower_bounds->get_vector<int64_t>();
+        auto ub = upper_bounds->get_vector<int64_t>();
+        auto str = strides->get_vector<int64_t>();
 
         int max_dims = input_shape.size() + m_new_axis.size();
         if (lb.size() && ub.size())
@@ -117,6 +117,7 @@ Shape op::DynSlice::compute_output_shape() const
             }
             stride_dms[i] = (str.size() > sj && str[sj] != 0) ? str[sj++] : 1;
 
+            // Use lower_bounds if mask is not set
             if (m_lower_bounds_mask.find(j) == m_lower_bounds_mask.end())
             {
                 begin_dms[i] = lb.size() > bj ? lb[bj] : (stride_dms[i] > 0 ? 0 : -1);
@@ -130,9 +131,10 @@ Shape op::DynSlice::compute_output_shape() const
             begin_dms[i] = begin_dms[i] >= 0 ? begin_dms[i] : input_shape[j] + begin_dms[i];
             //  Clipping 'begin'
             begin_dms[i] =
-                (begin_dms[i] < 0) ? 0 : (begin_dms[i] > input_shape[j] ? input_shape[j] - 1
-                                                                        : begin_dms[i]);
+                (begin_dms[i] < 0) ? 0 : (begin_dms[i] >= input_shape[j] ? input_shape[j] - 1
+                                                                         : begin_dms[i]);
 
+            // Use upper_bounds if mask is not set
             if (m_upper_bounds_mask.find(j) == m_upper_bounds_mask.end())
             {
                 int end_dms_tmp =
@@ -146,8 +148,8 @@ Shape op::DynSlice::compute_output_shape() const
             ej++;
             end_dms[i] = end_dms[i] >= 0 ? end_dms[i] : input_shape[j] + end_dms[i];
             //  Clipping 'end'
-            end_dms[i] = (end_dms[i] < 0) ? 0 : (end_dms[i] > input_shape[j] ? input_shape[j] - 1
-                                                                             : end_dms[i]);
+            end_dms[i] = (end_dms[i] < 0) ? 0 : (end_dms[i] >= input_shape[j] ? input_shape[j] - 1
+                                                                              : end_dms[i]);
 
             if (m_new_axis.find(i) == m_new_axis.end())
             {
@@ -212,16 +214,6 @@ void op::DynSlice::validate_and_infer_types()
                           "Strides shape must have rank 1, got ",
                           strides_shape.rank(),
                           ".");
-
-    NODE_VALIDATION_CHECK(this,
-                          lower_bounds_shape.compatible(PartialShape{arg_shape.rank()}),
-                          "Lower bounds must have shape [n], where n is the rank of arg.");
-    NODE_VALIDATION_CHECK(this,
-                          upper_bounds_shape.compatible(PartialShape{arg_shape.rank()}),
-                          "Upper bounds must have shape [n], where n is the rank of arg.");
-    NODE_VALIDATION_CHECK(this,
-                          strides_shape.compatible(PartialShape{arg_shape.rank()}),
-                          "Strides shape must have shape [n], where n is the rank of arg.");
 
     set_input_is_relevant_to_shape(1);
     set_input_is_relevant_to_shape(2);
