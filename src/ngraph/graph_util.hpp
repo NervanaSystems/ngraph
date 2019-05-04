@@ -141,52 +141,11 @@ namespace ngraph
         return result_list;
     }
 
-    // NOTE: This currently does _not_ work on graphs that contain control edges, or on graphs
-    // that contain zombie users. TODO(amprocte): Use something like the subgraph_topological_sort
-    // way of counting users, to disregard zombies.
-    template <typename T>
-    std::list<std::shared_ptr<Node>> reverse_topological_sort(const T& nodes)
-    {
-        std::deque<ngraph::Node*> independent_nodes;
-        std::unordered_map<const ngraph::Node*, size_t> node_users_count;
-        std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>> node_map;
-
-        for (auto node : nodes)
-        {
-            node_map[node.get()] = node;
-            size_t users_count = node->get_users().size();
-            node_users_count[node.get()] = users_count;
-            if (users_count == 0)
-            {
-                independent_nodes.push_back(node.get());
-            }
-        }
-
-        std::list<std::shared_ptr<ngraph::Node>> result_list;
-        while (independent_nodes.size() > 0)
-        {
-            auto independent_node = independent_nodes.front();
-            result_list.push_back(node_map[independent_node]);
-            independent_nodes.pop_front();
-
-            for (auto& input : independent_node->inputs())
-            {
-                auto arg = input.get_source_output().get_node();
-
-                if (--node_users_count[arg] == 0)
-                {
-                    independent_nodes.push_back(arg);
-                }
-            }
-        }
-
-        NGRAPH_CHECK(nodes.size() == result_list.size(),
-                     "Found ",
-                     result_list.size(),
-                     " nodes but expected ",
-                     nodes.size());
-        return result_list;
-    }
+    // NOTE: This currently does _not_ work on graphs that contain control edges.
+    // TODO(amprocte): Fix that.
+    // TODO(amprocte): Change this back to templating the container type.
+    std::list<std::shared_ptr<Node>>
+        reverse_topological_sort(const std::list<std::shared_ptr<Node>>& nodes);
 
     // For cases, where `nodes` is a subset of the entire graph
     template <typename T>

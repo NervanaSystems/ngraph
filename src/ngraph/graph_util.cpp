@@ -634,3 +634,58 @@ std::vector<Output<Node>> ngraph::get_outputs_to(Node& src, Node& dst)
 
     return result;
 }
+
+std::list<std::shared_ptr<Node>>
+    ngraph::reverse_topological_sort(const std::list<std::shared_ptr<Node>>& nodes)
+{
+    std::deque<ngraph::Node*> independent_nodes;
+    std::unordered_map<const ngraph::Node*, size_t> node_users_count;
+    std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>> node_map;
+    std::set<std::shared_ptr<ngraph::Node>> nodes_present(nodes.begin(), nodes.end());
+
+    for (auto node : nodes)
+    {
+        NGRAPH_CHECK(
+            node->get_control_dependencies().size() == 0,
+            "reverse_topological_sort does not yet support graphs with control dependencies");
+        node_map[node.get()] = node;
+        size_t users_count = 0;
+        for (auto& user : node->get_users())
+        {
+            if (nodes_present.count(user) > 0)
+            {
+                users_count++;
+            }
+        }
+        node_users_count[node.get()] = users_count;
+        if (users_count == 0)
+        {
+            independent_nodes.push_back(node.get());
+        }
+    }
+
+    std::list<std::shared_ptr<ngraph::Node>> result_list;
+    while (independent_nodes.size() > 0)
+    {
+        auto independent_node = independent_nodes.front();
+        result_list.push_back(node_map[independent_node]);
+        independent_nodes.pop_front();
+
+        for (auto& input : independent_node->inputs())
+        {
+            auto arg = input.get_source_output().get_node();
+
+            if (--node_users_count[arg] == 0)
+            {
+                independent_nodes.push_back(arg);
+            }
+        }
+    }
+
+    NGRAPH_CHECK(nodes.size() == result_list.size(),
+                 "Found ",
+                 result_list.size(),
+                 " nodes but expected ",
+                 nodes.size());
+    return result_list;
+}
