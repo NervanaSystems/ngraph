@@ -102,6 +102,10 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
 {
     for (shared_ptr<Function> f : functions)
     {
+        // Clone f, because currently reverse_topological_sort does not work on graphs with
+        // "zombie users" and checking for such users is expensive.
+        f = clone_function(*f);
+
         unordered_map<Node*, HeightMap> height_maps;
 
         for (auto& node : f->get_ops())

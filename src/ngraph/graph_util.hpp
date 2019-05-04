@@ -141,6 +141,9 @@ namespace ngraph
         return result_list;
     }
 
+    // NOTE: This currently does _not_ work on graphs that contain control edges, or on graphs
+    // that contain zombie users. TODO(amprocte): Use something like the subgraph_topological_sort
+    // way of counting users, to disregard zombies.
     template <typename T>
     std::list<std::shared_ptr<Node>> reverse_topological_sort(const T& nodes)
     {
@@ -166,7 +169,7 @@ namespace ngraph
             result_list.push_back(node_map[independent_node]);
             independent_nodes.pop_front();
 
-            for (auto input : independent_node->inputs())
+            for (auto& input : independent_node->inputs())
             {
                 auto arg = input.get_source_output().get_node();
 
@@ -177,7 +180,11 @@ namespace ngraph
             }
         }
 
-        NGRAPH_CHECK(nodes.size() == result_list.size());
+        NGRAPH_CHECK(nodes.size() == result_list.size(),
+                     "Found ",
+                     result_list.size(),
+                     " nodes but expected ",
+                     nodes.size());
         return result_list;
     }
 
