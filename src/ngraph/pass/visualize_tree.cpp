@@ -49,21 +49,6 @@ public:
             m_heights[k] = std::max(m_heights[k], v + 1);
         }
     }
-    void print()
-    {
-        bool first = true;
-        std::cout << "{";
-        for (auto& p : m_heights)
-        {
-            if (!first)
-            {
-                std::cout << ", ";
-            }
-            std::cout << p.first->get_name() << ": " << p.second;
-            first = false;
-        }
-        std::cout << "}";
-    }
     int64_t max_jump_to(const HeightMap& target)
     {
         int64_t result = 0;
@@ -141,13 +126,6 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
                     height_maps[node.get()].absorb(height_maps[target_node]);
                 }
             }
-        }
-
-        for (auto& p : height_maps)
-        {
-            std::cout << p.first->get_name() << ": ";
-            p.second.print();
-            std::cout << std::endl;
         }
 
         size_t warp_idx = 0;
