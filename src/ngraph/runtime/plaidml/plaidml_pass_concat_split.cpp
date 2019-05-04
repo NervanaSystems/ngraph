@@ -30,7 +30,7 @@ ngraph::runtime::plaidml::pass::ConcatSplit::ConcatSplit()
             return op != nullptr && kMaxConcatInputs < op->get_input_size();
         });
 
-    pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
+    auto callback = [](pattern::Matcher& m) {
         auto concat = std::static_pointer_cast<ngraph::op::Concat>(m.get_match_root());
         auto args = concat->get_arguments();
 
@@ -73,5 +73,5 @@ ngraph::runtime::plaidml::pass::ConcatSplit::ConcatSplit()
         return true;
     };
 
-    add_matcher(std::make_shared<pattern::Matcher>(concat_op, callback));
+    add_matcher(std::make_shared<pattern::Matcher>(concat_op), callback);
 }

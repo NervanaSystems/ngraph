@@ -180,9 +180,8 @@ void pass::ConstantFolding::construct_constant_pad()
         return false;
     };
 
-    auto pad_matcher =
-        make_shared<pattern::Matcher>(pad, constant_pad_callback, "ConstantFolding.ConstantPad");
-    this->add_matcher(pad_matcher);
+    auto pad_matcher = make_shared<pattern::Matcher>(pad, "ConstantFolding.ConstantPad");
+    this->add_matcher(pad_matcher, constant_pad_callback);
 }
 
 void pass::ConstantFolding::construct_constant_reshape()
@@ -245,9 +244,9 @@ void pass::ConstantFolding::construct_constant_reshape()
         return false;
     };
 
-    auto reshape_matcher = make_shared<pattern::Matcher>(
-        reshape, constant_reshape_callback, "ConstantFolding.ConstantReshape");
-    this->add_matcher(reshape_matcher);
+    auto reshape_matcher =
+        make_shared<pattern::Matcher>(reshape, "ConstantFolding.ConstantReshape");
+    this->add_matcher(reshape_matcher, constant_reshape_callback);
 }
 
 template <class T>
@@ -340,9 +339,9 @@ void pass::ConstantFolding::construct_constant_broadcast()
         return false;
     };
 
-    auto broadcast_matcher = make_shared<pattern::Matcher>(
-        broadcast, constant_broadcast_callback, "ConstantFolding.ConstantBroadcast");
-    this->add_matcher(broadcast_matcher);
+    auto broadcast_matcher =
+        make_shared<pattern::Matcher>(broadcast, "ConstantFolding.ConstantBroadcast");
+    this->add_matcher(broadcast_matcher, constant_broadcast_callback);
 }
 
 template <class T>
@@ -478,9 +477,8 @@ void pass::ConstantFolding::construct_constant_binary()
         return false;
     };
 
-    auto reshape_matcher = make_shared<pattern::Matcher>(
-        bea, constant_binary_callback, "ConstantFolding.ConstantBinary");
-    this->add_matcher(reshape_matcher);
+    auto reshape_matcher = make_shared<pattern::Matcher>(bea, "ConstantFolding.ConstantBinary");
+    this->add_matcher(reshape_matcher, constant_binary_callback);
 }
 
 bool is_supported_unary_op(std::shared_ptr<Node> n)
@@ -609,9 +607,8 @@ void pass::ConstantFolding::construct_constant_unary()
         return false;
     };
 
-    auto reshape_matcher = make_shared<pattern::Matcher>(
-        uea, constant_unary_callback, "ConstantFolding.ConstantUnary");
-    this->add_matcher(reshape_matcher);
+    auto reshape_matcher = make_shared<pattern::Matcher>(uea, "ConstantFolding.ConstantUnary");
+    this->add_matcher(reshape_matcher, constant_unary_callback);
 }
 
 template <class QUANT, class REAL>
@@ -682,9 +679,9 @@ void pass::ConstantFolding::construct_constant_dequantize()
         return false;
     };
 
-    auto dequantize_matcher = make_shared<pattern::Matcher>(
-        dequant, constant_dequantize_callback, "ConstantFolding.ConstantDequantize");
-    this->add_matcher(dequantize_matcher);
+    auto dequantize_matcher =
+        make_shared<pattern::Matcher>(dequant, "ConstantFolding.ConstantDequantize");
+    this->add_matcher(dequantize_matcher, constant_dequantize_callback);
 }
 
 template <class REAL, class QUANT>
@@ -757,7 +754,7 @@ void pass::ConstantFolding::construct_constant_quantize()
         return false;
     };
 
-    auto quantize_matcher = make_shared<pattern::Matcher>(
-        quant, constant_quantize_callback, "ConstantFolding.ConstantQuantize");
-    this->add_matcher(quantize_matcher);
+    auto quantize_matcher =
+        make_shared<pattern::Matcher>(quant, "ConstantFolding.ConstantQuantize");
+    this->add_matcher(quantize_matcher, constant_quantize_callback);
 }
