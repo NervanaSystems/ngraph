@@ -421,14 +421,6 @@ namespace ngraph
                     }
                 }
 
-                size_t build_pooling_forward(mkldnn::algorithm pooling_algorithm,
-                                             const mkldnn::memory::desc& input_desc,
-                                             const mkldnn::memory::desc& result_desc,
-                                             const ngraph::Strides& window_strides,
-                                             const ngraph::Shape& window_shape,
-                                             const ngraph::Shape& padding_below,
-                                             const ngraph::Shape& padding_above);
-
                 template <typename OP>
                 mkldnn::pooling_forward::desc get_max_pooling_forward_desc(const ngraph::Node* node,
                                                                            bool training)
@@ -821,10 +813,6 @@ namespace ngraph
                                         const mkldnn::eltwise_forward::desc& bounded_relu_desc,
                                         const std::vector<size_t>& deps,
                                         size_t bounded_relu_index);
-
-                size_t build_quantized_max_pool(const ngraph::Node* node);
-
-                size_t build_quantized_avg_pool(const ngraph::Node* node);
 
                 size_t build_dequantization(const ngraph::Node* node,
                                             const mkldnn::memory::desc& input_desc,
