@@ -30,6 +30,10 @@ namespace ngraph
             const std::string& get_name() const override { return m_name; }
             int get_size() override { return 0; }
             int get_rank() override { return 0; }
+            void finalize() override 
+            {
+                throw ngraph_error("Distributed Library not supported/mentioned");
+            }
             void
                 all_reduce(void* in, void* out, element::Type_t element_type, size_t count) override
             {
