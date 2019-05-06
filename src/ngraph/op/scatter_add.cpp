@@ -22,7 +22,7 @@ using namespace ngraph;
 
 static int INPUTS = 0;
 static int INDICES = 1;
-static int UPDATES = 1;
+static int UPDATES = 2;
 
 shared_ptr<Node> op::ScatterAdd::copy_with_new_args(const NodeVector& new_args) const
 {
