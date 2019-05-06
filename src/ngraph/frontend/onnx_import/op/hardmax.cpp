@@ -33,7 +33,13 @@ namespace ngraph
                 NodeVector hardmax(const Node& node)
                 {
                     const auto input = node.get_ng_inputs().at(0);
-                    const auto axis = node.get_attribute_value<std::int64_t>("axis", 1);
+                    const auto& input_shape = input->get_shape();
+                    auto axis = node.get_attribute_value<std::int64_t>("axis", 1);
+
+                    NGRAPH_CHECK(axis >= 0 && axis < input_shape.size(),
+                                 "The provided axis value ",
+                                 axis,
+                                 " does not match the input tensor dimensions");
 
                     // reshape to 2D - "batch size" x "input feature dimensions" (NxD)
                     const auto coerced_tensor = reshape::flatten(input, axis);
@@ -50,7 +56,7 @@ namespace ngraph
                     auto results =
                         std::make_shared<ngraph::op::EmbeddingLookup>(argmax_2d, eye_matrix);
 
-                    return {ngraph::op::util::reshape(results, input->get_shape())};
+                    return {ngraph::op::util::reshape(results, input_shape)};
                 }
 
             } // namespace set_1
