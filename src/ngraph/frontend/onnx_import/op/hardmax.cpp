@@ -14,13 +14,13 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "exceptions.hpp"
 #include "hardmax.hpp"
-#include "ngraph/op/argmax.hpp"
-#include "ngraph/op/util/reshape.hpp"
-#include "ngraph/frontend/onnx_import/utils/reshape.hpp"
+#include "exceptions.hpp"
 #include "ngraph/frontend/onnx_import/utils/eye.hpp"
+#include "ngraph/frontend/onnx_import/utils/reshape.hpp"
+#include "ngraph/op/argmax.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
+#include "ngraph/op/util/reshape.hpp"
 
 namespace ngraph
 {
@@ -32,34 +32,25 @@ namespace ngraph
             {
                 NodeVector hardmax(const Node& node)
                 {
-                    const auto& input = node.get_ng_inputs().at(0);
-                    const auto& input_shape = input->get_shape();
+                    const auto input = node.get_ng_inputs().at(0);
+                    const auto axis = node.get_attribute_value<std::int64_t>("axis", 1);
 
-                    const auto axis = node.get_attribute_value<int>("axis", 1);
-
-                    // reshape to 2D (NxD)
+                    // reshape to 2D - "batch size" x "input feature dimensions" (NxD)
                     const auto coerced_tensor = reshape::flatten(input, axis);
                     const auto& coerced_shape = coerced_tensor->get_shape();
 
-                    const std::shared_ptr<ngraph::Node> argmax_2d = std::make_shared<ngraph::op::ArgMax>(coerced_tensor, 1, element::i64);
+                    const std::shared_ptr<ngraph::Node> argmax_2d =
+                        std::make_shared<ngraph::op::ArgMax>(coerced_tensor, 1, element::i64);
 
-                    std::shared_ptr<ngraph::Node> eye_matrix;
-                    if (input->get_element_type() == element::f32)
-                    {
-                        eye_matrix = std::dynamic_pointer_cast<ngraph::Node>(eye::square_identity<float>(coerced_shape.at(1), input->get_element_type()));
-                    }
-                    else if (input->get_element_type() == element::f64)
-                    {
-                        eye_matrix = std::dynamic_pointer_cast<ngraph::Node>(eye::square_identity<double>(coerced_shape.at(1), input->get_element_type()));
-                    }
-                    else
-                    {
-                        ASSERT_IS_SUPPORTED(input, false) << "The input tensor contains unsupported data type " << input->get_element_type();
-                    }
+                    std::shared_ptr<ngraph::Node> eye_matrix =
+                        eye::square_identity(coerced_shape.at(1), input->get_element_type());
 
-                    auto results = std::make_shared<ngraph::op::EmbeddingLookup>(argmax_2d, eye_matrix);
+                    // the results are elements of the eye_matrix indexed by argmax_2d values
+                    // in other words: eye_matrix[argmax_2d]
+                    auto results =
+                        std::make_shared<ngraph::op::EmbeddingLookup>(argmax_2d, eye_matrix);
 
-                    return {ngraph::op::util::reshape(results, input_shape)};
+                    return {ngraph::op::util::reshape(results, input->get_shape())};
                 }
 
             } // namespace set_1

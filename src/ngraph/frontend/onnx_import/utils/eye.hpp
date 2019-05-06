@@ -18,8 +18,8 @@
 #include <memory>
 
 #include "common.hpp"
-#include "ngraph/node.hpp"
 #include "ngraph/builder/make_constant.hpp"
+#include "ngraph/node.hpp"
 
 namespace ngraph
 {
@@ -32,14 +32,15 @@ namespace ngraph
             /// \param[in] n Order of the resulting matrix.
             ///
             /// \return A Constant node representing identity matrix with shape (n, n).
-            template <typename T>
-            std::shared_ptr<ngraph::op::Constant> square_identity(const size_t n, const element::Type& type)
+            template <typename T = double>
+            std::shared_ptr<ngraph::op::Constant> square_identity(const size_t n,
+                                                                  const element::Type& type)
             {
-                std::vector<T> identity_matrix(n*n, T{0});
+                std::vector<T> identity_matrix(n * n, T{0});
 
                 for (size_t row = 0; row < n; ++row)
                 {
-                    const size_t diagonal_element = (n * row) + n;
+                    const size_t diagonal_element = (n * row) + row;
                     identity_matrix.at(diagonal_element) = T{1};
                 }
 
