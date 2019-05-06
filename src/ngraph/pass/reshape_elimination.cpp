@@ -72,8 +72,8 @@ void pass::ReshapeElimination::construct_identity_reshape_pattern()
         return true;
     };
 
-    auto m = make_shared<pattern::Matcher>(reshape1, callback);
-    this->add_matcher(m);
+    auto m = make_shared<pattern::Matcher>(reshape1);
+    this->add_matcher(m, callback);
 }
 
 void pass::ReshapeElimination::construct_reshapex2_pattern()
@@ -131,8 +131,8 @@ void pass::ReshapeElimination::construct_reshapex2_pattern()
 
         return false;
     };
-    auto m = make_shared<pattern::Matcher>(reshape2, callback);
-    this->add_matcher(m);
+    auto m = make_shared<pattern::Matcher>(reshape2);
+    this->add_matcher(m, callback);
 }
 
 void pass::ReshapeElimination::construct_dot_transpose_pattern()
@@ -145,7 +145,7 @@ void pass::ReshapeElimination::construct_dot_transpose_pattern()
     auto pdot = make_shared<pattern::op::Label>(element::f32, Shape{2, 1}, dot_pred);
     auto preshape = make_shared<op::Reshape>(pdot, AxisVector{1, 0}, Shape{1, 2});
 
-    pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
+    auto callback = [](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_dot_transpose_pattern against node = "
                      << m.get_match_root()->get_name();
 
@@ -188,8 +188,8 @@ void pass::ReshapeElimination::construct_dot_transpose_pattern()
         return true;
     };
 
-    auto m = make_shared<pattern::Matcher>(preshape, callback);
-    this->add_matcher(m);
+    auto m = make_shared<pattern::Matcher>(preshape);
+    this->add_matcher(m, callback);
 }
 
 void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
@@ -289,7 +289,7 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
         return modify_graph;
     };
     std::set<std::shared_ptr<pattern::op::Label>> empty_correlated_matches;
-    auto m = std::make_shared<pattern::RecurrentMatcher>(
-        reshape_label, op, empty_correlated_matches, callback);
-    this->add_matcher(m);
+    auto m =
+        std::make_shared<pattern::RecurrentMatcher>(reshape_label, op, empty_correlated_matches);
+    this->add_matcher(m, callback);
 }

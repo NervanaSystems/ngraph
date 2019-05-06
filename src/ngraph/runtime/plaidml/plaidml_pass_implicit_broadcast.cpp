@@ -39,7 +39,7 @@ ngraph::runtime::plaidml::pass::ImplicitBroadcast::ImplicitBroadcast()
         },
         NodeVector{broadcast_op});
 
-    pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
+    auto callback = [](pattern::Matcher& m) {
         // Since the broadcast is going to an elementwise operation, we
         // can always replace it with an equivalent reshape that uses ones
         // for the broadcast axes.
@@ -70,5 +70,5 @@ ngraph::runtime::plaidml::pass::ImplicitBroadcast::ImplicitBroadcast()
 
         return true;
     };
-    add_matcher(std::make_shared<pattern::Matcher>(target_op, callback));
+    add_matcher(std::make_shared<pattern::Matcher>(target_op), callback);
 }

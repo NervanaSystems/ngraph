@@ -162,6 +162,10 @@ set (SRC
     op/experimental/quantized_dot_bias.hpp
     op/experimental/transpose.cpp
     op/experimental/transpose.hpp
+    op/experimental/layers/detection_output.cpp
+    op/experimental/layers/detection_output.hpp
+    op/experimental/layers/interpolate.cpp
+    op/experimental/layers/interpolate.hpp
     op/experimental/layers/prior_box.cpp
     op/experimental/layers/prior_box.hpp
     op/experimental/layers/prior_box_clustered.cpp

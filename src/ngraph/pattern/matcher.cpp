@@ -87,7 +87,7 @@ namespace ngraph
                 for (auto entry : m_pattern_map)
                 {
                     // leaf label
-                    if (entry.first->get_input_size() == 0)
+                    if (entry.first->get_inputs().empty())
                     {
                         label_exclusions.push_back(entry.second);
                     }
@@ -194,7 +194,7 @@ namespace ngraph
             // when their individual GOE are matched
             // this also gives a bit more flexibility since we don't have to worry
             // about *all* outputs of a pattern node but only the ones we want to match.
-            if (m_strict_mode && graph_node->get_output_size() == 1)
+            if (m_strict_mode && graph_node->get_outputs().size() == 1)
             {
                 bool shape_match = pattern_node->get_output_partial_shape(0).compatible(
                     graph_node->get_output_partial_shape(0));
@@ -328,26 +328,6 @@ namespace ngraph
             return false;
         }
 
-        bool Matcher::process_match(::ngraph::pattern::graph_rewrite_callback callback)
-        {
-            graph_rewrite_callback cb = m_callback;
-            if (callback)
-            {
-                cb = callback;
-            }
-            if (!cb)
-            {
-                throw ngraph_error("process_match invoked w/o a callback function");
-            }
-
-            if (!this->m_match_root)
-            {
-                throw ngraph_error("process_match invoked w/o a match");
-            }
-
-            return cb(*this);
-        }
-
         bool Matcher::match(const std::shared_ptr<Node>& graph_node)
         {
             // clear our state
@@ -395,11 +375,6 @@ namespace ngraph
                 m_match_root = graph_node;
             }
             return is_match;
-        }
-
-        bool Matcher::get_property(const ngraph::pass::PassPropertyMask& prop) const
-        {
-            return m_property.is_set(prop);
         }
 
         bool RecurrentMatcher::match(std::shared_ptr<Node> graph)
@@ -456,12 +431,6 @@ namespace ngraph
             }
 
             return matched;
-        }
-
-        bool RecurrentMatcher::process_match() { return m_callback(*this); }
-        bool RecurrentMatcher::get_property(const ngraph::pass::PassPropertyMask& prop) const
-        {
-            return m_property.is_set(prop);
         }
     }
 }
