@@ -27,10 +27,10 @@ static int UPDATES = 2;
 shared_ptr<Node> op::ScatterNDAdd::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<ScatterAdd>(new_args.at(INPUTS), new_args.at(INDICES), new_args.at(UPDATES));
+    return make_shared<ScatterNDAdd>(new_args.at(INPUTS), new_args.at(INDICES), new_args.at(UPDATES));
 }
 
-void op::GatherND::validate_and_infer_types()
+void op::ScatterNDAdd::validate_and_infer_types()
 {
     element::Type inputs_et = get_input_element_type(INPUTS);
     element::Type indices_et = get_input_element_type(INDICES);
@@ -38,6 +38,7 @@ void op::GatherND::validate_and_infer_types()
 
     const PartialShape& inputs_shape = get_input_partial_shape(INPUTS);
     const PartialShape& indices_shape = get_input_partial_shape(INDICES);
+    const PartialShape& updates_shape = get_input_partial_shape(UPDATES);
 
     NODE_VALIDATION_CHECK(this,
                           indices_et == element::i32 || indices_et == element::i64,
@@ -56,7 +57,7 @@ void op::GatherND::validate_and_infer_types()
         this,
         inputs_shape.rank().is_dynamic() || indices_shape.rank().is_dynamic() ||
             static_cast<size_t>(indices_shape[static_cast<size_t>(indices_shape.rank()) - 1]) <=
-                static_cast<size_t>(params_shape.rank()),
+                static_cast<size_t>(inputs_shape.rank()),
         "last dimension of indices can be at most the rank of inputs");
 
     NODE_VALIDATION_CHECK(

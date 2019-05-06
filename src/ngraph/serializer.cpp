@@ -1330,12 +1330,12 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::ScatterAdd:
             {
-                node = make_shared<op::Select>(args[0], args[1], args[2]);
+                node = make_shared<op::ScatterAdd>(args[0], args[1], args[2]);
                 break;
             }
             case OP_TYPEID::ScatterNDAdd:
             {
-                node = make_shared<op::Select>(args[0], args[1], args[2]);
+                node = make_shared<op::ScatterNDAdd>(args[0], args[1], args[2]);
                 break;
             }
             case OP_TYPEID::Select:
@@ -2040,6 +2040,10 @@ static json write(const Node& n, bool binary_constant_data)
         node["value"] = constant->get_value_strings()[0];
         node["element_type"] = write_element_type(constant->get_element_type());
         break;
+    }
+    case OP_TYPEID::ScatterAdd: { break;
+    }
+    case OP_TYPEID::ScatterNDAdd: { break;
     }
     case OP_TYPEID::Select: { break;
     }

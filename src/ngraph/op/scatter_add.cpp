@@ -30,7 +30,7 @@ shared_ptr<Node> op::ScatterAdd::copy_with_new_args(const NodeVector& new_args) 
     return make_shared<ScatterAdd>(new_args.at(INPUTS), new_args.at(INDICES), new_args.at(UPDATES));
 }
 
-void op::Gather::validate_and_infer_types()
+void op::ScatterAdd::validate_and_infer_types()
 {
     element::Type inputs_et = get_input_element_type(INPUTS);
     element::Type indices_et = get_input_element_type(INDICES);
@@ -38,6 +38,7 @@ void op::Gather::validate_and_infer_types()
 
     const PartialShape& inputs_shape = get_input_partial_shape(INPUTS);
     const PartialShape& indices_shape = get_input_partial_shape(INDICES);
+    const PartialShape& updates_shape = get_input_partial_shape(UPDATES);
 
     NODE_VALIDATION_CHECK(this,
                           indices_et == element::i32 || indices_et == element::i64,
@@ -52,7 +53,7 @@ void op::Gather::validate_and_infer_types()
                           inputs_shape.rank().is_dynamic() ||
                               indices_shape.rank().is_dynamic() ||
                               updates_shape.rank().is_dynamic() ||
-                              static_cast<size_t>(updates_shape.rank()) =
+                              static_cast<size_t>(updates_shape.rank()) ==
                                   static_cast<size_t>(indices_shape.rank()) +
                                   static_cast<size_t>(inputs_shape.rank()) - 1,
                           "updates rank is expected to be indices rank + inputs rank - 1");

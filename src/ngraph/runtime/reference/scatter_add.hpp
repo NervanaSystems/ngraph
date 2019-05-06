@@ -58,7 +58,7 @@ namespace ngraph
                 Coordinate updates_outer_end_corner(updates_shape);
                 for (size_t i = indices_ndim - 1; i < updates_ndim; i++)
                 {
-                    out_end_corner[i] = 1;
+                    updates_outer_end_corner[i] = 1;
                 }
                 Strides updates_strides(updates_ndim, 1);
                 AxisVector updates_axis_order(updates_ndim);
@@ -74,11 +74,11 @@ namespace ngraph
                 AxisVector out_axis_order(out_ndim);
                 iota(out_axis_order.begin(), out_axis_order.end(), 0);
                 // Visit one updates silce and one out silce at a time.
-                auto updates_outer_coord_iter = update_outer_transform.begin();
-                for (const Corrdinate& indices_coord : indices_transform)
+                auto updates_outer_coord_iter = updates_outer_transform.begin();
+                for (const Coordinate& indices_coord : indices_transform)
                 {
-                    auto indices_index = indices_transfrom.index(indices_coord);
-                    U silce_index = indices[indices_index];
+                    auto indices_index = indices_transform.index(indices_coord);
+                    U slice_index = indices[indices_index];
                     // Create CoordinateTransform for out slice
                     Coordinate out_start_corner(out_ndim, 0);
                     Coordinate out_end_corner(out_shape);
@@ -94,7 +94,7 @@ namespace ngraph
                     Coordinate updates_inner_end_corner(updates_shape);
                     for(size_t i = 0; i < indices_ndim; i++)
                     {
-                        update_inner_end_corner[i] = updates_inner_start_corner[i] + 1;
+                        updates_inner_end_corner[i] = updates_inner_start_corner[i] + 1;
                     }
                     CoordinateTransform updates_inner_transform(updates_shape,
                                                                 updates_inner_start_corner,
@@ -106,10 +106,10 @@ namespace ngraph
                     auto updates_inner_coord_iter = updates_inner_transform.begin();
                     for(const Coordinate& out_coord : out_transform)
                     {
-                        out[out_transform.index(out_coord)] += updates[updates_inner_transform(*updates_inner_coord_iter)];
+                        out[out_transform.index(out_coord)] += updates[updates_inner_transform.index(*updates_inner_coord_iter)];
                         updates_inner_coord_iter++;
                     }
-                    update_outer_coord_iter++;
+                    updates_outer_coord_iter++;
 
                 }
             }

@@ -29,9 +29,9 @@ namespace ngraph
             // \param inputs Tensor
             // \param indices Index tensor: Data type must be `element::i32` or `element::i64`
             // \param update Tensor: Must have same type as inputs
-            Gather(const std::shared_ptr<Node>& inputs,
-                   const std::shared_ptr<Node>& indices,
-                   const std::shared_ptr<Node>& updates)
+            ScatterAdd(const std::shared_ptr<Node>& inputs,
+                       const std::shared_ptr<Node>& indices,
+                       const std::shared_ptr<Node>& updates)
                 : Op("ScatterAdd", check_single_output_args({inputs, indices, updates}))
             {
                 constructor_validate_and_infer_types();

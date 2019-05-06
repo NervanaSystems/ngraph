@@ -30,7 +30,7 @@ namespace ngraph
             // \param indices Index tensor: Data type must be `element::i32` or `element::i64`
             // \param update Tensor: Must have same type as inputs
             ScatterNDAdd(const std::shared_ptr<Node>& inputs,
-                         const std::shared_ptr<Node>& indices
+                         const std::shared_ptr<Node>& indices,
                          const std::shared_ptr<Node>& updates)
                 : Op("ScatterNDAdd", check_single_output_args({inputs, indices, updates}))
             {

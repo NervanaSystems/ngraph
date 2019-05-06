@@ -129,7 +129,7 @@ NGRAPH_TEST(${BACKEND_NAME}, scatter_nd_add_batch_2d_to_3d)
 {
     Shape ref_shape{3, 3, 3};
     Shape indices_shape{2, 1};
-    Shape update_shape{2, 3, 3};
+    Shape updates_shape{2, 3, 3};
     Shape out_shape{3, 3, 3};
     auto R = make_shared<op::Parameter>(element::f32, ref_shape);
     auto I = make_shared<op::Parameter>(element::i32, indices_shape);
@@ -140,11 +140,11 @@ NGRAPH_TEST(${BACKEND_NAME}, scatter_nd_add_batch_2d_to_3d)
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto r = backend->create_tensor(element::f32, params_shape);
+    auto r = backend->create_tensor(element::f32, ref_shape);
     copy_data(r, vector<float>{1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 6, 7, 7, 7, 8, 8, 8, 9, 9, 9});
     auto i = backend->create_tensor(element::i32, indices_shape);
     copy_data(i, vector<int32_t>{0, 2});
-    auto u = backend->create_tensor(element::f32, params_shape);
+    auto u = backend->create_tensor(element::f32, updates_shape);
     copy_data(u, vector<float>{1, 1, 1, 2, 2, 2, 3, 3, 3, 7, 7, 7, 8, 8, 8, 9, 9, 9});
     auto result = backend->create_tensor(element::f32, out_shape);
 
@@ -159,7 +159,7 @@ NGRAPH_TEST(${BACKEND_NAME}, scatter_nd_add_2d_to_3d)
 {
     Shape ref_shape{3, 3, 3};
     Shape indices_shape{1};
-    Shape update_shape{3, 3};
+    Shape updates_shape{3, 3};
     Shape out_shape{3, 3, 3};
     auto R = make_shared<op::Parameter>(element::f32, ref_shape);
     auto I = make_shared<op::Parameter>(element::i32, indices_shape);
@@ -170,11 +170,11 @@ NGRAPH_TEST(${BACKEND_NAME}, scatter_nd_add_2d_to_3d)
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto r = backend->create_tensor(element::f32, params_shape);
+    auto r = backend->create_tensor(element::f32, ref_shape);
     copy_data(r, vector<float>{1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 6, 7, 7, 7, 8, 8, 8, 9, 9, 9});
     auto i = backend->create_tensor(element::i32, indices_shape);
     copy_data(i, vector<int32_t>{0});
-    auto u = backend->create_tensor(element::f32, params_shape);
+    auto u = backend->create_tensor(element::f32, updates_shape);
     copy_data(u, vector<float>{1, 1, 1, 2, 2, 2, 3, 3, 3});
     auto result = backend->create_tensor(element::f32, out_shape);
 
