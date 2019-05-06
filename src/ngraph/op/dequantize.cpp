@@ -116,7 +116,7 @@ void op::Dequantize::validate_and_infer_types()
     {
         size_t i = 0;
 
-        std::vector<Dimension> injected_scale_zero_point_dims;
+        vector<Dimension> injected_scale_zero_point_dims;
 
         for (size_t j = 0; j < size_t(input_shape.rank()); j++)
         {

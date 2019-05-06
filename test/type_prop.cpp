@@ -10578,7 +10578,8 @@ TEST(type_prop, quantize_f32_to_i8_nchw_per_channel_ok)
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
     auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
-    auto quant = make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
+    auto quant =
+        make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
 
     ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -10600,7 +10601,8 @@ TEST(type_prop, quantize_f32_to_i8_nchw_per_image_ok)
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
     auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
-    auto quant = make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
+    auto quant =
+        make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
 
     ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -10622,7 +10624,8 @@ TEST(type_prop, quantize_f32_to_i8_nchw_per_row_ok)
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
     auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
-    auto quant = make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
+    auto quant =
+        make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
 
     ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -10644,7 +10647,8 @@ TEST(type_prop, quantize_f32_to_i8_nchw_per_image_channel_ok)
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
     auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
-    auto quant = make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
+    auto quant =
+        make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
 
     ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -10666,7 +10670,8 @@ TEST(type_prop, quantize_f32_to_i8_nchw_whole_batch_ok)
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
     auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
-    auto quant = make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
+    auto quant =
+        make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
 
     ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -10688,7 +10693,8 @@ TEST(type_prop, quantize_f64_to_i8_ok)
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
     auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
-    auto quant = make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
+    auto quant =
+        make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
 
     ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -10710,7 +10716,8 @@ TEST(type_prop, quantize_f64_to_u8_ok)
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
     auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
-    auto quant = make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
+    auto quant =
+        make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
 
     ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -10879,9 +10886,10 @@ TEST(type_prop, quantize_zero_point_type_mismatch_fails)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             "Zero point element type (element::Type{8, 0, 0, 1, \"uint8_t\"}) must "
-                             "match output element type (element::Type{8, 0, 1, 1, \"int8_t\"})");
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "Zero point element type (element::Type{8, 0, 0, 1, \"uint8_t\"}) must "
+            "match output element type (element::Type{8, 0, 1, 1, \"int8_t\"})");
     }
     catch (...)
     {
@@ -11075,7 +11083,8 @@ TEST(type_prop, quantize_partial_all_rank_dynamic_ok)
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
     auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
-    auto quant = make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
+    auto quant =
+        make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
 
     ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
     ASSERT_TRUE(quant->get_output_partial_shape(0).rank().is_dynamic());
@@ -11098,7 +11107,8 @@ TEST(type_prop,
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
     auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
-    auto quant = make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
+    auto quant =
+        make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
 
     ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
     ASSERT_TRUE(quant->get_output_partial_shape(0).rank().is_dynamic());
@@ -11141,8 +11151,9 @@ TEST(
     }
 }
 
-TEST(type_prop,
-     quantize_partial_input_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_static_dynamic_ok)
+TEST(
+    type_prop,
+    quantize_partial_input_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_static_dynamic_ok)
 {
     PartialShape batch_shape{PartialShape::dynamic()};
     PartialShape scale_shape{64, Dimension::dynamic(), 96, Dimension::dynamic()};
@@ -11158,7 +11169,8 @@ TEST(type_prop,
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
     auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
-    auto quant = make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
+    auto quant =
+        make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
 
     ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
     ASSERT_TRUE(quant->get_output_partial_shape(0).rank().is_dynamic());
@@ -11192,7 +11204,8 @@ TEST(
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
-            error.what(), "Scale shape ({64,?,96,?}) and zero point shape ({64,22,?,?,3}) must match");
+            error.what(),
+            "Scale shape ({64,?,96,?}) and zero point shape ({64,22,?,?,3}) must match");
     }
     catch (...)
     {
@@ -11227,8 +11240,9 @@ TEST(
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale shape ({64,?,96,?}) and zero point shape ({65,22,?,?}) must match");
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "Scale shape ({64,?,96,?}) and zero point shape ({65,22,?,?}) must match");
     }
     catch (...)
     {
@@ -11254,7 +11268,8 @@ TEST(
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
     auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
-    auto quant = make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
+    auto quant =
+        make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
 
     ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
     ASSERT_TRUE(quant->get_output_partial_shape(0).same_scheme(
@@ -11324,9 +11339,10 @@ TEST(
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale / zero point shape ({4,8,?}) must match input shape ({2,5,6,?,10,?}) "
-                             "at the quantization axes (AxisSet{1, 3, 5})");
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "Scale / zero point shape ({4,8,?}) must match input shape ({2,5,6,?,10,?}) "
+            "at the quantization axes (AxisSet{1, 3, 5})");
     }
     catch (...)
     {
@@ -11537,9 +11553,10 @@ TEST(type_prop, dequantize_f32_from_f32_fails)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             "Zero point / input element type (element::Type{32, 1, 1, 0, \"float\"}) "
-                             "must be a quantized type");
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "Zero point / input element type (element::Type{32, 1, 1, 0, \"float\"}) "
+            "must be a quantized type");
     }
     catch (...)
     {
@@ -11570,9 +11587,10 @@ TEST(type_prop, dequantize_batch_zero_point_type_mismatch_fails)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             "Zero point element type (element::Type{8, 0, 0, 1, \"uint8_t\"}) must "
-                             "match input element type (element::Type{8, 0, 1, 1, \"int8_t\"})");
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "Zero point element type (element::Type{8, 0, 0, 1, \"uint8_t\"}) must "
+            "match input element type (element::Type{8, 0, 1, 1, \"int8_t\"})");
     }
     catch (...)
     {
@@ -11853,8 +11871,9 @@ TEST(
     }
 }
 
-TEST(type_prop,
-     dequantize_partial_input_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_static_dynamic_ok)
+TEST(
+    type_prop,
+    dequantize_partial_input_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_static_dynamic_ok)
 {
     PartialShape batch_shape{PartialShape::dynamic()};
     PartialShape scale_shape{64, Dimension::dynamic(), 96, Dimension::dynamic()};
@@ -11901,7 +11920,8 @@ TEST(
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
-            error.what(), "Scale shape ({64,?,96,?}) and zero point shape ({64,22,?,?,3}) must match");
+            error.what(),
+            "Scale shape ({64,?,96,?}) and zero point shape ({64,22,?,?,3}) must match");
     }
     catch (...)
     {
@@ -11934,8 +11954,9 @@ TEST(
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale shape ({64,?,96,?}) and zero point shape ({65,22,?,?}) must match");
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "Scale shape ({64,?,96,?}) and zero point shape ({65,22,?,?}) must match");
     }
     catch (...)
     {
@@ -12026,9 +12047,10 @@ TEST(
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale / zero point shape ({4,8,?}) must match input shape ({2,5,6,?,10,?}) "
-                             "at the quantization axes (AxisSet{1, 3, 5})");
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "Scale / zero point shape ({4,8,?}) must match input shape ({2,5,6,?,10,?}) "
+            "at the quantization axes (AxisSet{1, 3, 5})");
     }
     catch (...)
     {

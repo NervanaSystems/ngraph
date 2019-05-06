@@ -30,7 +30,7 @@ op::QuantizedConvolution::QuantizedConvolution(const shared_ptr<Node>& data_batc
                                                const CoordinateDiff& padding_below,
                                                const CoordinateDiff& padding_above,
                                                const Strides& data_dilation_strides,
-                                               const std::shared_ptr<Node>& scale,
+                                               const shared_ptr<Node>& scale,
                                                const bool requantize)
     : Op("QuantizedConvolution", check_single_output_args({data_batch, filters, scale}))
     , m_window_movement_strides(window_movement_strides)
