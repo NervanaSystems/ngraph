@@ -631,10 +631,16 @@ namespace ngraph
                     construct_string = writer.get_code();
                 }
 
-                template <>
-                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(Concat)
+                template <typename OP>
+                void construct_primitive_build_string_concat(
+                    ngraph::runtime::cpu::MKLDNNEmitter& mkldnn_emitter,
+                    ngraph::Node* node,
+                    std::string& construct_string,
+                    std::vector<size_t>& deps,
+                    size_t& index,
+                    std::ofstream& desc_file)
                 {
-                    auto concat = static_cast<const ngraph::op::Concat*>(node);
+                    auto concat = static_cast<OP*>(node);
                     size_t concat_dim = concat->get_concatenation_axis();
                     size_t nargs = node->get_inputs().size();
 
@@ -686,6 +692,13 @@ namespace ngraph
                            << std::to_string(deps[nargs]) << "]);\n";
 
                     construct_string = writer.get_code();
+                }
+
+                template <>
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(Concat)
+                {
+                    construct_primitive_build_string_concat<Concat>(
+                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
                 }
 
                 template <>
@@ -766,28 +779,22 @@ namespace ngraph
                            << desc_index + 1 << "], "
                                                 "cg_ctx->global_cpu_engine);\n";
 
-                    writer << "\nstd::vector<size_t> result_shape {";
+                    writer << "auto view_pd = mkldnn::view::primitive_desc(input_pd, "
+                              "mkldnn::memory::dims{";
                     auto size = result_shape.size();
                     for (auto i = 0; i < size - 1; i++)
                     {
-                        writer << result_shape[i] << ", ";
+                        writer << std::to_string(result_shape[i]) << ", ";
                     }
-                    writer << result_shape[size - 1] << "};\n";
-                    writer << "auto dims = mkldnn::memory::dims(result_shape.begin(), "
-                              "result_shape.end());\n";
-
-                    writer << "std::vector<size_t> lower_bounds {";
+                    writer << std::to_string(result_shape[size - 1]) << "}, mkldnn::memory::dims{";
                     size = lower_bounds.size();
                     for (auto i = 0; i < size - 1; i++)
                     {
-                        writer << lower_bounds[i] << ", ";
+                        writer << std::to_string(lower_bounds[i]) << ", ";
                     }
-                    writer << lower_bounds[size - 1] << "};\n";
-                    writer << "auto offsets = mkldnn::memory::dims(lower_bounds.begin(), "
-                              "lower_bounds.end());\n";
+                    writer << std::to_string(lower_bounds[size - 1])
+                           << "}).dst_primitive_desc();\n";
 
-                    writer << "auto view_pd = mkldnn::view::primitive_desc(input_pd, dims, "
-                              "offsets).dst_primitive_desc();\n";
                     writer << "\n// create reorder primitive descriptor\n";
                     writer << "mkldnn::reorder::primitive_desc reorder_pd = "
                               "mkldnn::reorder::primitive_desc(view_pd, result_pd);\n";
@@ -1774,21 +1781,11 @@ namespace ngraph
                 }
 
                 template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(QuantizedConcat)
+                void
+                    MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(QuantizedConcat)
                 {
-                    int args_size = node->get_inputs().size();
-
-                    std::vector<mkldnn::memory::desc> inputs_data_desc;
-                    for (size_t i = 0; i < args_size; i++)
-                    {
-                        inputs_data_desc.push_back(mkldnn_utils::get_input_mkldnn_md(node, i));
-                    }
-
-                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-
-                    size_t concat_dim =
-                        (static_cast<const QuantizedConcat*>(node))->get_concatenation_axis();
-                    return mkldnn_emitter.build_concat(inputs_data_desc, result_desc, concat_dim);
+                    construct_primitive_build_string_concat<QuantizedConcat>(
+                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
                 }
             }
         }
@@ -1800,7 +1797,6 @@ using namespace ngraph::runtime::cpu::pass;
 #define TI(x) std::type_index(typeid(x))
 
 static const PrimitiveBuildOpMap prim_build_dispatcher{
-    {TI(Convert), &MKLDNNPrimitiveBuildPass::build_primitive<Convert>},
     {TI(AvgPool), &MKLDNNPrimitiveBuildPass::build_primitive<AvgPool>},
     {TI(AvgPoolBackprop), &MKLDNNPrimitiveBuildPass::build_primitive<AvgPoolBackprop>},
     {TI(ConvolutionBackpropData),
@@ -1816,12 +1812,8 @@ static const PrimitiveBuildOpMap prim_build_dispatcher{
      &MKLDNNPrimitiveBuildPass::build_primitive<ConvolutionBiasBackpropFiltersBias>},
     {TI(QuantizedMaxPool), &MKLDNNPrimitiveBuildPass::build_primitive<QuantizedMaxPool>},
     {TI(QuantizedAvgPool), &MKLDNNPrimitiveBuildPass::build_primitive<QuantizedAvgPool>},
-    {TI(ReplaceSlice), &MKLDNNPrimitiveBuildPass::build_primitive<ReplaceSlice>},
-    {TI(UpdateSlice), &MKLDNNPrimitiveBuildPass::build_primitive<UpdateSlice>},
     {TI(Quantize), &MKLDNNPrimitiveBuildPass::build_primitive<Quantize>},
     {TI(Dequantize), &MKLDNNPrimitiveBuildPass::build_primitive<Dequantize>},
-    {TI(QuantizedConcat), &MKLDNNPrimitiveBuildPass::build_primitive<QuantizedConcat>},
-    {TI(GetOutputElement), &MKLDNNPrimitiveBuildPass::build_primitive<GetOutputElement>},
 };
 
 static const PrimitiveBuildStringConstructOpMap prim_build_string_construct_dispatcher{
@@ -1870,6 +1862,8 @@ static const PrimitiveBuildStringConstructOpMap prim_build_string_construct_disp
     {TI(QuantizedConvolutionBiasSignedAdd),
      &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<
          QuantizedConvolutionBiasSignedAdd>},
+    {TI(QuantizedConcat),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<QuantizedConcat>},
     {TI(Sigmoid), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Sigmoid>},
     {TI(SigmoidBackprop),
      &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<SigmoidBackprop>},
@@ -1906,6 +1900,7 @@ static bool in_new_map(const std::shared_ptr<Node>& node)
         std::dynamic_pointer_cast<ngraph::op::QuantizedConvolutionBiasSignedAdd>(node) ||
         std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(node) ||
         std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(node) ||
+        std::dynamic_pointer_cast<ngraph::op::QuantizedConcat>(node) ||
         std::dynamic_pointer_cast<ngraph::op::Relu>(node) ||
         std::dynamic_pointer_cast<ngraph::op::ReluBackprop>(node) ||
         std::dynamic_pointer_cast<ngraph::op::Sigmoid>(node) ||

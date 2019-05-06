@@ -1423,48 +1423,6 @@ void MKLDNNEmitter::build_rnn_forward(std::vector<mkldnn::primitive*>& mkldnn_pr
                                 static_cast<mkldnn::memory>(*mkldnn_primitives[workspace_index]));
 }
 
-size_t MKLDNNEmitter::build_concat(const std::vector<mkldnn::memory::desc>& inputs_data_desc,
-                                   const mkldnn::memory::desc& result_desc,
-                                   const size_t concat_dim)
-{
-    std::vector<mkldnn::memory::primitive::at> inputs_primitive;
-    std::vector<size_t> inputs_data_index;
-    std::vector<size_t> in_out_index;
-    std::vector<mkldnn::memory::primitive_desc> inputs_pd;
-
-    for (size_t i = 0; i < inputs_data_desc.size(); i++)
-    {
-        inputs_pd.push_back(mkldnn::memory::primitive_desc(
-            inputs_data_desc[i], runtime::cpu::executor::global_cpu_engine));
-    }
-
-    for (size_t i = 0; i < inputs_data_desc.size(); i++)
-    {
-        inputs_data_index.push_back(build_memory_primitive(inputs_data_desc[i]));
-        inputs_primitive.push_back(*m_mkldnn_primitives[inputs_data_index[i]]);
-    }
-    size_t result_index = build_memory_primitive(result_desc);
-
-    // concat primtive descriptor
-    mkldnn::concat::primitive_desc concat_pd =
-        mkldnn::concat::primitive_desc(result_desc, static_cast<int>(concat_dim), inputs_pd);
-    // concat primitive
-    size_t concat_index = insert_primitive(
-        new mkldnn::concat(concat_pd, inputs_primitive, *m_mkldnn_primitives[result_index]));
-
-    for (size_t i = 0; i < inputs_data_index.size(); i++)
-    {
-        in_out_index.push_back(inputs_data_index[i]);
-    }
-    in_out_index.push_back(result_index);
-
-    NGRAPH_CHECK(m_primitive_deps.find(concat_index) == m_primitive_deps.end(),
-                 "Dependencies already created for node");
-
-    m_primitive_deps[concat_index] = in_out_index;
-    return concat_index;
-}
-
 void MKLDNNEmitter::build_concat(std::vector<mkldnn::primitive*>& mkldnn_primitives,
                                  const mkldnn::concat::primitive_desc& concat_pd,
                                  const std::vector<mkldnn::memory::desc>& inputs_data_desc,
