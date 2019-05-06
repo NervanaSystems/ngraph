@@ -1437,6 +1437,11 @@ std::string runtime::gpu::GPU_Emitter::emit_DynPad(EMIT_ARGS)
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
+std::string runtime::gpu::GPU_Emitter::emit_Tile(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
 std::string runtime::gpu::GPU_Emitter::emit_Transpose(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
