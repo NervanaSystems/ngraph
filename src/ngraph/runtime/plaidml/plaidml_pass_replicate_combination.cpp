@@ -35,7 +35,7 @@ ngraph::runtime::plaidml::pass::ReplicateCombination::ReplicateCombination()
         },
         NodeVector{upper_replicate_op});
 
-    pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
+    auto callback = [](pattern::Matcher& m) {
         auto nodes = m.get_matched_nodes();
         auto lower = std::static_pointer_cast<plaidml::op::Replicate>(nodes.at(0));
         auto upper = std::static_pointer_cast<plaidml::op::Replicate>(nodes.at(1));
@@ -54,5 +54,5 @@ ngraph::runtime::plaidml::pass::ReplicateCombination::ReplicateCombination()
         return true;
     };
 
-    add_matcher(std::make_shared<pattern::Matcher>(lower_replicate_op, callback));
+    add_matcher(std::make_shared<pattern::Matcher>(lower_replicate_op), callback);
 }
