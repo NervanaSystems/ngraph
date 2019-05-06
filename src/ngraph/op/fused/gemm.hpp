@@ -29,15 +29,20 @@ namespace ngraph
         /// A' = transpose(A) if transA else A
         /// B' = transpose(B) if transB else B
         ///
-        /// Compute Y = alpha * A ' * B' + beta * C
+        /// Compute Y = alpha * A' * B' + beta * C
         ///
         class Gemm : public ngraph::op::util::FusedOp
         {
         public:
             /// \brief Constructs an Gemm operation.
             ///
-            /// \param A, B, C Input tensors
-            /// \param alpha Multiplier for negative values
+            /// \param A Input tensor A
+            /// \param B Input tensor B
+            /// \param C Input tensor C
+            /// \param alpha Scalar multiplier for the product of input tensors A * B
+            /// \param beta Scalar multiplier for input tensor C
+            /// \param transA Whether A should be transposed
+            /// \param transB Whether B should be transposed
             Gemm(const std::shared_ptr<ngraph::Node>& A,
                  const std::shared_ptr<ngraph::Node>& B,
                  const std::shared_ptr<ngraph::Node>& C,
