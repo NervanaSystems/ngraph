@@ -735,7 +735,8 @@ mkldnn::algorithm runtime::cpu::mkldnn_utils::get_deconv_algo()
 
 mkldnn::algorithm runtime::cpu::mkldnn_utils::get_conv_algo()
 {
-#if defined(MKLDNN_VERSION_MAJOR) && defined(MKLDNN_VERSION_MINOR) && defined(MKLDNN_VERSION_PATCH)
+#if defined(NGRAPH_ENABLE_CPU_CONV_AUTO) && defined(MKLDNN_VERSION_MAJOR) &&                       \
+    defined(MKLDNN_VERSION_MINOR) && defined(MKLDNN_VERSION_PATCH)
     auto mkldnn_version = get_mkldnn_version();
     if (mkldnn_version->major >= 0 && mkldnn_version->minor >= 18 && mkldnn_version->patch >= 0)
     {
