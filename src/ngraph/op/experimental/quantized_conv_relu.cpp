@@ -63,8 +63,7 @@ op::QuantizedConvolutionRelu::QuantizedConvolutionRelu(const shared_ptr<Node>& d
                                                          ));
 }
 
-shared_ptr<Node>
-    op::QuantizedConvolutionRelu::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::QuantizedConvolutionRelu::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() != 3)
     {
@@ -72,11 +71,11 @@ shared_ptr<Node>
     }
 
     return shared_ptr<Node>(new QuantizedConvolutionRelu(new_args.at(0),
-                                                              new_args.at(1),
-                                                              get_window_movement_strides(),
-                                                              get_window_dilation_strides(),
-                                                              get_padding_below(),
-                                                              get_padding_above(),
-                                                              get_data_dilation_strides(),
-                                                              new_args.at(2)));
+                                                         new_args.at(1),
+                                                         get_window_movement_strides(),
+                                                         get_window_dilation_strides(),
+                                                         get_padding_below(),
+                                                         get_padding_above(),
+                                                         get_data_dilation_strides(),
+                                                         new_args.at(2)));
 }
