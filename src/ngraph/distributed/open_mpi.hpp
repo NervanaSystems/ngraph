@@ -43,7 +43,7 @@ namespace ngraph
                 }
             }
 
-            ~OpenMPIDistributedInterface() override
+           /* ~OpenMPIDistributedInterface() override
             {
                 int flag = 0;
                 MPI_Initialized(&flag);
@@ -52,7 +52,7 @@ namespace ngraph
                 {
                     MPI_Finalize();
                 }
-            }
+            }*/
 
             const std::string& get_name() const override { return m_name; }
             int get_size() override
@@ -67,6 +67,15 @@ namespace ngraph
                 int rank;
                 MPI_Comm_rank(MPI_COMM_WORLD, &rank);
                 return rank;
+            }
+
+            void finalize() override
+            {
+                int flag = 0;
+                MPI_Initialized(&flag);
+                if (flag){
+                    MPI_Finalize();
+                }
             }
 
             void
