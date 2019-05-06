@@ -133,7 +133,7 @@ NGRAPH_TEST(${BACKEND_NAME}, scatter_nd_add_batch_2d_to_3d)
     Shape out_shape{3, 3, 3};
     auto R = make_shared<op::Parameter>(element::f32, ref_shape);
     auto I = make_shared<op::Parameter>(element::i32, indices_shape);
-    auto U = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
     auto G = make_shared<op::ScatterNDAdd>(R, I , U);
     auto f = make_shared<Function>(make_shared<op::GetOutputElement>(G, 0), ParameterVector{R, I, U});
 
@@ -163,7 +163,7 @@ NGRAPH_TEST(${BACKEND_NAME}, scatter_nd_add_2d_to_3d)
     Shape out_shape{3, 3, 3};
     auto R = make_shared<op::Parameter>(element::f32, ref_shape);
     auto I = make_shared<op::Parameter>(element::i32, indices_shape);
-    auto U = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
     auto G = make_shared<op::ScatterNDAdd>(R, I , U);
     auto f = make_shared<Function>(make_shared<op::GetOutputElement>(G, 0), ParameterVector{R, I, U});
 
