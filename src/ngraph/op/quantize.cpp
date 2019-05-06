@@ -63,7 +63,7 @@ void op::Quantize::validate_and_infer_types()
 
     NODE_VALIDATION_CHECK(this,
                           unquantized_type.is_dynamic() || unquantized_type.is_real(),
-                          "Scale/input element type (",
+                          "Scale / input element type (",
                           unquantized_type,
                           ") must be a floating point number");
 

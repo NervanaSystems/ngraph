@@ -10566,19 +10566,19 @@ TEST(type_prop, quantize_f32_to_i8_nchw_per_channel_ok)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{3};
-    Shape offset_shape{3};
+    Shape zero_point_shape{3};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{1};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant = make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
 
     ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -10588,19 +10588,19 @@ TEST(type_prop, quantize_f32_to_i8_nchw_per_image_ok)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{64};
-    Shape offset_shape{64};
+    Shape zero_point_shape{64};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant = make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
 
     ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -10610,19 +10610,19 @@ TEST(type_prop, quantize_f32_to_i8_nchw_per_row_ok)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{480};
-    Shape offset_shape{480};
+    Shape zero_point_shape{480};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{2};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant = make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
 
     ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -10632,19 +10632,19 @@ TEST(type_prop, quantize_f32_to_i8_nchw_per_image_channel_ok)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{64, 3};
-    Shape offset_shape{64, 3};
+    Shape zero_point_shape{64, 3};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant = make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
 
     ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -10654,19 +10654,19 @@ TEST(type_prop, quantize_f32_to_i8_nchw_whole_batch_ok)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{};
-    Shape offset_shape{};
+    Shape zero_point_shape{};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant = make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
 
     ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -10676,19 +10676,19 @@ TEST(type_prop, quantize_f64_to_i8_ok)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{};
-    Shape offset_shape{};
+    Shape zero_point_shape{};
     element::Type unquantized_type = element::f64;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant = make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
 
     ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -10698,19 +10698,19 @@ TEST(type_prop, quantize_f64_to_u8_ok)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{};
-    Shape offset_shape{};
+    Shape zero_point_shape{};
     element::Type unquantized_type = element::f64;
     element::Type quantized_type = element::u8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant = make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
 
     ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -10720,23 +10720,23 @@ TEST(type_prop, quantize_f64_to_dyn_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{};
-    Shape offset_shape{};
+    Shape zero_point_shape{};
     element::Type unquantized_type = element::f64;
     element::Type quantized_type = element::dynamic;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
         auto quant =
-            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+            make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
         FAIL() << "Attempt to quantize to dynamic type not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -10753,29 +10753,29 @@ TEST(type_prop, quantize_i8_to_u8_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{};
-    Shape offset_shape{};
+    Shape zero_point_shape{};
     element::Type unquantized_type = element::i8;
     element::Type quantized_type = element::u8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
         auto quant =
-            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+            make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
         FAIL() << "Attempt to quantize non-floating point type not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale/input element type (element::Type{8, 0, 1, 1, \"int8_t\"}) "
+                             "Scale / input element type (element::Type{8, 0, 1, 1, \"int8_t\"}) "
                              "must be a floating point number");
     }
     catch (...)
@@ -10788,23 +10788,23 @@ TEST(type_prop, quantize_f32_to_f32_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{};
-    Shape offset_shape{};
+    Shape zero_point_shape{};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::f32;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
         auto quant =
-            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+            make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
         FAIL() << "Attempt to quantize to non-quantized type not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -10823,23 +10823,23 @@ TEST(type_prop, quantize_batch_scale_type_mismatch_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{};
-    Shape offset_shape{};
+    Shape zero_point_shape{};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = element::f64;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
         auto quant =
-            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+            make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
         FAIL() << "Mismatch of batch and scale element types not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -10854,33 +10854,33 @@ TEST(type_prop, quantize_batch_scale_type_mismatch_fails)
     }
 }
 
-TEST(type_prop, quantize_offset_type_mismatch_fails)
+TEST(type_prop, quantize_zero_point_type_mismatch_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{};
-    Shape offset_shape{};
+    Shape zero_point_shape{};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = element::u8;
+    element::Type zero_point_type = element::u8;
     AxisSet axes{};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
         auto quant =
-            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
-        FAIL() << "Mismatch of offset element type with offset argument not detected";
+            make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
+        FAIL() << "Mismatch of zero point element type with zero point argument not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Offset element type (element::Type{8, 0, 0, 1, \"uint8_t\"}) must "
+                             "Zero point element type (element::Type{8, 0, 0, 1, \"uint8_t\"}) must "
                              "match output element type (element::Type{8, 0, 1, 1, \"int8_t\"})");
     }
     catch (...)
@@ -10893,23 +10893,23 @@ TEST(type_prop, quantize_oob_axis_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{320};
-    Shape offset_shape{320};
+    Shape zero_point_shape{320};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{3, 4};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
         auto quant =
-            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+            make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
         FAIL() << "Out-of-bounds quantization axis not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -10927,29 +10927,29 @@ TEST(type_prop, quantize_scale_shape_mismatch_same_rank_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{64, 4};
-    Shape offset_shape{64, 3};
+    Shape zero_point_shape{64, 3};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
         auto quant =
-            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+            make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
         FAIL() << "Mismatch of scale argument shape with required shape not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale shape ({64,4}) and offset shape ({64,3}) must match");
+                             "Scale shape ({64,4}) and zero point shape ({64,3}) must match");
     }
     catch (...)
     {
@@ -10961,29 +10961,29 @@ TEST(type_prop, quantize_scale_shape_mismatch_different_rank_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{64, 3, 2};
-    Shape offset_shape{64, 3};
+    Shape zero_point_shape{64, 3};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
         auto quant =
-            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+            make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
         FAIL() << "Mismatch of scale argument shape with required shape not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale shape ({64,3,2}) and offset shape ({64,3}) must match");
+                             "Scale shape ({64,3,2}) and zero point shape ({64,3}) must match");
     }
     catch (...)
     {
@@ -10991,33 +10991,33 @@ TEST(type_prop, quantize_scale_shape_mismatch_different_rank_fails)
     }
 }
 
-TEST(type_prop, quantize_offset_shape_mismatch_same_rank_fails)
+TEST(type_prop, quantize_zero_point_shape_mismatch_same_rank_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{64, 3};
-    Shape offset_shape{64, 4};
+    Shape zero_point_shape{64, 4};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
         auto quant =
-            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
-        FAIL() << "Mismatch of offset argument shape with required shape not detected";
+            make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
+        FAIL() << "Mismatch of zero point argument shape with required shape not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale shape ({64,3}) and offset shape ({64,4}) must match");
+                             "Scale shape ({64,3}) and zero point shape ({64,4}) must match");
     }
     catch (...)
     {
@@ -11025,33 +11025,33 @@ TEST(type_prop, quantize_offset_shape_mismatch_same_rank_fails)
     }
 }
 
-TEST(type_prop, quantize_offset_shape_mismatch_different_rank_fails)
+TEST(type_prop, quantize_zero_point_shape_mismatch_different_rank_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{64, 3};
-    Shape offset_shape{64, 3, 2};
+    Shape zero_point_shape{64, 3, 2};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
         auto quant =
-            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
-        FAIL() << "Mismatch of offset argument shape with required shape not detected";
+            make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
+        FAIL() << "Mismatch of zero point argument shape with required shape not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale shape ({64,3}) and offset shape ({64,3,2}) must match");
+                             "Scale shape ({64,3}) and zero point shape ({64,3,2}) must match");
     }
     catch (...)
     {
@@ -11063,42 +11063,42 @@ TEST(type_prop, quantize_partial_all_rank_dynamic_ok)
 {
     PartialShape batch_shape{PartialShape::dynamic()};
     PartialShape scale_shape{PartialShape::dynamic()};
-    PartialShape offset_shape{PartialShape::dynamic()};
+    PartialShape zero_point_shape{PartialShape::dynamic()};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1, 2000};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant = make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
 
     ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
     ASSERT_TRUE(quant->get_output_partial_shape(0).rank().is_dynamic());
 }
 
 TEST(type_prop,
-     quantize_partial_input_rank_dynamic_scale_rank_static_dynamic_offset_rank_dynamic_ok)
+     quantize_partial_input_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_dynamic_ok)
 {
     PartialShape batch_shape{PartialShape::dynamic()};
     PartialShape scale_shape{64, Dimension::dynamic(), 96};
-    PartialShape offset_shape{PartialShape::dynamic()};
+    PartialShape zero_point_shape{PartialShape::dynamic()};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1, 2000};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant = make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
 
     ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
     ASSERT_TRUE(quant->get_output_partial_shape(0).rank().is_dynamic());
@@ -11106,34 +11106,34 @@ TEST(type_prop,
 
 TEST(
     type_prop,
-    quantize_partial_input_rank_dynamic_scale_rank_static_dynamic_offset_rank_dynamic_axis_count_inconsistent)
+    quantize_partial_input_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_dynamic_axis_count_inconsistent)
 {
     PartialShape batch_shape{PartialShape::dynamic()};
     PartialShape scale_shape{64, Dimension::dynamic(), 96};
-    PartialShape offset_shape{PartialShape::dynamic()};
+    PartialShape zero_point_shape{PartialShape::dynamic()};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
         auto quant =
-            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
-        FAIL() << "Mismatch of scale/offset rank with axis count not detected";
+            make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
+        FAIL() << "Mismatch of scale / zero point rank with axis count not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            "Scale/offset rank (3) does not match the number of quantization axes (2)");
+            "Scale / zero point rank (3) does not match the number of quantization axes (2)");
     }
     catch (...)
     {
@@ -11142,23 +11142,23 @@ TEST(
 }
 
 TEST(type_prop,
-     quantize_partial_input_rank_dynamic_scale_rank_static_dynamic_offset_rank_static_dynamic_ok)
+     quantize_partial_input_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_static_dynamic_ok)
 {
     PartialShape batch_shape{PartialShape::dynamic()};
     PartialShape scale_shape{64, Dimension::dynamic(), 96, Dimension::dynamic()};
-    PartialShape offset_shape{64, 22, Dimension::dynamic(), Dimension::dynamic()};
+    PartialShape zero_point_shape{64, 22, Dimension::dynamic(), Dimension::dynamic()};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1, 5, 88};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant = make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
 
     ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
     ASSERT_TRUE(quant->get_output_partial_shape(0).rank().is_dynamic());
@@ -11166,33 +11166,33 @@ TEST(type_prop,
 
 TEST(
     type_prop,
-    quantize_partial_input_rank_dynamic_scale_rank_static_dynamic_offset_rank_static_dynamic_ranks_inconsistent)
+    quantize_partial_input_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_static_dynamic_ranks_inconsistent)
 {
     PartialShape batch_shape{PartialShape::dynamic()};
     PartialShape scale_shape{64, Dimension::dynamic(), 96, Dimension::dynamic()};
-    PartialShape offset_shape{64, 22, Dimension::dynamic(), Dimension::dynamic(), 3};
+    PartialShape zero_point_shape{64, 22, Dimension::dynamic(), Dimension::dynamic(), 3};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1, 5, 88};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
         auto quant =
-            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
-        FAIL() << "Inconsistent scale/offset ranks not detected";
+            make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
+        FAIL() << "Inconsistent scale / zero point ranks not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
-            error.what(), "Scale shape ({64,?,96,?}) and offset shape ({64,22,?,?,3}) must match");
+            error.what(), "Scale shape ({64,?,96,?}) and zero point shape ({64,22,?,?,3}) must match");
     }
     catch (...)
     {
@@ -11202,33 +11202,33 @@ TEST(
 
 TEST(
     type_prop,
-    quantize_partial_input_rank_dynamic_scale_rank_static_dynamic_offset_rank_static_dynamic_dims_inconsistent)
+    quantize_partial_input_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_static_dynamic_dims_inconsistent)
 {
     PartialShape batch_shape{PartialShape::dynamic()};
     PartialShape scale_shape{64, Dimension::dynamic(), 96, Dimension::dynamic()};
-    PartialShape offset_shape{65, 22, Dimension::dynamic(), Dimension::dynamic()};
+    PartialShape zero_point_shape{65, 22, Dimension::dynamic(), Dimension::dynamic()};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1, 5, 88};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
         auto quant =
-            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
-        FAIL() << "Inconsistent scale/offset dims not detected";
+            make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
+        FAIL() << "Inconsistent scale / zero point dims not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale shape ({64,?,96,?}) and offset shape ({65,22,?,?}) must match");
+                             "Scale shape ({64,?,96,?}) and zero point shape ({65,22,?,?}) must match");
     }
     catch (...)
     {
@@ -11238,23 +11238,23 @@ TEST(
 
 TEST(
     type_prop,
-    quantize_partial_input_static_rank_dynamic_scale_rank_static_dynamic_offset_rank_static_dynamic_ok)
+    quantize_partial_input_static_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_static_dynamic_ok)
 {
     PartialShape batch_shape{2, 4, 6, Dimension::dynamic(), 10, Dimension::dynamic()};
     PartialShape scale_shape{4, Dimension::dynamic(), Dimension::dynamic()};
-    PartialShape offset_shape{Dimension::dynamic(), 8, Dimension::dynamic()};
+    PartialShape zero_point_shape{Dimension::dynamic(), 8, Dimension::dynamic()};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{1, 3, 5};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant = make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
 
     ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
     ASSERT_TRUE(quant->get_output_partial_shape(0).same_scheme(
@@ -11263,27 +11263,27 @@ TEST(
 
 TEST(
     type_prop,
-    quantize_partial_input_static_rank_dynamic_scale_rank_static_dynamic_offset_rank_static_dynamic_axis_oob)
+    quantize_partial_input_static_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_static_dynamic_axis_oob)
 {
     PartialShape batch_shape{2, 4, 6, Dimension::dynamic(), 10, Dimension::dynamic()};
     PartialShape scale_shape{4, Dimension::dynamic(), Dimension::dynamic()};
-    PartialShape offset_shape{Dimension::dynamic(), 8, Dimension::dynamic()};
+    PartialShape zero_point_shape{Dimension::dynamic(), 8, Dimension::dynamic()};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{1, 3, 6};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
         auto quant =
-            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+            make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
         FAIL() << "Out-of-bound quantization axis not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -11299,33 +11299,33 @@ TEST(
 
 TEST(
     type_prop,
-    quantize_partial_input_static_rank_dynamic_scale_rank_static_dynamic_offset_rank_static_dynamic_dims_inconsistent)
+    quantize_partial_input_static_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_static_dynamic_dims_inconsistent)
 {
     PartialShape batch_shape{2, 5, 6, Dimension::dynamic(), 10, Dimension::dynamic()};
     PartialShape scale_shape{4, Dimension::dynamic(), Dimension::dynamic()};
-    PartialShape offset_shape{Dimension::dynamic(), 8, Dimension::dynamic()};
+    PartialShape zero_point_shape{Dimension::dynamic(), 8, Dimension::dynamic()};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{1, 3, 5};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
         auto quant =
-            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+            make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
         FAIL() << "Inconsistent dimensions not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale/offset shape ({4,8,?}) must match input shape ({2,5,6,?,10,?}) "
+                             "Scale / zero point shape ({4,8,?}) must match input shape ({2,5,6,?,10,?}) "
                              "at the quantization axes (AxisSet{1, 3, 5})");
     }
     catch (...)
@@ -11338,18 +11338,18 @@ TEST(type_prop, dequantize_f32_from_i8_nchw_per_channel_ok)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{3};
-    Shape offset_shape{3};
+    Shape zero_point_shape{3};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{1};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
 
     ASSERT_EQ(quant->get_output_element_type(0), unquantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -11359,18 +11359,18 @@ TEST(type_prop, dequantize_f32_from_i8_nchw_per_image_ok)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{64};
-    Shape offset_shape{64};
+    Shape zero_point_shape{64};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
 
     ASSERT_EQ(quant->get_output_element_type(0), unquantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -11380,18 +11380,18 @@ TEST(type_prop, dequantize_f32_from_i8_nchw_per_row_ok)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{480};
-    Shape offset_shape{480};
+    Shape zero_point_shape{480};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{2};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
 
     ASSERT_EQ(quant->get_output_element_type(0), unquantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -11401,18 +11401,18 @@ TEST(type_prop, dequantize_f32_from_i8_nchw_per_image_channel_ok)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{64, 3};
-    Shape offset_shape{64, 3};
+    Shape zero_point_shape{64, 3};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
 
     ASSERT_EQ(quant->get_output_element_type(0), unquantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -11422,18 +11422,18 @@ TEST(type_prop, dequantize_f32_from_i8_nchw_whole_batch_ok)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{};
-    Shape offset_shape{};
+    Shape zero_point_shape{};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
 
     ASSERT_EQ(quant->get_output_element_type(0), unquantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -11443,18 +11443,18 @@ TEST(type_prop, dequantize_f64_from_i8_ok)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{};
-    Shape offset_shape{};
+    Shape zero_point_shape{};
     element::Type unquantized_type = element::f64;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
 
     ASSERT_EQ(quant->get_output_element_type(0), unquantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -11464,18 +11464,18 @@ TEST(type_prop, dequantize_f64_to_u8_ok)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{};
-    Shape offset_shape{};
+    Shape zero_point_shape{};
     element::Type unquantized_type = element::f64;
     element::Type quantized_type = element::u8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
 
     ASSERT_EQ(quant->get_output_element_type(0), unquantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -11485,21 +11485,21 @@ TEST(type_prop, dequantize_i8_from_u8_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{};
-    Shape offset_shape{};
+    Shape zero_point_shape{};
     element::Type unquantized_type = element::i8;
     element::Type quantized_type = element::u8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
-        auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+        auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
         FAIL() << "Attempt to dequantize to non-floating point type not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -11518,27 +11518,27 @@ TEST(type_prop, dequantize_f32_from_f32_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{};
-    Shape offset_shape{};
+    Shape zero_point_shape{};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::f32;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
-        auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+        auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
         FAIL() << "Attempt to dequantize from non-quantized type not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Offset/input element type (element::Type{32, 1, 1, 0, \"float\"}) "
+                             "Zero point / input element type (element::Type{32, 1, 1, 0, \"float\"}) "
                              "must be a quantized type");
     }
     catch (...)
@@ -11547,31 +11547,31 @@ TEST(type_prop, dequantize_f32_from_f32_fails)
     }
 }
 
-TEST(type_prop, dequantize_batch_offset_type_mismatch_fails)
+TEST(type_prop, dequantize_batch_zero_point_type_mismatch_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{};
-    Shape offset_shape{};
+    Shape zero_point_shape{};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = element::u8;
+    element::Type zero_point_type = element::u8;
     AxisSet axes{};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
-        auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
-        FAIL() << "Mismatch of batch and offset element types not detected";
+        auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
+        FAIL() << "Mismatch of batch and zero point element types not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Offset element type (element::Type{8, 0, 0, 1, \"uint8_t\"}) must "
+                             "Zero point element type (element::Type{8, 0, 0, 1, \"uint8_t\"}) must "
                              "match input element type (element::Type{8, 0, 1, 1, \"int8_t\"})");
     }
     catch (...)
@@ -11584,21 +11584,21 @@ TEST(type_prop, dequantize_scale_type_mismatch_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{};
-    Shape offset_shape{};
+    Shape zero_point_shape{};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = element::f64;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
-        auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+        auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
         FAIL() << "Mismatch of scale element type with scale argument not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -11619,21 +11619,21 @@ TEST(type_prop, dequantize_oob_axis_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{320};
-    Shape offset_shape{320};
+    Shape zero_point_shape{320};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{3, 4};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
-        auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+        auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
         FAIL() << "Out-of-bounds quantization axis not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -11651,27 +11651,27 @@ TEST(type_prop, dequantize_scale_shape_mismatch_same_rank_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{64, 4};
-    Shape offset_shape{64, 3};
+    Shape zero_point_shape{64, 3};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
-        auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+        auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
         FAIL() << "Mismatch of scale argument shape with required shape not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale shape ({64,4}) and offset shape ({64,3}) must match");
+                             "Scale shape ({64,4}) and zero point shape ({64,3}) must match");
     }
     catch (...)
     {
@@ -11683,27 +11683,27 @@ TEST(type_prop, dequantize_scale_shape_mismatch_different_rank_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{64, 3, 2};
-    Shape offset_shape{64, 3};
+    Shape zero_point_shape{64, 3};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
-        auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+        auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
         FAIL() << "Mismatch of scale argument shape with required shape not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale shape ({64,3,2}) and offset shape ({64,3}) must match");
+                             "Scale shape ({64,3,2}) and zero point shape ({64,3}) must match");
     }
     catch (...)
     {
@@ -11711,31 +11711,31 @@ TEST(type_prop, dequantize_scale_shape_mismatch_different_rank_fails)
     }
 }
 
-TEST(type_prop, dequantize_offset_shape_mismatch_same_rank_fails)
+TEST(type_prop, dequantize_zero_point_shape_mismatch_same_rank_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{64, 3};
-    Shape offset_shape{64, 4};
+    Shape zero_point_shape{64, 4};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
-        auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
-        FAIL() << "Mismatch of offset argument shape with required shape not detected";
+        auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
+        FAIL() << "Mismatch of zero point argument shape with required shape not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale shape ({64,3}) and offset shape ({64,4}) must match");
+                             "Scale shape ({64,3}) and zero point shape ({64,4}) must match");
     }
     catch (...)
     {
@@ -11743,31 +11743,31 @@ TEST(type_prop, dequantize_offset_shape_mismatch_same_rank_fails)
     }
 }
 
-TEST(type_prop, dequantize_offset_shape_mismatch_different_rank_fails)
+TEST(type_prop, dequantize_zero_point_shape_mismatch_different_rank_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{64, 3};
-    Shape offset_shape{64, 3, 2};
+    Shape zero_point_shape{64, 3, 2};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
-        auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
-        FAIL() << "Mismatch of offset argument shape with required shape not detected";
+        auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
+        FAIL() << "Mismatch of zero point argument shape with required shape not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale shape ({64,3}) and offset shape ({64,3,2}) must match");
+                             "Scale shape ({64,3}) and zero point shape ({64,3,2}) must match");
     }
     catch (...)
     {
@@ -11779,40 +11779,40 @@ TEST(type_prop, dequantize_partial_all_rank_dynamic_ok)
 {
     PartialShape batch_shape{PartialShape::dynamic()};
     PartialShape scale_shape{PartialShape::dynamic()};
-    PartialShape offset_shape{PartialShape::dynamic()};
+    PartialShape zero_point_shape{PartialShape::dynamic()};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1, 2000};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
 
     ASSERT_EQ(quant->get_output_element_type(0), unquantized_type);
     ASSERT_TRUE(quant->get_output_partial_shape(0).rank().is_dynamic());
 }
 
 TEST(type_prop,
-     dequantize_partial_input_rank_dynamic_scale_rank_static_dynamic_offset_rank_dynamic_ok)
+     dequantize_partial_input_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_dynamic_ok)
 {
     PartialShape batch_shape{PartialShape::dynamic()};
     PartialShape scale_shape{64, Dimension::dynamic(), 96};
-    PartialShape offset_shape{PartialShape::dynamic()};
+    PartialShape zero_point_shape{PartialShape::dynamic()};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1, 2000};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
 
     ASSERT_EQ(quant->get_output_element_type(0), unquantized_type);
     ASSERT_TRUE(quant->get_output_partial_shape(0).rank().is_dynamic());
@@ -11820,32 +11820,32 @@ TEST(type_prop,
 
 TEST(
     type_prop,
-    dequantize_partial_input_rank_dynamic_scale_rank_static_dynamic_offset_rank_dynamic_axis_count_inconsistent)
+    dequantize_partial_input_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_dynamic_axis_count_inconsistent)
 {
     PartialShape batch_shape{PartialShape::dynamic()};
     PartialShape scale_shape{64, Dimension::dynamic(), 96};
-    PartialShape offset_shape{PartialShape::dynamic()};
+    PartialShape zero_point_shape{PartialShape::dynamic()};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
-        auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
-        FAIL() << "Mismatch of scale/offset rank with axis count not detected";
+        auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
+        FAIL() << "Mismatch of scale / zero point rank with axis count not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            "Scale/offset rank (3) does not match the number of quantization axes (2)");
+            "Scale / zero point rank (3) does not match the number of quantization axes (2)");
     }
     catch (...)
     {
@@ -11854,22 +11854,22 @@ TEST(
 }
 
 TEST(type_prop,
-     dequantize_partial_input_rank_dynamic_scale_rank_static_dynamic_offset_rank_static_dynamic_ok)
+     dequantize_partial_input_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_static_dynamic_ok)
 {
     PartialShape batch_shape{PartialShape::dynamic()};
     PartialShape scale_shape{64, Dimension::dynamic(), 96, Dimension::dynamic()};
-    PartialShape offset_shape{64, 22, Dimension::dynamic(), Dimension::dynamic()};
+    PartialShape zero_point_shape{64, 22, Dimension::dynamic(), Dimension::dynamic()};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1, 5, 88};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
 
     ASSERT_EQ(quant->get_output_element_type(0), unquantized_type);
     ASSERT_TRUE(quant->get_output_partial_shape(0).rank().is_dynamic());
@@ -11877,31 +11877,31 @@ TEST(type_prop,
 
 TEST(
     type_prop,
-    dequantize_partial_input_rank_dynamic_scale_rank_static_dynamic_offset_rank_static_dynamic_ranks_inconsistent)
+    dequantize_partial_input_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_static_dynamic_ranks_inconsistent)
 {
     PartialShape batch_shape{PartialShape::dynamic()};
     PartialShape scale_shape{64, Dimension::dynamic(), 96, Dimension::dynamic()};
-    PartialShape offset_shape{64, 22, Dimension::dynamic(), Dimension::dynamic(), 3};
+    PartialShape zero_point_shape{64, 22, Dimension::dynamic(), Dimension::dynamic(), 3};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1, 5, 88};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
-        auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
-        FAIL() << "Inconsistent scale/offset ranks not detected";
+        auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
+        FAIL() << "Inconsistent scale / zero point ranks not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
-            error.what(), "Scale shape ({64,?,96,?}) and offset shape ({64,22,?,?,3}) must match");
+            error.what(), "Scale shape ({64,?,96,?}) and zero point shape ({64,22,?,?,3}) must match");
     }
     catch (...)
     {
@@ -11911,31 +11911,31 @@ TEST(
 
 TEST(
     type_prop,
-    dequantize_partial_input_rank_dynamic_scale_rank_static_dynamic_offset_rank_static_dynamic_dims_inconsistent)
+    dequantize_partial_input_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_static_dynamic_dims_inconsistent)
 {
     PartialShape batch_shape{PartialShape::dynamic()};
     PartialShape scale_shape{64, Dimension::dynamic(), 96, Dimension::dynamic()};
-    PartialShape offset_shape{65, 22, Dimension::dynamic(), Dimension::dynamic()};
+    PartialShape zero_point_shape{65, 22, Dimension::dynamic(), Dimension::dynamic()};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1, 5, 88};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
-        auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
-        FAIL() << "Inconsistent scale/offset dims not detected";
+        auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
+        FAIL() << "Inconsistent scale / zero point dims not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale shape ({64,?,96,?}) and offset shape ({65,22,?,?}) must match");
+                             "Scale shape ({64,?,96,?}) and zero point shape ({65,22,?,?}) must match");
     }
     catch (...)
     {
@@ -11945,22 +11945,22 @@ TEST(
 
 TEST(
     type_prop,
-    dequantize_partial_input_static_rank_dynamic_scale_rank_static_dynamic_offset_rank_static_dynamic_ok)
+    dequantize_partial_input_static_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_static_dynamic_ok)
 {
     PartialShape batch_shape{2, 4, 6, Dimension::dynamic(), 10, Dimension::dynamic()};
     PartialShape scale_shape{4, Dimension::dynamic(), Dimension::dynamic()};
-    PartialShape offset_shape{Dimension::dynamic(), 8, Dimension::dynamic()};
+    PartialShape zero_point_shape{Dimension::dynamic(), 8, Dimension::dynamic()};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{1, 3, 5};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
 
     ASSERT_EQ(quant->get_output_element_type(0), unquantized_type);
     ASSERT_TRUE(quant->get_output_partial_shape(0).same_scheme(
@@ -11969,25 +11969,25 @@ TEST(
 
 TEST(
     type_prop,
-    dequantize_partial_input_static_rank_dynamic_scale_rank_static_dynamic_offset_rank_static_dynamic_axis_oob)
+    dequantize_partial_input_static_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_static_dynamic_axis_oob)
 {
     PartialShape batch_shape{2, 4, 6, Dimension::dynamic(), 10, Dimension::dynamic()};
     PartialShape scale_shape{4, Dimension::dynamic(), Dimension::dynamic()};
-    PartialShape offset_shape{Dimension::dynamic(), 8, Dimension::dynamic()};
+    PartialShape zero_point_shape{Dimension::dynamic(), 8, Dimension::dynamic()};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{1, 3, 6};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
-        auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+        auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
         FAIL() << "Out-of-bound quantization axis not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -12003,31 +12003,31 @@ TEST(
 
 TEST(
     type_prop,
-    dequantize_partial_input_static_rank_dynamic_scale_rank_static_dynamic_offset_rank_static_dynamic_dims_inconsistent)
+    dequantize_partial_input_static_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_static_dynamic_dims_inconsistent)
 {
     PartialShape batch_shape{2, 5, 6, Dimension::dynamic(), 10, Dimension::dynamic()};
     PartialShape scale_shape{4, Dimension::dynamic(), Dimension::dynamic()};
-    PartialShape offset_shape{Dimension::dynamic(), 8, Dimension::dynamic()};
+    PartialShape zero_point_shape{Dimension::dynamic(), 8, Dimension::dynamic()};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{1, 3, 5};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
-        auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+        auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
         FAIL() << "Inconsistent dimensions not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale/offset shape ({4,8,?}) must match input shape ({2,5,6,?,10,?}) "
+                             "Scale / zero point shape ({4,8,?}) must match input shape ({2,5,6,?,10,?}) "
                              "at the quantization axes (AxisSet{1, 3, 5})");
     }
     catch (...)

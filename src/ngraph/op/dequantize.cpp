@@ -53,7 +53,7 @@ void op::Dequantize::validate_and_infer_types()
                           element::Type::merge(quantized_type,
                                                get_input_element_type(INPUT),
                                                get_input_element_type(ZERO_POINT)),
-                          "Offset element type (",
+                          "Zero point element type (",
                           get_input_element_type(ZERO_POINT),
                           ") must match input element type (",
                           get_input_element_type(INPUT),
@@ -61,7 +61,7 @@ void op::Dequantize::validate_and_infer_types()
 
     NODE_VALIDATION_CHECK(this,
                           quantized_type.is_dynamic() || quantized_type.is_quantized(),
-                          "Offset/input element type (",
+                          "Zero point / input element type (",
                           quantized_type,
                           ") must be a quantized type");
 
