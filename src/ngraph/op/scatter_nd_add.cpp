@@ -51,14 +51,14 @@ void op::ScatterNDAdd::validate_and_infer_types()
     NODE_VALIDATION_CHECK(this,
                           indices_shape.rank().is_dynamic() ||
                               static_cast<size_t>(indices_shape.rank()) >= 1,
-                          "indices rank is expected to be at least 1");
+                          "Indices rank is expected to be at least 1");
 
     NODE_VALIDATION_CHECK(
         this,
         inputs_shape.rank().is_dynamic() || indices_shape.rank().is_dynamic() ||
             static_cast<size_t>(indices_shape[static_cast<size_t>(indices_shape.rank()) - 1]) <=
                 static_cast<size_t>(inputs_shape.rank()),
-        "last dimension of indices can be at most the rank of inputs");
+        "Last dimension of indices can be at most the rank of inputs");
 
     NODE_VALIDATION_CHECK(
         this,

@@ -13702,7 +13702,7 @@ TEST(type_prop, scatter_add_fail_updates_element_type)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Updates element type must match inputs element type"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Updates element type must be the same as Inputs"));
     }
     catch (...)
     {
@@ -13727,7 +13727,7 @@ TEST(type_prop, scatter_add_fail_updates_rank)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Updates rank is incorrect"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Updates rank is expected to be indices rank + inputs rank - 1"));
     }
     catch (...)
     {
@@ -13739,11 +13739,11 @@ TEST(type_prop, scatter_nd_add_fail_indices_element_type)
 {
     Shape ref_shape{3, 3, 3};
     Shape indices_shape{1};
-    Shape update_shape{3, 3};
+    Shape updates_shape{3, 3};
     Shape out_shape{3, 3, 3};
     auto R = make_shared<op::Parameter>(element::f32, ref_shape);
     auto I = make_shared<op::Parameter>(element::i16, indices_shape);
-    auto U = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
     try
     {
         auto G = make_shared<op::ScatterNDAdd>(R, I , U);
@@ -13764,11 +13764,11 @@ TEST(type_prop, scatter_nd_add_fail_indices_rank)
 {
     Shape ref_shape{3, 3, 3};
     Shape indices_shape{};
-    Shape update_shape{3, 3};
+    Shape updates_shape{3, 3};
     Shape out_shape{3, 3, 3};
     auto R = make_shared<op::Parameter>(element::f32, ref_shape);
     auto I = make_shared<op::Parameter>(element::i32, indices_shape);
-    auto U = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
     try
     {
         auto G = make_shared<op::ScatterNDAdd>(R, I , U);
@@ -13777,7 +13777,7 @@ TEST(type_prop, scatter_nd_add_fail_indices_rank)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Indices rank must me at least 1"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Indices rank is expected to be at least 1"));
     }
     catch (...)
     {
@@ -13789,11 +13789,11 @@ TEST(type_prop, scatter_nd_add_fail_indices_last_dim)
 {
     Shape ref_shape{3, 3, 3};
     Shape indices_shape{2, 4};
-    Shape update_shape{2, 3, 3};
+    Shape updates_shape{2, 3, 3};
     Shape out_shape{3, 3, 3};
     auto R = make_shared<op::Parameter>(element::f32, ref_shape);
     auto I = make_shared<op::Parameter>(element::i32, indices_shape);
-    auto U = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
     try
     {
         auto G = make_shared<op::ScatterNDAdd>(R, I , U);
@@ -13802,7 +13802,7 @@ TEST(type_prop, scatter_nd_add_fail_indices_last_dim)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Indices innnermost dim should be at most the rank of input"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Last dimension of indices can be at most the rank of inputs"));
     }
     catch (...)
     {
@@ -13814,11 +13814,11 @@ TEST(type_prop, scatter_nd_add_fail_updates_element_type)
 {
     Shape ref_shape{3, 3, 3};
     Shape indices_shape{1};
-    Shape update_shape{3, 3};
+    Shape updates_shape{3, 3};
     Shape out_shape{3, 3, 3};
     auto R = make_shared<op::Parameter>(element::f32, ref_shape);
     auto I = make_shared<op::Parameter>(element::i32, indices_shape);
-    auto U = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto U = make_shared<op::Parameter>(element::i32, updates_shape);
     try
     {
         auto G = make_shared<op::ScatterNDAdd>(R, I , U);
@@ -13827,7 +13827,7 @@ TEST(type_prop, scatter_nd_add_fail_updates_element_type)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Updates element type must match inputs element type"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Updates element type must be the same as inputs"));
     }
     catch (...)
     {
@@ -13837,6 +13837,27 @@ TEST(type_prop, scatter_nd_add_fail_updates_element_type)
 
 TEST(type_prop, scatter_nd_add_fail_updates_rank)
 {
+    Shape ref_shape{3, 3, 3};
+    Shape indices_shape{1};
+    Shape updates_shape{3, 3, 3};
+    Shape out_shape{3, 3, 3};
+    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    try
+    {
+        auto G = make_shared<op::ScatterNDAdd>(R, I , U);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect updates rank";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Rank of updates must be rank of inputs + rank of indices - last dimension of indices - 1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
 }
 
 TEST(type_prop, conv_bias_2d_deduce)

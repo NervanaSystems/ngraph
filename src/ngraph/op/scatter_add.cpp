@@ -56,7 +56,7 @@ void op::ScatterAdd::validate_and_infer_types()
                               static_cast<size_t>(updates_shape.rank()) ==
                                   static_cast<size_t>(indices_shape.rank()) +
                                   static_cast<size_t>(inputs_shape.rank()) - 1,
-                          "updates rank is expected to be indices rank + inputs rank - 1");
+                          "Updates rank is expected to be indices rank + inputs rank - 1");
 
     // TODO: updates shape must be indices shape + inputs shape[1:]
 
