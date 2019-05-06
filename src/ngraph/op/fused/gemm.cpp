@@ -75,10 +75,8 @@ NodeVector op::Gemm::decompose_op() const
 
     // alpha * A' * B' + beta * C
     NodeVector broadcasted_nodes = ngraph::op::numpy_style_broadcast({a_dot_b, C});
-    // The ONNX documentation says that `C` should be "unidirectional broadcastable"
-    // to the `a_dot_b` tensor. Since numpy style broadcasting is bidirectional, below we
-    // only use the second output from above broadcasting. In other words we want to
-    // preserve the shape of original `a_dot_b` tensor.
+    // The input tensor `C` should be "unidirectional broadcastable" to the `a_dot_b` tensor.
+    // Numpy style broadcast is bidirectional, so we only use the second output from broadcasting.
     return {std::make_shared<ngraph::op::Add>(a_dot_b, broadcasted_nodes.at(1))};
 }
 
