@@ -25,7 +25,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Dequantize operation
-        ///        Maps quantized input (q) to real output (r) using scale (s) and offset (o):
+        ///        Maps quantized input (q) to real output (r) using scale (s) and zero point (z):
         ///        r = (q - o) * s
         class Dequantize : public ngraph::op::Op
         {
@@ -33,12 +33,12 @@ namespace ngraph
             /// \brief Constructs a Dequantize operation
             /// \param input quantized input
             /// \param scale scale used for mapping
-            /// \param offset offset used for mapping
+            /// \param zero_point zero point used for mapping
             /// \param type output element type
-            /// \param axes axis positions on which `scale` and `offset` are specified
+            /// \param axes axis positions on which `scale` and `zero_point` are specified
             Dequantize(const std::shared_ptr<Node>& input,
                        const std::shared_ptr<Node>& scale,
-                       const std::shared_ptr<Node>& offset,
+                       const std::shared_ptr<Node>& zero_point,
                        const ngraph::element::Type& type,
                        const ngraph::AxisSet& axes);
 

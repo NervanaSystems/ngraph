@@ -34,11 +34,11 @@ namespace ngraph
     namespace builder
     {
         shared_ptr<Node> ScaledQuantize(const shared_ptr<Node>& input,
-                                             const shared_ptr<Node>& min,
-                                             const shared_ptr<Node>& max,
-                                             const ngraph::element::Type& quant_type,
-                                             const ngraph::AxisSet& axes,
-                                             op::Quantize::RoundMode round_mode)
+                                        const shared_ptr<Node>& min,
+                                        const shared_ptr<Node>& max,
+                                        const ngraph::element::Type& quant_type,
+                                        const ngraph::AxisSet& axes,
+                                        op::Quantize::RoundMode round_mode)
         {
             auto real_type = input->get_element_type();
 
@@ -64,10 +64,10 @@ namespace ngraph
         }
 
         shared_ptr<Node> ScaledDequantize(const shared_ptr<Node>& input,
-                                               const shared_ptr<Node>& min,
-                                               const shared_ptr<Node>& max,
-                                               const ngraph::element::Type& real_type,
-                                               const ngraph::AxisSet& axes)
+                                          const shared_ptr<Node>& min,
+                                          const shared_ptr<Node>& max,
+                                          const ngraph::element::Type& real_type,
+                                          const ngraph::AxisSet& axes)
         {
             auto quant_type = input->get_element_type();
 
@@ -93,18 +93,16 @@ namespace ngraph
         }
 
         shared_ptr<Node> ScaledQuantizedConcat(const NodeVector& args,
-                                                    size_t concatenation_axis,
-                                                    const NodeVector& mins,
-                                                    const NodeVector& maxs)
+                                               size_t concatenation_axis,
+                                               const NodeVector& mins,
+                                               const NodeVector& maxs)
         {
             quantization_util::check_concat(args, mins, maxs);
             auto quant_type = args[0]->get_element_type();
 
             // output scale
-            auto min = make_shared<op::Min>(make_shared<op::Concat>(mins, 0),
-                                                 ngraph::AxisSet{0});
-            auto max = make_shared<op::Max>(make_shared<op::Concat>(maxs, 0),
-                                                 ngraph::AxisSet{0});
+            auto min = make_shared<op::Min>(make_shared<op::Concat>(mins, 0), ngraph::AxisSet{0});
+            auto max = make_shared<op::Max>(make_shared<op::Concat>(maxs, 0), ngraph::AxisSet{0});
             auto out_scale = quantization_util::get_scale(min, max, quant_type);
 
             NodeVector rescaled_args(args.size());
@@ -130,13 +128,13 @@ namespace ngraph
         }
 
         shared_ptr<Node> ScaledQuantizedAvgPool(const shared_ptr<Node>& input,
-                                                     const Shape& window_shape,
-                                                     const Strides& window_movement_strides,
-                                                     const Shape& padding_below,
-                                                     const Shape& padding_above,
-                                                     bool include_padding_in_avg_computation,
-                                                     const shared_ptr<Node>& min,
-                                                     const shared_ptr<Node>& max)
+                                                const Shape& window_shape,
+                                                const Strides& window_movement_strides,
+                                                const Shape& padding_below,
+                                                const Shape& padding_above,
+                                                bool include_padding_in_avg_computation,
+                                                const shared_ptr<Node>& min,
+                                                const shared_ptr<Node>& max)
         {
             return make_shared<op::QuantizedAvgPool>(input,
                                                      window_shape,
@@ -146,31 +144,25 @@ namespace ngraph
                                                      include_padding_in_avg_computation);
         }
 
-        shared_ptr<Node>
-            ScaledQuantizedConvolutionBias(const shared_ptr<Node>& input,
-                                           const shared_ptr<Node>& filters,
-                                           const shared_ptr<Node>& bias,
-                                           const Strides& window_movement_strides,
-                                           const Strides& window_dilation_strides,
-                                           const CoordinateDiff& padding_below,
-                                           const CoordinateDiff& padding_above,
-                                           const Strides& data_dilation_strides,
-                                           const shared_ptr<Node>& min_input,
-                                           const shared_ptr<Node>& max_input,
-                                           const shared_ptr<Node>& min_filter,
-                                           const shared_ptr<Node>& max_filter,
-                                           const shared_ptr<Node>& min_output,
-                                           const shared_ptr<Node>& max_output,
-                                           const bool with_relu)
+        shared_ptr<Node> ScaledQuantizedConvolutionBias(const shared_ptr<Node>& input,
+                                                        const shared_ptr<Node>& filters,
+                                                        const shared_ptr<Node>& bias,
+                                                        const Strides& window_movement_strides,
+                                                        const Strides& window_dilation_strides,
+                                                        const CoordinateDiff& padding_below,
+                                                        const CoordinateDiff& padding_above,
+                                                        const Strides& data_dilation_strides,
+                                                        const shared_ptr<Node>& min_input,
+                                                        const shared_ptr<Node>& max_input,
+                                                        const shared_ptr<Node>& min_filter,
+                                                        const shared_ptr<Node>& max_filter,
+                                                        const shared_ptr<Node>& min_output,
+                                                        const shared_ptr<Node>& max_output,
+                                                        const bool with_relu)
         {
             auto output_et = with_relu ? element::u8 : element::i8;
-            auto requantization_scale = quantization_util::get_scale(min_input,
-                                                                     max_input,
-                                                                     min_filter,
-                                                                     max_filter,
-                                                                     min_output,
-                                                                     max_output,
-                                                                     output_et);
+            auto requantization_scale = quantization_util::get_scale(
+                min_input, max_input, min_filter, max_filter, min_output, max_output, output_et);
 
             auto mybias = bias;
             if (bias->get_element_type() != element::i32)
@@ -198,28 +190,22 @@ namespace ngraph
                                                              with_relu);
         }
 
-        shared_ptr<Node>
-            ScaledQuantizedConvolutionRelu(const shared_ptr<Node>& input,
-                                           const shared_ptr<Node>& filters,
-                                           const Strides& window_movement_strides,
-                                           const Strides& window_dilation_strides,
-                                           const CoordinateDiff& padding_below,
-                                           const CoordinateDiff& padding_above,
-                                           const Strides& data_dilation_strides,
-                                           const shared_ptr<Node>& min_input,
-                                           const shared_ptr<Node>& max_input,
-                                           const shared_ptr<Node>& min_filter,
-                                           const shared_ptr<Node>& max_filter,
-                                           const shared_ptr<Node>& min_output,
-                                           const shared_ptr<Node>& max_output)
+        shared_ptr<Node> ScaledQuantizedConvolutionRelu(const shared_ptr<Node>& input,
+                                                        const shared_ptr<Node>& filters,
+                                                        const Strides& window_movement_strides,
+                                                        const Strides& window_dilation_strides,
+                                                        const CoordinateDiff& padding_below,
+                                                        const CoordinateDiff& padding_above,
+                                                        const Strides& data_dilation_strides,
+                                                        const shared_ptr<Node>& min_input,
+                                                        const shared_ptr<Node>& max_input,
+                                                        const shared_ptr<Node>& min_filter,
+                                                        const shared_ptr<Node>& max_filter,
+                                                        const shared_ptr<Node>& min_output,
+                                                        const shared_ptr<Node>& max_output)
         {
-            auto requantization_scale = quantization_util::get_scale(min_input,
-                                                                     max_input,
-                                                                     min_filter,
-                                                                     max_filter,
-                                                                     min_output,
-                                                                     max_output,
-                                                                     element::u8);
+            auto requantization_scale = quantization_util::get_scale(
+                min_input, max_input, min_filter, max_filter, min_output, max_output, element::u8);
 
             return make_shared<op::QuantizedConvolutionRelu>(input,
                                                              filters,
@@ -232,26 +218,21 @@ namespace ngraph
         }
 
         shared_ptr<Node> ScaledQuantizedConvolution(const shared_ptr<Node>& input,
-                                                         const shared_ptr<Node>& filters,
-                                                         const Strides& window_movement_strides,
-                                                         const Strides& window_dilation_strides,
-                                                         const CoordinateDiff& padding_below,
-                                                         const CoordinateDiff& padding_above,
-                                                         const Strides& data_dilation_strides,
-                                                         const shared_ptr<Node>& min_input,
-                                                         const shared_ptr<Node>& max_input,
-                                                         const shared_ptr<Node>& min_filter,
-                                                         const shared_ptr<Node>& max_filter,
-                                                         const shared_ptr<Node>& min_output,
-                                                         const shared_ptr<Node>& max_output)
+                                                    const shared_ptr<Node>& filters,
+                                                    const Strides& window_movement_strides,
+                                                    const Strides& window_dilation_strides,
+                                                    const CoordinateDiff& padding_below,
+                                                    const CoordinateDiff& padding_above,
+                                                    const Strides& data_dilation_strides,
+                                                    const shared_ptr<Node>& min_input,
+                                                    const shared_ptr<Node>& max_input,
+                                                    const shared_ptr<Node>& min_filter,
+                                                    const shared_ptr<Node>& max_filter,
+                                                    const shared_ptr<Node>& min_output,
+                                                    const shared_ptr<Node>& max_output)
         {
-            auto requantization_scale = quantization_util::get_scale(min_input,
-                                                                     max_input,
-                                                                     min_filter,
-                                                                     max_filter,
-                                                                     min_output,
-                                                                     max_output,
-                                                                     element::i8);
+            auto requantization_scale = quantization_util::get_scale(
+                min_input, max_input, min_filter, max_filter, min_output, max_output, element::i8);
 
             return make_shared<op::QuantizedConvolution>(input,
                                                          filters,
@@ -264,50 +245,42 @@ namespace ngraph
         }
 
         shared_ptr<Node> ScaledQuantizedMaxPool(const shared_ptr<Node>& input,
-                                                     const Shape& window_shape,
-                                                     const Strides& window_movement_strides,
-                                                     const Shape& padding_below,
-                                                     const Shape& padding_above,
-                                                     const shared_ptr<Node>& min,
-                                                     const shared_ptr<Node>& max)
+                                                const Shape& window_shape,
+                                                const Strides& window_movement_strides,
+                                                const Shape& padding_below,
+                                                const Shape& padding_above,
+                                                const shared_ptr<Node>& min,
+                                                const shared_ptr<Node>& max)
         {
             return make_shared<op::QuantizedMaxPool>(
                 input, window_shape, window_movement_strides, padding_below, padding_above);
         }
 
-        shared_ptr<Node>
-            ScaledQuantizedConvolutionBiasAdd(const shared_ptr<Node>& input,
-                                              const shared_ptr<Node>& filters,
-                                              const shared_ptr<Node>& bias,
-                                              const shared_ptr<Node>& sum_input,
-                                              const Strides& window_movement_strides,
-                                              const Strides& window_dilation_strides,
-                                              const CoordinateDiff& padding_below,
-                                              const CoordinateDiff& padding_above,
-                                              const Strides& data_dilation_strides,
-                                              const shared_ptr<Node>& min_input,
-                                              const shared_ptr<Node>& max_input,
-                                              const shared_ptr<Node>& min_filter,
-                                              const shared_ptr<Node>& max_filter,
-                                              const shared_ptr<Node>& min_output,
-                                              const shared_ptr<Node>& max_output,
-                                              const shared_ptr<Node>& min_sum_input,
-                                              const shared_ptr<Node>& max_sum_input,
-                                              const bool with_relu)
+        shared_ptr<Node> ScaledQuantizedConvolutionBiasAdd(const shared_ptr<Node>& input,
+                                                           const shared_ptr<Node>& filters,
+                                                           const shared_ptr<Node>& bias,
+                                                           const shared_ptr<Node>& sum_input,
+                                                           const Strides& window_movement_strides,
+                                                           const Strides& window_dilation_strides,
+                                                           const CoordinateDiff& padding_below,
+                                                           const CoordinateDiff& padding_above,
+                                                           const Strides& data_dilation_strides,
+                                                           const shared_ptr<Node>& min_input,
+                                                           const shared_ptr<Node>& max_input,
+                                                           const shared_ptr<Node>& min_filter,
+                                                           const shared_ptr<Node>& max_filter,
+                                                           const shared_ptr<Node>& min_output,
+                                                           const shared_ptr<Node>& max_output,
+                                                           const shared_ptr<Node>& min_sum_input,
+                                                           const shared_ptr<Node>& max_sum_input,
+                                                           const bool with_relu)
         {
             auto output_et = with_relu ? element::u8 : element::i8;
-            auto requantization_scale = quantization_util::get_scale(min_input,
-                                                                     max_input,
-                                                                     min_filter,
-                                                                     max_filter,
-                                                                     min_output,
-                                                                     max_output,
-                                                                     output_et);
+            auto requantization_scale = quantization_util::get_scale(
+                min_input, max_input, min_filter, max_filter, min_output, max_output, output_et);
 
-            auto sum_scale = builder::quantization_util::get_sum_scale(min_output,
-                                                                       max_output,
-                                                                       min_sum_input,
-                                                                       max_sum_input);
+            auto sum_scale = builder::quantization_util::get_sum_scale(
+                min_output, max_output, min_sum_input, max_sum_input);
 
             auto mybias = bias;
             if (bias->get_element_type() != element::i32)
@@ -358,18 +331,11 @@ namespace ngraph
                                                     const bool with_relu)
         {
             auto output_et = with_relu ? element::u8 : element::i8;
-            auto requantization_scale = quantization_util::get_scale(min_input,
-                                                                     max_input,
-                                                                     min_filter,
-                                                                     max_filter,
-                                                                     min_output,
-                                                                     max_output,
-                                                                     output_et);
+            auto requantization_scale = quantization_util::get_scale(
+                min_input, max_input, min_filter, max_filter, min_output, max_output, output_et);
 
-            auto sum_scale = builder::quantization_util::get_sum_scale(min_output,
-                                                                       max_output,
-                                                                       min_sum_input,
-                                                                       max_sum_input);
+            auto sum_scale = builder::quantization_util::get_sum_scale(
+                min_output, max_output, min_sum_input, max_sum_input);
             if (output_et == element::u8)
             {
                 // Need to multiply by two to account for u8 requantization_scale
@@ -406,16 +372,16 @@ namespace ngraph
         }
 
         shared_ptr<Node> ScaledQuantizedDotBias(const shared_ptr<Node>& input,
-                                                     const shared_ptr<Node>& filters,
-                                                     const shared_ptr<Node>& bias,
-                                                     const shared_ptr<Node>& min_input,
-                                                     const shared_ptr<Node>& max_input,
-                                                     const shared_ptr<Node>& min_filter,
-                                                     const shared_ptr<Node>& max_filter,
-                                                     const shared_ptr<Node>& min_output,
-                                                     const shared_ptr<Node>& max_output,
-                                                     const bool requantize,
-                                                     const bool with_relu)
+                                                const shared_ptr<Node>& filters,
+                                                const shared_ptr<Node>& bias,
+                                                const shared_ptr<Node>& min_input,
+                                                const shared_ptr<Node>& max_input,
+                                                const shared_ptr<Node>& min_filter,
+                                                const shared_ptr<Node>& max_filter,
+                                                const shared_ptr<Node>& min_output,
+                                                const shared_ptr<Node>& max_output,
+                                                const bool requantize,
+                                                const bool with_relu)
         {
             auto requantization_scale =
                 quantization_util::get_dot_scale(min_input,
@@ -446,15 +412,15 @@ namespace ngraph
         }
 
         shared_ptr<Node> ScaledQuantizedDot(const shared_ptr<Node>& input,
-                                                 const shared_ptr<Node>& filters,
-                                                 const shared_ptr<Node>& min_input,
-                                                 const shared_ptr<Node>& max_input,
-                                                 const shared_ptr<Node>& min_filter,
-                                                 const shared_ptr<Node>& max_filter,
-                                                 const shared_ptr<Node>& min_output,
-                                                 const shared_ptr<Node>& max_output,
-                                                 const bool requantize,
-                                                 const bool with_relu)
+                                            const shared_ptr<Node>& filters,
+                                            const shared_ptr<Node>& min_input,
+                                            const shared_ptr<Node>& max_input,
+                                            const shared_ptr<Node>& min_filter,
+                                            const shared_ptr<Node>& max_filter,
+                                            const shared_ptr<Node>& min_output,
+                                            const shared_ptr<Node>& max_output,
+                                            const bool requantize,
+                                            const bool with_relu)
         {
             auto requantization_scale =
                 quantization_util::get_dot_scale(min_input,
