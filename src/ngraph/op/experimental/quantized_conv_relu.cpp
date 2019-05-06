@@ -31,7 +31,7 @@ op::QuantizedConvolutionRelu::QuantizedConvolutionRelu(const std::shared_ptr<Nod
                                                        const CoordinateDiff& padding_below,
                                                        const CoordinateDiff& padding_above,
                                                        const Strides& data_dilation_strides,
-                                                       const std::shared_ptr<Node> scale)
+                                                       const std::shared_ptr<Node>& scale)
     : Op("QuantizedConvolutionRelu", check_single_output_args({data_batch, filters, scale}))
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)

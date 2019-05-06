@@ -34,7 +34,7 @@ op::QuantizedConvolutionBias::QuantizedConvolutionBias(const shared_ptr<Node>& d
                                                        const CoordinateDiff& padding_below,
                                                        const CoordinateDiff& padding_above,
                                                        const Strides& data_dilation_strides,
-                                                       const std::shared_ptr<Node> scale,
+                                                       const std::shared_ptr<Node>& scale,
                                                        const bool with_relu)
     : Op("QuantizedConvolutionBias", check_single_output_args({data_batch, filters, bias, scale}))
     , m_window_movement_strides(window_movement_strides)
@@ -100,8 +100,8 @@ op::QuantizedConvolutionBiasAdd::QuantizedConvolutionBiasAdd(const shared_ptr<No
                                                              const CoordinateDiff& padding_below,
                                                              const CoordinateDiff& padding_above,
                                                              const Strides& data_dilation_strides,
-                                                             const std::shared_ptr<Node> scale,
-                                                             const std::shared_ptr<Node> sum_scale,
+                                                             const std::shared_ptr<Node>& scale,
+                                                             const std::shared_ptr<Node>& sum_scale,
                                                              const bool with_relu)
     : Op("QuantizedConvolutionBiasAdd",
          check_single_output_args({data_batch, filters, bias, sum_input, scale, sum_scale}))
@@ -172,8 +172,8 @@ op::QuantizedConvolutionBiasSignedAdd::QuantizedConvolutionBiasSignedAdd(
     const CoordinateDiff& padding_below,
     const CoordinateDiff& padding_above,
     const Strides& data_dilation_strides,
-    const std::shared_ptr<Node> scale,
-    const std::shared_ptr<Node> sum_scale,
+    const std::shared_ptr<Node>& scale,
+    const std::shared_ptr<Node>& sum_scale,
     const bool with_relu)
     : Op("QuantizedConvolutionBiasSignedAdd",
          check_single_output_args({data_batch, filters, bias, sum_input, scale, sum_scale}))

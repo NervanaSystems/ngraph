@@ -20,9 +20,9 @@
 using namespace std;
 using namespace ngraph;
 
-op::Dequantize::Dequantize(shared_ptr<Node> input,
-                           shared_ptr<Node> scale,
-                           shared_ptr<Node> offset,
+op::Dequantize::Dequantize(const shared_ptr<Node>& input,
+                           const shared_ptr<Node>& scale,
+                           const shared_ptr<Node>& offset,
                            const element::Type& type,
                            const AxisSet& axes)
 

@@ -20,9 +20,9 @@
 using namespace std;
 using namespace ngraph;
 
-op::Quantize::Quantize(shared_ptr<Node> input,
-                       shared_ptr<Node> scale,
-                       shared_ptr<Node> offset,
+op::Quantize::Quantize(const shared_ptr<Node>& input,
+                       const shared_ptr<Node>& scale,
+                       const shared_ptr<Node>& offset,
                        const element::Type& type,
                        const AxisSet& axes,
                        RoundMode round_mode)
