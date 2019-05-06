@@ -275,7 +275,7 @@ string pass::VisualizeTree::get_file_ext()
     const char* format = getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_FORMAT");
     if (!format)
     {
-        format = "png";
+        format = "dot";
     }
 
     if (format[0] == '.')
@@ -297,11 +297,12 @@ void pass::VisualizeTree::render() const
         out << "}\n";
         out.close();
 
-        if (!m_dot_only)
+        if (!m_dot_only && get_file_ext() != "dot")
         {
 #ifndef _WIN32
             stringstream ss;
-            ss << "dot -T" << get_file_ext() << " " << dot_file << " -o " << m_name;
+            ss << "dot -T" << get_file_ext() << " " << dot_file << " -o" << m_name << "."
+               << get_file_ext();
             auto cmd = ss.str();
             auto stream = popen(cmd.c_str(), "r");
             if (stream)
