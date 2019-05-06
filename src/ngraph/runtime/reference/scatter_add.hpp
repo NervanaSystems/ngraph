@@ -56,7 +56,7 @@ namespace ngraph
                 size_t updates_ndim = static_cast<size_t>(updates_shape.size());
                 Coordinate updates_outer_start_corner(updates_ndim, 0);
                 Coordinate updates_outer_end_corner(updates_shape);
-                for (size_t i = indices_ndim - 1; i < updates_ndim; i++)
+                for (size_t i = indices_ndim; i < updates_ndim; i++)
                 {
                     updates_outer_end_corner[i] = 1;
                 }
