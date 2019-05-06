@@ -966,6 +966,12 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::GreaterEq>(args[0], args[1]);
                 break;
             }
+            case OP_TYPEID::GRN:
+            {
+                auto bias = node_js.at("bias").get<float>();
+                node = make_shared<op::GRN>(args[0], bias);
+                break;
+            }
             case OP_TYPEID::GroupConvolution:
             {
                 auto window_movement_strides =
@@ -1815,6 +1821,11 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Greater: { break;
     }
     case OP_TYPEID::GreaterEq: { break;
+    }
+    case OP_TYPEID::GRN: {
+        auto tmp = dynamic_cast<const op::GRN*>(&n);
+        node["bias"] = tmp->get_bias();
+        break;
     }
     case OP_TYPEID::GroupConvolution:
     {

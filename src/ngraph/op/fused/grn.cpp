@@ -13,16 +13,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+#include <memory>
 
-// This collection contains one entry for each fused op.
-//
+#include "grn.hpp"
 
-NGRAPH_OP(Elu, ngraph::op)
-NGRAPH_OP(PRelu, ngraph::op)
-NGRAPH_OP(ConvolutionBias, ngraph::op)
-NGRAPH_OP(ConvolutionBiasAdd, ngraph::op)
-NGRAPH_OP(ConvolutionBiasBackpropFiltersBias, ngraph::op)
-NGRAPH_OP(DepthToSpace, ngraph::op)
-NGRAPH_OP(SpaceToDepth, ngraph::op)
-NGRAPH_OP(GroupConvolution, ngraph::op)
-NGRAPH_OP(GRN, ngraph::op)
+using namespace std;
+using namespace ngraph;
+
+op::GRN::GRN(const shared_ptr<Node>& data, float bias)
+    : FusedOp("GRN", {data})
+    , m_bias(bias)
+{
+    // TODO: check for input dimensions? should be 2,3,4D
+    constructor_validate_and_infer_types();
+}
+
+NodeVector op::GRN::decompose_op() const
+{
+}
+
+shared_ptr<Node> op::GRN::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 1)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+    return make_shared<GRN>(new_args.at(0), m_bias);
+}

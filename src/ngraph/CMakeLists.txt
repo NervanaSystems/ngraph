@@ -280,6 +280,8 @@ set (SRC
     op/fused/depth_to_space.hpp
     op/fused/elu.cpp
     op/fused/elu.hpp
+    op/fused/grn.cpp
+    op/fused/grn.hpp
     op/fused/group_conv.hpp
     op/fused/group_conv.cpp
     op/fused/prelu.cpp
