@@ -65,9 +65,10 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
     return false;
 }
 
-pass::VisualizeTree::VisualizeTree(const string& file_name, node_modifiers_t nm)
+pass::VisualizeTree::VisualizeTree(const string& file_name, node_modifiers_t nm, bool dot_only)
     : m_name{file_name}
     , m_node_modifiers{nm}
+    , m_dot_only(dot_only)
 {
 }
 
@@ -115,8 +116,8 @@ string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
         {
             // The shapes of the Outputs of a multi-output op
             // will be printed for its corresponding `GetOutputElement`s
-            label << " " << (node->get_outputs().size() != 1 ? string("[skipped]")
-                                                             : vector_to_string(node->get_shape()));
+            label << " " << (node->get_output_size() != 1 ? string("[skipped]")
+                                                          : vector_to_string(node->get_shape()));
         }
 
         static const char* nvtot = getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES");
@@ -125,8 +126,8 @@ string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
             // The types of the Outputs of a multi-output op
             // will be printed for its corresponding `GetOutputElement`s
             label << " "
-                  << ((node->get_outputs().size() != 1) ? string("[skipped]")
-                                                        : node->get_element_type().c_type_string());
+                  << ((node->get_output_size() != 1) ? string("[skipped]")
+                                                     : node->get_element_type().c_type_string());
         }
 
         const Node& n = *node;
@@ -177,15 +178,18 @@ void pass::VisualizeTree::render() const
         out << "}\n";
         out.close();
 
-#ifndef _WIN32
-        stringstream ss;
-        ss << "dot -T" << get_file_ext() << " " << dot_file << " -o " << m_name;
-        auto cmd = ss.str();
-        auto stream = popen(cmd.c_str(), "r");
-        if (stream)
+        if (!m_dot_only)
         {
-            pclose(stream);
-        }
+#ifndef _WIN32
+            stringstream ss;
+            ss << "dot -T" << get_file_ext() << " " << dot_file << " -o " << m_name;
+            auto cmd = ss.str();
+            auto stream = popen(cmd.c_str(), "r");
+            if (stream)
+            {
+                pclose(stream);
+            }
 #endif
+        }
     }
 }

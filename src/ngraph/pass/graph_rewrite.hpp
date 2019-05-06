@@ -17,8 +17,11 @@
 #pragma once
 
 #include <functional>
+#include <memory>
 #include <set>
+
 #include "ngraph/pass/pass.hpp"
+#include "ngraph/pattern/matcher.hpp"
 
 namespace ngraph
 {
@@ -27,11 +30,10 @@ namespace ngraph
         class GraphRewrite;
         class RecurrentGraphRewrite;
     }
-    namespace pattern
-    {
-        class Matcher;
-        class RecurrentMatcher;
-    }
+
+    using graph_rewrite_callback = std::function<bool(ngraph::pattern::Matcher& m)>;
+    using recurrent_graph_rewrite_callback =
+        std::function<bool(ngraph::pattern::RecurrentMatcher& m)>;
 }
 
 /// \brief GraphRewrite (in tandem with \sa Matcher) performs transformations on specified patterns
@@ -52,13 +54,20 @@ public:
     {
     }
 
-    bool is_enabled(std::shared_ptr<pattern::Matcher> m);
-    void add_matcher(std::shared_ptr<pattern::Matcher> m);
+    void add_matcher(const std::shared_ptr<pattern::Matcher>& m,
+                     const ngraph::graph_rewrite_callback& callback);
     virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
 
+protected:
+    bool is_enabled(const std::shared_ptr<pattern::Matcher>& m) const;
+
 private:
-    // enable cascading rewrites
-    std::vector<std::shared_ptr<pattern::Matcher>> m_matchers;
+    struct MatchClosure
+    {
+        std::shared_ptr<pattern::Matcher> matcher;
+        ngraph::graph_rewrite_callback callback;
+    };
+    std::vector<MatchClosure> m_matchers;
 };
 
 class ngraph::pass::RecurrentGraphRewrite : public FunctionPass
@@ -70,10 +79,17 @@ public:
     {
     }
 
-    void add_matcher(std::shared_ptr<pattern::RecurrentMatcher> m) { m_matchers.push_back(m); }
+    void add_matcher(const std::shared_ptr<pattern::RecurrentMatcher>& m,
+                     const ngraph::recurrent_graph_rewrite_callback& callback);
     virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
 
 private:
     size_t m_num_iters;
-    std::vector<std::shared_ptr<pattern::RecurrentMatcher>> m_matchers;
+
+    struct MatchClosure
+    {
+        std::shared_ptr<pattern::RecurrentMatcher> matcher;
+        ngraph::recurrent_graph_rewrite_callback callback;
+    };
+    std::vector<MatchClosure> m_matchers;
 };

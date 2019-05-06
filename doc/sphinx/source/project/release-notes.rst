@@ -1,39 +1,63 @@
-.. release-notes:
+.. ngraph/release-notes:
 
 Release Notes
 #############
 
-|release|
+The latest |version| download below
+
+* `Format .zip`_ 
+* `Format tar.gz`_ 
+
+See also: https://github.com/NervanaSystems/ngraph/releases for previous versions. 
 
 
-This release focuses on accelerating deep learning inference workloads on 
-Intel® Xeon® (CPU processor) and has the following key features: 
+CHANGELOG |release|
+===================
 
-* Out-of-box installation experience for TensorFlow*, MXNet*, and ONNX.
-* Validated optimizations for 17 workloads each on both TensorFlow and MXNet, 
-  as well as 14 for ONNX.
-* Support for Ubuntu 16.04 (TensorFlow, MXNet and ONNX).
-* Support for OSX 10.13.x (buildable for TensorFlow and MXNet).
-
-This |version| release includes optimizations built for popular workloads 
-already widely deployed in production environments. These workloads cover 
-the following categories:
-
-* ``image recognition & segmentation`` 
-* ``object detection`` 
-* ``language translation`` 
-* ``speech generation & recognition``
-* ``recommender systems`` 
-* ``Generative Adversarial Networks (GAN)``
-* ``reinforcement learning`` 
-
-In our tests, the optimized workloads can perform up to 45X faster than native 
-frameworks, and we expect performance gains for other workloads due to our 
-powerful :doc:`../core/fusion/index` feature.
++ Add graph visualization tools to doc
++ Update doxygen to be friendlier to frontends
 
 
-See also our recent `API changes`_
+Changelog 
+=========
+
+nGraph v0.18.1
+--------------
+
++ Python formatting issue
++ mkl-dnn work-around
++ Event tracing improvements
++ Gaussian error function
++ Begin tracking framework node names
++ ONNX quantization
++ More fusions
 
 
+nGraph v0.17.0-rc.0
+-------------------
 
-.. _API changes: https://github.com/NervanaSystems/ngraph/blob/master/changes.md
++ Allow negative padding in more places
++ Add code generation for some quantized ops
++ Preliminary dynamic shape support
++ initial distributed ops
+
+Recent API Changes
+~~~~~~~~~~~~~~~~~~
+
++ Pad op takes CoordinateDiff instead of Shape pad values to allow for negative padding.
+
+
+nGraph v0.16.0-rc.3
+-------------------
+
++ NodeInput and NodeOutput classes prepare for simplifications of Node
++ Test improvements
++ Additional quantization ops
++ Performance improvements
++ Fix memory leak
++ Concat optimization
++ Doc updates
+
+
+.. _Format .zip: https://github.com/NervanaSystems/ngraph/archive/v0.19.0-rc.0.zip
+.. _Format tar.gz: https://github.com/NervanaSystems/ngraph/archive/v0.19.0-rc.0.tar.gz

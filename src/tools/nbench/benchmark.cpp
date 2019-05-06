@@ -178,18 +178,13 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
         }
     }
 
-    if (warmup_iterations)
-    {
-        for (int i = 0; i < warmup_iterations; i++)
-        {
-            compiled_func->call(results, args);
-        }
-    }
-
     stopwatch t1;
-    t1.start();
-    for (size_t i = 0; i < iterations; i++)
+    for (size_t i = 0; i < iterations + warmup_iterations; i++)
     {
+        if (i == warmup_iterations)
+        {
+            t1.start();
+        }
         if (copy_data)
         {
             for (size_t arg_index = 0; arg_index < args.size(); arg_index++)

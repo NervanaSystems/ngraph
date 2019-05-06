@@ -18,24 +18,22 @@
 
 using namespace ngraph;
 
-using ReplacementMap = std::map<Node*, std::shared_ptr<Node>>;
-
 std::shared_ptr<Function>
     ngraph::specialize_shapes(std::shared_ptr<Function> f,
                               const std::vector<element::Type>& parameter_element_types,
                               const std::vector<PartialShape>& parameter_shapes)
 {
-    NGRAPH_ASSERT(f->get_parameters().size() == parameter_shapes.size());
-    NGRAPH_ASSERT(f->get_parameters().size() == parameter_element_types.size());
+    NGRAPH_CHECK(f->get_parameters().size() == parameter_shapes.size());
+    NGRAPH_CHECK(f->get_parameters().size() == parameter_element_types.size());
 
-    ReplacementMap m;
+    NodeMap m;
 
     for (size_t i = 0; i < parameter_shapes.size(); i++)
     {
-        NGRAPH_ASSERT(
+        NGRAPH_CHECK(
             parameter_shapes[i].refines(f->get_parameters()[i]->get_output_partial_shape(0)));
-        NGRAPH_ASSERT(f->get_parameters()[i]->get_element_type().is_dynamic() ||
-                      parameter_element_types[i] == f->get_parameters()[i]->get_element_type());
+        NGRAPH_CHECK(f->get_parameters()[i]->get_element_type().is_dynamic() ||
+                     parameter_element_types[i] == f->get_parameters()[i]->get_element_type());
 
         m[f->get_parameters()[i].get()] =
             std::make_shared<op::Parameter>(parameter_element_types[i], parameter_shapes[i]);

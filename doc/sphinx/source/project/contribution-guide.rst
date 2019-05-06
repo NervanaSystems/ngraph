@@ -156,14 +156,12 @@ use **clang format** to enforce certain formatting. Although not always ideal,
 it is automatically enforced and reduces merge conflicts.
 
 - The :file:`.clang-format` file located in the root of the project specifies
-  our format.
+  our format.  Simply run:  
 
-  * The script :file:`maint/apply-code-format.sh` enforces that formatting
-    at the C/C++ syntactic level.
-  * The script at :file:`maint/check-code-format.sh` verifies that the formatting
-    rules are met by all C/C++ code (again, at the syntax level). The script has
-    an exit  code of ``0`` when code meets the standard and non-zero otherwise.
-    This script does *not* modify the source code.
+  .. code-block:: console
+
+     $ make style-check
+     $ make style-apply
 
 - Formatting with ``#include`` files:
 

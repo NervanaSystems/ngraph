@@ -50,10 +50,15 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
+            bool is_relevant_to_shapes() const;
+            void set_is_relevant_to_shapes(bool is_relevant);
+
         protected:
             bool m_cacheable;
             PartialShape m_partial_shape;
             element::Type m_element_type;
+            bool m_is_relevant_to_shapes;
         };
     }
+    using ParameterVector = std::vector<std::shared_ptr<op::Parameter>>;
 }

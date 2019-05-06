@@ -22,15 +22,24 @@ nGraph Compiler stack
 ######################
 
 
-.. toctree::
-   :maxdepth: 1 
+nGraph is an open-source graph compiler for :abbr:`Artificial Neural Networks (ANNs)`. 
+The nGraph Compiler stack provides an inherently efficient graph-based compilation 
+infrastructure designed to be compatible with many upcoming 
+:abbr:`Application-Specific Integrated Circuits (ASICs)`, like the Intel® Nervana™ 
+Neural Network Processor (Intel® Nervana™ NNP), while also unlocking a massive 
+performance boost on any existing hardware targets for your neural network: both 
+GPUs and CPUs. Using its flexible infrastructure, you will find it becomes much 
+easier to create Deep Learning (DL) models that can adhere to the "write once, 
+run anywhere" mantra that enables your AI solutions to easily go from concept to 
+production to scale.
 
-   project/introduction.rst
-
+Frameworks using nGraph to execute workloads have shown `up to 45X`_ performance 
+boost compared to native implementations. For a high-level overview, see the 
+:doc:`project/introduction` and our latest :doc:`project/release-notes`.
 
 .. toctree::
    :maxdepth: 1
-   :caption: Framework Support
+   :caption: Connecting Frameworks
    
    frameworks/index.rst
    frameworks/validated/list.rst
@@ -41,13 +50,19 @@ nGraph Compiler stack
    :maxdepth: 1
    :caption: nGraph Core
 
+   buildlb.rst
    core/overview.rst
    core/fusion/index.rst
    nGraph Core Ops <ops/index.rst>
    core/constructing-graphs/index.rst
    core/passes/passes.rst
-   buildlb.rst
    
+.. toctree::
+   :maxdepth: 1
+   :caption: nGraph Python API
+
+   python_api/index.rst
+
    
 .. toctree::
    :maxdepth: 1
@@ -59,19 +74,19 @@ nGraph Compiler stack
 
 .. toctree::
    :maxdepth: 1
-   :caption: Distributed training
+   :caption: Distributed Training
 
    distr/index.rst
 
 
 .. toctree::
    :maxdepth: 1
-   :caption: Diagnostics and Visualization
+   :caption: Inspecting Graphs
 
-   diagnostics/nbench.rst
-   diagnostics/performance-profile.rst
-   diagnostics/visualize.rst
-   diagnostics/debug.rst 
+   inspection/index.rst
+   inspection/performance-profile.rst
+   inspection/debug.rst 
+
 
 .. toctree::
    :maxdepth: 1
@@ -84,11 +99,13 @@ nGraph Compiler stack
    :maxdepth: 1
    :caption: Project Metadata
 
+   project/introduction.rst
    project/release-notes.rst
    project/contribution-guide.rst
    project/governance.rst
    project/doc-contributor-README.rst
-   project/index.rst 
+   project/index.rst
+   project/extras.rst 
    glossary.rst
 
 Indices and tables
@@ -96,3 +113,9 @@ Indices and tables
 
    * :ref:`search`
    * :ref:`genindex`
+
+
+
+
+.. nGraph: https://www.ngraph.ai
+.. _up to 45X: https://ai.intel.com/ngraph-compiler-stack-beta-release/

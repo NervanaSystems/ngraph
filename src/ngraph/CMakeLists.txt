@@ -31,6 +31,8 @@ set (SRC
     builder/quantization.hpp
     builder/quantization/quantized_linear_convolution.cpp
     builder/quantization/quantized_linear_convolution.hpp
+    builder/quantization/quantized_linear_dot.cpp
+    builder/quantization/quantized_linear_dot.hpp
     builder/quantization_util.hpp
     builder/reduce_ops.cpp
     builder/reduce_ops.hpp
@@ -44,6 +46,7 @@ set (SRC
     coordinate_transform.cpp
     cpio.cpp
     cpio.hpp
+    deprecated.hpp
     descriptor/input.cpp
     descriptor/input.hpp
     descriptor/layout/dense_tensor_layout.cpp
@@ -56,6 +59,8 @@ set (SRC
     descriptor/tensor.hpp
     dimension.cpp
     dimension.hpp
+    distributed.cpp 
+    distributed.hpp
     except.hpp
     file_util.cpp
     file_util.hpp
@@ -69,11 +74,6 @@ set (SRC
     ngraph_visibility.hpp
     node.cpp
     node.hpp
-    node_input.cpp
-    node_input.hpp
-    node_output.cpp
-    node_output.hpp
-    node_vector.hpp
     op/abs.cpp
     op/abs.hpp
     op/acos.cpp
@@ -101,7 +101,7 @@ set (SRC
     op/batch_norm.cpp
     op/batch_norm.hpp
     op/broadcast.cpp
-    op/broadcast.hpp
+    op/broadcast_distributed.cpp
     op/ceiling.cpp
     op/ceiling.hpp
     op/concat.cpp
@@ -126,8 +126,20 @@ set (SRC
     op/embedding_lookup.hpp
     op/equal.cpp
     op/equal.hpp
+    op/erf.cpp
+    op/erf.hpp
     op/exp.cpp
     op/exp.hpp
+    op/experimental/batch_mat_mul.cpp
+    op/experimental/batch_mat_mul.hpp
+    op/experimental/dyn_broadcast.cpp
+    op/experimental/dyn_broadcast.hpp
+    op/experimental/dyn_pad.cpp
+    op/experimental/dyn_pad.hpp
+    op/experimental/dyn_reshape.cpp
+    op/experimental/dyn_reshape.hpp
+    op/experimental/dyn_slice.cpp
+    op/experimental/dyn_slice.hpp
     op/experimental/generate_mask.cpp
     op/experimental/generate_mask.hpp
     op/experimental/quantized_avg_pool.cpp
@@ -150,8 +162,26 @@ set (SRC
     op/experimental/quantized_dot_bias.hpp
     op/experimental/transpose.cpp
     op/experimental/transpose.hpp
+    op/experimental/layers/detection_output.cpp
+    op/experimental/layers/detection_output.hpp
+    op/experimental/layers/interpolate.cpp
+    op/experimental/layers/interpolate.hpp
+    op/experimental/layers/prior_box.cpp
+    op/experimental/layers/prior_box.hpp
+    op/experimental/layers/prior_box_clustered.cpp
+    op/experimental/layers/prior_box_clustered.hpp
+    op/experimental/layers/proposal.hpp
+    op/experimental/layers/proposal.cpp
+    op/experimental/layers/region_yolo.hpp
+    op/experimental/layers/region_yolo.cpp
+    op/experimental/layers/reorg_yolo.hpp
+    op/experimental/layers/reorg_yolo.cpp
     op/floor.cpp
     op/floor.hpp
+    op/gather.cpp
+    op/gather.hpp
+    op/gather_nd.cpp
+    op/gather_nd.hpp
     op/get_output_element.cpp
     op/get_output_element.hpp
     op/greater.cpp
@@ -242,6 +272,18 @@ set (SRC
     op/tanh.hpp
     op/topk.cpp
     op/topk.hpp
+    op/fused/conv_fused.cpp
+    op/fused/conv_fused.hpp
+    op/fused/depth_to_space.cpp
+    op/fused/depth_to_space.hpp
+    op/fused/elu.cpp
+    op/fused/elu.hpp
+    op/fused/group_conv.hpp
+    op/fused/group_conv.cpp
+    op/fused/prelu.cpp
+    op/fused/prelu.hpp
+    op/fused/space_to_depth.cpp
+    op/fused/space_to_depth.hpp
     op/util/arithmetic_reduction.cpp
     op/util/arithmetic_reduction.hpp
     op/util/binary_elementwise_arithmetic.cpp
@@ -250,28 +292,38 @@ set (SRC
     op/util/binary_elementwise_comparison.hpp
     op/util/binary_elementwise_logical.cpp
     op/util/binary_elementwise_logical.hpp
+    op/util/broadcasting.cpp
+    op/util/broadcasting.hpp
+    op/util/fused_op.cpp
+    op/util/fused_op.hpp
     op/util/index_reduction.cpp
     op/util/index_reduction.hpp
     op/util/logical_reduction.cpp
     op/util/logical_reduction.hpp
+    op/util/reshape.cpp
+    op/util/reshape.hpp
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise_arithmetic.hpp
-    parameter_vector.hpp
     partial_shape.cpp
     partial_shape.hpp
     pass/algebraic_simplification.cpp
     pass/algebraic_simplification.hpp
     pass/assign_layout.hpp
+    pass/batch_fusion.hpp
+    pass/batch_fusion.cpp
     pass/common_function_collection.cpp
     pass/common_function_collection.hpp
     pass/constant_folding.cpp
     pass/constant_folding.hpp
+    pass/constant_to_broadcast.cpp
     pass/core_fusion.cpp
     pass/core_fusion.hpp
     pass/cse.cpp
     pass/cse.hpp
     pass/dump_sorted.cpp
     pass/dump_sorted.hpp
+    pass/fused_op_decomposition.cpp
+    pass/fused_op_decomposition.hpp
     pass/get_output_element_elimination.cpp
     pass/get_output_element_elimination.hpp
     pass/graph_rewrite.cpp
@@ -304,6 +356,10 @@ set (SRC
     pass/reshape_sinking.hpp
     pass/serialize.cpp
     pass/serialize.hpp
+    pass/shape_relevance.cpp
+    pass/shape_relevance.hpp
+    pass/shape_specialization.cpp
+    pass/shape_specialization.hpp
     pass/validate_graph.cpp
     pass/validate_graph.hpp
     pass/visualize_tree.cpp
@@ -312,6 +368,10 @@ set (SRC
     pass/zero_dim_tensor_elimination.cpp
     pass/zero_dim_tensor_elimination.hpp
     pass/zero_dim_tensor_elimination.hpp
+    pass/concat_fusion.hpp
+    pass/concat_fusion.cpp
+    pass/pass_util.hpp
+    pass/pass_util.cpp
     pattern/matcher.cpp
     pattern/matcher.hpp
     pattern/op/any.hpp
@@ -321,8 +381,9 @@ set (SRC
     pattern/op/skip.hpp
     placement.cpp
     placement.hpp
+    provenance.cpp
+    provenance.hpp
     rank.hpp
-    result_vector.hpp
     runtime/aligned_buffer.cpp
     runtime/aligned_buffer.hpp
     runtime/backend.cpp
@@ -336,8 +397,6 @@ set (SRC
     runtime/performance_counter.hpp
     runtime/tensor.cpp
     runtime/tensor.hpp
-    serializer.cpp
-    serializer.hpp
     shape.cpp
     shape.hpp
     shape_util.cpp
@@ -348,6 +407,9 @@ set (SRC
     strides.cpp
     strides.hpp
     type/bfloat16.cpp
+    type/bfloat16.hpp
+    type/float16.cpp
+    type/float16.hpp
     type/element_type.cpp
     util.cpp
     util.hpp
@@ -360,6 +422,7 @@ set(SRC ${SRC}
     runtime/hybrid/hybrid_backend.hpp
     runtime/hybrid/hybrid_executable.cpp
     runtime/hybrid/hybrid_executable.hpp
+    runtime/hybrid/hybrid_tensor.cpp
     runtime/hybrid/hybrid_util.cpp
     runtime/hybrid/hybrid_util.hpp
     runtime/hybrid/op/function_call.cpp
@@ -376,9 +439,8 @@ set(SRC ${SRC}
     runtime/hybrid/pass/memory_layout.hpp
     )
 
-
-if(NGRAPH_DISTRIBUTED_ENABLE)
-    list(APPEND SRC distributed.cpp distributed.hpp)
+if(NGRAPH_JSON_ENABLE)
+    list(APPEND SRC serializer.cpp serializer.hpp event_tracing.cpp event_tracing.hpp)
 endif()
 
 configure_file(version.in.hpp version.hpp)
@@ -386,7 +448,6 @@ configure_file(version.in.hpp version.hpp)
 add_library(ngraph SHARED ${SRC})
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
-    target_sources(ngraph PRIVATE distributed.cpp)
     if(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
         target_include_directories(ngraph SYSTEM PRIVATE libmlsl)
         target_link_libraries(ngraph PRIVATE libmlsl)
@@ -425,7 +486,9 @@ if(NGRAPH_LIB_VERSIONING_ENABLE)
         VERSION ${NGRAPH_VERSION}
         SOVERSION ${NGRAPH_API_VERSION})
 endif()
-target_link_libraries(ngraph PRIVATE libjson)
+if(NGRAPH_JSON_ENABLE)
+    target_link_libraries(ngraph PRIVATE libjson)
+endif()
 target_compile_definitions(ngraph PUBLIC NGRAPH_VERSION="${NGRAPH_VERSION}")
 
 if (LINUX)
