@@ -30,7 +30,7 @@
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
-#include "utils/norm.hpp"
+#include "ngraph/op/util/norm.hpp"
 #include "utils/reduction.hpp"
 
 namespace ngraph
@@ -99,11 +99,12 @@ namespace ngraph
                 ///
                 inline NodeVector reduce_l1(const Node& node)
                 {
-                    return {reduction::make_ng_reduction_op(
-                        node,
-                        node.get_ng_inputs().at(0),
-                        std::bind(
-                            norm::l1_norm, std::placeholders::_1, std::placeholders::_2, 0.f))};
+                    return {reduction::make_ng_reduction_op(node,
+                                                            node.get_ng_inputs().at(0),
+                                                            std::bind(ngraph::op::l1_norm,
+                                                                      std::placeholders::_1,
+                                                                      std::placeholders::_2,
+                                                                      0.f))};
                 }
 
                 /// \brief      Compute the L2 norm of the input tensor's element along the provided axes.
@@ -119,11 +120,12 @@ namespace ngraph
                 ///
                 inline NodeVector reduce_l2(const Node& node)
                 {
-                    return {reduction::make_ng_reduction_op(
-                        node,
-                        node.get_ng_inputs().at(0),
-                        std::bind(
-                            norm::l2_norm, std::placeholders::_1, std::placeholders::_2, 0.f))};
+                    return {reduction::make_ng_reduction_op(node,
+                                                            node.get_ng_inputs().at(0),
+                                                            std::bind(ngraph::op::l2_norm,
+                                                                      std::placeholders::_1,
+                                                                      std::placeholders::_2,
+                                                                      0.f))};
                 }
 
                 /// \brief      Compute the maximum value of the input tensor's elements along the provided axes.

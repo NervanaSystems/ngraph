@@ -59,7 +59,7 @@ set (SRC
     descriptor/tensor.hpp
     dimension.cpp
     dimension.hpp
-    distributed.cpp 
+    distributed.cpp
     distributed.hpp
     except.hpp
     file_util.cpp
@@ -300,6 +300,8 @@ set (SRC
     op/util/index_reduction.hpp
     op/util/logical_reduction.cpp
     op/util/logical_reduction.hpp
+    op/util/norm.cpp
+    op/util/norm.hpp
     op/util/reshape.cpp
     op/util/reshape.hpp
     op/util/unary_elementwise_arithmetic.cpp

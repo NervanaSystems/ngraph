@@ -183,8 +183,6 @@ add_library(onnx_import STATIC
         utils/common.hpp
         utils/convpool.cpp
         utils/convpool.hpp
-        utils/norm.cpp
-        utils/norm.hpp
         utils/reduction.cpp
         utils/reduction.hpp
         utils/reshape.cpp
