@@ -39,11 +39,11 @@ constexpr uint64_t DOUBLE_MAX_DIFF = ULLONG_MAX - 1;
 
 uint32_t test::float_distance(float a, float b, float min_signal)
 {
-    if (isnan(a) && isnan(b))
+    if (std::isnan(a) && std::isnan(b))
     {
         return 0;
     }
-    else if (isinf(a) && isinf(b))
+    else if (std::isinf(a) && std::isinf(b))
     {
         if (a > 0 && b > 0)
         {
@@ -94,11 +94,11 @@ uint32_t test::float_distance(float a, float b, float min_signal)
 
 uint64_t test::float_distance(double a, double b, double min_signal)
 {
-    if (isnan(a) && isnan(b))
+    if (std::isnan(a) && std::isnan(b))
     {
         return 0;
     }
-    else if (isinf(a) && isinf(b))
+    else if (std::isinf(a) && std::isinf(b))
     {
         if (a > 0 && b > 0)
         {
@@ -149,11 +149,11 @@ uint64_t test::float_distance(double a, double b, double min_signal)
 
 bool test::close_f(float a, float b, int tolerance_bits, float min_signal)
 {
-    if (isnan(a) && isnan(b))
+    if (std::isnan(a) && std::isnan(b))
     {
         return true;
     }
-    else if (isinf(a) && isinf(b))
+    else if (std::isinf(a) && std::isinf(b))
     {
         if (a > 0 && b > 0)
         {
@@ -179,11 +179,11 @@ bool test::close_f(float a, float b, int tolerance_bits, float min_signal)
 
 bool test::close_f(double a, double b, int tolerance_bits, double min_signal)
 {
-    if (isnan(a) && isnan(b))
+    if (std::isnan(a) && std::isnan(b))
     {
         return true;
     }
-    else if (isinf(a) && isinf(b))
+    else if (std::isinf(a) && std::isinf(b))
     {
         if (a > 0 && b > 0)
         {
