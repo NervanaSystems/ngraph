@@ -106,7 +106,7 @@ vector<string> op::Constant::get_value_strings() const
             rc.push_back(to_string(value));
         }
         break;
-    case element::Type_t::u64:
+    case element::Type_t::i64:
         for (int64_t value : get_vector<int64_t>())
         {
             rc.push_back(to_string(value));
@@ -130,7 +130,7 @@ vector<string> op::Constant::get_value_strings() const
             rc.push_back(to_string(value));
         }
         break;
-    case element::Type_t::i64:
+    case element::Type_t::u64:
         for (uint64_t value : get_vector<uint64_t>())
         {
             rc.push_back(to_string(value));
