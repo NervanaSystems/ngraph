@@ -273,7 +273,6 @@ TEST(serialize, constant_infinity_nan)
     auto f = make_shared<Function>(NodeVector{A, B, C}, ParameterVector{});
 
     string s = serialize(f, 4);
-    NGRAPH_INFO << s;
     shared_ptr<Function> g = deserialize(s);
     shared_ptr<op::Constant> a;
     shared_ptr<op::Constant> b;
@@ -296,8 +295,6 @@ TEST(serialize, constant_infinity_nan)
     ASSERT_NE(a, nullptr);
     ASSERT_NE(b, nullptr);
     ASSERT_NE(c, nullptr);
-    NGRAPH_INFO << join(a_data);
-    NGRAPH_INFO << join(a->get_vector<float>());
     EXPECT_TRUE(test::all_close_f(a->get_vector<float>(), a_data));
     EXPECT_TRUE(test::all_close_f(b->get_vector<float>(), b_data));
     EXPECT_TRUE(test::all_close_f(c->get_vector<float>(), c_data));
