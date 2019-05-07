@@ -45,11 +45,13 @@ namespace ngraph
             ///
             /// \param[in]  node            The input tensor node.
             /// \param[in]  reduction_axes  The axes along which we calculate norm.
+            /// \param[in]  bias            The bias added to the calculated sum.
             ///
             /// \return     Node with calculated L-1 norm values.
             ///
             std::shared_ptr<ngraph::Node> l1_norm(const std::shared_ptr<ngraph::Node>& node,
-                                                  const ngraph::AxisSet& reduction_axes);
+                                                  const ngraph::AxisSet& reduction_axes,
+                                                  float bias = 0.f);
 
             /// \brief      Calculates L-2 norm of input tensor.
             ///
@@ -58,23 +60,27 @@ namespace ngraph
             ///
             /// \param[in]  node            The input tensor node.
             /// \param[in]  reduction_axes  The axes along which we calculate norm.
+            /// \param[in]  bias            The bias added to the calculated sum.
             ///
             /// \return     Node with calculated L-2 norm values.
             ///
             std::shared_ptr<ngraph::Node> l2_norm(const std::shared_ptr<ngraph::Node>& node,
-                                                  const ngraph::AxisSet& reduction_axes);
+                                                  const ngraph::AxisSet& reduction_axes,
+                                                  float bias = 0.f);
 
             /// \brief      Calculates L-p norm on input tensor.
             ///
             /// \param[in]  node            The input nGraph tensor.
             /// \param[in]  reduction_axes  The axes along which we calculate norm.
             /// \param[in]  p_norm          The p norm to calculate.
+            /// \param[in]  bias            The bias added to the calculated sum.
             ///
             /// \return     Resulting L-p norm.
             ///
             std::shared_ptr<ngraph::Node> lp_norm(const std::shared_ptr<ngraph::Node>& node,
                                                   const ngraph::AxisSet& reduction_axes,
-                                                  std::size_t p_norm = 2);
+                                                  std::size_t p_norm = 2,
+                                                  float bias = 0.f);
 
         } //namespace norm
 
