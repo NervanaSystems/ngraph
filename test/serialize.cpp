@@ -28,6 +28,7 @@
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
+#include "util/all_close_f.hpp"
 #include "util/test_tools.hpp"
 
 using namespace std;
@@ -260,14 +261,44 @@ TEST(serialize, passthrough)
 
 TEST(serialize, constant_infinity_nan)
 {
-    auto A = make_shared<op::Constant>(
-        element::f32, Shape{5}, vector<float>{123, 456, INFINITY, -INFINITY, NAN});
-    auto B = make_shared<op::Constant>(element::f32, Shape{6}, vector<float>{5, 5, 5, 5, 5, 5});
-    auto C = make_shared<op::Constant>(
-        element::f32, Shape{7}, vector<float>{0.05, 0.05, 0.05, 0.05, 0.05, 0.05001, 0.05});
+    vector<float> a_data{123, 456, INFINITY, -INFINITY, NAN};
+    vector<float> b_data{5, 5, 5, 5, 5, 5};
+    vector<float> c_data{0.05, 0.05, 0.05, 0.05, 0.05, 0.05001, 0.05};
+    auto A = make_shared<op::Constant>(element::f32, Shape{5}, a_data);
+    auto B = make_shared<op::Constant>(element::f32, Shape{6}, b_data);
+    auto C = make_shared<op::Constant>(element::f32, Shape{7}, c_data);
+    A->set_friendly_name("A");
+    B->set_friendly_name("B");
+    C->set_friendly_name("C");
     auto f = make_shared<Function>(NodeVector{A, B, C}, ParameterVector{});
 
     string s = serialize(f, 4);
     NGRAPH_INFO << s;
     shared_ptr<Function> g = deserialize(s);
+    shared_ptr<op::Constant> a;
+    shared_ptr<op::Constant> b;
+    shared_ptr<op::Constant> c;
+    for (auto node : g->get_ops())
+    {
+        if (node->get_friendly_name() == "A")
+        {
+            a = static_pointer_cast<op::Constant>(node);
+        }
+        else if (node->get_friendly_name() == "B")
+        {
+            b = static_pointer_cast<op::Constant>(node);
+        }
+        else if (node->get_friendly_name() == "C")
+        {
+            c = static_pointer_cast<op::Constant>(node);
+        }
+    }
+    ASSERT_NE(a, nullptr);
+    ASSERT_NE(b, nullptr);
+    ASSERT_NE(c, nullptr);
+    NGRAPH_INFO << join(a_data);
+    NGRAPH_INFO << join(a->get_vector<float>());
+    EXPECT_TRUE(test::all_close_f(a->get_vector<float>(), a_data));
+    EXPECT_TRUE(test::all_close_f(b->get_vector<float>(), b_data));
+    EXPECT_TRUE(test::all_close_f(c->get_vector<float>(), c_data));
 }
