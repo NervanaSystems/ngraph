@@ -79,6 +79,7 @@
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/depth_to_space.hpp"
 #include "ngraph/op/fused/elu.hpp"
+#include "ngraph/op/fused/gemm.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -1983,6 +1984,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::Erf:
         case OP_TYPEID::Gather:
         case OP_TYPEID::GatherND:
+        case OP_TYPEID::Gemm:
         case OP_TYPEID::GenerateMask:
         case OP_TYPEID::PRelu:
         case OP_TYPEID::Passthrough:
