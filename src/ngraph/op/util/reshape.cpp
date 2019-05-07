@@ -30,8 +30,7 @@ std::shared_ptr<Node> op::util::reshape(const std::shared_ptr<Node>& node,
                                         const AxisVector& axis_order,
                                         const Shape& shape)
 {
-    return std::make_shared<op::Reshape>(
-        node, ngraph::get_default_order(node->get_shape().size()), shape);
+    return std::make_shared<op::Reshape>(node, axis_order, shape);
 }
 
 std::shared_ptr<Node> op::util::reorder_axes(const std::shared_ptr<Node>& node,
