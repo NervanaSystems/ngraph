@@ -39,7 +39,7 @@ namespace ngraph
                 }
             }
 
-            ~MLSLDistributedInterface() override 
+            ~MLSLDistributedInterface() override
             {
                 if (MLSL::Environment::GetEnv().IsInitialized())
                 {
