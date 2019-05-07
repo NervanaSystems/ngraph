@@ -72,7 +72,28 @@ void op::ScatterNDAdd::validate_and_infer_types()
                     1,
         "Rank of updates must be rank of inputs + rank of indices - last dimension of indices - 1");
 
-    // TODO: check updates shape
+    bool compatible = true;
+    if (inputs_shape.is_static() && indices_shape.is_static() && updates_shape.is_static())
+    {
+        for (size_t i = 0; i < static_cast<size_t>(indices_shape.rank()) - 1; i++)
+        {
+            compatible = compatible && updates_shape[i].same_scheme(indices_shape[i]);
+        }
+        size_t j =
+            static_cast<size_t>(indices_shape[static_cast<size_t>(indices_shape.rank()) - 1]);
+        for (size_t i = j; i < static_cast<size_t>(inputs_shape.rank()); i++)
+        {
+            compatible =
+                compatible &&
+                updates_shape[static_cast<size_t>(indices_shape.rank()) + i - 2].same_scheme(
+                    inputs_shape[i]);
+        }
+    }
+
+    NODE_VALIDATION_CHECK(
+        this,
+        compatible,
+        "Updates shape must be indices_shape[:-1] + inputs_shape[indices.shape[-1]:]");
 
     set_output_type(0, inputs_et, inputs_shape);
 }

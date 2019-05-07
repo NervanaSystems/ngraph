@@ -13738,6 +13738,32 @@ TEST(type_prop, scatter_add_fail_updates_rank)
     }
 }
 
+TEST(type_prop, scatter_add_fail_updates_shape)
+{
+    Shape ref_shape{2, 3, 3};
+    Shape indices_shape{2, 2};
+    Shape updates_shape{1, 2, 3, 3};
+    Shape out_shape{2, 3, 3};
+    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    try
+    {
+        auto G = make_shared<op::ScatterAdd>(R, I, U);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect updates shape";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Updates shape must be indices_shape + inputs_shape[1:]"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
 TEST(type_prop, scatter_nd_add_fail_indices_element_type)
 {
     Shape ref_shape{3, 3, 3};
@@ -13862,6 +13888,34 @@ TEST(type_prop, scatter_nd_add_fail_updates_rank)
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Rank of updates must be rank of inputs + rank of indices "
                                          "- last dimension of indices - 1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, scatter_nd_add_fail_updates_shape)
+{
+    Shape ref_shape{3, 3, 3};
+    Shape indices_shape{1};
+    Shape updates_shape{2, 3};
+    Shape out_shape{3, 3, 3};
+    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    try
+    {
+        auto G = make_shared<op::ScatterNDAdd>(R, I, U);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect updates shape";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string(
+                "Updates shape must be indices_shape[:-1] + inputs_shape[indices.shape[-1]:]"));
     }
     catch (...)
     {
