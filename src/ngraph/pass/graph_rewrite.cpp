@@ -64,27 +64,37 @@ bool pass::GraphRewrite::run_on_function(shared_ptr<Function> f)
     const size_t NUM_TRIES = 10;
     size_t tries = NUM_TRIES;
     vector<MatchClosure> original_matchers{m_matchers};
+    bool is_dyn_func = f->is_dynamic();
     do
     {
         rewritten = false;
         // m_matchers may contain newly constructed matchers for matchers
         // that need multiple passes. See comments above.
-        vector<MatchClosure> run_matchers{m_matchers};
+        vector<MatchClosure> matchers_to_run{m_matchers};
         m_matchers.clear();
         for (auto node : f->get_ordered_ops())
         {
-            for (auto& mc : run_matchers)
+            for (auto& closure : matchers_to_run)
             {
-                NGRAPH_DEBUG << "Running matcher " << mc.matcher->get_name() << "("
-                             << mc.matcher->get_pattern()->get_name() << ") on "
-                             << node->get_name();
-                if (mc.matcher->match(node))
+                if (is_dyn_func && closure.property[PassProperty::REQUIRE_STATIC_SHAPE])
                 {
-                    NGRAPH_DEBUG << "Matcher " << mc.matcher << mc.matcher->get_name()
+                    NGRAPH_DEBUG << "matcher callback requires static shape but the "
+                                    "function is dynamic, skipping this "
+                                    "optimization till the shapes are fully "
+                                    "materialized";
+                    continue;
+                }
+                NGRAPH_DEBUG << "Running matcher " << closure.matcher->get_name() << "("
+                             << closure.matcher->get_pattern()->get_name() << ") on "
+                             << node->get_name();
+                if (closure.matcher->match(node))
+                {
+                    NGRAPH_DEBUG << "Matcher " << closure.matcher << closure.matcher->get_name()
                                  << " matched " << node->get_name();
-                    if (mc.callback(*mc.matcher.get()))
+                    if (closure.callback(*closure.matcher.get()))
                     {
                         rewritten = true;
+                        is_dyn_func = f->is_dynamic();
                         break;
                     }
                 }
@@ -132,44 +142,78 @@ bool pass::GraphRewrite::is_enabled(const shared_ptr<pattern::Matcher>& m) const
 }
 
 void pass::GraphRewrite::add_matcher(const shared_ptr<pattern::Matcher>& m,
-                                     const graph_rewrite_callback& callback)
+                                     const graph_rewrite_callback& callback,
+                                     const PassPropertyMask& property)
 {
     if (is_enabled(m))
     {
-        m_matchers.push_back({m, callback});
+        m_matchers.push_back({m, callback, property});
     }
+}
+
+void pass::GraphRewrite::add_matcher(const shared_ptr<pattern::Matcher>& m,
+                                     const graph_rewrite_callback& callback)
+{
+    // TODO: before deprecate this function, by default expect the
+    // callback require static shape.
+    add_matcher(m, callback, {PassProperty::REQUIRE_STATIC_SHAPE});
+}
+
+void pass::RecurrentGraphRewrite::add_matcher(
+    const std::shared_ptr<pattern::RecurrentMatcher>& m,
+    const ngraph::recurrent_graph_rewrite_callback& callback,
+    const PassPropertyMask& property)
+{
+    m_matchers.push_back({m, callback, property});
 }
 
 void pass::RecurrentGraphRewrite::add_matcher(
     const std::shared_ptr<pattern::RecurrentMatcher>& m,
     const ngraph::recurrent_graph_rewrite_callback& callback)
 {
-    m_matchers.push_back({m, callback});
+    // TODO: before deprecate this function, by default expect the
+    // callback require static shape.
+    add_matcher(m, callback, {PassProperty::REQUIRE_STATIC_SHAPE});
 }
 
 bool pass::RecurrentGraphRewrite::run_on_function(shared_ptr<Function> f)
 {
     bool changed = false;
     size_t i = 0;
-    do
-    {
+    bool is_dyn_func = f->is_dynamic();
+
+    auto run_matchers = [&]() -> bool {
         for (auto node : f->get_ops())
         {
-            for (auto& mc : m_matchers)
+            for (auto& closure : m_matchers)
             {
-                NGRAPH_DEBUG << "Running matcher " << mc.matcher << " on " << node->get_name();
-                if (mc.matcher->match(node))
+                if (is_dyn_func && closure.property[PassProperty::REQUIRE_STATIC_SHAPE])
                 {
-                    NGRAPH_DEBUG << "Matcher " << mc.matcher << " matched " << node->get_name();
-                    if (mc.callback(*mc.matcher.get()))
+                    NGRAPH_DEBUG << "matcher callback requires static shape but the "
+                                    "function is dynamic, skipping this "
+                                    "optimization till the shapes are fully "
+                                    "materialized";
+                    continue;
+                }
+                NGRAPH_DEBUG << "Running matcher " << closure.matcher << " on " << node->get_name();
+                if (closure.matcher->match(node))
+                {
+                    NGRAPH_DEBUG << "Matcher " << closure.matcher << " matched "
+                                 << node->get_name();
+                    if (closure.callback(*closure.matcher.get()))
                     {
-                        changed = true;
-                        goto next_fusion;
+                        is_dyn_func = f->is_dynamic();
+                        return true;
                     }
                 }
             }
         }
-    next_fusion:
+        return false;
+    };
+
+    do
+    {
+        changed = run_matchers();
         i++;
     } while (changed && i < m_num_iters);
     return changed;
