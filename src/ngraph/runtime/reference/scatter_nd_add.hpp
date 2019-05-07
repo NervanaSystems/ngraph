@@ -29,13 +29,13 @@ namespace ngraph
         {
             template <typename T, typename U>
             void scatter_nd_add(T* inputs,
-                        U* indices,
-                        T* updates,
-                        T* out,
-                        const Shape& inputs_shape,
-                        const Shape& indices_shape,
-                        const Shape& updates_shape,
-                        const Shape& out_shape)
+                                U* indices,
+                                T* updates,
+                                T* out,
+                                const Shape& inputs_shape,
+                                const Shape& indices_shape,
+                                const Shape& updates_shape,
+                                const Shape& out_shape)
             {
                 using namespace std;
                 // Copy inputs to out
@@ -66,8 +66,11 @@ namespace ngraph
                 {
                     updates_outer_end_corner[i] = 1;
                 }
-                CoordinateTransform updates_outer_transform(
-                    updates_shape, updates_outer_start_corner, updates_outer_end_corner, updates_strides, updates_axis_order);
+                CoordinateTransform updates_outer_transform(updates_shape,
+                                                            updates_outer_start_corner,
+                                                            updates_outer_end_corner,
+                                                            updates_strides,
+                                                            updates_axis_order);
 
                 // Add an updates slice to a slice on out indexed by innermost dim ofindices
                 size_t out_ndim = static_cast<size_t>(out_shape.size());
@@ -88,11 +91,8 @@ namespace ngraph
                         out_end_corner[i] = index + 1;
                         indices_index++;
                     }
-                    CoordinateTransform out_transform(out_shape,
-                                                      out_start_corner,
-                                                      out_end_corner,
-                                                      out_strides,
-                                                      out_axis_order);
+                    CoordinateTransform out_transform(
+                        out_shape, out_start_corner, out_end_corner, out_strides, out_axis_order);
                     auto updates_index = updates_outer_transform.index(*updates_outer_coord_iter);
                     for (const Coordinate& out_coord : out_transform)
                     {
@@ -101,7 +101,6 @@ namespace ngraph
                     }
                     updates_outer_coord_iter++;
                 }
-
             }
         }
     }

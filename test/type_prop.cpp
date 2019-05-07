@@ -13702,7 +13702,8 @@ TEST(type_prop, scatter_add_fail_updates_element_type)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Updates element type must be the same as Inputs"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Updates element type must be the same as Inputs"));
     }
     catch (...)
     {
@@ -13727,7 +13728,9 @@ TEST(type_prop, scatter_add_fail_updates_rank)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Updates rank is expected to be indices rank + inputs rank - 1"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Updates rank is expected to be indices rank + inputs rank - 1"));
     }
     catch (...)
     {
@@ -13746,7 +13749,7 @@ TEST(type_prop, scatter_nd_add_fail_indices_element_type)
     auto U = make_shared<op::Parameter>(element::f32, updates_shape);
     try
     {
-        auto G = make_shared<op::ScatterNDAdd>(R, I , U);
+        auto G = make_shared<op::ScatterNDAdd>(R, I, U);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect indices element type";
     }
@@ -13771,13 +13774,14 @@ TEST(type_prop, scatter_nd_add_fail_indices_rank)
     auto U = make_shared<op::Parameter>(element::f32, updates_shape);
     try
     {
-        auto G = make_shared<op::ScatterNDAdd>(R, I , U);
+        auto G = make_shared<op::ScatterNDAdd>(R, I, U);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect indices rank";
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Indices rank is expected to be at least 1"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Indices rank is expected to be at least 1"));
     }
     catch (...)
     {
@@ -13796,13 +13800,15 @@ TEST(type_prop, scatter_nd_add_fail_indices_last_dim)
     auto U = make_shared<op::Parameter>(element::f32, updates_shape);
     try
     {
-        auto G = make_shared<op::ScatterNDAdd>(R, I , U);
+        auto G = make_shared<op::ScatterNDAdd>(R, I, U);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect indices innermost dim";
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Last dimension of indices can be at most the rank of inputs"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Last dimension of indices can be at most the rank of inputs"));
     }
     catch (...)
     {
@@ -13821,13 +13827,14 @@ TEST(type_prop, scatter_nd_add_fail_updates_element_type)
     auto U = make_shared<op::Parameter>(element::i32, updates_shape);
     try
     {
-        auto G = make_shared<op::ScatterNDAdd>(R, I , U);
+        auto G = make_shared<op::ScatterNDAdd>(R, I, U);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect updates element type";
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Updates element type must be the same as inputs"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Updates element type must be the same as inputs"));
     }
     catch (...)
     {
@@ -13846,13 +13853,15 @@ TEST(type_prop, scatter_nd_add_fail_updates_rank)
     auto U = make_shared<op::Parameter>(element::f32, updates_shape);
     try
     {
-        auto G = make_shared<op::ScatterNDAdd>(R, I , U);
+        auto G = make_shared<op::ScatterNDAdd>(R, I, U);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect updates rank";
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Rank of updates must be rank of inputs + rank of indices - last dimension of indices - 1"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Rank of updates must be rank of inputs + rank of indices "
+                                         "- last dimension of indices - 1"));
     }
     catch (...)
     {

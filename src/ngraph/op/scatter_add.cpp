@@ -44,18 +44,16 @@ void op::ScatterAdd::validate_and_infer_types()
                           indices_et == element::i32 || indices_et == element::i64,
                           "Indices element type must be i64 or i32");
 
-    NODE_VALIDATION_CHECK(this,
-                          updates_et == inputs_et,
-                          "Updates element type must be the same as Inputs");
+    NODE_VALIDATION_CHECK(
+        this, updates_et == inputs_et, "Updates element type must be the same as Inputs");
 
     // updates rank must be at indices rank + inputs rank - 1
     NODE_VALIDATION_CHECK(this,
-                          inputs_shape.rank().is_dynamic() ||
-                              indices_shape.rank().is_dynamic() ||
+                          inputs_shape.rank().is_dynamic() || indices_shape.rank().is_dynamic() ||
                               updates_shape.rank().is_dynamic() ||
                               static_cast<size_t>(updates_shape.rank()) ==
                                   static_cast<size_t>(indices_shape.rank()) +
-                                  static_cast<size_t>(inputs_shape.rank()) - 1,
+                                      static_cast<size_t>(inputs_shape.rank()) - 1,
                           "Updates rank is expected to be indices rank + inputs rank - 1");
 
     // TODO: updates shape must be indices shape + inputs shape[1:]

@@ -29,13 +29,13 @@ namespace ngraph
         {
             template <typename T, typename U>
             void scatter_add(T* inputs,
-                        U* indices,
-                        T* updates,
-                        T* out,
-                        const Shape& inputs_shape,
-                        const Shape& indices_shape,
-                        const Shape& updates_shape,
-                        const Shape& out_shape)
+                             U* indices,
+                             T* updates,
+                             T* out,
+                             const Shape& inputs_shape,
+                             const Shape& indices_shape,
+                             const Shape& updates_shape,
+                             const Shape& out_shape)
             {
                 using namespace std;
                 // Copy inputs to out
@@ -84,15 +84,12 @@ namespace ngraph
                     Coordinate out_end_corner(out_shape);
                     out_start_corner[0] = static_cast<size_t>(slice_index);
                     out_end_corner[0] = out_start_corner[0] + 1;
-                    CoordinateTransform out_transform(out_shape,
-                                                      out_start_corner,
-                                                      out_end_corner,
-                                                      out_strides,
-                                                      out_axis_order);
+                    CoordinateTransform out_transform(
+                        out_shape, out_start_corner, out_end_corner, out_strides, out_axis_order);
                     // Create CoordinateTransform for updates slice
                     Coordinate updates_inner_start_corner = *updates_outer_coord_iter;
                     Coordinate updates_inner_end_corner(updates_shape);
-                    for(size_t i = 0; i < indices_ndim; i++)
+                    for (size_t i = 0; i < indices_ndim; i++)
                     {
                         updates_inner_end_corner[i] = updates_inner_start_corner[i] + 1;
                     }
@@ -104,13 +101,13 @@ namespace ngraph
 
                     // Add one element from updates to inputs at a time
                     auto updates_inner_coord_iter = updates_inner_transform.begin();
-                    for(const Coordinate& out_coord : out_transform)
+                    for (const Coordinate& out_coord : out_transform)
                     {
-                        out[out_transform.index(out_coord)] += updates[updates_inner_transform.index(*updates_inner_coord_iter)];
+                        out[out_transform.index(out_coord)] +=
+                            updates[updates_inner_transform.index(*updates_inner_coord_iter)];
                         updates_inner_coord_iter++;
                     }
                     updates_outer_coord_iter++;
-
                 }
             }
         }

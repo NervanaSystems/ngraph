@@ -27,7 +27,8 @@ static int UPDATES = 2;
 shared_ptr<Node> op::ScatterNDAdd::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<ScatterNDAdd>(new_args.at(INPUTS), new_args.at(INDICES), new_args.at(UPDATES));
+    return make_shared<ScatterNDAdd>(
+        new_args.at(INPUTS), new_args.at(INDICES), new_args.at(UPDATES));
 }
 
 void op::ScatterNDAdd::validate_and_infer_types()
@@ -44,9 +45,8 @@ void op::ScatterNDAdd::validate_and_infer_types()
                           indices_et == element::i32 || indices_et == element::i64,
                           "Indices element type must be i64 or i32");
 
-    NODE_VALIDATION_CHECK(this,
-                          updates_et == inputs_et,
-                          "Updates element type must be the same as inputs");
+    NODE_VALIDATION_CHECK(
+        this, updates_et == inputs_et, "Updates element type must be the same as inputs");
 
     NODE_VALIDATION_CHECK(this,
                           indices_shape.rank().is_dynamic() ||
@@ -65,8 +65,11 @@ void op::ScatterNDAdd::validate_and_infer_types()
         inputs_shape.rank().is_dynamic() || indices_shape.rank().is_dynamic() ||
             updates_shape.rank().is_dynamic() ||
             static_cast<size_t>(updates_shape.rank()) ==
-                static_cast<size_t>(indices_shape.rank()) + static_cast<size_t>(inputs_shape.rank()) -
-                static_cast<size_t>(indices_shape[static_cast<size_t>(indices_shape.rank()) - 1]) - 1,
+                static_cast<size_t>(indices_shape.rank()) +
+                    static_cast<size_t>(inputs_shape.rank()) -
+                    static_cast<size_t>(
+                        indices_shape[static_cast<size_t>(indices_shape.rank()) - 1]) -
+                    1,
         "Rank of updates must be rank of inputs + rank of indices - last dimension of indices - 1");
 
     // TODO: check updates shape
