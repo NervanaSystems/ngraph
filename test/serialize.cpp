@@ -22,6 +22,7 @@
 
 #include "ngraph/file_util.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/passthrough.hpp"
 #include "ngraph/serializer.hpp"
@@ -255,4 +256,18 @@ TEST(serialize, passthrough)
     EXPECT_THAT(pt->output_shapes(),
                 ElementsAre(IsOutputShape(element::f32, Shape{2, 3}),
                             IsOutputShape(element::i8, Shape{4, 5})));
+}
+
+TEST(serialize, constant_infinity_nan)
+{
+    auto A = make_shared<op::Constant>(
+        element::f32, Shape{5}, vector<float>{123, 456, INFINITY, -INFINITY, NAN});
+    auto B = make_shared<op::Constant>(element::f32, Shape{6}, vector<float>{5, 5, 5, 5, 5, 5});
+    auto C = make_shared<op::Constant>(
+        element::f32, Shape{7}, vector<float>{0.05, 0.05, 0.05, 0.05, 0.05, 0.05001, 0.05});
+    auto f = make_shared<Function>(NodeVector{A, B, C}, ParameterVector{});
+
+    string s = serialize(f, 4);
+    NGRAPH_INFO << s;
+    shared_ptr<Function> g = deserialize(s);
 }
