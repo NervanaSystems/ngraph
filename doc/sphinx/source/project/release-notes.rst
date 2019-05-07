@@ -3,23 +3,30 @@
 Release Notes
 #############
 
-The latest |version| download below
+For downloads formatted as ``.zip`` and ``tar.gz``, see https://github.com/NervanaSystems/ngraph/releases; 
 
-* `Format .zip`_ 
-* `Format tar.gz`_ 
-
-See also: https://github.com/NervanaSystems/ngraph/releases for previous versions. 
-
+.. important:: Pre-releases (``rc-0.x``) may have newer features, and may be 
+   less stable.  
 
 CHANGELOG |release|
 ===================
 
++ More dynamic shape preparation
++ Distributed interface factored out
++ fp16 and bfloat16 types
++ codegen execution parameterized by context
++ NodeMap, NodeVector, ParameterVector, ResultVector now vectors
+  - node_vector.hpp replaced by node.hpp
+  - op/parameter_vector.hpp replaced by op/parameter.hpp
+  - op/result_vector.hpp replaced by op/result.hpp
++ Additional ONNX ops
 + Add graph visualization tools to doc
 + Update doxygen to be friendlier to frontends
 
 
 Changelog 
 =========
+
 
 nGraph v0.18.1
 --------------
@@ -57,7 +64,3 @@ nGraph v0.16.0-rc.3
 + Fix memory leak
 + Concat optimization
 + Doc updates
-
-
-.. _Format .zip: https://github.com/NervanaSystems/ngraph/archive/v0.19.0-rc1.zip
-.. _Format tar.gz: https://github.com/NervanaSystems/ngraph/archive/v0.19.0-rc1.tar.gz
