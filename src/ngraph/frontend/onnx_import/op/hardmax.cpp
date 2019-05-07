@@ -16,7 +16,7 @@
 
 #include "hardmax.hpp"
 #include "exceptions.hpp"
-#include "ngraph/frontend/onnx_import/utils/eye.hpp"
+#include "ngraph/frontend/onnx_import/utils/common.hpp"
 #include "ngraph/frontend/onnx_import/utils/reshape.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
@@ -49,7 +49,7 @@ namespace ngraph
                         std::make_shared<ngraph::op::ArgMax>(coerced_tensor, 1, element::i64);
 
                     std::shared_ptr<ngraph::Node> eye_matrix =
-                        eye::square_identity(coerced_shape.at(1), input->get_element_type());
+                        common::square_identity(coerced_shape.at(1), input->get_element_type());
 
                     // the results are elements of the eye_matrix indexed by argmax_2d values
                     // in other words: eye_matrix[argmax_2d]
