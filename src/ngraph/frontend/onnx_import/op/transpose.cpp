@@ -38,7 +38,7 @@ namespace ngraph
                         node.get_attribute_value<std::vector<std::size_t>>("perm", {});
 
                     return {(permute_axes.empty())
-                                ? reshape::transpose(data)
+                                ? ngraph::op::util::transpose(data)
                                 : ngraph::op::util::reorder_axes(data, permute_axes)};
                 }
 
