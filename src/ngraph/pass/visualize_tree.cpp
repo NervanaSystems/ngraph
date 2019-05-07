@@ -79,7 +79,7 @@ using namespace std;
 //    for each n in N in reverse topological ("results-first") order:
 //        for each user m of n:
 //            for each r in height_maps[m].keys:
-//                height_maps[n][r] := max(height_maps[n][r], height_maps[n][r]+1)
+//                height_maps[n][r] := max(height_maps[n][r], height_maps[m][r]+1)
 //
 // Jump-Distance(n,m,height_maps):
 //     Inputs: n (source node), m (destination node), height_maps (pre-computed above)
