@@ -34,62 +34,64 @@ using namespace std;
 // routing more tractable for Graphviz as well as (hopefully) more legible for the user.
 //
 // NOTE: It's possible, even likely, that better algorithms are available here. I just tried a
-// few difference things without doing much research, and this seemed to work well. Please feel
+// few different things without doing much research, and this seemed to work well. Please feel
 // free to improve on this. --amprocte
+//
+// -----------------
 //
 // The first tweak is to trim edges that, intuitively speaking, have long "skip distance". For
 // example:
 //
 // [Actual Graph Structure]      [Visualization]
-//    N0                             N0
+//    n0                             n0
 //    | \                            |  \
-//    N1 \                           N1  [to N50]
+//    n1 \                           n1  [to n50]
 //    |   |                          |
-//    N2  |                          N2
+//    n2  |                          n2
 //    |   |                          |
-//    N3  |                          N3
+//    n3  |                          n3
 //    |   |                          |
-//   ...  |                         ...  [from N0]
+//   ...  |                         ...  [from n0]
 //    |  /                           |  /
-//   N50                            N50
+//   n50                            n50
 //
 // This is useful for training graphs especially, which tend to have very long feed-forward edges
 // for intermediate values from fprop being stored for later reuse in the bprop phase.
 //
 // Efficiently detecting a "long skip" is a bit tricky. We want to come up with a metric that is
 // reasonably fast to compute, but does not result in cuts that will split the graph into multiple
-// components. The heuristic we are using for the jump distance between N and M is the maximum
-// difference in maximum path length from N and M to any result node that is reachable from both
-// N and M (or 0, if no such result node exists). Not sure if this is mathematically guaranteed
+// components. The heuristic we are using for the jump distance between n and m is the maximum
+// difference in maximum path length from n and m to any result node that is reachable from both
+// n and m (or 0, if no such result node exists). Not sure if this is mathematically *guaranteed*
 // not to split graph components, but it seems to work well in practice.
 //
 // Formally:
 //
 // Compute-Heights-Above-Each-Parameter(N):
-//    Inputs: nodes N=[N1,...,Nn]; define R as the subset of N that are Result nodes
-//    Output: height_maps: map from N to map from R to int
+//    Inputs: nodes N={n1,...,ni}; define R={r1,...,rj}={r in N | r is a Result node}
+//    Output: height_maps: map from N to (map from R to int)
 //
 //    height_maps is initially empty
 //
-//    for each R:
-//        Insert into height_map the map {R -> 1}
+//    for each r in R:
+//        Insert into height_map the map {r -> 1}
 //
-//    for each N in reverse topological ("results-first") order:
-//        for each user M of N:
-//            for each k of height_maps[M].keys:
-//                height_maps[N][k] := max(height_maps[N][k], height_maps[M][k]+1)
+//    for each n in N in reverse topological ("results-first") order:
+//        for each user m of n:
+//            for each r in height_maps[m].keys:
+//                height_maps[n][r] := max(height_maps[n][r], height_maps[n][r]+1)
 //
-// Jump-Distance(N,M,height_maps):
-//     Inputs: N (source node), M (destination node), height_maps (pre-computed above)
+// Jump-Distance(n,m,height_maps):
+//     Inputs: n (source node), m (destination node), height_maps (pre-computed above)
 //     Output: jump_distance: int
 //
 //     jump_distance := 0
 //
-//     for each (k,v) in height_maps[N]:
-//         if k is in height_maps[M].keys:
-//             jump_distance := max(jump_distance, abs(height_maps[N][k] - height_maps[M][k]))
+//     for each r in height_maps[n].keys:
+//         if r is in height_maps[m].keys:
+//             jump_distance := max(jump_distance, abs(height_maps[n][r] - height_maps[m][r]))
 //
-// Later on, if E is an edge from N to M, and Jump-Distance(N,M,height_map) > K (where K is kind
+// Later on, if E is an edge from n to m, and Jump-Distance(n,m,height_map) > K (where K is kind
 // of arbitrary but currently set to 20), we will "cut" the edge as illustrated above.
 //
 // -----------------
