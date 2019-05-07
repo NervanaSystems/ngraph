@@ -59,5 +59,5 @@ nGraph v0.16.0-rc.3
 + Doc updates
 
 
-.. _Format .zip: https://github.com/NervanaSystems/ngraph/archive/v0.19.0-rc.0.zip
-.. _Format tar.gz: https://github.com/NervanaSystems/ngraph/archive/v0.19.0-rc.0.tar.gz
+.. _Format .zip: https://github.com/NervanaSystems/ngraph/archive/v0.19.0-rc1.zip
+.. _Format tar.gz: https://github.com/NervanaSystems/ngraph/archive/v0.19.0-rc1.tar.gz
