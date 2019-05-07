@@ -16,8 +16,6 @@
 
 #pragma once
 
-#include <memory>
-
 #include "core/node.hpp"
 #include "ngraph/node.hpp"
 

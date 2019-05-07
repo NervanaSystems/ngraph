@@ -18,7 +18,6 @@
 #include <memory>
 
 #include "common.hpp"
-#include "ngraph/builder/make_constant.hpp"
 #include "ngraph/node.hpp"
 
 namespace ngraph
