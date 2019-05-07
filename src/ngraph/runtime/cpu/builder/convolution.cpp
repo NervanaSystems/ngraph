@@ -91,7 +91,12 @@ namespace ngraph
                     std::function<decltype(runtime::cpu::kernel::convolution<float, float, float>)>
                         kernel;
 
-                    kernel = runtime::cpu::kernel::convolution<float, float, float>;
+                    if (out[0].get_element_type() == element::f64)
+                        kernel = runtime::cpu::kernel::convolution<double, double, double>;
+                    else if (out[0].get_element_type() == element::i64)
+                        kernel = runtime::cpu::kernel::convolution<int64_t, int64_t, int64_t>;
+                    else
+                        kernel = runtime::cpu::kernel::convolution<float, float, float>;
 
                     auto window_movement_strides = convolution->get_window_movement_strides();
                     auto window_dilation_strides = convolution->get_window_dilation_strides();
