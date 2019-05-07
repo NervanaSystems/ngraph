@@ -16,8 +16,10 @@
 
 #pragma once
 
+#if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wfloat-equal"
+#endif
 
 #include <cstddef>
 
@@ -42,4 +44,6 @@ namespace ngraph
     }
 }
 
+#if defined(__clang__)
 #pragma clang diagnostic pop
+#endif
