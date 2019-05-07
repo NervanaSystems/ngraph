@@ -17,6 +17,7 @@
 #include <fstream>
 #include <functional>
 
+#include "ngraph/cpio.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/abs.hpp"
@@ -123,6 +124,7 @@
 using namespace ngraph;
 using namespace std;
 using json = nlohmann::json;
+using const_data_callback_t = shared_ptr<Node>(const string&, const element::Type&, const Shape&);
 
 static bool s_serialize_output_shapes_enabled =
     (std::getenv("NGRAPH_SERIALIZER_OUTPUT_SHAPES") != nullptr);
@@ -173,11 +175,14 @@ T get_or_default(nlohmann::json& j, const std::string& key, const T& default_val
 }
 
 static std::shared_ptr<ngraph::Function>
-    read_function(const json&, std::unordered_map<std::string, std::shared_ptr<Function>>&);
+    read_function(const json&,
+                  std::unordered_map<std::string, std::shared_ptr<Function>>&,
+                  function<const_data_callback_t>);
 
-static json write(const ngraph::Function&);
-static json write(const ngraph::Node&);
-static string serialize(shared_ptr<ngraph::Function> func, size_t indent);
+static json write(const ngraph::Function&, bool binary_constant_data);
+static json write(const ngraph::Node&, bool binary_constant_data);
+static string
+    serialize(shared_ptr<ngraph::Function> func, size_t indent, bool binary_constant_data);
 
 static json write_dimension(Dimension d)
 {
@@ -286,15 +291,39 @@ void ngraph::serialize(const string& path, shared_ptr<ngraph::Function> func, si
 
 void ngraph::serialize(ostream& out, shared_ptr<ngraph::Function> func, size_t indent)
 {
-    out << ::serialize(func, indent);
+    out << ::serialize(func, indent, false);
 }
 
-static string serialize(shared_ptr<ngraph::Function> func, size_t indent)
+#if defined ENABLE_CPIO_FILE
+static void serialize_to_cpio(ostream& out, shared_ptr<ngraph::Function> func, size_t indent)
+{
+    string j = ::serialize(func, indent, true);
+    cpio::Writer writer(out);
+    writer.write(func->get_name(), j.c_str(), static_cast<uint32_t>(j.size()));
+
+    traverse_functions(func, [&](shared_ptr<ngraph::Function> f) {
+        traverse_nodes(const_cast<Function*>(f.get()),
+                       [&](shared_ptr<Node> node) {
+                           if (auto c = dynamic_pointer_cast<op::Constant>(node))
+                           {
+                               uint32_t size =
+                                   static_cast<uint32_t>(shape_size(c->get_output_shape(0)) *
+                                                         c->get_output_element_type(0).size());
+                               writer.write(c->get_name(), c->get_data_ptr(), size);
+                           }
+                       },
+                       true);
+    });
+}
+#endif
+
+static string serialize(shared_ptr<ngraph::Function> func, size_t indent, bool binary_constant_data)
 {
     json j;
     vector<json> functions;
-    traverse_functions(func,
-                       [&](shared_ptr<ngraph::Function> f) { functions.push_back(write(*f)); });
+    traverse_functions(func, [&](shared_ptr<ngraph::Function> f) {
+        functions.push_back(write(*f, binary_constant_data));
+    });
     for (auto it = functions.rbegin(); it != functions.rend(); it++)
     {
         j.push_back(*it);
@@ -314,14 +343,58 @@ static string serialize(shared_ptr<ngraph::Function> func, size_t indent)
 
 std::string ngraph::serialize(std::shared_ptr<ngraph::Function> func, size_t indent)
 {
-    return ::serialize(func, indent);
+    return ::serialize(func, indent, false);
 }
 
 shared_ptr<ngraph::Function> ngraph::deserialize(istream& in)
 {
-    std::stringstream ss;
-    ss << in.rdbuf();
-    return deserialize(ss.str());
+    shared_ptr<Function> rc;
+    if (cpio::is_cpio(in))
+    {
+        cpio::Reader reader(in);
+        vector<cpio::FileInfo> file_info = reader.get_file_info();
+        if (file_info.size() > 0)
+        {
+            // The first file is the model
+            uint32_t size = static_cast<uint32_t>(file_info[0].get_size());
+            char* data = new char[size];
+            reader.read(file_info[0].get_name(), data, size);
+            string jstr(data, size);
+            delete[] data;
+            json js = json::parse(jstr);
+            unordered_map<string, shared_ptr<Function>> function_map;
+            for (json func : js)
+            {
+                shared_ptr<Function> f = read_function(
+                    func,
+                    function_map,
+                    [&](const string& const_name, const element::Type& et, const Shape& shape) {
+                        shared_ptr<Node> const_node;
+                        for (const cpio::FileInfo& info : file_info)
+                        {
+                            if (info.get_name() == const_name)
+                            {
+                                void* const_data = ngraph_malloc(info.get_size());
+                                reader.read(const_name, const_data, info.get_size());
+                                const_node = make_shared<op::Constant>(et, shape, const_data);
+                                ngraph_free(const_data);
+                                break;
+                            }
+                        }
+                        return const_node;
+                    });
+                rc = f;
+            }
+        }
+    }
+    else
+    {
+        // json file?
+        std::stringstream ss;
+        ss << in.rdbuf();
+        rc = deserialize(ss.str());
+    }
+    return rc;
 }
 
 shared_ptr<ngraph::Function> ngraph::deserialize(const string& s)
@@ -339,7 +412,7 @@ shared_ptr<ngraph::Function> ngraph::deserialize(const string& s)
         unordered_map<string, shared_ptr<Function>> function_map;
         for (json func : js)
         {
-            shared_ptr<Function> f = read_function(func, function_map);
+            shared_ptr<Function> f = read_function(func, function_map, nullptr);
             rc = f;
         }
     }
@@ -347,7 +420,7 @@ shared_ptr<ngraph::Function> ngraph::deserialize(const string& s)
     return rc;
 }
 
-static json write(const Function& f)
+static json write(const Function& f, bool binary_constant_data)
 {
     json function;
     function["name"] = f.get_name();
@@ -369,7 +442,7 @@ static json write(const Function& f)
     json nodes;
     for (shared_ptr<Node> node : pf->get_ordered_ops(true))
     {
-        nodes.push_back(write(*node));
+        nodes.push_back(write(*node, binary_constant_data));
     }
 
     function["ops"] = nodes;
@@ -389,7 +462,9 @@ T get_value(nlohmann::json js, const string& key)
 }
 
 static shared_ptr<ngraph::Function>
-    read_function(const json& func_js, unordered_map<string, shared_ptr<Function>>& function_map)
+    read_function(const json& func_js,
+                  unordered_map<string, shared_ptr<Function>>& function_map,
+                  function<const_data_callback_t> const_data_callback)
 {
     shared_ptr<ngraph::Function> rc;
 
@@ -1416,7 +1491,7 @@ static shared_ptr<ngraph::Function>
     return rc;
 }
 
-static json write(const Node& n)
+static json write(const Node& n, bool binary_constant_data)
 {
     json node;
     node["name"] = n.get_name();
