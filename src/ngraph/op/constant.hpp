@@ -211,7 +211,7 @@ namespace ngraph
             }
 
             bool is_constant() const override { return true; }
-            bool is_data_constant() const;
+            bool are_all_data_elements_bitwise_identical() const;
 
         protected:
             void* get_data_ptr_nc() { return (m_data ? m_data->get_ptr() : nullptr); }

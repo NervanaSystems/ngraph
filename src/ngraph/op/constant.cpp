@@ -151,7 +151,7 @@ shared_ptr<Node> op::Constant::copy_with_new_args(const NodeVector& new_args) co
 }
 
 template <typename T>
-static bool is_data_constant__(const op::Constant* constant)
+static bool test_bitwise_identical(const op::Constant* constant)
 {
     const size_t size = shape_size(constant->get_shape());
     bool data_is_constant = true;
@@ -171,7 +171,7 @@ static bool is_data_constant__(const op::Constant* constant)
     return data_is_constant;
 }
 
-bool op::Constant::is_data_constant() const
+bool op::Constant::are_all_data_elements_bitwise_identical() const
 {
     bool rc = false;
     size_t size = shape_size(get_shape());
@@ -184,7 +184,7 @@ bool op::Constant::is_data_constant() const
     case element::Type_t::i8:
     case element::Type_t::u8:
     {
-        rc = is_data_constant__<uint8_t>(this);
+        rc = test_bitwise_identical<uint8_t>(this);
         break;
     }
     case element::Type_t::bf16:
@@ -192,21 +192,21 @@ bool op::Constant::is_data_constant() const
     case element::Type_t::i16:
     case element::Type_t::u16:
     {
-        rc = is_data_constant__<uint16_t>(this);
+        rc = test_bitwise_identical<uint16_t>(this);
         break;
     }
     case element::Type_t::f32:
     case element::Type_t::i32:
     case element::Type_t::u32:
     {
-        rc = is_data_constant__<uint32_t>(this);
+        rc = test_bitwise_identical<uint32_t>(this);
         break;
     }
     case element::Type_t::f64:
     case element::Type_t::i64:
     case element::Type_t::u64:
     {
-        rc = is_data_constant__<uint64_t>(this);
+        rc = test_bitwise_identical<uint64_t>(this);
         break;
     }
     case element::Type_t::undefined:

@@ -1656,7 +1656,7 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Constant:
     {
         auto tmp = dynamic_cast<const op::Constant*>(&n);
-        if (tmp->is_data_constant())
+        if (tmp->are_all_data_elements_bitwise_identical())
         {
             vector<string> vs;
             vs.push_back(tmp->get_value_strings()[0]);
