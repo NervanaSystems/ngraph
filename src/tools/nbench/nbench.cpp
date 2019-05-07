@@ -71,6 +71,15 @@ vector<PerfShape> to_perf_shape(shared_ptr<Function> f,
     return result;
 }
 
+string get_common_name(string name)
+{
+	if(name.compare(0, 4, "NNP_") == 0)
+	{
+	     name[3] = '.';
+	}
+        return name.substr(0, name.find('_'));
+}
+
 multimap<size_t, string> aggregate_timing_details(const vector<PerfShape>& perf_data)
 {
     unordered_map<string, size_t> timing;
@@ -78,7 +87,7 @@ multimap<size_t, string> aggregate_timing_details(const vector<PerfShape>& perf_
     for (const PerfShape& p : perf_data)
     {
         auto node = p.get_node();
-        string op = node->get_name().substr(0, node->get_name().find('_'));
+        string op = get_common_name(node->get_name());
         string shape_name = " {" + join(p.shape) + "} ";
         timing[op + shape_name] += p.microseconds();
         count[op + shape_name] += 1;
@@ -98,7 +107,7 @@ multimap<size_t, string> aggregate_timing(const vector<PerfShape>& perf_data)
     for (const PerfShape& p : perf_data)
     {
         auto node = p.get_node();
-        string op = node->get_name().substr(0, node->get_name().find('_'));
+        string op = get_common_name(node->get_name());
         timing[op] += p.microseconds();
     }
 
@@ -355,8 +364,7 @@ OPTIONS
                         total_temporary_bytes += tensor->size();
                         total_temporary_count++;
                     }
-                    string name = node->get_name();
-                    string op_name = name.substr(0, name.find('_'));
+                    string op_name = get_common_name(node->get_name());
                     string shape_name = "{" + join(node->output(0).get_shape()) + "}";
                     op_list[op_name + shape_name]++;
                     auto et = get_op_element_type(*node);
