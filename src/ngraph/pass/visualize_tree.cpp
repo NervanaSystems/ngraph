@@ -29,6 +29,83 @@ using namespace std;
 
 #define TI(x) type_index(typeid(x))
 
+//
+// As we are visualizing the graph, we will make some tweaks to the generated dot file to make
+// routing more tractable for Graphviz as well as (hopefully) more legible for the user.
+//
+// NOTE: It's possible, even likely, that better algorithms are available here. I just tried a
+// few difference things without doing much research, and this seemed to work well. Please feel
+// free to improve on this. --amprocte
+//
+// The first tweak is to trim edges that, intuitively speaking, have long "skip distance". For
+// example:
+//
+// [Actual Graph Structure]      [Visualization]
+//    N0                             N0
+//    | \                            |  \
+//    N1 \                           N1  [to N50]
+//    |   |                          |
+//    N2  |                          N2
+//    |   |                          |
+//    N3  |                          N3
+//    |   |                          |
+//   ...  |                         ...  [from N0]
+//    |  /                           |  /
+//   N50                            N50
+//
+// This is useful for training graphs especially, which tend to have very long feed-forward edges
+// for intermediate values from fprop being stored for later reuse in the bprop phase.
+//
+// Efficiently detecting a "long skip" is a bit tricky. We want to come up with a metric that is
+// reasonably fast to compute, but does not result in cuts that will split the graph into multiple
+// components. The heuristic we are using for the jump distance between N and M is the maximum
+// difference in maximum path length from N and M to any result node that is reachable from both
+// N and M (or 0, if no such result node exists). Not sure if this is mathematically guaranteed
+// not to split graph components, but it seems to work well in practice.
+//
+// Formally:
+//
+// Compute-Heights-Above-Each-Parameter(N):
+//    Inputs: nodes N=[N1,...,Nn]; define R as the subset of N that are Result nodes
+//    Output: height_maps: map from N to map from R to int
+//
+//    height_maps is initially empty
+//
+//    for each R:
+//        Insert into height_map the map {R -> 1}
+//
+//    for each N in reverse topological ("results-first") order:
+//        for each user M of N:
+//            for each k of height_maps[M].keys:
+//                height_maps[N][k] := max(height_maps[N][k], height_maps[M][k]+1)
+//
+// Jump-Distance(N,M,height_maps):
+//     Inputs: N (source node), M (destination node), height_maps (pre-computed above)
+//     Output: jump_distance: int
+//
+//     jump_distance := 0
+//
+//     for each (k,v) in height_maps[N]:
+//         if k is in height_maps[M].keys:
+//             jump_distance := max(jump_distance, abs(height_maps[N][k] - height_maps[M][k]))
+//
+// Later on, if E is an edge from N to M, and Jump-Distance(N,M,height_map) > K (where K is kind
+// of arbitrary but currently set to 20), we will "cut" the edge as illustrated above.
+//
+// -----------------
+//
+// The second tweak aims to eliminate routing pressure from nodes that have large outdegree and
+// are connected to many otherwise-distant places in the graph. For this, the only thing we are
+// doing at the moment is to "float" Parameter and Constant nodes. This means that rather than
+// visualizing them as a single node (which might have very large outdegree as in, e.g., a
+// learning rate parameter being fed to many different places), we make a "copy" of the node at
+// each occurrence site (with a dashed outline).
+//
+// NOTE: This tweak could probably be extended to float other kinds of nodes with high out-degree.
+// (This situation is likely to arise after constant subexpression elimination.) Here one has to
+// be careful to avoid splitting the components. I have some rough ideas on how this could be
+// dealt with, but have not had time to implement them yet. --amprocte
+//
 class HeightMap
 {
 public:
@@ -86,7 +163,7 @@ static std::string label_edge(const std::shared_ptr<Node>& src,
         ss << label_edge.str();
     }
 
-    else if (getenv("NGRAPH_VISUALIZE_EDGE_JUMP") != nullptr)
+    else if (getenv("NGRAPH_VISUALIZE_EDGE_JUMP_DISTANCE") != nullptr)
     {
         if (jump_distance > 1)
         {
@@ -128,8 +205,11 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
             }
         }
 
-        size_t warp_idx = 0;
-        // map<size_t, list<node_ptr>> dependent_nodes;
+        // TODO(amprocte): Maybe find a way to make this tunable.
+        const int max_jump_distance = 20;
+
+        size_t fake_node_ctr = 0;
+
         traverse_nodes(f, [&](shared_ptr<Node> node) {
             size_t arg_index = 0;
             for (auto arg : node->get_arguments())
@@ -138,21 +218,21 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
 
                 if (arg->description() == "Constant" || arg->description() == "Parameter")
                 {
-                    auto clone_name = "CLONE_" + to_string(warp_idx);
+                    auto clone_name = "CLONE_" + to_string(fake_node_ctr);
                     auto color = (arg->description() == "Parameter" ? "blue" : "black");
                     m_ss << "    " << clone_name
                          << "[shape=\"box\" style=\"dashed,filled\" color=\"" << color
                          << "\" fillcolor=\"white\" label=\"" << arg->get_name() << "\"]\n";
                     m_ss << "    " << clone_name << " -> " << node->get_name()
                          << label_edge(arg, node, arg_index, jump_distance) << "\n";
-                    warp_idx++;
+                    fake_node_ctr++;
                 }
-                else if (jump_distance > 20)
+                else if (jump_distance > max_jump_distance)
                 {
                     m_ss << add_attributes(arg);
                     m_ss << add_attributes(node);
-                    auto recv_node_name = "RECV_" + to_string(warp_idx);
-                    auto send_node_name = "SEND_" + to_string(warp_idx);
+                    auto recv_node_name = "RECV_" + to_string(fake_node_ctr);
+                    auto send_node_name = "SEND_" + to_string(fake_node_ctr);
 
                     m_ss << "    " << recv_node_name << "[shape=\"box\" style=\"solid,filled\" "
                                                         "fillcolor=\"#ffcccc\" label=\"Receive["
@@ -165,7 +245,7 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
                          << label_edge(arg, node, arg_index, jump_distance) << "\n";
                     m_ss << "    " << recv_node_name << " -> " << node->get_name()
                          << label_edge(arg, node, arg_index, jump_distance) << "\n";
-                    warp_idx++;
+                    fake_node_ctr++;
                 }
                 else
                 {
@@ -205,23 +285,15 @@ string pass::VisualizeTree::add_attributes(shared_ptr<Node> node)
 string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
 {
     vector<string> attributes;
-    if (node->is_parameter() || node->is_output())
+    attributes.push_back("shape=box");
+
+    if (node->is_output())
     {
-        attributes.push_back("shape=box");
-        if (node->is_parameter())
-        {
-            attributes.push_back("color=blue");
-            attributes.push_back("penwidth=1.5");
-        }
-        if (node->is_output())
-        {
-            attributes.push_back("color=crimson");
-            attributes.push_back("penwidth=1.5");
-        }
+        attributes.push_back("color=crimson");
+        attributes.push_back("penwidth=1.5");
     }
     else
     {
-        attributes.push_back("shape=box");
         attributes.push_back("color=black");
     }
 
