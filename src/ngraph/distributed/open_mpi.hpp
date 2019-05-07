@@ -43,6 +43,15 @@ namespace ngraph
                 }
             }
 
+            ~OpenMPIDistributedInterface() override
+            {
+                int is_mpi_finalized = 0;
+                MPI_Finalized(&is_mpi_finalized);
+                if (!is_mpi_finalized) {
+                    MPI_Finalize();
+                }
+
+            }
             const std::string& get_name() const override { return m_name; }
             int get_size() override
             {
