@@ -68,7 +68,7 @@ using namespace std;
 // Formally:
 //
 // Compute-Heights-Above-Each-Parameter(N):
-//    Inputs: nodes N={n1,...,ni}; define R={r1,...,rj}={r in N | r is a Result node}
+//    Inputs: nodes N; define R={n in N | n is a Result node}
 //    Output: height_maps: map from N to (map from R to int)
 //
 //    height_maps is initially empty
