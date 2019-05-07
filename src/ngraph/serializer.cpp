@@ -69,6 +69,7 @@
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/depth_to_space.hpp"
 #include "ngraph/op/fused/elu.hpp"
+#include "ngraph/op/fused/gemm.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/prelu.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
@@ -941,6 +942,16 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::GatherND>(args[0], args[1]);
                 break;
             }
+            case OP_TYPEID::Gemm:
+            {
+                auto alpha = node_js.at("alpha").get<double>();
+                auto beta = node_js.at("beta").get<double>();
+                auto transA = node_js.at("transA").get<bool>();
+                auto transB = node_js.at("transB").get<bool>();
+                node =
+                    make_shared<op::Gemm>(args[0], args[1], args[2], alpha, beta, transA, transB);
+                break;
+            }
             case OP_TYPEID::GenerateMask:
             {
                 auto output_shape = node_js.at("output_shape").get<vector<size_t>>();
@@ -1807,6 +1818,15 @@ static json write(const Node& n, bool binary_constant_data)
     {
         auto tmp = dynamic_cast<const op::GetOutputElement*>(&n);
         node["n"] = tmp->get_n();
+        break;
+    }
+    case OP_TYPEID::Gemm:
+    {
+        auto tmp = dynamic_cast<const op::Gemm*>(&n);
+        node["alpha"] = tmp->get_alpha();
+        node["beta"] = tmp->get_beta();
+        node["transA"] = tmp->get_transA();
+        node["transB"] = tmp->get_transB();
         break;
     }
     case OP_TYPEID::GenerateMask:
