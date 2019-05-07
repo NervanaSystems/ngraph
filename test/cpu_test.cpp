@@ -951,8 +951,6 @@ TEST(cpu_test, rotated_pooling)
         make_f(false, false), make_f(false, false), "INTERPRETER", "CPU"); // 5D MaxPool
 }
 
-// TODO enable test for Windows
-#ifndef _WIN32
 // for float this will be 18 bits matching
 // for bfloat this will be 6 bits matching
 constexpr int three_quarters_of_available_bits = (MAX_FLOAT_BITS * 3) / 4;
@@ -1049,7 +1047,6 @@ TEST(cpu_test, thread_safe_calls_convolution_2d_2items)
 
     unset_environment("NGRAPH_CPU_CONCURRENCY");
 }
-#endif
 
 TEST(cpu_test, constant_reshape)
 {

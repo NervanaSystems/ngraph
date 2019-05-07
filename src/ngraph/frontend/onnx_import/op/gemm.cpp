@@ -14,14 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "op/gemm.hpp"
-#include "ngraph/frontend/onnx_import/exceptions.hpp"
-#include "ngraph/frontend/onnx_import/utils/reshape.hpp"
-#include "ngraph/op/add.hpp"
-#include "ngraph/op/constant.hpp"
-#include "ngraph/op/dot.hpp"
-#include "ngraph/op/multiply.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
+#include <memory>
+
+#include "gemm.hpp"
+#include "ngraph/op/fused/gemm.hpp"
 
 namespace ngraph
 {
@@ -41,48 +37,11 @@ namespace ngraph
                     double alpha = node.get_attribute_value<double>("alpha", 1);
                     double beta = node.get_attribute_value<double>("beta", 1);
 
-                    auto trans_a = node.get_attribute_value<int64_t>("transA", 0);
-                    auto trans_b = node.get_attribute_value<int64_t>("transB", 0);
+                    bool trans_a = node.get_attribute_value<int64_t>("transA", 0);
+                    bool trans_b = node.get_attribute_value<int64_t>("transB", 0);
 
-                    if (trans_a != 0)
-                    {
-                        input_a = reshape::transpose(input_a);
-                    }
-                    if (trans_b != 0)
-                    {
-                        input_b = reshape::transpose(input_b);
-                    }
-
-                    input_a = reshape::flatten(input_a, 1);
-                    input_b = reshape::flatten(input_b, 1);
-
-                    // A' * B'
-                    std::shared_ptr<ngraph::Node> a_dot_b =
-                        std::make_shared<ngraph::op::Dot>(input_a, input_b);
-
-                    // alpha
-                    std::shared_ptr<ngraph::Node> alpha_node =
-                        std::make_shared<ngraph::op::Constant>(a_dot_b->get_element_type(),
-                                                               a_dot_b->get_shape(),
-                                                               std::vector<double>{alpha});
-                    // alpha * A' * B'
-                    a_dot_b = std::make_shared<ngraph::op::Multiply>(alpha_node, a_dot_b);
-
-                    // beta * C
-                    std::shared_ptr<ngraph::Node> beta_node =
-                        std::make_shared<ngraph::op::Constant>(input_c->get_element_type(),
-                                                               input_c->get_shape(),
-                                                               std::vector<double>{beta});
-                    input_c = std::make_shared<ngraph::op::Multiply>(beta_node, input_c);
-
-                    // alpha * A' * B' + beta * C
-                    NodeVector broadcasted_nodes =
-                        ngraph::op::numpy_style_broadcast({a_dot_b, input_c});
-                    // The ONNX documentation says that `input_c` should be "unidirectional broadcastable"
-                    // to the `a_dot_b` tensor. Since numpy style broadcasting is bidirectional, below we
-                    // only use the second output from above broadcasting. In other words we want to
-                    // preserve the shape of original `a_dot_b` tensor.
-                    return {std::make_shared<ngraph::op::Add>(a_dot_b, broadcasted_nodes.at(1))};
+                    return NodeVector{std::make_shared<ngraph::op::Gemm>(
+                        input_a, input_b, input_c, alpha, beta, trans_a, trans_b)};
                 }
 
             } // namespace set_1
