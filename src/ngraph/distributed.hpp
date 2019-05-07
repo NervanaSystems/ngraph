@@ -32,7 +32,6 @@ namespace ngraph
         virtual int get_size() = 0;
         virtual int get_rank() = 0;
 
-        virtual void finalize() = 0;
         virtual void
             all_reduce(void* in, void* out, element::Type_t element_type, size_t count) = 0;
         virtual void broadcast(void* in, element::Type_t element_type, size_t count) = 0;
