@@ -13,9 +13,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+#include <algorithm>
 #include <memory>
 
 #include "grn.hpp"
+#include "ngraph/op/divide.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
+#include "ngraph/op/util/norm.hpp"
+#include "ngraph/op/util/reshape.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -24,12 +29,44 @@ op::GRN::GRN(const shared_ptr<Node>& data, float bias)
     : FusedOp("GRN", {data})
     , m_bias(bias)
 {
-    // TODO: check for input dimensions? should be 2,3,4D
+    const auto& data_shape = data->get_shape();
+
+    NODE_VALIDATION_CHECK(this,
+                          (data_shape.size() >= 2 && data_shape.size() <= 4),
+                          "Input tensor rank must be 2, 3 or 4 dimensional (actual input shape: ",
+                          data_shape,
+                          ").");
+
     constructor_validate_and_infer_types();
 }
 
 NodeVector op::GRN::decompose_op() const
 {
+    const auto input_node{get_argument(0)};
+    const auto& input_shape{input_node->get_shape()};
+
+    const auto data{input_node};
+    // reshape to 4D tensor
+    if (input_shape.size() != 4)
+    {
+        Shape data_shape{input_shape};
+        data_shape.resize(4);
+        fill(begin(data_shape), next(begin(data_shape), input_shape.size()), size_t{1});
+        data = util::reshape(data, data_shape);
+    }
+
+    // calculate l2 norm across channels
+    shared_ptr<Node> norm = l2_norm(data, AxisSet{2, 3}, m_bias);
+    norm = make_broadcast_node(norm, data->get_shape(), 0);
+    data = data / norm;
+
+    // get back original input tensor rank
+    if (input_shape.size() != 4)
+    {
+        data = util::reshape(data, input_shape);
+    }
+
+    return data;
 }
 
 shared_ptr<Node> op::GRN::copy_with_new_args(const NodeVector& new_args) const
