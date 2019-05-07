@@ -53,7 +53,7 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_weight_fu
     auto conv = std::make_shared<ngraph::op::Convolution>(
         data_conv, cvt_lt_conv, Strides{1, 1}, Strides{1, 1});
 
-    pattern::graph_rewrite_callback callback = [param](pattern::Matcher& m) {
+    auto callback = [param](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_weight against "
                      << m.get_match_root()->get_name();
 
@@ -116,9 +116,9 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_weight_fu
         return true;
     };
 
-    auto m = make_shared<pattern::Matcher>(
-        conv, callback, "CPUPostLayoutOptimizations.ConstructWeight_fusion");
-    this->add_matcher(m);
+    auto m =
+        make_shared<pattern::Matcher>(conv, "CPUPostLayoutOptimizations.ConstructWeight_fusion");
+    this->add_matcher(m, callback);
 }
 
 void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_slice_convertLayout_fusion()
@@ -130,7 +130,7 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_slice_con
     auto lt_desc = std::make_shared<runtime::cpu::LayoutDescriptor>(*tvt);
     auto cvt_lt = std::make_shared<runtime::cpu::op::ConvertLayout>(slice, lt_desc);
 
-    pattern::graph_rewrite_callback callback = [param](pattern::Matcher& m) {
+    auto callback = [param](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_slice_converLayout against "
                      << m.get_match_root()->get_name();
 
@@ -169,8 +169,8 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_slice_con
     };
 
     auto m = make_shared<pattern::Matcher>(
-        cvt_lt, callback, "CPUPostLayoutOptimizations.ConstructSliceConvertLayoutFusion");
-    this->add_matcher(m);
+        cvt_lt, "CPUPostLayoutOptimizations.ConstructSliceConvertLayoutFusion");
+    this->add_matcher(m, callback);
 }
 
 // Reshape(transpose) + ConvertLayout
@@ -193,7 +193,7 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
         std::make_shared<runtime::cpu::LayoutDescriptor>(*reshape->get_output_tensor_ptr());
     auto cvt_lt = std::make_shared<runtime::cpu::op::ConvertLayout>(reshape, lt_desc);
 
-    pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
+    auto callback = [](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_reshape_converLayout against "
                      << m.get_match_root()->get_name();
 
@@ -264,6 +264,6 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
     };
 
     auto m = make_shared<pattern::Matcher>(
-        cvt_lt, callback, "CPUPostLayoutOptimizations.ConstructReshapeConvertLayoutFusion");
-    this->add_matcher(m);
+        cvt_lt, "CPUPostLayoutOptimizations.ConstructReshapeConvertLayoutFusion");
+    this->add_matcher(m, callback);
 }
