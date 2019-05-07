@@ -34,14 +34,13 @@ shared_ptr<runtime::Tensor>
     runtime::dynamic_wrapper::DynamicWrapperBackend::create_tensor(const element::Type& type,
                                                                    const Shape& shape)
 {
-    return make_shared<WrappedStaticTensor>(m_wrapped_backend->create_tensor(type, shape));
+    return m_wrapped_backend->create_tensor(type, shape);
 }
 
 shared_ptr<runtime::Tensor> runtime::dynamic_wrapper::DynamicWrapperBackend::create_tensor(
     const element::Type& type, const Shape& shape, void* memory_pointer)
 {
-    return make_shared<WrappedStaticTensor>(
-        m_wrapped_backend->create_tensor(type, shape, memory_pointer));
+    return m_wrapped_backend->create_tensor(type, shape, memory_pointer);
 }
 
 std::shared_ptr<runtime::Tensor>
@@ -89,16 +88,8 @@ bool runtime::dynamic_wrapper::WrappedExecutable::call(
 
     for (auto& input : inputs)
     {
-        if (auto static_tensor =
-                std::dynamic_pointer_cast<runtime::dynamic_wrapper::WrappedStaticTensor>(input))
-        {
-            arg_element_types.push_back(static_tensor->get_wrapped_tensor()->get_element_type());
-            arg_shapes.push_back(static_tensor->get_wrapped_tensor()->get_shape());
-            wrapped_inputs.push_back(static_tensor->get_wrapped_tensor());
-        }
-        else if (auto dynamic_tensor =
-                     std::dynamic_pointer_cast<runtime::dynamic_wrapper::WrappedDynamicTensor>(
-                         input))
+        if (auto dynamic_tensor =
+                std::dynamic_pointer_cast<runtime::dynamic_wrapper::WrappedDynamicTensor>(input))
         {
             NGRAPH_CHECK(dynamic_tensor->has_storage());
             arg_element_types.push_back(dynamic_tensor->get_wrapped_tensor()->get_element_type());
@@ -107,9 +98,9 @@ bool runtime::dynamic_wrapper::WrappedExecutable::call(
         }
         else
         {
-            NGRAPH_CHECK(false,
-                         "Internal error: Tensor is neither a WrappedStaticTensor nor a "
-                         "WrappedDynamicTensor");
+            arg_element_types.push_back(input->get_element_type());
+            arg_shapes.push_back(input->get_shape());
+            wrapped_inputs.push_back(input);
         }
     }
 
@@ -125,14 +116,8 @@ bool runtime::dynamic_wrapper::WrappedExecutable::call(
 
     for (auto& output : outputs)
     {
-        if (auto static_tensor =
-                std::dynamic_pointer_cast<runtime::dynamic_wrapper::WrappedStaticTensor>(output))
-        {
-            wrapped_outputs.push_back(static_tensor->get_wrapped_tensor());
-        }
-        else if (auto dynamic_tensor =
-                     std::dynamic_pointer_cast<runtime::dynamic_wrapper::WrappedDynamicTensor>(
-                         output))
+        if (auto dynamic_tensor =
+                std::dynamic_pointer_cast<runtime::dynamic_wrapper::WrappedDynamicTensor>(output))
         {
             dynamic_tensor->make_storage((*results_it)->get_output_element_type(0),
                                          (*results_it)->get_output_shape(0));
@@ -140,9 +125,7 @@ bool runtime::dynamic_wrapper::WrappedExecutable::call(
         }
         else
         {
-            NGRAPH_CHECK(false,
-                         "Internal error: Tensor is neither a WrappedStaticTensor nor a "
-                         "WrappedDynamicTensor");
+            wrapped_outputs.push_back(output);
         }
     }
 
@@ -151,45 +134,6 @@ bool runtime::dynamic_wrapper::WrappedExecutable::call(
     auto result = compiled_executable->call(wrapped_outputs, wrapped_inputs);
 
     return result;
-}
-
-runtime::dynamic_wrapper::WrappedStaticTensor::WrappedStaticTensor(
-    const std::shared_ptr<runtime::Tensor>& wrapped_tensor)
-    : Tensor(make_shared<descriptor::Tensor>(
-          wrapped_tensor->get_element_type(), wrapped_tensor->get_shape(), "wrapped_static"))
-    , m_wrapped_tensor(wrapped_tensor)
-{
-}
-
-const element::Type& runtime::dynamic_wrapper::WrappedStaticTensor::get_element_type() const
-{
-    return m_wrapped_tensor->get_element_type();
-}
-
-const ngraph::Shape& runtime::dynamic_wrapper::WrappedStaticTensor::get_shape() const
-{
-    return m_wrapped_tensor->get_shape();
-}
-
-void runtime::dynamic_wrapper::WrappedStaticTensor::write(const void* p, size_t offset, size_t n)
-{
-    m_wrapped_tensor->write(p, offset, n);
-}
-
-void runtime::dynamic_wrapper::WrappedStaticTensor::read(void* p, size_t offset, size_t n) const
-{
-    m_wrapped_tensor->read(p, offset, n);
-}
-
-void runtime::dynamic_wrapper::WrappedStaticTensor::copy_from(const ngraph::runtime::Tensor& source)
-{
-    m_wrapped_tensor->copy_from(source);
-}
-
-const std::shared_ptr<ngraph::runtime::Tensor>&
-    runtime::dynamic_wrapper::WrappedStaticTensor::get_wrapped_tensor() const
-{
-    return m_wrapped_tensor;
 }
 
 runtime::dynamic_wrapper::WrappedDynamicTensor::WrappedDynamicTensor(
