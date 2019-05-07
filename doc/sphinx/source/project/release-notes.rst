@@ -16,9 +16,11 @@ CHANGELOG |release|
 + fp16 and bfloat16 types
 + codegen execution parameterized by context
 + NodeMap, NodeVector, ParameterVector, ResultVector now vectors
-  - node_vector.hpp replaced by node.hpp
-  - op/parameter_vector.hpp replaced by op/parameter.hpp
-  - op/result_vector.hpp replaced by op/result.hpp
+  
+  - ``node_vector.hpp`` replaced by ``node.hpp``
+  - ``op/parameter_vector.hpp`` replaced by ``op/parameter.hpp``
+  - ``op/result_vector.hpp`` replaced by ``op/result.hpp``
+
 + Additional ONNX ops
 + Add graph visualization tools to doc
 + Update doxygen to be friendlier to frontends
