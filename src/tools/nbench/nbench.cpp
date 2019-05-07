@@ -73,11 +73,11 @@ vector<PerfShape> to_perf_shape(shared_ptr<Function> f,
 
 string get_common_name(string name)
 {
-	if(name.compare(0, 4, "NNP_") == 0)
-	{
-	     name[3] = '.';
-	}
-        return name.substr(0, name.find('_'));
+    if (name.compare(0, 4, "NNP_") == 0)
+    {
+        name[3] = '.';
+    }
+    return name.substr(0, name.find('_'));
 }
 
 multimap<size_t, string> aggregate_timing_details(const vector<PerfShape>& perf_data)
