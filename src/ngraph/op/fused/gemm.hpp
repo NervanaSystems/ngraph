@@ -26,7 +26,7 @@ namespace ngraph
     {
         /// \brief Operator performing General Matrix multiplication.
         ///
-        /// \notes More information: https://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms#Level_3
+        /// \note More information: https://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms#Level_3
         ///
         /// A' = transpose(A) if transA else A
         /// B' = transpose(B) if transB else B
