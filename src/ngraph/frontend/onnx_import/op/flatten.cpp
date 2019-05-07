@@ -35,7 +35,7 @@ namespace ngraph
                     ASSERT_VALID_ARGUMENT(node, (axis >= 0) && (axis <= data->get_shape().size()))
                         << "provided 'axis' attribute is not valid.";
 
-                    return {reshape::flatten(data, axis)};
+                    return {ngraph::op::util::flatten(data, axis)};
                 }
 
             } // namespace set_1

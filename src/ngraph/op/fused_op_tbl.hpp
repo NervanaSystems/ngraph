@@ -18,6 +18,7 @@
 //
 
 NGRAPH_OP(Elu, ngraph::op)
+NGRAPH_OP(Gemm, ngraph::op)
 NGRAPH_OP(PRelu, ngraph::op)
 NGRAPH_OP(ConvolutionBias, ngraph::op)
 NGRAPH_OP(ConvolutionBiasAdd, ngraph::op)
