@@ -92,7 +92,7 @@ Function::~Function()
     // heap.
     std::list<Node*> list;
 
-    traverse_nodes(this, [&](shared_ptr<Node> n) { list.push_front(n.get()); });
+    traverse_nodes(this, [&](shared_ptr<Node> n) { list.push_front(n.get()); }, true);
 
     for (Node* n : list)
     {

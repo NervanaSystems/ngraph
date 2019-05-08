@@ -49,7 +49,7 @@ namespace ngraph
 
     void traverse_nodes(const Function* p,
                         std::function<void(std::shared_ptr<Node>)> f,
-                        bool include_control_deps = false);
+                        bool include_control_deps);
 
     /// \brief Visit each node in a sub-graph of the entire graph
     /// \param subgraph_results The output nodes of the sub-graph
