@@ -1677,8 +1677,8 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Clamp:
     {
         auto tmp = dynamic_cast<const op::Clamp*>(&n);
-        node["min"] = tmp->m_min;
-        node["max"] = tmp->m_max;
+        node["min"] = tmp->get_min();
+        node["max"] = tmp->get_max();
         break;
     }
     case OP_TYPEID::Concat:
