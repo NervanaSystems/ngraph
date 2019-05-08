@@ -37,10 +37,10 @@ namespace ngraph
             {
                 int flag = 0;
                 MPI_Initialized(&flag);
-                if (!flag && m_initialized_mpi==0)
+                if (!flag && !m_initialized_mpi)
                 {
                     MPI_Init(NULL, NULL);
-                    m_initialized_mpi = 1;
+                    m_initialized_mpi = true;
                 }
             }
 
@@ -48,9 +48,10 @@ namespace ngraph
             {
                 int is_mpi_finalized = 0;
                 MPI_Finalized(&is_mpi_finalized);
-                if (!is_mpi_finalized && m_initialized_mpi==1) {
+                if (!is_mpi_finalized && m_initialized_mpi)
+                {
                     MPI_Finalize();
-                    m_initialized_mpi = 0;
+                    m_initialized_mpi = false;
                 }
             }
 
@@ -108,7 +109,7 @@ namespace ngraph
 
         protected:
             std::string m_name;
-            int m_initialized_mpi = 0;
+            bool m_initialized_mpi = false;
         };
     }
 }
