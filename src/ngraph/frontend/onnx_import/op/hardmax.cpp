@@ -17,7 +17,6 @@
 #include "hardmax.hpp"
 #include "exceptions.hpp"
 #include "ngraph/frontend/onnx_import/utils/common.hpp"
-#include "ngraph/frontend/onnx_import/utils/reshape.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/util/reshape.hpp"
@@ -41,7 +40,7 @@ namespace ngraph
                         << " does not match the input tensor dimensions";
 
                     // reshape to 2D - "batch size" x "input feature dimensions" (NxD)
-                    const auto coerced_tensor = reshape::flatten(input, axis);
+                    const auto coerced_tensor = ngraph::op::util::flatten(input, axis);
                     const auto& coerced_shape = coerced_tensor->get_shape();
 
                     const std::shared_ptr<ngraph::Node> argmax_2d =
