@@ -488,6 +488,45 @@ NGRAPH_TEST(DISABLED_${BACKEND_NAME}, normalize_across_hw_w_scale)
                      0.5491252 , 0.62757164, 0.7060181 , 0.78446454, 0.862911  , 0.94135743,
                      0.5982327 , 0.64425063, 0.6902685 , 0.7362864 , 0.7823043 , 0.8283222 ,
                      0.87434006, 0.920358  , 0.9663758 , 1.0123938 , 1.0584116 , 1.1044296 });
+    test_case.run();
+}
 
+NGRAPH_TEST(${BACKEND_NAME}, gemm)
+{
+    auto A = make_shared<op::Parameter>(element::f64, Shape{3, 6});
+    auto B = make_shared<op::Parameter>(element::f64, Shape{6, 4});
+    auto C = make_shared<op::Parameter>(element::f64, Shape{3, 4});
+
+    auto gemm_func = make_shared<op::Gemm>(A, B, C);
+    auto function = make_shared<Function>(NodeVector{gemm_func}, ParameterVector{A, B, C});
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    // A
+    test_case.add_input<double>(vector<double>(18, 1));
+    // B
+    test_case.add_input<double>(vector<double>(24, 2));
+    // C
+    test_case.add_input<double>(vector<double>(12, 0));
+    //output
+    test_case.add_expected_output<double>(Shape{3, 4}, vector<double>(12, 12));
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, gemm_broadcast_input_C)
+{
+    auto A = make_shared<op::Parameter>(element::f64, Shape{3, 6});
+    auto B = make_shared<op::Parameter>(element::f64, Shape{6, 4});
+    auto C = make_shared<op::Parameter>(element::f64, Shape{});
+
+    auto gemm_func = make_shared<op::Gemm>(A, B, C, 0.5);
+    auto function = make_shared<Function>(NodeVector{gemm_func}, ParameterVector{A, B, C});
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    // A
+    test_case.add_input<double>(vector<double>(18, 1));
+    // B
+    test_case.add_input<double>(vector<double>(24, 2));
+    // C
+    test_case.add_input<double>(vector<double>{1});
+    //output
+    test_case.add_expected_output<double>(Shape{3, 4}, vector<double>(12, 7));
     test_case.run();
 }

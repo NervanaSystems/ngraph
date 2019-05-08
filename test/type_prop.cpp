@@ -13937,3 +13937,23 @@ TEST(type_prop, normalize_invalid_scale_rank)
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
+
+TEST(type_prop, gemm)
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape{3, 6});
+    auto B = make_shared<op::Parameter>(element::f32, Shape{6, 4});
+    auto C = make_shared<op::Parameter>(element::f32, Shape{3, 4});
+    auto gemm_func = make_shared<op::Gemm>(A, B, C);
+    EXPECT_EQ(gemm_func->get_element_type(), element::f32);
+    EXPECT_EQ(gemm_func->get_shape(), (Shape{3, 4}));
+}
+
+TEST(type_prop, gemm_broadcast_input_C)
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape{3, 6});
+    auto B = make_shared<op::Parameter>(element::f32, Shape{6, 4});
+    auto C = make_shared<op::Parameter>(element::f32, Shape{});
+    auto gemm_func = make_shared<op::Gemm>(A, B, C);
+    EXPECT_EQ(gemm_func->get_element_type(), element::f32);
+    EXPECT_EQ(gemm_func->get_shape(), (Shape{3, 4}));
+}
