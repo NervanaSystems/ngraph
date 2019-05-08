@@ -57,25 +57,27 @@ void op::Normalize::pre_validate_and_infer_types()
                               ").");
         if (m_channel_shared)
         {
+            NODE_VALIDATION_CHECK(this,
+                                  scale_shape.size() == 0,
+                                  "Scale must be a scalar if 'channels_shared' parameter is true");
+        }
+        else
+        {
             // only HW
             if (data_shape.size() == 2)
             {
-                NODE_VALIDATION_CHECK(
-                    this,
-                    scale_shape.size() == 0,
-                    "Scale must be a scalar if 'channels_shared' parameter is "
-                    "true and input tensor is of rank 2.");
+                NODE_VALIDATION_CHECK(this,
+                                      scale_shape.size() == 0,
+                                      "Scale must be a scalar if input tensor is of rank 2.");
             }
             else
             {
-                size_t n_channels =
-                    data_shape.size() == 3 ? data_shape.at(0) : data_shape.at(1);
+                size_t n_channels = data_shape.size() == 3 ? data_shape.at(0) : data_shape.at(1);
                 NODE_VALIDATION_CHECK(
                     this,
                     (scale_shape.size() == 1 && scale_shape.at(0) == n_channels),
-                    "Scale must be a vector of size of input tensor channels if "
-                    "'channels_shared' parameter is true and input tensor is of "
-                    "rank greater equal 3.");
+                    "Scale must be a vector of size of input tensor channels if input tensor is "
+                    "of rank greater equal 3.");
             }
         }
     }
@@ -98,7 +100,7 @@ NodeVector op::Normalize::decompose_op() const
 
     // Calculate norm over CHW axes.
     AxisSet reduction_axes{1, 2, 3};
-    if (!m_across_spatial)
+    if (m_across_spatial)
     {
         // Calculate norm only onver HW axes.
         reduction_axes = AxisSet{2, 3};
