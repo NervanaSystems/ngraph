@@ -120,6 +120,13 @@ namespace ngraph
                 auto value = read_binary_file<T>(filepath);
                 add_expected_output(expected_shape, value);
             }
+
+            NgraphTestCase& dump_results(bool dump = true)
+            {
+                m_dump_results = dump;
+                return *this;
+            }
+
             void run();
 
         protected:
@@ -127,10 +134,17 @@ namespace ngraph
             static typename std::enable_if<std::is_floating_point<T>::value,
                                            ::testing::AssertionResult>::type
                 compare_values(const std::shared_ptr<ngraph::op::Constant>& expected_results,
-                               const std::shared_ptr<ngraph::runtime::Tensor>& results)
+                               const std::shared_ptr<ngraph::runtime::Tensor>& results,
+                               const bool dump_results)
             {
                 const auto expected = expected_results->get_vector<T>();
                 const auto result = read_vector<T>(results);
+
+                if (dump_results)
+                {
+                    std::cout << get_results_str<T>(expected, result, expected.size());
+                }
+
                 return ngraph::test::all_close_f(expected, result);
             }
 
@@ -138,16 +152,24 @@ namespace ngraph
             static typename std::enable_if<std::is_integral<T>::value,
                                            ::testing::AssertionResult>::type
                 compare_values(const std::shared_ptr<ngraph::op::Constant>& expected_results,
-                               const std::shared_ptr<ngraph::runtime::Tensor>& results)
+                               const std::shared_ptr<ngraph::runtime::Tensor>& results,
+                               const bool dump_results)
             {
                 const auto expected = expected_results->get_vector<T>();
                 const auto result = read_vector<T>(results);
+
+                if (dump_results)
+                {
+                    std::cout << get_results_str<T>(expected, result, expected.size());
+                }
+
                 return ngraph::test::all_close(expected, result);
             }
 
             using value_comparator_function = std::function<::testing::AssertionResult(
                 const std::shared_ptr<ngraph::op::Constant>&,
-                const std::shared_ptr<ngraph::runtime::Tensor>&)>;
+                const std::shared_ptr<ngraph::runtime::Tensor>&,
+                const bool)>;
 
             std::shared_ptr<Function> m_function;
             std::shared_ptr<runtime::Backend> m_backend;
@@ -156,6 +178,7 @@ namespace ngraph
             std::vector<std::shared_ptr<ngraph::op::Constant>> m_expected_outputs;
             int m_input_index = 0;
             int m_output_index = 0;
+            bool m_dump_results = false;
             static std::map<ngraph::element::Type_t, value_comparator_function> m_value_comparators;
         };
     }
