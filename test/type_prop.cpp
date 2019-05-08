@@ -4295,6 +4295,15 @@ TEST(
     }
 }
 
+TEST(type_prop, tile)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 8, 10});
+    auto param1 = op::Constant::create(element::i64, Shape{3}, {3, 4, 1});
+    auto top = make_shared<op::Tile>(param0, param1);
+    ASSERT_EQ(top->get_element_type(), element::f32);
+    ASSERT_EQ(top->get_shape(), (Shape{18, 32, 10}));
+}
+
 TEST(type_prop, one_hot_deduce_scalar)
 {
     auto param = make_shared<op::Parameter>(element::i32, Shape{});
@@ -13847,4 +13856,24 @@ TEST(type_prop, group_conv_invalid_groups)
     {
         FAIL() << "Deduced type check failed for unexpected reason";
     }
+}
+
+TEST(type_prop, gemm)
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape{3, 6});
+    auto B = make_shared<op::Parameter>(element::f32, Shape{6, 4});
+    auto C = make_shared<op::Parameter>(element::f32, Shape{3, 4});
+    auto gemm_func = make_shared<op::Gemm>(A, B, C);
+    EXPECT_EQ(gemm_func->get_element_type(), element::f32);
+    EXPECT_EQ(gemm_func->get_shape(), (Shape{3, 4}));
+}
+
+TEST(type_prop, gemm_broadcast_input_C)
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape{3, 6});
+    auto B = make_shared<op::Parameter>(element::f32, Shape{6, 4});
+    auto C = make_shared<op::Parameter>(element::f32, Shape{});
+    auto gemm_func = make_shared<op::Gemm>(A, B, C);
+    EXPECT_EQ(gemm_func->get_element_type(), element::f32);
+    EXPECT_EQ(gemm_func->get_shape(), (Shape{3, 4}));
 }
