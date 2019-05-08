@@ -432,3 +432,62 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_scalar_scale_2d)
 
     test_case.run();
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_w_scale)
+{
+    Shape data_shape{1, 2, 3, 4};
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    auto scale = make_shared<op::Parameter>(element::f32, Shape{2});
+    bool across_spatial{false};
+    bool channel_shared{false};
+    float eps{1e-6f};
+
+    auto normalize = make_shared<op::Normalize>(data, scale, across_spatial, channel_shared, eps);
+    auto function = make_shared<Function>(NodeVector{normalize}, ParameterVector{data, scale});
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    vector<float> input_data(shape_size(data_shape));
+    iota(begin(input_data), end(input_data), 1);
+
+    test_case.add_input<float>(input_data);
+    test_case.add_input<float>({2.f, 3.f});
+
+    test_case.add_expected_output<float>(
+        data_shape, {0.02857143, 0.05714286, 0.08571429, 0.11428571, 0.14285714, 0.17142857,
+                     0.2,        0.22857143, 0.25714286, 0.28571429, 0.31428571, 0.34285714,
+                     0.55714286, 0.6,        0.64285714, 0.68571429, 0.72857143, 0.77142857,
+                     0.81428571, 0.85714286, 0.9,        0.94285714, 0.98571429, 1.02857143});
+
+    test_case.run();
+}
+
+// TODO lower tolerance; mismatch at 4th decimal positions
+NGRAPH_TEST(DISABLED_${BACKEND_NAME}, normalize_across_hw_w_scale)
+{
+    Shape data_shape{1, 2, 3, 4};
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    auto scale = make_shared<op::Parameter>(element::f32, Shape{2});
+    bool across_spatial{true};
+    bool channel_shared{false};
+    float eps{0.25f};
+
+    auto normalize = make_shared<op::Normalize>(data, scale, across_spatial, channel_shared, eps);
+    auto function = make_shared<Function>(NodeVector{normalize}, ParameterVector{data, scale});
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    vector<float> input_data(shape_size(data_shape));
+    iota(begin(input_data), end(input_data), 1);
+
+    test_case.add_input<float>(input_data);
+    test_case.add_input<float>({2.f, 3.f});
+
+    test_case.add_expected_output<float>(
+        data_shape, {0.07844646, 0.15689291, 0.23533936, 0.31378582, 0.39223227, 0.47067872,
+                     0.5491252 , 0.62757164, 0.7060181 , 0.78446454, 0.862911  , 0.94135743,
+                     0.5982327 , 0.64425063, 0.6902685 , 0.7362864 , 0.7823043 , 0.8283222 ,
+                     0.87434006, 0.920358  , 0.9663758 , 1.0123938 , 1.0584116 , 1.1044296 });
+
+    test_case.run();
+}
