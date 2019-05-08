@@ -426,8 +426,8 @@ set(SRC ${SRC}
     )
 
 set(SRC ${SRC}
-    runtime/dynamic_wrapper/dynamic_wrapper_backend.cpp
-    runtime/dynamic_wrapper/dynamic_wrapper_backend.hpp
+    runtime/dynamic/dynamic_backend.cpp
+    runtime/dynamic/dynamic_backend.hpp
     )
 
 if(NGRAPH_JSON_ENABLE)

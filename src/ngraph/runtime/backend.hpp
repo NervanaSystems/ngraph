@@ -48,7 +48,7 @@ public:
     ///    will support dynamic tensors. If the underlying backend has native
     ///    support for dynamic tensors, then that backend object will be
     ///    returned directly. Otherwise, it will be wrapped with
-    ///    DynamicWrapperBackend.
+    ///    DynamicWrapperBackend. This feature is EXPERIMENTAL.
     /// \returns unique_ptr to a new Backend or nullptr if the named backend
     ///   does not exist.
     static std::unique_ptr<Backend> create(const std::string& type,

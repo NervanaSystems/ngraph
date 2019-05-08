@@ -20,7 +20,7 @@
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
-#include "ngraph/runtime/dynamic_wrapper/dynamic_wrapper_backend.hpp"
+#include "ngraph/runtime/dynamic/dynamic_backend.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -47,7 +47,7 @@ unique_ptr<runtime::Backend> runtime::Backend::create(const string& type, bool m
     else
     {
         return std::unique_ptr<runtime::Backend>(
-            new runtime::dynamic_wrapper::DynamicWrapperBackend(std::move(inner_backend)));
+            new runtime::dynamic::DynamicBackend(std::move(inner_backend)));
     }
 }
 
