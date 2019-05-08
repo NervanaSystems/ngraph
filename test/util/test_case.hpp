@@ -150,7 +150,7 @@ namespace ngraph
                 const std::shared_ptr<ngraph::runtime::Tensor>&)>;
 
             std::shared_ptr<Function> m_function;
-            std::unique_ptr<runtime::Backend> m_backend;
+            std::shared_ptr<runtime::Backend> m_backend;
             std::vector<std::shared_ptr<ngraph::runtime::Tensor>> m_input_tensors;
             std::vector<std::shared_ptr<ngraph::runtime::Tensor>> m_result_tensors;
             std::vector<std::shared_ptr<ngraph::op::Constant>> m_expected_outputs;

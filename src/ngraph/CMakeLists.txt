@@ -59,7 +59,7 @@ set (SRC
     descriptor/tensor.hpp
     dimension.cpp
     dimension.hpp
-    distributed.cpp 
+    distributed.cpp
     distributed.hpp
     except.hpp
     file_util.cpp
@@ -156,6 +156,8 @@ set (SRC
     op/experimental/quantized_max_pool.hpp
     op/experimental/shape_of.cpp
     op/experimental/shape_of.hpp
+    op/experimental/tile.cpp
+    op/experimental/tile.hpp
     op/experimental/quantized_dot.cpp
     op/experimental/quantized_dot.hpp
     op/experimental/quantized_dot_bias.cpp
@@ -282,6 +284,8 @@ set (SRC
     op/fused/depth_to_space.hpp
     op/fused/elu.cpp
     op/fused/elu.hpp
+    op/fused/gemm.cpp
+    op/fused/gemm.hpp
     op/fused/group_conv.hpp
     op/fused/group_conv.cpp
     op/fused/prelu.cpp
