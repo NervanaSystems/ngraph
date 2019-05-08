@@ -322,29 +322,12 @@ namespace ngraph
                     const ngraph::CoordinateDiff& padding_below,
                     const ngraph::CoordinateDiff& padding_above);
 
-                size_t
-                    build_convolution_backward_weights(const mkldnn::memory::desc& input_desc,
-                                                       const mkldnn::memory::desc& delta_desc,
-                                                       const mkldnn::memory::desc& result_desc,
-                                                       const ngraph::Strides& strides,
-                                                       const ngraph::Strides& dilation_strides,
-                                                       const ngraph::CoordinateDiff& padding_below,
-                                                       const ngraph::CoordinateDiff& padding_above);
-
                 void build_convolution_backward_weights(
                     std::vector<mkldnn::primitive*>& mkldnn_primitives,
                     const mkldnn::convolution_backward_weights::desc& bwd_desc,
                     const mkldnn::convolution_forward::desc& fwd_desc,
                     const std::vector<size_t>& deps,
                     size_t conv_index);
-
-                size_t build_convolution_backward_data(const mkldnn::memory::desc& weights_desc,
-                                                       const mkldnn::memory::desc& delta_desc,
-                                                       const mkldnn::memory::desc& result_desc,
-                                                       const ngraph::Strides& strides,
-                                                       const ngraph::Strides& dilation_strides,
-                                                       const ngraph::CoordinateDiff& padding_below,
-                                                       const ngraph::CoordinateDiff& padding_above);
 
                 void build_convolution_backward_data(
                     std::vector<mkldnn::primitive*>& mkldnn_primitives,
@@ -356,16 +339,6 @@ namespace ngraph
                 /**
                  * Convolution + bias backprop for weights and bias
                  */
-                size_t build_convolution_backward_weights_bias(
-                    const mkldnn::memory::desc& in_data_desc,
-                    const mkldnn::memory::desc& in_delta_desc,
-                    const mkldnn::memory::desc& out_weights_delta_desc,
-                    const mkldnn::memory::desc& out_bias_delta_desc,
-                    const ngraph::Strides& ng_strides,
-                    const ngraph::Strides& ng_dilation_strides,
-                    const ngraph::CoordinateDiff& ng_padding_below,
-                    const ngraph::CoordinateDiff& ng_padding_above);
-
                 void build_convolution_backward_weights_bias(
                     std::vector<mkldnn::primitive*>& mkldnn_primitives,
                     const mkldnn::convolution_backward_weights::desc& bwd_desc,
@@ -1330,15 +1303,15 @@ namespace ngraph
                     {
                         weights_desc.data.format = mkldnn_oidhw;
                     }
-                    auto delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
-                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+                    auto diff_dst_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
+                    auto diff_src_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
                     mkldnn::algorithm convolution_algo = mkldnn_utils::get_conv_algo();
 
                     return mkldnn::convolution_backward_data::desc(
                         convolution_algo,
-                        result_desc,
+                        diff_src_desc,
                         weights_desc,
-                        delta_desc,
+                        diff_dst_desc,
                         MKLDNN_DIMS(convolution->get_window_movement_strides_forward()),
                         MKLDNN_DIMS(window_dilation_strides_adjusted),
                         MKLDNN_DIMS(convolution->get_padding_below_forward()),
@@ -1360,20 +1333,20 @@ namespace ngraph
                         window_dilation_strides_adjusted.push_back(s - 1);
                     }
 
-                    auto in_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                    auto in_delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
-                    auto out_weights_delta_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+                    auto src_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto diff_dst_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
+                    auto diff_weights_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
                     mkldnn::algorithm convolution_algo = mkldnn_utils::get_conv_algo();
                     if (has_bias<OP>())
                     {
-                        auto out_bias_delta_desc = mkldnn_utils::get_output_mkldnn_md(node, 1);
+                        auto diff_bias_desc = mkldnn_utils::get_output_mkldnn_md(node, 1);
 
                         return mkldnn::convolution_backward_weights::desc(
                             convolution_algo,
-                            in_data_desc,
-                            out_weights_delta_desc,
-                            out_bias_delta_desc,
-                            in_delta_desc,
+                            src_desc,
+                            diff_weights_desc,
+                            diff_bias_desc,
+                            diff_dst_desc,
                             MKLDNN_DIMS(convolution->get_window_movement_strides_forward()),
                             MKLDNN_DIMS(window_dilation_strides_adjusted),
                             MKLDNN_DIMS(convolution->get_padding_below_forward()),
@@ -1384,9 +1357,9 @@ namespace ngraph
                     {
                         return mkldnn::convolution_backward_weights::desc(
                             convolution_algo,
-                            in_data_desc,
-                            out_weights_delta_desc,
-                            in_delta_desc,
+                            src_desc,
+                            diff_weights_desc,
+                            diff_dst_desc,
                             MKLDNN_DIMS(convolution->get_window_movement_strides_forward()),
                             MKLDNN_DIMS(window_dilation_strides_adjusted),
                             MKLDNN_DIMS(convolution->get_padding_below_forward()),
@@ -1422,15 +1395,15 @@ namespace ngraph
                         {
                             weights_desc.data.format = mkldnn_oidhw;
                         }
-                        auto delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
-                        auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+                        auto diff_dst_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
+                        auto diff_src_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
                         return mkldnn::convolution_forward::desc(
                             mkldnn::prop_kind::forward,
                             convolution_algo,
-                            result_desc,
+                            diff_src_desc,
                             weights_desc,
-                            delta_desc,
+                            diff_dst_desc,
                             MKLDNN_DIMS(convolution->get_window_movement_strides_forward()),
                             MKLDNN_DIMS(window_dilation_strides_adjusted),
                             MKLDNN_DIMS(convolution->get_padding_below_forward()),
@@ -1439,15 +1412,15 @@ namespace ngraph
                     }
                     else if (std::is_same<OP, ngraph::op::ConvolutionBackpropFilters>())
                     {
-                        auto in_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                        auto in_delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
-                        auto out_weights_delta_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+                        auto src_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                        auto diff_dst_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
+                        auto diff_weights_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
                         return mkldnn::convolution_forward::desc(
                             mkldnn::prop_kind::forward,
                             convolution_algo,
-                            in_data_desc,
-                            out_weights_delta_desc,
-                            in_delta_desc,
+                            src_desc,
+                            diff_weights_desc,
+                            diff_dst_desc,
                             MKLDNN_DIMS(convolution->get_window_movement_strides_forward()),
                             MKLDNN_DIMS(window_dilation_strides_adjusted),
                             MKLDNN_DIMS(convolution->get_padding_below_forward()),
@@ -1456,18 +1429,18 @@ namespace ngraph
                     }
                     else
                     {
-                        auto in_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                        auto in_delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
-                        auto out_weights_delta_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                        auto out_bias_delta_desc = mkldnn_utils::get_output_mkldnn_md(node, 1);
+                        auto src_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                        auto diff_dst_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
+                        auto diff_weights_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+                        auto diff_bias_desc = mkldnn_utils::get_output_mkldnn_md(node, 1);
 
                         return mkldnn::convolution_forward::desc(
                             mkldnn::prop_kind::forward,
                             convolution_algo,
-                            in_data_desc,
-                            out_weights_delta_desc,
-                            out_bias_delta_desc,
-                            in_delta_desc,
+                            src_desc,
+                            diff_weights_desc,
+                            diff_bias_desc,
+                            diff_dst_desc,
                             MKLDNN_DIMS(convolution->get_window_movement_strides_forward()),
                             MKLDNN_DIMS(window_dilation_strides_adjusted),
                             MKLDNN_DIMS(convolution->get_padding_below_forward()),
