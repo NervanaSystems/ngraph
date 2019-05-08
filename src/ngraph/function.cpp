@@ -87,9 +87,10 @@ Function::~Function()
     // If you delete the nodes by simply releasing the results then the nodes recursively
     // traverse the tree freeing each node's inputs. This will exceed a process's stack allocation
     // for a sufficiently large graph.
-    // This deleter makes a list of nodes which can then be traversed in forward order to
-    // delete nodes. The only memory cost is the size of the list, but this is allocated on the
-    // heap.
+    // This makes a list of nodes which can then be traversed in forward order to clear each node's
+    // inputs. The only memory cost is the size of the list, but this is allocated on the
+    // heap. When we are done here none of the nodes are deleted, but all nodes are unlinked from
+    // each other so they can be deleted without traversing to other nodes.
     std::list<Node*> list;
 
     traverse_nodes(this, [&](shared_ptr<Node> n) { list.push_front(n.get()); }, true);
