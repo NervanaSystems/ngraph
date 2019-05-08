@@ -63,6 +63,7 @@
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
+#include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
@@ -1418,6 +1419,11 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Tanh>(args[0]);
                 break;
             }
+            case OP_TYPEID::Tile:
+            {
+                node = make_shared<op::Tile>(args[0], args[1]);
+                break;
+            }
             case OP_TYPEID::TopK:
             {
                 auto top_k_axis = node_js.at("top_k_axis").get<size_t>();
@@ -2099,6 +2105,8 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Tan: { break;
     }
     case OP_TYPEID::Tanh: { break;
+    }
+    case OP_TYPEID::Tile: { break;
     }
     case OP_TYPEID::TopK:
     {
