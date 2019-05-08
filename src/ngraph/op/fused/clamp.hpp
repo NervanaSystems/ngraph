@@ -14,16 +14,28 @@
 // limitations under the License.
 //*****************************************************************************
 
-// This collection contains one entry for each fused op.
-//
+#pragma once
 
-NGRAPH_OP(Elu, ngraph::op)
-NGRAPH_OP(Gemm, ngraph::op)
-NGRAPH_OP(PRelu, ngraph::op)
-NGRAPH_OP(Clamp, ngraph::op)
-NGRAPH_OP(ConvolutionBias, ngraph::op)
-NGRAPH_OP(ConvolutionBiasAdd, ngraph::op)
-NGRAPH_OP(ConvolutionBiasBackpropFiltersBias, ngraph::op)
-NGRAPH_OP(DepthToSpace, ngraph::op)
-NGRAPH_OP(SpaceToDepth, ngraph::op)
-NGRAPH_OP(GroupConvolution, ngraph::op)
+#include "ngraph/node.hpp"
+#include "ngraph/op/op.hpp"
+#include "ngraph/op/util/fused_op.hpp"
+
+namespace ngraph
+{
+    namespace op
+    {
+        class Clamp : public ngraph::op::util::FusedOp
+        {
+        public:
+            Clamp(const std::shared_ptr<ngraph::Node>& data, const double min, const double max);
+
+            virtual NodeVector decompose_op() const override;
+
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+
+            const double m_min;
+            const double m_max;
+        };
+    }
+}
