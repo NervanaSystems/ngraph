@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 #include <algorithm>
+#include <iterator>
 
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/multiply.hpp"
@@ -92,9 +93,8 @@ NodeVector op::Normalize::decompose_op() const
     // Reshape to 4D tensor.
     if (input_shape.size() != 4)
     {
-        Shape data_shape{input_shape};
-        data_shape.resize(4);
-        fill(begin(data_shape), next(begin(data_shape), input_shape.size()), size_t{1});
+        Shape data_shape(4 - input_shape.size(), 1);
+        copy(begin(input_shape), end(input_shape), back_inserter(data_shape));
         data = util::reshape(data, data_shape);
     }
 
