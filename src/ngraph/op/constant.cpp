@@ -174,7 +174,6 @@ static bool test_bitwise_identical(const op::Constant* constant)
 bool op::Constant::are_all_data_elements_bitwise_identical() const
 {
     bool rc = false;
-    size_t size = shape_size(get_shape());
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
