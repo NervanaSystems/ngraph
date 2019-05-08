@@ -167,8 +167,8 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                 std::function<decltype(runtime::cpu::kernel::reshape_1d<float, 2>)> kernel;
                 std::function<decltype(runtime::cpu::kernel::reshape_ref<float>)> ref_kernel;
@@ -188,10 +188,16 @@ namespace ngraph
                 CPUKernelFunctor functor;
                 if (kernel)
                 {
-                    functor = [&, kernel, arg_shape, input_order, result_shape](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        kernel(arg_tensor,
-                               out_tensor,
+                    functor = [&,
+                               kernel,
+                               arg_shape,
+                               input_order,
+                               result_shape,
+                               arg_buffer_index,
+                               out_buffer_index](CPURuntimeContext* ctx,
+                                                 CPUExecutionContext* ectx) {
+                        kernel(ctx->buffer_data[arg_buffer_index],
+                               ctx->buffer_data[out_buffer_index],
                                arg_shape,
                                input_order,
                                result_shape,
@@ -200,10 +206,16 @@ namespace ngraph
                 }
                 else if (ref_kernel)
                 {
-                    functor = [&, ref_kernel, arg_shape, input_order, result_shape](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        ref_kernel(arg_tensor,
-                                   out_tensor,
+                    functor = [&,
+                               ref_kernel,
+                               arg_shape,
+                               input_order,
+                               result_shape,
+                               arg_buffer_index,
+                               out_buffer_index](CPURuntimeContext* ctx,
+                                                 CPUExecutionContext* ectx) {
+                        ref_kernel(ctx->buffer_data[arg_buffer_index],
+                                   ctx->buffer_data[out_buffer_index],
                                    arg_shape,
                                    input_order,
                                    result_shape,
@@ -212,17 +224,24 @@ namespace ngraph
                 }
                 else if (skip_reshape)
                 {
-                    functor = [&, size](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        if (out_tensor != arg_tensor)
+                    functor = [&, size, arg_buffer_index, out_buffer_index](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        if (ctx->buffer_data[out_buffer_index] !=
+                            ctx->buffer_data[arg_buffer_index])
                         {
-                            memcpy(out_tensor, arg_tensor, size);
+                            memcpy(ctx->buffer_data[out_buffer_index],
+                                   ctx->buffer_data[arg_buffer_index],
+                                   size);
                         }
                     };
                 }
                 else
                 {
-                    functor = [&, size](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        memcpy(out_tensor, arg_tensor, size);
+                    functor = [&, size, arg_buffer_index, out_buffer_index](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        memcpy(ctx->buffer_data[out_buffer_index],
+                               ctx->buffer_data[arg_buffer_index],
+                               size);
                     };
                 }
                 functors.emplace_back(functor);

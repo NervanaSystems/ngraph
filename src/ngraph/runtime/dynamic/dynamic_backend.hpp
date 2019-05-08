@@ -56,7 +56,7 @@ namespace ngraph
 class ngraph::runtime::dynamic::DynamicBackend : public Backend
 {
 public:
-    DynamicBackend(std::unique_ptr<ngraph::runtime::Backend> wrapped_backend);
+    DynamicBackend(std::shared_ptr<ngraph::runtime::Backend> wrapped_backend);
 
     std::shared_ptr<Tensor>
         create_tensor(const element::Type& type, const Shape& shape, void* memory_pointer) override;
@@ -117,8 +117,8 @@ private:
 ///    value, `get_shape()` throws an exception.)
 /// 3. `make_storage()` allocates storage for a value of a specific element
 ///    type and shape, which must be consistent with the partial shape/element
-///    type. (`get_shape()` can now safely be called until `release_storage()`
-///    has been called.)
+///    type. Once storage has been allocated, `get_shape()` can safely be
+///    called until the storage has been released via `release_storage()`.
 /// 4. `release_storage()` unassigns previously assigned storage.
 ///
 class ngraph::runtime::dynamic::DynamicTensor : public ngraph::runtime::Tensor

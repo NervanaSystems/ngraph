@@ -49,9 +49,9 @@ public:
     ///    support for dynamic tensors, then that backend object will be
     ///    returned directly. Otherwise, it will be wrapped with
     ///    DynamicWrapperBackend. This feature is EXPERIMENTAL.
-    /// \returns unique_ptr to a new Backend or nullptr if the named backend
+    /// \returns shared_ptr to a new Backend or nullptr if the named backend
     ///   does not exist.
-    static std::unique_ptr<Backend> create(const std::string& type,
+    static std::shared_ptr<Backend> create(const std::string& type,
                                            bool must_support_dynamic = false);
 
     /// \brief Query the list of registered devices

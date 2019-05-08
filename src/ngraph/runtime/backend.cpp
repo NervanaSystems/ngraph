@@ -36,7 +36,8 @@ std::shared_ptr<ngraph::Node> runtime::Backend::get_backend_op(const std::string
     return dummy_node;
 }
 
-unique_ptr<runtime::Backend> runtime::Backend::create(const string& type, bool must_support_dynamic)
+std::shared_ptr<runtime::Backend> runtime::Backend::create(const string& type,
+                                                           bool must_support_dynamic)
 {
     auto inner_backend = BackendManager::create_backend(type);
 
@@ -46,8 +47,7 @@ unique_ptr<runtime::Backend> runtime::Backend::create(const string& type, bool m
     }
     else
     {
-        return std::unique_ptr<runtime::Backend>(
-            new runtime::dynamic::DynamicBackend(std::move(inner_backend)));
+        return make_shared<runtime::dynamic::DynamicBackend>(inner_backend);
     }
 }
 

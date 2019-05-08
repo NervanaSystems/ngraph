@@ -17,7 +17,7 @@
 #pragma once
 
 #include "core/node.hpp"
-#include "ngraph/node_vector.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/util/broadcasting.hpp"

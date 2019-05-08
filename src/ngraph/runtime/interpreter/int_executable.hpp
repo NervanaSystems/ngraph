@@ -571,6 +571,7 @@ private:
             case element::Type_t::undefined:
             case element::Type_t::dynamic:
             case element::Type_t::bf16:
+            case element::Type_t::f16:
                 ss << "unsupported element type " << type << " op Convert";
                 throw std::runtime_error(ss.str());
             }
@@ -1360,6 +1361,7 @@ private:
         case OP_TYPEID::DynBroadcast:
         case OP_TYPEID::Transpose:
         case OP_TYPEID::DynPad:
+        case OP_TYPEID::Tile:
         default: throw unsupported_op("Unsupported op '" + node.description() + "'");
 #pragma GCC diagnostic pop
         }

@@ -43,6 +43,7 @@ set(SRC
     cse.cpp
     element_type.cpp
     file_util.cpp
+    float16.cpp
     includes.cpp
     input_output_assign.cpp
     main.cpp
@@ -65,6 +66,7 @@ set(SRC
     specialize_shapes.cpp
     tensor.cpp
     type_prop.cpp
+    type_prop_layers.cpp
     util.cpp
     zero_dim_tensor_elimination.cpp
 )

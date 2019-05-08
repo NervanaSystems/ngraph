@@ -42,6 +42,9 @@ namespace ngraph
                 auto arg_shape = broadcast->get_argument(0)->get_shape();
                 out_shape = broadcast->get_shape();
 
+                // TODO(jmenon): Shape transformations, rank reduction etc. needs to be general
+                // and not in any one builder. Move this to the Halide analysis phase.
+
                 // Transform output shape - ex. [4, 1, 2, 2] -> [4, 1, 4]
                 // if we're not broadcasting along axes 2 and 3
 
@@ -92,7 +95,9 @@ namespace ngraph
                     else
                     {
                         broadcast_axes.erase(i);
-
+                        // TODO(jmenon): This needs to be rewritten
+                        // when it gets moved to the analysis pass
+                        // that doesn't use AxisSet
                         auto new_bcast_axes = AxisSet{};
                         for (auto axis : broadcast_axes)
                         {
@@ -188,8 +193,8 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                 std::function<decltype(runtime::cpu::kernel::broadcast<float, 2>)> kernel;
                 Shape expanded_input_shape, out_shape;
@@ -199,17 +204,28 @@ namespace ngraph
                 CPUKernelFunctor functor;
                 if (kernel)
                 {
-                    functor = [&, kernel, expanded_input_shape, out_shape](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        kernel(
-                            arg_tensor, out_tensor, expanded_input_shape, out_shape, ectx->arena);
+                    functor = [&,
+                               kernel,
+                               expanded_input_shape,
+                               out_shape,
+                               arg_buffer_index,
+                               out_buffer_index](CPURuntimeContext* ctx,
+                                                 CPUExecutionContext* ectx) {
+                        kernel(ctx->buffer_data[arg_buffer_index],
+                               ctx->buffer_data[out_buffer_index],
+                               expanded_input_shape,
+                               out_shape,
+                               ectx->arena);
                     };
                     functors.emplace_back(functor);
                 }
                 else
                 {
-                    functor = [&, size](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        memcpy(out_tensor, arg_tensor, size);
+                    functor = [&, size, arg_buffer_index, out_buffer_index](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        memcpy(ctx->buffer_data[out_buffer_index],
+                               ctx->buffer_data[arg_buffer_index],
+                               size);
                     };
                     functors.emplace_back(functor);
                 }

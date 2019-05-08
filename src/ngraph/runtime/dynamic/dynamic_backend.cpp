@@ -24,7 +24,7 @@
 using namespace std;
 using namespace ngraph;
 
-runtime::dynamic::DynamicBackend::DynamicBackend(unique_ptr<runtime::Backend> wrapped_backend)
+runtime::dynamic::DynamicBackend::DynamicBackend(shared_ptr<runtime::Backend> wrapped_backend)
     : m_wrapped_backend(std::move(wrapped_backend))
 {
 }
