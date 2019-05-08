@@ -380,7 +380,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gemm_broadcast_input_C)
 
 NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_normalization)
 {
-    Shape data_shape{2, 5};
+    Shape data_shape{1, 2, 5};
     auto data = make_shared<op::Parameter>(element::f64, data_shape);
 
     auto mvn_func = make_shared<op::MVN>(data);

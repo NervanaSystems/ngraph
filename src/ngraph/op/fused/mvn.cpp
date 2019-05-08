@@ -41,11 +41,11 @@ op::MVN::MVN(const std::shared_ptr<Node>& data,
 NodeVector op::MVN::decompose_op() const
 {
     auto data = get_argument(0);
-    auto data_shape = data->get_shape();
-    auto element_count = shape_size(data_shape);
+    auto data_shape = data->get_shape(); // assume that data have n and c channels.
+    auto element_count = shape_size(data_shape) / data_shape[0];
 
     AxisSet reduction_axes;
-    for (size_t i = 0; i < data_shape.size(); ++i)
+    for (size_t i = 1; i < data_shape.size(); ++i)
     {
         if (!m_across_channels && i == 1)
         {
@@ -55,12 +55,12 @@ NodeVector op::MVN::decompose_op() const
         reduction_axes.insert(i);
     }
 
+    // calculate mean normalization
     auto sum = make_shared<ngraph::op::Sum>(data, reduction_axes);
     auto element_count_node =
         op::Constant::create(data->get_element_type(), sum->get_shape(), vector<size_t>{element_count});
     auto mean = sum / element_count_node;
-    mean = legacy_style_broadcast_for_binary_operation(data, mean, 1).at(1);
-
+    mean = legacy_style_broadcast_for_binary_operation(data, mean, 0).at(1);
     auto mean_normalization = data - mean;
 
     return {mean_normalization};
