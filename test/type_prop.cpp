@@ -13826,3 +13826,114 @@ TEST(type_prop, group_conv_invalid_groups)
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
+
+TEST(type_prop, normalize_invalid_input_tensor_rank)
+{
+    Shape data_shape{1, 2, 3, 4, 5};
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    auto scale = make_shared<op::Parameter>(element::f32, Shape{});
+    bool across_spatial{false};
+    bool channel_shared{true};
+    float eps{1e-6f};
+
+    try
+    {
+        auto normalize =
+            make_shared<op::Normalize>(data, scale, across_spatial, channel_shared, eps);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input tensor rank.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Input tensor rank must be 2, 3 or 4 dimensional"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+
+    data = make_shared<op::Parameter>(element::f32, Shape{2});
+
+    try
+    {
+        auto normalize =
+            make_shared<op::Normalize>(data, scale, across_spatial, channel_shared, eps);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input tensor rank.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Input tensor rank must be 2, 3 or 4 dimensional"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, normalize_invalid_scale_rank)
+{
+    Shape data_shape{1, 2, 3, 4};
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    auto scale = make_shared<op::Parameter>(element::f32, Shape{3});
+    bool across_spatial{false};
+    bool channel_shared{true};
+    float eps{1e-6f};
+
+    try
+    {
+        auto normalize =
+            make_shared<op::Normalize>(data, scale, across_spatial, channel_shared, eps);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input tensor rank.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Scale must be a scalar if 'channels_shared' "
+                                         "parameter is true"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+
+    channel_shared = false;
+    try
+    {
+        auto normalize =
+            make_shared<op::Normalize>(data, scale, across_spatial, channel_shared, eps);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input tensor rank.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Scale must be a vector of size of input tensor "
+                                         "channels"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+
+    data = make_shared<op::Parameter>(element::f32, Shape{4, 3});
+    try
+    {
+        auto normalize =
+            make_shared<op::Normalize>(data, scale, across_spatial, channel_shared, eps);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input tensor rank.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Scale must be a scalar if input tensor is of rank 2"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
