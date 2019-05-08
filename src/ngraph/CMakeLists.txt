@@ -282,6 +282,8 @@ set (SRC
     op/fused/elu.hpp
     op/fused/group_conv.hpp
     op/fused/group_conv.cpp
+    op/fused/normalize.cpp
+    op/fused/normalize.hpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
     op/fused/space_to_depth.cpp

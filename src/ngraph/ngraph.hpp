@@ -98,6 +98,7 @@
 #include "ngraph/op/fused/depth_to_space.hpp"
 #include "ngraph/op/fused/elu.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/fused/normalize.hpp"
 #include "ngraph/op/fused/prelu.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
 #include "ngraph/op/gather.hpp"
