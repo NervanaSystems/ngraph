@@ -47,6 +47,11 @@ NodeVector op::MVN::decompose_op() const
     AxisSet reduction_axes;
     for (size_t i = 0; i < data_shape.size(); ++i)
     {
+        if (!m_across_channels && i == 1)
+        {
+            element_count /= data_shape[i];
+            continue;
+        }
         reduction_axes.insert(i);
     }
 
@@ -54,7 +59,7 @@ NodeVector op::MVN::decompose_op() const
     auto element_count_node =
         op::Constant::create(data->get_element_type(), sum->get_shape(), vector<size_t>{element_count});
     auto mean = sum / element_count_node;
-    mean = numpy_style_broadcast({data, mean}).at(1);
+    mean = legacy_style_broadcast_for_binary_operation(data, mean, 1).at(1);
 
     auto mean_normalization = data - mean;
 
