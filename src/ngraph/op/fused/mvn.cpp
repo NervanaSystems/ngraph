@@ -16,10 +16,13 @@
 #include <algorithm>
 
 #include "mvn.hpp"
+#include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
-#include "ngraph/op/subtract.hpp"
 #include "ngraph/op/fused/mvn.hpp"
+#include "ngraph/op/multiply.hpp"
+#include "ngraph/op/sqrt.hpp"
+#include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 
@@ -57,13 +60,32 @@ NodeVector op::MVN::decompose_op() const
 
     // calculate mean normalization
     auto sum = make_shared<ngraph::op::Sum>(data, reduction_axes);
-    auto element_count_node =
-        op::Constant::create(data->get_element_type(), sum->get_shape(), vector<size_t>{element_count});
+    auto element_count_node = op::Constant::create(
+        data->get_element_type(), sum->get_shape(), vector<size_t>{element_count});
     auto mean = sum / element_count_node;
     mean = legacy_style_broadcast_for_binary_operation(data, mean, 0).at(1);
     auto mean_normalization = data - mean;
 
-    return {mean_normalization};
+    if (!m_normalize_variance)
+    {
+        return {mean_normalization};
+    }
+    else
+    {
+        // calculate variance
+        auto variance = mean_normalization * mean_normalization;
+        auto variance_sum = make_shared<ngraph::op::Sum>(variance, reduction_axes);
+        auto variance_mean = variance_sum / element_count_node;
+        variance = make_shared<op::Sqrt>(variance_mean);
+        // add epsilon
+        auto eps_node = op::Constant::create(
+            data->get_element_type(), variance->get_shape(), vector<double>{m_eps});
+        variance = variance + eps_node;
+        variance =
+            legacy_style_broadcast_for_binary_operation(mean_normalization, variance, 0).at(1);
+
+        return {mean_normalization / variance};
+    }
 }
 
 shared_ptr<Node> op::MVN::copy_with_new_args(const NodeVector& new_args) const
