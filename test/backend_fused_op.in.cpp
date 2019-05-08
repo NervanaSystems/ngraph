@@ -397,3 +397,23 @@ NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_normalization)
 
     test_case.run();
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_normalization_split_channels)
+{
+    Shape data_shape{1, 2, 5, 1};
+    auto data = make_shared<op::Parameter>(element::f64, data_shape);
+
+    auto mvn_func = make_shared<op::MVN>(data, false);
+    auto function = make_shared<Function>(NodeVector{mvn_func}, ParameterVector{data});
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    // data
+    vector<double> data_vector(shape_size(data_shape));
+    iota(begin(data_vector), end(data_vector), 0);
+    test_case.add_input<double>(data_vector);
+
+    // expected result
+    test_case.add_expected_output<double>({1, 2, 5, 1},
+                                          vector<double>{-2, -1, 0, 1, 2, -2, -1, 0, 1, 2});
+
+    test_case.run();
+}
