@@ -377,3 +377,23 @@ NGRAPH_TEST(${BACKEND_NAME}, gemm_broadcast_input_C)
     test_case.add_expected_output<double>(Shape{3, 4}, vector<double>(12, 7));
     test_case.run();
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_normalization)
+{
+    Shape data_shape{2, 5};
+    auto data = make_shared<op::Parameter>(element::f64, data_shape);
+
+    auto mvn_func = make_shared<op::MVN>(data);
+    auto function = make_shared<Function>(NodeVector{mvn_func}, ParameterVector{data});
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    // data
+    vector<double> data_vector(shape_size(data_shape));
+    iota(begin(data_vector), end(data_vector), 0);
+    test_case.add_input<double>(data_vector);
+
+    // expected result
+    test_case.add_expected_output<double>(
+        data_shape, vector<double>{-4.5, -3.5, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 3.5, 4.5});
+
+    test_case.run();
+}
