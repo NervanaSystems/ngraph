@@ -13938,6 +13938,20 @@ TEST(type_prop, normalize_invalid_scale_rank)
     }
 }
 
+TEST(type_prop, normalize)
+{
+    Shape data_shape{2, 3, 4};
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    auto scale = make_shared<op::Parameter>(element::f32, Shape{2});
+    bool across_spatial{false};
+    bool channel_shared{false};
+    float eps{1e-6f};
+
+    auto normalize = make_shared<op::Normalize>(data, scale, across_spatial, channel_shared, eps);
+    EXPECT_EQ(normalize->get_element_type(), element::f32);
+    EXPECT_EQ(normalize->get_shape(), (Shape{2, 3, 4}));
+}
+
 TEST(type_prop, gemm)
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{3, 6});
