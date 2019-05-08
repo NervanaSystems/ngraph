@@ -97,14 +97,10 @@ size_t float16::size() const
 
 bool float16::operator==(const float16& other) const
 {
-#if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wfloat-equal"
-#endif
     return (static_cast<float>(*this) == static_cast<float>(other));
-#if defined(__clang__)
 #pragma clang diagnostic pop
-#endif
 }
 
 bool float16::operator<(const float16& other) const
