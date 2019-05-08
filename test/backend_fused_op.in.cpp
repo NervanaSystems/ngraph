@@ -338,7 +338,7 @@ NGRAPH_TEST(${BACKEND_NAME}, depth_to_space)
     test_case.run();
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_scalar_scale)
+NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_scalar_scale_4d)
 {
     Shape data_shape{1, 2, 3, 4};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
@@ -363,6 +363,72 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_scalar_scale)
                      0.2f,        0.22857143f, 0.25714286f, 0.28571429f, 0.31428571f, 0.34285714f,
                      0.37142857f, 0.4f,        0.42857143f, 0.45714286f, 0.48571429f, 0.51428571f,
                      0.54285714f, 0.57142857f, 0.6f,        0.62857143f, 0.65714286f, 0.68571429f});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_scalar_scale_3d)
+{
+    Shape data_shape{2, 3, 4};
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    auto scale = make_shared<op::Parameter>(element::f32, Shape{});
+    bool across_spatial{false};
+    bool channel_shared{true};
+    float eps{1e-6f};
+
+    auto normalize = make_shared<op::Normalize>(data, scale, across_spatial, channel_shared, eps);
+    auto function = make_shared<Function>(NodeVector{normalize}, ParameterVector{data, scale});
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    vector<float> input_data(shape_size(data_shape));
+    iota(begin(input_data), end(input_data), 1);
+
+    test_case.add_input<float>(input_data);
+    test_case.add_input<float>({2.f});
+
+    test_case.add_expected_output<float>(
+        data_shape, {0.02857143f, 0.05714286f, 0.08571429f, 0.11428571f, 0.14285714f, 0.17142857f,
+                     0.2f,        0.22857143f, 0.25714286f, 0.28571429f, 0.31428571f, 0.34285714f,
+                     0.37142857f, 0.4f,        0.42857143f, 0.45714286f, 0.48571429f, 0.51428571f,
+                     0.54285714f, 0.57142857f, 0.6f,        0.62857143f, 0.65714286f, 0.68571429f});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_scalar_scale_2d)
+{
+    Shape data_shape{3, 4};
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    auto scale = make_shared<op::Parameter>(element::f32, Shape{});
+    bool across_spatial{false};
+    bool channel_shared{true};
+    float eps{1e-6f};
+
+    auto normalize = make_shared<op::Normalize>(data, scale, across_spatial, channel_shared, eps);
+    auto function = make_shared<Function>(NodeVector{normalize}, ParameterVector{data, scale});
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    vector<float> input_data(shape_size(data_shape));
+    iota(begin(input_data), end(input_data), 1);
+
+    test_case.add_input<float>(input_data);
+    test_case.add_input<float>({2.f});
+
+    test_case.add_expected_output<float>(data_shape,
+                                         {0.07844645,
+                                          0.15689291,
+                                          0.23533936,
+                                          0.31378582,
+                                          0.39223227,
+                                          0.47067872,
+                                          0.54912518,
+                                          0.62757163,
+                                          0.70601809,
+                                          0.78446454,
+                                          0.86291099,
+                                          0.94135745});
 
     test_case.run();
 }
