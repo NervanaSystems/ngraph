@@ -16,14 +16,12 @@
 #include <algorithm>
 
 #include "mvn.hpp"
+#include "ngraph/builder/reduce_ops.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
-#include "ngraph/op/fused/mvn.hpp"
-#include "ngraph/op/multiply.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
-#include "ngraph/op/sum.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 
 using namespace std;
@@ -45,24 +43,18 @@ NodeVector op::MVN::decompose_op() const
 {
     auto data = get_argument(0);
     auto data_shape = data->get_shape(); // assume that data have n and c channels.
-    auto element_count = shape_size(data_shape) / data_shape[0];
 
+    // if m_across_channels is true we should calculate mean and variance per batch
+    // else we calculate these per channel
     AxisSet reduction_axes;
-    for (size_t i = 1; i < data_shape.size(); ++i)
+    size_t start_axis = m_across_channels ? 1 : 2;
+    for (size_t i = start_axis; i < data_shape.size(); ++i)
     {
-        if (!m_across_channels && i == 1)
-        {
-            element_count /= data_shape[i];
-            continue;
-        }
         reduction_axes.insert(i);
     }
 
     // calculate mean normalization
-    auto sum = make_shared<ngraph::op::Sum>(data, reduction_axes);
-    auto element_count_node = op::Constant::create(
-        data->get_element_type(), sum->get_shape(), vector<size_t>{element_count});
-    auto mean = sum / element_count_node;
+    auto mean = builder::mean(data, reduction_axes);
     mean = legacy_style_broadcast_for_binary_operation(data, mean, 0).at(1);
     auto mean_normalization = data - mean;
 
@@ -73,10 +65,8 @@ NodeVector op::MVN::decompose_op() const
     else
     {
         // calculate variance
-        auto variance = mean_normalization * mean_normalization;
-        auto variance_sum = make_shared<ngraph::op::Sum>(variance, reduction_axes);
-        auto variance_mean = variance_sum / element_count_node;
-        variance = make_shared<op::Sqrt>(variance_mean);
+        auto variance = builder::variance(mean_normalization, reduction_axes);
+        variance = make_shared<op::Sqrt>(variance);
         // add epsilon
         auto eps_node = op::Constant::create(
             data->get_element_type(), variance->get_shape(), vector<double>{m_eps});
