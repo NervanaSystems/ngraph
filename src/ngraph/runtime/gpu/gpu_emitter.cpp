@@ -73,6 +73,7 @@
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
+#include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/gather.hpp"
@@ -1432,6 +1433,11 @@ std::string runtime::gpu::GPU_Emitter::emit_DynBroadcast(EMIT_ARGS)
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_DynPad(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_Tile(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
