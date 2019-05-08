@@ -1976,6 +1976,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::BatchMatMul:
         case OP_TYPEID::BroadcastDistributed:
         case OP_TYPEID::BroadcastLike:
+        case OP_TYPEID::Clamp:
         case OP_TYPEID::DepthToSpace:
         case OP_TYPEID::DynBroadcast:
         case OP_TYPEID::DynPad:

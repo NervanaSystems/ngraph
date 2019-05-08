@@ -378,7 +378,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gemm_broadcast_input_C)
     test_case.add_expected_output<double>(Shape{3, 4}, vector<double>(12, 7));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, clamp)
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp)
 {
     auto data = make_shared<op::Parameter>(element::f64, Shape{4, 4});
     auto tested_op = make_shared<op::Clamp>(data, 10.0, 20.0);
