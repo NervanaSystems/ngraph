@@ -42,7 +42,7 @@ op::MVN::MVN(const std::shared_ptr<Node>& data,
 NodeVector op::MVN::decompose_op() const
 {
     auto data = get_argument(0);
-    auto data_shape = data->get_shape(); // assume that data have n and c channels.
+    auto data_shape = data->get_shape(); // assume that data has n and c channels.
 
     // if m_across_channels is true we should calculate mean and variance per batch
     // else we calculate these per channel
