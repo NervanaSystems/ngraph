@@ -64,6 +64,9 @@ if(MKLDNN_INCLUDE_DIR AND MKLDNN_LIB_DIR)
         set_property(TARGET libmkl PROPERTY IMPORTED_LOCATION ${MKLML_LIB_DIR}/${MKLML_LIB})
         set_target_properties(libmkl PROPERTIES
             IMPORTED_LINK_INTERFACE_LIBRARIES ${MKLML_LIB_DIR}/${OMP_LIB})
+        if(LINUX)
+            set_property(TARGET libmkl PROPERTY IMPORTED_NO_SONAME 1)
+        endif()
     endif()
 
     if(WIN32)
@@ -105,9 +108,12 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
         if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 8.0 OR CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 8.0)
             set(MKLDNN_FLAG "-Wno-stringop-truncation -Wno-stringop-overflow")
         endif()
-    elseif(NGRAPH_MANYLINUX_ENABLE) #pragma GCC diagnostic ignored does not work on GCC used for manylinux1
-        set(MKLDNN_FLAG "-Wno-error=strict-overflow -Wno-error=unused-result -Wno-error=array-bounds")
-        set(MKLDNN_FLAG "${MKLDNN_FLAG} -Wno-unused-result -Wno-unused-value")
+    elseif(LINUX)
+        if(CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 4.8.2)
+            #pragma GCC diagnostic ignored does not work on GCC used for manylinux1
+            set(MKLDNN_FLAG "-Wno-error=strict-overflow -Wno-error=unused-result -Wno-error=array-bounds")
+            set(MKLDNN_FLAG "${MKLDNN_FLAG} -Wno-unused-result -Wno-unused-value")
+        endif()
     endif()
 endif()
 
@@ -312,12 +318,12 @@ endif()
 if(WIN32)
     install(
         FILES
-            ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLML_LIB}
-            ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${MKLML_IMPLIB}
-            ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${OMP_LIB}
-            ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${OMP_IMPLIB}
-            ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}
-            ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${MKLDNN_IMPLIB}
+            ${NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY}/${MKLML_LIB}
+            ${NGRAPH_ARCHIVE_INSTALL_SRC_DIRECTORY}/${MKLML_IMPLIB}
+            ${NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY}/${OMP_LIB}
+            ${NGRAPH_ARCHIVE_INSTALL_SRC_DIRECTORY}/${OMP_IMPLIB}
+            ${NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY}/${MKLDNN_LIB}
+            ${NGRAPH_ARCHIVE_INSTALL_SRC_DIRECTORY}/${MKLDNN_IMPLIB}
         DESTINATION
             ${NGRAPH_INSTALL_LIB}
         OPTIONAL
@@ -325,9 +331,9 @@ if(WIN32)
 else()
     install(
         FILES
-            ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLML_LIB}
-            ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${OMP_LIB}
-            ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}
+            ${NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY}/${MKLML_LIB}
+            ${NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY}/${OMP_LIB}
+            ${NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY}/${MKLDNN_LIB}
         DESTINATION
             ${NGRAPH_INSTALL_LIB}
         OPTIONAL
@@ -335,8 +341,8 @@ else()
     if(NGRAPH_LIB_VERSIONING_ENABLE)
         install(
             FILES
-            ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_SHORT_LIB}
-            ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_FULL_LIB}
+            ${NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY}/${MKLDNN_SHORT_LIB}
+            ${NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY}/${MKLDNN_FULL_LIB}
             DESTINATION
                 ${NGRAPH_INSTALL_LIB}
             OPTIONAL

@@ -252,7 +252,7 @@ static void broadcast_test_helper(const Shape& shape_a, const Shape& shape_r, co
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
 
     vector<float> inp_data(shape_size<const Shape>(shape_a));
-    iota(inp_data.begin(), inp_data.end(), 1);
+    iota(inp_data.begin(), inp_data.end(), 1.f);
 
     auto f =
         make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, axis), ParameterVector{A});
@@ -462,6 +462,7 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_matrix_2)
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
 
+#ifdef NGRAPH_JSON_ENABLE
 NGRAPH_TEST(${BACKEND_NAME}, constant_broadcast)
 {
     const string js =
@@ -538,3 +539,4 @@ NGRAPH_TEST(${BACKEND_NAME}, constant_broadcast)
 
     // If this compiles it works
 }
+#endif

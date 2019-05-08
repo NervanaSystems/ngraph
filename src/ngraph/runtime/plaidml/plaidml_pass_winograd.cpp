@@ -111,7 +111,7 @@ ngraph::runtime::plaidml::pass::Winograd::Winograd()
                     filters_shape.at(1) == 3 && filters_shape.at(2) > 4 && filters_shape.at(3) > 4);
         });
 
-    pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
+    auto callback = [](pattern::Matcher& m) {
         auto conv = std::static_pointer_cast<plaidml::op::Convolution>(m.get_match_root());
         NodeVector args = conv->get_arguments();
         std::shared_ptr<ngraph::op::Constant> a;
@@ -126,5 +126,5 @@ ngraph::runtime::plaidml::pass::Winograd::Winograd()
         return true;
     };
 
-    add_matcher(std::make_shared<pattern::Matcher>(convolution_op, callback));
+    add_matcher(std::make_shared<pattern::Matcher>(convolution_op), callback);
 }

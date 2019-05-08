@@ -18,9 +18,11 @@
 
 #include "ngraph/file_util.hpp"
 #include "ngraph/pass/serialize.hpp"
-#include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
+#ifdef NGRAPH_JSON_ENABLE
+#include "ngraph/serializer.hpp"
 #include "nlohmann/json.hpp"
+#endif
 
 using namespace std;
 using namespace ngraph;
@@ -32,8 +34,10 @@ pass::Serialization::Serialization(const string& name)
 
 bool pass::Serialization::run_on_module(vector<shared_ptr<Function>>& functions)
 {
+#ifdef NGRAPH_JSON_ENABLE
     // serializing the outermost functions
     // also implicitly serializes any inner functions
     serialize(m_name, functions.at(0), 4);
+#endif
     return false;
 }

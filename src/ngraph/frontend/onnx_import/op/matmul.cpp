@@ -28,8 +28,10 @@
 #include "ngraph/op/experimental/quantized_dot.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
+#include "ngraph/op/util/reshape.hpp"
 #include "ngraph/shape.hpp"
-#include "utils/broadcasting.hpp"
+#include "ngraph/util.hpp"
 #include "utils/reshape.hpp"
 
 /// \brief      Slice the sub matrix from the input tensor.
@@ -127,7 +129,7 @@ namespace ngraph
                     if (left_rank > 1 && right_rank > 1)
                     {
                         const NodeVector& broadcasted_nodes =
-                            numpy_style_broadcast_for_matmul_operation(left, right);
+                            ngraph::op::numpy_style_broadcast_for_matmul_operation(left, right);
 
                         left = broadcasted_nodes.at(0);
                         right = broadcasted_nodes.at(1);
@@ -200,7 +202,7 @@ namespace ngraph
                             std::begin(left_shape),
                             std::next(std::begin(left_shape), left_shape.size() - 2));
                         return {std::make_shared<ngraph::op::Reshape>(
-                            result, reshape::get_default_axis_vector(shape.size()), result_shape)};
+                            result, ngraph::get_default_order(shape.size()), result_shape)};
                     }
                 }
 

@@ -36,9 +36,9 @@ namespace ngraph
                 auto& functors = external_function->get_functors();
 
                 CPUKernelFunctor functor;
-                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                 if (out[0].get_element_type() != element::f32 &&
                     out[0].get_element_type() != element::f64)
@@ -54,39 +54,54 @@ namespace ngraph
                 {
                     if (index_element_type == element::f32)
                     {
-                        functor = [&, in_shape, element_count](CPURuntimeContext* ctx,
-                                                               CPUExecutionContext* ectx) {
+                        functor = [&,
+                                   in_shape,
+                                   element_count,
+                                   arg0_buffer_index,
+                                   arg1_buffer_index,
+                                   out_buffer_index](CPURuntimeContext* ctx,
+                                                     CPUExecutionContext* ectx) {
 
                             ngraph::runtime::reference::embedding<float, float>(
-                                static_cast<float*>(arg0_tensor),
-                                static_cast<float*>(arg1_tensor),
-                                static_cast<float*>(out_tensor),
+                                static_cast<float*>(ctx->buffer_data[arg0_buffer_index]),
+                                static_cast<float*>(ctx->buffer_data[arg1_buffer_index]),
+                                static_cast<float*>(ctx->buffer_data[out_buffer_index]),
                                 element_count,
                                 in_shape);
                         };
                     }
                     else if (index_element_type == element::i32)
                     {
-                        functor = [&, in_shape, element_count](CPURuntimeContext* ctx,
-                                                               CPUExecutionContext* ectx) {
+                        functor = [&,
+                                   in_shape,
+                                   element_count,
+                                   arg0_buffer_index,
+                                   arg1_buffer_index,
+                                   out_buffer_index](CPURuntimeContext* ctx,
+                                                     CPUExecutionContext* ectx) {
 
                             ngraph::runtime::reference::embedding<float, int>(
-                                static_cast<int*>(arg0_tensor),
-                                static_cast<float*>(arg1_tensor),
-                                static_cast<float*>(out_tensor),
+                                static_cast<int*>(ctx->buffer_data[arg0_buffer_index]),
+                                static_cast<float*>(ctx->buffer_data[arg1_buffer_index]),
+                                static_cast<float*>(ctx->buffer_data[out_buffer_index]),
                                 element_count,
                                 in_shape);
                         };
                     }
                     else if (index_element_type == element::i64)
                     {
-                        functor = [&, in_shape, element_count](CPURuntimeContext* ctx,
-                                                               CPUExecutionContext* ectx) {
+                        functor = [&,
+                                   in_shape,
+                                   element_count,
+                                   arg0_buffer_index,
+                                   arg1_buffer_index,
+                                   out_buffer_index](CPURuntimeContext* ctx,
+                                                     CPUExecutionContext* ectx) {
 
                             ngraph::runtime::reference::embedding<float, int64_t>(
-                                static_cast<int64_t*>(arg0_tensor),
-                                static_cast<float*>(arg1_tensor),
-                                static_cast<float*>(out_tensor),
+                                static_cast<int64_t*>(ctx->buffer_data[arg0_buffer_index]),
+                                static_cast<float*>(ctx->buffer_data[arg1_buffer_index]),
+                                static_cast<float*>(ctx->buffer_data[out_buffer_index]),
                                 element_count,
                                 in_shape);
                         };
@@ -101,39 +116,54 @@ namespace ngraph
                 {
                     if (index_element_type == element::f32)
                     {
-                        functor = [&, in_shape, element_count](CPURuntimeContext* ctx,
-                                                               CPUExecutionContext* ectx) {
+                        functor = [&,
+                                   in_shape,
+                                   element_count,
+                                   arg0_buffer_index,
+                                   arg1_buffer_index,
+                                   out_buffer_index](CPURuntimeContext* ctx,
+                                                     CPUExecutionContext* ectx) {
 
                             ngraph::runtime::reference::embedding<int, float>(
-                                static_cast<float*>(arg0_tensor),
-                                static_cast<int*>(arg1_tensor),
-                                static_cast<int*>(out_tensor),
+                                static_cast<float*>(ctx->buffer_data[arg0_buffer_index]),
+                                static_cast<int*>(ctx->buffer_data[arg1_buffer_index]),
+                                static_cast<int*>(ctx->buffer_data[out_buffer_index]),
                                 element_count,
                                 in_shape);
                         };
                     }
                     else if (index_element_type == element::i32)
                     {
-                        functor = [&, in_shape, element_count](CPURuntimeContext* ctx,
-                                                               CPUExecutionContext* ectx) {
+                        functor = [&,
+                                   in_shape,
+                                   element_count,
+                                   arg0_buffer_index,
+                                   arg1_buffer_index,
+                                   out_buffer_index](CPURuntimeContext* ctx,
+                                                     CPUExecutionContext* ectx) {
 
                             ngraph::runtime::reference::embedding<int, int>(
-                                static_cast<int*>(arg0_tensor),
-                                static_cast<int*>(arg1_tensor),
-                                static_cast<int*>(out_tensor),
+                                static_cast<int*>(ctx->buffer_data[arg0_buffer_index]),
+                                static_cast<int*>(ctx->buffer_data[arg1_buffer_index]),
+                                static_cast<int*>(ctx->buffer_data[out_buffer_index]),
                                 element_count,
                                 in_shape);
                         };
                     }
                     else if (index_element_type == element::i64)
                     {
-                        functor = [&, in_shape, element_count](CPURuntimeContext* ctx,
-                                                               CPUExecutionContext* ectx) {
+                        functor = [&,
+                                   in_shape,
+                                   element_count,
+                                   arg0_buffer_index,
+                                   arg1_buffer_index,
+                                   out_buffer_index](CPURuntimeContext* ctx,
+                                                     CPUExecutionContext* ectx) {
 
                             ngraph::runtime::reference::embedding<int, int64_t>(
-                                static_cast<int64_t*>(arg0_tensor),
-                                static_cast<int*>(arg1_tensor),
-                                static_cast<int*>(out_tensor),
+                                static_cast<int64_t*>(ctx->buffer_data[arg0_buffer_index]),
+                                static_cast<int*>(ctx->buffer_data[arg1_buffer_index]),
+                                static_cast<int*>(ctx->buffer_data[out_buffer_index]),
                                 element_count,
                                 in_shape);
                         };

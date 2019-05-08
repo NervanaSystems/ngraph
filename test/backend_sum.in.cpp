@@ -168,7 +168,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_matrix_6d)
     auto result_ref = backend_ref->create_tensor(element::f32, shape_rt);
 
     vector<float> inp_data(shape_size<const Shape>(shape_a));
-    iota(inp_data.begin(), inp_data.end(), 1);
+    iota(inp_data.begin(), inp_data.end(), 1.f);
     copy_data(a_wrk, inp_data);
     copy_data(a_ref, inp_data);
 

@@ -27,6 +27,7 @@ using namespace std;
 NGRAPH_API const element::Type element::dynamic(element::Type_t::dynamic);
 NGRAPH_API const element::Type element::boolean(element::Type_t::boolean);
 NGRAPH_API const element::Type element::bf16(element::Type_t::bf16);
+NGRAPH_API const element::Type element::f16(element::Type_t::f16);
 NGRAPH_API const element::Type element::f32(element::Type_t::f32);
 NGRAPH_API const element::Type element::f64(element::Type_t::f64);
 NGRAPH_API const element::Type element::i8(element::Type_t::i8);
@@ -41,13 +42,18 @@ NGRAPH_API const element::Type element::u64(element::Type_t::u64);
 class TypeInfo
 {
 public:
-    TypeInfo(
-        size_t bitwidth, bool is_real, bool is_signed, bool is_quantized, const std::string& cname)
+    TypeInfo(size_t bitwidth,
+             bool is_real,
+             bool is_signed,
+             bool is_quantized,
+             const std::string& cname,
+             const std::string& type_name)
         : m_bitwidth{bitwidth}
         , m_is_real{is_real}
         , m_is_signed{is_signed}
         , m_is_quantized{is_quantized}
         , m_cname{cname}
+        , m_type_name{type_name}
     {
     }
     size_t m_bitwidth;
@@ -55,26 +61,29 @@ public:
     bool m_is_signed;
     bool m_is_quantized;
     std::string m_cname;
+    std::string m_type_name;
 };
 
 static const map<element::Type_t, const TypeInfo>& get_type_info_map()
 {
     static map<element::Type_t, const TypeInfo> s_type_info_map{
         {element::Type_t::undefined,
-         TypeInfo(std::numeric_limits<size_t>::max(), false, false, false, "undefined")},
-        {element::Type_t::dynamic, TypeInfo(0, false, false, false, "dynamic")},
-        {element::Type_t::boolean, TypeInfo(8, false, true, false, "char")},
-        {element::Type_t::bf16, TypeInfo(16, true, true, false, "bfloat16")},
-        {element::Type_t::f32, TypeInfo(32, true, true, false, "float")},
-        {element::Type_t::f64, TypeInfo(64, true, true, false, "double")},
-        {element::Type_t::i8, TypeInfo(8, false, true, true, "int8_t")},
-        {element::Type_t::i16, TypeInfo(16, false, true, false, "int16_t")},
-        {element::Type_t::i32, TypeInfo(32, false, true, true, "int32_t")},
-        {element::Type_t::i64, TypeInfo(64, false, true, false, "int64_t")},
-        {element::Type_t::u8, TypeInfo(8, false, false, true, "uint8_t")},
-        {element::Type_t::u16, TypeInfo(16, false, false, false, "uint16_t")},
-        {element::Type_t::u32, TypeInfo(32, false, false, false, "uint32_t")},
-        {element::Type_t::u64, TypeInfo(64, false, false, false, "uint64_t")},
+         TypeInfo(
+             std::numeric_limits<size_t>::max(), false, false, false, "undefined", "undefined")},
+        {element::Type_t::dynamic, TypeInfo(0, false, false, false, "dynamic", "dynamic")},
+        {element::Type_t::boolean, TypeInfo(8, false, true, false, "char", "boolean")},
+        {element::Type_t::bf16, TypeInfo(16, true, true, false, "bfloat16", "bf16")},
+        {element::Type_t::f16, TypeInfo(16, true, true, false, "float16", "f16")},
+        {element::Type_t::f32, TypeInfo(32, true, true, false, "float", "f32")},
+        {element::Type_t::f64, TypeInfo(64, true, true, false, "double", "f64")},
+        {element::Type_t::i8, TypeInfo(8, false, true, true, "int8_t", "i8")},
+        {element::Type_t::i16, TypeInfo(16, false, true, false, "int16_t", "i16")},
+        {element::Type_t::i32, TypeInfo(32, false, true, true, "int32_t", "i32")},
+        {element::Type_t::i64, TypeInfo(64, false, true, false, "int64_t", "i64")},
+        {element::Type_t::u8, TypeInfo(8, false, false, true, "uint8_t", "u8")},
+        {element::Type_t::u16, TypeInfo(16, false, false, false, "uint16_t", "u16")},
+        {element::Type_t::u32, TypeInfo(32, false, false, false, "uint32_t", "u32")},
+        {element::Type_t::u64, TypeInfo(64, false, false, false, "uint64_t", "u64")},
     };
     return s_type_info_map;
 };
@@ -84,6 +93,7 @@ std::vector<const element::Type*> element::Type::get_known_types()
     std::vector<const element::Type*> rc = {&element::dynamic,
                                             &element::boolean,
                                             &element::bf16,
+                                            &element::f16,
                                             &element::f32,
                                             &element::f64,
                                             &element::i8,
@@ -137,6 +147,11 @@ size_t element::Type::hash() const
     return static_cast<size_t>(m_type);
 }
 
+const std::string& element::Type::get_type_name() const
+{
+    return get_type_info_map().at(m_type).m_type_name;
+}
+
 namespace ngraph
 {
     namespace element
@@ -150,6 +165,11 @@ namespace ngraph
         const Type& from<bool>()
         {
             return boolean;
+        }
+        template <>
+        const Type& from<ngraph::float16>()
+        {
+            return f16;
         }
         template <>
         const Type& from<float>()

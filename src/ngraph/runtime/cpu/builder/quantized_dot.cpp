@@ -36,12 +36,22 @@ namespace ngraph
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
+                    if (node->get_input_element_type(0) == element::u8 &&
+                        node->get_input_element_type(1) == element::u8)
+                    {
+                        throw ngraph_error(
+                            "Unsupported data types for QuantizedDot MKLDNN kernel.");
+                    }
                     auto& functors = external_function->get_functors();
-                    auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                    auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                    auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
-                    auto& arg3_tensor = external_function->get_tensor_data(args[3].get_name());
-                    auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
+                    auto arg0_buffer_index =
+                        external_function->get_buffer_index(args[0].get_name());
+                    auto arg1_buffer_index =
+                        external_function->get_buffer_index(args[1].get_name());
+                    auto arg2_buffer_index =
+                        external_function->get_buffer_index(args[2].get_name());
+                    auto arg3_buffer_index =
+                        external_function->get_buffer_index(args[3].get_name());
+                    auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto scales_size = shape_size(args[3].get_shape());
@@ -55,21 +65,42 @@ namespace ngraph
                     size_t ip_index = mkldnn_emitter->inner_product_forward_init(true);
                     auto& deps = mkldnn_emitter->get_primitive_deps(ip_index);
 
-                    auto functor = [&, scales_size, ip_desc, ip_attr, deps, ip_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) mutable {
+                    auto functor = [&,
+                                    scales_size,
+                                    ip_desc,
+                                    ip_attr,
+                                    deps,
+                                    ip_index,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    arg2_buffer_index,
+                                    arg3_buffer_index,
+                                    out0_buffer_index](CPURuntimeContext* ctx,
+                                                       CPUExecutionContext* ectx) mutable {
                         if (ctx->first_iteration)
                         {
                             vector<float> dyn_scales;
-                            dyn_scales.assign(static_cast<float*>(arg3_tensor),
-                                              static_cast<float*>(arg3_tensor) + scales_size);
+                            dyn_scales.assign(
+                                static_cast<float*>(ctx->buffer_data[arg3_buffer_index]),
+                                static_cast<float*>(ctx->buffer_data[arg3_buffer_index]) +
+                                    scales_size);
                             ip_attr.set_output_scales(0, dyn_scales);
                             mkldnn_emitter->build_inner_product_forward<true>(
-                                ip_desc, ip_attr, executor::global_cpu_engine, ip_index);
+                                ctx->mkldnn_primitives,
+                                ip_desc,
+                                ip_attr,
+                                executor::global_cpu_engine,
+                                deps,
+                                ip_index);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], arg2_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], out0_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[2], ctx->buffer_data[arg2_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[3], ctx->buffer_data[out0_buffer_index]);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, ip_index);
                     };
                     functors.emplace_back(functor);
@@ -86,10 +117,13 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& functors = external_function->get_functors();
-                    auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                    auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                    auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
-                    auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
+                    auto arg0_buffer_index =
+                        external_function->get_buffer_index(args[0].get_name());
+                    auto arg1_buffer_index =
+                        external_function->get_buffer_index(args[1].get_name());
+                    auto arg2_buffer_index =
+                        external_function->get_buffer_index(args[2].get_name());
+                    auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto scales_size = shape_size(args[2].get_shape());
@@ -103,20 +137,39 @@ namespace ngraph
                     size_t ip_index = mkldnn_emitter->inner_product_forward_init(false);
                     auto& deps = mkldnn_emitter->get_primitive_deps(ip_index);
 
-                    auto functor = [&, scales_size, ip_desc, ip_attr, deps, ip_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) mutable {
+                    auto functor = [&,
+                                    scales_size,
+                                    ip_desc,
+                                    ip_attr,
+                                    deps,
+                                    ip_index,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    arg2_buffer_index,
+                                    out0_buffer_index](CPURuntimeContext* ctx,
+                                                       CPUExecutionContext* ectx) mutable {
                         if (ctx->first_iteration)
                         {
                             vector<float> dyn_scales;
-                            dyn_scales.assign(static_cast<float*>(arg2_tensor),
-                                              static_cast<float*>(arg2_tensor) + scales_size);
+                            dyn_scales.assign(
+                                static_cast<float*>(ctx->buffer_data[arg2_buffer_index]),
+                                static_cast<float*>(ctx->buffer_data[arg2_buffer_index]) +
+                                    scales_size);
                             ip_attr.set_output_scales(0, dyn_scales);
                             mkldnn_emitter->build_inner_product_forward<false>(
-                                ip_desc, ip_attr, executor::global_cpu_engine, ip_index);
+                                ctx->mkldnn_primitives,
+                                ip_desc,
+                                ip_attr,
+                                executor::global_cpu_engine,
+                                deps,
+                                ip_index);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out0_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[2], ctx->buffer_data[out0_buffer_index]);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, ip_index);
                     };
                     functors.emplace_back(functor);

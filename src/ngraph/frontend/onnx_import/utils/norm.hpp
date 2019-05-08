@@ -19,7 +19,6 @@
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/node_vector.hpp"
 
 namespace ngraph
 {

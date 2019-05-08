@@ -78,7 +78,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_sigmoid()
     auto divide_1_over_exp = std::make_shared<ngraph::op::Divide>(broadcast_constant, add_exp);
 
     // Define a call back that needs to called once the DFG matches the pattern
-    ngraph::pattern::graph_rewrite_callback callback = [input](pattern::Matcher& m) {
+    auto callback = [input](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_fprop_sigmoid pattern against "
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
@@ -102,9 +102,8 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_sigmoid()
         return true;
     };
 
-    auto m = std::make_shared<ngraph::pattern::Matcher>(
-        divide_1_over_exp, callback, "LSTMFusion.Sigmoid");
-    this->add_matcher(m);
+    auto m = std::make_shared<ngraph::pattern::Matcher>(divide_1_over_exp, "LSTMFusion.Sigmoid");
+    this->add_matcher(m, callback);
 }
 
 static void replace_collapse_node_user(std::shared_ptr<Node> collapsed_node,
@@ -184,14 +183,8 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         std::make_shared<ngraph::op::Multiply>(ot, std::make_shared<ngraph::op::Tanh>(ct_label));
 
     // Define a call back that needs to called once the DFG matches the pattern
-    pattern::graph_rewrite_callback callback = [ct_label,
-                                                w_i2h,
-                                                bias_i2h,
-                                                w_h2h,
-                                                bias_h2h,
-                                                xt,
-                                                ht_1,
-                                                ct_1](pattern::Matcher& m) {
+    auto callback = [ct_label, w_i2h, bias_i2h, w_h2h, bias_h2h, xt, ht_1, ct_1](
+        pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_fprop_lstm pattern against "
                      << m.get_match_root()->get_name();
 
@@ -326,8 +319,8 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         ngraph::replace_node(m.get_match_root(), ht_slice);
         return true;
     };
-    auto m = std::make_shared<pattern::Matcher>(ht, callback, "LSTMFusion.Fprop");
-    this->add_matcher(m);
+    auto m = std::make_shared<pattern::Matcher>(ht, "LSTMFusion.Fprop");
+    this->add_matcher(m, callback);
 }
 
 void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
@@ -378,13 +371,12 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
     auto lstm_goe_slice =
         std::make_shared<ngraph::op::Slice>(lstm_goe_label, Coordinate{10, 0}, Coordinate{20, 100});
 
-    pattern::recurrent_graph_rewrite_callback callback = [lstm_goe_label,
-                                                          lstm_src_layer,
-                                                          lstm_src_iter_label,
-                                                          lstm_weights_layer_label,
-                                                          lstm_weights_iter_label,
-                                                          lstm_bias_label](
-        pattern::RecurrentMatcher& m) {
+    auto callback = [lstm_goe_label,
+                     lstm_src_layer,
+                     lstm_src_iter_label,
+                     lstm_weights_layer_label,
+                     lstm_weights_iter_label,
+                     lstm_bias_label](pattern::RecurrentMatcher& m) {
 
         NGRAPH_DEBUG << " In recurrent RNN fusion callback";
 
@@ -568,9 +560,8 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         std::set<std::shared_ptr<pattern::op::Label>>{lstm_weights_layer_shared,
                                                       lstm_weights_iter_shared,
                                                       lstm_bias_layer_shared,
-                                                      lstm_bias_iter_shared},
-        callback);
-    this->add_matcher(m);
+                                                      lstm_bias_iter_shared});
+    this->add_matcher(m, callback);
 }
 
 static std::shared_ptr<Node> stack_rnn_inputs(NodeVector rnn_input_nodes)
@@ -613,13 +604,12 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
     auto rnn_goe0_label =
         std::make_shared<pattern::op::Label>(rnn_goe0, nullptr, NodeVector{rnn_goe0});
 
-    pattern::recurrent_graph_rewrite_callback callback = [rnn_src_layer,
-                                                          rnn_src_iter,
-                                                          rnn_weights_layer,
-                                                          rnn_weights_iter,
-                                                          rnn_bias,
-                                                          rnn_goe0_label](
-        pattern::RecurrentMatcher& m) {
+    auto callback = [rnn_src_layer,
+                     rnn_src_iter,
+                     rnn_weights_layer,
+                     rnn_weights_iter,
+                     rnn_bias,
+                     rnn_goe0_label](pattern::RecurrentMatcher& m) {
         auto number_of_rnn_cell_matched = m.get_number_of_recurrent_matches();
         NGRAPH_DEBUG << " In Recurrent multi layer RNN fusion callback ";
         NGRAPH_DEBUG << " Number of RNN's Matched: " << number_of_rnn_cell_matched;
@@ -775,8 +765,8 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
 
     std::set<std::shared_ptr<pattern::op::Label>> empty_correlated_matches;
     auto m = std::make_shared<pattern::RecurrentMatcher>(
-        rnn_goe0_label, rnn_src_layer, empty_correlated_matches, callback);
-    this->add_matcher(m);
+        rnn_goe0_label, rnn_src_layer, empty_correlated_matches);
+    this->add_matcher(m, callback);
 }
 
 void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
@@ -813,8 +803,7 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
         NodeVector{rnn_ltor_goe0_reshape_tnc, skip_reverse_seq}, 0);
 
     // Define a call back that needs to called once the DFG matches the pattern
-    ngraph::pattern::graph_rewrite_callback callback = [rnn_left_to_right,
-                                                        rnn_right_to_left](pattern::Matcher& m) {
+    auto callback = [rnn_left_to_right, rnn_right_to_left](pattern::Matcher& m) {
 
         auto pattern_map = m.get_pattern_map();
         auto rnn_ltor_node =
@@ -914,6 +903,6 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
         return true;
     };
 
-    auto m = std::make_shared<ngraph::pattern::Matcher>(concat, callback);
-    this->add_matcher(m);
+    auto m = std::make_shared<ngraph::pattern::Matcher>(concat, "BiDirectionalRnn");
+    this->add_matcher(m, callback);
 }

@@ -18,8 +18,6 @@
 
 using namespace ngraph;
 
-using ReplacementMap = std::map<Node*, std::shared_ptr<Node>>;
-
 std::shared_ptr<Function>
     ngraph::specialize_shapes(std::shared_ptr<Function> f,
                               const std::vector<element::Type>& parameter_element_types,
@@ -28,7 +26,7 @@ std::shared_ptr<Function>
     NGRAPH_CHECK(f->get_parameters().size() == parameter_shapes.size());
     NGRAPH_CHECK(f->get_parameters().size() == parameter_element_types.size());
 
-    ReplacementMap m;
+    NodeMap m;
 
     for (size_t i = 0; i < parameter_shapes.size(); i++)
     {

@@ -30,6 +30,7 @@
 #include "exceptions.hpp"
 #include "lstm.hpp"
 #include "ngraph/axis_set.hpp"
+#include "ngraph/builder/make_constant.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/concat.hpp"
@@ -45,11 +46,10 @@
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/tanh.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
-#include "utils/broadcasting.hpp"
-#include "utils/common.hpp"
 #include "utils/reshape.hpp"
 #include "utils/rnn/activation_functions.hpp"
 
@@ -64,21 +64,21 @@ namespace ngraph
                 std::shared_ptr<ngraph::Node> add(const std::shared_ptr<ngraph::Node>& lhs,
                                                   const std::shared_ptr<ngraph::Node>& rhs)
                 {
-                    auto args = numpy_style_broadcast({lhs, rhs});
+                    auto args = ngraph::op::numpy_style_broadcast({lhs, rhs});
                     return {std::make_shared<ngraph::op::Add>(args.at(0), args.at(1))};
                 }
 
                 std::shared_ptr<ngraph::Node> sub(const std::shared_ptr<ngraph::Node>& lhs,
                                                   const std::shared_ptr<ngraph::Node>& rhs)
                 {
-                    auto args = numpy_style_broadcast({lhs, rhs});
+                    auto args = ngraph::op::numpy_style_broadcast({lhs, rhs});
                     return {std::make_shared<ngraph::op::Subtract>(args.at(0), args.at(1))};
                 }
 
                 std::shared_ptr<ngraph::Node> mul(const std::shared_ptr<ngraph::Node>& lhs,
                                                   const std::shared_ptr<ngraph::Node>& rhs)
                 {
-                    auto args = numpy_style_broadcast({lhs, rhs});
+                    auto args = ngraph::op::numpy_style_broadcast({lhs, rhs});
                     return {std::make_shared<ngraph::op::Multiply>(args.at(0), args.at(1))};
                 }
 
@@ -166,10 +166,8 @@ namespace ngraph
                         }
                         else
                         {
-                            m_map[LSTMInput::LSTM_INPUT_B] = common::make_constant_node<float>(
-                                element::f32,
-                                {num_directions, 2 * gates_count * hidden_size},
-                                {0.f});
+                            m_map[LSTMInput::LSTM_INPUT_B] = ngraph::builder::make_constant<float>(
+                                element::f32, {num_directions, 2 * gates_count * hidden_size}, 0.f);
                         }
                         // The lengths of the sequences in a batch. Shape [batch_size]
                         if (ng_inputs.size() > 4 && !ng_inputs.at(4)->is_null())
@@ -191,8 +189,9 @@ namespace ngraph
                         }
                         else
                         {
-                            m_map[LSTMInput::LSTM_INPUT_INIT_H] = common::make_constant_node<float>(
-                                element::f32, {num_directions, batch_size, hidden_size}, {0.f});
+                            m_map[LSTMInput::LSTM_INPUT_INIT_H] =
+                                ngraph::builder::make_constant<float>(
+                                    element::f32, {num_directions, batch_size, hidden_size}, 0.f);
                         }
                         // The initial value of the cell. Shape [num_directions, batch_size, hidden_size]
                         if (ng_inputs.size() > 6 && !ng_inputs.at(6)->is_null())
@@ -201,8 +200,9 @@ namespace ngraph
                         }
                         else
                         {
-                            m_map[LSTMInput::LSTM_INPUT_INIT_C] = common::make_constant_node<float>(
-                                element::f32, {num_directions, batch_size, hidden_size}, {0.f});
+                            m_map[LSTMInput::LSTM_INPUT_INIT_C] =
+                                ngraph::builder::make_constant<float>(
+                                    element::f32, {num_directions, batch_size, hidden_size}, 0.f);
                         }
                         // The weight tensor for peepholes. Shape [num_directions, 3*hidde_size]
                         if (ng_inputs.size() > 7 && !ng_inputs.at(7)->is_null())
@@ -211,10 +211,8 @@ namespace ngraph
                         }
                         else
                         {
-                            m_map[LSTMInput::LSTM_INPUT_P] = common::make_constant_node<float>(
-                                element::f32,
-                                {num_directions, peepholes_count * hidden_size},
-                                {0.f});
+                            m_map[LSTMInput::LSTM_INPUT_P] = ngraph::builder::make_constant<float>(
+                                element::f32, {num_directions, peepholes_count * hidden_size}, 0.f);
                         }
                     }
 
@@ -389,11 +387,11 @@ namespace ngraph
                             // *   - Denotes dot product.
 
                             // Xt*(W^T) -- for [iofc] gates.
-                            auto Xt_W =
-                                std::make_shared<ngraph::op::Dot>(in_x, reshape::transpose(m_W));
+                            auto Xt_W = std::make_shared<ngraph::op::Dot>(
+                                in_x, ngraph::op::util::transpose(m_W));
                             // Ht-1*(R^T)  -- for [iofc] gates.
-                            auto Ht_R =
-                                std::make_shared<ngraph::op::Dot>(H_t, reshape::transpose(m_R));
+                            auto Ht_R = std::make_shared<ngraph::op::Dot>(
+                                H_t, ngraph::op::util::transpose(m_R));
                             // Xt*(W^T) + Ht-1*(R^T) + Wb + Rb  -- for [iofc] gates.
                             auto gates = add(Xt_W, add(Ht_R, bias));
 
@@ -504,7 +502,7 @@ namespace ngraph
                                                           time_step));
 
                         std::shared_ptr<ngraph::Node> batch_seq_length =
-                            legacy_style_broadcast_for_binary_operation(
+                            ngraph::op::legacy_style_broadcast_for_binary_operation(
                                 curr_time_step_node, m_seq_lengths, batch_axis)
                                 .at(1);
 
