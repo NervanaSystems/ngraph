@@ -24,6 +24,7 @@
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -31,14 +32,20 @@ using namespace ngraph;
 
 using descriptor::layout::DenseTensorLayout;
 
-extern "C" const char* get_ngraph_version_string()
+extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
 {
-    return NGRAPH_VERSION;
-}
+    class LocalBackendConstructor : public runtime::BackendConstructor
+    {
+    public:
+        std::shared_ptr<runtime::Backend> create(const std::string& config) override
+        {
+            return std::make_shared<runtime::nop::NOPBackend>();
+        }
+    };
 
-extern "C" runtime::Backend* new_backend(const char* configuration_string)
-{
-    return new runtime::nop::NOPBackend();
+    static unique_ptr<runtime::BackendConstructor> s_backend_constructor(
+        new LocalBackendConstructor());
+    return s_backend_constructor.get();
 }
 
 shared_ptr<runtime::Tensor> runtime::nop::NOPBackend::create_tensor(const element::Type& type,
