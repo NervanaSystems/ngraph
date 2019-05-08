@@ -16,10 +16,10 @@
 #include <algorithm>
 #include <iterator>
 
+#include "ngraph/builder/norm.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
-#include "ngraph/op/util/norm.hpp"
 #include "ngraph/op/util/reshape.hpp"
 #include "normalize.hpp"
 
@@ -107,7 +107,7 @@ NodeVector op::Normalize::decompose_op() const
     }
 
     // Calculate l2 norm across channels.
-    shared_ptr<Node> norm = l2_norm(data, reduction_axes, m_eps);
+    shared_ptr<Node> norm = builder::l2_norm(data, reduction_axes, m_eps);
     norm = make_broadcast_node(norm, data->get_shape(), 0);
 
     auto scale_node{get_argument(1)};
