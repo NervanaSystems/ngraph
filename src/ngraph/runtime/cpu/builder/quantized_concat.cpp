@@ -35,41 +35,55 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& functors = external_function->get_functors();
-                    vector<reference_wrapper<void*>> arg_tensors;
+                    vector<size_t> arg_buffer_indices;
                     for (auto& arg : args)
                     {
                         if (shape_size(arg.get_shape()))
                         {
-                            arg_tensors.emplace_back(
-                                external_function->get_tensor_data(arg.get_name()));
+                            arg_buffer_indices.emplace_back(
+                                external_function->get_buffer_index(arg.get_name()));
                         }
                     }
                     auto nargs = args.size();
 
-                    auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                    auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto concat_pd =
+                        mkldnn_emitter->get_concat_desc<ngraph::op::QuantizedConcat>(node, nargs);
                     std::vector<mkldnn::memory::desc> inputs_data_desc;
                     for (size_t i = 0; i < args.size(); i++)
                     {
                         inputs_data_desc.push_back(mkldnn_utils::get_input_mkldnn_md(node, i));
                     }
 
-                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-
-                    size_t concat_dim = (static_cast<const ngraph::op::QuantizedConcat*>(node))
-                                            ->get_concatenation_axis();
-                    auto concat_index =
-                        mkldnn_emitter->build_concat(inputs_data_desc, result_desc, concat_dim);
+                    // Concat needs number of inputs plus 2 primitives; those two are for result and concat.
+                    auto concat_index = mkldnn_emitter->reserve_primitive_space(nargs + 2);
                     auto& deps = mkldnn_emitter->get_primitive_deps(concat_index);
 
-                    auto functor = [&, arg_tensors, nargs, concat_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    auto functor = [&,
+                                    concat_pd,
+                                    inputs_data_desc,
+                                    arg_buffer_indices,
+                                    nargs,
+                                    concat_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* ectx) {
+                        if (ctx->first_iteration)
+                        {
+                            mkldnn_emitter->build_concat(ctx->mkldnn_primitives,
+                                                         concat_pd,
+                                                         inputs_data_desc,
+                                                         deps,
+                                                         concat_index);
+                        }
                         for (size_t i = 0; i < nargs; i++)
                         {
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[i], arg_tensors[i]);
+                            cpu::mkldnn_utils::set_memory_ptr(
+                                ctx, deps[i], ctx->buffer_data[arg_buffer_indices[i]]);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[nargs], out_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(
+                            ctx, deps[nargs], ctx->buffer_data[out_buffer_index]);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, concat_index);
                     };
 

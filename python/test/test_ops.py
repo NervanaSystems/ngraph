@@ -21,7 +21,7 @@ import numpy as np
 
 from ngraph.impl import util
 from ngraph.impl import Shape, Strides, CoordinateDiff, AxisSet, AxisVector, Coordinate
-from ngraph.impl import Type, Function, NodeVector
+from ngraph.impl import Type, Function
 from ngraph.impl.runtime import Backend, Executable
 from ngraph.impl.op import Acos, Asin, Atan, Cos, Sin, Tan
 from ngraph.impl.op import Cosh, Sinh, Tanh, Sqrt, Sign
@@ -116,7 +116,7 @@ def binary_op_exec(op_str):
     A = Parameter(element_type, shape)
     B = Parameter(element_type, shape)
     parameter_list = [A, B]
-    function = Function(NodeVector([binary_op(op_str, A, B)]), parameter_list, 'test')
+    function = Function([binary_op(op_str, A, B)], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, shape)
@@ -146,7 +146,7 @@ def binary_op_comparison(op_str):
     A = Parameter(element_type, shape)
     B = Parameter(element_type, shape)
     parameter_list = [A, B]
-    function = Function(NodeVector([binary_op(op_str, A, B)]), parameter_list, 'test')
+    function = Function([binary_op(op_str, A, B)], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, shape)
@@ -245,7 +245,7 @@ def test_add_with_mul():
     B = Parameter(element_type, shape)
     C = Parameter(element_type, shape)
     parameter_list = [A, B, C]
-    function = Function(NodeVector([Multiply(Add(A, B), C)]), parameter_list, 'test')
+    function = Function([Multiply(Add(A, B), C)], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, shape)
@@ -358,7 +358,7 @@ def unary_op_exec(op_str, input_list):
     shape_np = np.array(input_list).shape
     A = Parameter(element_type, shape)
     parameter_list = [A]
-    function = Function(NodeVector([unary_op(op_str, A)]), parameter_list, 'test')
+    function = Function([unary_op(op_str, A)], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, shape)
@@ -492,7 +492,7 @@ def test_not():
     shape = Shape([2])
     A = Parameter(element_type, shape)
     parameter_list = [A]
-    function = Function(NodeVector([Not(A)]), parameter_list, 'test')
+    function = Function([Not(A)], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, shape)
@@ -518,7 +518,7 @@ def test_sum():
     shape = Shape([1, 4])
     A = Parameter(element_type, shape)
     parameter_list = [A]
-    function = Function(NodeVector([Sum(A, AxisSet({1}))]), parameter_list, 'test')
+    function = Function([Sum(A, AxisSet({1}))], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, shape)
@@ -545,7 +545,7 @@ def test_reshape():
     shape = Shape([2, 3])
     A = Parameter(element_type, shape)
     parameter_list = [A]
-    function = Function(NodeVector([Reshape(A, AxisVector([0, 1]), Shape([3, 2]))]), parameter_list, 'test')
+    function = Function([Reshape(A, AxisVector([0, 1]), Shape([3, 2]))], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, shape)
@@ -572,7 +572,7 @@ def test_convert():
     A = Parameter(element_type, shape)
     parameter_list = [A]
     # f32 to boolean
-    function = Function(NodeVector([Convert(A, Type.boolean)]), parameter_list, 'test')
+    function = Function([Convert(A, Type.boolean)], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, shape)
@@ -591,7 +591,7 @@ def test_convert():
     assert np.allclose(result_arr, result_arr_ref)
 
     # f32 to i32
-    function = Function(NodeVector([Convert(A, Type.i32)]), parameter_list, 'test')
+    function = Function([Convert(A, Type.i32)], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     result = backend.create_tensor(Type.i32, shape)
@@ -615,7 +615,7 @@ def test_broadcast():
     element_type = Type.f32
     A = Parameter(element_type, Shape([3]))
     parameter_list = [A]
-    function = Function(NodeVector([Broadcast(A, Shape([3, 3]), AxisSet({0}))]), parameter_list, 'test')
+    function = Function([Broadcast(A, Shape([3, 3]), AxisSet({0}))], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, Shape([3]))
@@ -640,7 +640,7 @@ def test_constant():
 
     element_type = Type.f32
     parameter_list = []
-    function = Function(NodeVector([Constant(element_type, Shape([3, 3]), list(range(9)))]),
+    function = Function([Constant(element_type, Shape([3, 3]), list(range(9)))],
                         parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
@@ -662,7 +662,7 @@ def test_onehot():
     element_type = Type.i32
     A = Parameter(element_type, Shape([3]))
     parameter_list = [A]
-    function = Function(NodeVector([OneHot(A, Shape([3, 3]), 0)]), parameter_list, 'test')
+    function = Function([OneHot(A, Shape([3, 3]), 0)], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, Shape([3]))
@@ -691,7 +691,7 @@ def test_concat():
     C = Parameter(element_type, Shape([1, 2]))
     parameter_list = [A, B, C]
     axis = 0
-    function = Function(NodeVector([Concat(NodeVector([A, B, C]), axis)]), parameter_list, 'test')
+    function = Function([Concat([A, B, C], axis)], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, Shape([1, 2]))
@@ -743,7 +743,7 @@ def test_select():
     C = Parameter(element_type, Shape([1, 2]))
     parameter_list = [A, B, C]
 
-    function = Function(NodeVector([Select(A, B, C)]), parameter_list, 'test')
+    function = Function([Select(A, B, C)], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(Type.boolean, Shape([1, 2]))
@@ -778,8 +778,8 @@ def test_slice():
     lower_bounds = [1, 1]
     upper_bounds = [5, 5]
 
-    function = Function(NodeVector([Slice(A, Coordinate(lower_bounds),
-                                   Coordinate(upper_bounds))]), parameter_list, 'test')
+    function = Function([Slice(A, Coordinate(lower_bounds),
+                                   Coordinate(upper_bounds))], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, shape)
@@ -801,8 +801,8 @@ def test_slice():
     #test with strides
     strides = [1, 2]
 
-    function = Function(NodeVector([Slice(A, Coordinate(lower_bounds), Coordinate(upper_bounds),
-                        Strides(strides))]), parameter_list, 'test')
+    function = Function([Slice(A, Coordinate(lower_bounds), Coordinate(upper_bounds),
+                        Strides(strides))], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     result = backend.create_tensor(element_type, Shape([4, 2]))
@@ -831,8 +831,8 @@ def test_replace_slice():
     lower_bounds = [0, 1]
     upper_bounds = [3, 3]
 
-    function = Function(NodeVector([ReplaceSlice(A, B, Coordinate(lower_bounds),
-                        Coordinate(upper_bounds))]), parameter_list, 'test')
+    function = Function([ReplaceSlice(A, B, Coordinate(lower_bounds),
+                        Coordinate(upper_bounds))], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, Shape([6, 4]))
@@ -858,8 +858,8 @@ def test_replace_slice():
     upper_bounds = [5, 3]
     strides = [2, 2]
 
-    function = Function(NodeVector([ReplaceSlice(A, B, Coordinate(lower_bounds),
-                        Coordinate(upper_bounds), Strides(strides))]),
+    function = Function([ReplaceSlice(A, B, Coordinate(lower_bounds),
+                        Coordinate(upper_bounds), Strides(strides))],
                         parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
@@ -885,7 +885,7 @@ def test_max_pool():
     input_arr = np.arange(10, dtype=np.float32).reshape(1, 1, 10)
     window_shape = [3]
 
-    function = Function(NodeVector([MaxPool(A, Shape(window_shape))]), parameter_list, 'test')
+    function = Function([MaxPool(A, Shape(window_shape))], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, shape)
@@ -905,7 +905,7 @@ def test_max_pool():
     #test 1d with strides
     strides = [2]
 
-    function = Function(NodeVector([MaxPool(A, Shape(window_shape), Strides(strides))]), parameter_list, 'test')
+    function = Function([MaxPool(A, Shape(window_shape), Strides(strides))], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     size = 4
@@ -929,7 +929,7 @@ def test_max_pool():
     input_arr = np.arange(100, dtype=np.float32).reshape(1, 1, 10, 10)
     window_shape = [3, 3]
 
-    function = Function(NodeVector([MaxPool(A, Shape(window_shape))]), parameter_list, 'test')
+    function = Function([MaxPool(A, Shape(window_shape))], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, shape)
@@ -949,7 +949,7 @@ def test_max_pool():
     #test 2d with strides
     strides = [2, 2]
 
-    function = Function(NodeVector([MaxPool(A, Shape(window_shape), Strides(strides))]), parameter_list, 'test')
+    function = Function([MaxPool(A, Shape(window_shape), Strides(strides))], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     size = 4
@@ -1027,7 +1027,7 @@ def test_convolution():
     filter_arr[0][0][2][0] = -1
     result_arr = np.zeros(196, dtype=np.float32).reshape(1, 1, 14, 14)
 
-    function = Function(NodeVector([Convolution(A, B)]), parameter_list, 'test')
+    function = Function([Convolution(A, B)], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, image_shape)
@@ -1061,7 +1061,7 @@ def test_convolution_with_strides():
     filter_arr[0][0][1][1] = 1
     strides = [2, 2]
 
-    function = Function(NodeVector([Convolution(A, B, Strides(strides))]), parameter_list, 'test')
+    function = Function([Convolution(A, B, Strides(strides))], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, image_shape)
@@ -1096,7 +1096,7 @@ def test_convolution_with_filter_dilation():
     strides = [1, 1]
     dilation = [2, 2]
 
-    function = Function(NodeVector([Convolution(A, B, Strides(strides), Strides(dilation))]), parameter_list, 'test')
+    function = Function([Convolution(A, B, Strides(strides), Strides(dilation))], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, image_shape)
@@ -1135,8 +1135,8 @@ def test_convolution_with_padding():
     padding_below = [0, 0]
     padding_above = [0, 0]
 
-    function = Function(NodeVector([Convolution(A, B, Strides(strides), Strides(dilation),
-                        CoordinateDiff(padding_below), CoordinateDiff(padding_above))]),
+    function = Function([Convolution(A, B, Strides(strides), Strides(dilation),
+                        CoordinateDiff(padding_below), CoordinateDiff(padding_above))],
                         parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
@@ -1174,8 +1174,8 @@ def test_convolution_with_padding():
     padding_below = [2, 1]
     padding_above = [1, 2]
 
-    function = Function(NodeVector([Convolution(A, B, Strides(strides), Strides(dilation),
-                        CoordinateDiff(padding_below), CoordinateDiff(padding_above))]),
+    function = Function([Convolution(A, B, Strides(strides), Strides(dilation),
+                        CoordinateDiff(padding_below), CoordinateDiff(padding_above))],
                         parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
@@ -1216,9 +1216,9 @@ def test_convolution_with_data_dilation():
     padding_above = [0, 0]
     data_dilation = [2, 2]
 
-    function = Function(NodeVector([Convolution(A, B, Strides(strides), Strides(dilation),
+    function = Function([Convolution(A, B, Strides(strides), Strides(dilation),
                                     CoordinateDiff(padding_below), CoordinateDiff(padding_above),
-                                    Strides(data_dilation))]), parameter_list, 'test')
+                                    Strides(data_dilation))], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, image_shape)
@@ -1264,9 +1264,9 @@ def test_convolutionBackpropData():
     B = Parameter(element_type, output_shape)
     parameter_list = [A, B]
 
-    function = Function(NodeVector([ConvolutionBackpropData(image_shape, A, B, Strides(window_strides), Strides(window_dilation),
+    function = Function([ConvolutionBackpropData(image_shape, A, B, Strides(window_strides), Strides(window_dilation),
                                      CoordinateDiff(padding_below), CoordinateDiff(padding_above),
-                                     Strides(data_dilation))]), parameter_list, 'test')
+                                     Strides(data_dilation))], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, filter_shape)
@@ -1320,9 +1320,9 @@ def test_convolutionBackpropFilters():
     B = Parameter(element_type, output_shape)
     parameter_list = [A, B]
 
-    function = Function(NodeVector([ConvolutionBackpropFilters(A, filter_shape, B, Strides(window_strides), Strides(window_dilation),
+    function = Function([ConvolutionBackpropFilters(A, filter_shape, B, Strides(window_strides), Strides(window_dilation),
                                      CoordinateDiff(padding_below),CoordinateDiff(padding_above),
-                                     Strides(data_dilation))]), parameter_list, 'test')
+                                     Strides(data_dilation))], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, image_shape)

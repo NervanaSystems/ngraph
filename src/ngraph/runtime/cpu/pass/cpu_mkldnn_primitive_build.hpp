@@ -18,6 +18,7 @@
 
 #include "ngraph/pass/pass.hpp"
 
+#include <fstream>
 #include <functional>
 #include <typeindex>
 #include <unordered_map>
@@ -25,6 +26,15 @@
 #define BUILD_PRIMITIVE_DECL(op_name)                                                              \
     build_primitive<op_name>(ngraph::runtime::cpu::MKLDNNEmitter & mkldnn_emitter,                 \
                              ngraph::Node * node)
+
+#define CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(op_name)                                             \
+    construct_primitive_build_string<op_name>(ngraph::runtime::cpu::MKLDNNEmitter &                \
+                                                  mkldnn_emitter,                                  \
+                                              ngraph::Node * node,                                 \
+                                              std::string & construct_string,                      \
+                                              std::vector<size_t> & deps,                          \
+                                              size_t & index,                                      \
+                                              std::ofstream & desc_file)
 
 namespace mkldnn
 {
@@ -48,23 +58,46 @@ namespace ngraph
                 using PrimitiveBuildOpMap =
                     std::unordered_map<std::type_index, PrimitiveBuildFunction>;
 
+                using PrimitiveBuildStringConstructFunction =
+                    std::function<void(ngraph::runtime::cpu::MKLDNNEmitter&,
+                                       ngraph::Node*,
+                                       std::string&,
+                                       std::vector<size_t>&,
+                                       size_t&,
+                                       std::ofstream&)>;
+                using PrimitiveBuildStringConstructOpMap =
+                    std::unordered_map<std::type_index, PrimitiveBuildStringConstructFunction>;
+
                 /// This pass traverses the call graph and creates MKLDNN primitives for those ops
                 /// that have been assigned to MKLDNN.
                 class MKLDNNPrimitiveBuildPass : public ngraph::pass::CallGraphPass
                 {
                 private:
+                    std::string m_desc_filename;
+
                     ngraph::runtime::cpu::MKLDNNEmitter& m_mkldnn_emitter;
 
                     /// External map to store each node with mkldnn implementation and its mkldnn
                     /// associated primitive index.
                     std::unordered_map<const Node*, size_t>& m_node_primitive_idx_map;
 
+                    /// External map to store each node with mkldnn implementation and its mkldnn
+                    /// creation string, deps, and mkldnn primitive index.
+                    std::map<const Node*, std::tuple<std::string, std::vector<size_t>, size_t>>&
+                        m_node_primitive_string_deps_index_map;
+
                 public:
                     MKLDNNPrimitiveBuildPass(
+                        std::string filename,
                         ngraph::runtime::cpu::MKLDNNEmitter& mkldnn_emitter,
-                        std::unordered_map<const Node*, size_t>& node_primitive_idx_map)
-                        : m_mkldnn_emitter(mkldnn_emitter)
+                        std::unordered_map<const Node*, size_t>& node_primitive_idx_map,
+                        std::map<const Node*, std::tuple<std::string, std::vector<size_t>, size_t>>&
+                            node_primitive_string_deps_index_map)
+                        : m_desc_filename(filename)
+                        , m_mkldnn_emitter(mkldnn_emitter)
                         , m_node_primitive_idx_map(node_primitive_idx_map)
+                        , m_node_primitive_string_deps_index_map(
+                              node_primitive_string_deps_index_map)
                     {
                     }
 
@@ -74,6 +107,19 @@ namespace ngraph
                     static size_t
                         build_primitive(ngraph::runtime::cpu::MKLDNNEmitter& mkldnn_emitter,
                                         ngraph::Node* node)
+                    {
+                        throw std::runtime_error("Unimplemented op '" + node->description() +
+                                                 "' in MKLDNNPrimitiveBuildPass");
+                    }
+
+                    template <typename OP>
+                    static void construct_primitive_build_string(
+                        ngraph::runtime::cpu::MKLDNNEmitter& mkldnn_emitter,
+                        ngraph::Node* node,
+                        std::string& construct_string,
+                        std::vector<size_t>& deps,
+                        size_t& index,
+                        std::ofstream& desc_file)
                     {
                         throw std::runtime_error("Unimplemented op '" + node->description() +
                                                  "' in MKLDNNPrimitiveBuildPass");

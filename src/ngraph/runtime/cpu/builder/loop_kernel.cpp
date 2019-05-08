@@ -59,7 +59,7 @@ namespace ngraph
                 auto& halide_functions = external_function->get_halide_functions();
                 auto& subgraph_params = external_function->get_subgraph_params();
                 auto& subgraph_param_sizes = external_function->get_subgraph_param_sizes();
-                auto& subgraph_param_ptrs = external_function->get_subgraph_param_ptrs();
+                auto& subgraph_param_indices = external_function->get_subgraph_param_indices();
 
                 std::set<std::string> param_names;
                 for (const auto& op : hs->get_node_list())
@@ -85,8 +85,8 @@ namespace ngraph
                                     Halide::ImageParam(Halide::Float(32), 1, tensor_name);
                                 subgraph_param_sizes[tensor_name] =
                                     shape_size(input.get_output().get_tensor_ptr()->get_shape());
-                                subgraph_param_ptrs.emplace(
-                                    tensor_name, external_function->get_tensor_data(tensor_name));
+                                subgraph_param_indices.emplace(
+                                    tensor_name, external_function->get_buffer_index(tensor_name));
                                 inputs.emplace_back(subgraph_params[tensor_name]);
                             }
                             else
@@ -107,7 +107,7 @@ namespace ngraph
 
                 auto& functors = external_function->get_functors();
 
-                std::vector<std::tuple<void*&, size_t>> buffers_data;
+                std::vector<std::tuple<size_t, size_t>> buffers_data;
                 std::vector<Halide::Expr> results;
 
                 auto output_nodes = hs->get_kernel_outputs();
@@ -117,9 +117,9 @@ namespace ngraph
                     auto result_func =
                         halide_functions[output_nodes.at(i)->get_output_tensor_ptr()->get_name()];
                     results.push_back((result_func(x) + 0));
-                    auto& out_tensor = external_function->get_tensor_data(out[i].get_name());
+                    auto out_buffer_index = external_function->get_buffer_index(out[i].get_name());
                     buffers_data.push_back(
-                        std::tuple<void*&, size_t>(out_tensor, out[i].get_size()));
+                        std::tuple<size_t, size_t>(out_buffer_index, out[i].get_size()));
                 }
 
                 Halide::Func terminal_func;
@@ -131,7 +131,7 @@ namespace ngraph
                     for (auto& param : param_names)
                     {
                         Halide::Buffer<float> param_buffer(
-                            static_cast<float*>(subgraph_param_ptrs.at(param).get()),
+                            static_cast<float*>(ctx->buffer_data[subgraph_param_indices.at(param)]),
                             subgraph_param_sizes.at(param));
                         subgraph_params[param].set(param_buffer);
                     }
@@ -139,7 +139,8 @@ namespace ngraph
                     for (auto tuple : buffers_data)
                     {
                         buffers.push_back(Halide::Buffer<float>(
-                            static_cast<float*>(std::get<0>(tuple)), std::get<1>(tuple)));
+                            static_cast<float*>(ctx->buffer_data[std::get<0>(tuple)]),
+                            std::get<1>(tuple)));
                     }
                     Halide::Realization r(buffers);
                     terminal_func.realize(r);

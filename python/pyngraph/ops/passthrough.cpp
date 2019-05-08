@@ -30,6 +30,6 @@ void regclass_pyngraph_op_Passthrough(py::module m)
     pass.def(py::init<const std::string&,
                       const std::string&,
                       const std::string&,
-                      const ngraph::NodeVector&,
+                      const std::vector<std::shared_ptr<ngraph::Node>>&,
                       std::vector<std::tuple<ngraph::element::Type, ngraph::PartialShape>>>());
 }
