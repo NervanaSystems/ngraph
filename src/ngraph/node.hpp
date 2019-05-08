@@ -30,12 +30,13 @@
 
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/check.hpp"
+#include "ngraph/coordinate.hpp"
 #include "ngraph/deprecated.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/descriptor/tensor.hpp"
-#include "ngraph/node_vector.hpp"
 #include "ngraph/placement.hpp"
+#include "ngraph/strides.hpp"
 
 namespace ngraph
 {
@@ -45,10 +46,20 @@ namespace ngraph
     template <typename NodeType>
     class Output;
 
+    class Node;
+    using NodeVector = std::vector<std::shared_ptr<Node>>;
+
+    class Function;
+
     namespace op
     {
         class Constant;
     } // namespace op
+
+    namespace autodiff
+    {
+        class Adjoints;
+    }
 
     std::string node_validation_failure_loc_string(const Node* node);
 
@@ -59,6 +70,9 @@ namespace ngraph
     const std::shared_ptr<Node>& check_single_output_arg(const std::shared_ptr<Node>& node,
                                                          size_t i);
     const NodeVector& check_single_output_args(const NodeVector& args);
+
+    /// Alias useful for cloning
+    using NodeMap = std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>;
 
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
@@ -142,8 +156,7 @@ namespace ngraph
         /// graph against the graph.
         bool is_same_op_type(const std::shared_ptr<Node>& node) const
         {
-            Node* n = node.get();
-            return std::type_index(typeid(*this)) == std::type_index(typeid(*n));
+            return description() == node->description();
         }
 
         /// \brief Marks an input as being relevant or irrelevant to the output shapes of this

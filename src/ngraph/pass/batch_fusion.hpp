@@ -16,8 +16,24 @@
 
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include "ngraph/pass/pass.hpp"
 
-namespace py = pybind11;
+namespace ngraph
+{
+    namespace pass
+    {
+        class BatchFusion : public ngraph::pass::FunctionPass
+        {
+        public:
+            BatchFusion(ngraph::pass::FusionType type = ngraph::pass::ALL_FUSIONS)
+                : FunctionPass()
+                , m_fusion_type(type)
+            {
+            }
+            virtual bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
 
-void regclass_pyngraph_NodeVector(py::module m);
+        private:
+            ngraph::pass::FusionType m_fusion_type;
+        };
+    }
+}

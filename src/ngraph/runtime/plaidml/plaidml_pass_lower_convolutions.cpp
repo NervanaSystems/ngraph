@@ -34,7 +34,7 @@ ngraph::runtime::plaidml::pass::LowerConvolutions::LowerConvolutions()
                    pattern::has_class<ngraph::op::ConvolutionBackpropFilters>()(node);
         });
 
-    pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
+    auto callback = [](pattern::Matcher& m) {
         auto to_transpose = [](const std::shared_ptr<Node>& node) -> ngraph::op::Reshape* {
             if (!node)
             {
@@ -140,5 +140,5 @@ ngraph::runtime::plaidml::pass::LowerConvolutions::LowerConvolutions()
         return false;
     };
 
-    add_matcher(std::make_shared<pattern::Matcher>(convolution_op, callback));
+    add_matcher(std::make_shared<pattern::Matcher>(convolution_op), callback);
 }

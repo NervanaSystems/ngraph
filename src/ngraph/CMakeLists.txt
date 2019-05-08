@@ -59,6 +59,8 @@ set (SRC
     descriptor/tensor.hpp
     dimension.cpp
     dimension.hpp
+    distributed.cpp
+    distributed.hpp
     except.hpp
     file_util.cpp
     file_util.hpp
@@ -72,7 +74,6 @@ set (SRC
     ngraph_visibility.hpp
     node.cpp
     node.hpp
-    node_vector.hpp
     op/abs.cpp
     op/abs.hpp
     op/acos.cpp
@@ -161,6 +162,20 @@ set (SRC
     op/experimental/quantized_dot_bias.hpp
     op/experimental/transpose.cpp
     op/experimental/transpose.hpp
+    op/experimental/layers/detection_output.cpp
+    op/experimental/layers/detection_output.hpp
+    op/experimental/layers/interpolate.cpp
+    op/experimental/layers/interpolate.hpp
+    op/experimental/layers/prior_box.cpp
+    op/experimental/layers/prior_box.hpp
+    op/experimental/layers/prior_box_clustered.cpp
+    op/experimental/layers/prior_box_clustered.hpp
+    op/experimental/layers/proposal.hpp
+    op/experimental/layers/proposal.cpp
+    op/experimental/layers/region_yolo.hpp
+    op/experimental/layers/region_yolo.cpp
+    op/experimental/layers/reorg_yolo.hpp
+    op/experimental/layers/reorg_yolo.cpp
     op/floor.cpp
     op/floor.hpp
     op/gather.cpp
@@ -259,10 +274,18 @@ set (SRC
     op/topk.hpp
     op/fused/conv_fused.cpp
     op/fused/conv_fused.hpp
+    op/fused/depth_to_space.cpp
+    op/fused/depth_to_space.hpp
     op/fused/elu.cpp
     op/fused/elu.hpp
+    op/fused/gemm.cpp
+    op/fused/gemm.hpp
+    op/fused/group_conv.hpp
+    op/fused/group_conv.cpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
+    op/fused/space_to_depth.cpp
+    op/fused/space_to_depth.hpp
     op/util/arithmetic_reduction.cpp
     op/util/arithmetic_reduction.hpp
     op/util/binary_elementwise_arithmetic.cpp
@@ -279,14 +302,17 @@ set (SRC
     op/util/index_reduction.hpp
     op/util/logical_reduction.cpp
     op/util/logical_reduction.hpp
+    op/util/reshape.cpp
+    op/util/reshape.hpp
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise_arithmetic.hpp
-    parameter_vector.hpp
     partial_shape.cpp
     partial_shape.hpp
     pass/algebraic_simplification.cpp
     pass/algebraic_simplification.hpp
     pass/assign_layout.hpp
+    pass/batch_fusion.hpp
+    pass/batch_fusion.cpp
     pass/common_function_collection.cpp
     pass/common_function_collection.hpp
     pass/constant_folding.cpp
@@ -332,6 +358,8 @@ set (SRC
     pass/reshape_sinking.hpp
     pass/serialize.cpp
     pass/serialize.hpp
+    pass/shape_relevance.cpp
+    pass/shape_relevance.hpp
     pass/shape_specialization.cpp
     pass/shape_specialization.hpp
     pass/validate_graph.cpp
@@ -358,7 +386,6 @@ set (SRC
     provenance.cpp
     provenance.hpp
     rank.hpp
-    result_vector.hpp
     runtime/aligned_buffer.cpp
     runtime/aligned_buffer.hpp
     runtime/backend.cpp
@@ -382,6 +409,9 @@ set (SRC
     strides.cpp
     strides.hpp
     type/bfloat16.cpp
+    type/bfloat16.hpp
+    type/float16.cpp
+    type/float16.hpp
     type/element_type.cpp
     util.cpp
     util.hpp
@@ -415,16 +445,11 @@ if(NGRAPH_JSON_ENABLE)
     list(APPEND SRC serializer.cpp serializer.hpp event_tracing.cpp event_tracing.hpp)
 endif()
 
-if(NGRAPH_DISTRIBUTED_ENABLE)
-    list(APPEND SRC distributed.cpp distributed.hpp)
-endif()
-
 configure_file(version.in.hpp version.hpp)
 
 add_library(ngraph SHARED ${SRC})
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
-    target_sources(ngraph PRIVATE distributed.cpp)
     if(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
         target_include_directories(ngraph SYSTEM PRIVATE libmlsl)
         target_link_libraries(ngraph PRIVATE libmlsl)

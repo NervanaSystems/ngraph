@@ -18,7 +18,11 @@
 //
 
 NGRAPH_OP(Elu, ngraph::op)
+NGRAPH_OP(Gemm, ngraph::op)
 NGRAPH_OP(PRelu, ngraph::op)
 NGRAPH_OP(ConvolutionBias, ngraph::op)
 NGRAPH_OP(ConvolutionBiasAdd, ngraph::op)
 NGRAPH_OP(ConvolutionBiasBackpropFiltersBias, ngraph::op)
+NGRAPH_OP(DepthToSpace, ngraph::op)
+NGRAPH_OP(SpaceToDepth, ngraph::op)
+NGRAPH_OP(GroupConvolution, ngraph::op)

@@ -66,8 +66,12 @@
 #include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/depth_to_space.hpp"
 #include "ngraph/op/fused/elu.hpp"
+#include "ngraph/op/fused/gemm.hpp"
+#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/prelu.hpp"
+#include "ngraph/op/fused/space_to_depth.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/gather_nd.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -843,6 +847,12 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Cosh>(args[0]);
                 break;
             }
+            case OP_TYPEID::DepthToSpace:
+            {
+                auto block_size = node_js.at("block_size").get<size_t>();
+                node = make_shared<op::DepthToSpace>(args[0], block_size);
+                break;
+            }
             case OP_TYPEID::Dequantize:
             {
                 auto type = read_element_type(node_js.at("type"));
@@ -931,6 +941,16 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::GatherND>(args[0], args[1]);
                 break;
             }
+            case OP_TYPEID::Gemm:
+            {
+                auto alpha = node_js.at("alpha").get<double>();
+                auto beta = node_js.at("beta").get<double>();
+                auto transA = node_js.at("transA").get<bool>();
+                auto transB = node_js.at("transB").get<bool>();
+                node =
+                    make_shared<op::Gemm>(args[0], args[1], args[2], alpha, beta, transA, transB);
+                break;
+            }
             case OP_TYPEID::GenerateMask:
             {
                 auto output_shape = node_js.at("output_shape").get<vector<size_t>>();
@@ -955,6 +975,33 @@ static shared_ptr<ngraph::Function>
             case OP_TYPEID::GreaterEq:
             {
                 node = make_shared<op::GreaterEq>(args[0], args[1]);
+                break;
+            }
+            case OP_TYPEID::GroupConvolution:
+            {
+                auto window_movement_strides =
+                    node_js.at("window_movement_strides").get<vector<size_t>>();
+                auto window_dilation_strides =
+                    node_js.at("window_dilation_strides").get<vector<size_t>>();
+                auto padding_below = node_js.at("padding_below").get<vector<std::ptrdiff_t>>();
+                auto padding_above = node_js.at("padding_above").get<vector<std::ptrdiff_t>>();
+                auto data_dilation_strides =
+                    node_js.at("data_dilation_strides").get<vector<size_t>>();
+                auto groups = node_js.at("groups").get<size_t>();
+
+                op::PadType pad_type = node_js["pad_type"].empty()
+                                           ? op::PadType::EXPLICIT
+                                           : static_cast<op::PadType>(node_js.at("pad_type"));
+
+                node = make_shared<op::GroupConvolution>(args[0],
+                                                         args[1],
+                                                         window_movement_strides,
+                                                         window_dilation_strides,
+                                                         padding_below,
+                                                         padding_above,
+                                                         data_dilation_strides,
+                                                         groups,
+                                                         pad_type);
                 break;
             }
             case OP_TYPEID::Less:
@@ -1339,6 +1386,12 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Softmax>(args[0], softmax_axes);
                 break;
             }
+            case OP_TYPEID::SpaceToDepth:
+            {
+                auto block_size = node_js.at("block_size").get<size_t>();
+                node = make_shared<op::SpaceToDepth>(args[0], block_size);
+                break;
+            }
             case OP_TYPEID::Sqrt:
             {
                 node = make_shared<op::Sqrt>(args[0]);
@@ -1712,6 +1765,13 @@ static json write(const Node& n, bool binary_constant_data)
         node["axes"] = tmp->get_axes();
         break;
     }
+    case OP_TYPEID::DepthToSpace:
+    {
+        auto tmp = dynamic_cast<const op::DepthToSpace*>(&n);
+        node["type"] = write_element_type(tmp->get_element_type());
+        node["block_size"] = tmp->get_block_size();
+        break;
+    }
     case OP_TYPEID::Divide: { break;
     }
     case OP_TYPEID::Dot:
@@ -1754,6 +1814,15 @@ static json write(const Node& n, bool binary_constant_data)
         node["n"] = tmp->get_n();
         break;
     }
+    case OP_TYPEID::Gemm:
+    {
+        auto tmp = dynamic_cast<const op::Gemm*>(&n);
+        node["alpha"] = tmp->get_alpha();
+        node["beta"] = tmp->get_beta();
+        node["transA"] = tmp->get_transA();
+        node["transB"] = tmp->get_transB();
+        break;
+    }
     case OP_TYPEID::GenerateMask:
     {
         auto tmp = dynamic_cast<const op::GenerateMask*>(&n);
@@ -1766,6 +1835,18 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Greater: { break;
     }
     case OP_TYPEID::GreaterEq: { break;
+    }
+    case OP_TYPEID::GroupConvolution:
+    {
+        auto tmp = dynamic_cast<const op::GroupConvolution*>(&n);
+        node["window_movement_strides"] = tmp->get_window_movement_strides();
+        node["window_dilation_strides"] = tmp->get_window_dilation_strides();
+        node["padding_below"] = tmp->get_padding_below();
+        node["padding_above"] = tmp->get_padding_above();
+        node["data_dilation_strides"] = tmp->get_data_dilation_strides();
+        node["groups"] = tmp->get_groups();
+        node["pad_type"] = tmp->get_pad_type();
+        break;
     }
     case OP_TYPEID::Less: { break;
     }
@@ -1988,6 +2069,13 @@ static json write(const Node& n, bool binary_constant_data)
         node["lower_bounds"] = tmp->get_lower_bounds();
         node["upper_bounds"] = tmp->get_upper_bounds();
         node["strides"] = tmp->get_strides();
+        break;
+    }
+    case OP_TYPEID::SpaceToDepth:
+    {
+        auto tmp = dynamic_cast<const op::SpaceToDepth*>(&n);
+        node["type"] = write_element_type(tmp->get_element_type());
+        node["block_size"] = tmp->get_block_size();
         break;
     }
     case OP_TYPEID::Sqrt: { break;

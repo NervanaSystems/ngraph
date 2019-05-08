@@ -24,6 +24,7 @@
 #include <iomanip>
 
 #include "benchmark.hpp"
+#include "ngraph/distributed.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
@@ -34,10 +35,6 @@
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
-
-#if defined NGRAPH_DISTRIBUTED_ENABLE
-#include "ngraph/distributed.hpp"
-#endif
 
 using namespace std;
 using namespace ngraph;
@@ -270,7 +267,7 @@ int main(int argc, char** argv)
     {
         cout << R"###(
 DESCRIPTION
-    Benchmark ngraph json model with given backend.
+    Benchmark nGraph JSON model with given backend.
 
 SYNOPSIS
         nbench [-f <filename>] [-b <backend>] [-i <iterations>]
@@ -280,23 +277,15 @@ OPTIONS
         -b|--backend              Backend to use (default: CPU)
         -d|--directory            Directory to scan for models. All models are benchmarked.
         -i|--iterations           Iterations (default: 10)
-        -s|--statistics           Display op stastics
-        -v|--visualize            Visualize a model (WARNING: requires GraphViz installed)
+        -s|--statistics           Display op statistics
+        -v|--visualize            Visualize a model (WARNING: requires Graphviz installed)
         --timing_detail           Gather detailed timing
         -w|--warmup_iterations    Number of warm-up iterations
         --no_copy_data            Disable copy of input/result data every iteration
-        --dot                     Generate graphviz dot file
+        --dot                     Generate Graphviz dot file
 )###";
         return 1;
     }
-
-#if defined NGRAPH_DISTRIBUTED_ENABLE
-    unique_ptr<ngraph::Distributed> dist(new ngraph::Distributed());
-    if (dist->get_size() == 1)
-    {
-        dist.reset();
-    }
-#endif
 
     vector<string> models;
     if (!directory.empty())
@@ -460,13 +449,6 @@ OPTIONS
         cout << "============================================================================\n";
         print_results(aggregate_perf_data, timing_detail);
     }
-
-#if defined NGRAPH_DISTRIBUTED_ENABLE
-    if (dist)
-    {
-        dist.reset();
-    }
-#endif
 
     return rc;
 }

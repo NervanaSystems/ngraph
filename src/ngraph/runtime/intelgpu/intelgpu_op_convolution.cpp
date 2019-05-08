@@ -108,7 +108,8 @@ static CustomKernels::krnl_info do_convolution_operation(const string& input_nam
                                                          const string& input_order,
                                                          const string& filter_order,
                                                          const string& output_order,
-                                                         bool reverse_filter)
+                                                         bool reverse_filter,
+                                                         size_t group_count)
 {
     const string kernel_type_name = get_opencl_type_name(output_type);
     const string entry_point_name = "convolution_" + output_name;
@@ -140,6 +141,8 @@ static CustomKernels::krnl_info do_convolution_operation(const string& input_nam
     writer.block_begin();
     { // Main function body
 
+        writer << "const unsigned group_size = " << input_shape.at(input_channel_axis_data) << " / "
+               << group_count << " /*group_count*/;\n";
         writer << "const unsigned batch = get_global_id(0); /*batch trip count: "
                << output_shape.at(batch_axis_data) << "*/\n";
         gws.push_back(output_shape.at(batch_axis_data));
@@ -174,8 +177,8 @@ static CustomKernels::krnl_info do_convolution_operation(const string& input_nam
                     }
                     writer << kernel_type_name << " result = " << acc_init << ";\n\n"
                            << "// Loop over input_channel\n"
-                           << "for (uint input_channel = 0; input_channel < "
-                           << input_shape.at(input_channel_axis_data) << "; ++input_channel)\n";
+                           << "for (uint input_channel = 0; input_channel < group_size; "
+                              "++input_channel)\n";
                     writer.block_begin();
                     {
                         // Loop over filter
@@ -326,7 +329,35 @@ CustomKernels::krnl_info CustomKernels::build_krnl(const shared_ptr<op::Convolut
                                     "input[batch][input_channel]",
                                     "filter[output_channel][input_channel]",
                                     "output[batch][output_channel]",
-                                    false);
+                                    false,
+                                    1);
+}
+
+CustomKernels::krnl_info CustomKernels::build_krnl(const shared_ptr<op::GroupConvolution>& op) const
+{
+    return do_convolution_operation(op->get_input_tensor_name(0),
+                                    op->get_input_shape(0),
+                                    op->get_input_tensor_name(1),
+                                    op->get_input_shape(1),
+                                    string(),
+                                    {},
+                                    string(),
+                                    {},
+                                    op->get_output_tensor_name(0),
+                                    op->get_output_shape(0),
+                                    op->get_output_element_type(0),
+                                    op->get_padding_below(),
+                                    op->get_window_movement_strides(),
+                                    op->get_window_dilation_strides(),
+                                    op->get_data_dilation_strides(),
+                                    0,
+                                    1,
+                                    1,
+                                    "input[batch][(output_channel * group_size) + input_channel]",
+                                    "filter[output_channel][input_channel]",
+                                    "output[batch][output_channel]",
+                                    false,
+                                    op->get_groups());
 }
 
 CustomKernels::krnl_info CustomKernels::build_krnl(const shared_ptr<op::ConvolutionBias>& op) const
@@ -352,7 +383,8 @@ CustomKernels::krnl_info CustomKernels::build_krnl(const shared_ptr<op::Convolut
                                     "input[batch][input_channel]",
                                     "filter[output_channel][input_channel]",
                                     "output[batch][output_channel]",
-                                    false);
+                                    false,
+                                    1);
 }
 
 CustomKernels::krnl_info
@@ -379,7 +411,8 @@ CustomKernels::krnl_info
                                     "input[batch][input_channel]",
                                     "filter[output_channel][input_channel]",
                                     "output[batch][output_channel]",
-                                    false);
+                                    false,
+                                    1);
 }
 
 CustomKernels::krnl_info
@@ -406,7 +439,8 @@ CustomKernels::krnl_info
                                     "input[input_channel][batch]",
                                     "filter[input_channel][output_channel]",
                                     "output[output_channel][batch]",
-                                    false);
+                                    false,
+                                    1);
 }
 
 CustomKernels::krnl_info
@@ -436,7 +470,8 @@ CustomKernels::krnl_info
                                  "input[input_channel][batch]",
                                  "filter[input_channel][output_channel]",
                                  "output[output_channel][batch]",
-                                 false);
+                                 false,
+                                 1);
     result.insert(result.end(), filter.begin(), filter.end());
 
     AxisSet reduce_axes;
@@ -478,5 +513,6 @@ CustomKernels::krnl_info
                                     "input[batch][input_channel]",
                                     "filter[input_channel][output_channel]",
                                     "output[batch][output_channel]",
-                                    true);
+                                    true,
+                                    1);
 }

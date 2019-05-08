@@ -23,8 +23,7 @@ using namespace std;
 using namespace ngraph;
 
 // TODO: Add file-based configuration support
-pass::PassConfig::PassConfig(pass::CompilationMode mode)
-    : m_compilation_mode(mode)
+pass::PassConfig::PassConfig()
 {
     /**
     * Parses the semi-colon separated environment string passed through NGRAPH_PASS_ENABLES
@@ -81,30 +80,32 @@ pass::PassConfig::PassConfig(pass::CompilationMode mode)
     }
 }
 
-void pass::PassConfig::set_pass_enable(string name, bool enable)
+void pass::PassConfig::set_pass_enable(const string& name, bool enable)
 {
     m_pass_enables[name] = enable;
 }
 
-bool pass::PassConfig::get_pass_enable(string name)
+bool pass::PassConfig::get_pass_enable(const string& name) const
 {
-    if (m_pass_enables.find(name) == m_pass_enables.end())
+    auto it = m_pass_enables.find(name);
+    if (it != m_pass_enables.end())
     {
-        return false;
+        return it->second;
     }
-    return m_pass_enables[name];
+    return false;
 }
 
-void pass::PassConfig::set_pass_attribute(string name, bool enable)
+void pass::PassConfig::set_pass_attribute(const string& name, bool enable)
 {
     m_pass_attributes[name] = enable;
 }
 
-bool pass::PassConfig::get_pass_attribute(string name)
+bool pass::PassConfig::get_pass_attribute(const string& name) const
 {
-    if (m_pass_attributes.find(name) == m_pass_attributes.end())
+    auto it = m_pass_attributes.find(name);
+    if (it != m_pass_attributes.end())
     {
-        return false;
+        return it->second;
     }
-    return m_pass_attributes[name];
+    return false;
 }

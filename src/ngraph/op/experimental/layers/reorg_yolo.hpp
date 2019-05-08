@@ -16,8 +16,28 @@
 
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include "ngraph/op/op.hpp"
 
-namespace py = pybind11;
+namespace ngraph
+{
+    namespace op
+    {
+        class ReorgYolo : public Op
+        {
+        public:
+            /// \brief Constructs a ReorgYolo operation
+            ///
+            /// \param input          Input
+            /// \param stride         Stride to reorganize input by
+            ReorgYolo(const std::shared_ptr<Node>& input, const Strides& stride);
 
-void regclass_pyngraph_ResultVector(py::module m);
+            void validate_and_infer_types() override;
+
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+
+        private:
+            Strides m_stride;
+        };
+    }
+}

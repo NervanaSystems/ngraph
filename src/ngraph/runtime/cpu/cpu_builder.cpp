@@ -27,6 +27,7 @@
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/allreduce.hpp"
 #include "ngraph/op/and.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
@@ -107,11 +108,6 @@
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
-#ifdef NGRAPH_DISTRIBUTED_OMPI_ENABLE
-#include <mpi.h>
-#include "ngraph/op/allreduce.hpp"
-#endif
-
 using namespace std;
 using namespace ngraph;
 
@@ -181,15 +177,19 @@ namespace ngraph
                 auto& functors = external_function->get_functors();
 
                 auto element_count = out[0].get_size();
-                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
+                auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
-                auto functor = [&, element_count](CPURuntimeContext* ctx,
-                                                  CPUExecutionContext* ectx) {
-                    runtime::cpu::kernel::logical_and(
-                        arg0_tensor, arg1_tensor, out0_tensor, element_count, ectx->arena);
-                };
+                auto functor =
+                    [&, element_count, arg0_buffer_index, arg1_buffer_index, out0_buffer_index](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        runtime::cpu::kernel::logical_and(ctx->buffer_data[arg0_buffer_index],
+                                                          ctx->buffer_data[arg1_buffer_index],
+                                                          ctx->buffer_data[out0_buffer_index],
+                                                          element_count,
+                                                          ectx->arena);
+                    };
                 functors.emplace_back(functor);
             }
 
@@ -199,15 +199,19 @@ namespace ngraph
                 auto& functors = external_function->get_functors();
 
                 auto element_count = out[0].get_size();
-                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
-                auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
+                auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
-                auto functor = [&, element_count](CPURuntimeContext* ctx,
-                                                  CPUExecutionContext* ectx) {
-                    runtime::cpu::kernel::logical_or(
-                        arg0_tensor, arg1_tensor, out0_tensor, element_count, ectx->arena);
-                };
+                auto functor =
+                    [&, element_count, arg0_buffer_index, arg1_buffer_index, out0_buffer_index](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        runtime::cpu::kernel::logical_or(ctx->buffer_data[arg0_buffer_index],
+                                                         ctx->buffer_data[arg1_buffer_index],
+                                                         ctx->buffer_data[out0_buffer_index],
+                                                         element_count,
+                                                         ectx->arena);
+                    };
                 functors.emplace_back(functor);
             }
 
@@ -347,23 +351,23 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                vector<void**> dest;
+                vector<size_t> dest_indices;
                 for (auto& result : external_function->get_function()->get_results())
                 {
                     if (result.get() == node)
                     {
-                        dest.push_back(&external_function->get_tensor_data(
+                        dest_indices.push_back(external_function->get_buffer_index(
                             result->get_output_tensor(0).get_name()));
                     }
                 }
-                auto& src =
-                    external_function->get_tensor_data(node->get_output_tensor(0).get_name());
+                auto src_index =
+                    external_function->get_buffer_index(node->get_output_tensor(0).get_name());
                 auto size = node->get_output_tensor(0).size();
-                auto functor = [&, dest, src, size](CPURuntimeContext* ctx,
-                                                    CPUExecutionContext* ectx) {
-                    for (auto p : dest)
+                auto functor = [&, dest_indices, src_index, size](CPURuntimeContext* ctx,
+                                                                  CPUExecutionContext* ectx) {
+                    for (auto p : dest_indices)
                     {
-                        memcpy(*p, src, size);
+                        memcpy(ctx->buffer_data[p], ctx->buffer_data[src_index], size);
                     }
                 };
                 functors.emplace_back(functor);

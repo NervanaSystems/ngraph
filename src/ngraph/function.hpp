@@ -24,8 +24,8 @@
 #include <vector>
 
 #include "ngraph/node.hpp"
-#include "ngraph/parameter_vector.hpp"
-#include "ngraph/result_vector.hpp"
+#include "ngraph/op/parameter.hpp"
+#include "ngraph/op/result.hpp"
 
 namespace ngraph
 {

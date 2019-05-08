@@ -21,7 +21,6 @@
 #include <unordered_map>
 
 #include "ngraph/coordinate.hpp"
-#include "ngraph/node_vector.hpp"
 #include "ngraph/strides.hpp"
 
 namespace ngraph
@@ -29,11 +28,9 @@ namespace ngraph
     class Node;
     class Function;
 
-    namespace runtime
-    {
-        class Backend;
-        class Manager;
-    }
+    // Need duplicate definition here to avoid g++ issues
+    // Keep consistent with version in node.hpp
+    using NodeVector = std::vector<std::shared_ptr<Node>>;
 
     namespace autodiff
     {

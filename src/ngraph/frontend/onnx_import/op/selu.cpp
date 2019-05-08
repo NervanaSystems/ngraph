@@ -19,7 +19,6 @@
 
 #include "core/node.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/node_vector.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
