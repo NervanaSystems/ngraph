@@ -42,12 +42,12 @@ using namespace ngraph;
 class PerfShape : public ngraph::runtime::PerformanceCounter
 {
 public:
-    PerfShape(const runtime::PerformanceCounter& p, Shape s)
+    PerfShape(const runtime::PerformanceCounter& p, vector<Shape> s)
         : PerformanceCounter(p)
         , shape(s)
     {
     }
-    Shape shape;
+    vector<Shape> shape;
 };
 
 vector<PerfShape> to_perf_shape(shared_ptr<Function> f,
@@ -65,7 +65,12 @@ vector<PerfShape> to_perf_shape(shared_ptr<Function> f,
             throw runtime_error(os.str());
         }
 
-        Shape shape = node->output(0).get_shape();
+        vector<Shape> shape;
+	for(int i = 0; i < fmin(node->get_input_size(), 3); i++)
+	{
+	    shape.push_back(node->input(i).get_shape());
+	}
+	shape.push_back(node->output(0).get_shape());
         result.push_back(PerfShape(p, shape));
     }
     return result;
@@ -78,8 +83,12 @@ multimap<size_t, string> aggregate_timing_details(const vector<PerfShape>& perf_
     for (const PerfShape& p : perf_data)
     {
         auto node = p.get_node();
-        string op = node->get_name().substr(0, node->get_name().find('_'));
-        string shape_name = " {" + join(p.shape) + "} ";
+        string op = node->description();
+        string shape_name;
+	for(int i = 0; i < p.shape.size(); i++)
+	{
+       	   shape_name += " {" + join(p.shape[i]) + "} ";
+	}
         timing[op + shape_name] += p.microseconds();
         count[op + shape_name] += 1;
     }
@@ -98,7 +107,7 @@ multimap<size_t, string> aggregate_timing(const vector<PerfShape>& perf_data)
     for (const PerfShape& p : perf_data)
     {
         auto node = p.get_node();
-        string op = node->get_name().substr(0, node->get_name().find('_'));
+        string op = node->description();
         timing[op] += p.microseconds();
     }
 
@@ -355,8 +364,7 @@ OPTIONS
                         total_temporary_bytes += tensor->size();
                         total_temporary_count++;
                     }
-                    string name = node->get_name();
-                    string op_name = name.substr(0, name.find('_'));
+                    string op_name = node->description();
                     string shape_name = "{" + join(node->output(0).get_shape()) + "}";
                     op_list[op_name + shape_name]++;
                     auto et = get_op_element_type(*node);
