@@ -25,6 +25,8 @@ set (SRC
     builder/autobroadcast.cpp
     builder/autobroadcast.hpp
     builder/make_constant.hpp
+    builder/norm.cpp
+    builder/norm.hpp
     builder/numpy_transpose.cpp
     builder/numpy_transpose.hpp
     builder/quantization.cpp
@@ -300,8 +302,6 @@ set (SRC
     op/util/index_reduction.hpp
     op/util/logical_reduction.cpp
     op/util/logical_reduction.hpp
-    op/util/norm.cpp
-    op/util/norm.hpp
     op/util/reshape.cpp
     op/util/reshape.hpp
     op/util/unary_elementwise_arithmetic.cpp

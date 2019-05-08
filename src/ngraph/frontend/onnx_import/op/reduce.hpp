@@ -20,6 +20,7 @@
 #include <memory>
 
 #include "core/node.hpp"
+#include "ngraph/builder/norm.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/exp.hpp"
@@ -30,7 +31,6 @@
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
-#include "ngraph/op/util/norm.hpp"
 #include "utils/reduction.hpp"
 
 namespace ngraph
@@ -101,7 +101,7 @@ namespace ngraph
                 {
                     return {reduction::make_ng_reduction_op(node,
                                                             node.get_ng_inputs().at(0),
-                                                            std::bind(ngraph::op::l1_norm,
+                                                            std::bind(ngraph::builder::l1_norm,
                                                                       std::placeholders::_1,
                                                                       std::placeholders::_2,
                                                                       0.f))};
@@ -122,7 +122,7 @@ namespace ngraph
                 {
                     return {reduction::make_ng_reduction_op(node,
                                                             node.get_ng_inputs().at(0),
-                                                            std::bind(ngraph::op::l2_norm,
+                                                            std::bind(ngraph::builder::l2_norm,
                                                                       std::placeholders::_1,
                                                                       std::placeholders::_2,
                                                                       0.f))};

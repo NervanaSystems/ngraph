@@ -21,9 +21,9 @@
 #include "exceptions.hpp"
 #include "lp_pool.hpp"
 #include "ngraph/axis_set.hpp"
+#include "ngraph/builder/norm.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/reshape.hpp"
-#include "ngraph/op/util/norm.hpp"
 #include "ngraph/op/util/reshape.hpp"
 #include "ngraph/util.hpp"
 #include "utils/common.hpp"
@@ -56,7 +56,7 @@ namespace ngraph
                         AxisSet reduction_axes{
                             common::get_monotonic_range<std::size_t>(orig_shape.size(), 2)};
 
-                        slice = ngraph::op::lp_norm(
+                        slice = ngraph::builder::lp_norm(
                             slice, reduction_axes, static_cast<std::size_t>(p_norm));
 
                         // output shape is all ones except N channel

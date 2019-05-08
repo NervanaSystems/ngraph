@@ -15,6 +15,7 @@
 //*****************************************************************************
 #pragma once
 
+#include <cstddef>
 #include <memory>
 
 #include "ngraph/axis_set.hpp"
@@ -22,7 +23,7 @@
 
 namespace ngraph
 {
-    namespace op
+    namespace builder
     {
         /// \brief      Calculates L-0 norm of input tensor.
         ///
@@ -80,6 +81,6 @@ namespace ngraph
                                       std::size_t p_norm = 2,
                                       float bias = 0.f);
 
-    } // namespace op
+    } // namespace builder
 
 } // namespace ngraph
