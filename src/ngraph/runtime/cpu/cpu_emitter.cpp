@@ -155,25 +155,41 @@ namespace ngraph
     {
         namespace cpu
         {
+            static void emit_build_primitives(CPU_ExternalFunction* external_function,
+                                              const ngraph::Node* node,
+                                              CodeWriter& writer,
+                                              size_t& index,
+                                              std::vector<std::size_t>& deps)
+            {
+                writer << "if (ctx->first_iteration)\n";
+                writer.block_begin();
+
+                // get the string, deps, and index from the map
+                writer << get<0>(external_function->get_primitive_build_tuple(node));
+                writer.block_end();
+
+                deps = get<1>(external_function->get_primitive_build_tuple(node));
+                index = get<2>(external_function->get_primitive_build_tuple(node));
+            }
+
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Add)
             {
                 writer.block_begin();
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    size_t add_index = external_function->get_primitive_index(node);
+                    size_t add_index;
+                    std::vector<std::size_t> deps;
+                    emit_build_primitives(external_function, node, writer, add_index, deps);
 
-                    auto& deps = mkldnn_emitter->get_primitive_deps(add_index);
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
-                           << ", " << args[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
-                           << ", " << args[1].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
-                           << ", " << out[0].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
+                           << args[0].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
+                           << args[1].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
+                           << out[0].get_name() << ");\n";
 
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(add_index) << ");\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(add_index) << ");\n";
                 }
                 else
                 {
@@ -517,56 +533,55 @@ namespace ngraph
                     throw ngraph_error(
                         "Lstm op doesnt have the required number of inputs to emit MKLDNN kernel");
                 }
-                auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                auto lstm_index = external_function->get_primitive_index(node);
-                auto& deps = mkldnn_emitter->get_primitive_deps(lstm_index);
 
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0]) << ", "
+                size_t lstm_index;
+                std::vector<std::size_t> deps;
+                emit_build_primitives(external_function, node, writer, lstm_index, deps);
+
+                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                        << args[0].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1]) << ", "
+                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
                        << args[1].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2]) << ", "
+                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
                        << args[2].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3]) << ", "
+                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[3]) << ", "
                        << args[3].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[4]) << ", "
+                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[4]) << ", "
                        << args[4].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[5]) << ", "
+                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[5]) << ", "
                        << out[0].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[6]) << ", "
+                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[6]) << ", "
                        << out[1].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[7])
-                       << ", ctx->mkldnn_workspaces[" << deps[8] << "]);\n";
+                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[7])
+                       << ", cg_ctx->mkldnn_workspaces[" << deps[8] << "]);\n";
 
-                writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                       << to_string(lstm_index) << ");\n";
+                writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(lstm_index) << ");\n";
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Rnn)
             {
-                auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                auto rnn_index = external_function->get_primitive_index(node);
-                auto& deps = mkldnn_emitter->get_primitive_deps(rnn_index);
+                size_t rnn_index;
+                std::vector<std::size_t> deps;
+                emit_build_primitives(external_function, node, writer, rnn_index, deps);
 
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0]) << ", "
+                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                        << args[0].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1]) << ", "
+                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
                        << args[1].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2]) << ", "
+                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
                        << args[2].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3]) << ", "
+                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[3]) << ", "
                        << args[3].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[4]) << ", "
+                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[4]) << ", "
                        << args[4].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[5]) << ", "
+                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[5]) << ", "
                        << out[0].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[6]) << ", "
+                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[6]) << ", "
                        << out[1].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[7])
-                       << ", ctx->mkldnn_workspaces[" << deps[8] << "]);\n";
-                writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, " << to_string(rnn_index)
-                       << ");\n";
+                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[7])
+                       << ", cg_ctx->mkldnn_workspaces[" << deps[8] << "]);\n";
+                writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(rnn_index) << ");\n";
             }
 
             template <typename T>
@@ -588,52 +603,41 @@ namespace ngraph
                        << args[1].get_name() << ", "
                        << args[1].get_size() * args[1].get_element_type().size() << ");\n";
 
-                const float ops_scale = 1.f;
-                const float ops_alpha = -0.f; // relu negative slope
-                const float ops_beta = 0.f;
-
-                mkldnn::post_ops ops;
-                if (append_relu)
-                {
-                    ops.append_eltwise(
-                        ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, ops_beta);
-                }
-
-                auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                auto batchnorm_index = external_function->get_primitive_index(node);
-                auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
+                size_t batchnorm_index;
+                std::vector<std::size_t> deps;
+                emit_build_primitives(external_function, node, writer, batchnorm_index, deps);
 
                 if (training && args.size() == 3)
                 {
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
-                           << ", " << args[2].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
+                           << args[2].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1])
                            << ", bn_weights.data());\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
-                           << ", " << out[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3])
-                           << ", " << out[1].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[4])
-                           << ", " << out[2].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
+                           << out[0].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[3]) << ", "
+                           << out[1].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[4]) << ", "
+                           << out[2].get_name() << ");\n";
 
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(batchnorm_index) << ");\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(batchnorm_index)
+                           << ");\n";
                 }
                 else
                 {
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
-                           << ", " << args[2].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
-                           << ", " << args[3].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
-                           << ", " << args[4].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3])
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
+                           << args[2].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
+                           << args[3].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
+                           << args[4].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[3])
                            << ", bn_weights.data());\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[4])
-                           << ", " << out[0].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[4]) << ", "
+                           << out[0].get_name() << ");\n";
 
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(batchnorm_index) << ");\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(batchnorm_index)
+                           << ");\n";
                 }
                 writer.block_end();
             }
@@ -741,27 +745,27 @@ namespace ngraph
                        << args[1].get_name() << ", "
                        << args[1].get_size() * args[1].get_element_type().size() << ");\n";
 
-                auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                auto batchnorm_index = external_function->get_primitive_index(node);
-                auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
+                size_t batchnorm_index;
+                std::vector<std::size_t> deps;
+                emit_build_primitives(external_function, node, writer, batchnorm_index, deps);
 
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0])
                        << ", bn_weights.data());\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1]) << ", "
+                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
                        << args[2].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2]) << ", "
+                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
                        << args[3].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3]) << ", "
+                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[3]) << ", "
                        << args[4].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[4]) << ", "
+                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[4]) << ", "
                        << args[5].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[5]) << ", "
+                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[5]) << ", "
                        << out[0].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[6])
+                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[6])
                        << ", bn_dweights.data());\n";
 
-                writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                       << to_string(batchnorm_index) << ");\n";
+                writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(batchnorm_index)
+                       << ");\n";
 
                 writer << "memcpy(" << out[1].get_name() << ", &bn_dweights[0], "
                        << args[0].get_size() * args[0].get_element_type().size() << ");\n";
@@ -982,21 +986,21 @@ namespace ngraph
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    size_t concat_index = external_function->get_primitive_index(node);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(concat_index);
+                    size_t concat_index;
+                    std::vector<std::size_t> deps;
+                    emit_build_primitives(external_function, node, writer, concat_index, deps);
 
                     size_t i;
                     for (i = 0; i < args.size(); i++)
                     {
-                        writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[i])
-                               << ", " << args[i].get_name() << ");\n";
+                        writer << "cg_ctx->set_memory_ptr(" << to_string(deps[i]) << ", "
+                               << args[i].get_name() << ");\n";
                     }
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[i])
-                           << ", " << out[0].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[i]) << ", "
+                           << out[0].get_name() << ");\n";
 
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(concat_index) << ");\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(concat_index)
+                           << ");\n";
                 }
                 else
                 {
@@ -1150,17 +1154,16 @@ namespace ngraph
                 writer.block_begin();
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto lrn_index = external_function->get_primitive_index(node);
+                    size_t lrn_index;
+                    std::vector<std::size_t> deps;
+                    emit_build_primitives(external_function, node, writer, lrn_index, deps);
 
-                    auto& deps = mkldnn_emitter->get_primitive_deps(lrn_index);
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
-                           << ", " << args[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
-                           << ", " << out[0].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
+                           << args[0].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
+                           << out[0].get_name() << ");\n";
 
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(lrn_index) << ");\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(lrn_index) << ");\n";
                 }
                 else
                 {
@@ -1984,18 +1987,17 @@ namespace ngraph
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto conv_index = external_function->get_primitive_index(node);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+                    size_t conv_index;
+                    std::vector<std::size_t> deps;
+                    emit_build_primitives(external_function, node, writer, conv_index, deps);
 
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
-                           << ", " << args[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
-                           << ", " << args[1].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
-                           << ", " << out[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(conv_index) << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
+                           << args[0].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
+                           << args[1].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
+                           << out[0].get_name() << ");\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index) << ");\n";
                 }
             }
 
@@ -2004,18 +2006,17 @@ namespace ngraph
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto conv_index = external_function->get_primitive_index(node);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+                    size_t conv_index;
+                    std::vector<std::size_t> deps;
+                    emit_build_primitives(external_function, node, writer, conv_index, deps);
 
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
-                           << ", " << args[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
-                           << ", " << args[1].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
-                           << ", " << out[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(conv_index) << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
+                           << args[0].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
+                           << args[1].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
+                           << out[0].get_name() << ");\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index) << ");\n";
                 }
                 else
                 {
@@ -2028,18 +2029,17 @@ namespace ngraph
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto conv_index = external_function->get_primitive_index(node);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+                    size_t conv_index;
+                    std::vector<std::size_t> deps;
+                    emit_build_primitives(external_function, node, writer, conv_index, deps);
 
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
-                           << ", " << args[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
-                           << ", " << args[1].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
-                           << ", " << out[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(conv_index) << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
+                           << args[0].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
+                           << args[1].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
+                           << out[0].get_name() << ");\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index) << ");\n";
                 }
                 else
                 {
@@ -2050,26 +2050,20 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::GroupConvolution)
             {
-                auto arg0_shape = args[0].get_shape();
-                auto arg1_shape = args[1].get_shape();
-                auto result_shape = out[0].get_shape();
-
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     // invoke group convolution
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    size_t conv_index = external_function->get_primitive_index(node);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+                    size_t conv_index;
+                    std::vector<std::size_t> deps;
+                    emit_build_primitives(external_function, node, writer, conv_index, deps);
 
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
-                           << ", " << args[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
-                           << ", " << args[1].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
-                           << ", " << out[0].get_name() << ");\n";
-
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(conv_index) << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
+                           << args[0].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
+                           << args[1].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
+                           << out[0].get_name() << ");\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index) << ");\n";
                 }
                 else
                 {
@@ -2080,29 +2074,22 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::GroupConvolutionBias)
             {
-                auto arg0_shape = args[0].get_shape();
-                auto arg1_shape = args[1].get_shape();
-                auto arg2_shape = args[2].get_shape();
-                auto result_shape = out[0].get_shape();
-
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    size_t conv_index = external_function->get_primitive_index(node);
+                    // invoke group convolution
+                    size_t conv_index;
+                    std::vector<std::size_t> deps;
+                    emit_build_primitives(external_function, node, writer, conv_index, deps);
 
-                    // invoke group convolution bias
-                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
-                           << ", " << args[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
-                           << ", " << args[1].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
-                           << ", " << args[2].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3])
-                           << ", " << out[0].get_name() << ");\n";
-
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(conv_index) << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
+                           << args[0].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
+                           << args[1].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
+                           << args[2].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[3]) << ", "
+                           << out[0].get_name() << ");\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index) << ");\n";
                 }
                 else
                 {
@@ -2121,19 +2108,17 @@ namespace ngraph
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto conv_index = external_function->get_primitive_index(node);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+                    size_t conv_index;
+                    std::vector<std::size_t> deps;
+                    emit_build_primitives(external_function, node, writer, conv_index, deps);
 
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
-                           << ", " << args[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
-                           << ", " << args[1].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
-                           << ", " << out[0].get_name() << ");\n";
-
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(conv_index) << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
+                           << args[0].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
+                           << args[1].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
+                           << out[0].get_name() << ");\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index) << ");\n";
                 }
                 else
                 {
@@ -2291,21 +2276,19 @@ namespace ngraph
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto qconv_index = external_function->get_primitive_index(node);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(qconv_index);
+                    size_t conv_index;
+                    std::vector<std::size_t> deps;
+                    emit_build_primitives(external_function, node, writer, conv_index, deps);
 
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
-                           << ", " << args[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
-                           << ", " << args[1].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
-                           << ", " << args[2].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3])
-                           << ", " << out[0].get_name() << ");\n";
-
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(qconv_index) << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
+                           << args[0].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
+                           << args[1].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
+                           << args[2].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[3]) << ", "
+                           << out[0].get_name() << ");\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index) << ");\n";
                 }
                 else
                 {
@@ -2319,26 +2302,24 @@ namespace ngraph
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto qconv_index = external_function->get_primitive_index(node);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(qconv_index);
+                    size_t conv_index;
+                    std::vector<std::size_t> deps;
+                    emit_build_primitives(external_function, node, writer, conv_index, deps);
 
                     writer << "if (" << out[0].get_name() << " != " << args[3].get_name() << ")\n";
                     writer.block_begin();
                     writer << "memcpy(" << out[0].get_name() << ", " << args[3].get_name() << ", "
                            << args[3].get_size() * args[3].get_element_type().size() << ");\n";
                     writer.block_end();
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
-                           << ", " << args[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
-                           << ", " << args[1].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
-                           << ", " << args[2].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3])
-                           << ", " << out[0].get_name() << ");\n";
-
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(qconv_index) << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
+                           << args[0].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
+                           << args[1].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
+                           << args[2].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[3]) << ", "
+                           << out[0].get_name() << ");\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index) << ");\n";
                 }
                 else
                 {
@@ -2352,26 +2333,24 @@ namespace ngraph
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto qconv_index = external_function->get_primitive_index(node);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(qconv_index);
+                    size_t conv_index;
+                    std::vector<std::size_t> deps;
+                    emit_build_primitives(external_function, node, writer, conv_index, deps);
 
                     writer << "if (" << out[0].get_name() << " != " << args[3].get_name() << ")\n";
                     writer.block_begin();
                     writer << "memcpy(" << out[0].get_name() << ", " << args[3].get_name() << ", "
                            << args[3].get_size() * args[3].get_element_type().size() << ");\n";
                     writer.block_end();
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
-                           << ", " << args[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
-                           << ", " << args[1].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
-                           << ", " << args[2].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3])
-                           << ", " << out[0].get_name() << ");\n";
-
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(qconv_index) << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
+                           << args[0].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
+                           << args[1].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
+                           << args[2].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[3]) << ", "
+                           << out[0].get_name() << ");\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index) << ");\n";
                 }
                 else
                 {
@@ -2446,21 +2425,19 @@ namespace ngraph
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto conv_index = external_function->get_primitive_index(node);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+                    size_t conv_index;
+                    std::vector<std::size_t> deps;
+                    emit_build_primitives(external_function, node, writer, conv_index, deps);
 
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
-                           << ", " << args[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
-                           << ", " << args[1].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
-                           << ", " << args[2].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3])
-                           << ", " << out[0].get_name() << ");\n";
-
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(conv_index) << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
+                           << args[0].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
+                           << args[1].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
+                           << args[2].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[3]) << ", "
+                           << out[0].get_name() << ");\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index) << ");\n";
                 }
                 else
                 {
@@ -2473,25 +2450,24 @@ namespace ngraph
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto conv_index = external_function->get_primitive_index(node);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+                    size_t conv_index;
+                    std::vector<std::size_t> deps;
+                    emit_build_primitives(external_function, node, writer, conv_index, deps);
 
                     writer << "if (" << out[0].get_name() << " != " << args[3].get_name() << ")\n";
                     writer.block_begin();
                     writer << "memcpy(" << out[0].get_name() << ", " << args[3].get_name() << ", "
                            << args[3].get_size() * args[3].get_element_type().size() << ");\n";
                     writer.block_end();
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
-                           << ", " << args[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
-                           << ", " << args[1].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
-                           << ", " << args[2].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3])
-                           << ", " << out[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(conv_index) << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
+                           << args[0].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
+                           << args[1].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
+                           << args[2].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[3]) << ", "
+                           << out[0].get_name() << ");\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index) << ");\n";
                 }
                 else
                 {
@@ -2504,23 +2480,22 @@ namespace ngraph
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto conv_index = external_function->get_primitive_index(node);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+                    size_t conv_index;
+                    std::vector<std::size_t> deps;
+                    emit_build_primitives(external_function, node, writer, conv_index, deps);
 
                     writer << "if (" << out[0].get_name() << " != " << args[2].get_name() << ")\n";
                     writer.block_begin();
                     writer << "memcpy(" << out[0].get_name() << ", " << args[2].get_name() << ", "
                            << args[2].get_size() * args[2].get_element_type().size() << ");\n";
                     writer.block_end();
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
-                           << ", " << args[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
-                           << ", " << args[1].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
-                           << ", " << out[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(conv_index) << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
+                           << args[0].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
+                           << args[1].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
+                           << out[0].get_name() << ");\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index) << ");\n";
                 }
                 else
                 {

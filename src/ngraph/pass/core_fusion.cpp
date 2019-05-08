@@ -772,11 +772,11 @@ void ngraph::pass::CoreFusion::construct_conv_bias()
         auto bcast_m =
             std::dynamic_pointer_cast<op::Broadcast>(m.get_match_root()->get_argument(1));
 
-        if (conv_m == nullptr)
+        if (conv_m == nullptr || bcast_m == nullptr)
         {
-            conv_m = std::dynamic_pointer_cast<ngraph::op::Convolution>(
+            conv_m = std::static_pointer_cast<ngraph::op::Convolution>(
                 m.get_match_root()->get_argument(1));
-            bcast_m = std::dynamic_pointer_cast<op::Broadcast>(m.get_match_root()->get_argument(0));
+            bcast_m = std::static_pointer_cast<op::Broadcast>(m.get_match_root()->get_argument(0));
         }
 
         if (conv_m->get_shape().size() > 5 || conv_m->get_element_type() != element::f32)
@@ -851,7 +851,7 @@ void ngraph::pass::CoreFusion::construct_conv_bias_add()
 
         if (!conv_m)
         {
-            conv_m = std::dynamic_pointer_cast<ngraph::op::ConvolutionBias>(add_m->get_argument(0));
+            conv_m = std::static_pointer_cast<ngraph::op::ConvolutionBias>(add_m->get_argument(0));
             add_input_m = add_m->get_argument(1);
         }
 

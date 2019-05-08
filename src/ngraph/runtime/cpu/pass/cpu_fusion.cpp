@@ -1867,7 +1867,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_deconvolution_affine_foldi
                          << m.get_match_root()->get_name();
             auto pattern_map = m.get_pattern_map();
 
-            auto m_bn = std::dynamic_pointer_cast<op::BatchNormInference>(m.get_match_root());
+            // Matcher guarantees this is the right type
+            auto m_bn = std::static_pointer_cast<op::BatchNormInference>(m.get_match_root());
             auto conv_m =
                 std::static_pointer_cast<op::ConvolutionBackpropData>(pattern_map[conv_label]);
 
