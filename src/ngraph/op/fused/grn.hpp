@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include "ngraph/node.hpp"
 #include "ngraph/op/util/fused_op.hpp"
 
@@ -28,7 +30,6 @@ namespace ngraph
         class GRN : public ngraph::op::util::FusedOp
         {
         public:
-
             /// \brief      Constructs a GRN operation.
             ///
             /// \param      data  - Node producing the input tensor
@@ -37,6 +38,7 @@ namespace ngraph
             GRN(const std::shared_ptr<ngraph::Node>& data, float bias);
 
             float get_bias() const { return m_bias; }
+            virtual void pre_validate_and_infer_types() override;
             virtual NodeVector decompose_op() const override;
 
             virtual std::shared_ptr<Node>

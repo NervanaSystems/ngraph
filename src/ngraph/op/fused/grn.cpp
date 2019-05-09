@@ -14,12 +14,13 @@
 // limitations under the License.
 //*****************************************************************************
 #include <algorithm>
-#include <memory>
+#include <iterator>
 
 #include "grn.hpp"
+#include "ngraph/axis_set.hpp"
+#include "ngraph/builder/norm.hpp"
+#include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/divide.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
-#include "ngraph/op/util/norm.hpp"
 #include "ngraph/op/util/reshape.hpp"
 
 using namespace std;
@@ -29,15 +30,25 @@ op::GRN::GRN(const shared_ptr<Node>& data, float bias)
     : FusedOp("GRN", {data})
     , m_bias(bias)
 {
-    const auto& data_shape = data->get_shape();
-
-    NODE_VALIDATION_CHECK(this,
-                          (data_shape.size() >= 2 && data_shape.size() <= 4),
-                          "Input tensor rank must be 2, 3 or 4 dimensional (actual input shape: ",
-                          data_shape,
-                          ").");
-
     constructor_validate_and_infer_types();
+}
+
+void op::GRN::pre_validate_and_infer_types()
+{
+    const auto& data_pshape = get_input_partial_shape(0);
+
+    if (data_pshape.is_static())
+    {
+        const auto& data_shape{data_pshape.to_shape()};
+
+        // Input data must be 2, 3 or 4D tensor.
+        NODE_VALIDATION_CHECK(this,
+                              (data_shape.size() >= 2 && data_shape.size() <= 4),
+                              "Input tensor rank must be 2, 3 or 4 dimensional (actual input "
+                              "shape: ",
+                              data_shape,
+                              ").");
+    }
 }
 
 NodeVector op::GRN::decompose_op() const
@@ -45,19 +56,19 @@ NodeVector op::GRN::decompose_op() const
     const auto input_node{get_argument(0)};
     const auto& input_shape{input_node->get_shape()};
 
-    const auto data{input_node};
-    // reshape to 4D tensor
+    auto data{input_node};
+    // Reshape to 4D tensor.
     if (input_shape.size() != 4)
     {
-        Shape data_shape{input_shape};
-        data_shape.resize(4);
-        fill(begin(data_shape), next(begin(data_shape), input_shape.size()), size_t{1});
+        Shape data_shape(4 - input_shape.size(), 1);
+        copy(begin(input_shape), end(input_shape), back_inserter(data_shape));
         data = util::reshape(data, data_shape);
     }
 
-    // calculate l2 norm across channels
-    shared_ptr<Node> norm = l2_norm(data, AxisSet{2, 3}, m_bias);
-    norm = make_broadcast_node(norm, data->get_shape(), 0);
+    // Calculate l2 norm across channels.
+    shared_ptr<Node> norm = builder::l2_norm(data, AxisSet{1}, m_bias);
+    // Get back reduced axis.
+    norm = std::make_shared<Broadcast>(norm, data->get_shape(), AxisSet{1});
     data = data / norm;
 
     // get back original input tensor rank
@@ -66,7 +77,7 @@ NodeVector op::GRN::decompose_op() const
         data = util::reshape(data, input_shape);
     }
 
-    return data;
+    return {data};
 }
 
 shared_ptr<Node> op::GRN::copy_with_new_args(const NodeVector& new_args) const
