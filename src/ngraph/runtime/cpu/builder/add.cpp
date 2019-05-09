@@ -21,7 +21,6 @@
 #include "ngraph/runtime/cpu/kernel/add.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
-#include "ngraph/runtime/cpu/mlir/compiler.hpp"
 
 using namespace std;
 using namespace ngraph;

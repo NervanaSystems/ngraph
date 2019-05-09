@@ -19,11 +19,11 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node_vector.hpp"
 #include "ngraph/op/add.hpp"
-#include "ngraph/runtime/cpu/mlir/dialect/dialect.hpp"
-#include "ngraph/runtime/cpu/mlir/dialect/ops.hpp"
-#include "ngraph/runtime/cpu/mlir/dialect/type.hpp"
-#include "ngraph/runtime/cpu/mlir/lowerer.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
+#include "ngraph/runtime/mlir/dialect/dialect.hpp"
+#include "ngraph/runtime/mlir/dialect/ops.hpp"
+#include "ngraph/runtime/mlir/dialect/type.hpp"
+#include "ngraph/runtime/mlir/lowerer.hpp"
 #include "ngraph/type/element_type.hpp"
 
 #include <llvm/ADT/STLExtras.h>

@@ -109,6 +109,10 @@
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
+#ifdef NGRAPH_MLIR_ENABLE
+#include "ngraph/runtime/mlir/compiler.hpp"
+#endif
+
 using namespace std;
 using namespace ngraph;
 
@@ -504,6 +508,10 @@ namespace ngraph
     }
 }
 
+// TODO:
+// Get rid of the #ifdefs by moving MLIR hooks to separate files in cpu backend
+// we can then instead compile them conditionally based on NGRAPH_MLIR_ENABLE cmake flag
+#ifdef NGRAPH_MLIR_ENABLE
 using namespace ngraph::runtime::cpu;
 
 CPUKernelFunctor Builder::build_mlir_single_output_binary_op(const ngraph::Node* node,
@@ -528,3 +536,4 @@ CPUKernelFunctor Builder::build_mlir_single_output_binary_op(const ngraph::Node*
 
     return functor;
 }
+#endif

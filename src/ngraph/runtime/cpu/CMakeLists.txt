@@ -16,14 +16,6 @@
 
 include(FindOpenMP)
 
-set(MLIR_SRC
-    mlir/dialect/dialect.cpp
-    mlir/dialect/type.cpp
-    mlir/dialect/ops.cpp
-    mlir/compiler.cpp
-    mlir/lowerer.cpp
-    mlir/memory_manager.cpp
-)
 set(SRC
     cpu_backend.cpp
     cpu_builder.cpp
@@ -131,7 +123,6 @@ set(SRC
     pass/cpu_rnn_fusion.cpp
     pass/cpu_workspace_insertion.cpp
     ngraph_version.cpp
-    ${MLIR_SRC}
 )
 
 if (NOT NGRAPH_DEX_ONLY)
@@ -215,65 +206,23 @@ if (NGRAPH_CPU_ENABLE)
         set_property(TARGET cpu_backend APPEND PROPERTY LINK_FLAGS "-Wl,-Bsymbolic-functions -Wl,--exclude-libs=ALL")
     endif()
 
-    # Link LLVM and MLIR
-    find_package(LLVM REQUIRED CONFIG)
-    message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
-    message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
-    message(STATUS "LLVM RTTI is ${LLVM_ENABLE_RTTI}")
-    add_definitions(${LLVM_DEFINITIONS})
-
-    target_include_directories(cpu_backend PRIVATE ${LLVM_INCLUDE_DIRS})
-    if(DEFINED ENV{MLIR_INCLUDE_PATH})
-        string(REPLACE ":" ";" MLIR_INCLUDE_PATH $ENV{MLIR_INCLUDE_PATH})
-        message(STATUS "MLIR Headers at : ${MLIR_INCLUDE_PATH}")
-        target_include_directories(cpu_backend PRIVATE ${MLIR_INCLUDE_PATH}) 
+    if (NGRAPH_MLIR_ENABLE)
+        # TODO: can we get away without LLVM/MLIR include path. 
+        # Currently mlir backend compiler.hpp include LLVM/MLIR files
+        get_directory_property(MLIR_LLVM_INCLUDEPATH
+                               DIRECTORY ${CMAKE_SOURCE_DIR}/src/ngraph/runtime/mlir
+                               DEFINITION MLIR_LLVM_INCLUDEPATH)
+        
+        message(STATUS "Building CPU backend with MLIR")
+        message(STATUS "MLIR INCLUDE DIRS: ${MLIR_INCLUDE_PATH}")
+        message(STATUS "LLVM INCLUDE DIRS: ${MLIR_LLVM_INCLUDEPATH}")
+        add_dependencies(cpu_backend mlir_backend)
+        target_include_directories(cpu_backend PUBLIC ${MLIR_INCLUDE_PATH} ${MLIR_LLVM_INCLUDEPATH})
+        target_link_libraries(cpu_backend PUBLIC mlir_backend)
+        # TODO: Get rid of the compile time def, and move all MLIR code to separate src files
+        # and add them to cpu_backend here instead.
+        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_MLIR_ENABLE")
     endif()
-
-    llvm_map_components_to_libnames(llvm_libs support core irreader)
-
-    # Link MLIR libs
-    target_link_libraries(
-      cpu_backend PUBLIC 
-      MLIRAnalysis
-      MLIREDSC
-      MLIRExecutionEngine
-      MLIRIR
-      MLIRLLVMIR
-      MLIRParser
-      MLIRPass
-      MLIRTargetLLVMIR
-      MLIRTransforms
-      MLIRSupport
-    )
-    # some libs need whole archive linkage because of Globals static initialization
-    # TODO: move this helper somewhere else. 
-    function(whole_archive_link target)
-      if("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
-        set(link_flags "-Llib -Wl,-all_load ")
-        FOREACH(LIB ${ARGN})
-          string(CONCAT link_flags ${link_flags} "${LIB}")
-        ENDFOREACH(LIB)
-      else()
-        set(link_flags "-Llib -Wl,--whole-archive,")
-        FOREACH(LIB ${ARGN})
-          string(CONCAT link_flags ${link_flags} "${LIB},")
-        ENDFOREACH(LIB)
-        string(CONCAT link_flags ${link_flags} "--no-whole-archive")
-      endif()
-      message(STATUS "MLIR Ops link flag: ${link_flags}" )
-
-      set_target_properties(${target} PROPERTIES LINK_FLAGS ${link_flags})
-    endfunction(whole_archive_link)
-
-    whole_archive_link(cpu_backend
-        ${LLVM_BUILD_LIBRARY_DIR}/libMLIRAffineOps.a
-        ${LLVM_BUILD_LIBRARY_DIR}/libMLIRStandardOps.a
-    )
-    # Link LLVM libs
-    target_link_libraries(
-      cpu_backend PRIVATE 
-      ${llvm_libs}
-    )
-
+    
     install(TARGETS cpu_backend DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()
