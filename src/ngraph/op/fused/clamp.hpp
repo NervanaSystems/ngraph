@@ -24,9 +24,19 @@ namespace ngraph
 {
     namespace op
     {
+        /// \brief Performs a clipping operation on all elements of the input node
+        ///
+        /// All input values that are outside of the <min;max> range are set to 'min' or 'max'
+        /// depending on which side of the <min;max> range they are. The values that fall into
+        /// this range remain unchanged.
         class Clamp : public ngraph::op::util::FusedOp
         {
         public:
+            /// \brief Constructs a Clamp node.
+            ///
+            /// \param data - Node producing the input tensor
+            /// \param min - the lower bound of the <min;max> range
+            /// \param max - the upper bound of the <min;max> range
             Clamp(const std::shared_ptr<ngraph::Node>& data, const double min, const double max);
 
             void pre_validate_and_infer_types() override;
