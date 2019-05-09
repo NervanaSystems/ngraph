@@ -84,8 +84,8 @@ namespace ngraph
                 std::shared_ptr<ngraph::Node>
                     operator()(const std::shared_ptr<ngraph::Node>& arg) const;
 
-                void set_alpha(float alpha) { m_alpha = alpha; };
-                void set_beta(float beta) { m_beta = beta; };
+                void set_alpha(float alpha) { m_alpha = alpha; }
+                void set_beta(float beta) { m_beta = beta; }
             private:
                 float m_alpha;
                 float m_beta;
