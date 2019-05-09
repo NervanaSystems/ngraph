@@ -495,14 +495,6 @@ namespace ngraph
                                             const std::vector<size_t>& deps,
                                             size_t pool_index);
 
-                size_t build_max_pooling_with_indices_forward(mkldnn::algorithm pooling_algorithm,
-                                                              const mkldnn::memory::desc& src_desc,
-                                                              const mkldnn::memory::desc& dst_desc,
-                                                              const ngraph::Strides& window_strides,
-                                                              const ngraph::Shape& window_shape,
-                                                              const ngraph::Shape& padding_below,
-                                                              const ngraph::Shape& padding_above);
-
                 template <typename OP>
                 mkldnn::pooling_forward::desc
                     get_max_pooling_with_indices_forward_desc(const ngraph::Node* node)
@@ -578,15 +570,6 @@ namespace ngraph
                                                 std::vector<size_t>& bdeps,
                                                 size_t fwd_pool_index,
                                                 size_t bwd_pool_index);
-
-                size_t build_max_pooling_with_indices_backward(
-                    mkldnn::algorithm pooling_algorithm,
-                    const mkldnn::memory::desc& diff_dst_desc,
-                    const mkldnn::memory::desc& diff_src_desc,
-                    const ngraph::Strides& window_strides,
-                    const ngraph::Shape& window_shape,
-                    const ngraph::Shape& padding_below,
-                    const ngraph::Shape& padding_above);
 
                 void build_max_pooling_with_indices_backward(
                     std::vector<mkldnn::primitive*>& mkldnn_primitives,

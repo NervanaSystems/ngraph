@@ -1377,20 +1377,64 @@ namespace ngraph
                 }
 
                 template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(MaxPoolWithIndices)
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
+                    MaxPoolWithIndices)
                 {
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    auto max_pool = static_cast<const ngraph::op::MaxPoolWithIndices*>(node);
+                    auto pool = static_cast<const ngraph::op::MaxPoolWithIndices*>(node);
+                    auto window_shape = pool->get_window_shape();
+                    auto window_strides = pool->get_window_movement_strides();
+                    auto padding_below = pool->get_padding_below();
+                    auto padding_above = pool->get_padding_above();
 
-                    return mkldnn_emitter.build_max_pooling_with_indices_forward(
-                        mkldnn::algorithm::pooling_max,
-                        input_desc,
-                        result_desc,
-                        max_pool->get_window_movement_strides(),
-                        max_pool->get_window_shape(),
-                        max_pool->get_padding_below(),
-                        max_pool->get_padding_above());
+                    // MaxPoolWithIndices needs 4 primitives: input, result, workspace, and pooling_forward.
+                    index = mkldnn_emitter.reserve_primitive_space_cg(4);
+                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+
+                    CodeWriter writer;
+
+                    // Write memory descriptors to file
+                    std::vector<mkldnn::memory::desc> descs = {input_desc, result_desc};
+                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
+
+                    writer << "auto pool_desc = "
+                              "mkldnn::pooling_forward::desc(mkldnn::prop_kind::forward_training,\n"
+                              "mkldnn::algorithm::pooling_max,\n"
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "],\n"
+                                            "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 1 << "],\n";
+                    WRITE_MKLDNN_DIMS(window_strides);
+                    writer << ", \n";
+                    WRITE_MKLDNN_DIMS(window_shape);
+                    writer << ", \n";
+                    WRITE_MKLDNN_DIMS(padding_below);
+                    writer << ", \n";
+                    WRITE_MKLDNN_DIMS(padding_above);
+                    writer << ", \nmkldnn::padding_kind::zero);\n";
+
+                    writer << "\n// build primitive descriptor\n";
+                    writer << "mkldnn::pooling_forward::primitive_desc fwd_pd{pool_desc, "
+                              "cg_ctx->global_cpu_engine};\n";
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(deps[2])
+                           << "] = new mkldnn::memory({fwd_pd.workspace_primitive_desc().desc(), "
+                              "cg_ctx->global_cpu_engine}, nullptr);\n";
+
+                    writer << "\n// build primitive\n";
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = new mkldnn::pooling_forward(fwd_pd, "
+                              "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[0]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[1]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[2]) << "]";
+                    writer << ");\n";
+
+                    construct_string = writer.get_code();
                 }
 
                 template <>
@@ -1451,20 +1495,85 @@ namespace ngraph
                 }
 
                 template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(MaxPoolWithIndicesBackprop)
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
+                    MaxPoolWithIndicesBackprop)
                 {
                     auto diff_dst_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
                     auto diff_src_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    auto mpb = static_cast<const ngraph::op::MaxPoolWithIndicesBackprop*>(node);
+                    auto pool = static_cast<const ngraph::op::MaxPoolWithIndices*>(node);
+                    auto window_shape = pool->get_window_shape();
+                    auto window_strides = pool->get_window_movement_strides();
+                    auto padding_below = pool->get_padding_below();
+                    auto padding_above = pool->get_padding_above();
 
-                    return mkldnn_emitter.build_max_pooling_with_indices_backward(
-                        mkldnn::algorithm::pooling_max,
-                        diff_dst_desc,
-                        diff_src_desc,
-                        mpb->get_window_movement_strides(),
-                        mpb->get_window_shape(),
-                        mpb->get_padding_below(),
-                        mpb->get_padding_above());
+                    // MaxPoolWithIndicesBackprop needs 4 primitives: diff_dst, fprop_workspace, diff_src
+                    // and pooling_backward.
+                    index = mkldnn_emitter.reserve_primitive_space_cg(4);
+                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+
+                    CodeWriter writer;
+
+                    // Write memory descriptors to file
+                    std::vector<mkldnn::memory::desc> descs = {diff_dst_desc, diff_src_desc};
+                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
+
+                    writer << "auto fwd_desc = "
+                              "mkldnn::pooling_forward::desc(mkldnn::prop_kind::forward_training,\n"
+                              "mkldnn::algorithm::pooling_max,\n"
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 1 << "],\n"
+                                                "*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "],\n";
+                    WRITE_MKLDNN_DIMS(window_strides);
+                    writer << ", \n";
+                    WRITE_MKLDNN_DIMS(window_shape);
+                    writer << ", \n";
+                    WRITE_MKLDNN_DIMS(padding_below);
+                    writer << ", \n";
+                    WRITE_MKLDNN_DIMS(padding_above);
+                    writer << ", \nmkldnn::padding_kind::zero);\n";
+
+                    writer << "auto bwd_desc = "
+                              "mkldnn::pooling_backward::desc(\n"
+                              "mkldnn::algorithm::pooling_max,\n"
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 1 << "],\n"
+                                                "*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "],\n";
+                    WRITE_MKLDNN_DIMS(window_strides);
+                    writer << ", \n";
+                    WRITE_MKLDNN_DIMS(window_shape);
+                    writer << ", \n";
+                    WRITE_MKLDNN_DIMS(padding_below);
+                    writer << ", \n";
+                    WRITE_MKLDNN_DIMS(padding_above);
+                    writer << ", \nmkldnn::padding_kind::zero);\n";
+
+                    writer << "\n// build primitive descriptor\n";
+                    writer << "mkldnn::pooling_forward::primitive_desc fwd_pd{fwd_desc, "
+                              "cg_ctx->global_cpu_engine};\n";
+                    writer << "mkldnn::pooling_backward::primitive_desc bwd_pd{bwd_desc, "
+                              "cg_ctx->global_cpu_engine, fwd_pd};\n";
+                    // this is different from cpu builder because we do not write workspace desc to desc_file.
+                    // here workspace's mkldnn primitive index is in deps[2] in stead of deps[1].
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(deps[2])
+                           << "] = new mkldnn::memory({fwd_pd.workspace_primitive_desc().desc(), "
+                              "cg_ctx->global_cpu_engine}, nullptr);\n";
+
+                    writer << "\n// build primitive\n";
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = new mkldnn::pooling_backward(bwd_pd, "
+                              "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[0]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[2]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[1]) << "]";
+                    writer << ");\n";
+
+                    construct_string = writer.get_code();
                 }
 
                 template <>
@@ -1903,10 +2012,7 @@ static const PrimitiveBuildOpMap prim_build_dispatcher{
     {TI(AvgPool), &MKLDNNPrimitiveBuildPass::build_primitive<AvgPool>},
     {TI(AvgPoolBackprop), &MKLDNNPrimitiveBuildPass::build_primitive<AvgPoolBackprop>},
     {TI(MaxPool), &MKLDNNPrimitiveBuildPass::build_primitive<MaxPool>},
-    {TI(MaxPoolWithIndices), &MKLDNNPrimitiveBuildPass::build_primitive<MaxPoolWithIndices>},
     {TI(MaxPoolBackprop), &MKLDNNPrimitiveBuildPass::build_primitive<MaxPoolBackprop>},
-    {TI(MaxPoolWithIndicesBackprop),
-     &MKLDNNPrimitiveBuildPass::build_primitive<MaxPoolWithIndicesBackprop>},
     {TI(QuantizedMaxPool), &MKLDNNPrimitiveBuildPass::build_primitive<QuantizedMaxPool>},
     {TI(QuantizedAvgPool), &MKLDNNPrimitiveBuildPass::build_primitive<QuantizedAvgPool>},
     {TI(Quantize), &MKLDNNPrimitiveBuildPass::build_primitive<Quantize>},
@@ -1968,6 +2074,10 @@ static const PrimitiveBuildStringConstructOpMap prim_build_string_construct_disp
          ConvolutionBiasBackpropFiltersBias>},
     {TI(QuantizedConcat),
      &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<QuantizedConcat>},
+    {TI(MaxPoolWithIndices),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<MaxPoolWithIndices>},
+    {TI(MaxPoolWithIndicesBackprop),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<MaxPoolWithIndicesBackprop>},
     {TI(Sigmoid), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Sigmoid>},
     {TI(SigmoidBackprop),
      &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<SigmoidBackprop>},
@@ -2008,6 +2118,8 @@ static bool in_new_map(const std::shared_ptr<Node>& node)
         std::dynamic_pointer_cast<ngraph::op::ConvolutionBackpropFilters>(node) ||
         std::dynamic_pointer_cast<ngraph::op::ConvolutionBiasBackpropFiltersBias>(node) ||
         std::dynamic_pointer_cast<ngraph::op::QuantizedConcat>(node) ||
+        std::dynamic_pointer_cast<ngraph::op::MaxPoolWithIndices>(node) ||
+        std::dynamic_pointer_cast<ngraph::op::MaxPoolWithIndicesBackprop>(node) ||
         std::dynamic_pointer_cast<ngraph::op::Relu>(node) ||
         std::dynamic_pointer_cast<ngraph::op::ReluBackprop>(node) ||
         std::dynamic_pointer_cast<ngraph::op::Sigmoid>(node) ||
