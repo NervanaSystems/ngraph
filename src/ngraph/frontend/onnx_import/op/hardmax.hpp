@@ -14,15 +14,24 @@
 // limitations under the License.
 //*****************************************************************************
 
-// This collection contains one entry for each fused op.
-//
+#pragma once
 
-NGRAPH_OP(Elu, ngraph::op)
-NGRAPH_OP(Gemm, ngraph::op)
-NGRAPH_OP(PRelu, ngraph::op)
-NGRAPH_OP(ConvolutionBias, ngraph::op)
-NGRAPH_OP(ConvolutionBiasAdd, ngraph::op)
-NGRAPH_OP(ConvolutionBiasBackpropFiltersBias, ngraph::op)
-NGRAPH_OP(DepthToSpace, ngraph::op)
-NGRAPH_OP(SpaceToDepth, ngraph::op)
-NGRAPH_OP(GroupConvolution, ngraph::op)
+#include "core/node.hpp"
+#include "ngraph/node.hpp"
+
+namespace ngraph
+{
+    namespace onnx_import
+    {
+        namespace op
+        {
+            namespace set_1
+            {
+                NodeVector hardmax(const Node& node);
+            } // namespace set_1
+
+        } //namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

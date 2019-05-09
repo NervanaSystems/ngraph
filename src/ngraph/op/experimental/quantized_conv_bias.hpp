@@ -39,7 +39,7 @@ namespace ngraph
                                      const CoordinateDiff& padding_below,
                                      const CoordinateDiff& padding_above,
                                      const Strides& data_dilation_strides,
-                                     const std::shared_ptr<Node> scale,
+                                     const std::shared_ptr<Node>& scale,
                                      const bool with_relu = false);
 
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
@@ -75,8 +75,8 @@ namespace ngraph
                                         const CoordinateDiff& padding_below,
                                         const CoordinateDiff& padding_above,
                                         const Strides& data_dilation_strides,
-                                        const std::shared_ptr<Node> scale,
-                                        const std::shared_ptr<Node> sum_scale,
+                                        const std::shared_ptr<Node>& scale,
+                                        const std::shared_ptr<Node>& sum_scale,
                                         const bool with_relu = false);
 
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
@@ -112,8 +112,8 @@ namespace ngraph
                                               const CoordinateDiff& padding_below,
                                               const CoordinateDiff& padding_above,
                                               const Strides& data_dilation_strides,
-                                              const std::shared_ptr<Node> scale,
-                                              const std::shared_ptr<Node> sum_scale,
+                                              const std::shared_ptr<Node>& scale,
+                                              const std::shared_ptr<Node>& sum_scale,
                                               const bool with_relu = false);
 
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
