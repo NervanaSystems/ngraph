@@ -16,8 +16,8 @@
 
 #pragma once
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wfloat-equal"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
 
 #include <cstddef>
 
@@ -42,4 +42,4 @@ namespace ngraph
     }
 }
 
-#pragma clang diagnostic pop
+#pragma GCC diagnostic pop
