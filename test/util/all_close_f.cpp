@@ -39,8 +39,20 @@ constexpr uint64_t DOUBLE_MAX_DIFF = ULLONG_MAX - 1;
 
 uint32_t test::float_distance(float a, float b, float min_signal)
 {
-    if (!isfinite(a) || !isfinite(b))
+    if (std::isnan(a) && std::isnan(b))
     {
+        return 0;
+    }
+    else if (std::isinf(a) && std::isinf(b))
+    {
+        if (a > 0 && b > 0)
+        {
+            return 0;
+        }
+        else if (a < 0 && b < 0)
+        {
+            return 0;
+        }
         return FLOAT_MAX_DIFF;
     }
 
@@ -82,8 +94,20 @@ uint32_t test::float_distance(float a, float b, float min_signal)
 
 uint64_t test::float_distance(double a, double b, double min_signal)
 {
-    if (!isfinite(a) || !isfinite(b))
+    if (std::isnan(a) && std::isnan(b))
     {
+        return 0;
+    }
+    else if (std::isinf(a) && std::isinf(b))
+    {
+        if (a > 0 && b > 0)
+        {
+            return 0;
+        }
+        else if (a < 0 && b < 0)
+        {
+            return 0;
+        }
         return DOUBLE_MAX_DIFF;
     }
 
@@ -125,9 +149,20 @@ uint64_t test::float_distance(double a, double b, double min_signal)
 
 bool test::close_f(float a, float b, int tolerance_bits, float min_signal)
 {
-    // isfinite(a) => !isinf(a) && !isnan(a)
-    if (!isfinite(a) || !isfinite(b))
+    if (std::isnan(a) && std::isnan(b))
     {
+        return true;
+    }
+    else if (std::isinf(a) && std::isinf(b))
+    {
+        if (a > 0 && b > 0)
+        {
+            return true;
+        }
+        else if (a < 0 && b < 0)
+        {
+            return true;
+        }
         return false;
     }
 
@@ -144,9 +179,20 @@ bool test::close_f(float a, float b, int tolerance_bits, float min_signal)
 
 bool test::close_f(double a, double b, int tolerance_bits, double min_signal)
 {
-    // isfinite(a) => !isinf(a) && !isnan(a)
-    if (!isfinite(a) || !isfinite(b))
+    if (std::isnan(a) && std::isnan(b))
     {
+        return true;
+    }
+    else if (std::isinf(a) && std::isinf(b))
+    {
+        if (a > 0 && b > 0)
+        {
+            return true;
+        }
+        else if (a < 0 && b < 0)
+        {
+            return true;
+        }
         return false;
     }
 
