@@ -44,6 +44,13 @@ namespace ngraph
             class UnaryElementwiseArithmetic : public Op
             {
             protected:
+                UnaryElementwiseArithmetic();
+
+                /// \brief Constructs a unary elementwise arithmetic operation.
+                ///
+                /// \param arg Node that produces the input tensor.
+                UnaryElementwiseArithmetic(const std::shared_ptr<Node>& arg);
+
                 /// \brief Constructs a unary elementwise arithmetic operation.
                 ///
                 /// \param arg Node that produces the input tensor.

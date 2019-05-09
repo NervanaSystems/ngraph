@@ -49,7 +49,7 @@ shared_ptr<Node> op::Result::copy_with_new_args(const NodeVector& new_args) cons
     {
         res->set_needs_default_layout(m_needs_default_layout);
     }
-    return res;
+    return std::move(res);
 }
 
 void op::Result::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)

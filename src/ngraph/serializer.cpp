@@ -222,7 +222,7 @@ static json write_partial_shape(const PartialShape& s)
         {
             vals[i] = write_dimension(s[i]);
         }
-        return vals;
+        return move(vals);
     }
 }
 

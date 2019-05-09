@@ -38,7 +38,7 @@ namespace ngraph
                 size_t n = goe->get_n();
                 auto arg_buffer_index = external_function->get_buffer_index(args[n].get_name());
                 auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
-                auto functor = [&, n, arg_buffer_index, out_buffer_index](
+                auto functor = [&, arg_buffer_index, out_buffer_index](
                     CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                     if (ctx->buffer_data[arg_buffer_index] != ctx->buffer_data[out_buffer_index])
                     {

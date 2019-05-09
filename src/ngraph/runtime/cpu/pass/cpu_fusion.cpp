@@ -1680,7 +1680,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_groupconv_batchnorm_global
     auto bn =
         std::make_shared<ngraph::op::BatchNormInference>(eps, gamma, beta, conv_label, mean, var);
 
-    auto callback = [input, filters, conv_label, mean, var, gamma, beta, eps](pattern::Matcher& m) {
+    auto callback = [input, filters, conv_label, mean, var, gamma, beta](pattern::Matcher& m) {
 
         NGRAPH_DEBUG << "In callback for groupconv BatchNorm folding against node = "
                      << m.get_match_root()->get_name();
@@ -1838,7 +1838,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_deconvolution_affine_foldi
     double eps = 0.001;
     auto bn = std::make_shared<op::BatchNormInference>(eps, gamma, beta, conv_label, mean, var);
 
-    auto callback = [data_label, filters, out_delta, conv_label, mean, var, gamma, beta, eps](
+    auto callback = [data_label, filters, out_delta, conv_label, mean, var, gamma, beta](
         pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for deconv affine folding against node = "
                      << m.get_match_root()->get_name();
