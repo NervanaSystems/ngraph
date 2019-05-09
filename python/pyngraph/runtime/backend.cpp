@@ -32,7 +32,7 @@ static std::shared_ptr<ngraph::runtime::Executable> compile(ngraph::runtime::Bac
 
 void regclass_pyngraph_runtime_Backend(py::module m)
 {
-    py::class_<ngraph::runtime::Backend, std::unique_ptr<ngraph::runtime::Backend>> backend(
+    py::class_<ngraph::runtime::Backend, std::shared_ptr<ngraph::runtime::Backend>> backend(
         m, "Backend");
     backend.doc() = "ngraph.impl.runtime.Backend wraps ngraph::runtime::Backend";
     backend.def_static("create", &ngraph::runtime::Backend::create);

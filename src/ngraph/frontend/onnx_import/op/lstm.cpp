@@ -395,11 +395,11 @@ namespace ngraph
                             // *   - Denotes dot product.
 
                             // Xt*(W^T) -- for [iofc] gates.
-                            auto Xt_W =
-                                std::make_shared<ngraph::op::Dot>(in_x, reshape::transpose(m_W));
+                            auto Xt_W = std::make_shared<ngraph::op::Dot>(
+                                in_x, ngraph::op::util::transpose(m_W));
                             // Ht-1*(R^T)  -- for [iofc] gates.
-                            auto Ht_R =
-                                std::make_shared<ngraph::op::Dot>(H_t, reshape::transpose(m_R));
+                            auto Ht_R = std::make_shared<ngraph::op::Dot>(
+                                H_t, ngraph::op::util::transpose(m_R));
                             // Xt*(W^T) + Ht-1*(R^T) + Wb + Rb  -- for [iofc] gates.
                             auto gates = add(Xt_W, add(Ht_R, bias));
 

@@ -25,15 +25,14 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/node_vector.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
+#include "ngraph/op/result.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/provenance.hpp"
-#include "ngraph/result_vector.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -158,15 +157,6 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
         };
 
         traverse_nodes({target}, set_replacement_prov, false, replacement->get_arguments());
-
-        auto propagate_replacement_prov = [replacement](std::shared_ptr<Node> node) {
-            if (is_post_dominated(node.get(), replacement.get()))
-            {
-                node->merge_provenance_tags_from(replacement);
-            }
-        };
-
-        traverse_nodes({replacement}, propagate_replacement_prov, false);
     }
 
     // For each of target's output O with replacement output O_rep:

@@ -29,6 +29,7 @@
 #include "ngraph/except.hpp"
 #include "ngraph/ngraph_visibility.hpp"
 #include "ngraph/type/bfloat16.hpp"
+#include "ngraph/type/float16.hpp"
 
 namespace ngraph
 {
@@ -40,6 +41,7 @@ namespace ngraph
             dynamic,
             boolean,
             bf16,
+            f16,
             f32,
             f64,
             i8,
@@ -124,6 +126,7 @@ namespace ngraph
         extern NGRAPH_API const Type dynamic;
         extern NGRAPH_API const Type boolean;
         extern NGRAPH_API const Type bf16;
+        extern NGRAPH_API const Type f16;
         extern NGRAPH_API const Type f32;
         extern NGRAPH_API const Type f64;
         extern NGRAPH_API const Type i8;
@@ -166,6 +169,8 @@ namespace ngraph
         const Type& from<uint64_t>();
         template <>
         const Type& from<ngraph::bfloat16>();
+        template <>
+        const Type& from<ngraph::float16>();
 
         std::ostream& operator<<(std::ostream& out, const ngraph::element::Type& obj);
     }

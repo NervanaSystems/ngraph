@@ -28,16 +28,22 @@
 using namespace ngraph;
 using namespace std;
 
-extern "C" CPU_BACKEND_API runtime::Backend* new_backend(const char* configuration_string)
+extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
 {
-    // Force TBB to link to the backend
-    tbb::TBB_runtime_interface_version();
-    return new runtime::cpu::CPU_Backend();
-}
+    class CPU_BackendConstructor : public runtime::BackendConstructor
+    {
+    public:
+        std::shared_ptr<runtime::Backend> create(const std::string& config) override
+        {
+            // Force TBB to link to the backend
+            tbb::TBB_runtime_interface_version();
+            return make_shared<runtime::cpu::CPU_Backend>();
+        }
+    };
 
-extern "C" CPU_BACKEND_API void delete_backend(runtime::Backend* backend)
-{
-    delete backend;
+    static unique_ptr<runtime::BackendConstructor> s_backend_constructor(
+        new CPU_BackendConstructor());
+    return s_backend_constructor.get();
 }
 
 namespace
@@ -45,7 +51,10 @@ namespace
     static class CPUStaticInit
     {
     public:
-        CPUStaticInit() { runtime::BackendManager::register_backend("CPU", new_backend); }
+        CPUStaticInit()
+        {
+            runtime::BackendManager::register_backend("CPU", get_backend_constructor_pointer());
+        }
         ~CPUStaticInit() {}
     } s_cpu_static_init;
 }
