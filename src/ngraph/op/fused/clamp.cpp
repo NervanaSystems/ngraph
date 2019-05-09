@@ -27,9 +27,13 @@ op::Clamp::Clamp(const shared_ptr<Node>& data, const double min, const double ma
     , m_min{min}
     , m_max{max}
 {
-    NODE_VALIDATION_CHECK(
-        this, min < max, "The 'min' parameter has to be less than 'max' for Clamp.");
     constructor_validate_and_infer_types();
+}
+
+void op::Clamp::pre_validate_and_infer_types()
+{
+    NODE_VALIDATION_CHECK(
+        this, m_min < m_max, "The 'min' parameter needs to be less than 'max' for Clamp");
 }
 
 NodeVector op::Clamp::decompose_op() const

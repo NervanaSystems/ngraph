@@ -29,6 +29,8 @@ namespace ngraph
         public:
             Clamp(const std::shared_ptr<ngraph::Node>& data, const double min, const double max);
 
+            void pre_validate_and_infer_types() override;
+
             virtual NodeVector decompose_op() const override;
 
             virtual std::shared_ptr<Node>
