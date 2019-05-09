@@ -173,6 +173,7 @@ namespace ngraph
                     REGISTER_COMPARATOR(u32, uint32_t),
                     REGISTER_COMPARATOR(u64, uint64_t),
             };
+#undef REGISTER_COMPARATOR
 
         protected:
             std::shared_ptr<Function> m_function;

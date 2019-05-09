@@ -45,7 +45,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_lstm_fwd_with_clip)
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     test_case.add_input<float>({-0.455351, -0.276391, -0.185934, -0.269585}); // X
-    test_case.add_input<float>({-0.494659f,
+    test_case.add_input<float>({-0.494659f,                                   // W
                                 0.0453352f,
                                 -0.487793f,
                                 0.417264f,
