@@ -288,6 +288,8 @@ set (SRC
     op/fused/prelu.hpp
     op/fused/space_to_depth.cpp
     op/fused/space_to_depth.hpp
+    op/fused/squeeze.cpp
+    op/fused/squeeze.hpp
     op/util/arithmetic_reduction.cpp
     op/util/arithmetic_reduction.hpp
     op/util/binary_elementwise_arithmetic.cpp
