@@ -33,8 +33,8 @@ op::MVN::MVN(const std::shared_ptr<Node>& data,
              double eps)
     : FusedOp("MVN", {data})
     , m_across_channels{across_channels}
-    , m_normalize_variance{normalize_variance}
     , m_eps{eps}
+    , m_normalize_variance{normalize_variance}
 {
     constructor_validate_and_infer_types();
 }
