@@ -82,6 +82,7 @@
 #include "ngraph/op/fused/elu.hpp"
 #include "ngraph/op/fused/gemm.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/fused/scale_shift.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
@@ -2001,6 +2002,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::QuantizedMaxPool:
         case OP_TYPEID::ReplaceSlice:
         case OP_TYPEID::ScalarConstantLike:
+        case OP_TYPEID::ScaleShift:
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::SpaceToDepth:
         case OP_TYPEID::StopGradient:
