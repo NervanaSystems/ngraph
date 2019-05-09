@@ -25,17 +25,17 @@ namespace ngraph
     {
         namespace quantization
         {
-            std::shared_ptr<Node> QuantizedLinearMatmul(std::shared_ptr<Node> input,
-                                                        std::shared_ptr<Node> filter,
-                                                        std::shared_ptr<Node> input_scale,
-                                                        std::shared_ptr<Node> input_zero_point,
-                                                        std::shared_ptr<Node> filter_scale,
-                                                        std::shared_ptr<Node> filter_zero_point,
+            std::shared_ptr<Node> QuantizedLinearMatmul(std::shared_ptr<Node> input0,
+                                                        std::shared_ptr<Node> input1,
+                                                        std::shared_ptr<Node> input0_scale,
+                                                        std::shared_ptr<Node> input0_zero_point,
+                                                        std::shared_ptr<Node> input1_scale,
+                                                        std::shared_ptr<Node> input1_zero_point,
                                                         std::shared_ptr<Node> output_scale,
                                                         std::shared_ptr<Node> output_zero_point);
 
-            std::shared_ptr<Node> QuantizedLinearMatmulInteger(std::shared_ptr<Node> input,
-                                                               std::shared_ptr<Node> filter);
+            std::shared_ptr<Node> QuantizedLinearMatmulInteger(std::shared_ptr<Node> input0,
+                                                               std::shared_ptr<Node> input1);
         }
     }
 }
