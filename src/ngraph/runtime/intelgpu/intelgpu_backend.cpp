@@ -410,6 +410,7 @@ shared_ptr<runtime::Executable>
     {
         ngraph::pass::Manager pass_manager;
 
+        pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>();
         pass_manager.register_pass<ngraph::pass::NopElimination>();
         pass_manager.register_pass<ngraph::pass::BatchFusion>();
         pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();

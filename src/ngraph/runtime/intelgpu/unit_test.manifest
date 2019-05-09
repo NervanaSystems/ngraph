@@ -21,13 +21,6 @@ shape_of_5d
 shape_of_matrix
 shape_of_scalar
 shape_of_vector
-prelu
-prelu_shared_slope
-prelu_negative_slope
-elu
-elu_negative_alpha
-space_to_depth
-depth_to_space
 
 # Unsupported extra padding modes
 pad_edge_1d
@@ -64,5 +57,3 @@ gather_nd_batch_2d_from_3d
 gather_scalar_indices_no_axis
 gather_scalar_indices
 gather_nd_single_indices
-gemm
-gemm_broadcast_input_C
