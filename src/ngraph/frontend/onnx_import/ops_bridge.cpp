@@ -60,6 +60,7 @@
 #include "op/global_max_pool.hpp"
 #include "op/greater.hpp"
 #include "op/hard_sigmoid.hpp"
+#include "op/hardmax.hpp"
 #include "op/identity.hpp"
 #include "op/leaky_relu.hpp"
 #include "op/less.hpp"
@@ -262,6 +263,7 @@ namespace ngraph
             REGISTER_OPERATOR("GlobalLpPool", 1, global_lp_pool);
             REGISTER_OPERATOR("GlobalMaxPool", 1, global_max_pool);
             REGISTER_OPERATOR("Greater", 1, greater);
+            REGISTER_OPERATOR("Hardmax", 1, hardmax);
             REGISTER_OPERATOR("HardSigmoid", 1, hard_sigmoid);
             REGISTER_OPERATOR("Identity", 1, identity);
             REGISTER_OPERATOR("LeakyRelu", 1, leaky_relu);
