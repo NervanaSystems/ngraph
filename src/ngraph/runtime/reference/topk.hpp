@@ -35,13 +35,13 @@ namespace ngraph
             {
 // this is intentional to be able to compare floats directly
 // without using relative or absolute tolerance
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wfloat-equal"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
                 if (std::get<0>(a) == std::get<0>(b))
                 {
                     return std::get<1>(a) < std::get<1>(b);
                 }
-#pragma clang diagnostic pop
+#pragma GCC diagnostic pop
 
                 return a > b;
             }

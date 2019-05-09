@@ -1354,14 +1354,14 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_leaky_relu()
         auto alpha_vec = alpha_const_op->get_vector<float>();
         for (auto val : alpha_vec)
         {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wfloat-equal"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
             if (val != alpha_vec[0])
             {
                 NGRAPH_DEBUG << "alpha is not a singular constant";
                 return false;
             }
-#pragma clang diagnostic pop
+#pragma GCC diagnostic pop
         }
 
         if (alpha_vec[0] < 0)

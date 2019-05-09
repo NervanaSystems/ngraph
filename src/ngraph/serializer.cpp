@@ -63,6 +63,7 @@
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
+#include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
@@ -660,16 +661,8 @@ static shared_ptr<ngraph::Function>
                     node_js.count("element_type") == 0 ? node_js.at("value_type") : node_js;
                 auto element_type = read_element_type(type_node_js.at("element_type"));
                 auto shape = type_node_js.at("shape");
-                auto value_it = node_js.find("value");
-                if (value_it != node_js.end())
-                {
-                    auto value = value_it->get<vector<string>>();
-                    node = make_shared<op::Constant>(element_type, shape, value);
-                }
-                else
-                {
-                    node = const_data_callback(node_name, element_type, shape);
-                }
+                auto value = node_js.at("value").get<vector<string>>();
+                node = make_shared<op::Constant>(element_type, shape, value);
                 break;
             }
             case OP_TYPEID::Convert:
@@ -1418,6 +1411,11 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Tanh>(args[0]);
                 break;
             }
+            case OP_TYPEID::Tile:
+            {
+                node = make_shared<op::Tile>(args[0], args[1]);
+                break;
+            }
             case OP_TYPEID::TopK:
             {
                 auto top_k_axis = node_js.at("top_k_axis").get<size_t>();
@@ -1675,7 +1673,13 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Constant:
     {
         auto tmp = dynamic_cast<const op::Constant*>(&n);
-        if (!binary_constant_data)
+        if (tmp->are_all_data_elements_bitwise_identical())
+        {
+            vector<string> vs;
+            vs.push_back(tmp->get_value_strings()[0]);
+            node["value"] = vs;
+        }
+        else
         {
             node["value"] = tmp->get_value_strings();
         }
@@ -2099,6 +2103,8 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Tan: { break;
     }
     case OP_TYPEID::Tanh: { break;
+    }
+    case OP_TYPEID::Tile: { break;
     }
     case OP_TYPEID::TopK:
     {

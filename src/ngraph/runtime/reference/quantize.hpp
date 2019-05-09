@@ -28,23 +28,23 @@ namespace ngraph
             template <typename REAL, typename QUANT>
             void quantize(const REAL* input,
                           const REAL* scale,
-                          const QUANT* offset,
+                          const QUANT* zero_point,
                           QUANT* output,
                           const Shape& input_shape,
-                          const Shape& scale_offset_shape,
+                          const Shape& scale_zero_point_shape,
                           const AxisSet& axes,
                           op::Quantize::RoundMode round_mode)
             {
                 CoordinateTransform input_transform(input_shape);
-                CoordinateTransform scale_offset_transform(scale_offset_shape);
+                CoordinateTransform scale_zero_point_transform(scale_zero_point_shape);
 
                 for (const Coordinate& input_coord : input_transform)
                 {
-                    Coordinate scale_offset_coord = project(input_coord, axes);
+                    Coordinate scale_zero_point_coord = project(input_coord, axes);
 
                     // apply scale
                     REAL qvalue = input[input_transform.index(input_coord)] /
-                                  scale[scale_offset_transform.index(scale_offset_coord)];
+                                  scale[scale_zero_point_transform.index(scale_zero_point_coord)];
 
                     // round
                     if (round_mode == op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY)
@@ -95,8 +95,8 @@ namespace ngraph
                         qvalue = std::floor(qvalue);
                     }
 
-                    // apply offset
-                    qvalue += offset[scale_offset_transform.index(scale_offset_coord)];
+                    // apply zero_point
+                    qvalue += zero_point[scale_zero_point_transform.index(scale_zero_point_coord)];
 
                     // clamp
                     qvalue = std::max<REAL>(qvalue,

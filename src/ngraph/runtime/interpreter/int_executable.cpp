@@ -208,6 +208,7 @@ void runtime::interpreter::INTExecutable::generate_calls(const element::Type& ty
     case element::Type_t::undefined:
     case element::Type_t::dynamic:
     case element::Type_t::bf16:
+    case element::Type_t::f16:
         ss << "unsupported element type " << type << " op " << op.get_node()->get_name();
         throw ngraph_error(ss.str());
     }
