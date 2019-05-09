@@ -16,45 +16,31 @@
 
 #pragma once
 
-#include "ngraph/axis_set.hpp"
 #include "ngraph/op/op.hpp"
-#include "ngraph/type/element_type.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        /// \brief Dequantize operation
-        ///        Maps quantized input (q) to real output (r) using scale (s) and zero point (z):
-        ///        r = (q - o) * s
-        class Dequantize : public ngraph::op::Op
+        /// \brief Dynamic Tiling operation which repeats a tensor multiple times
+        ///        along each dimension
+        class Tile : public Op
         {
         public:
-            /// \brief Constructs a Dequantize operation
-            /// \param input quantized input
-            /// \param scale scale used for mapping
-            /// \param zero_point zero point used for mapping
-            /// \param type output element type
-            /// \param axes axis positions on which `scale` and `zero_point` are specified
-            Dequantize(const std::shared_ptr<Node>& input,
-                       const std::shared_ptr<Node>& scale,
-                       const std::shared_ptr<Node>& zero_point,
-                       const ngraph::element::Type& type,
-                       const ngraph::AxisSet& axes);
+            /// \brief Perform dynamic padding of a tensor
+            ///
+            /// \param arg The node producing input tensor to be padded.
+            /// \param repeats The node producing the per-dimension replication factor
+            Tile(const std::shared_ptr<Node>& arg, const std::shared_ptr<Node>& repeats);
 
             void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            const ngraph::AxisSet& get_axes() const { return m_axes; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
-
-        private:
-            ngraph::element::Type m_type;
-            ngraph::AxisSet m_axes;
         };
     }
 }
