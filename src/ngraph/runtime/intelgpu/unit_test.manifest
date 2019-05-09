@@ -64,3 +64,5 @@ gather_nd_batch_2d_from_3d
 gather_scalar_indices_no_axis
 gather_scalar_indices
 gather_nd_single_indices
+gemm
+gemm_broadcast_input_C
