@@ -14,20 +14,30 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include "memory_manager.hpp"
+#include <llvm/ADT/STLExtras.h>
+#include <memory>
+#include "compiler.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
+using namespace ngraph::runtime::cpu;
 
-#include "mlir/Pass/Pass.h"
-#include "mlir/Support/LLVM.h"
-
-namespace ngraph
+/// Call back to allocate memory for temps from JIT'ed code
+extern "C" CPU_BACKEND_API void* __mlir_allocate(MLIRMemMgr* mem_mgr, size_t size)
 {
-    namespace runtime
-    {
-        namespace cpu
-        {
-            class MLIRCompiler;
+    return mem_mgr->allocate(size);
+}
 
-            mlir::Pass* createDialectLoweringPass(MLIRCompiler* compiler);
-        }
+void* MLIRMemMgr::allocate(size_t size)
+{
+    void* ptr = malloc(size);
+    ptrList.push_back(ptr);
+    return ptr;
+}
+
+void MLIRMemMgr::freeAll()
+{
+    for (auto p : ptrList)
+    {
+        free(p);
     }
 }

@@ -16,6 +16,7 @@
 
 #include "lowerer.hpp"
 #include <map>
+#include "compiler.hpp"
 #include "llvm/ADT/DenseSet.h"
 #include "mlir/EDSC/Builders.h"
 #include "mlir/EDSC/Helpers.h"
@@ -69,8 +70,9 @@ namespace
     class DialectLoweringPass : public ModulePass<DialectLoweringPass>
     {
     public:
-        DialectLoweringPass()
+        DialectLoweringPass(MLIRCompiler& compiler)
             : m_dialectLowerer(*this)
+            , m_compiler(compiler)
         {
         }
         void runOnModule() override;
@@ -78,25 +80,24 @@ namespace
         SmallVector<Value*, 4> buildOutputDefs(Operation* op, FuncBuilder& rewriter);
 
     private:
+        mlir::Function* getCallDecl(StringRef name,
+                                    ArrayRef<Type> args,
+                                    ArrayRef<Type> output,
+                                    FuncBuilder& rewriter);
         void findOutputValues();
-        void fixOutputs();
+        void processFakeInstrs();
+        Value* insertMemMgrDef(FuncBuilder* rewriter = nullptr);
 
     private:
         DialectLowerer m_dialectLowerer;
+        // Value holding mem manager passed pointer
+        SmallVector<Value*, 4> m_memMgrDefs;
         // maps output ng dialect values to args pos
         std::map<Value*, unsigned> m_outputValueMap;
         // list of results values to add to func signature
         SmallVector<Value*, 4> m_loweredOutputValues;
+        MLIRCompiler& m_compiler;
     };
-
-    Type DialectLowerer::convertType(Type t)
-    {
-        if (auto tensor = t.cast<NGTensorType>())
-        {
-            return tensor.toMemref();
-        }
-        return t;
-    }
 
     void DialectLoweringPass::runOnModule()
     {
@@ -115,7 +116,7 @@ namespace
         {
             getModule().dump();
         }
-        fixOutputs();
+        processFakeInstrs();
         if (std::getenv("NGRAPH_MLIR_DUMP_ALL") != nullptr)
         {
             getModule().dump();
@@ -124,6 +125,7 @@ namespace
 
     void DialectLoweringPass::findOutputValues()
     {
+        // get original function
         auto f = getModule().getNamedFunction("main");
         SmallVector<Value*, 4> outputList;
         unsigned outputCount = 0;
@@ -143,7 +145,136 @@ namespace
         m_loweredOutputValues.resize(outputCount, nullptr);
     }
 
+    /// Inserts a fake def for Mem Mgr pointer at converted func start
+    Value* DialectLoweringPass::insertMemMgrDef(FuncBuilder* rewriter)
+    {
+        // it would be nice to insert one fake def at the start of the new func
+        // however, due to how DialectConversion framework works, new func is only
+        // materialized after conversion is done (rewriter->getFunction, or even rewriter->getInsertionBlock()->getFunction()
+        // will give you the original func). This makes it very convoluted to insert instructions at entry block.
+        auto op = rewriter->create<NG_FakeInput>(rewriter->getUnknownLoc(),
+                                                 IndexType::get(getModule().getContext()));
+        // will be fixed later to read passed arg instead.
+        m_memMgrDefs.push_back(op.getResult());
+        return op.getResult();
+    }
+
+    SmallVector<Value*, 4> DialectLoweringPass::buildOutputDefs(Operation* op,
+                                                                FuncBuilder& rewriter)
+    {
+        auto& outputMap = getOutputValueMap();
+        SmallVector<Value*, 4> newResults;
+        for (auto origResult : op->getResults())
+        {
+            auto it = outputMap.find(origResult);
+            // create output def if this operation produces any sub-graph outputs
+            if (it != outputMap.end())
+            {
+                unsigned argId = (*it).second;
+                auto newResult = rewriter
+                                     .create<NG_FakeInput>(
+                                         op->getLoc(),
+                                         m_dialectLowerer.convertType(
+                                             origResult->getType()) /* convert to lowered type */
+                                         )
+                                     .getResult();
+                newResults.push_back(newResult);
+                m_loweredOutputValues[argId] = newResult;
+            }
+            else
+            {
+                auto tensorType = origResult->getType().cast<NGTensorType>();
+                auto callBackFunc = getCallDecl("__mlir_allocate",
+                                                {rewriter.getIndexType(), rewriter.getIndexType()},
+                                                {tensorType.toMemref()},
+                                                rewriter);
+
+                auto size = tensorType.getSizeInBytes();
+                SmallVector<mlir::Value*, 4> args = {
+                    insertMemMgrDef(&rewriter), /* pointer to mem manager */
+                    rewriter.create<mlir::ConstantIndexOp>(rewriter.getUnknownLoc(),
+                                                           size)}; /* size to allocate */
+                auto newResult =
+                    rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args)
+                        .getResult(0);
+                newResults.push_back(newResult);
+            }
+        }
+        return newResults;
+    }
+
+    void DialectLoweringPass::processFakeInstrs()
+    {
+        auto context = getModule().getContext();
+        auto f = getModule().getNamedFunction("main");
+        mlir::Block* entryBlock = &*(f->begin());
+        auto oldFuncType = f->getType();
+        ArrayRef<mlir::Type> ipArgs = oldFuncType.getInputs();
+        ArrayRef<mlir::Type> opArgs = oldFuncType.getResults();
+        SmallVector<mlir::Type, 4> allArgs;
+
+        // Move all args as inputs in new type
+        for (auto type : ipArgs)
+        {
+            allArgs.push_back(type);
+        }
+        for (auto type : opArgs)
+        {
+            allArgs.push_back(type);
+            // add new value for result
+            entryBlock->addArgument(type);
+        }
+        // Mem Manager Ptr
+        auto indexType = mlir::IndexType::get(context);
+        allArgs.push_back(indexType);
+        entryBlock->addArgument(indexType);
+        // update type
+        auto newFuncType = mlir::FunctionType::get(allArgs, {}, context);
+        f->setType(newFuncType);
+
+        // RAUW fake outputs with result values
+        unsigned i = 0;
+        for (auto value : m_loweredOutputValues)
+        {
+            auto op = value->getDefiningOp();
+            NGRAPH_ASSERT(op->isa<NG_FakeInput>()) << "output value not defined by fake output?";
+            value->replaceAllUsesWith(entryBlock->getArgument(oldFuncType.getNumInputs() + i));
+            op->erase();
+            i++;
+        }
+        for (auto v : m_memMgrDefs)
+        {
+            v->replaceAllUsesWith(entryBlock->getArgument(m_compiler.get_mem_mgr_arg_id(f)));
+            v->getDefiningOp()->erase();
+        }
+    }
+
+    mlir::Function* DialectLoweringPass::getCallDecl(StringRef name,
+                                                     ArrayRef<Type> args,
+                                                     ArrayRef<Type> output,
+                                                     FuncBuilder& rewriter)
+    {
+        auto callBackFuncPtr = getModule().getNamedFunction(name);
+        if (callBackFuncPtr == nullptr)
+        {
+            auto callBackType = rewriter.getFunctionType(args, output);
+            auto callBackFunc =
+                llvm::make_unique<mlir::Function>(rewriter.getUnknownLoc(), name, callBackType);
+            callBackFuncPtr = callBackFunc.get();
+            getModule().getFunctions().push_back(callBackFunc.release());
+        }
+        return callBackFuncPtr;
+    }
     // NGDialect converters
+    Type DialectLowerer::convertType(Type t)
+    {
+        if (auto tensor = t.dyn_cast<NGTensorType>())
+        {
+            return tensor.toMemref();
+        }
+        return t;
+    }
+
     // ADD
     SmallVector<Value*, 4> NG_AddOpConversion::rewrite(Operation* op,
                                                        ArrayRef<Value*> operands,
@@ -256,69 +387,6 @@ namespace
         rewriter.create<ReturnOp>(op->getLoc());
         return {};
     }
-
-    SmallVector<Value*, 4> DialectLoweringPass::buildOutputDefs(Operation* op,
-                                                                FuncBuilder& rewriter)
-    {
-        auto& outputMap = getOutputValueMap();
-        SmallVector<Value*, 4> newResults;
-        for (auto origResult : op->getResults())
-        {
-            auto it = outputMap.find(origResult);
-            // create output def if this operation produces any sub-graph outputs
-            if (it != outputMap.end())
-            {
-                unsigned argId = (*it).second;
-                auto newResult = rewriter
-                                     .create<NG_FakeOutput>(
-                                         op->getLoc(),
-                                         m_dialectLowerer.convertType(
-                                             origResult->getType()) /* convert to lowered type */
-                                         )
-                                     .getResult();
-                newResults.push_back(newResult);
-                m_loweredOutputValues[argId] = newResult;
-            }
-        }
-        return newResults;
-    }
-
-    void DialectLoweringPass::fixOutputs()
-    {
-        auto context = getModule().getContext();
-        auto f = getModule().getNamedFunction("main");
-        mlir::Block* entryBlock = &*(f->begin());
-        auto oldFuncType = f->getType();
-        ArrayRef<mlir::Type> ipArgs = oldFuncType.getInputs();
-        ArrayRef<mlir::Type> opArgs = oldFuncType.getResults();
-        SmallVector<mlir::Type, 4> allArgs;
-
-        // Move all args as inputs in new type
-        for (auto type : ipArgs)
-        {
-            allArgs.push_back(type);
-        }
-        for (auto type : opArgs)
-        {
-            allArgs.push_back(type);
-            // add new value for result
-            entryBlock->addArgument(type);
-        }
-        // update type
-        auto newFuncType = mlir::FunctionType::get(allArgs, {}, context);
-        f->setType(newFuncType);
-
-        // RAUW fake outputs with result values
-        unsigned i = 0;
-        for (auto value : m_loweredOutputValues)
-        {
-            auto op = value->getDefiningOp();
-            NGRAPH_ASSERT(op->isa<NG_FakeOutput>()) << "output value not defined by fake output?";
-            value->replaceAllUsesWith(entryBlock->getArgument(oldFuncType.getNumInputs() + i));
-            op->erase();
-            i++;
-        }
-    }
 }
 
 namespace ngraph
@@ -327,7 +395,10 @@ namespace ngraph
     {
         namespace cpu
         {
-            Pass* createDialectLoweringPass() { return new DialectLoweringPass(); }
+            Pass* createDialectLoweringPass(MLIRCompiler* compiler)
+            {
+                return new DialectLoweringPass(*compiler);
+            }
         }
     }
 }

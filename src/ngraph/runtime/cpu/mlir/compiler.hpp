@@ -15,6 +15,8 @@
 //*****************************************************************************
 #pragma once
 
+#include "lowerer.hpp"
+#include "memory_manager.hpp"
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/node.hpp"
 
@@ -29,6 +31,11 @@
 #include <mlir/IR/Types.h>
 #include <mlir/StandardOps/Ops.h>
 
+namespace mlir
+{
+    struct StaticFloatMemRef;
+}
+
 namespace ngraph
 {
     namespace runtime
@@ -37,6 +44,9 @@ namespace ngraph
         {
             class MLIRCompiler
             {
+            public:
+                static void init_mlir();
+
             public:
                 using TensorList = std::vector<descriptor::Tensor*>;
                 using TypeList = llvm::SmallVector<mlir::Type, 4>;
@@ -48,9 +58,16 @@ namespace ngraph
                 {
                 }
 
-                static void init_mlir();
-                /// Compiles and runs a subgraph in MLIR.
+                /// Compiles and runs a subgraph in MLIR
                 void compile_and_run();
+
+                /// Returns the memory manager used by this sub-graph compiler
+                MLIRMemMgr& get_mem_mgr() { return m_mem_mgr; }
+                /// Returns memory manager pointer argument ID in call interface
+                unsigned get_mem_mgr_arg_id(mlir::Function* func)
+                {
+                    return func->getNumArguments() - 1;
+                }
 
             private:
                 struct TensorInfo
@@ -63,15 +80,17 @@ namespace ngraph
                 void build_module();
                 void lower_dialect();
                 void optimize();
-                void bind_tensors_to_arguments();
+                void bind_arguments();
                 void execute();
                 void cleanup();
 
+                /// Collects input and output tensors to this sub-graph
                 void build_tensors_list();
                 mlir::Type get_mlir_type(const descriptor::Tensor* tensor);
                 mlir::Type get_mlir_type(const element::Type& type);
                 TensorInfo get_tensor_value(descriptor::Tensor* tensor);
                 void update_tensor_value(descriptor::Tensor* tensor, mlir::Value* value);
+
                 void build_ng_dialect();
 
                 template <typename OP>
@@ -84,6 +103,12 @@ namespace ngraph
                 template <typename BinOp>
                 mlir::Value* create_binary_op(const ngraph::Node* ng_node);
                 void create_return();
+
+                /// Helper to create memref arguments for MLIR function signature
+                llvm::SmallVector<void*, 8> allocate_memref_args(mlir::Function* func);
+
+                /// Helper to allocate a mem ref object. Handles static shapes only for now.
+                mlir::StaticFloatMemRef* allocate_memref_descriptor(mlir::Type type);
 
             private:
                 mlir::MLIRContext m_context;
@@ -107,6 +132,9 @@ namespace ngraph
                 // List of input and output tensors in the graph
                 TensorList m_ip_tensors, m_op_tensors;
                 static const MLIRCompOpMap op_dispatcher;
+
+                // Memory manager for temp allocations inside JIT'ed code
+                MLIRMemMgr m_mem_mgr;
             };
         }
     }

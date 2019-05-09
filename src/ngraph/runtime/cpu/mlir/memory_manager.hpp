@@ -15,9 +15,8 @@
 //*****************************************************************************
 
 #pragma once
-
-#include "mlir/Pass/Pass.h"
-#include "mlir/Support/LLVM.h"
+#include <stdint.h>
+#include <vector>
 
 namespace ngraph
 {
@@ -25,9 +24,23 @@ namespace ngraph
     {
         namespace cpu
         {
-            class MLIRCompiler;
+            /// Memory manager for temporaries in MLIR compiled sub-graph
+            /// It handles call-backs from the code and returns pointer to allocated memory
+            /// Also, handles freeing up memory
+            class MLIRMemMgr
+            {
+            public:
+                /// Allocates data for temporary tensor. Currently, it is called for each
+                /// temp tensor defintion. Keeps track of each pointer and free them during cleanup.
+                // TODO: Use pre-allocation from framework memory manager
+                void* allocate(size_t size);
 
-            mlir::Pass* createDialectLoweringPass(MLIRCompiler* compiler);
+                /// Frees all allocated pointers
+                void freeAll();
+
+            private:
+                std::vector<void*> ptrList;
+            };
         }
     }
 }

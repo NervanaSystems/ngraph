@@ -59,12 +59,13 @@ namespace ngraph
         // Register any LLVM command line options
         llvm::cl::ParseEnvironmentOptions("ngraph", "MLIR_LLVM_OPTIONS", "");
     }
+
     void MLIRCompiler::compile_and_run()
     {
         build_module(); // MLIR gen
         lower_dialect();
         optimize();
-        bind_tensors_to_arguments();
+        bind_arguments();
         execute();
         cleanup();
     }
@@ -114,7 +115,6 @@ namespace ngraph
         }
     }
 
-    /// Collects input and output tensors to this sub-graph
     void MLIRCompiler::build_tensors_list()
     {
         for (const auto node : m_sub_graph)
@@ -223,7 +223,7 @@ namespace ngraph
     void MLIRCompiler::lower_dialect()
     {
         mlir::PassManager pm;
-        pm.addPass(createDialectLoweringPass());
+        pm.addPass(createDialectLoweringPass(this));
         pm.addPass(mlir::createCanonicalizerPass());
 
         pm.run(m_module.get());
@@ -314,7 +314,7 @@ namespace ngraph
         m_builder->create<NG_ReturnOp>(mlir::UnknownLoc::get(&m_context), value_list);
     }
 
-    void MLIRCompiler::bind_tensors_to_arguments()
+    void MLIRCompiler::bind_arguments()
     {
         NGRAPH_ASSERT(m_module && "MLIR module is not ready.");
 
@@ -326,11 +326,10 @@ namespace ngraph
         // SmallVector<StaticFloatMemref*>. StaticFloatMemref is just a struct with the
         // actual pointer to the data.
 
-        // TODO (dcab): Only f32 arguments are supported for now. We may want to implement
-        // this more generically by just allocating a void double pointer.
-        auto expected_arguments = allocateMemRefArguments(func);
-        NGRAPH_ASSERT(expected_arguments) << "Arguments can't be created";
-        m_invoke_args = std::move(*expected_arguments);
+        // create MemRef args
+        auto expected_arguments = allocate_memref_args(func);
+        NGRAPH_ASSERT(expected_arguments.size()) << "Arguments can't be created";
+        m_invoke_args = std::move(expected_arguments);
 
         NGRAPH_ASSERT(m_invoke_args.size() == m_external_tensors.size())
             << "Number of external tensors doesn't match number of function arguments";
@@ -340,6 +339,15 @@ namespace ngraph
         {
             ((mlir::StaticFloatMemRef*)m_invoke_args[i])->data = (float*)m_external_tensors[i];
         }
+
+        // Add pointer to memory manager
+        // malloc here since that's what allocateMemRefArguments use
+        // TODO (nmostafa): Better way of doing this ? Use builder allocator ?
+        MLIRMemMgr** mem_mgr_arg = reinterpret_cast<MLIRMemMgr**>(malloc(sizeof(void*)));
+        *mem_mgr_arg = &get_mem_mgr();
+        // inserting memory manager ptr in right location ?
+        NGRAPH_ASSERT(m_invoke_args.size() == get_mem_mgr_arg_id(func));
+        m_invoke_args.push_back(static_cast<void*>(mem_mgr_arg));
     }
 
     void MLIRCompiler::execute()
@@ -355,11 +363,6 @@ namespace ngraph
         // Initialize LLVM targets.
         llvm::InitializeNativeTarget();
         llvm::InitializeNativeTargetAsmPrinter();
-
-        // Create an MLIR execution engine. Note that it takes a null pass manager
-        // to make sure it won't run "default" passes on the MLIR that would trigger
-        // a second conversion to LLVM IR.  The execution engine eagerly JIT-compiles
-        // the module.
 
         // Create an MLIR execution engine. Note that it takes a null pass manager
         // to make sure it won't run "default" passes on the MLIR that would trigger
@@ -389,5 +392,39 @@ namespace ngraph
         // Free MLIR function builder.
         if (m_builder)
             m_builder.reset(nullptr);
+
+        // Free allocated memory for JIT'ed code temps
+        m_mem_mgr.freeAll();
+    }
+
+    SmallVector<void*, 8> MLIRCompiler::allocate_memref_args(mlir::Function* func)
+    {
+        SmallVector<void*, 8> args;
+        args.reserve(func->getNumArguments());
+        for (const auto& arg : func->getArguments())
+        {
+            auto descriptor = allocate_memref_descriptor(arg->getType());
+
+            if (!descriptor)
+                continue;
+            args.push_back(descriptor);
+        }
+        return args;
+    }
+
+    mlir::StaticFloatMemRef* MLIRCompiler::allocate_memref_descriptor(mlir::Type type)
+    {
+        auto memRefType = type.dyn_cast<mlir::MemRefType>();
+        if (!memRefType)
+            return nullptr;
+        if (memRefType.getNumDynamicDims() != 0)
+            NGRAPH_FAIL();
+
+        // We only use StaticFloatMemRef because that's what MLIR currently offers.
+        // We should expand this with different types and dynamic MemRefs
+        auto* descriptor =
+            reinterpret_cast<mlir::StaticFloatMemRef*>(malloc(sizeof(mlir::StaticFloatMemRef)));
+        descriptor->data = nullptr;
+        return descriptor;
     }
 }

@@ -31,7 +31,7 @@ namespace ngraph
         addOperations<NG_AddOp>();
         addOperations<NG_MatmulBiasOp>();
         addOperations<NG_ReturnOp>();
-        addOperations<NG_FakeOutput>();
+        addOperations<NG_FakeInput>();
     }
 
     void NGDialect::printType(mlir::Type type, raw_ostream& os) const

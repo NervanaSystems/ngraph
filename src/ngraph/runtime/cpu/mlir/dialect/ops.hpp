@@ -29,10 +29,15 @@ namespace ngraph
         namespace cpu
         {
             // Fake instructions
-            class NG_FakeOutput : public mlir::Op<NG_FakeOutput,
-                                                  mlir::OpTrait::NOperands<0>::Impl,
-                                                  mlir::OpTrait::OneResult,
-                                                  mlir::OpTrait::HasNoSideEffect>
+
+            /// Fake Input
+            /// Used as fake definitions during dialect conversion.
+            /// Used when we cannot insert the real definition once during lowering.
+            /// The are cleaned up after dialect lowering and replaced with real defintion.
+            class NG_FakeInput : public mlir::Op<NG_FakeInput,
+                                                 mlir::OpTrait::NOperands<0>::Impl,
+                                                 mlir::OpTrait::OneResult,
+                                                 mlir::OpTrait::HasNoSideEffect>
             {
             public:
                 static llvm::StringRef getOperationName() { return "ng.fake.output"; }

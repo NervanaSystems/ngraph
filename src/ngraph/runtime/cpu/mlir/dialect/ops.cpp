@@ -69,14 +69,14 @@ namespace ngraph
         }
     }
 
-    void runtime::cpu::NG_FakeOutput::build(mlir::Builder* builder,
-                                            mlir::OperationState* state,
-                                            mlir::Type resultType)
+    void runtime::cpu::NG_FakeInput::build(mlir::Builder* builder,
+                                           mlir::OperationState* state,
+                                           mlir::Type resultType)
     {
         state->types.push_back(std::move(resultType));
     }
 
-    mlir::LogicalResult runtime::cpu::NG_FakeOutput::verify()
+    mlir::LogicalResult runtime::cpu::NG_FakeInput::verify()
     {
         // TODO: Verify returned tensor types must match function return type.
         return mlir::success();

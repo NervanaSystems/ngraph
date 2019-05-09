@@ -94,6 +94,20 @@ namespace ngraph
                 EltType getElementType() const { return getImpl()->getElementType(); }
                 Shape getShape() const { return getImpl()->getShape(); }
                 int getRank() { return getShape().size(); }
+                size_t getSizeInBytes()
+                {
+                    size_t s = 1;
+                    auto shape = getShape();
+                    for (auto i = 0; i < getRank(); i++)
+                    {
+                        // no dynamic dims
+                        if (shape[i] == -1)
+                            return -1;
+                        s *= shape[i];
+                    }
+                    // Multiply times element size
+                    return s * llvm::divideCeil(getElementType().getIntOrFloatBitWidth(), 8);
+                }
                 /// convert to memref native MLIR type. Used for lowering.
                 mlir::MemRefType toMemref();
                 /// create a unique tensor type based on element type and shape.

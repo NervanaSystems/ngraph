@@ -22,6 +22,7 @@ set(MLIR_SRC
     mlir/dialect/ops.cpp
     mlir/compiler.cpp
     mlir/lowerer.cpp
+    mlir/memory_manager.cpp
 )
 set(SRC
     cpu_backend.cpp
@@ -222,10 +223,11 @@ if (NGRAPH_CPU_ENABLE)
     add_definitions(${LLVM_DEFINITIONS})
 
     target_include_directories(cpu_backend PRIVATE ${LLVM_INCLUDE_DIRS})
-    
-    string(REPLACE ":" ";" MLIR_INCLUDE_PATH $ENV{MLIR_INCLUDE_PATH})
-    message(STATUS "MLIR Headers at : ${MLIR_INCLUDE_PATH}")
-    target_include_directories(cpu_backend PRIVATE ${MLIR_INCLUDE_PATH}) 
+    if(DEFINED ENV{MLIR_INCLUDE_PATH})
+        string(REPLACE ":" ";" MLIR_INCLUDE_PATH $ENV{MLIR_INCLUDE_PATH})
+        message(STATUS "MLIR Headers at : ${MLIR_INCLUDE_PATH}")
+        target_include_directories(cpu_backend PRIVATE ${MLIR_INCLUDE_PATH}) 
+    endif()
 
     llvm_map_components_to_libnames(llvm_libs support core irreader)
 
