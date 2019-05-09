@@ -337,3 +337,28 @@ NGRAPH_TEST(${BACKEND_NAME}, depth_to_space)
                             22.f, 23.f, 24.f, 25.f, 26.f, 27.f, 28.f, 29.f, 30.f, 31.f});
     test_case.run();
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, grn_4d)
+{
+    Shape data_shape{1, 2, 3, 4};
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    float bias{1e-6f};
+
+    auto grn = make_shared<op::GRN>(data, bias);
+    auto function = make_shared<Function>(NodeVector{grn}, ParameterVector{data});
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    vector<float> input_data(shape_size(data_shape));
+    iota(begin(input_data), end(input_data), 1);
+
+    test_case.add_input<float>(input_data);
+
+    test_case.add_expected_output<float>(
+        data_shape, {0.00588235f, 0.01f,       0.01282051f, 0.01470588f, 0.01592357f, 0.01666667f,
+                     0.01707317f, 0.01724138f, 0.01724138f, 0.01712329f, 0.01692308f, 0.01666667f,
+                     0.07647059f, 0.07f,       0.06410257f, 0.05882353f, 0.05414013f, 0.05f,
+                     0.04634146f, 0.04310345f, 0.04022989f, 0.03767123f, 0.03538461f, 0.03333334f});
+
+    test_case.run();
+}
