@@ -55,7 +55,7 @@ void op::DynReshape::validate_and_infer_types()
         std::transform(out_shape.begin(),
                        out_shape.end(),
                        output_shape.begin(),
-                       [&](const int64_t& v) { return (v > 0) ? v : 0; });
+                       [&](const int64_t& v) { return max(v, int64_t(0)); });
         set_output_type(0, get_input_element_type(0), output_shape);
     }
     else
