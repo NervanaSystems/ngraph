@@ -28,7 +28,7 @@ namespace ngraph
         class Squeeze : public ngraph::op::util::FusedOp
         {
         public:
-            Squeeze(const std::shared_ptr<ngraph::Node>& data, const AxisVector& axes);
+            Squeeze(const std::shared_ptr<ngraph::Node>& data, const AxisVector& axes = {});
 
             virtual NodeVector decompose_op() const override;
 

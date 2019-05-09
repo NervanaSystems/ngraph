@@ -377,3 +377,30 @@ NGRAPH_TEST(${BACKEND_NAME}, gemm_broadcast_input_C)
     test_case.add_expected_output<double>(Shape{3, 4}, vector<double>(12, 7));
     test_case.run();
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, squeeze)
+{
+    auto param = make_shared<op::Parameter>(element::f32, Shape{1, 4, 1, 1, 2});
+    auto squeeze = make_shared<op::Squeeze>(param);
+    auto data = vector<float>{1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f};
+
+    auto function = make_shared<Function>(NodeVector{squeeze}, ParameterVector{param});
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input(data);
+    test_case.add_expected_output<float>(Shape{4, 2}, data);
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, squeeze_axes)
+{
+    auto param = make_shared<op::Parameter>(element::f32, Shape{1, 4, 1, 1, 2});
+    auto axes = AxisVector{0, 2};
+    auto squeeze = make_shared<op::Squeeze>(param, axes);
+    auto data = vector<float>{1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f};
+
+    auto function = make_shared<Function>(NodeVector{squeeze}, ParameterVector{param});
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input(data);
+    test_case.add_expected_output<float>(Shape{4, 1, 2}, data);
+    test_case.run();
+}
