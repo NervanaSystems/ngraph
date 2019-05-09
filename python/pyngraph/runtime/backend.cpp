@@ -30,7 +30,7 @@ static std::shared_ptr<ngraph::runtime::Executable> compile(ngraph::runtime::Bac
     return self->compile(func, enable_performance_data);
 }
 
-static std::unique_ptr<ngraph::runtime::Backend> create(const std::string& type)
+static std::shared_ptr<ngraph::runtime::Backend> create(const std::string& type)
 {
     bool must_support_dynamic = false;
     return ngraph::runtime::Backend::create(type, must_support_dynamic);
