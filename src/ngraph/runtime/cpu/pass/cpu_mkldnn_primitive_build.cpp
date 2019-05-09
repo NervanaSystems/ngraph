@@ -1836,7 +1836,6 @@ namespace ngraph
 
                     // Write memory descriptors to file
                     std::vector<mkldnn::memory::desc> descs = {input_desc, result_desc};
-                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
                     mkldnn_emitter.reserve_descriptor_space(descs.size());
                     serialize_memory_descs(desc_file, descs, deps[0]);
 
@@ -2338,7 +2337,7 @@ static bool in_new_map(const std::shared_ptr<Node>& node)
         std::dynamic_pointer_cast<ngraph::op::Sigmoid>(node) ||
         std::dynamic_pointer_cast<ngraph::op::SigmoidBackprop>(node) ||
         std::dynamic_pointer_cast<ngraph::op::Slice>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::Softmax>(node))
+        std::dynamic_pointer_cast<ngraph::op::Softmax>(node) ||
         std::dynamic_pointer_cast<ngraph::op::MaxPool>(node) ||
         std::dynamic_pointer_cast<ngraph::op::QuantizedMaxPool>(node) ||
         std::dynamic_pointer_cast<ngraph::op::AvgPool>(node) ||
