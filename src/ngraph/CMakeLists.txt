@@ -156,6 +156,8 @@ set (SRC
     op/experimental/quantized_max_pool.hpp
     op/experimental/shape_of.cpp
     op/experimental/shape_of.hpp
+    op/experimental/tile.cpp
+    op/experimental/tile.hpp
     op/experimental/quantized_dot.cpp
     op/experimental/quantized_dot.hpp
     op/experimental/quantized_dot_bias.cpp
