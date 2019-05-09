@@ -21,6 +21,8 @@
 #include "ngraph/axis_set.hpp"
 #include "ngraph/node.hpp"
 
+using namespace std;
+
 namespace ngraph
 {
     namespace builder
@@ -35,8 +37,7 @@ namespace ngraph
         ///
         /// \return     Node which calculates L-0 norm values.
         ///
-        std::shared_ptr<Node> l0_norm(const std::shared_ptr<Node>& node,
-                                      const AxisSet& reduction_axes);
+        shared_ptr<Node> l0_norm(const shared_ptr<Node>& node, const AxisSet& reduction_axes);
 
         /// \brief      Creates node which calculates L-1 norm of input tensor.
         ///
@@ -48,9 +49,8 @@ namespace ngraph
         ///
         /// \return     Node which calculates L-1 norm values.
         ///
-        std::shared_ptr<Node> l1_norm(const std::shared_ptr<Node>& node,
-                                      const AxisSet& reduction_axes,
-                                      float bias = 0.f);
+        shared_ptr<Node>
+            l1_norm(const shared_ptr<Node>& node, const AxisSet& reduction_axes, float bias = 0.f);
 
         /// \brief      Calculates L-2 norm of input tensor.
         ///
@@ -63,9 +63,8 @@ namespace ngraph
         ///
         /// \return     Node which calculates L-2 norm values.
         ///
-        std::shared_ptr<Node> l2_norm(const std::shared_ptr<Node>& node,
-                                      const AxisSet& reduction_axes,
-                                      float bias = 0.f);
+        shared_ptr<Node>
+            l2_norm(const shared_ptr<Node>& node, const AxisSet& reduction_axes, float bias = 0.f);
 
         /// \brief      Creates node which calculates L-p norm on input tensor.
         ///
@@ -76,10 +75,10 @@ namespace ngraph
         ///
         /// \return     Node which calculates L-p norm.
         ///
-        std::shared_ptr<Node> lp_norm(const std::shared_ptr<Node>& node,
-                                      const AxisSet& reduction_axes,
-                                      std::size_t p_norm = 2,
-                                      float bias = 0.f);
+        shared_ptr<Node> lp_norm(const shared_ptr<Node>& node,
+                                 const AxisSet& reduction_axes,
+                                 size_t p_norm = 2,
+                                 float bias = 0.f);
 
     } // namespace builder
 
