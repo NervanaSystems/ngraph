@@ -926,7 +926,7 @@ TEST(builder, scaled_Q_unsigned)
 
 TEST(builder, dynamic_scaled_Q)
 {
-    auto call_SQ = [](unique_ptr<runtime::Backend>& backend,
+    auto call_SQ = [](shared_ptr<runtime::Backend>& backend,
                       element::Type type,
                       op::Quantize::RoundMode mode,
                       Shape in_shape,
@@ -1036,7 +1036,7 @@ TEST(builder, scaled_DQ_signed)
 }
 
 template <typename T>
-shared_ptr<runtime::Tensor> call_SDQ(unique_ptr<runtime::Backend>& backend,
+shared_ptr<runtime::Tensor> call_SDQ(shared_ptr<runtime::Backend>& backend,
                                      element::Type type,
                                      Shape in_shape,
                                      vector<T> in,

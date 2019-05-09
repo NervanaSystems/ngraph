@@ -820,34 +820,47 @@ namespace ngraph
                     }
                     writer << "*cg_ctx->mkldnn_descriptors[" << desc_index + (descs.size() - 1)
                            << "],\n"
-                              "mkldnn::memory::dims{"
-                           << std::to_string(strides[0]) << ", " << std::to_string(strides[1]);
-                    if (strides.size() == 3)
+                              "mkldnn::memory::dims{";
+                    if (strides.size() > 1)
                     {
-                        writer << ", " << std::to_string(strides[2]);
+                        for (auto i = 0; i < strides.size() - 1; i++)
+                        {
+                            writer << std::to_string(strides[i]) << ", ";
+                        }
                     }
+                    writer << std::to_string(strides[strides.size() - 1]);
                     writer << "},\n"
-                              "mkldnn::memory::dims{"
-                           << std::to_string(window_dilation_strides_adjusted[0]) << ", "
-                           << std::to_string(window_dilation_strides_adjusted[1]);
-                    if (window_dilation_strides_adjusted.size() == 3)
+                              "mkldnn::memory::dims{";
+                    if (window_dilation_strides_adjusted.size() > 1)
                     {
-                        writer << ", " << std::to_string(window_dilation_strides_adjusted[2]);
+                        for (auto i = 0; i < window_dilation_strides_adjusted.size() - 1; i++)
+                        {
+                            writer << std::to_string(window_dilation_strides_adjusted[i]) << ", ";
+                        }
                     }
+                    writer << std::to_string(
+                        window_dilation_strides_adjusted[window_dilation_strides_adjusted.size() -
+                                                         1]);
                     writer << "},\n"
-                              "mkldnn::memory::dims{"
-                           << std::to_string(pad_below[0]) << ", " << std::to_string(pad_below[1]);
-                    if (pad_below.size() == 3)
+                              "mkldnn::memory::dims{";
+                    if (pad_below.size() > 1)
                     {
-                        writer << ", " << std::to_string(pad_below[2]);
+                        for (auto i = 0; i < pad_below.size() - 1; i++)
+                        {
+                            writer << std::to_string(pad_below[i]) << ", ";
+                        }
                     }
+                    writer << std::to_string(pad_below[pad_below.size() - 1]);
                     writer << "},\n"
-                              "mkldnn::memory::dims{"
-                           << std::to_string(pad_above[0]) << ", " << std::to_string(pad_above[1]);
-                    if (pad_above.size() == 3)
+                              "mkldnn::memory::dims{";
+                    if (pad_above.size() > 1)
                     {
-                        writer << ", " << std::to_string(pad_above[2]);
+                        for (auto i = 0; i < pad_above.size() - 1; i++)
+                        {
+                            writer << std::to_string(pad_above[i]) << ", ";
+                        }
                     }
+                    writer << std::to_string(pad_above[pad_above.size() - 1]);
                     writer << "},\n"
                               "mkldnn::padding_kind::zero);\n";
 
@@ -1143,33 +1156,260 @@ namespace ngraph
                         mkldnn_emitter, node);
                 }
 
-                template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(MaxPool)
+                template <typename OP, bool is_training>
+                void construct_primitive_build_string_max_pool(
+                    ngraph::runtime::cpu::MKLDNNEmitter& mkldnn_emitter,
+                    ngraph::Node* node,
+                    std::string& construct_string,
+                    std::vector<size_t>& deps,
+                    size_t& index,
+                    std::ofstream& desc_file)
                 {
-                    auto max_pool = static_cast<const ngraph::op::MaxPool*>(node);
+                    auto pool = static_cast<const OP*>(node);
+                    CodeWriter writer;
+                    std::vector<mkldnn::memory::desc> descs = {};
+
+                    auto window_shape = pool->get_window_shape();
+                    auto window_strides = pool->get_window_movement_strides();
+                    auto padding_below = pool->get_padding_below();
+                    auto padding_above = pool->get_padding_above();
+
+                    if (is_training)
+                    {
+                        auto diff_dst_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
+                        auto diff_src_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+                        descs.push_back(diff_dst_desc);
+                        descs.push_back(diff_src_desc);
+                    }
+                    else
+                    {
+                        auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                        auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+                        descs.push_back(input_desc);
+                        descs.push_back(result_desc);
+                    }
+
+                    index = mkldnn_emitter.reserve_primitive_space_cg(3);
+                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+
+                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
+
+                    writer << "\n// build Maxpool primitive descriptor\n";
+                    writer << "auto max_pool_desc = ";
+                    if (is_training)
+                    {
+                        writer << "mkldnn::pooling_forward::desc(mkldnn::prop_kind::forward_"
+                                  "training,\n";
+                    }
+                    else
+                    {
+                        writer << "mkldnn::pooling_forward::desc(mkldnn::prop_kind::forward_"
+                                  "inference,\n";
+                    }
+                    writer << "mkldnn::algorithm::pooling_max,\n"
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "],\n"
+                                            "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 1 << "],\n";
+                    writer << "mkldnn::memory::dims{";
+                    if (window_strides.size() > 1)
+                    {
+                        for (auto i = 0; i < window_strides.size() - 1; i++)
+                        {
+                            writer << std::to_string(window_strides[i]) << ", ";
+                        }
+                    }
+                    writer << std::to_string(window_strides[window_strides.size() - 1]);
+                    writer << "},\n";
+
+                    writer << "mkldnn::memory::dims{";
+                    if (window_shape.size() > 1)
+                    {
+                        for (auto i = 0; i < window_shape.size() - 1; i++)
+                        {
+                            writer << std::to_string(window_shape[i]) << ", ";
+                        }
+                    }
+                    writer << std::to_string(window_shape[window_shape.size() - 1]);
+                    writer << "},\n";
+
+                    writer << "mkldnn::memory::dims{";
+                    if (padding_below.size() > 1)
+                    {
+                        for (auto i = 0; i < padding_below.size() - 1; i++)
+                        {
+                            writer << std::to_string(padding_below[i]) << ", ";
+                        }
+                    }
+                    writer << std::to_string(padding_below[padding_below.size() - 1]);
+                    writer << "},\n";
+
+                    writer << "mkldnn::memory::dims{";
+                    if (padding_above.size() > 1)
+                    {
+                        for (auto i = 0; i < padding_above.size() - 1; i++)
+                        {
+                            writer << std::to_string(padding_above[i]) << ", ";
+                        }
+                    }
+                    writer << std::to_string(padding_above[padding_above.size() - 1]);
+                    writer << "},\n";
+                    writer << "mkldnn::padding_kind::zero);\n";
+
+                    writer << "mkldnn::primitive* prim;\n";
+                    writer << "prim = new mkldnn::pooling_forward({max_pool_desc, "
+                              "cg_ctx->global_cpu_engine},"
+                              "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[0]) << "],\n"
+                                                         "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[1]) << "]);\n";
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = prim;\n";
+                    construct_string = writer.get_code();
+                }
+
+                template <typename OP, bool is_training>
+                void construct_primitive_build_string_avg_pool(
+                    ngraph::runtime::cpu::MKLDNNEmitter& mkldnn_emitter,
+                    ngraph::Node* node,
+                    std::string& construct_string,
+                    std::vector<size_t>& deps,
+                    size_t& index,
+                    std::ofstream& desc_file)
+                {
+                    auto pool = static_cast<const OP*>(node);
+
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                    return mkldnn_emitter.build_pooling_forward(
-                        mkldnn::algorithm::pooling_max,
-                        input_desc,
-                        result_desc,
-                        max_pool->get_window_movement_strides(),
-                        max_pool->get_window_shape(),
-                        max_pool->get_padding_below(),
-                        max_pool->get_padding_above());
+                    auto window_shape = pool->get_window_shape();
+                    auto window_strides = pool->get_window_movement_strides();
+                    auto padding_below = pool->get_padding_below();
+                    auto padding_above = pool->get_padding_above();
+                    auto include_padding_in_avg_computation =
+                        pool->get_include_padding_in_avg_computation();
+
+                    CodeWriter writer;
+                    std::vector<mkldnn::memory::desc> descs = {input_desc, result_desc};
+
+                    index = mkldnn_emitter.reserve_primitive_space_cg(3);
+                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+
+                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
+
+                    writer << "\n// build Avgpool primitive descriptor\n";
+                    writer << "auto avg_pool_desc = ";
+                    if (is_training)
+                    {
+                        writer << "mkldnn::pooling_forward::desc(mkldnn::prop_kind::forward_"
+                                  "training,\n";
+                    }
+                    else
+                    {
+                        writer << "mkldnn::pooling_forward::desc(mkldnn::prop_kind::forward_"
+                                  "inference,\n";
+                    }
+                    if (include_padding_in_avg_computation)
+                    {
+                        writer << "mkldnn::algorithm::pooling_avg_include_padding,\n";
+                    }
+                    else
+                    {
+                        writer << "mkldnn::algorithm::pooling_avg_exclude_padding,\n";
+                    }
+                    writer << "*cg_ctx->mkldnn_descriptors[" << desc_index
+                           << "],\n"
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 1 << "],\n";
+                    writer << "mkldnn::memory::dims{";
+                    if (window_strides.size() > 1)
+                    {
+                        for (auto i = 0; i < window_strides.size() - 1; i++)
+                        {
+                            writer << std::to_string(window_strides[i]) << ", ";
+                        }
+                    }
+                    writer << std::to_string(window_strides[window_strides.size() - 1]);
+                    writer << "},\n";
+
+                    writer << "mkldnn::memory::dims{";
+                    if (window_shape.size() > 1)
+                    {
+                        for (auto i = 0; i < window_shape.size() - 1; i++)
+                        {
+                            writer << std::to_string(window_shape[i]) << ", ";
+                        }
+                    }
+                    writer << std::to_string(window_shape[window_shape.size() - 1]);
+                    writer << "},\n";
+
+                    writer << "mkldnn::memory::dims{";
+                    if (padding_below.size() > 1)
+                    {
+                        for (auto i = 0; i < padding_below.size() - 1; i++)
+                        {
+                            writer << std::to_string(padding_below[i]) << ", ";
+                        }
+                    }
+                    writer << std::to_string(padding_below[padding_below.size() - 1]);
+                    writer << "},\n";
+
+                    writer << "mkldnn::memory::dims{";
+                    if (padding_above.size() > 1)
+                    {
+                        for (auto i = 0; i < padding_above.size() - 1; i++)
+                        {
+                            writer << std::to_string(padding_above[i]) << ", ";
+                        }
+                    }
+                    writer << std::to_string(padding_above[padding_above.size() - 1]);
+                    writer << "},\n";
+                    writer << "mkldnn::padding_kind::zero);\n";
+
+                    writer << "mkldnn::primitive* prim;\n";
+                    writer << "prim = new mkldnn::pooling_forward({avg_pool_desc, "
+                              "cg_ctx->global_cpu_engine},"
+                              "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[0]) << "],\n"
+                                                         "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[1]) << "]);\n";
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = prim;\n";
+                    construct_string = writer.get_code();
                 }
 
                 template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(QuantizedMaxPool)
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(MaxPool)
                 {
-                    return mkldnn_emitter.build_quantized_max_pool(node);
+                    construct_primitive_build_string_max_pool<MaxPool, false>(
+                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
                 }
 
                 template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(QuantizedAvgPool)
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
+                    QuantizedMaxPool)
                 {
-                    return mkldnn_emitter.build_quantized_avg_pool(node);
+                    construct_primitive_build_string_max_pool<QuantizedMaxPool, false>(
+                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
+                }
+
+                template <>
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(AvgPool)
+                {
+                    construct_primitive_build_string_avg_pool<AvgPool, false>(
+                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
+                }
+
+                template <>
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
+                    QuantizedAvgPool)
+                {
+                    construct_primitive_build_string_avg_pool<QuantizedAvgPool, false>(
+                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
                 }
 
                 template <>
@@ -1187,25 +1427,6 @@ namespace ngraph
                         max_pool->get_window_shape(),
                         max_pool->get_padding_below(),
                         max_pool->get_padding_above());
-                }
-
-                template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(AvgPool)
-                {
-                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    auto avg_pool = static_cast<const ngraph::op::AvgPool*>(node);
-
-                    return mkldnn_emitter.build_pooling_forward(
-                        (avg_pool->get_include_padding_in_avg_computation()
-                             ? mkldnn::algorithm::pooling_avg_include_padding
-                             : mkldnn::algorithm::pooling_avg_exclude_padding),
-                        input_desc,
-                        result_desc,
-                        avg_pool->get_window_movement_strides(),
-                        avg_pool->get_window_shape(),
-                        avg_pool->get_padding_below(),
-                        avg_pool->get_padding_above());
                 }
 
                 template <>
@@ -1454,7 +1675,6 @@ static const PrimitiveBuildOpMap prim_build_dispatcher{
      &MKLDNNPrimitiveBuildPass::build_primitive<ConvolutionBackpropData>},
     {TI(ConvolutionBackpropFilters),
      &MKLDNNPrimitiveBuildPass::build_primitive<ConvolutionBackpropFilters>},
-    {TI(MaxPool), &MKLDNNPrimitiveBuildPass::build_primitive<MaxPool>},
     {TI(MaxPoolWithIndices), &MKLDNNPrimitiveBuildPass::build_primitive<MaxPoolWithIndices>},
     {TI(MaxPoolBackprop), &MKLDNNPrimitiveBuildPass::build_primitive<MaxPoolBackprop>},
     {TI(MaxPoolWithIndicesBackprop),
@@ -1518,6 +1738,12 @@ static const PrimitiveBuildStringConstructOpMap prim_build_string_construct_disp
     {TI(QuantizedConvolutionBiasSignedAdd),
      &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<
          QuantizedConvolutionBiasSignedAdd>},
+    {TI(MaxPool), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<MaxPool>},
+    {TI(QuantizedMaxPool),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<QuantizedMaxPool>},
+    {TI(AvgPool), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<AvgPool>},
+    {TI(QuantizedAvgPool),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<QuantizedAvgPool>},
 };
 
 // Check if the node builds primitives at first iteration.
@@ -1545,7 +1771,11 @@ static bool in_new_map(const std::shared_ptr<Node>& node)
         std::dynamic_pointer_cast<ngraph::op::QuantizedConvolutionBiasAdd>(node) ||
         std::dynamic_pointer_cast<ngraph::op::QuantizedConvolutionBiasSignedAdd>(node) ||
         std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(node))
+        std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(node) ||
+        std::dynamic_pointer_cast<ngraph::op::MaxPool>(node) ||
+        std::dynamic_pointer_cast<ngraph::op::QuantizedMaxPool>(node) ||
+        std::dynamic_pointer_cast<ngraph::op::AvgPool>(node) ||
+        std::dynamic_pointer_cast<ngraph::op::QuantizedAvgPool>(node))
     {
         return true;
     }
