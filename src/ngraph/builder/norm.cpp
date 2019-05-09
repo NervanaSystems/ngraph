@@ -34,23 +34,6 @@ namespace ngraph
     {
         namespace detail
         {
-            ///
-            /// \brief      Creates constant node with the given bias value.
-            ///
-            /// \param[in]  element_type  The node element type.
-            /// \param[in]  node_shape    The node shape.
-            /// \param[in]  bias          The value to fill node with.
-            ///
-            /// \return     The created Constant node.
-            ///
-            inline shared_ptr<Node> get_bias_node(const element::Type& element_type,
-                                                  const Shape& node_shape,
-                                                  float bias)
-            {
-                return op::Constant::create(
-                    element_type, node_shape, vector<float>(shape_size(node_shape), bias));
-            }
-
             shared_ptr<Node> lp_norm(const shared_ptr<Node>& node,
                                      size_t p_norm,
                                      const AxisSet& reduction_axes,
@@ -69,7 +52,9 @@ namespace ngraph
                 values = make_shared<op::Sum>(values, reduction_axes);
 
                 shared_ptr<Node> bias_node{
-                    detail::get_bias_node(values->get_element_type(), values->get_shape(), bias)};
+                    op::Constant::create(values->get_element_type(),
+                                         values->get_shape(),
+                                         vector<float>(shape_size(values->get_shape()), bias))};
 
                 values = values + bias_node;
 
@@ -105,7 +90,9 @@ namespace ngraph
                 make_shared<op::Sum>(make_shared<op::Abs>(node), reduction_axes)};
 
             shared_ptr<Node> bias_node{
-                detail::get_bias_node(values->get_element_type(), values->get_shape(), bias)};
+                op::Constant::create(values->get_element_type(),
+                                     values->get_shape(),
+                                     vector<float>(shape_size(values->get_shape()), bias))};
 
             return values + bias_node;
         }
@@ -116,7 +103,9 @@ namespace ngraph
             shared_ptr<Node> values{make_shared<op::Sum>(node * node, reduction_axes)};
 
             shared_ptr<Node> bias_node{
-                detail::get_bias_node(values->get_element_type(), values->get_shape(), bias)};
+                op::Constant::create(values->get_element_type(),
+                                     values->get_shape(),
+                                     vector<float>(shape_size(values->get_shape()), bias))};
 
             return {make_shared<op::Sqrt>(values + bias_node)};
         }
