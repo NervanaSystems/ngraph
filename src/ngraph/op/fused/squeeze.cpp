@@ -77,7 +77,7 @@ NodeVector op::Squeeze::decompose_op() const
 
 shared_ptr<Node> op::Squeeze::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 2)
+    if (new_args.size() != 1)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
