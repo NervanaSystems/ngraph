@@ -17,6 +17,7 @@
 #include "ngraph/runtime/gpuh/gpuh_backend.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/runtime/interpreter/int_backend.hpp"
 #include "ngraph/runtime/tensor.hpp"
@@ -24,19 +25,20 @@
 using namespace ngraph;
 using namespace std;
 
-extern "C" const char* get_ngraph_version_string()
+extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
 {
-    return NGRAPH_VERSION;
-}
+    class LocalBackendConstructor : public runtime::BackendConstructor
+    {
+    public:
+        std::shared_ptr<runtime::Backend> create(const std::string& config) override
+        {
+            return std::make_shared<runtime::gpuh::GPUHBackend>();
+        }
+    };
 
-extern "C" runtime::Backend* new_backend(const char* configuration_string)
-{
-    return new runtime::gpuh::GPUHBackend();
-}
-
-vector<string> get_excludes()
-{
-    return vector<string>{{"Not"}};
+    static unique_ptr<runtime::BackendConstructor> s_backend_constructor(
+        new LocalBackendConstructor());
+    return s_backend_constructor.get();
 }
 
 runtime::gpuh::GPUHBackend::GPUHBackend()
