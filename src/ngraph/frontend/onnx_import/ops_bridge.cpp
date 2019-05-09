@@ -334,6 +334,7 @@ namespace ngraph
             REGISTER_OPERATOR("Xor", 1, logical_xor);
         }
 
+#undef REGISTER_OPERATOR
     } // namespace onnx_import
 
 } // namespace ngraph
