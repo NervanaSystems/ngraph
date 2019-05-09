@@ -33,8 +33,6 @@ NodeVector op::Squeeze::decompose_op() const
     auto data = get_argument(0);
     auto data_shape = data->get_shape();
 
-    AxisVector input_order{ngraph::get_default_order(data_shape.size())};
-
     // Prepare set of unique axes marked to be removed from input data.
     if (m_axes.empty())
     {
@@ -57,7 +55,7 @@ NodeVector op::Squeeze::decompose_op() const
             NODE_VALIDATION_CHECK(
                 this,
                 (data_shape.at(axis) == 1),
-                "provided axis value is invalid. Only single dimension axes may be removed.");
+                "provided axis value is invalid. Only axes of size 1 may be removed.");
 
             // Mark with zero elements to remove;
             data_shape.at(axis) = 0;
@@ -72,6 +70,8 @@ NodeVector op::Squeeze::decompose_op() const
             output_data_shape.push_back(data_shape.at(idx));
         }
     }
+
+    AxisVector input_order{ngraph::get_default_order(data_shape.size())};
     return {std::make_shared<ngraph::op::Reshape>(data, input_order, output_data_shape)};
 }
 
