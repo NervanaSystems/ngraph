@@ -25,7 +25,7 @@ namespace ngraph
 {
     namespace builder
     {
-        /// \brief      Calculates L-0 norm of input tensor.
+        /// \brief      Creates node which calculates L-0 norm of input tensor.
         ///
         /// \note       The L-0 norm represents the cardinality of elements different
         ///             from zero. This actually is not a "true" norm.
@@ -33,12 +33,12 @@ namespace ngraph
         /// \param[in]  node            The input tensor node.
         /// \param[in]  reduction_axes  The axes along which we calculate norm.
         ///
-        /// \return     Node with calculated L-0 norm values.
+        /// \return     Node which calculates L-0 norm values.
         ///
         std::shared_ptr<Node> l0_norm(const std::shared_ptr<Node>& node,
                                       const AxisSet& reduction_axes);
 
-        /// \brief      Calculates L-1 norm of input tensor.
+        /// \brief      Creates node which calculates L-1 norm of input tensor.
         ///
         /// \note       The L-1 norm represents the sum of absolute values.
         ///
@@ -46,7 +46,7 @@ namespace ngraph
         /// \param[in]  reduction_axes  The axes along which we calculate norm.
         /// \param[in]  bias            The bias added to the calculated sum.
         ///
-        /// \return     Node with calculated L-1 norm values.
+        /// \return     Node which calculates L-1 norm values.
         ///
         std::shared_ptr<Node> l1_norm(const std::shared_ptr<Node>& node,
                                       const AxisSet& reduction_axes,
@@ -61,20 +61,20 @@ namespace ngraph
         /// \param[in]  reduction_axes  The axes along which we calculate norm.
         /// \param[in]  bias            The bias added to the calculated sum.
         ///
-        /// \return     Node with calculated L-2 norm values.
+        /// \return     Node which calculates L-2 norm values.
         ///
         std::shared_ptr<Node> l2_norm(const std::shared_ptr<Node>& node,
                                       const AxisSet& reduction_axes,
                                       float bias = 0.f);
 
-        /// \brief      Calculates L-p norm on input tensor.
+        /// \brief      Creates node which calculates L-p norm on input tensor.
         ///
         /// \param[in]  node            The input nGraph tensor.
         /// \param[in]  reduction_axes  The axes along which we calculate norm.
         /// \param[in]  p_norm          The p norm to calculate.
         /// \param[in]  bias            The bias added to the calculated sum.
         ///
-        /// \return     Resulting L-p norm.
+        /// \return     Node which calculates L-p norm.
         ///
         std::shared_ptr<Node> lp_norm(const std::shared_ptr<Node>& node,
                                       const AxisSet& reduction_axes,

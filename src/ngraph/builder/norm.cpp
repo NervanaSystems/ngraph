@@ -32,6 +32,15 @@ namespace ngraph
     {
         namespace detail
         {
+            ///
+            /// \brief      Creates constant node with the given bias value.
+            ///
+            /// \param[in]  element_type  The node element type.
+            /// \param[in]  node_shape    The node shape.
+            /// \param[in]  bias          The value to fill node with.
+            ///
+            /// \return     The created Constant node.
+            ///
             inline std::shared_ptr<Node> get_bias_node(const element::Type& element_type,
                                                        const Shape& node_shape,
                                                        float bias)
@@ -45,20 +54,24 @@ namespace ngraph
                                           const AxisSet& reduction_axes,
                                           float bias)
             {
+                // In general "entrywise" lp-norm for matrix `A` is defined as following double sum:
+                // ||A||_p = ||vec(A)||_p = [sum_{i=1}^m sum_{j=1}^n abs(a_{i,j})^p]^{1/p}
                 std::shared_ptr<Node> abs_values{std::make_shared<op::Abs>(node)};
                 std::shared_ptr<Node> p_node = op::Constant::create(
                     node->get_element_type(),
                     node->get_shape(),
                     std::vector<float>(shape_size(node->get_shape()), static_cast<float>(p_norm)));
 
+                // Get inner part of equation: abs_values^p_node, then sum over reduction_axes.
                 std::shared_ptr<Node> values{std::make_shared<op::Power>(abs_values, p_node)};
-
                 values = std::make_shared<op::Sum>(values, reduction_axes);
 
                 std::shared_ptr<Node> bias_node{
                     detail::get_bias_node(values->get_element_type(), values->get_shape(), bias)};
+
                 values = values + bias_node;
 
+                // Get outer part of equation: raise values to 1/p_norm exponent.
                 std::shared_ptr<Node> inv_p_node = op::Constant::create(
                     values->get_element_type(),
                     values->get_shape(),
@@ -71,15 +84,15 @@ namespace ngraph
         std::shared_ptr<Node> l0_norm(const std::shared_ptr<Node>& node,
                                       const AxisSet& reduction_axes)
         {
-            std::shared_ptr<Node> abs_values{std::make_shared<op::Abs>(node)};
+            // L0 norm returns number of elements different from zero.
             std::shared_ptr<Node> zero_node{
                 op::Constant::create(node->get_element_type(),
                                      node->get_shape(),
                                      std::vector<float>(shape_size(node->get_shape()), 0.f))};
 
-            std::shared_ptr<Node> non_zero_values =
-                std::make_shared<op::Convert>(std::make_shared<op::NotEqual>(abs_values, zero_node),
-                                              abs_values->get_element_type());
+            // Convert bool values to input node data type.
+            std::shared_ptr<Node> non_zero_values = std::make_shared<op::Convert>(
+                std::make_shared<op::NotEqual>(node, zero_node), node->get_element_type());
 
             return std::make_shared<op::Sum>(non_zero_values, reduction_axes);
         }
@@ -99,7 +112,6 @@ namespace ngraph
         std::shared_ptr<Node>
             l2_norm(const std::shared_ptr<Node>& node, const AxisSet& reduction_axes, float bias)
         {
-            // std::shared_ptr<Node> abs_values{std::make_shared<op::Abs>(node)};
             std::shared_ptr<Node> values{std::make_shared<op::Sum>(node * node, reduction_axes)};
 
             std::shared_ptr<Node> bias_node{
