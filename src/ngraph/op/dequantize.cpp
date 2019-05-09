@@ -20,13 +20,13 @@
 using namespace std;
 using namespace ngraph;
 
-op::Dequantize::Dequantize(shared_ptr<Node> input,
-                           shared_ptr<Node> scale,
-                           shared_ptr<Node> offset,
+op::Dequantize::Dequantize(const shared_ptr<Node>& input,
+                           const shared_ptr<Node>& scale,
+                           const shared_ptr<Node>& zero_point,
                            const element::Type& type,
                            const AxisSet& axes)
 
-    : Op("Dequantize", check_single_output_args({input, scale, offset}))
+    : Op("Dequantize", check_single_output_args({input, scale, zero_point}))
     , m_type(type)
     , m_axes(axes)
 {
@@ -39,7 +39,7 @@ void op::Dequantize::validate_and_infer_types()
     {
         INPUT,
         SCALE,
-        OFFSET
+        ZERO_POINT
     };
 
     NODE_VALIDATION_CHECK(this, m_type.is_static(), "Output element type must not be dynamic");
@@ -52,16 +52,16 @@ void op::Dequantize::validate_and_infer_types()
     NODE_VALIDATION_CHECK(this,
                           element::Type::merge(quantized_type,
                                                get_input_element_type(INPUT),
-                                               get_input_element_type(OFFSET)),
-                          "Offset element type (",
-                          get_input_element_type(OFFSET),
+                                               get_input_element_type(ZERO_POINT)),
+                          "Zero point element type (",
+                          get_input_element_type(ZERO_POINT),
                           ") must match input element type (",
                           get_input_element_type(INPUT),
                           ")");
 
     NODE_VALIDATION_CHECK(this,
                           quantized_type.is_dynamic() || quantized_type.is_quantized(),
-                          "Offset/input element type (",
+                          "Zero point / input element type (",
                           quantized_type,
                           ") must be a quantized type");
 
@@ -90,21 +90,21 @@ void op::Dequantize::validate_and_infer_types()
                               ")");
     }
 
-    PartialShape scale_offset_shape = get_input_partial_shape(SCALE);
+    PartialShape scale_zero_point_shape = get_input_partial_shape(SCALE);
 
     NODE_VALIDATION_CHECK(
         this,
-        PartialShape::merge_into(scale_offset_shape, get_input_partial_shape(OFFSET)),
+        PartialShape::merge_into(scale_zero_point_shape, get_input_partial_shape(ZERO_POINT)),
         "Scale shape (",
         get_input_partial_shape(SCALE),
-        ") and offset shape (",
-        get_input_partial_shape(OFFSET),
+        ") and zero point shape (",
+        get_input_partial_shape(ZERO_POINT),
         ") must match");
 
     NODE_VALIDATION_CHECK(this,
-                          scale_offset_shape.rank().compatible(m_axes.size()),
-                          "Scale/offset rank (",
-                          scale_offset_shape.rank(),
+                          scale_zero_point_shape.rank().compatible(m_axes.size()),
+                          "Scale / zero point rank (",
+                          scale_zero_point_shape.rank(),
                           ") does not match the number of ",
                           "quantization axes (",
                           m_axes.size(),
@@ -112,30 +112,30 @@ void op::Dequantize::validate_and_infer_types()
 
     set_output_size(1);
 
-    if (input_shape.rank().is_static() && scale_offset_shape.rank().is_static())
+    if (input_shape.rank().is_static() && scale_zero_point_shape.rank().is_static())
     {
         size_t i = 0;
 
-        std::vector<Dimension> injected_scale_offset_dims;
+        vector<Dimension> injected_scale_zero_point_dims;
 
         for (size_t j = 0; j < size_t(input_shape.rank()); j++)
         {
             if (m_axes.count(j) != 0)
             {
-                injected_scale_offset_dims.push_back(scale_offset_shape[i++]);
+                injected_scale_zero_point_dims.push_back(scale_zero_point_shape[i++]);
             }
             else
             {
-                injected_scale_offset_dims.push_back(Dimension::dynamic());
+                injected_scale_zero_point_dims.push_back(Dimension::dynamic());
             }
         }
 
         PartialShape result_shape = input_shape;
         NODE_VALIDATION_CHECK(
             this,
-            PartialShape::merge_into(result_shape, PartialShape{injected_scale_offset_dims}),
-            "Scale/offset shape (",
-            scale_offset_shape,
+            PartialShape::merge_into(result_shape, PartialShape{injected_scale_zero_point_dims}),
+            "Scale / zero point shape (",
+            scale_zero_point_shape,
             ") must match input shape (",
             input_shape,
             ") at the quantization axes (",
