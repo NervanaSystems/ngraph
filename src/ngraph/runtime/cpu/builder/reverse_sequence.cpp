@@ -34,9 +34,9 @@ namespace ngraph
 
                 auto& functors = external_function->get_functors();
 
-                auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& seq_len_tensor = external_function->get_tensor_data(args[1].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto seq_len_buffer_index = external_function->get_buffer_index(args[1].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                 auto arg_shape = args[0].get_shape();
 
@@ -59,14 +59,21 @@ namespace ngraph
                                        " requires a kernel instantiation to handle this type");
                 }
 
-                auto functor = [&, kernel, arg_shape, batch_axis, sequence_axis](
-                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                    kernel(arg_tensor,
-                           out_tensor,
+                auto functor = [&,
+                                kernel,
+                                arg_shape,
+                                batch_axis,
+                                sequence_axis,
+                                arg_buffer_index,
+                                seq_len_buffer_index,
+                                out_buffer_index](CPURuntimeContext* ctx,
+                                                  CPUExecutionContext* ectx) {
+                    kernel(ctx->buffer_data[arg_buffer_index],
+                           ctx->buffer_data[out_buffer_index],
                            arg_shape,
                            batch_axis,
                            sequence_axis,
-                           seq_len_tensor,
+                           ctx->buffer_data[seq_len_buffer_index],
                            ectx->arena);
                 };
                 functors.emplace_back(functor);

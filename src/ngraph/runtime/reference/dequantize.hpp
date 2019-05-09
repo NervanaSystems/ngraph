@@ -31,24 +31,24 @@ namespace ngraph
             template <typename QUANT, typename REAL>
             void dequantize(const QUANT* input,
                             const REAL* scale,
-                            const QUANT* offset,
+                            const QUANT* zero_point,
                             REAL* output,
                             const Shape& input_shape,
-                            const Shape& scale_offset_shape,
+                            const Shape& scale_zero_point_shape,
                             const AxisSet& axes)
             {
                 CoordinateTransform input_transform(input_shape);
-                CoordinateTransform scale_offset_transform(scale_offset_shape);
+                CoordinateTransform scale_zero_point_transform(scale_zero_point_shape);
 
                 for (const Coordinate& input_coord : input_transform)
                 {
-                    Coordinate scale_offset_coord = project(input_coord, axes);
+                    Coordinate scale_zero_point_coord = project(input_coord, axes);
 
                     output[input_transform.index(input_coord)] =
-                        static_cast<REAL>(
-                            (input[input_transform.index(input_coord)] -
-                             offset[scale_offset_transform.index(scale_offset_coord)])) *
-                        scale[scale_offset_transform.index(scale_offset_coord)];
+                        static_cast<REAL>((
+                            input[input_transform.index(input_coord)] -
+                            zero_point[scale_zero_point_transform.index(scale_zero_point_coord)])) *
+                        scale[scale_zero_point_transform.index(scale_zero_point_coord)];
                 }
             }
         }

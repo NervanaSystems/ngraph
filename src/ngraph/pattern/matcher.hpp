@@ -25,7 +25,6 @@
 #include "ngraph/pattern/op/any_of.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
-#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -36,8 +35,6 @@ namespace ngraph
 
     namespace pattern
     {
-        using graph_rewrite_callback = std::function<bool(class Matcher& m)>;
-        using recurrent_graph_rewrite_callback = std::function<bool(class RecurrentMatcher& m)>;
         using RPatternMap = std::map<std::shared_ptr<op::Label>, NodeVector>;
 
         template <typename T>
@@ -61,21 +58,35 @@ namespace ngraph
         {
         public:
             using PatternMap = std::map<std::shared_ptr<op::Label>, std::shared_ptr<Node>>;
+            // Avoid implicit string construction from nullptr.
+            Matcher(const std::shared_ptr<Node>& pattern_node, std::nullptr_t name) = delete;
 
+            Matcher(const std::shared_ptr<Node>& pattern_node)
+                : m_pattern_node{pattern_node}
+                , m_depth{0}
+                , m_name{"Unnamed"}
+                , m_strict_mode{false}
+            {
+            }
+
+            Matcher(const std::shared_ptr<Node>& pattern_node, const std::string& name)
+                : m_pattern_node(pattern_node)
+                , m_depth{0}
+                , m_name{name}
+                , m_strict_mode{false}
+            {
+            }
             /// \brief Constructs a Matcher object
             ///
             /// \param pattern_node is a pattern sub graph that will be matched against input graphs
-            /// \param callback is a callback function that will be called on a successful match
-            Matcher(const std::shared_ptr<Node> pattern_node = nullptr,
-                    graph_rewrite_callback callback = nullptr,
-                    const std::string& name = "Unnamed",
-                    pass::PassPropertyMask property = pass::PassProperty::REGULAR_FUSIONS,
-                    bool strict_mode = false)
+            /// \param name is a string which is used for logging and disabling a matcher
+            /// \param strict_mode forces a matcher to consider shapes and ET of nodes
+            Matcher(const std::shared_ptr<Node>& pattern_node,
+                    const std::string& name,
+                    bool strict_mode)
                 : m_pattern_node(pattern_node)
-                , m_callback(callback)
                 , m_depth(0)
                 , m_name(name)
-                , m_property(property)
                 , m_strict_mode(strict_mode)
             {
             }
@@ -113,13 +124,10 @@ namespace ngraph
                 return matched;
             }
 
-            bool get_property(const pass::PassPropertyMask& prop) const;
             bool is_contained_match(const NodeVector& exclusions = {}, bool ignore_unused = true);
-
-            bool process_match(graph_rewrite_callback callback = nullptr);
-            NodeVector get_matched_nodes() { return m_matched_list; }
+            const NodeVector& get_matched_nodes() { return m_matched_list; }
             void reset() {}
-            std::string get_name() { return m_name; }
+            const std::string& get_name() { return m_name; }
             std::shared_ptr<Node> get_pattern() { return m_pattern_node; }
             std::shared_ptr<Node> get_match_root();
             PatternMap get_pattern_map() { return PatternMap{m_pattern_map}; }
@@ -173,10 +181,8 @@ namespace ngraph
                               const std::shared_ptr<Node>& graph_node,
                               PatternMap& pattern_map);
 
-            graph_rewrite_callback m_callback;
             size_t m_depth;
             std::string m_name;
-            pass::PassPropertyMask m_property;
             bool m_strict_mode;
         };
 
@@ -189,15 +195,12 @@ namespace ngraph
             /// \param pattern is a pattern sub graph describing an individual cell
             /// \param rpattern is a (recurring) label to denote which node the next match should start at
             /// \param correlated_patterns is a set of labels whose bound nodes must remain the same across all cells
-            // \param is a callback function that will be called on a successful match
             RecurrentMatcher(std::shared_ptr<Node> pattern,
                              std::shared_ptr<op::Label> rpattern,
-                             const std::set<std::shared_ptr<op::Label>>& correlated_patterns,
-                             recurrent_graph_rewrite_callback callback)
+                             const std::set<std::shared_ptr<op::Label>>& correlated_patterns)
                 : m_pattern(pattern)
                 , m_recurrent_pattern(rpattern)
                 , m_correlated_patterns(correlated_patterns)
-                , m_callback(callback)
             {
             }
 
@@ -227,16 +230,12 @@ namespace ngraph
             /// \brief Tries to match a pattern for an individual cell to a given \p graph
             bool match(std::shared_ptr<Node> graph);
 
-            /// \brief Invoked by a pass to process a successful match
-            bool process_match();
-
             std::shared_ptr<Node> get_match_root() { return m_match_root; }
         private:
             std::shared_ptr<Node> m_pattern;
             std::shared_ptr<op::Label> m_recurrent_pattern;
             const std::set<std::shared_ptr<op::Label>> m_correlated_patterns;
             RPatternMap m_matches;
-            recurrent_graph_rewrite_callback m_callback;
             std::shared_ptr<Node> m_match_root;
         };
     }

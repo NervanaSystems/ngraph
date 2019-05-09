@@ -6,7 +6,7 @@ Current framework integrations
 .. toctree::
    :maxdepth: 1
    
-   tensorflow_integ.rst
+   tensorflow_connect.rst
    mxnet_integ.rst
    onnx_integ.rst
    paddle_integ.rst

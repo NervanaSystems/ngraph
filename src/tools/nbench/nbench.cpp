@@ -267,7 +267,7 @@ int main(int argc, char** argv)
     {
         cout << R"###(
 DESCRIPTION
-    Benchmark ngraph json model with given backend.
+    Benchmark nGraph JSON model with given backend.
 
 SYNOPSIS
         nbench [-f <filename>] [-b <backend>] [-i <iterations>]
@@ -277,12 +277,12 @@ OPTIONS
         -b|--backend              Backend to use (default: CPU)
         -d|--directory            Directory to scan for models. All models are benchmarked.
         -i|--iterations           Iterations (default: 10)
-        -s|--statistics           Display op stastics
-        -v|--visualize            Visualize a model (WARNING: requires GraphViz installed)
+        -s|--statistics           Display op statistics
+        -v|--visualize            Visualize a model (WARNING: requires Graphviz installed)
         --timing_detail           Gather detailed timing
         -w|--warmup_iterations    Number of warm-up iterations
         --no_copy_data            Disable copy of input/result data every iteration
-        --dot                     Generate graphviz dot file
+        --dot                     Generate Graphviz dot file
 )###";
         return 1;
     }

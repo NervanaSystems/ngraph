@@ -62,29 +62,6 @@ namespace ngraph
 
             } // namespace anonymous
 
-            std::shared_ptr<ngraph::Node> flatten(const std::shared_ptr<ngraph::Node>& node,
-                                                  int axis)
-            {
-                auto data_shape = node->get_shape();
-
-                //  First dimension of output tensor is the product of [d_0, ... d_{axis-1}] dimensions of input tensor.
-                //  The last dimension is the product of the rest of input tensor dimensions: [d_{axis}, ..., d_n]
-                size_t first_dim_size = std::accumulate(std::begin(data_shape),
-                                                        std::next(std::begin(data_shape), axis),
-                                                        1UL,
-                                                        std::multiplies<std::size_t>());
-
-                size_t last_dim_size = std::accumulate(std::next(std::begin(data_shape), axis),
-                                                       std::end(data_shape),
-                                                       1UL,
-                                                       std::multiplies<std::size_t>());
-
-                return std::make_shared<ngraph::op::Reshape>(
-                    node,
-                    ngraph::get_default_order(data_shape.size()),
-                    Shape{first_dim_size, last_dim_size});
-            }
-
             std::vector<std::size_t> infer_dimensions(const std::string& node_name,
                                                       const std::vector<std::size_t>& input_shape,
                                                       const std::vector<std::size_t>& output_shape)
@@ -138,14 +115,6 @@ namespace ngraph
                 }
 
                 return inferred_dims;
-            }
-
-            std::shared_ptr<ngraph::Node> transpose(const std::shared_ptr<ngraph::Node>& node)
-            {
-                std::vector<size_t> axes_order(node->get_shape().size());
-                std::iota(std::begin(axes_order), std::end(axes_order), 0);
-                std::reverse(std::begin(axes_order), std::end(axes_order));
-                return ngraph::op::util::reorder_axes(node, axes_order);
             }
 
             std::shared_ptr<ngraph::Node> squeeze(const std::shared_ptr<ngraph::Node>& node,

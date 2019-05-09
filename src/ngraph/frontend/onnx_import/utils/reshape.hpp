@@ -23,7 +23,6 @@
 
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/node_vector.hpp"
 #include "ngraph/op/util/reshape.hpp"
 #include "ngraph/shape.hpp"
 
@@ -33,15 +32,6 @@ namespace ngraph
     {
         namespace reshape
         {
-            /// \brief Flatten the input tensor into a 2D matrix.
-            ///
-            /// \param node The tensor to be flattened.
-            /// \param axis The axis dividing shape.
-            ///
-            /// \return The new node being a 2D matrix representing flattened input node.
-            std::shared_ptr<ngraph::Node> flatten(const std::shared_ptr<ngraph::Node>& node,
-                                                  int axis);
-
             /// \brief      Infer `output_shape` dimension values.
             ///
             /// \par Inferention rules
@@ -59,13 +49,6 @@ namespace ngraph
             std::vector<std::size_t> infer_dimensions(const std::string& node_name,
                                                       const std::vector<std::size_t>& input_shape,
                                                       const std::vector<std::size_t>& output_shape);
-
-            /// \brief Return transposed tensor (with axes in reversed order).
-            ///
-            /// \param node Input tensor we want to transpose
-            ///
-            /// \return: New node with reversed dimensions.
-            std::shared_ptr<ngraph::Node> transpose(const std::shared_ptr<ngraph::Node>& node);
 
             /// \brief      Remove empty axes from input tensor.
             ///
