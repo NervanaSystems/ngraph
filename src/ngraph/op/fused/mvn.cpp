@@ -32,8 +32,8 @@ op::MVN::MVN(const std::shared_ptr<Node>& data,
              bool normalize_variance,
              double eps)
     : FusedOp("MVN", {data})
-    , m_across_channels{across_channels}
     , m_eps{eps}
+    , m_across_channels{across_channels}
     , m_normalize_variance{normalize_variance}
 {
     constructor_validate_and_infer_types();
@@ -80,9 +80,9 @@ NodeVector op::MVN::decompose_op() const
 
 shared_ptr<Node> op::MVN::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 1)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
+    NODE_VALIDATION_CHECK(this,
+                          new_args.size() == 1,
+                          "Expected 1 element in new_args for the MVN op but got ",
+                          new_args.size());
     return make_shared<MVN>(new_args.at(0), m_across_channels, m_normalize_variance, m_eps);
 }

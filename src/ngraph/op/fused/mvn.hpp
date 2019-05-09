@@ -50,9 +50,9 @@ namespace ngraph
             bool get_across_channels() const { return m_across_channels; }
             bool get_normalize_variance() const { return m_normalize_variance; }
         private:
-            double m_eps;
-            bool m_across_channels;
-            bool m_normalize_variance;
+            const double m_eps;
+            const bool m_across_channels;
+            const bool m_normalize_variance;
         };
     } // namespace op
 } // namespace ngraph
