@@ -24,14 +24,20 @@
 using namespace std;
 using namespace ngraph;
 
-extern "C" const char* get_ngraph_version_string()
+extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
 {
-    return NGRAPH_VERSION;
-}
+    class LocalBackendConstructor : public runtime::BackendConstructor
+    {
+    public:
+        std::shared_ptr<runtime::Backend> create(const std::string& config) override
+        {
+            return std::make_shared<runtime::gcpu::GCPUBackend>();
+        }
+    };
 
-extern "C" runtime::Backend* new_backend(const char* configuration_string)
-{
-    return new runtime::gcpu::GCPUBackend();
+    static unique_ptr<runtime::BackendConstructor> s_backend_constructor(
+        new LocalBackendConstructor());
+    return s_backend_constructor.get();
 }
 
 runtime::gcpu::GCPUBackend::GCPUBackend()
