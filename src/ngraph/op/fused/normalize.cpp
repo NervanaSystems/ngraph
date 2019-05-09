@@ -26,8 +26,8 @@
 using namespace std;
 using namespace ngraph;
 
-op::Normalize::Normalize(const std::shared_ptr<ngraph::Node>& data,
-                         const std::shared_ptr<ngraph::Node>& scale,
+op::Normalize::Normalize(const shared_ptr<ngraph::Node>& data,
+                         const shared_ptr<ngraph::Node>& scale,
                          bool across_spatial,
                          bool channel_shared,
                          float eps)
