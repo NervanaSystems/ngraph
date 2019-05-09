@@ -1479,12 +1479,21 @@ TEST(builder, scaled_QDot_u8u8)
     auto A = make_shared<op::Parameter>(element::u8, shape_a);
     auto B = make_shared<op::Parameter>(element::u8, shape_b);
     auto input_scale = op::Constant::create(element::f32, Shape{}, {2});
+    auto input_zero_point = op::Constant::create(element::u8, Shape{}, {0});
     auto filter_scale = op::Constant::create(element::f32, Shape{}, {1});
+    auto filter_zero_point = op::Constant::create(element::u8, Shape{}, {0});
     auto output_scale = op::Constant::create(element::f32, Shape{}, {2});
+    auto output_zero_point = op::Constant::create(element::u8, Shape{}, {0});
 
     Shape shape_r{1, 3}; // output shape
-    auto QD = ngraph::builder::quantization::QuantizedLinearMatmul(
-        A, B, input_scale, filter_scale, output_scale);
+    auto QD = ngraph::builder::quantization::QuantizedLinearMatmul(A,
+                                                                   B,
+                                                                   input_scale,
+                                                                   input_zero_point,
+                                                                   filter_scale,
+                                                                   filter_zero_point,
+                                                                   output_scale,
+                                                                   output_zero_point);
     auto f = make_shared<Function>(NodeVector{QD}, ParameterVector{A, B});
     constant_fold(f);
     auto backend = runtime::Backend::create("CPU");

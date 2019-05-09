@@ -28,12 +28,6 @@ namespace ngraph
             std::shared_ptr<Node> QuantizedLinearMatmul(std::shared_ptr<Node> input,
                                                         std::shared_ptr<Node> filter,
                                                         std::shared_ptr<Node> input_scale,
-                                                        std::shared_ptr<Node> filter_scale,
-                                                        std::shared_ptr<Node> output_scale);
-
-            std::shared_ptr<Node> QuantizedLinearMatmul(std::shared_ptr<Node> input,
-                                                        std::shared_ptr<Node> filter,
-                                                        std::shared_ptr<Node> input_scale,
                                                         std::shared_ptr<Node> input_zero_point,
                                                         std::shared_ptr<Node> filter_scale,
                                                         std::shared_ptr<Node> filter_zero_point,

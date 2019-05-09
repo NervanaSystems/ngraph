@@ -21,11 +21,11 @@
 
 #include "exceptions.hpp"
 #include "matmul.hpp"
+#include "ngraph/builder/quantization/quantized_linear_matmul.hpp"
 #include "ngraph/coordinate.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/dot.hpp"
-#include "ngraph/op/experimental/quantized_dot.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
@@ -79,10 +79,6 @@ namespace ngraph
                     auto scale = std::shared_ptr<ngraph::Node>{};
                     if (quantized)
                     {
-                        NGRAPH_WARN
-                            << "[" << node.get_name()
-                            << "] Zero point different from 0 is not supported. Assuming Zero "
-                               "point is 0";
                         right = ng_inputs.at(3);
                         scale = ng_inputs.at(6);
                     }
@@ -114,7 +110,15 @@ namespace ngraph
                                 AxisVector{1, 0},
                                 Shape(right->get_shape().rbegin(), right->get_shape().rend()));
 
-                            return {std::make_shared<ngraph::op::QuantizedDot>(left, right, scale)};
+                            return {ngraph::builder::quantization::QuantizedLinearMatmul(
+                                left,
+                                right,
+                                ng_inputs.at(1),
+                                ng_inputs.at(2),
+                                ng_inputs.at(4),
+                                ng_inputs.at(5),
+                                ng_inputs.at(6),
+                                ng_inputs.at(7))};
                         }
                         else
                         {
@@ -172,8 +176,15 @@ namespace ngraph
                                 AxisVector{1, 0},
                                 Shape(sliced_right->get_shape().rbegin(),
                                       sliced_right->get_shape().rend()));
-                            sub_dot = std::make_shared<ngraph::op::QuantizedDot>(
-                                sliced_left, sliced_right, scale);
+                            sub_dot = ngraph::builder::quantization::QuantizedLinearMatmul(
+                                sliced_left,
+                                sliced_right,
+                                ng_inputs.at(1),
+                                ng_inputs.at(2),
+                                ng_inputs.at(4),
+                                ng_inputs.at(5),
+                                ng_inputs.at(6),
+                                ng_inputs.at(7));
                         }
                         else
                         {
