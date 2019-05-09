@@ -73,27 +73,24 @@ namespace ngraph
                 auto output_zero = dynamic_pointer_cast<ngraph::op::Constant>(output_zero_point);
 
                 // Check if zero point is constant and zero
-                if (input_zero != nullptr && filter_zero != nullptr && output_zero != nullptr)
+                if (input_zero != nullptr && filter_zero != nullptr && output_zero != nullptr &&
+                    check_zero_point(input_zero) && check_zero_point(filter_zero) &&
+                    check_zero_point(output_zero))
                 {
-                    if (check_zero_point(input_zero) && check_zero_point(filter_zero) &&
-                        check_zero_point(output_zero))
+                    auto requantization_scale = (input_scale * filter_scale) / output_scale;
 
+                    // Since u8u8 goes to ref reshape the filter so that the ref dot can do a matmul
+                    // which requires [m, n] * [n, k] order where as mkldnn requires [m, n] * [k, n]
+                    if (input->get_element_type() == element::u8 &&
+                        filter->get_element_type() == element::u8)
                     {
-                        auto requantization_scale = (input_scale * filter_scale) / output_scale;
-
-                        // Since u8u8 goes to ref reshape the filter so that the ref dot can do a matmul
-                        // which requires [m, n] * [n, k] order where as mkldnn requires [m, n] * [k, n]
-                        if (input->get_element_type() == element::u8 &&
-                            filter->get_element_type() == element::u8)
-                        {
-                            filter = make_shared<op::Reshape>(
-                                filter,
-                                AxisVector{1, 0},
-                                Shape{filter->get_shape()[1], filter->get_shape()[0]});
-                        }
-
-                        return make_shared<op::QuantizedDot>(input, filter, requantization_scale);
+                        filter = make_shared<op::Reshape>(
+                            filter,
+                            AxisVector{1, 0},
+                            Shape{filter->get_shape()[1], filter->get_shape()[0]});
                     }
+
+                    return make_shared<op::QuantizedDot>(input, filter, requantization_scale);
                 }
                 else
                 {
