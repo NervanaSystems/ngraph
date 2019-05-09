@@ -13877,3 +13877,24 @@ TEST(type_prop, gemm_broadcast_input_C)
     EXPECT_EQ(gemm_func->get_element_type(), element::f32);
     EXPECT_EQ(gemm_func->get_shape(), (Shape{3, 4}));
 }
+
+TEST(type_prop, fused_clamp)
+{
+    const auto data = make_shared<op::Parameter>(element::f64, Shape{2, 2});
+
+    try
+    {
+        const auto clamp = make_shared<op::Clamp>(data, 2.0, 1.0);
+        EXPECT_FALSE(clamp.get())
+            << "Clamp validation did not work. Op node was created with incorrect params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(), std::string("The 'min' parameter needs to be less than 'max' for Clamp"));
+    }
+
+    const auto clamp = make_shared<op::Clamp>(data, 1.0, 2.0);
+    EXPECT_EQ(clamp->get_element_type(), element::f64);
+    EXPECT_EQ(clamp->get_shape(), (Shape{2, 2}));
+}
