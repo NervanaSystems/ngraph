@@ -13877,3 +13877,23 @@ TEST(type_prop, gemm_broadcast_input_C)
     EXPECT_EQ(gemm_func->get_element_type(), element::f32);
     EXPECT_EQ(gemm_func->get_shape(), (Shape{3, 4}));
 }
+
+TEST(type_prop, scale_shift_no_broadcast)
+{
+    auto data = make_shared<op::Parameter>(element::f64, Shape{3, 6});
+    auto scale = make_shared<op::Parameter>(element::f64, Shape{3, 6});
+    auto shift = make_shared<op::Parameter>(element::f64, Shape{3, 6});
+    auto scale_shift_func = make_shared<op::ScaleShift>(data, scale, shift);
+    EXPECT_EQ(scale_shift_func->get_element_type(), element::f64);
+    EXPECT_EQ(scale_shift_func->get_shape(), (Shape{3, 6}));
+}
+
+TEST(type_prop, scale_shift)
+{
+    auto data = make_shared<op::Parameter>(element::f64, Shape{3, 6});
+    auto scale = make_shared<op::Parameter>(element::f64, Shape{3, 6});
+    auto shift = make_shared<op::Parameter>(element::f64, Shape{});
+    auto scale_shift_func = make_shared<op::ScaleShift>(data, scale, shift);
+    EXPECT_EQ(scale_shift_func->get_element_type(), element::f64);
+    EXPECT_EQ(scale_shift_func->get_shape(), (Shape{3, 6}));
+}
