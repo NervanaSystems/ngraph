@@ -26,10 +26,10 @@ namespace ngraph
         {
             namespace pass
             {
-                class CPULoopKernelFusion : public ngraph::pass::FunctionPass
+                class CPUCompiledKernelFusion : public ngraph::pass::FunctionPass
                 {
                 public:
-                    CPULoopKernelFusion(size_t min_kernel_size = 2)
+                    CPUCompiledKernelFusion(size_t min_kernel_size = 2)
                         : FunctionPass()
                         , m_min_kernel_size(min_kernel_size)
                     {

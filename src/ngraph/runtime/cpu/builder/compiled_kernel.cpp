@@ -35,7 +35,7 @@
 
 #include "halide_generators.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
-#include "ngraph/runtime/cpu/op/loop_kernel.hpp"
+#include "ngraph/runtime/cpu/op/compiled_kernel.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -49,10 +49,10 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::runtime::cpu::op::LoopKernel)
+            void Builder::BUILDER_DECL(ngraph::op::CompiledKernel)
             {
-                const ngraph::runtime::cpu::op::LoopKernel* hs =
-                    static_cast<const ngraph::runtime::cpu::op::LoopKernel*>(node);
+                const ngraph::op::CompiledKernel* hs =
+                    static_cast<const ngraph::op::CompiledKernel*>(node);
 
                 const auto& generators = ngraph::runtime::cpu::halide::get_halide_generators();
 
@@ -99,7 +99,7 @@ namespace ngraph
                     //a subgraph
                     if (op->get_outputs().size() > 1)
                     {
-                        throw ngraph_error("no multi-output ops in a LoopKernel");
+                        throw ngraph_error("no multi-output ops in a CompiledKernel");
                     }
                     halide_functions[op->get_output_tensor_ptr()->get_name()] =
                         generators.at(TI(*op))(inputs);

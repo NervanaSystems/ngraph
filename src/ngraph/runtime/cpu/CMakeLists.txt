@@ -101,7 +101,6 @@ set(SRC
     op/group_conv_bias.cpp
     op/halide_op.cpp
     op/leaky_relu.cpp
-    op/loop_kernel.cpp
     op/lstm.cpp
     op/matmul_bias.cpp
     op/max_pool_with_indices.cpp
@@ -111,10 +110,10 @@ set(SRC
     op/update_slice.cpp
     pass/cpu_assignment.cpp
     pass/cpu_collapse_dims.cpp
+    pass/cpu_compiled_kernel_fusion.cpp
     pass/cpu_fusion.cpp
     pass/cpu_horizontal_fusion.cpp
     pass/cpu_layout.cpp
-    pass/cpu_loop_kernel_fusion.cpp
     pass/cpu_mat_fusion.cpp
     pass/cpu_memory_assignment.cpp
     pass/cpu_memory_optimization.cpp
@@ -137,8 +136,8 @@ endif()
 if (NGRAPH_HALIDE)
     set(SRC
         ${SRC}
+        builder/compiled_kernel.cpp
         builder/halide_op.cpp
-        builder/loop_kernel.cpp
         builder/halide_generators.cpp
         pass/halide_subgraph_extraction.cpp
         )
