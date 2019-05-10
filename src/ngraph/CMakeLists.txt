@@ -276,6 +276,8 @@ set (SRC
     op/topk.hpp
     op/fused/conv_fused.cpp
     op/fused/conv_fused.hpp
+    op/fused/hard_sigmoid.cpp
+    op/fused/hard_sigmoid.hpp
     op/fused/depth_to_space.cpp
     op/fused/depth_to_space.hpp
     op/fused/elu.cpp
