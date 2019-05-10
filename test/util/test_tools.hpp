@@ -54,7 +54,7 @@ void copy_data(std::shared_ptr<ngraph::runtime::Tensor> tv, const std::vector<T>
 template <typename T>
 std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::Tensor> tv)
 {
-    if (ngraph::element::from<T>() != tv->get_tensor_layout()->get_element_type())
+    if (ngraph::element::from<T>() != tv->get_element_type())
     {
         throw std::invalid_argument("read_vector type must match Tensor type");
     }
