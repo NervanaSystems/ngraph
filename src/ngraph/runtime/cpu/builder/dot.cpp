@@ -232,7 +232,8 @@ namespace ngraph
 
                 std::function<decltype(runtime::cpu::kernel::dot_ref<float, float, float>)> kernel;
 
-                kernel = runtime::cpu::kernel::dot_ref<float, float, float>;
+                SELECT_KERNEL_3ARGS(
+                    kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_ref);
 
                 auto functor = [&,
                                 kernel,
@@ -251,7 +252,7 @@ namespace ngraph
                            arg1_shape,
                            result_shape,
                            reduction_axes_count,
-                           1.0f);
+                           1.0f); // Requantization scale (1 for non quant dot)
                 };
                 functors.emplace_back(functor);
             }
