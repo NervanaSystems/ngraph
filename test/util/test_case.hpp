@@ -38,7 +38,16 @@ namespace ngraph
             {
             }
 
-            void set_tolerance(int tolerance_bits) { m_tolerance_bits = tolerance_bits; }
+            NgraphTestCase& set_tolerance(int tolerance_bits);
+
+            /// \brief Makes the test case print the expected and computed values to the console. This should only be used for debugging purposes.
+            ///
+            /// Just before the assertion is done, the current test case will gather expected and computed values,
+            /// format them as 2 columns and print out to the console along with a corresponding index in the vector.
+            ///
+            /// \param dump - Indicates if the test case should perform the console printout
+            NgraphTestCase& dump_results(bool dump = true);
+
             template <typename T>
             void add_input(const std::vector<T>& values)
             {
@@ -120,12 +129,6 @@ namespace ngraph
             {
                 auto value = read_binary_file<T>(filepath);
                 add_expected_output(expected_shape, value);
-            }
-
-            NgraphTestCase& dump_results(bool dump = true)
-            {
-                m_dump_results = dump;
-                return *this;
             }
 
             void run();
