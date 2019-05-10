@@ -1066,77 +1066,79 @@ CustomKernels::krnl_info CustomKernels::build_krnl(const shared_ptr<op::Gemm>& o
     vector<size_t> gws;
 
     gen_func_def(writer,
-                                    entry_point_name,
-                                    {3, type_name},
-                                    {input0_shape, input1_shape, input2_shape},
-                                    type_name,
-                                    output_shape);
+                 entry_point_name,
+                 {3, type_name},
+                 {input0_shape, input1_shape, input2_shape},
+                 type_name,
+                 output_shape);
     writer.block_begin();
     {
-	writer << type_name << " temp[" << output_shape.at(0) << "][" << output_shape.at(1) << "];\n";
+        writer << type_name << " temp[" << output_shape.at(0) << "][" << output_shape.at(1)
+               << "];\n";
 
         writer << "for(uint i0 = 0; i0 < " << output_shape.at(0) << "; ++i0)\n";
-	writer.block_begin();
-	{
-	    writer << "for(uint i1 = 0; i1 < " << output_shape.at(1) << "; ++i1)\n";
+        writer.block_begin();
+        {
+            writer << "for(uint i1 = 0; i1 < " << output_shape.at(1) << "; ++i1)\n";
             writer.block_begin();
             {
-		string input2_coords;
-		if (input2_shape.size() != output_shape.size())
-		{
-		    if(input2_shape.at(0) == 1)
-		    {
-			input2_coords = "[0]";
-		    }
-		    else
-		    {
-			input2_coords = "[i1]";
-		    }
-		}
-		else
-		{
-		    input2_coords = "[i0][i1]";
-		}
-		writer << "temp[i0][i1] = input2" << input2_coords << " * " << beta << ";\n";
-	    }
-	    writer.block_end();
-	}
-	writer.block_end();
+                string input2_coords;
+                if (input2_shape.size() != output_shape.size())
+                {
+                    if (input2_shape.at(0) == 1)
+                    {
+                        input2_coords = "[0]";
+                    }
+                    else
+                    {
+                        input2_coords = "[i1]";
+                    }
+                }
+                else
+                {
+                    input2_coords = "[i0][i1]";
+                }
+                writer << "temp[i0][i1] = input2" << input2_coords << " * " << beta << ";\n";
+            }
+            writer.block_end();
+        }
+        writer.block_end();
 
-	writer << "const uint i0 = get_global_id(0);";
+        writer << "const uint i0 = get_global_id(0);";
         gws.push_back(output_shape.at(0));
         writer << "/*trip count " << output_shape.at(0) << "*/\n";
         writer.block_begin();
         {
-	    writer << "const uint i1 = get_global_id(1);";
+            writer << "const uint i1 = get_global_id(1);";
             gws.push_back(output_shape.at(1));
             writer << "/*trip count " << output_shape.at(1) << "*/\n";
             writer.block_begin();
             {
-		string acc;
-		if (type_name == "float")
-		{
-		    acc = "0.0f";
-		} 
-		else 
-		{
-		    acc = "0.0";
-		}
-		writer << type_name << " acc = " << acc << ";\n";
-		size_t k_coord = transA ? input0_shape.at(0) : input0_shape.at(1);
-		writer << "for (uint k=0; k < " << k_coord << "; ++k)\n";
-		writer.block_begin();
-		{
-		    string input0_coord = transA ? "[k][i0]" : "[i0][k]";
-		    string input1_coord = transB ? "[i1][k]" : "[k][i1]";
-		    writer << "acc += input0" << input0_coord << " * input1" << input1_coord << ";\n";
-		}
-		writer.block_end();
-		writer << "output[i0][i1] = acc * " << alpha << " + temp[i0][i1];\n";
-	    }
-	    writer.block_end();
-	}
-	writer.block_end();
+                string acc;
+                if (type_name == "float")
+                {
+                    acc = "0.0f";
+                }
+                else
+                {
+                    acc = "0.0";
+                }
+                writer << type_name << " acc = " << acc << ";\n";
+                size_t k_coord = transA ? input0_shape.at(0) : input0_shape.at(1);
+                writer << "for (uint k=0; k < " << k_coord << "; ++k)\n";
+                writer.block_begin();
+                {
+                    string input0_coord = transA ? "[k][i0]" : "[i0][k]";
+                    string input1_coord = transB ? "[i1][k]" : "[k][i1]";
+                    writer << "acc += input0" << input0_coord << " * input1" << input1_coord
+                           << ";\n";
+                }
+                writer.block_end();
+                writer << "output[i0][i1] = acc * " << alpha << " + temp[i0][i1];\n";
+            }
+            writer.block_end();
+        }
+        writer.block_end();
     }
     writer.block_end();
 
