@@ -87,9 +87,9 @@ namespace ngraph
                 void set_alpha(float alpha) { m_alpha = alpha; }
                 void set_beta(float beta) { m_beta = beta; }
             private:
+                ActivationFunctionType m_function;
                 float m_alpha;
                 float m_beta;
-                ActivationFunctionType m_function;
             };
 
             /// \brief      Gets the activation function by name.
