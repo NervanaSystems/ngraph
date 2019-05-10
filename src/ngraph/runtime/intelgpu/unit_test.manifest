@@ -48,7 +48,7 @@ pad_reflect_2d_with_neg
 
 # Not implemented
 erf
-zero_sized_erf
+fused_clamp
 gather_no_axis
 gather
 gather_nd_scalar_from_2d
@@ -71,3 +71,4 @@ mvn_mean_normalization
 mvn_mean_normalization_split_channels
 mvn_mean_variance_normalization
 mvn_mean_variance_normalization_split_channels
+zero_sized_erf

@@ -17,6 +17,7 @@
 // This collection contains one entry for each fused op.
 //
 
+NGRAPH_OP(Clamp, ngraph::op)
 NGRAPH_OP(ConvolutionBias, ngraph::op)
 NGRAPH_OP(ConvolutionBiasAdd, ngraph::op)
 NGRAPH_OP(ConvolutionBiasBackpropFiltersBias, ngraph::op)
