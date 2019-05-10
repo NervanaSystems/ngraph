@@ -34,6 +34,10 @@ namespace ngraph
                     auto data = ng_inputs.at(0);
                     auto indices = ng_inputs.at(1);
                     auto axis = node.get_attribute_value<int64_t>("axis", 0);
+                    if (axis < 0)
+                    {
+                        axis += data->get_shape().size();
+                    }
 
                     return {std::make_shared<ngraph::op::Gather>(data, indices, axis)};
                 }
