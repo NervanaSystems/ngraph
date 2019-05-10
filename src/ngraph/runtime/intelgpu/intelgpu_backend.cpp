@@ -802,6 +802,77 @@ shared_ptr<runtime::Executable>
             }
             break;
         }
+	case OP_TYPEID::Gemm:
+	{
+	    arguments_check(op, 3, 1);
+
+	    const shared_ptr<op::Gemm> gemm_op = static_pointer_cast<op::Gemm>(op);
+	    const double alpha = gemm_op->get_alpha();
+	    const double beta = gemm_op->get_beta();
+	    const bool transA = gemm_op->get_transA();
+	    const bool transB = gemm_op->get_transB();
+
+	    if(op->get_input_element_type(0) == element::f32 &&
+               op->get_input_element_type(1) == element::f32 &&
+	       op->get_input_element_type(2) == element::f32 &&
+               op->get_output_element_type(0) == element::f32 )
+	    {
+		if (alpha==1.0 && beta==0.0)
+		{
+		    const cldnn::gemm gemm_op(op->get_output_tensor_name(0),
+                    	                      op->get_input_tensor_name(0),
+                                              op->get_input_tensor_name(1),
+                                              transA,
+                                              transB);
+                    topology.add(gemm_op);
+		}
+		else if (alpha==1.0 && beta==1.0)
+		{
+		    const cldnn::gemm gemm_op(op->get_output_tensor_name(0),
+                                              op->get_input_tensor_name(0),
+                                              op->get_input_tensor_name(1),
+					      op->get_input_tensor_name(2),
+                                              transA,
+                                              transB,
+					      1.0f,
+					      1.0f);
+                    topology.add(gemm_op);
+		}
+		else 
+		{
+		    const cldnn::gemm gemm_op(op->get_output_tensor_name(0),
+                                              op->get_input_tensor_name(0),
+                                              op->get_input_tensor_name(1),
+                                              op->get_input_tensor_name(2),
+                                              transA,
+                                              transB,
+                                              (float) alpha,
+                                              (float) beta);
+                    topology.add(gemm_op);
+		}
+	    }
+	    else 
+	    {
+		if (alpha==1.0 && beta==0.0 && transA==false && transB==false)
+                {
+		    do_dot_operation(topology,
+                                 op->get_input_tensor_name(0),
+                                 op->get_input_shape(0),
+                                 op->get_input_tensor_name(1),
+                                 op->get_input_shape(1),
+                                 op->get_output_tensor_name(0),
+                                 op->get_output_shape(0),
+                                 op->get_output_element_type(0),
+                                 0);
+		}
+		else
+		{
+		    kern.emit<op::Gemm>(gemm_op);
+		}
+	    }
+
+	    break;
+	}	
         case OP_TYPEID::MaxPool:
         {
             arguments_check(op, 1, 1);
@@ -1985,8 +2056,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::EmbeddingLookup:
         case OP_TYPEID::Erf:
         case OP_TYPEID::Gather:
-        case OP_TYPEID::GatherND:
-        case OP_TYPEID::Gemm:
+        case OP_TYPEID::GatherND: 
         case OP_TYPEID::GenerateMask:
         case OP_TYPEID::PRelu:
         case OP_TYPEID::Passthrough:
