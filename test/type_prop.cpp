@@ -13100,6 +13100,106 @@ TEST(type_prop, dynslice_arg_rank_static_dynamic_params_rank_dynamic_ok)
     EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
 }
 
+TEST(type_prop, dynslice_static_shape)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5, 6});
+    auto lower_bounds = op::Constant::create(element::i64, Shape{5}, {0, 1, 2, 3, 1});
+    auto upper_bounds = op::Constant::create(element::i64, Shape{5}, {1, 3, 3, 5, 6});
+    auto strides = op::Constant::create(element::i64, Shape{5}, {1, 1, 1, 2, 2});
+
+    auto r = make_shared<op::DynSlice>(arg, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_EQ(r->get_shape(), (Shape{1, 2, 1, 1, 3}));
+}
+
+struct DynSliceParams
+{
+    std::vector<Shape> shapes;
+    std::vector<std::vector<int64_t>> vals;
+    std::vector<AxisSet> attrs;
+
+    DynSliceParams(const std::vector<Shape>& shape,
+                   const std::vector<std::vector<int64_t>>& val,
+                   const std::vector<AxisSet>& attr)
+        : shapes(shape)
+        , vals(val)
+        , attrs(attr)
+    {
+    }
+};
+
+struct DeduceDynSliceTest : ::testing::TestWithParam<DynSliceParams>
+{
+};
+
+TEST_P(DeduceDynSliceTest, output_shape)
+{
+    auto tp = GetParam();
+    auto arg = make_shared<op::Parameter>(element::f32, tp.shapes[0]);
+    auto lower_bounds = op::Constant::create(element::i64, tp.shapes[1], tp.vals[0]);
+    auto upper_bounds = op::Constant::create(element::i64, tp.shapes[2], tp.vals[1]);
+    auto strides = op::Constant::create(element::i64, tp.shapes[3], tp.vals[2]);
+
+    auto r = make_shared<op::DynSlice>(arg,
+                                       lower_bounds,
+                                       upper_bounds,
+                                       strides,
+                                       tp.attrs[0],
+                                       tp.attrs[1],
+                                       tp.attrs[2],
+                                       tp.attrs[3],
+                                       tp.attrs[4]);
+
+    EXPECT_EQ(r->get_shape(), tp.shapes[4]);
+}
+
+INSTANTIATE_TEST_CASE_P(
+    type_prop,
+    DeduceDynSliceTest,
+    ::testing::Values(
+        DynSliceParams({{2, 3, 4, 5, 6}, {5}, {5}, {5}, {1, 2, 1, 1, 3}},
+                       {{0, 1, 2, 3, 1}, {1, 3, 3, 5, 6}, {1, 1, 1, 2, 2}},
+                       {{}, {}, {}, {}, {}}),
+        DynSliceParams({{10}, {0}, {0}, {0}, {10}}, {{}, {}, {}}, {{}, {}, {}, {}, {}}),
+        DynSliceParams({{10}, {1}, {1}, {0}, {10}},
+                       {{0}, {0}, {}},
+                       {{}, {0}, {}, {}, {}}), // end-mask
+        DynSliceParams({{10}, {1}, {1}, {0}, {9}},
+                       {{-1}, {-1}, {}},
+                       {{0}, {}, {}, {}, {}}), // begin-mask
+        DynSliceParams({{10}, {1}, {1}, {0}, {10}}, {{0}, {10}, {}}, {{}, {}, {}, {}, {}}),
+        DynSliceParams({{10}, {1}, {1}, {0}, {5}}, {{5}, {10}, {}}, {{}, {}, {}, {}, {}}),
+        DynSliceParams({{10}, {1}, {1}, {0}, {5}}, {{-5}, {10}, {}}, {{}, {}, {}, {}, {}}),
+        DynSliceParams({{10}, {1}, {1}, {1}, {6}},
+                       {{-5}, {0}, {-1}}, // negative-stride
+                       {{}, {0}, {}, {}, {}}),
+        DynSliceParams({{10}, {1}, {1}, {1}, {3}}, {{-5}, {2}, {-1}}, {{}, {}, {}, {}, {}}),
+        DynSliceParams({{10}, {1}, {1}, {1}, {5}}, {{0}, {0}, {2}}, {{}, {0}, {}, {}, {}}),
+        DynSliceParams({{10}, {1}, {1}, {1}, {5}}, {{1}, {0}, {2}}, {{}, {0}, {}, {}, {}}),
+        DynSliceParams({{10}, {1}, {1}, {1}, {10}}, {{-1}, {0}, {-1}}, {{}, {0}, {}, {}, {}}),
+        DynSliceParams({{10}, {1}, {1}, {1}, {5}}, {{-1}, {0}, {-2}}, {{}, {0}, {}, {}, {}}),
+        /* Axis Masks: New, Shrink, Ellipsis */
+        DynSliceParams({{10}, {1}, {1}, {0}, {1, 10}}, {{0}, {10}, {}}, {{}, {}, {0}, {}, {}}),
+        DynSliceParams({{1, 2, 3}, {2}, {2}, {0}, {1, 2, 2}},
+                       {{0, 0}, {1, 2}, {}},
+                       {{}, {}, {}, {}, {1}}),
+        DynSliceParams({{1, 2, 3}, {4}, {4}, {0}, {1, 2, 1}},
+                       {{0, 0, 0, 1}, {2, 3, 2, 2}, {}},
+                       {{}, {}, {2}, {3}, {}}),
+        DynSliceParams({{1, 2, 3}, {3}, {3}, {0}, {1, 1, 2, 1}},
+                       {{0, 0, 1}, {2, 2, 2}, {}},
+                       {{}, {}, {0}, {}, {1}}),
+        DynSliceParams({{1, 2, 2, 2}, {1}, {1}, {1}, {1, 2, 2}},
+                       {{-1}, {0}, {-2}},
+                       {{1}, {1}, {}, {1}, {}}),
+        DynSliceParams({{1, 2, 2, 2}, {4}, {4}, {0}, {1, 2, 2}},
+                       {{0, 1, 0, 0}, {1, 2, 2, 2}, {}},
+                       {{1}, {1}, {}, {1}, {}}),
+        DynSliceParams({{1, 2, 3}, {3}, {3}, {0}, {1, 1, 2}},
+                       {{0, 0, 1}, {2, 2, 2}, {}},
+                       {{}, {}, {0}, {2}, {1}})));
+
 void DynSlice_Test_Shape_Except(const shared_ptr<Node>& param_0,
                                 const shared_ptr<Node>& param_1,
                                 const shared_ptr<Node>& param_2,
@@ -13869,6 +13969,27 @@ TEST(type_prop, group_conv_invalid_groups)
     }
 }
 
+TEST(type_prop, function_revalidate_and_infer)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto pattern = op::Constant::create(element::i64, Shape{6}, {1, 3, 16, 2, 2, 2});
+
+    auto r = make_shared<op::DynReshape>(arg, pattern);
+    auto relu = make_shared<op::Relu>(r);
+    auto f = make_shared<Function>(relu, ParameterVector{arg});
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_EQ(r->get_output_shape(0), (Shape{1, 3, 16, 2, 2, 2}));
+    EXPECT_EQ(f->get_output_shape(0), (Shape{1, 3, 16, 2, 2, 2}));
+
+    auto new_pattern = op::Constant::create(element::i64, Shape{2}, {32, 12});
+    r->input(1).replace_source_output(new_pattern->output(0));
+
+    f->validate_nodes_and_infer_types();
+    EXPECT_EQ(r->get_output_shape(0), (Shape{32, 12}));
+    EXPECT_EQ(f->get_output_shape(0), (Shape{32, 12}));
+}
+
 TEST(type_prop, gemm)
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{3, 6});
@@ -13887,4 +14008,25 @@ TEST(type_prop, gemm_broadcast_input_C)
     auto gemm_func = make_shared<op::Gemm>(A, B, C);
     EXPECT_EQ(gemm_func->get_element_type(), element::f32);
     EXPECT_EQ(gemm_func->get_shape(), (Shape{3, 4}));
+}
+
+TEST(type_prop, fused_clamp)
+{
+    const auto data = make_shared<op::Parameter>(element::f64, Shape{2, 2});
+
+    try
+    {
+        const auto clamp = make_shared<op::Clamp>(data, 2.0, 1.0);
+        EXPECT_FALSE(clamp.get())
+            << "Clamp validation did not work. Op node was created with incorrect params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(), std::string("The 'min' parameter needs to be less than 'max' for Clamp"));
+    }
+
+    const auto clamp = make_shared<op::Clamp>(data, 1.0, 2.0);
+    EXPECT_EQ(clamp->get_element_type(), element::f64);
+    EXPECT_EQ(clamp->get_shape(), (Shape{2, 2}));
 }
