@@ -487,47 +487,6 @@ void MKLDNNEmitter::build_pooling_forward(std::vector<mkldnn::primitive*>& mkldn
                                     *mkldnn_primitives[result_index]);
 }
 
-size_t MKLDNNEmitter::build_pooling_backward(mkldnn::algorithm pooling_algorithm,
-                                             const mkldnn::memory::desc& diff_dst_desc,
-                                             const mkldnn::memory::desc& diff_src_desc,
-                                             const ngraph::Strides& window_strides,
-                                             const ngraph::Shape& window_shape,
-                                             const ngraph::Shape& padding_below,
-                                             const ngraph::Shape& padding_above)
-{
-    size_t input_index = build_memory_primitive(diff_dst_desc);
-    size_t result_index = build_memory_primitive(diff_src_desc);
-
-    size_t primitive_index = insert_primitive(new mkldnn::pooling_backward(
-        {{pooling_algorithm,
-          diff_src_desc,
-          diff_dst_desc,
-          mkldnn::memory::dims(window_strides.begin(), window_strides.end()),
-          mkldnn::memory::dims(window_shape.begin(), window_shape.end()),
-          mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
-          mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
-          mkldnn::padding_kind::zero},
-         executor::global_cpu_engine,
-         {{mkldnn::prop_kind::forward_training,
-           pooling_algorithm,
-           diff_src_desc,
-           diff_dst_desc,
-           mkldnn::memory::dims(window_strides.begin(), window_strides.end()),
-           mkldnn::memory::dims(window_shape.begin(), window_shape.end()),
-           mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
-           mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
-           mkldnn::padding_kind::zero},
-          executor::global_cpu_engine}},
-        *m_mkldnn_primitives[input_index],
-        *m_mkldnn_primitives[result_index]));
-
-    NGRAPH_CHECK(m_primitive_deps.find(primitive_index) == m_primitive_deps.end(),
-                 "Dependencies already created for node");
-
-    m_primitive_deps[primitive_index] = {input_index, result_index};
-    return primitive_index;
-}
-
 void MKLDNNEmitter::build_pooling_backward(std::vector<mkldnn::primitive*>& mkldnn_primitives,
                                            const mkldnn::pooling_backward::desc& pool_desc,
                                            const mkldnn::pooling_forward::desc& pool_fwd_desc,
@@ -546,71 +505,6 @@ void MKLDNNEmitter::build_pooling_backward(std::vector<mkldnn::primitive*>& mkld
 
     mkldnn_primitives[pool_index] = new mkldnn::pooling_backward(
         pool_pd, *mkldnn_primitives[input_index], *mkldnn_primitives[result_index]);
-}
-
-size_t MKLDNNEmitter::build_max_pooling_backward(mkldnn::algorithm pooling_algorithm,
-                                                 const mkldnn::memory::desc& fprop_src_desc,
-                                                 const mkldnn::memory::desc& diff_dst_desc,
-                                                 const mkldnn::memory::desc& diff_src_desc,
-                                                 const ngraph::Strides& window_strides,
-                                                 const ngraph::Shape& window_shape,
-                                                 const ngraph::Shape& padding_below,
-                                                 const ngraph::Shape& padding_above)
-{
-    size_t fprop_src_index = build_memory_primitive(fprop_src_desc);
-    size_t diff_dst_index = build_memory_primitive(diff_dst_desc);
-    size_t diff_src_index = build_memory_primitive(diff_src_desc);
-
-    mkldnn::pooling_forward::primitive_desc fwd_pd{
-        {mkldnn::prop_kind::forward_training,
-         pooling_algorithm,
-         diff_src_desc,
-         diff_dst_desc,
-         mkldnn::memory::dims(window_strides.begin(), window_strides.end()),
-         mkldnn::memory::dims(window_shape.begin(), window_shape.end()),
-         mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
-         mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
-         mkldnn::padding_kind::zero},
-        executor::global_cpu_engine};
-
-    auto ws_index = build_memory_primitive(fwd_pd.workspace_primitive_desc().desc());
-    // Allocate workspace
-    // TODO (jbobba): Might need to align memory
-    auto ws = std::unique_ptr<MKLDNNWorkspace>(
-        new MKLDNNWorkspace(fwd_pd.workspace_primitive_desc().get_size()));
-    auto ws_buf_index = insert_workspace(ws);
-
-    size_t fwd_primitive_index = insert_primitive(new mkldnn::pooling_forward(
-        fwd_pd,
-        *m_mkldnn_primitives[fprop_src_index],
-        *m_mkldnn_primitives
-            [diff_src_index], // HACK - Uses diff_src buffer. Safe since diff_src > fprop_dst
-        *m_mkldnn_primitives[ws_index]));
-
-    size_t bwd_primitive_index = insert_primitive(new mkldnn::pooling_backward(
-        {{pooling_algorithm,
-          diff_src_desc,
-          diff_dst_desc,
-          mkldnn::memory::dims(window_strides.begin(), window_strides.end()),
-          mkldnn::memory::dims(window_shape.begin(), window_shape.end()),
-          mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
-          mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
-          mkldnn::padding_kind::zero},
-         executor::global_cpu_engine,
-         fwd_pd},
-        *m_mkldnn_primitives[diff_dst_index],
-        *m_mkldnn_primitives[ws_index],
-        *m_mkldnn_primitives[diff_src_index]));
-
-    NGRAPH_CHECK(m_primitive_deps.find(fwd_primitive_index) == m_primitive_deps.end() &&
-                     m_primitive_deps.find(bwd_primitive_index) == m_primitive_deps.end(),
-                 "Dependencies already created for node");
-
-    m_primitive_deps[fwd_primitive_index] = {
-        fprop_src_index, diff_src_index, ws_index, ws_buf_index};
-    m_primitive_deps[bwd_primitive_index] = {
-        diff_dst_index, ws_index, diff_src_index, ws_buf_index};
-    return bwd_primitive_index;
 }
 
 void MKLDNNEmitter::build_max_pooling_backward(std::vector<mkldnn::primitive*>& mkldnn_primitives,

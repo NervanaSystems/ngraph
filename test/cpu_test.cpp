@@ -1669,3 +1669,63 @@ TEST(cpu_test, max_pool_bprop_2d_2channel_2image)
                                   read_vector<float>(result),
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
+
+TEST(cpu_test, avg_pool_bprop_2d_2channel_2image)
+{
+    Shape shape_a{2, 2, 3, 3};
+    Shape window_shape{2, 2};
+    auto window_movement_strides = Strides{1, 1};
+    Shape padding_below{0, 0};
+    Shape padding_above{0, 0};
+    Shape shape_d{2, 2, 2, 2};
+    auto delta = make_shared<op::Parameter>(element::f32, shape_d);
+
+    auto avg_pool_bprop = make_shared<op::AvgPoolBackprop>(
+        shape_a, delta, window_shape, window_movement_strides, padding_below, padding_above, false);
+
+    auto f = make_shared<Function>(avg_pool_bprop, ParameterVector{delta});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto d = backend->create_tensor(element::f32, shape_d);
+    copy_data(d,
+              test::NDArray<float, 4>({{{{0.3, 0.3}, // img 0 chan 0
+                                         {0.3, 0.3}},
+
+                                        {{0.2, 0.2}, // img 0 chan 1
+                                         {0.2, 0.2}}},
+
+                                       {{{0.1, 0.1}, // img 1 chan 0
+                                         {0.1, 0.1}},
+
+                                        {{0.4, 0.4}, // img 1 chan 1
+                                         {0.4, 0.4}}}})
+                  .get_vector());
+
+    auto result = backend->create_tensor(element::f32, shape_a);
+
+    float denom = 2 * 2;
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {d});
+    EXPECT_TRUE(test::all_close_f(
+        (test::NDArray<float, 4>({{{{0.3f / denom, 0.6f / denom, 0.3f / denom}, // img 0 chan 0
+                                    {0.6f / denom, 1.2f / denom, 0.6f / denom},
+                                    {0.3f / denom, 0.6f / denom, 0.3f / denom}},
+
+                                   {{0.2f / denom, 0.4f / denom, 0.2f / denom}, // img 0 chan 1
+                                    {0.4f / denom, 0.8f / denom, 0.4f / denom},
+                                    {0.2f / denom, 0.4f / denom, 0.2f / denom}}},
+
+                                  {{{0.1f / denom, 0.2f / denom, 0.1f / denom}, // img 1 chan 0
+                                    {0.2f / denom, 0.4f / denom, 0.2f / denom},
+                                    {0.1f / denom, 0.2f / denom, 0.1f / denom}},
+
+                                   {{0.4f / denom, 0.8f / denom, 0.4f / denom}, // img 1 chan 1
+                                    {0.8f / denom, 1.6f / denom, 0.8f / denom},
+                                    {0.4f / denom, 0.8f / denom, 0.4f / denom}}}})
+             .get_vector()),
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
+}
