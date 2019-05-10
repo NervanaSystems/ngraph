@@ -66,3 +66,4 @@ gather_scalar_indices
 gather_nd_single_indices
 gemm
 gemm_broadcast_input_C
+hardsigmoid
