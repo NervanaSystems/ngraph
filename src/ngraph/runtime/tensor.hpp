@@ -50,7 +50,11 @@ namespace ngraph
 
             /// \brief Get tensor shape
             /// \return const reference to a Shape
-            const ngraph::Shape& get_shape() const;
+            virtual const ngraph::Shape& get_shape() const;
+
+            /// \brief Get tensor partial shape
+            /// \return const reference to a PartialShape
+            const ngraph::PartialShape& get_partial_shape() const;
 
             /// \brief Get tensor strides
             /// \return Strides
@@ -58,7 +62,7 @@ namespace ngraph
 
             /// \brief Get tensor element type
             /// \return element::Type
-            const element::Type& get_element_type() const;
+            virtual const element::Type& get_element_type() const;
 
             /// \brief Get number of elements in the tensor
             /// \return number of elements in the tensor

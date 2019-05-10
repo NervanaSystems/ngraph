@@ -43,6 +43,7 @@
 /src/ngraph/runtime/                @rkimballn1 @jbobba
 /src/ngraph/runtime/cpu/            @jbobba
 /src/ngraph/runtime/cpu/builder/allreduce.*pp    @wenzhe-nrv @jbobba @avijit-nervana
+/src/ngraph/runtime/dynamic_wrapper/ @aprocter
 /src/ngraph/runtime/gpu/            @rkimballn1
 /src/ngraph/runtime/hybrid/         @rkimballn1
 /src/ngraph/runtime/intelgpu/       @dmyershov

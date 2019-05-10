@@ -44,9 +44,15 @@ public:
     /// \brief Create a new Backend object
     /// \param type The name of a registered backend, such as "CPU" or "GPU".
     ///   To select a subdevice use "GPU:N" where s`N` is the subdevice number.
+    /// \param must_support_dynamic If `true`, the returned `Backend` object
+    ///    will support dynamic tensors. If the underlying backend has native
+    ///    support for dynamic tensors, then that backend object will be
+    ///    returned directly. Otherwise, it will be wrapped with
+    ///    DynamicWrapperBackend. This feature is EXPERIMENTAL.
     /// \returns shared_ptr to a new Backend or nullptr if the named backend
     ///   does not exist.
-    static std::shared_ptr<Backend> create(const std::string& type);
+    static std::shared_ptr<Backend> create(const std::string& type,
+                                           bool must_support_dynamic = false);
 
     /// \brief Query the list of registered devices
     /// \returns A vector of all registered devices.
@@ -78,6 +84,17 @@ public:
         return create_tensor(element::from<T>(), shape);
     }
 
+    /// \brief Create a dynamic tensor specific to this backend, if the backend supports dynamic
+    ///        tensors.
+    /// \param element_type The type of the tensor element
+    /// \param shape The shape of the tensor
+    /// \returns shared_ptr to a new backend-specific tensor
+    /// \throws std::invalid_argument if the backend does not support dynamic tensors
+    virtual std::shared_ptr<ngraph::runtime::Tensor>
+        create_dynamic_tensor(const ngraph::element::Type& element_type, const PartialShape& shape);
+
+    /// \returns `true` if this backend supports dynamic tensors, else `false`.
+    virtual bool supports_dynamic_tensors() { return false; }
     /// \brief Compiles a Function.
     /// \param func The function to compile
     /// \returns compiled function or nullptr on failure
