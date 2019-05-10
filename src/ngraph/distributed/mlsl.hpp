@@ -33,17 +33,19 @@ namespace ngraph
             MLSLDistributedInterface(const std::string& name = "MLSL")
                 : m_name(name)
             {
-                if (!MLSL::Environment::GetEnv().IsInitialized())
+                if (!MLSL::Environment::GetEnv().IsInitialized() && !m_initialized_mlsl)
                 {
                     MLSL::Environment::GetEnv().Init(nullptr, nullptr);
+                    m_initialized_mlsl = true;
                 }
             }
 
             ~MLSLDistributedInterface() override
             {
-                if (MLSL::Environment::GetEnv().IsInitialized())
+                if (MLSL::Environment::GetEnv().IsInitialized() && m_initialized_mlsl)
                 {
                     MLSL::Environment::GetEnv().Finalize();
+                    m_initialized_mlsl = false;
                 }
             }
 
@@ -107,6 +109,7 @@ namespace ngraph
 
         protected:
             std::string m_name{"MLSL"};
+            bool m_initialized_mlsl = false;
         };
     }
 }
