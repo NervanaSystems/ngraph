@@ -364,11 +364,12 @@ namespace ngraph
         llvm::InitializeNativeTarget();
         llvm::InitializeNativeTargetAsmPrinter();
 
-        // Create an MLIR execution engine. Note that it takes a null pass manager
-        // to make sure it won't run "default" passes on the MLIR that would trigger
-        // a second conversion to LLVM IR.  The execution engine eagerly JIT-compiles
-        // the module.
-        auto maybeEngine = mlir::ExecutionEngine::create(m_module.get(), /*pm=*/nullptr);
+        // Create an MLIR execution engine. We use a null MLIR pass manager for now to make sure we
+        // don't run MLIR passes that were already run. We also pass a default transformer to run
+        // LLVM optimizations at level 3.
+        mlir::PassManager* mlir_pm = nullptr;
+        auto llvm_transformer = mlir::makeOptimizingTransformer(3 /*optLevel*/, 0 /*sizeLevel*/);
+        auto maybeEngine = mlir::ExecutionEngine::create(m_module.get(), mlir_pm, llvm_transformer);
         NGRAPH_ASSERT(maybeEngine) << "failed to construct an execution engine";
         m_engine = std::move(maybeEngine.get());
 
