@@ -96,6 +96,8 @@ add_library(onnx_import STATIC
         op/greater.hpp
         op/hard_sigmoid.cpp
         op/hard_sigmoid.hpp
+        op/hardmax.cpp
+        op/hardmax.hpp
         op/identity.hpp
         op/leaky_relu.cpp
         op/leaky_relu.hpp

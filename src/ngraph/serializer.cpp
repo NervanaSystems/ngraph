@@ -66,11 +66,13 @@
 #include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/floor.hpp"
+#include "ngraph/op/fused/clamp.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/depth_to_space.hpp"
 #include "ngraph/op/fused/elu.hpp"
 #include "ngraph/op/fused/gemm.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/normalize.hpp"
 #include "ngraph/op/fused/prelu.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
@@ -650,6 +652,13 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Ceiling>(args[0]);
                 break;
             }
+            case OP_TYPEID::Clamp:
+            {
+                const auto clamp_min = node_js.at("min").get<float>();
+                const auto clamp_max = node_js.at("max").get<float>();
+                node = make_shared<op::Clamp>(args[0], clamp_min, clamp_max);
+                break;
+            }
             case OP_TYPEID::Concat:
             {
                 auto axis = node_js.at("axis").get<size_t>();
@@ -662,16 +671,8 @@ static shared_ptr<ngraph::Function>
                     node_js.count("element_type") == 0 ? node_js.at("value_type") : node_js;
                 auto element_type = read_element_type(type_node_js.at("element_type"));
                 auto shape = type_node_js.at("shape");
-                auto value_it = node_js.find("value");
-                if (value_it != node_js.end())
-                {
-                    auto value = value_it->get<vector<string>>();
-                    node = make_shared<op::Constant>(element_type, shape, value);
-                }
-                else
-                {
-                    node = const_data_callback(node_name, element_type, shape);
-                }
+                auto value = node_js.at("value").get<vector<string>>();
+                node = make_shared<op::Constant>(element_type, shape, value);
                 break;
             }
             case OP_TYPEID::Convert:
@@ -977,6 +978,13 @@ static shared_ptr<ngraph::Function>
             case OP_TYPEID::GreaterEq:
             {
                 node = make_shared<op::GreaterEq>(args[0], args[1]);
+                break;
+            }
+            case OP_TYPEID::HardSigmoid:
+            {
+                auto alpha = node_js.at("alpha").get<float>();
+                auto beta = node_js.at("beta").get<float>();
+                node = make_shared<op::HardSigmoid>(args[0], alpha, beta);
                 break;
             }
             case OP_TYPEID::GroupConvolution:
@@ -1682,6 +1690,13 @@ static json write(const Node& n, bool binary_constant_data)
     }
     case OP_TYPEID::Ceiling: { break;
     }
+    case OP_TYPEID::Clamp:
+    {
+        auto tmp = dynamic_cast<const op::Clamp*>(&n);
+        node["min"] = tmp->get_min();
+        node["max"] = tmp->get_max();
+        break;
+    }
     case OP_TYPEID::Concat:
     {
         auto tmp = dynamic_cast<const op::Concat*>(&n);
@@ -1691,7 +1706,13 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Constant:
     {
         auto tmp = dynamic_cast<const op::Constant*>(&n);
-        if (!binary_constant_data)
+        if (tmp->are_all_data_elements_bitwise_identical())
+        {
+            vector<string> vs;
+            vs.push_back(tmp->get_value_strings()[0]);
+            node["value"] = vs;
+        }
+        else
         {
             node["value"] = tmp->get_value_strings();
         }
@@ -1851,6 +1872,13 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Greater: { break;
     }
     case OP_TYPEID::GreaterEq: { break;
+    }
+    case OP_TYPEID::HardSigmoid:
+    {
+        auto tmp = dynamic_cast<const op::HardSigmoid*>(&n);
+        node["alpha"] = tmp->get_alpha();
+        node["beta"] = tmp->get_beta();
+        break;
     }
     case OP_TYPEID::GroupConvolution:
     {

@@ -34,10 +34,20 @@ namespace ngraph
             /// \param upper_bounds The axiswise upper bounds of the slice (exclusive).
             /// \param strides The slicing strides; for example, strides of `{n,m}` means to take
             ///                every nth row and every mth column of the input matrix.
+            /// \param lower_bounds_mask Ignores lower_bounds for axis with the mask set
+            /// \param upper_bounds_mask Ignores upper_bounds for axis with the mask set
+            /// \param new_axis          Add dimension one axis at the set positions
+            /// \param shrink_axis       Delete dimensions at the set positions
+            /// \param ellipsis_mask     Inserts missing dimensions on the set position
             DynSlice(const std::shared_ptr<Node>& arg,
                      const std::shared_ptr<Node>& lower_bounds,
                      const std::shared_ptr<Node>& upper_bounds,
-                     const std::shared_ptr<Node>& strides);
+                     const std::shared_ptr<Node>& strides,
+                     const AxisSet& lower_bounds_mask = AxisSet{},
+                     const AxisSet& upper_bounds_mask = AxisSet{},
+                     const AxisSet& new_axis = AxisSet{},
+                     const AxisSet& shrink_axis = AxisSet{},
+                     const AxisSet& ellipsis_mask = AxisSet{});
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -46,6 +56,16 @@ namespace ngraph
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
             void validate_and_infer_types() override;
+
+        private:
+            /// Helper method to compute output shape
+            Shape compute_output_shape() const;
+
+            AxisSet m_lower_bounds_mask;
+            AxisSet m_upper_bounds_mask;
+            AxisSet m_new_axis;
+            AxisSet m_shrink_axis;
+            AxisSet m_ellipsis_mask;
         };
     }
 }

@@ -74,11 +74,11 @@ namespace ngraph
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
 
-        private:
             static constexpr size_t INPUT_GAMMA = 0;
             static constexpr size_t INPUT_BETA = 1;
             static constexpr size_t INPUT_DATA = 2;
 
+        private:
             double m_epsilon;
         };
 
