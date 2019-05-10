@@ -30,7 +30,7 @@ op::QuantizedConvolution::QuantizedConvolution(const shared_ptr<Node>& data_batc
                                                const CoordinateDiff& padding_below,
                                                const CoordinateDiff& padding_above,
                                                const Strides& data_dilation_strides,
-                                               const std::shared_ptr<Node> scale,
+                                               const shared_ptr<Node>& scale,
                                                const bool requantize)
     : Op("QuantizedConvolution", check_single_output_args({data_batch, filters, scale}))
     , m_window_movement_strides(window_movement_strides)
@@ -48,6 +48,11 @@ op::QuantizedConvolution::QuantizedConvolution(const shared_ptr<Node>& data_batc
     auto& filters_shape = filters->get_shape();
 
     auto output_et = requantize ? element::i8 : element::i32;
+
+    if (data_batch->get_element_type() == element::u8 && filters->get_element_type() == element::u8)
+    {
+        output_et = element::u8;
+    }
 
     set_output_type(0,
                     output_et,

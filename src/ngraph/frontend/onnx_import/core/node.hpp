@@ -20,7 +20,7 @@
 #include <string>
 
 #include "ngraph/except.hpp"
-#include "ngraph/node_vector.hpp"
+#include "ngraph/node.hpp"
 
 namespace onnx
 {

@@ -299,7 +299,7 @@ template <typename T>
 class BatchNormInferenceTester
 {
 public:
-    BatchNormInferenceTester(const std::unique_ptr<ngraph::runtime::Backend>& backend,
+    BatchNormInferenceTester(const std::shared_ptr<ngraph::runtime::Backend>& backend,
                              const Shape& input_shape,
                              element::Type etype,
                              double epsilon)
@@ -343,7 +343,7 @@ public:
     }
 
 protected:
-    const std::unique_ptr<ngraph::runtime::Backend>& m_backend;
+    const std::shared_ptr<ngraph::runtime::Backend>& m_backend;
     std::shared_ptr<Function> m_function;
     std::shared_ptr<ngraph::runtime::Tensor> m_input;
     std::shared_ptr<ngraph::runtime::Tensor> m_gamma;
@@ -365,7 +365,7 @@ public:
     using Variance = test::NDArray<T, 1>;
     using NormedInput = test::NDArray<T, 2>;
 
-    BatchNormInferenceTesterZeroEpsilon(const std::unique_ptr<ngraph::runtime::Backend>& backend,
+    BatchNormInferenceTesterZeroEpsilon(const std::shared_ptr<ngraph::runtime::Backend>& backend,
                                         element::Type etype)
         : BatchNormInferenceTester<T>(backend, Shape{2, 3}, etype, 0.0)
     {
@@ -459,7 +459,7 @@ public:
     using Variance = test::NDArray<T, 1>;
     using NormedInput = test::NDArray<T, 2>;
 
-    BatchNormInferenceTesterNonZeroEpsilon(const std::unique_ptr<ngraph::runtime::Backend>& backend,
+    BatchNormInferenceTesterNonZeroEpsilon(const std::shared_ptr<ngraph::runtime::Backend>& backend,
                                            element::Type etype)
         : BatchNormInferenceTester<T>(backend, Shape{2, 3}, etype, 0.25)
     {
@@ -545,7 +545,7 @@ template <typename T>
 class BatchNormTrainingTester
 {
 public:
-    BatchNormTrainingTester(const std::unique_ptr<ngraph::runtime::Backend>& backend,
+    BatchNormTrainingTester(const std::shared_ptr<ngraph::runtime::Backend>& backend,
                             const Shape& input_shape,
                             element::Type etype,
                             double epsilon)
@@ -597,7 +597,7 @@ public:
     }
 
 protected:
-    const std::unique_ptr<ngraph::runtime::Backend>& m_backend;
+    const std::shared_ptr<ngraph::runtime::Backend>& m_backend;
     std::shared_ptr<Function> m_function;
     std::shared_ptr<ngraph::runtime::Tensor> m_input;
     std::shared_ptr<ngraph::runtime::Tensor> m_gamma;
@@ -619,7 +619,7 @@ public:
     using Mean = test::NDArray<T, 1>;
     using Variance = test::NDArray<T, 1>;
 
-    BatchNormTrainingTesterZeroEpsilon(const std::unique_ptr<ngraph::runtime::Backend>& backend,
+    BatchNormTrainingTesterZeroEpsilon(const std::shared_ptr<ngraph::runtime::Backend>& backend,
                                        element::Type etype)
         : BatchNormTrainingTester<T>(backend, Shape{10, 3}, etype, 0.0)
     {

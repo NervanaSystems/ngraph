@@ -16,8 +16,22 @@
 
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include "core/node.hpp"
+#include "ngraph/node.hpp"
 
-namespace py = pybind11;
+namespace ngraph
+{
+    namespace onnx_import
+    {
+        namespace op
+        {
+            namespace set_1
+            {
+                NodeVector hardmax(const Node& node);
+            } // namespace set_1
 
-void regclass_pyngraph_NodeVector(py::module m);
+        } //namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

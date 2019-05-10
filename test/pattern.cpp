@@ -90,7 +90,7 @@ public:
         auto iconst1 = construct_constant_node(1);
         auto pattern = std::make_shared<pattern::op::Label>(iconst1);
 
-        ngraph::pattern::graph_rewrite_callback callback = [pattern](pattern::Matcher& m) {
+        auto callback = [pattern](pattern::Matcher& m) {
             NGRAPH_DEBUG << "In a callback for construct_multiply_by_one against "
                          << m.get_match_root()->get_name();
             NGRAPH_CHECK(m.get_match_root()->get_arguments().size() == 2);
@@ -126,8 +126,8 @@ public:
             return true;
         };
 
-        auto m = make_shared<TestMatcher>(pattern * iconst1, callback);
-        this->add_matcher(m);
+        auto m = make_shared<TestMatcher>(pattern * iconst1);
+        this->add_matcher(m, callback);
     }
 
     void construct_add_zero()
@@ -172,8 +172,9 @@ public:
             return true;
         };
 
-        auto m = make_shared<TestMatcher>(pattern + iconst0, callback);
-        this->add_matcher(m);
+        auto add = pattern + iconst0;
+        auto m = make_shared<TestMatcher>(add);
+        this->add_matcher(m, callback);
     }
 
     TestGraphRewrite()
@@ -446,7 +447,7 @@ TEST(pattern, matcher)
 
     // strict mode
     {
-        TestMatcher sm(nullptr, nullptr, "TestMatcher", pass::PassProperty::REGULAR_FUSIONS, true);
+        TestMatcher sm(nullptr, "TestMatcher", true);
         // exact shape and type
         auto scalar_param = make_shared<op::Parameter>(element::i32, Shape{});
         auto label_dynamic_shape =
@@ -540,7 +541,7 @@ TEST(pattern, recurrent_pattern)
     auto add3 = iconst0 + add2;
     auto padd = iconst0 + rpattern;
     std::set<std::shared_ptr<pattern::op::Label>> empty_correlated_matches;
-    RecurrentMatcher rm(padd, rpattern, empty_correlated_matches, nullptr);
+    RecurrentMatcher rm(padd, rpattern, empty_correlated_matches);
     ASSERT_TRUE(rm.match(add3));
     ASSERT_EQ(rm.get_number_of_bound_labels(), 1);
     auto recurrent_matches = rm.get_bound_nodes_for_pattern(rpattern);
@@ -554,7 +555,7 @@ TEST(pattern, recurrent_pattern)
     auto add2_2 = iconst1 + add1;
     auto add3_2 = iconst0 + add2_2;
     auto padd2 = iconst_label + rpattern;
-    RecurrentMatcher rm2(padd2, rpattern, empty_correlated_matches, nullptr);
+    RecurrentMatcher rm2(padd2, rpattern, empty_correlated_matches);
     ASSERT_TRUE(rm2.match(add3_2));
     ASSERT_EQ(rm2.get_number_of_bound_labels(), 2);
     recurrent_matches = rm2.get_bound_nodes_for_pattern(rpattern);
@@ -569,7 +570,7 @@ TEST(pattern, recurrent_pattern)
     // Non-matching correlated labels
     std::set<std::shared_ptr<pattern::op::Label>> correlated_matches;
     correlated_matches.insert(iconst_label);
-    RecurrentMatcher rm3(padd2, rpattern, correlated_matches, nullptr);
+    RecurrentMatcher rm3(padd2, rpattern, correlated_matches);
     ASSERT_TRUE(rm3.match(add3_2));
     ASSERT_EQ(rm3.get_number_of_bound_labels(), 2);
     iconst_matches = rm3.get_bound_nodes_for_pattern(iconst_label);
@@ -602,8 +603,7 @@ public:
         auto rpattern = std::make_shared<pattern::op::Label>(element::i32, shape);
         auto padd = iconst_label + rpattern;
 
-        ngraph::pattern::recurrent_graph_rewrite_callback callback = [iconst_label, rpattern](
-            pattern::RecurrentMatcher& rm) {
+        auto callback = [iconst_label, rpattern](pattern::RecurrentMatcher& rm) {
             NGRAPH_DEBUG << "In a callback for construct_recurrent_add against "
                          << rm.get_match_root()->get_name();
 
@@ -634,9 +634,8 @@ public:
         };
 
         std::set<std::shared_ptr<pattern::op::Label>> empty_correlated_matches;
-        auto rm = make_shared<pattern::RecurrentMatcher>(
-            padd, rpattern, empty_correlated_matches, callback);
-        this->add_matcher(rm);
+        auto rm = make_shared<pattern::RecurrentMatcher>(padd, rpattern, empty_correlated_matches);
+        this->add_matcher(rm, callback);
     }
 
     TestRecurrentGraphRewrite()
@@ -697,7 +696,7 @@ TEST(pattern, label_on_skip)
     auto bcst = std::make_shared<pattern::op::Skip>(const_label, bcst_pred);
     auto bcst_label = std::make_shared<pattern::op::Label>(bcst, nullptr, NodeVector{bcst});
     auto matcher = std::make_shared<pattern::Matcher>(
-        std::make_shared<op::Multiply>(label, bcst_label), nullptr);
+        std::make_shared<op::Multiply>(label, bcst_label), "label_on_skip");
 
     auto const_broadcast = make_shared<op::Broadcast>(iconst, shape, AxisSet{0, 1});
     auto mul = a * const_broadcast;
