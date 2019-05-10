@@ -16,15 +16,8 @@
 
 #include <memory>
 
-#include "core/node.hpp"
 #include "hard_sigmoid.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/op/add.hpp"
-#include "ngraph/op/constant.hpp"
-#include "ngraph/op/maximum.hpp"
-#include "ngraph/op/minimum.hpp"
-#include "ngraph/op/multiply.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
+#include "ngraph/op/fused/hard_sigmoid.hpp"
 
 using namespace ngraph::op;
 
@@ -43,29 +36,7 @@ namespace ngraph
                     double alpha = node.get_attribute_value<double>("alpha", 0.2);
                     double beta = node.get_attribute_value<double>("beta", 0.5);
 
-                    std::shared_ptr<ngraph::Node> alpha_node =
-                        std::make_shared<ngraph::op::Constant>(
-                            data->get_element_type(), ngraph::Shape{}, std::vector<double>{alpha});
-                    alpha_node = make_broadcast_node(alpha_node, data->get_shape());
-
-                    std::shared_ptr<ngraph::Node> beta_node =
-                        std::make_shared<ngraph::op::Constant>(
-                            data->get_element_type(), ngraph::Shape{}, std::vector<double>{beta});
-                    beta_node = make_broadcast_node(beta_node, data->get_shape());
-
-                    std::shared_ptr<ngraph::Node> one_node = std::make_shared<ngraph::op::Constant>(
-                        data->get_element_type(), Shape{}, std::vector<double>{1});
-                    one_node = make_broadcast_node(one_node, data->get_shape());
-
-                    std::shared_ptr<ngraph::Node> zero_node =
-                        std::make_shared<ngraph::op::Constant>(
-                            data->get_element_type(), Shape{}, std::vector<double>{0});
-                    zero_node = make_broadcast_node(zero_node, data->get_shape());
-
-                    return {std::make_shared<ngraph::op::Maximum>(
-                        zero_node,
-                        std::make_shared<ngraph::op::Minimum>(one_node,
-                                                              alpha_node * data + beta_node))};
+                    return {std::make_shared<ngraph::op::HardSigmoid>(data, alpha, beta)};
                 }
 
             } // namespace set_1
