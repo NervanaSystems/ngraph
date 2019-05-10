@@ -13751,6 +13751,17 @@ TEST(type_prop, conv_bias_bprop_2d_deduce)
     EXPECT_EQ(conv->get_output_shape(1), bias->get_shape());
 }
 
+TEST(type_prop, hardsigmoid)
+{
+    Shape data_shape{3, 5};
+    float alpha = 0.1;
+    float beta = 1.2;
+    auto P = make_shared<op::Parameter>(element::f32, data_shape);
+    auto H = make_shared<op::HardSigmoid>(P, alpha, beta);
+    ASSERT_EQ(H->get_element_type(), element::f32);
+    ASSERT_EQ(H->get_shape(), data_shape);
+}
+
 TEST(type_prop, group_conv)
 {
     // Deduce type

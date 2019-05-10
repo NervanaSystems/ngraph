@@ -18,6 +18,8 @@
 #include <cinttypes>
 #include <cmath>
 #include <cstdlib>
+#include <iterator>
+#include <limits>
 #include <random>
 #include <string>
 
@@ -87,6 +89,47 @@ NGRAPH_TEST(${BACKEND_NAME}, prelu)
     handle->call_with_validate({result0}, {a, b});
     vector<float> expected{0, 3, -1, 1, -1, 0};
     EXPECT_EQ(expected, read_vector<float>(result0));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, hardsigmoid)
+{
+    Shape shape{2, 7};
+    float alpha = 0.125f;
+    float beta = 0.642f;
+
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto hardsigmoid = make_shared<op::HardSigmoid>(A, alpha, beta);
+    auto f0 = make_shared<Function>(NodeVector{hardsigmoid}, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Prepare input and expected output data
+    vector<float> input_data{-1.f,
+                             0.f,
+                             1.f,
+                             -100.f,
+                             100.f,
+                             -3.1234567f,
+                             5.876543f,
+                             7.13245364f,
+                             numeric_limits<float>::max(),
+                             numeric_limits<float>::lowest(),
+                             numeric_limits<float>::min(),
+                             numeric_limits<float>::infinity(),
+                             numeric_limits<float>::min() / 16.f,
+                             -numeric_limits<float>::min() / 16.f};
+
+    auto impl = [alpha, beta](float val) { return min(max(alpha * val + beta, 0.f), 1.f); };
+    vector<float> expected_output;
+    transform(begin(input_data), end(input_data), back_inserter(expected_output), impl);
+
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a, input_data);
+    auto result0 = backend->create_tensor(element::f32, shape);
+    auto handle = backend->compile(f0);
+    handle->call_with_validate({result0}, {a});
+
+    EXPECT_TRUE(test::all_close_f(expected_output, read_vector<float>(result0)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, prelu_shared_slope)

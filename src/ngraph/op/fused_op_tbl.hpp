@@ -20,6 +20,7 @@
 NGRAPH_OP(ConvolutionBias, ngraph::op)
 NGRAPH_OP(ConvolutionBiasAdd, ngraph::op)
 NGRAPH_OP(ConvolutionBiasBackpropFiltersBias, ngraph::op)
+NGRAPH_OP(HardSigmoid, ngraph::op)
 NGRAPH_OP(DepthToSpace, ngraph::op)
 NGRAPH_OP(Elu, ngraph::op)
 NGRAPH_OP(Gemm, ngraph::op)

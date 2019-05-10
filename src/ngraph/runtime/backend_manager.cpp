@@ -98,6 +98,9 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
             throw runtime_error(ss.str());
         }
 
+#ifndef _WIN32
+        dlerror(); // Clear any pending errors
+#endif
         function<runtime::BackendConstructor*()> get_backend_constructor_pointer =
             reinterpret_cast<runtime::BackendConstructor* (*)()>(
                 DLSYM(handle, "get_backend_constructor_pointer"));
@@ -107,9 +110,16 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
         }
         else
         {
+            string error;
+#ifndef _WIN32
+            const char* err = dlerror();
+            error = (err ? err : "");
+#endif
             CLOSE_LIBRARY(handle);
-            throw runtime_error("Backend '" + type +
-                                "' does not implement get_backend_constructor_pointer");
+            throw runtime_error(
+                "Failed to find symbol 'get_backend_constructor_pointer' in backend "
+                "library.\nError='" +
+                error + "'");
         }
     }
     return backend;
@@ -152,12 +162,23 @@ DL_HANDLE runtime::BackendManager::open_shared_library(string type)
     string library_name = lib_prefix + to_lower(type) + "_backend" + lib_suffix;
     string my_directory = file_util::get_directory(find_my_file());
     string library_path = file_util::path_join(my_directory, library_name);
+    string error;
 #ifdef _WIN32
     SetDllDirectory((LPCSTR)my_directory.c_str());
     handle = LoadLibrary(library_path.c_str());
 #else
+    dlerror(); // Clear any pending errors
     handle = dlopen(library_path.c_str(), RTLD_NOW | RTLD_GLOBAL);
+    const char* err = dlerror();
+    error = (err ? err : "");
 #endif
+    if (!handle)
+    {
+        stringstream ss;
+        ss << "Unable to find backend '" << type << "' as file '" << library_path << "'";
+        ss << "\nOpen error message '" << error << "'";
+        throw runtime_error(ss.str());
+    }
     return handle;
 }
 

@@ -61,36 +61,38 @@ void runtime::Executable::validate(const vector<std::shared_ptr<runtime::Tensor>
 
     for (size_t i = 0; i < parameters.size(); i++)
     {
-        if (parameters[i]->get_element_type() != inputs[i]->get_element_type())
+        if (parameters[i]->get_element_type().is_static() &&
+            parameters[i]->get_element_type() != inputs[i]->get_element_type())
         {
             stringstream ss;
             ss << "Input " << i << " type '" << inputs[i]->get_element_type()
                << "' does not match Parameter type '" << parameters[i]->get_element_type() << "'";
             throw runtime_error(ss.str());
         }
-        if (parameters[i]->get_shape() != inputs[i]->get_shape())
+        if (!(parameters[i]->get_output_partial_shape(0).relaxes(inputs[i]->get_partial_shape())))
         {
             stringstream ss;
-            ss << "Input " << i << " shape {" << join(inputs[i]->get_shape())
-               << "} does not match Parameter shape {" << join(parameters[i]->get_shape()) << "}";
+            ss << "Input " << i << " shape " << inputs[i]->get_partial_shape()
+               << " does not match Parameter shape " << parameters[i]->get_output_partial_shape(0);
             throw runtime_error(ss.str());
         }
     }
 
     for (size_t i = 0; i < results.size(); i++)
     {
-        if (results[i]->get_element_type() != outputs[i]->get_element_type())
+        if (outputs[i]->get_element_type().is_static() &&
+            results[i]->get_element_type() != outputs[i]->get_element_type())
         {
             stringstream ss;
             ss << "Output " << i << " type '" << outputs[i]->get_element_type()
                << "' does not match Result type '" << results[i]->get_element_type() << "'";
             throw runtime_error(ss.str());
         }
-        if (results[i]->get_shape() != outputs[i]->get_shape())
+        if (!(outputs[i]->get_partial_shape()).relaxes(results[i]->get_output_partial_shape(0)))
         {
             stringstream ss;
-            ss << "Output " << i << " shape {" << join(outputs[i]->get_shape())
-               << "} does not match Result shape {" << join(results[i]->get_shape()) << "}";
+            ss << "Output " << i << " shape " << outputs[i]->get_partial_shape()
+               << " does not match Result shape " << results[i]->get_output_partial_shape(0);
             throw runtime_error(ss.str());
         }
     }
