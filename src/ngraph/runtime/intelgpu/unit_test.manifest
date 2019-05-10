@@ -48,7 +48,7 @@ pad_reflect_2d_with_neg
 
 # Not implemented
 erf
-zero_sized_erf
+fused_clamp
 gather_no_axis
 gather
 gather_nd_scalar_from_2d
@@ -67,3 +67,4 @@ gather_nd_single_indices
 gemm
 gemm_broadcast_input_C
 hardsigmoid
+zero_sized_erf

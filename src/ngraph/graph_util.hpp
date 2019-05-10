@@ -224,7 +224,7 @@ namespace ngraph
     {
         for (auto node : subgraph_topological_sort(nodes))
         {
-            node->delayed_validate_and_infer_types();
+            node->revalidate_and_infer_types();
         }
     }
 

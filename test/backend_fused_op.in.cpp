@@ -418,5 +418,49 @@ NGRAPH_TEST(${BACKEND_NAME}, gemm_broadcast_input_C)
     test_case.add_input<double>(vector<double>{1});
     //output
     test_case.add_expected_output<double>(Shape{3, 4}, vector<double>(12, 7));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp)
+{
+    auto data = make_shared<op::Parameter>(element::f64, Shape{4, 4});
+    auto tested_op = make_shared<op::Clamp>(data, 10.0, 20.0);
+    auto function = make_shared<Function>(tested_op, ParameterVector{data});
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<double>({std::numeric_limits<double>::min(),
+                                 std::numeric_limits<double>::max(),
+                                 -std::numeric_limits<double>::infinity(),
+                                 std::numeric_limits<double>::infinity(),
+                                 -1.0,
+                                 0.0,
+                                 1.0,
+                                 9.99999,
+                                 10.0,
+                                 10.0000001,
+                                 15.0,
+                                 19.9999999,
+                                 20.0,
+                                 20.0000001,
+                                 21.0,
+                                 100.0});
+
+    test_case.add_expected_output<double>(Shape{4, 4},
+                                          {10.0,
+                                           20.0,
+                                           10.0,
+                                           20.0,
+                                           10.0,
+                                           10.0,
+                                           10.0,
+                                           10.0,
+                                           10.0,
+                                           10.0000001,
+                                           15.0,
+                                           19.9999999,
+                                           20.0,
+                                           20.0,
+                                           20.0,
+                                           20.0});
+
     test_case.run();
 }
