@@ -413,3 +413,29 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_nd_batch_2d_from_3d)
                                   read_vector<float>(result),
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, gather_no_axis_int32)
+{
+    Shape params_shape{3, 2};
+    Shape indices_shape{2, 2};
+    Shape out_shape{2, 2, 2};
+    auto P = make_shared<op::Parameter>(element::i32, params_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto G = make_shared<op::Gather>(P, I);
+    auto f = make_shared<Function>(make_shared<op::GetOutputElement>(G, 0), ParameterVector{P, I});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto p = backend->create_tensor(element::i32, params_shape);
+    copy_data(p, vector<int32_t>{10, 11, 20, 21, 30, 31});
+    auto i = backend->create_tensor(element::i32, indices_shape);
+    copy_data(i, vector<int32_t>{0, 1, 1, 2});
+    auto result = backend->create_tensor(element::i32, out_shape);
+
+    auto c = backend->compile(f);
+    c->call_with_validate({result}, {p, i});
+    EXPECT_TRUE(test::all_close((vector<int32_t>{10, 11, 20, 21, 20, 21, 30, 31}),
+                                read_vector<int32_t>(result),
+                                MIN_FLOAT_TOLERANCE_BITS));
+}
