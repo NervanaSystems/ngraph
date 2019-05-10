@@ -1083,16 +1083,13 @@ CustomKernels::krnl_info CustomKernels::build_krnl(const shared_ptr<op::Gemm>& o
             writer.block_begin();
             {
                 string input2_coords;
-                if (input2_shape.size() != output_shape.size())
+                if (input2_shape.empty())
                 {
-                    if (input2_shape.at(0) == 1)
-                    {
-                        input2_coords = "[0]";
-                    }
-                    else
-                    {
-                        input2_coords = "[i1]";
-                    }
+                    input2_coords = "[0]";
+                }
+                else if (!input2_shape.empty() && input2_shape.size() == 1)
+                {
+                    input2_coords = "[i1]";
                 }
                 else
                 {
