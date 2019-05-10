@@ -1401,8 +1401,7 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::Squeeze:
             {
-                auto axes = node_js.at("axes").get<vector<size_t>>();
-                node = make_shared<op::Squeeze>(args[0], axes);
+                node = make_shared<op::Squeeze>(args[0], args[1]);
                 break;
             }
             case OP_TYPEID::Subtract:
@@ -2093,10 +2092,7 @@ static json write(const Node& n, bool binary_constant_data)
     }
     case OP_TYPEID::Sqrt: { break;
     }
-    case OP_TYPEID::Squeeze: {
-        auto tmp = dynamic_cast<const op::Squeeze*>(&n);
-        node["axes"] = tmp->get_axes();
-        break;
+    case OP_TYPEID::Squeeze: { break;
     }
     case OP_TYPEID::StopGradient: { break;
     }

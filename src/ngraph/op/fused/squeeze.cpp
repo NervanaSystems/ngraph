@@ -16,14 +16,14 @@
 #include "ngraph/op/fused/squeeze.hpp"
 
 #include "ngraph/builder/make_constant.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/reshape.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::Squeeze::Squeeze(const shared_ptr<Node>& data, const AxisVector& axes)
-    : FusedOp("Squeeze", {data})
-    , m_axes(axes)
+op::Squeeze::Squeeze(const shared_ptr<Node>& data, const shared_ptr<Node>& axes)
+    : FusedOp("Squeeze", {data, axes})
 {
     constructor_validate_and_infer_types();
 }
@@ -31,10 +31,21 @@ op::Squeeze::Squeeze(const shared_ptr<Node>& data, const AxisVector& axes)
 NodeVector op::Squeeze::decompose_op() const
 {
     auto data = get_argument(0);
+    auto axes_node = get_argument(1);
+
+    // Currently only support Constant node for axes.
+    NODE_VALIDATION_CHECK(this,
+                          axes_node->description() == "Constant",
+                          "doesn't support 'axes' input of other type than a Constant.");
+
+    // Get value of axes from Constant
+    auto axes_constant = std::dynamic_pointer_cast<ngraph::op::Constant>(axes_node);
+    auto axes = axes_constant->get_vector<std::size_t>();
+
     auto data_shape = data->get_shape();
 
     // Prepare set of unique axes marked to be removed from input data.
-    if (m_axes.empty())
+    if (axes.empty())
     {
         // Default behaviour is to remove all single dimension axes.
         for (std::size_t idx = 0; idx < data_shape.size(); ++idx)
@@ -48,8 +59,8 @@ NodeVector op::Squeeze::decompose_op() const
     }
     else
     {
-        std::set<std::size_t, std::greater<std::size_t>> unique_axes(std::begin(m_axes),
-                                                                     std::end(m_axes));
+        std::set<std::size_t, std::greater<std::size_t>> unique_axes(std::begin(axes),
+                                                                     std::end(axes));
         for (uint64_t axis : unique_axes)
         {
             NODE_VALIDATION_CHECK(
@@ -77,9 +88,9 @@ NodeVector op::Squeeze::decompose_op() const
 
 shared_ptr<Node> op::Squeeze::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 1)
+    if (new_args.size() != 2)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return make_shared<Squeeze>(new_args.at(0), m_axes);
+    return make_shared<Squeeze>(new_args.at(0), new_args.at(1));
 }

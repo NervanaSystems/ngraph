@@ -14,7 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/axis_vector.hpp"
+#include <vector>
+
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/fused/squeeze.hpp"
 #include "squeeze.hpp"
 
@@ -29,8 +31,10 @@ namespace ngraph
                 NodeVector squeeze(const Node& node)
                 {
                     auto data = node.get_ng_inputs().at(0);
-                    auto axes = AxisVector{node.get_attribute_value<std::vector<std::size_t>>("axes", {})};
-                    return {std::make_shared<ngraph::op::Squeeze>(data, axes)};
+                    auto axes = node.get_attribute_value<std::vector<std::int64_t>>("axes", {});
+                    auto axes_node = std::make_shared<ngraph::op::Constant>(
+                        element::u64, Shape{axes.size()}, axes);
+                    return {std::make_shared<ngraph::op::Squeeze>(data, axes_node)};
                 }
 
             } // namespace set_1

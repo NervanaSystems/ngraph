@@ -13457,12 +13457,15 @@ TEST(type_prop, space_to_depth)
 TEST(type_prop, squeeze)
 {
     auto param = make_shared<op::Parameter>(element::f32, Shape{1, 4, 1, 4, 1, 8});
-    auto squeeze = make_shared<op::Squeeze>(param, AxisVector{0, 2});
+    auto axes_node =
+        make_shared<ngraph::op::Constant>(element::u64, Shape{2}, vector<int64_t>{0, 2});
+    auto squeeze = make_shared<op::Squeeze>(param, axes_node);
 
     ASSERT_EQ(squeeze->get_element_type(), element::f32);
     ASSERT_EQ(squeeze->get_shape(), (Shape{4, 4, 1, 8}));
 
-    auto squeeze_default_axes = make_shared<op::Squeeze>(param);
+    axes_node = make_shared<ngraph::op::Constant>(element::u64, Shape{0}, vector<int64_t>{});
+    auto squeeze_default_axes = make_shared<op::Squeeze>(param, axes_node);
 
     ASSERT_EQ(squeeze_default_axes->get_element_type(), element::f32);
     ASSERT_EQ(squeeze_default_axes->get_shape(), (Shape{4, 4, 8}));
