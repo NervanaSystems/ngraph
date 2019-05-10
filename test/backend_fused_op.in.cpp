@@ -338,6 +338,46 @@ NGRAPH_TEST(${BACKEND_NAME}, depth_to_space)
     test_case.run();
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, gemm)
+{
+    auto A = make_shared<op::Parameter>(element::f64, Shape{3, 6});
+    auto B = make_shared<op::Parameter>(element::f64, Shape{6, 4});
+    auto C = make_shared<op::Parameter>(element::f64, Shape{3, 4});
+
+    auto gemm_func = make_shared<op::Gemm>(A, B, C);
+    auto function = make_shared<Function>(NodeVector{gemm_func}, ParameterVector{A, B, C});
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    // A
+    test_case.add_input<double>(vector<double>(18, 1));
+    // B
+    test_case.add_input<double>(vector<double>(24, 2));
+    // C
+    test_case.add_input<double>(vector<double>(12, 0));
+    //output
+    test_case.add_expected_output<double>(Shape{3, 4}, vector<double>(12, 12));
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, gemm_broadcast_input_C)
+{
+    auto A = make_shared<op::Parameter>(element::f64, Shape{3, 6});
+    auto B = make_shared<op::Parameter>(element::f64, Shape{6, 4});
+    auto C = make_shared<op::Parameter>(element::f64, Shape{});
+
+    auto gemm_func = make_shared<op::Gemm>(A, B, C, 0.5);
+    auto function = make_shared<Function>(NodeVector{gemm_func}, ParameterVector{A, B, C});
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    // A
+    test_case.add_input<double>(vector<double>(18, 1));
+    // B
+    test_case.add_input<double>(vector<double>(24, 2));
+    // C
+    test_case.add_input<double>(vector<double>{1});
+    //output
+    test_case.add_expected_output<double>(Shape{3, 4}, vector<double>(12, 7));
+    test_case.run();
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, grn_4d)
 {
     Shape data_shape{1, 2, 3, 4};
@@ -359,6 +399,5 @@ NGRAPH_TEST(${BACKEND_NAME}, grn_4d)
                      0.34570536f, 0.37139067f, 0.39391932f, 0.41380295f, 0.4314555f,  0.4472136f,
                      0.9970545f,  0.98994946f, 0.9805807f,  0.97014254f, 0.9593655f,  0.9486833f,
                      0.9383431f,  0.9284767f,  0.91914505f, 0.9103665f,  0.9021342f,  0.8944272f});
-
     test_case.run();
 }
