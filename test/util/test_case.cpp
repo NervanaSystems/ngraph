@@ -47,7 +47,7 @@ void ngraph::test::NgraphTestCase::run()
         {
             auto values_match = m_value_comparators.at(element_type.get_type_enum());
 
-            EXPECT_TRUE(values_match(expected_result_constant, result_tensor, m_dump_results));
+            EXPECT_TRUE(values_match(expected_result_constant, result_tensor));
         }
     }
 }
