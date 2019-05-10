@@ -30,12 +30,18 @@ static std::shared_ptr<ngraph::runtime::Executable> compile(ngraph::runtime::Bac
     return self->compile(func, enable_performance_data);
 }
 
+static std::shared_ptr<ngraph::runtime::Backend> create(const std::string& type)
+{
+    bool must_support_dynamic = false;
+    return ngraph::runtime::Backend::create(type, must_support_dynamic);
+}
+
 void regclass_pyngraph_runtime_Backend(py::module m)
 {
     py::class_<ngraph::runtime::Backend, std::shared_ptr<ngraph::runtime::Backend>> backend(
         m, "Backend");
     backend.doc() = "ngraph.impl.runtime.Backend wraps ngraph::runtime::Backend";
-    backend.def_static("create", &ngraph::runtime::Backend::create);
+    backend.def_static("create", &create);
     backend.def_static("get_registered_devices", &ngraph::runtime::Backend::get_registered_devices);
     backend.def("create_tensor",
                 (std::shared_ptr<ngraph::runtime::Tensor>(ngraph::runtime::Backend::*)(
