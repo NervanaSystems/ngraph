@@ -445,6 +445,11 @@ set(SRC ${SRC}
     runtime/hybrid/pass/memory_layout.hpp
     )
 
+set(SRC ${SRC}
+    runtime/dynamic/dynamic_backend.cpp
+    runtime/dynamic/dynamic_backend.hpp
+    )
+
 if(NGRAPH_JSON_ENABLE)
     list(APPEND SRC serializer.cpp serializer.hpp event_tracing.cpp event_tracing.hpp)
 endif()
