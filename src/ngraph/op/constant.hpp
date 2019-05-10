@@ -152,6 +152,15 @@ namespace ngraph
                 set_output_type(0, m_element_type, m_shape);
             }
 
+            /// \brief Returns the value of the constant node as a Shape object
+            ///        Can only be used on element::i64 nodes and interprets
+            ///        negative values as zeros.
+            Shape get_shape_val() const;
+            /// \brief Returns the value of the constant node as a Strides object
+            ///        Can only be used on element::i64 nodes and interprets
+            ///        negative values as zeros.
+            Strides get_strides_val() const;
+
             /// \brief Wrapper around constructing a shared_ptr of a Constant
             ///
             /// \param type The element type of the tensor constant.

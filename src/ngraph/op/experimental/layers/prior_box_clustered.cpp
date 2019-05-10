@@ -91,7 +91,7 @@ void op::PriorBoxClustered::validate_and_infer_types()
                               "Layer shape must have rank 2",
                               const_shape->get_shape());
 
-        auto layer_shape = static_cast<const int64_t*>(const_shape->get_data_ptr());
+        auto layer_shape = const_shape->get_shape_val();
         // {Prior boxes, variances-adjusted prior boxes}
         set_output_type(
             0, element::f32, Shape{2, 4 * layer_shape[0] * layer_shape[1] * m_num_priors});
