@@ -817,39 +817,15 @@ shared_ptr<runtime::Executable>
                 op->get_input_element_type(2) == element::f32 &&
                 op->get_output_element_type(0) == element::f32)
             {
-                if (alpha == 1.0 && beta == 0.0)
-                {
-                    const cldnn::gemm gemm_op(op->get_output_tensor_name(0),
-                                              op->get_input_tensor_name(0),
-                                              op->get_input_tensor_name(1),
-                                              transA,
-                                              transB);
-                    topology.add(gemm_op);
-                }
-                else if (alpha == 1.0 && beta == 1.0)
-                {
-                    const cldnn::gemm gemm_op(op->get_output_tensor_name(0),
-                                              op->get_input_tensor_name(0),
-                                              op->get_input_tensor_name(1),
-                                              op->get_input_tensor_name(2),
-                                              transA,
-                                              transB,
-                                              1.0f,
-                                              1.0f);
-                    topology.add(gemm_op);
-                }
-                else
-                {
-                    const cldnn::gemm gemm_op(op->get_output_tensor_name(0),
-                                              op->get_input_tensor_name(0),
-                                              op->get_input_tensor_name(1),
-                                              op->get_input_tensor_name(2),
-                                              transA,
-                                              transB,
-                                              (float)alpha,
-                                              (float)beta);
-                    topology.add(gemm_op);
-                }
+                const cldnn::gemm gemm_op(op->get_output_tensor_name(0),
+                                          op->get_input_tensor_name(0),
+                                          op->get_input_tensor_name(1),
+                                          op->get_input_tensor_name(2),
+                                          transA,
+                                          transB,
+                                          (float)alpha,
+                                          (float)beta);
+                topology.add(gemm_op);
             }
             else
             {
