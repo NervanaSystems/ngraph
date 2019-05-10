@@ -37,20 +37,21 @@ namespace ngraph
             {
                 int flag = 0;
                 MPI_Initialized(&flag);
-                if (!flag)
+                if (!flag && !m_initialized_mpi)
                 {
                     MPI_Init(NULL, NULL);
+                    m_initialized_mpi = true;
                 }
             }
 
             ~OpenMPIDistributedInterface() override
             {
-                int flag = 0;
-                MPI_Initialized(&flag);
-
-                if (flag)
+                int is_mpi_finalized = 0;
+                MPI_Finalized(&is_mpi_finalized);
+                if (!is_mpi_finalized && m_initialized_mpi)
                 {
                     MPI_Finalize();
+                    m_initialized_mpi = false;
                 }
             }
 
@@ -108,6 +109,7 @@ namespace ngraph
 
         protected:
             std::string m_name;
+            bool m_initialized_mpi = false;
         };
     }
 }
