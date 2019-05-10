@@ -266,11 +266,11 @@ namespace ngraph
         /// type to use unsigned underlying type.
         static_assert(std::is_unsigned<value_type>::value, "EnumMask enum must use unsigned type.");
 
-        EnumMask()
+        constexpr EnumMask()
             : m_value{0}
         {
         }
-        EnumMask(const T& enum_value)
+        constexpr EnumMask(const T& enum_value)
             : m_value{static_cast<value_type>(enum_value)}
         {
         }

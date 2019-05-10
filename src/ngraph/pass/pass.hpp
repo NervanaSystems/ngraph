@@ -53,6 +53,7 @@ namespace ngraph
             CHANGE_FUNCTION_STATE = 1 << 3
         };
         typedef EnumMask<PassProperty> PassPropertyMask;
+        constexpr PassPropertyMask pass_property_all_off;
     }
 }
 
