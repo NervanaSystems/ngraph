@@ -82,6 +82,7 @@
 #include "ngraph/op/fused/elu.hpp"
 #include "ngraph/op/fused/gemm.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
@@ -1976,6 +1977,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::BatchMatMul:
         case OP_TYPEID::BroadcastDistributed:
         case OP_TYPEID::BroadcastLike:
+        case OP_TYPEID::Clamp:
         case OP_TYPEID::DepthToSpace:
         case OP_TYPEID::DynBroadcast:
         case OP_TYPEID::DynPad:
@@ -1988,6 +1990,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::GatherND:
         case OP_TYPEID::Gemm:
         case OP_TYPEID::GenerateMask:
+        case OP_TYPEID::HardSigmoid:
         case OP_TYPEID::PRelu:
         case OP_TYPEID::Passthrough:
         case OP_TYPEID::QuantizedAvgPool:

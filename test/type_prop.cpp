@@ -13751,6 +13751,17 @@ TEST(type_prop, conv_bias_bprop_2d_deduce)
     EXPECT_EQ(conv->get_output_shape(1), bias->get_shape());
 }
 
+TEST(type_prop, hardsigmoid)
+{
+    Shape data_shape{3, 5};
+    float alpha = 0.1;
+    float beta = 1.2;
+    auto P = make_shared<op::Parameter>(element::f32, data_shape);
+    auto H = make_shared<op::HardSigmoid>(P, alpha, beta);
+    ASSERT_EQ(H->get_element_type(), element::f32);
+    ASSERT_EQ(H->get_shape(), data_shape);
+}
+
 TEST(type_prop, group_conv)
 {
     // Deduce type
@@ -13897,4 +13908,25 @@ TEST(type_prop, gemm_broadcast_input_C)
     auto gemm_func = make_shared<op::Gemm>(A, B, C);
     EXPECT_EQ(gemm_func->get_element_type(), element::f32);
     EXPECT_EQ(gemm_func->get_shape(), (Shape{3, 4}));
+}
+
+TEST(type_prop, fused_clamp)
+{
+    const auto data = make_shared<op::Parameter>(element::f64, Shape{2, 2});
+
+    try
+    {
+        const auto clamp = make_shared<op::Clamp>(data, 2.0, 1.0);
+        EXPECT_FALSE(clamp.get())
+            << "Clamp validation did not work. Op node was created with incorrect params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(), std::string("The 'min' parameter needs to be less than 'max' for Clamp"));
+    }
+
+    const auto clamp = make_shared<op::Clamp>(data, 1.0, 2.0);
+    EXPECT_EQ(clamp->get_element_type(), element::f64);
+    EXPECT_EQ(clamp->get_shape(), (Shape{2, 2}));
 }

@@ -220,7 +220,7 @@ To perform unit tests on the install:
       $ make check
 
 
-.. _doxygen: https://www.stack.nl/~dimitri/doxygen/
+.. _doxygen: http://www.doxygen.nl/index.html
 .. _Sphinx:  http://www.sphinx-doc.org/en/stable/
 .. _breathe: https://breathe.readthedocs.io/en/latest/
 .. _llvm.org: https://www.llvm.org 
