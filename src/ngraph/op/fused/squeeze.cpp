@@ -13,7 +13,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-#include "ngraph/op/fused/squeeze.hpp"
+#include <cstddef>
+#include <functional>
+#include <iterator>
+#include <set>
 
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/op/constant.hpp"
