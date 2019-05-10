@@ -14,11 +14,13 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <cmath>
 #include <functional>
 #include <iterator>
 #include <unordered_map>
 
 #include "activation_functions.hpp"
+#include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/tanh.hpp"
@@ -31,30 +33,67 @@ namespace ngraph
         {
             namespace detail
             {
-                std::shared_ptr<ngraph::Node> sigmoid(const std::shared_ptr<ngraph::Node>& arg)
+                std::shared_ptr<ngraph::Node>
+                    sigmoid(const std::shared_ptr<ngraph::Node>& arg, float alpha, float beta)
                 {
                     return std::make_shared<ngraph::op::Sigmoid>(arg);
                 }
 
-                std::shared_ptr<ngraph::Node> tanh(const std::shared_ptr<ngraph::Node>& arg)
+                std::shared_ptr<ngraph::Node>
+                    tanh(const std::shared_ptr<ngraph::Node>& arg, float alpha, float beta)
                 {
                     return std::make_shared<ngraph::op::Tanh>(arg);
                 }
 
-                std::shared_ptr<ngraph::Node> relu(const std::shared_ptr<ngraph::Node>& arg)
+                std::shared_ptr<ngraph::Node>
+                    relu(const std::shared_ptr<ngraph::Node>& arg, float alpha, float beta)
                 {
                     return std::make_shared<ngraph::op::Relu>(arg);
                 }
+
+                std::shared_ptr<ngraph::Node>
+                    hardsigmoid(const std::shared_ptr<ngraph::Node>& arg, float alpha, float beta)
+                {
+                    return std::make_shared<ngraph::op::HardSigmoid>(arg, alpha, beta);
+                }
             } // namespace detail
+
+            ActivationFunction::ActivationFunction(ActivationFunctionType f,
+                                                   float alpha,
+                                                   float beta)
+                : m_function{f}
+                , m_alpha{alpha}
+                , m_beta{beta}
+            {
+            }
+
+            ActivationFunction::ActivationFunction(ActivationFunctionType f, float alpha)
+                : ActivationFunction(f, alpha, std::nanf(""))
+            {
+            }
+
+            ActivationFunction::ActivationFunction(ActivationFunctionType f)
+                : ActivationFunction(f, std::nanf(""), std::nanf(""))
+            {
+            }
+
+            std::shared_ptr<ngraph::Node> ActivationFunction::
+                operator()(const std::shared_ptr<ngraph::Node>& arg) const
+            {
+                return m_function(arg, m_alpha, m_beta);
+            }
 
             ActivationFunction get_activation_func_by_name(const std::string& func_name)
             {
                 using ActivationFunctionMap = std::unordered_map<std::string, ActivationFunction>;
+                using namespace std::placeholders;
 
                 static ActivationFunctionMap func_map{
-                    {"sigmoid", std::bind(detail::sigmoid, std::placeholders::_1)},
-                    {"tanh", std::bind(detail::tanh, std::placeholders::_1)},
-                    {"relu", std::bind(detail::relu, std::placeholders::_1)}};
+                    {"sigmoid", ActivationFunction{detail::sigmoid}},
+                    {"tanh", ActivationFunction{detail::tanh}},
+                    {"relu", ActivationFunction{detail::relu}},
+                    {"hardsigmoid", ActivationFunction{detail::hardsigmoid, 0.2f, 0.5f}},
+                };
 
                 auto func_it = func_map.find(func_name);
                 if (func_it == std::end(func_map))

@@ -66,6 +66,7 @@
 #include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/floor.hpp"
+#include "ngraph/op/fused/clamp.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/depth_to_space.hpp"
 #include "ngraph/op/fused/elu.hpp"
@@ -648,6 +649,13 @@ static shared_ptr<ngraph::Function>
             case OP_TYPEID::Ceiling:
             {
                 node = make_shared<op::Ceiling>(args[0]);
+                break;
+            }
+            case OP_TYPEID::Clamp:
+            {
+                const auto clamp_min = node_js.at("min").get<float>();
+                const auto clamp_max = node_js.at("max").get<float>();
+                node = make_shared<op::Clamp>(args[0], clamp_min, clamp_max);
                 break;
             }
             case OP_TYPEID::Concat:
@@ -1671,6 +1679,13 @@ static json write(const Node& n, bool binary_constant_data)
         break;
     }
     case OP_TYPEID::Ceiling: { break;
+    }
+    case OP_TYPEID::Clamp:
+    {
+        auto tmp = dynamic_cast<const op::Clamp*>(&n);
+        node["min"] = tmp->get_min();
+        node["max"] = tmp->get_max();
+        break;
     }
     case OP_TYPEID::Concat:
     {

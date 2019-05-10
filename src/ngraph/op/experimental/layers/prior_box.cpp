@@ -79,7 +79,7 @@ void op::PriorBox::validate_and_infer_types()
                               "Layer shape must have rank 2",
                               const_shape->get_shape());
 
-        auto layer_shape = static_cast<const int64_t*>(const_shape->get_data_ptr());
+        auto layer_shape = const_shape->get_shape_val();
         size_t num_priors = 0;
         // {Prior boxes, Variance-adjusted prior boxes}
         if (m_scale_all)
