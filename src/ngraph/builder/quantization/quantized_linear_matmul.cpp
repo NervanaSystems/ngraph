@@ -37,7 +37,8 @@ namespace ngraph
     {
         namespace quantization
         {
-            bool check_zero_point(shared_ptr<op::Constant> input)
+            // Check if zero point is zero
+            bool check_zero_point(const shared_ptr<op::Constant>& input)
             {
                 bool is_zero = false;
                 if (input->get_element_type() == element::i8)
