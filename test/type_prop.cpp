@@ -13723,8 +13723,8 @@ TEST(type_prop, conv_bias_bprop_2d_deduce)
 TEST(type_prop, hardsigmoid)
 {
     Shape data_shape{3, 5};
-    double alpha = 0.1;
-    double beta = 1.2;
+    float alpha = 0.1;
+    float beta = 1.2;
     auto P = make_shared<op::Parameter>(element::f32, data_shape);
     auto H = make_shared<op::HardSigmoid>(P, alpha, beta);
     ASSERT_EQ(H->get_element_type(), element::f32);

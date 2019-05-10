@@ -969,8 +969,8 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::HardSigmoid:
             {
-                auto alpha = node_js.at("alpha").get<double>();
-                auto beta = node_js.at("beta").get<double>();
+                auto alpha = node_js.at("alpha").get<float>();
+                auto beta = node_js.at("beta").get<float>();
                 node = make_shared<op::HardSigmoid>(args[0], alpha, beta);
                 break;
             }

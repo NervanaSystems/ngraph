@@ -91,7 +91,7 @@ NGRAPH_TEST(${BACKEND_NAME}, prelu)
     EXPECT_EQ(expected, read_vector<float>(result0));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, hardsigmoid_float)
+NGRAPH_TEST(${BACKEND_NAME}, hardsigmoid)
 {
     Shape shape{2, 7};
     float alpha = 0.125f;
@@ -130,48 +130,6 @@ NGRAPH_TEST(${BACKEND_NAME}, hardsigmoid_float)
     handle->call_with_validate({result0}, {a});
 
     EXPECT_TRUE(test::all_close_f(expected_output, read_vector<float>(result0)));
-}
-
-NGRAPH_TEST(${BACKEND_NAME}, hardsigmoid_double)
-{
-    Shape shape{3, 5};
-    double alpha = 0.125;
-    double beta = 0.642;
-
-    auto A = make_shared<op::Parameter>(element::f64, shape);
-    auto hardsigmoid = make_shared<op::HardSigmoid>(A, alpha, beta);
-    auto f0 = make_shared<Function>(NodeVector{hardsigmoid}, ParameterVector{A});
-
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
-    // Prepare input and expected output data
-    vector<double> input_data{-1.,
-                              0.,
-                              1.,
-                              -100.,
-                              100.,
-                              -3.1234567,
-                              5.876543,
-                              7.13245364,
-                              numeric_limits<double>::max(),
-                              numeric_limits<double>::lowest(),
-                              numeric_limits<double>::min(),
-                              -numeric_limits<double>::infinity(),
-                              numeric_limits<double>::infinity(),
-                              numeric_limits<double>::min() / 16.,
-                              -numeric_limits<double>::min() / 16.};
-
-    auto impl = [alpha, beta](double val) { return min(max(alpha * val + beta, 0.), 1.); };
-    vector<double> expected_output;
-    transform(begin(input_data), end(input_data), back_inserter(expected_output), impl);
-
-    auto a = backend->create_tensor(element::f64, shape);
-    copy_data(a, input_data);
-    auto result0 = backend->create_tensor(element::f64, shape);
-    auto handle = backend->compile(f0);
-    handle->call_with_validate({result0}, {a});
-
-    EXPECT_TRUE(test::all_close_f(expected_output, read_vector<double>(result0)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, prelu_shared_slope)

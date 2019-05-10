@@ -36,17 +36,17 @@ namespace ngraph
             /// \param[in]  alpha  The alpha parameter.
             /// \param[in]  beta   The beta parameter.
             ///
-            HardSigmoid(const std::shared_ptr<ngraph::Node>& data, double alpha, double beta);
+            HardSigmoid(const std::shared_ptr<ngraph::Node>& data, float alpha, float beta);
 
             virtual NodeVector decompose_op() const override;
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            double get_alpha() const { return m_alpha; }
-            double get_beta() const { return m_beta; }
+            float get_alpha() const { return m_alpha; }
+            float get_beta() const { return m_beta; }
         private:
-            double m_alpha;
-            double m_beta;
+            float m_alpha;
+            float m_beta;
         };
     }
 }
