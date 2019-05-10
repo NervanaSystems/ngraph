@@ -20,6 +20,7 @@
 
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/fused/squeeze.hpp"
 #include "ngraph/op/reshape.hpp"
 
 using namespace std;
@@ -42,8 +43,8 @@ NodeVector op::Squeeze::decompose_op() const
                           "doesn't support 'axes' input of other type than a Constant.");
 
     // Get value of axes from Constant
-    auto axes_constant = std::dynamic_pointer_cast<ngraph::op::Constant>(axes_node);
-    auto axes = axes_constant->get_vector<std::size_t>();
+    auto axes_constant = dynamic_pointer_cast<op::Constant>(axes_node);
+    auto axes = axes_constant->get_vector<size_t>();
 
     auto data_shape = data->get_shape();
 
@@ -51,7 +52,7 @@ NodeVector op::Squeeze::decompose_op() const
     if (axes.empty())
     {
         // Default behaviour is to remove all single dimension axes.
-        for (std::size_t idx = 0; idx < data_shape.size(); ++idx)
+        for (size_t idx = 0; idx < data_shape.size(); ++idx)
         {
             if (data_shape.at(idx) == 1)
             {
@@ -62,8 +63,7 @@ NodeVector op::Squeeze::decompose_op() const
     }
     else
     {
-        std::set<std::size_t, std::greater<std::size_t>> unique_axes(std::begin(axes),
-                                                                     std::end(axes));
+        set<size_t, greater<size_t>> unique_axes(begin(axes), end(axes));
         for (uint64_t axis : unique_axes)
         {
             NODE_VALIDATION_CHECK(
@@ -77,7 +77,7 @@ NodeVector op::Squeeze::decompose_op() const
     }
 
     Shape output_data_shape;
-    for (std::size_t idx = 0; idx < data_shape.size(); ++idx)
+    for (size_t idx = 0; idx < data_shape.size(); ++idx)
     {
         if (data_shape.at(idx) != 0)
         {
@@ -85,8 +85,8 @@ NodeVector op::Squeeze::decompose_op() const
         }
     }
 
-    AxisVector input_order{ngraph::get_default_order(data_shape.size())};
-    return {std::make_shared<ngraph::op::Reshape>(data, input_order, output_data_shape)};
+    AxisVector input_order{get_default_order(data_shape.size())};
+    return {make_shared<op::Reshape>(data, input_order, output_data_shape)};
 }
 
 shared_ptr<Node> op::Squeeze::copy_with_new_args(const NodeVector& new_args) const
