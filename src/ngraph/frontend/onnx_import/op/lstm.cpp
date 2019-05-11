@@ -258,6 +258,12 @@ namespace ngraph
                         , m_activations{to_lower_case(
                               node.get_attribute_value<std::vector<std::string>>(
                                   "activations", {"sigmoid", "tanh", "tanh"}))}
+                        // Default values for activation functions are same as for corresponding
+                        // ONNX operator.
+                        , m_activation_alpha{node.get_attribute_value<std::vector<float>>(
+                              "activation_alpha", std::vector<float>{})}
+                        , m_activation_beta{node.get_attribute_value<std::vector<float>>(
+                              "activation_beta", std::vector<float>{})}
                         , m_input_forget{static_cast<bool>(
                               node.get_attribute_value<std::int64_t>("input_forget", 0))}
                     {
@@ -276,6 +282,8 @@ namespace ngraph
                     std::int64_t m_hidden_size;
                     float m_clip_threshold;
                     std::vector<std::string> m_activations;
+                    std::vector<float> m_activation_alpha;
+                    std::vector<float> m_activation_beta;
                     bool m_input_forget;
                 };
 
@@ -534,6 +542,25 @@ namespace ngraph
                     float m_clip_threshold;
                 };
 
+                rnn::ActivationFunction get_activation_function(const LSTMAttributes& attributes,
+                                                                std::size_t idx)
+                {
+                    rnn::ActivationFunction afunc =
+                        rnn::get_activation_func_by_name(attributes.m_activations.at(idx));
+
+                    // Set activation functions parameters (if any)
+                    if (attributes.m_activation_alpha.size() > idx)
+                    {
+                        afunc.set_alpha(attributes.m_activation_alpha.at(idx));
+                    }
+                    if (attributes.m_activation_beta.size() > idx)
+                    {
+                        afunc.set_beta(attributes.m_activation_beta.at(idx));
+                    }
+
+                    return afunc;
+                }
+
             } // anonymous namespace
 
             namespace set_1
@@ -543,12 +570,13 @@ namespace ngraph
                     LSTMNgInputMap input_map{node};
                     LSTMAttributes attributes{node};
 
-                    rnn::ActivationFunction activation_f =
-                        rnn::get_activation_func_by_name(attributes.m_activations.at(0));
-                    rnn::ActivationFunction activation_g =
-                        rnn::get_activation_func_by_name(attributes.m_activations.at(1));
-                    rnn::ActivationFunction activation_h =
-                        rnn::get_activation_func_by_name(attributes.m_activations.at(2));
+                    // Get activation functions.
+                    const rnn::ActivationFunction& activation_f =
+                        get_activation_function(attributes, 0);
+                    const rnn::ActivationFunction& activation_g =
+                        get_activation_function(attributes, 1);
+                    const rnn::ActivationFunction& activation_h =
+                        get_activation_function(attributes, 2);
 
                     NodeVector results;
 

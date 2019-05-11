@@ -25,6 +25,8 @@ set (SRC
     builder/autobroadcast.cpp
     builder/autobroadcast.hpp
     builder/make_constant.hpp
+    builder/norm.cpp
+    builder/norm.hpp
     builder/numpy_transpose.cpp
     builder/numpy_transpose.hpp
     builder/quantization.cpp
@@ -274,6 +276,8 @@ set (SRC
     op/tanh.hpp
     op/topk.cpp
     op/topk.hpp
+    op/fused/clamp.cpp
+    op/fused/clamp.hpp
     op/fused/conv_fused.cpp
     op/fused/conv_fused.hpp
     op/fused/hard_sigmoid.cpp
@@ -286,6 +290,10 @@ set (SRC
     op/fused/gemm.hpp
     op/fused/group_conv.hpp
     op/fused/group_conv.cpp
+    op/fused/mvn.cpp
+    op/fused/mvn.hpp
+    op/fused/normalize.cpp
+    op/fused/normalize.hpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
     op/fused/space_to_depth.cpp
