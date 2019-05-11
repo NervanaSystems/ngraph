@@ -73,6 +73,7 @@
 #include "ngraph/op/fused/gemm.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
+#include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/prelu.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
 #include "ngraph/op/gather.hpp"
@@ -1131,6 +1132,14 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Multiply>(args[0], args[1]);
                 break;
             }
+            case OP_TYPEID::MVN:
+            {
+                auto normalize_variance = node_js.at("normalize_variance").get<bool>();
+                auto across_channels = node_js.at("across_channels").get<bool>();
+                auto eps = node_js.at("eps").get<double>();
+                node = make_shared<op::MVN>(args[0], normalize_variance, across_channels, eps);
+                break;
+            }
             case OP_TYPEID::Negative:
             {
                 node = make_shared<op::Negative>(args[0]);
@@ -1933,6 +1942,14 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Minimum: { break;
     }
     case OP_TYPEID::Multiply: { break;
+    }
+    case OP_TYPEID::MVN:
+    {
+        auto tmp = dynamic_cast<const op::MVN*>(&n);
+        node["normalize_variance"] = tmp->get_normalize_variance();
+        node["across_channels"] = tmp->get_across_channels();
+        node["eps"] = tmp->get_eps();
+        break;
     }
     case OP_TYPEID::Negative: { break;
     }
