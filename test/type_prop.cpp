@@ -13969,6 +13969,131 @@ TEST(type_prop, group_conv_invalid_groups)
     }
 }
 
+TEST(type_prop, normalize_invalid_input_tensor_rank)
+{
+    Shape data_shape{1, 2, 3, 4, 5};
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    auto scale = make_shared<op::Parameter>(element::f32, Shape{});
+    bool across_spatial{false};
+    bool channel_shared{true};
+    float eps{1e-6f};
+
+    try
+    {
+        auto normalize =
+            make_shared<op::Normalize>(data, scale, across_spatial, channel_shared, eps);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input tensor rank.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Input tensor rank must be 2, 3 or 4 dimensional"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+
+    data = make_shared<op::Parameter>(element::f32, Shape{2});
+
+    try
+    {
+        auto normalize =
+            make_shared<op::Normalize>(data, scale, across_spatial, channel_shared, eps);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input tensor rank.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Input tensor rank must be 2, 3 or 4 dimensional"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, normalize_invalid_scale_rank)
+{
+    Shape data_shape{1, 2, 3, 4};
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    auto scale = make_shared<op::Parameter>(element::f32, Shape{3});
+    bool across_spatial{false};
+    bool channel_shared{true};
+    float eps{1e-6f};
+
+    try
+    {
+        auto normalize =
+            make_shared<op::Normalize>(data, scale, across_spatial, channel_shared, eps);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input tensor rank.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Scale must be a scalar if 'channels_shared' "
+                                         "parameter is true"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+
+    channel_shared = false;
+    try
+    {
+        auto normalize =
+            make_shared<op::Normalize>(data, scale, across_spatial, channel_shared, eps);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input tensor rank.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Scale must be a vector of size of input tensor "
+                                         "channels"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+
+    data = make_shared<op::Parameter>(element::f32, Shape{4, 3});
+    try
+    {
+        auto normalize =
+            make_shared<op::Normalize>(data, scale, across_spatial, channel_shared, eps);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input tensor rank.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Scale must be a scalar if input tensor is of rank 2"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, normalize)
+{
+    Shape data_shape{2, 3, 4};
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    auto scale = make_shared<op::Parameter>(element::f32, Shape{2});
+    bool across_spatial{false};
+    bool channel_shared{false};
+    float eps{1e-6f};
+
+    auto normalize = make_shared<op::Normalize>(data, scale, across_spatial, channel_shared, eps);
+    EXPECT_EQ(normalize->get_element_type(), element::f32);
+    EXPECT_EQ(normalize->get_shape(), (Shape{2, 3, 4}));
+}
+
 TEST(type_prop, function_revalidate_and_infer)
 {
     auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
@@ -14008,6 +14133,14 @@ TEST(type_prop, gemm_broadcast_input_C)
     auto gemm_func = make_shared<op::Gemm>(A, B, C);
     EXPECT_EQ(gemm_func->get_element_type(), element::f32);
     EXPECT_EQ(gemm_func->get_shape(), (Shape{3, 4}));
+}
+
+TEST(type_prop, mvn)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 3, 6});
+    auto mvn_func = make_shared<op::MVN>(data);
+    EXPECT_EQ(mvn_func->get_element_type(), element::f32);
+    EXPECT_EQ(mvn_func->get_shape(), (Shape{1, 3, 6}));
 }
 
 TEST(type_prop, fused_clamp)

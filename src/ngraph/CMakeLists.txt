@@ -176,10 +176,14 @@ set (SRC
     op/experimental/layers/prior_box_clustered.hpp
     op/experimental/layers/proposal.hpp
     op/experimental/layers/proposal.cpp
+    op/experimental/layers/psroi_pooling.hpp
+    op/experimental/layers/psroi_pooling.cpp
     op/experimental/layers/region_yolo.hpp
     op/experimental/layers/region_yolo.cpp
     op/experimental/layers/reorg_yolo.hpp
     op/experimental/layers/reorg_yolo.cpp
+    op/experimental/layers/roi_pooling.hpp
+    op/experimental/layers/roi_pooling.cpp
     op/floor.cpp
     op/floor.hpp
     op/gather.cpp
@@ -290,6 +294,10 @@ set (SRC
     op/fused/gemm.hpp
     op/fused/group_conv.hpp
     op/fused/group_conv.cpp
+    op/fused/mvn.cpp
+    op/fused/mvn.hpp
+    op/fused/normalize.cpp
+    op/fused/normalize.hpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
     op/fused/space_to_depth.cpp

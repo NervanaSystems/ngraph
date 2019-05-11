@@ -653,7 +653,7 @@ using namespace ngraph::runtime;
                 for (auto& ele_t : tensor_set)
                 {
                     NGRAPH_CHECK(ele_t->get_pool_offset() == 0, "no offset set for constants");
-                    m_tensor_roles[ele_t->get_name()] = CPUTensorRole::CONSTANT;
+                    m_tensor_roles[ele_t->get_name()] = TensorRole::CONSTANT;
                     m_variable_name_map[ele_t->get_name()] = output_tensor->get_name();
                 }
             }
@@ -795,7 +795,7 @@ using namespace ngraph::runtime;
                     ss << "(((" << type << "*)(inputs[" << arg_index << "])) + "
                        << ele_t->get_pool_offset() / et.size() << ")";
                     m_variable_name_map[ele_t->get_name()] = ss.str();
-                    m_tensor_roles[ele_t->get_name()] = CPUTensorRole::INPUT;
+                    m_tensor_roles[ele_t->get_name()] = TensorRole::INPUT;
                 }
                 arg_index++;
             }
@@ -806,7 +806,7 @@ using namespace ngraph::runtime;
         {
             for (auto& ele : bufferID_to_tensorSets)
             {
-                if (ele.second.first == CPUTensorRole::INTERMEDIATE)
+                if (ele.second.first == TensorRole::INTERMEDIATE)
                 {
                     for (auto& ele_t : ele.second.second)
                     {
@@ -814,7 +814,7 @@ using namespace ngraph::runtime;
                         ss << "((" << ele_t->get_element_type().c_type_string()
                            << "*)(pool_base_ptr + " << ele_t->get_pool_offset() << "))";
                         m_variable_name_map[ele_t->get_name()] = ss.str();
-                        m_tensor_roles[ele_t->get_name()] = CPUTensorRole::INTERMEDIATE;
+                        m_tensor_roles[ele_t->get_name()] = TensorRole::INTERMEDIATE;
                     }
                 }
             }
@@ -835,7 +835,7 @@ using namespace ngraph::runtime;
                 ss << "(((" << type << "*)(outputs[" << i << "])) + "
                    << ele_t->get_pool_offset() / et.size() << ")";
                 m_variable_name_map[ele_t->get_name()] = ss.str();
-                m_tensor_roles[ele_t->get_name()] = CPUTensorRole::OUTPUT;
+                m_tensor_roles[ele_t->get_name()] = TensorRole::OUTPUT;
             }
         }
 
@@ -1220,7 +1220,7 @@ bool runtime::cpu::CPU_ExternalFunction::computes_result(Node* node)
     {
         auto& output_tensor = node->get_output_tensor(i);
         if (m_tensor_roles.find(output_tensor.get_name()) != m_tensor_roles.end() &&
-            m_tensor_roles[output_tensor.get_name()] == CPUTensorRole::OUTPUT)
+            m_tensor_roles[output_tensor.get_name()] == TensorRole::OUTPUT)
         {
             return true;
         }
@@ -1294,14 +1294,14 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         m_memory_buffer_sizes.push_back(m_function->get_temporary_pool_size());
         for (auto& ele : bufferID_to_tensorSets)
         {
-            if (ele.second.first == CPUTensorRole::INTERMEDIATE)
+            if (ele.second.first == TensorRole::INTERMEDIATE)
             {
                 for (auto& ele_t : ele.second.second)
                 {
                     m_buffer_indices[ele_t->get_name()] = buffer_index;
                     intermediates_offsets.emplace_back(m_buffer_indices[ele_t->get_name()],
                                                        ele_t->get_pool_offset());
-                    m_tensor_roles[ele_t->get_name()] = CPUTensorRole::INTERMEDIATE;
+                    m_tensor_roles[ele_t->get_name()] = TensorRole::INTERMEDIATE;
                     buffer_index++;
                 }
             }
@@ -1323,7 +1323,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             for (auto& ele_t : tensor_set)
             {
                 NGRAPH_CHECK(ele_t->get_pool_offset() == 0, "no offset set for constants");
-                m_tensor_roles[ele_t->get_name()] = CPUTensorRole::CONSTANT;
+                m_tensor_roles[ele_t->get_name()] = TensorRole::CONSTANT;
                 if (ele_t->get_name() != output_tensor->get_name())
                 {
                     tensor_alias[ele_t->get_name()] = output_tensor->get_name();
@@ -1346,7 +1346,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             // process all tensors in the set containing the output tensor of the parameter
             for (auto& ele_t : tensor_set)
             {
-                m_tensor_roles[ele_t->get_name()] = CPUTensorRole::INPUT;
+                m_tensor_roles[ele_t->get_name()] = TensorRole::INPUT;
                 m_buffer_indices[ele_t->get_name()] = buffer_index;
                 function_input_index_offset.emplace_back(m_buffer_indices[ele_t->get_name()],
                                                          arg_index,
@@ -1368,7 +1368,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         // process all tensors in the set containing the output tensor of the result
         for (auto& ele_t : tensor_set)
         {
-            m_tensor_roles[ele_t->get_name()] = CPUTensorRole::OUTPUT;
+            m_tensor_roles[ele_t->get_name()] = TensorRole::OUTPUT;
             m_buffer_indices[ele_t->get_name()] = buffer_index;
             function_output_index_offset.emplace_back(
                 m_buffer_indices[ele_t->get_name()], i, ele_t->get_pool_offset());
@@ -1495,13 +1495,13 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
     {
         string filename = file_util::path_join(s_debug_dir, m_function_name + "_debug.txt");
         std::stringstream strm;
-        auto find_role = [](CPUTensorRole tensor_role) -> string {
+        auto find_role = [](TensorRole tensor_role) -> string {
             switch (tensor_role)
             {
-            case CPUTensorRole::INPUT: return string("CPUTensorRole::INPUT");
-            case CPUTensorRole::INTERMEDIATE: return string("CPUTensorRole::INTERMEDIATE");
-            case CPUTensorRole::CONSTANT: return string("CPUTensorRole::CONSTANT");
-            case CPUTensorRole::OUTPUT: return string("CPUTensorRole::OUTPUT");
+            case TensorRole::INPUT: return string("TensorRole::INPUT");
+            case TensorRole::INTERMEDIATE: return string("TensorRole::INTERMEDIATE");
+            case TensorRole::CONSTANT: return string("TensorRole::CONSTANT");
+            case TensorRole::OUTPUT: return string("TensorRole::OUTPUT");
             }
             throw runtime_error("unhandled CPU tensor role");
         };
