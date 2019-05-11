@@ -144,6 +144,29 @@ vector<string> op::Constant::get_value_strings() const
     return rc;
 }
 
+Shape op::Constant::get_shape_val() const
+{
+    NGRAPH_CHECK(m_element_type == element::i64);
+    std::vector<int64_t> out_shape = get_vector<int64_t>();
+    Shape output_shape(shape_size(m_shape));
+    std::transform(out_shape.begin(), out_shape.end(), output_shape.begin(), [&](const int64_t& v) {
+        return (v > 0) ? v : 0;
+    });
+    return output_shape;
+}
+
+Strides op::Constant::get_strides_val() const
+{
+    NGRAPH_CHECK(m_element_type == element::i64);
+    std::vector<int64_t> out_strides = get_vector<int64_t>();
+    Strides output_strides(shape_size(m_shape));
+    std::transform(out_strides.begin(),
+                   out_strides.end(),
+                   output_strides.begin(),
+                   [&](const int64_t& v) { return (v > 0) ? v : 0; });
+    return output_strides;
+}
+
 shared_ptr<Node> op::Constant::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);

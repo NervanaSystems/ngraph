@@ -418,5 +418,147 @@ NGRAPH_TEST(${BACKEND_NAME}, gemm_broadcast_input_C)
     test_case.add_input<double>(vector<double>{1});
     //output
     test_case.add_expected_output<double>(Shape{3, 4}, vector<double>(12, 7));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp)
+{
+    auto data = make_shared<op::Parameter>(element::f64, Shape{4, 4});
+    auto tested_op = make_shared<op::Clamp>(data, 10.0, 20.0);
+    auto function = make_shared<Function>(tested_op, ParameterVector{data});
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<double>({std::numeric_limits<double>::min(),
+                                 std::numeric_limits<double>::max(),
+                                 -std::numeric_limits<double>::infinity(),
+                                 std::numeric_limits<double>::infinity(),
+                                 -1.0,
+                                 0.0,
+                                 1.0,
+                                 9.99999,
+                                 10.0,
+                                 10.0000001,
+                                 15.0,
+                                 19.9999999,
+                                 20.0,
+                                 20.0000001,
+                                 21.0,
+                                 100.0});
+
+    test_case.add_expected_output<double>(Shape{4, 4},
+                                          {10.0,
+                                           20.0,
+                                           10.0,
+                                           20.0,
+                                           10.0,
+                                           10.0,
+                                           10.0,
+                                           10.0,
+                                           10.0,
+                                           10.0000001,
+                                           15.0,
+                                           19.9999999,
+                                           20.0,
+                                           20.0,
+                                           20.0,
+                                           20.0});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_normalization)
+{
+    Shape data_shape{1, 2, 5};
+    auto data = make_shared<op::Parameter>(element::f64, data_shape);
+
+    auto mvn_func = make_shared<op::MVN>(data, true, false);
+    auto function = make_shared<Function>(NodeVector{mvn_func}, ParameterVector{data});
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    // data
+    vector<double> data_vector(shape_size(data_shape));
+    iota(begin(data_vector), end(data_vector), 0);
+    test_case.add_input<double>(data_vector);
+
+    // expected result
+    test_case.add_expected_output<double>(
+        data_shape, vector<double>{-4.5, -3.5, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 3.5, 4.5});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_normalization_split_channels)
+{
+    Shape data_shape{1, 2, 5, 1};
+    auto data = make_shared<op::Parameter>(element::f64, data_shape);
+
+    auto mvn_func = make_shared<op::MVN>(data, false, false);
+    auto function = make_shared<Function>(NodeVector{mvn_func}, ParameterVector{data});
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    // data
+    vector<double> data_vector(shape_size(data_shape));
+    iota(begin(data_vector), end(data_vector), 0);
+    test_case.add_input<double>(data_vector);
+
+    // expected result
+    test_case.add_expected_output<double>({1, 2, 5, 1},
+                                          vector<double>{-2, -1, 0, 1, 2, -2, -1, 0, 1, 2});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_variance_normalization)
+{
+    Shape data_shape{1, 2, 5};
+    auto data = make_shared<op::Parameter>(element::f64, data_shape);
+
+    auto mvn_func = make_shared<op::MVN>(data);
+    auto function = make_shared<Function>(NodeVector{mvn_func}, ParameterVector{data});
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    // data
+    vector<double> data_vector(shape_size(data_shape));
+    iota(begin(data_vector), end(data_vector), 0);
+    test_case.add_input<double>(data_vector);
+
+    // expected result
+    test_case.add_expected_output<double>(data_shape,
+                                          vector<double>{-1.566698903055826,
+                                                         -1.2185435912656424,
+                                                         -0.87038827947545883,
+                                                         -0.52223296768527527,
+                                                         -0.17407765589509178,
+                                                         0.17407765589509178,
+                                                         0.52223296768527527,
+                                                         0.87038827947545883,
+                                                         1.2185435912656424,
+                                                         1.566698903055826});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_variance_normalization_split_channels)
+{
+    Shape data_shape{1, 2, 5};
+    auto data = make_shared<op::Parameter>(element::f64, data_shape);
+
+    auto mvn_func = make_shared<op::MVN>(data, false);
+    auto function = make_shared<Function>(NodeVector{mvn_func}, ParameterVector{data});
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    // data
+    vector<double> data_vector(shape_size(data_shape));
+    iota(begin(data_vector), end(data_vector), 0);
+    test_case.add_input<double>(data_vector);
+
+    // expected result
+    test_case.add_expected_output<double>(data_shape,
+                                          vector<double>{-1.4142135613730948,
+                                                         -0.70710678068654742,
+                                                         0.000000000000000,
+                                                         0.70710678068654742,
+                                                         1.4142135613730948,
+                                                         -1.4142135613730948,
+                                                         -0.70710678068654742,
+                                                         0.000000000000000,
+                                                         0.70710678068654742,
+                                                         1.4142135613730948});
+
     test_case.run();
 }

@@ -66,12 +66,14 @@
 #include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/floor.hpp"
+#include "ngraph/op/fused/clamp.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/depth_to_space.hpp"
 #include "ngraph/op/fused/elu.hpp"
 #include "ngraph/op/fused/gemm.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
+#include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/prelu.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
 #include "ngraph/op/gather.hpp"
@@ -650,6 +652,13 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Ceiling>(args[0]);
                 break;
             }
+            case OP_TYPEID::Clamp:
+            {
+                const auto clamp_min = node_js.at("min").get<float>();
+                const auto clamp_max = node_js.at("max").get<float>();
+                node = make_shared<op::Clamp>(args[0], clamp_min, clamp_max);
+                break;
+            }
             case OP_TYPEID::Concat:
             {
                 auto axis = node_js.at("axis").get<size_t>();
@@ -1121,6 +1130,14 @@ static shared_ptr<ngraph::Function>
             case OP_TYPEID::Multiply:
             {
                 node = make_shared<op::Multiply>(args[0], args[1]);
+                break;
+            }
+            case OP_TYPEID::MVN:
+            {
+                auto normalize_variance = node_js.at("normalize_variance").get<bool>();
+                auto across_channels = node_js.at("across_channels").get<bool>();
+                auto eps = node_js.at("eps").get<double>();
+                node = make_shared<op::MVN>(args[0], normalize_variance, across_channels, eps);
                 break;
             }
             case OP_TYPEID::Negative:
@@ -1672,6 +1689,13 @@ static json write(const Node& n, bool binary_constant_data)
     }
     case OP_TYPEID::Ceiling: { break;
     }
+    case OP_TYPEID::Clamp:
+    {
+        auto tmp = dynamic_cast<const op::Clamp*>(&n);
+        node["min"] = tmp->get_min();
+        node["max"] = tmp->get_max();
+        break;
+    }
     case OP_TYPEID::Concat:
     {
         auto tmp = dynamic_cast<const op::Concat*>(&n);
@@ -1918,6 +1942,14 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Minimum: { break;
     }
     case OP_TYPEID::Multiply: { break;
+    }
+    case OP_TYPEID::MVN:
+    {
+        auto tmp = dynamic_cast<const op::MVN*>(&n);
+        node["normalize_variance"] = tmp->get_normalize_variance();
+        node["across_channels"] = tmp->get_across_channels();
+        node["eps"] = tmp->get_eps();
+        break;
     }
     case OP_TYPEID::Negative: { break;
     }
