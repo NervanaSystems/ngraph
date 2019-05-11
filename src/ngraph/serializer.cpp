@@ -74,6 +74,7 @@
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/mvn.hpp"
+#include "ngraph/op/fused/normalize.hpp"
 #include "ngraph/op/fused/prelu.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
 #include "ngraph/op/gather.hpp"
@@ -1145,6 +1146,15 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Negative>(args[0]);
                 break;
             }
+            case OP_TYPEID::Normalize:
+            {
+                bool across_spatial = node_js.at("across_spatial").get<bool>();
+                bool channel_shared = node_js.at("channel_shared").get<bool>();
+                float eps = node_js.at("eps").get<float>();
+                node = make_shared<op::Normalize>(
+                    args[0], args[1], across_spatial, channel_shared, eps);
+                break;
+            }
             case OP_TYPEID::NotEqual:
             {
                 node = make_shared<op::NotEqual>(args[0], args[1]);
@@ -1952,6 +1962,14 @@ static json write(const Node& n, bool binary_constant_data)
         break;
     }
     case OP_TYPEID::Negative: { break;
+    }
+    case OP_TYPEID::Normalize:
+    {
+        auto tmp = dynamic_cast<const op::Normalize*>(&n);
+        node["across_spatial"] = tmp->get_across_spatial();
+        node["channel_shared"] = tmp->get_channel_shared();
+        node["eps"] = tmp->get_eps();
+        break;
     }
     case OP_TYPEID::NotEqual: { break;
     }
