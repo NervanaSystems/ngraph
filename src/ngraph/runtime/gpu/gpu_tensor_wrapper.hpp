@@ -21,6 +21,7 @@
 
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/type/element_type.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -38,17 +39,9 @@ namespace ngraph
 class ngraph::runtime::gpu::GPUTensorWrapper
 {
 public:
-    enum TensorType : std::size_t
-    {
-        CONSTANT,
-        INTERMEDIATE,
-        INPUT,
-        OUTPUT,
-        UNKNOWN
-    };
     GPUTensorWrapper(const std::shared_ptr<descriptor::Tensor>&, const std::string& alias = "");
     GPUTensorWrapper(const std::shared_ptr<descriptor::Tensor>&,
-                     TensorType,
+                     TensorRole,
                      size_t,
                      const std::string& alias);
 
@@ -58,12 +51,12 @@ public:
     const element::Type& get_element_type() const;
     const std::string& get_name() const;
     const std::string& get_type() const;
-    const std::pair<TensorType, size_t>& get_offset() const;
+    const std::pair<TensorRole, size_t>& get_offset() const;
     friend std::ostream& ngraph::runtime::gpu::
         operator<<(std::ostream& out, const ngraph::runtime::gpu::GPUTensorWrapper& obj);
 
 private:
     std::shared_ptr<descriptor::Tensor> m_tensor;
     std::string m_alias;
-    std::pair<TensorType, size_t> m_offset;
+    std::pair<TensorRole, size_t> m_offset;
 };
