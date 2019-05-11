@@ -45,6 +45,7 @@
 #include "ngraph/pass/batch_fusion.hpp"
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/cse.hpp"
+#include "ngraph/pass/fused_op_decomposition.hpp"
 #include "ngraph/pass/get_output_element_elimination.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
@@ -409,10 +410,12 @@ shared_ptr<runtime::Executable>
         visualize_tree(func, "intelgpu_", "_orig");
     }
 
+    ngraph::pass::Manager pass_manager;
+    pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>(
+        runtime::intelgpu::IntelGPUBackend::is_supported_impl);
+
     if (!m_disable_backend_optimizations)
     {
-        ngraph::pass::Manager pass_manager;
-
         pass_manager.register_pass<ngraph::pass::NopElimination>();
         pass_manager.register_pass<ngraph::pass::BatchFusion>();
         pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
@@ -2082,4 +2085,32 @@ bool runtime::intelgpu::IntelGPUBackend::is_supported_property(const Property pr
     }
 
     return false;
+}
+
+bool runtime::intelgpu::IntelGPUBackend::is_supported(const Node& node) const
+{
+    return runtime::intelgpu::IntelGPUBackend::is_supported_impl(node);
+}
+
+bool runtime::intelgpu::IntelGPUBackend::is_supported_impl(const Node& node)
+{
+    const OP_TYPEID op_type_id = get_typeid(node.description());
+    switch (op_type_id)
+    {
+    case OP_TYPEID::Clamp:
+    case OP_TYPEID::HardSigmoid:
+    case OP_TYPEID::DepthToSpace:
+    case OP_TYPEID::Elu:
+    case OP_TYPEID::Gemm:
+    case OP_TYPEID::MVN:
+    case OP_TYPEID::Normalize:
+    case OP_TYPEID::PRelu:
+    case OP_TYPEID::SpaceToDepth:
+    {
+        return false;
+        break;
+    }
+    default: { return true;
+    }
+    }
 }
