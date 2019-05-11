@@ -1696,7 +1696,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_batch_norm_training)
     // and getting freed.
     NodeVector goes;
 
-    auto make_graph = [&input_shape, &channel_shape, &eps, &et, &goes] {
+    auto make_graph = [&input_shape, &channel_shape, &eps, &goes] {
         auto input = make_shared<op::Parameter>(et, input_shape);
         auto gamma = make_shared<op::Parameter>(et, channel_shape);
         auto beta = make_shared<op::Parameter>(et, channel_shape);
