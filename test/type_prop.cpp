@@ -14010,6 +14010,14 @@ TEST(type_prop, gemm_broadcast_input_C)
     EXPECT_EQ(gemm_func->get_shape(), (Shape{3, 4}));
 }
 
+TEST(type_prop, mvn)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 3, 6});
+    auto mvn_func = make_shared<op::MVN>(data);
+    EXPECT_EQ(mvn_func->get_element_type(), element::f32);
+    EXPECT_EQ(mvn_func->get_shape(), (Shape{1, 3, 6}));
+}
+
 TEST(type_prop, fused_clamp)
 {
     const auto data = make_shared<op::Parameter>(element::f64, Shape{2, 2});
