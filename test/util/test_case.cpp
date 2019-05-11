@@ -51,3 +51,15 @@ void ngraph::test::NgraphTestCase::run()
         }
     }
 }
+
+ngraph::test::NgraphTestCase& ngraph::test::NgraphTestCase::set_tolerance(int tolerance_bits)
+{
+    m_tolerance_bits = tolerance_bits;
+    return *this;
+}
+
+ngraph::test::NgraphTestCase& ngraph::test::NgraphTestCase::dump_results(bool dump)
+{
+    m_dump_results = dump;
+    return *this;
+}

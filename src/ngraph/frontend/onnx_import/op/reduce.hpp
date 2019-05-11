@@ -16,9 +16,11 @@
 
 #pragma once
 
+#include <functional>
 #include <memory>
 
 #include "core/node.hpp"
+#include "ngraph/builder/norm.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/exp.hpp"
@@ -29,7 +31,6 @@
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
-#include "utils/norm.hpp"
 #include "utils/reduction.hpp"
 
 namespace ngraph
@@ -98,8 +99,12 @@ namespace ngraph
                 ///
                 inline NodeVector reduce_l1(const Node& node)
                 {
+                    auto l1_norm_reduction = std::bind(ngraph::builder::l1_norm,
+                                                       std::placeholders::_1,
+                                                       std::placeholders::_2,
+                                                       0.f);
                     return {reduction::make_ng_reduction_op(
-                        node, node.get_ng_inputs().at(0), norm::l1_norm)};
+                        node, node.get_ng_inputs().at(0), l1_norm_reduction)};
                 }
 
                 /// \brief      Compute the L2 norm of the input tensor's element along the provided axes.
@@ -115,8 +120,12 @@ namespace ngraph
                 ///
                 inline NodeVector reduce_l2(const Node& node)
                 {
+                    auto l2_norm_reduction = std::bind(ngraph::builder::l2_norm,
+                                                       std::placeholders::_1,
+                                                       std::placeholders::_2,
+                                                       0.f);
                     return {reduction::make_ng_reduction_op(
-                        node, node.get_ng_inputs().at(0), norm::l2_norm)};
+                        node, node.get_ng_inputs().at(0), l2_norm_reduction)};
                 }
 
                 /// \brief      Compute the maximum value of the input tensor's elements along the provided axes.
