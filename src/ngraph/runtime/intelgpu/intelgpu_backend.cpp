@@ -83,6 +83,7 @@
 #include "ngraph/op/fused/gemm.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
+#include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/normalize.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -1992,6 +1993,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::Gemm:
         case OP_TYPEID::GenerateMask:
         case OP_TYPEID::HardSigmoid:
+        case OP_TYPEID::MVN:
         case OP_TYPEID::Normalize:
         case OP_TYPEID::PRelu:
         case OP_TYPEID::Passthrough:

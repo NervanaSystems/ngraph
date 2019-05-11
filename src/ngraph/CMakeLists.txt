@@ -290,6 +290,8 @@ set (SRC
     op/fused/gemm.hpp
     op/fused/group_conv.hpp
     op/fused/group_conv.cpp
+    op/fused/mvn.cpp
+    op/fused/mvn.hpp
     op/fused/normalize.cpp
     op/fused/normalize.hpp
     op/fused/prelu.cpp
