@@ -106,6 +106,7 @@
 #include "ngraph/op/fused/normalize.hpp"
 #include "ngraph/op/fused/prelu.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
+#include "ngraph/op/fused/unsqueeze.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/gather_nd.hpp"
 #include "ngraph/op/get_output_element.hpp"
