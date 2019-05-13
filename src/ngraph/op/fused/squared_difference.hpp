@@ -33,7 +33,7 @@ namespace ngraph
             /// \brief Constructs the squared difference operation.
             ///
             /// \param x1 First input tensor
-            /// \param x1 Second input tensor
+            /// \param x2 Second input tensor
             SquaredDifference(const std::shared_ptr<ngraph::Node>& x1,
                               const std::shared_ptr<ngraph::Node>& x2);
 
