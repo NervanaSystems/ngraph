@@ -715,3 +715,45 @@ NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_variance_normalization_split_channels)
 
     test_case.run();
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, scale_shift_no_broadcast)
+{
+    auto data = make_shared<op::Parameter>(element::f64, Shape{3, 6});
+    auto scale = make_shared<op::Parameter>(element::f64, Shape{3, 6});
+    auto shift = make_shared<op::Parameter>(element::f64, Shape{3, 6});
+
+    auto scale_shift_func = make_shared<op::ScaleShift>(data, scale, shift);
+    auto function =
+        make_shared<Function>(NodeVector{scale_shift_func}, ParameterVector{data, scale, shift});
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    // Data
+    test_case.add_input<double>(vector<double>(18, 2));
+    // Scale
+    test_case.add_input<double>(vector<double>(18, 2));
+    // Shift
+    test_case.add_input<double>(vector<double>(18, 2));
+    //output
+    test_case.add_expected_output<double>(Shape{3, 6}, vector<double>(18, 6));
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, scale_shift)
+{
+    auto data = make_shared<op::Parameter>(element::f64, Shape{3, 6});
+    auto scale = make_shared<op::Parameter>(element::f64, Shape{3, 6});
+    auto shift = make_shared<op::Parameter>(element::f64, Shape{});
+
+    auto scale_shift_func = make_shared<op::ScaleShift>(data, scale, shift);
+    auto function =
+        make_shared<Function>(NodeVector{scale_shift_func}, ParameterVector{data, scale, shift});
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    // Data
+    test_case.add_input<double>(vector<double>(18, 2));
+    // Scale
+    test_case.add_input<double>(vector<double>(18, 2));
+    // Shift
+    test_case.add_input<double>(vector<double>{2});
+    //output
+    test_case.add_expected_output<double>(Shape{3, 6}, vector<double>(18, 6));
+    test_case.run();
+}
