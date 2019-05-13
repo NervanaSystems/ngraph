@@ -13,11 +13,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-#include "scale_shift.hpp"
-
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
+#include "scale_shift.hpp"
 
 using namespace std;
 using namespace ngraph;
