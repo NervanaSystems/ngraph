@@ -28,6 +28,7 @@ elu
 elu_negative_alpha
 space_to_depth
 depth_to_space
+squared_difference
 
 # Unsupported extra padding modes
 pad_edge_1d
