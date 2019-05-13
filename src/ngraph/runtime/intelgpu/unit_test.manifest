@@ -72,8 +72,6 @@ normalize_across_hw_w_scale
 normalize_invalid_input_tensor_rank
 normalize_invalid_scale_rank
 normalize
-gemm
-gemm_broadcast_input_C
 hardsigmoid
 mvn_mean_normalization
 mvn_mean_normalization_split_channels

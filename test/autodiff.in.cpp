@@ -27,8 +27,10 @@
 
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/manager.hpp"
+#if defined(AUTODIFF_BACKEND_CPU)
 #include "ngraph/runtime/cpu/op/batch_mat_mul_transpose.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_mat_fusion.hpp"
+#endif
 #include "ngraph/runtime/reference/avg_pool.hpp"
 #include "util/autodiff/backprop_function.hpp"
 #include "util/autodiff/numeric_compare.hpp"
