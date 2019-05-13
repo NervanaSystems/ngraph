@@ -86,6 +86,7 @@
 #include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/normalize.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
+#include "ngraph/op/fused/shuffle_channels.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
@@ -2059,6 +2060,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::ScatterAdd:
         case OP_TYPEID::ScatterNDAdd:
         case OP_TYPEID::ShapeOf:
+        case OP_TYPEID::ShuffleChannels:
         case OP_TYPEID::SpaceToDepth:
         case OP_TYPEID::StopGradient:
         case OP_TYPEID::Tile:
