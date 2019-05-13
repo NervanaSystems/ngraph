@@ -39,7 +39,7 @@ NodeVector op::Unsqueeze::decompose_op() const
 
     // Currently only support Constant node for axes.
     NODE_VALIDATION_CHECK(this,
-                          axes_node->description() == "Constant",
+                          axes_node->is_constant(),
                           "doesn't support 'axes' input of other type than a Constant.");
 
     // Get value of axes from Constant
@@ -50,11 +50,10 @@ NodeVector op::Unsqueeze::decompose_op() const
 
     NODE_VALIDATION_CHECK(this, !axes.empty(), "'axes' input is mandatory.");
     NODE_VALIDATION_CHECK(this,
-                          axes.size() ==
-                              std::set<std::int64_t>(std::begin(axes), std::end(axes)).size(),
+                          axes.size() == set<int64_t>(begin(axes), end(axes)).size(),
                           "'axes' input has a duplicate axis.");
 
-    std::sort(std::begin(axes), std::end(axes), std::less<int64_t>());
+    sort(begin(axes), end(axes), less<int64_t>());
 
     AxisVector input_order{ngraph::get_default_order(data_shape.size())};
 
@@ -66,10 +65,10 @@ NodeVector op::Unsqueeze::decompose_op() const
                               axis,
                               " is not valid.");
 
-        data_shape.insert(std::next(std::begin(data_shape), axis), 1);
+        data_shape.insert(next(begin(data_shape), axis), 1);
     }
 
-    return {std::make_shared<ngraph::op::Reshape>(data, input_order, data_shape)};
+    return {make_shared<ngraph::op::Reshape>(data, input_order, data_shape)};
 }
 
 shared_ptr<Node> op::Unsqueeze::copy_with_new_args(const NodeVector& new_args) const
