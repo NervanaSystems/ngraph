@@ -85,7 +85,7 @@ multimap<size_t, string> aggregate_timing_details(const vector<PerfShape>& perf_
     }
 
     multimap<size_t, string> rc;
-    for (const pair<string, size_t>& t : timing)
+    for (auto& t : timing)
     {
         rc.insert({t.second, t.first + to_string(count[t.first])});
     }
@@ -103,7 +103,7 @@ multimap<size_t, string> aggregate_timing(const vector<PerfShape>& perf_data)
     }
 
     multimap<size_t, string> rc;
-    for (const pair<string, size_t>& t : timing)
+    for (auto& t : timing)
     {
         rc.insert({t.second, t.first});
     }
@@ -115,7 +115,7 @@ void print_times(const multimap<size_t, string>& timing)
     // set the column widths
     int name_width = 0;
     int time_width = 0;
-    for (const pair<size_t, string>& p : timing)
+    for (auto& p : timing)
     {
         name_width = max(name_width, static_cast<int>(p.second.size()));
         time_width = max(time_width, static_cast<int>(locale_string(p.first).size()));
@@ -411,7 +411,7 @@ OPTIONS
                     cout << "    " << type << "\n";
                 }
                 cout << "--\n";
-                for (const pair<string, size_t>& op_info : op_list)
+                for (auto& op_info : op_list)
                 {
                     cout << op_info.first << ": " << op_info.second << " ops" << endl;
                 }
