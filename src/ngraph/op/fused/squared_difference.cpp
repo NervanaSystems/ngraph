@@ -20,6 +20,7 @@
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/util/fused_op.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -35,9 +36,11 @@ NodeVector op::SquaredDifference::decompose_op() const
     const auto x1 = get_argument(0);
     const auto x2 = get_argument(1);
 
-    const auto difference = x1 - x2;
+    const auto broadcasted = numpy_style_broadcast({x1, x2});
 
-    return {make_shared<ngraph::op::Multiply>(difference, difference)};
+    const auto difference = broadcasted.at(0) - broadcasted.at(1);
+
+    return {difference * difference};
 }
 
 shared_ptr<Node> op::SquaredDifference::copy_with_new_args(const NodeVector& new_args) const
