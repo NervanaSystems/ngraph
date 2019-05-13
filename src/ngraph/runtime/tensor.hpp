@@ -38,11 +38,9 @@ namespace ngraph
         class Tensor
         {
         protected:
-            Tensor(const std::shared_ptr<ngraph::descriptor::Tensor>& descriptor,
-                   const Backend* parent)
+            Tensor(const std::shared_ptr<ngraph::descriptor::Tensor>& descriptor)
                 : m_descriptor(descriptor)
                 , m_stale(true)
-                , m_parent(parent)
             {
             }
 
@@ -52,7 +50,11 @@ namespace ngraph
 
             /// \brief Get tensor shape
             /// \return const reference to a Shape
-            const ngraph::Shape& get_shape() const;
+            virtual const ngraph::Shape& get_shape() const;
+
+            /// \brief Get tensor partial shape
+            /// \return const reference to a PartialShape
+            const ngraph::PartialShape& get_partial_shape() const;
 
             /// \brief Get tensor strides
             /// \return Strides
@@ -60,7 +62,7 @@ namespace ngraph
 
             /// \brief Get tensor element type
             /// \return element::Type
-            const element::Type& get_element_type() const;
+            virtual const element::Type& get_element_type() const;
 
             /// \brief Get number of elements in the tensor
             /// \return number of elements in the tensor
@@ -107,11 +109,9 @@ namespace ngraph
             /// \param source The source tensor
             virtual void copy_from(const ngraph::runtime::Tensor& source);
 
-            const Backend* get_parent() const { return m_parent; }
         protected:
             std::shared_ptr<ngraph::descriptor::Tensor> m_descriptor;
             bool m_stale;
-            const Backend* m_parent;
         };
 
         using TensorViewPtrs = std::vector<std::shared_ptr<Tensor>>;

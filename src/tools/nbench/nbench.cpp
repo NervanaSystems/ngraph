@@ -24,6 +24,7 @@
 #include <iomanip>
 
 #include "benchmark.hpp"
+#include "ngraph/distributed.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
@@ -34,10 +35,6 @@
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
-
-#if defined NGRAPH_DISTRIBUTED_ENABLE
-#include "ngraph/distributed.hpp"
-#endif
 
 using namespace std;
 using namespace ngraph;
@@ -53,33 +50,18 @@ public:
     Shape shape;
 };
 
-unordered_map<string, shared_ptr<Node>> get_node_map(shared_ptr<Function> func)
-{
-    unordered_map<string, shared_ptr<Node>> node_map;
-    vector<shared_ptr<Function>> fs;
-    traverse_functions(func, [&](shared_ptr<Function> f) { fs.push_back(f); });
-    for (shared_ptr<Function> f : fs)
-    {
-        for (shared_ptr<Node> node : f->get_ops())
-        {
-            node_map.insert({node->get_name(), node});
-        }
-    }
-    return node_map;
-}
-
 vector<PerfShape> to_perf_shape(shared_ptr<Function> f,
                                 const vector<runtime::PerformanceCounter>& perf_data)
 {
     vector<PerfShape> result;
-    auto node_map = get_node_map(f);
     for (const runtime::PerformanceCounter& p : perf_data)
     {
-        auto node = node_map[p.name()];
+        auto node = p.get_node();
         if (node == nullptr)
         {
             ostringstream os;
-            os << "Can't find \"" << p.name() << "\" in Function \"" << f->get_name() << "\".";
+            os << "Can't find \"" << node->get_name() << "\" in Function \"" << f->get_name()
+               << "\".";
             throw runtime_error(os.str());
         }
 
@@ -95,7 +77,8 @@ multimap<size_t, string> aggregate_timing_details(const vector<PerfShape>& perf_
     unordered_map<string, size_t> count;
     for (const PerfShape& p : perf_data)
     {
-        string op = p.name().substr(0, p.name().find('_'));
+        auto node = p.get_node();
+        string op = node->get_name().substr(0, node->get_name().find('_'));
         string shape_name = " {" + join(p.shape) + "} ";
         timing[op + shape_name] += p.microseconds();
         count[op + shape_name] += 1;
@@ -114,7 +97,8 @@ multimap<size_t, string> aggregate_timing(const vector<PerfShape>& perf_data)
     unordered_map<string, size_t> timing;
     for (const PerfShape& p : perf_data)
     {
-        string op = p.name().substr(0, p.name().find('_'));
+        auto node = p.get_node();
+        string op = node->get_name().substr(0, node->get_name().find('_'));
         timing[op] += p.microseconds();
     }
 
@@ -283,7 +267,7 @@ int main(int argc, char** argv)
     {
         cout << R"###(
 DESCRIPTION
-    Benchmark ngraph json model with given backend.
+    Benchmark nGraph JSON model with given backend.
 
 SYNOPSIS
         nbench [-f <filename>] [-b <backend>] [-i <iterations>]
@@ -293,23 +277,15 @@ OPTIONS
         -b|--backend              Backend to use (default: CPU)
         -d|--directory            Directory to scan for models. All models are benchmarked.
         -i|--iterations           Iterations (default: 10)
-        -s|--statistics           Display op stastics
-        -v|--visualize            Visualize a model (WARNING: requires GraphViz installed)
+        -s|--statistics           Display op statistics
+        -v|--visualize            Visualize a model (WARNING: requires Graphviz installed)
         --timing_detail           Gather detailed timing
         -w|--warmup_iterations    Number of warm-up iterations
         --no_copy_data            Disable copy of input/result data every iteration
-        --dot                     Generate graphviz dot file
+        --dot                     Generate Graphviz dot file
 )###";
         return 1;
     }
-
-#if defined NGRAPH_DISTRIBUTED_ENABLE
-    unique_ptr<ngraph::Distributed> dist(new ngraph::Distributed());
-    if (dist->get_size() == 1)
-    {
-        dist.reset();
-    }
-#endif
 
     vector<string> models;
     if (!directory.empty())
@@ -473,13 +449,6 @@ OPTIONS
         cout << "============================================================================\n";
         print_results(aggregate_perf_data, timing_detail);
     }
-
-#if defined NGRAPH_DISTRIBUTED_ENABLE
-    if (dist)
-    {
-        dist.reset();
-    }
-#endif
 
     return rc;
 }

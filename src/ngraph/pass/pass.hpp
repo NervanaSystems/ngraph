@@ -73,7 +73,7 @@ protected:
 
 private:
     PassPropertyMask m_property;
-    ManagerState* m_state;
+    ManagerState* m_state{0};
 };
 
 class ngraph::pass::ModulePass : public PassBase

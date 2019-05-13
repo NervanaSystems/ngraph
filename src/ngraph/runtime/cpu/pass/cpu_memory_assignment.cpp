@@ -32,7 +32,7 @@ using namespace std;
 using namespace ngraph;
 
 runtime::cpu::pass::CPUMemoryAssignment::CPUMemoryAssignment(
-    unordered_map<size_t, std::pair<CPUTensorRole, unordered_set<descriptor::Tensor*>>>&
+    unordered_map<size_t, std::pair<TensorRole, unordered_set<descriptor::Tensor*>>>&
         bufferID_to_tensorSets,
     unordered_map<descriptor::Tensor*, size_t>& tensor_to_bufferID,
     size_t alignment,
@@ -353,8 +353,8 @@ void runtime::cpu::pass::CPUMemoryAssignment::propagate_in_place_slice(
 // Output tensor is put into the set of input tensor when the operation is non-destructive in-place.
 // If the operation is destructive in-place or not in-place, a new buffer set is created for the output tensor.
 // Each buffer set has a bufferID which starts at 0 and increments by 1 each time a new set is created.
-// bufferID_to_tensorSets maps bufferID to the pair of CPUTensorRole and buffer set.
-// CPUTensorRole is INPUT, CONSTANT, OUTPUT, or INTERMEDIATE,
+// bufferID_to_tensorSets maps bufferID to the pair of TensorRole and buffer set.
+// TensorRole is INPUT, CONSTANT, OUTPUT, or INTERMEDIATE,
 // which tells from where the memory buffer comes.
 // tensor_to_bufferID maps tensor to the ID of the buffer set it belongs to.
 void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(list<shared_ptr<Node>>& ops)
@@ -367,8 +367,8 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(list<shared
         if (node->is_parameter())
         {
             auto output_tensor = &node->get_output_tensor();
-            auto ele = std::pair<CPUTensorRole, unordered_set<descriptor::Tensor*>>(
-                CPUTensorRole::INPUT, unordered_set<descriptor::Tensor*>({output_tensor}));
+            auto ele = std::pair<TensorRole, unordered_set<descriptor::Tensor*>>(
+                TensorRole::INPUT, unordered_set<descriptor::Tensor*>({output_tensor}));
             m_bufferID_to_tensorSets[count] = ele;
             m_tensor_to_bufferID[output_tensor] = count;
             count++;
@@ -376,8 +376,8 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(list<shared
         else if (node->is_constant())
         {
             auto output_tensor = &node->get_output_tensor();
-            auto ele = std::pair<CPUTensorRole, unordered_set<descriptor::Tensor*>>(
-                CPUTensorRole::CONSTANT, unordered_set<descriptor::Tensor*>({output_tensor}));
+            auto ele = std::pair<TensorRole, unordered_set<descriptor::Tensor*>>(
+                TensorRole::CONSTANT, unordered_set<descriptor::Tensor*>({output_tensor}));
             m_bufferID_to_tensorSets[count] = ele;
             m_tensor_to_bufferID[output_tensor] = count;
             count++;
@@ -392,13 +392,13 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(list<shared
             auto input_buffer_it = m_bufferID_to_tensorSets.find(bufferID);
             NGRAPH_CHECK(input_buffer_it != m_bufferID_to_tensorSets.end());
             auto pair = input_buffer_it->second;
-            if (pair.first != CPUTensorRole::INTERMEDIATE ||
+            if (pair.first != TensorRole::INTERMEDIATE ||
                 in_place_slice_chain.find(input_tensor) != in_place_slice_chain.end())
             {
                 // tensor of function output should not be in the same set as function input, constant, output, or in place slice,
                 // because they cannot share the same memory buffer
-                auto ele = std::pair<CPUTensorRole, unordered_set<descriptor::Tensor*>>(
-                    CPUTensorRole::OUTPUT, unordered_set<descriptor::Tensor*>({output_tensor}));
+                auto ele = std::pair<TensorRole, unordered_set<descriptor::Tensor*>>(
+                    TensorRole::OUTPUT, unordered_set<descriptor::Tensor*>({output_tensor}));
                 m_bufferID_to_tensorSets[count] = ele;
                 m_tensor_to_bufferID[output_tensor] = count;
                 count++;
@@ -406,7 +406,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(list<shared
             else
             {
                 //in place output
-                m_bufferID_to_tensorSets[bufferID].first = CPUTensorRole::OUTPUT;
+                m_bufferID_to_tensorSets[bufferID].first = TensorRole::OUTPUT;
                 m_bufferID_to_tensorSets[bufferID].second.insert(output_tensor);
                 m_tensor_to_bufferID[output_tensor] = bufferID;
             }
@@ -426,8 +426,8 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(list<shared
                     if (node->description() == "Concat")
                     {
                         auto output_tensor = &node->get_output_tensor();
-                        auto ele = std::pair<CPUTensorRole, unordered_set<descriptor::Tensor*>>(
-                            CPUTensorRole::INTERMEDIATE,
+                        auto ele = std::pair<TensorRole, unordered_set<descriptor::Tensor*>>(
+                            TensorRole::INTERMEDIATE,
                             unordered_set<descriptor::Tensor*>({output_tensor}));
                         for (auto& arg : node->get_arguments())
                         {
@@ -466,8 +466,8 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(list<shared
                             }
                             auto pair = m_bufferID_to_tensorSets[bufferID];
                             // no in-place concat if arg is from parameter or constant
-                            if (pair.first == CPUTensorRole::INPUT ||
-                                pair.first == CPUTensorRole::CONSTANT)
+                            if (pair.first == TensorRole::INPUT ||
+                                pair.first == TensorRole::CONSTANT)
                             {
                                 continue;
                             }
@@ -524,8 +524,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(list<shared
 
                                     if (node->description() == "Slice")
                                     {
-                                        if (input_buffer_it->second.first !=
-                                            CPUTensorRole::CONSTANT)
+                                        if (input_buffer_it->second.first != TensorRole::CONSTANT)
                                         {
                                             // build in place slice chain
                                             in_place_slice_chain.insert(output_tensor);
@@ -557,8 +556,8 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(list<shared
                 // not in place, create a new set and insert into the map
                 if (m_tensor_to_bufferID.find(output_tensor) == m_tensor_to_bufferID.end())
                 {
-                    auto ele = std::pair<CPUTensorRole, unordered_set<descriptor::Tensor*>>(
-                        CPUTensorRole::INTERMEDIATE,
+                    auto ele = std::pair<TensorRole, unordered_set<descriptor::Tensor*>>(
+                        TensorRole::INTERMEDIATE,
                         unordered_set<descriptor::Tensor*>({output_tensor}));
                     m_bufferID_to_tensorSets[count] = ele;
                     m_tensor_to_bufferID[output_tensor] = count;
@@ -572,13 +571,13 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(list<shared
 void runtime::cpu::pass::CPUMemoryAssignment::liveness_analysis(
     std::list<std::shared_ptr<Node>>& ops)
 {
-    auto find_role = [](CPUTensorRole tensor_role) -> string {
+    auto find_role = [](TensorRole tensor_role) -> string {
         switch (tensor_role)
         {
-        case CPUTensorRole::INPUT: return string("CPUTensorRole::INPUT");
-        case CPUTensorRole::INTERMEDIATE: return string("CPUTensorRole::INTERMEDIATE");
-        case CPUTensorRole::CONSTANT: return string("CPUTensorRole::CONSTANT");
-        case CPUTensorRole::OUTPUT: return string("CPUTensorRole::OUTPUT");
+        case TensorRole::INPUT: return string("TensorRole::INPUT");
+        case TensorRole::INTERMEDIATE: return string("TensorRole::INTERMEDIATE");
+        case TensorRole::CONSTANT: return string("TensorRole::CONSTANT");
+        case TensorRole::OUTPUT: return string("TensorRole::OUTPUT");
         }
         throw runtime_error("unhandled CPU tensor role");
     };
@@ -596,7 +595,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::liveness_analysis(
             NGRAPH_DEBUG << ele_t->get_name() << " ";
         }
         NGRAPH_DEBUG << "}";
-        if (ele.second.first != CPUTensorRole::INTERMEDIATE)
+        if (ele.second.first != TensorRole::INTERMEDIATE)
         {
             // do not allocate and free memory for function inputs, outputs, constants and tensors
             // sharing memory with them.
@@ -731,8 +730,8 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                         auto input_buffer_it = m_bufferID_to_tensorSets.find(input_bufferID);
                         NGRAPH_CHECK(input_buffer_it != m_bufferID_to_tensorSets.end());
                         // do not modify function inputs and constants, so no destructive oi
-                        if (input_buffer_it->second.first == CPUTensorRole::INPUT ||
-                            input_buffer_it->second.first == CPUTensorRole::CONSTANT)
+                        if (input_buffer_it->second.first == TensorRole::INPUT ||
+                            input_buffer_it->second.first == TensorRole::CONSTANT)
                         {
                             NGRAPH_DEBUG << "cpu_memory_assignment: input is function input or "
                                             "constant, no destructive oi";
@@ -859,7 +858,7 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
         auto buffer_it = m_bufferID_to_tensorSets.find(bufferID);
         NGRAPH_CHECK(buffer_it != m_bufferID_to_tensorSets.end());
 
-        if (buffer_it->second.first == CPUTensorRole::INTERMEDIATE)
+        if (buffer_it->second.first == TensorRole::INTERMEDIATE)
         {
             auto new_offset = item->get_pool_offset() + start;
             item->set_pool_offset(new_offset);

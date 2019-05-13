@@ -43,6 +43,7 @@
 #include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/pass.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
@@ -582,4 +583,14 @@ TEST(algebraic_simplification, log_no_divide)
     auto f = std::make_shared<Function>(ngraph::NodeVector{neg4}, ParameterVector{a, b});
     pass_manager.run_passes(f);
     ASSERT_EQ(neg_inner->get_argument(0), log_mul);
+}
+
+TEST(algebraic_simplification, pass_property)
+{
+    auto pass = std::make_shared<ngraph::pass::AlgebraicSimplification>();
+
+    ASSERT_EQ(true, pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
+    ASSERT_EQ(true,
+              pass->get_property(pass::PassPropertyMask(pass::PassProperty::REGULAR_FUSIONS) |
+                                 pass::PassPropertyMask(pass::PassProperty::REQUIRE_STATIC_SHAPE)));
 }

@@ -21,7 +21,7 @@
 #include <vector>
 
 #include "model.hpp"
-#include "ngraph/parameter_vector.hpp"
+#include "ngraph/op/parameter.hpp"
 #include "operator_set.hpp"
 #include "value_info.hpp"
 #include "weight.hpp"

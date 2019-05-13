@@ -14,10 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cstddef>    // std::size_t
-#include <functional> // std::multiplies
-#include <iterator>   // std::begin, std::end
-#include <numeric>    // std::accumulate
+#include <cstddef>  // std::size_t
+#include <iterator> // std::begin, std::end
+#include <numeric>  // std::accumulate
 
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"

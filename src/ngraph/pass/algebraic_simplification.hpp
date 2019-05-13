@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/pass/pass.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -32,7 +33,9 @@ public:
     AlgebraicSimplification()
         : FunctionPass()
     {
+        PassPropertyMask property{PassProperty::REGULAR_FUSIONS,
+                                  PassProperty::REQUIRE_STATIC_SHAPE};
+        set_property(property, true);
     }
-
     virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
 };

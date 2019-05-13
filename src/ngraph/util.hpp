@@ -31,14 +31,14 @@
 #include <vector>
 
 #include "ngraph/axis_vector.hpp"
-#include "ngraph/node_vector.hpp"
+#include "ngraph/graph_util.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
 {
     class Node;
     class Function;
-    class NodeMap;
     class stopwatch;
 
     namespace runtime
@@ -214,8 +214,8 @@ namespace ngraph
     {
         std::shared_ptr<Function> fprop;
         std::shared_ptr<Function> bprop;
-        std::vector<std::shared_ptr<Node>> fprop_output_nodes;
-        std::shared_ptr<NodeMap> node_param_map;
+        std::vector<Node*> fprop_output_nodes;
+        NodeMap node_param_map;
     };
 
     /**
@@ -237,12 +237,13 @@ namespace ngraph
 
     using BuildNodeExecutorMap = std::unordered_map<std::type_index, BuildNodeExecutor>;
 
-    enum class CPUTensorRole
+    enum class TensorRole
     {
         INPUT,
         CONSTANT,
         OUTPUT,
-        INTERMEDIATE
+        INTERMEDIATE,
+        UNKNOWN
     };
 
     /**

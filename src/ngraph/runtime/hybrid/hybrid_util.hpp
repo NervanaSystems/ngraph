@@ -28,6 +28,7 @@ namespace ngraph
 {
     namespace runtime
     {
+        class Backend;
         namespace hybrid
         {
             void rewrite_function(

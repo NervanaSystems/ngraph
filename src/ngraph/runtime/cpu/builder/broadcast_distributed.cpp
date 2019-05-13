@@ -13,13 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-#ifdef NGRAPH_DISTRIBUTED_ENABLE
-
-#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
-#include <mlsl.hpp>
-#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
-#include <mpi.h>
-#endif
 
 #include "ngraph/op/broadcast_distributed.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
@@ -38,51 +31,17 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
                 auto count = static_cast<int>(args[0].get_size());
-
-#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
-                auto data_type = MLSL::DT_FLOAT;
-
-                if (args[0].get_element_type() == element::f32)
-                {
-                    data_type = MLSL::DT_FLOAT;
-                }
-                else if (args[0].get_element_type() == element::f64)
-                {
-                    data_type = MLSL::DT_DOUBLE;
-                }
-
-                auto functor = [&, count, data_type](CPURuntimeContext* ctx,
-                                                     CPUExecutionContext* ectx) {
-                    MLSL::CommReq* req =
-                        ctx->mlsl_dist->Bcast(arg_tensor, count, data_type, 0, MLSL::GT_DATA);
-                    ctx->mlsl_env->Wait(req);
+                auto data_type = args[0].get_element_type().get_type_enum();
+                auto functor = [&, count, data_type, arg_buffer_index](CPURuntimeContext* ctx,
+                                                                       CPUExecutionContext* ectx) {
+                    get_distributed_interface()->broadcast(
+                        ctx->buffer_data[arg_buffer_index], data_type, count);
                 };
-#elif NGRAPH_DISTRIBUTED_OMPI_ENABLE
-                auto data_type = MPI_FLOAT;
-
-                if (args[0].get_element_type() == element::f32)
-                {
-                    data_type = MPI_FLOAT;
-                }
-                else if (args[0].get_element_type() == element::f64)
-                {
-                    data_type = MPI_DOUBLE;
-                }
-
-                auto functor = [&, count, data_type](CPURuntimeContext* ctx,
-                                                     CPUExecutionContext* ectx) {
-                    MPI_Bcast(arg_tensor, count, data_type, 0, MPI_COMM_WORLD);
-                };
-#else
-                throw ngraph_error("Distributed Library not supported/mentioned");
-#endif
                 functors.emplace_back(functor);
             }
-
             REGISTER_OP_BUILDER(BroadcastDistributed);
         }
     }
 }
-#endif
