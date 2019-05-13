@@ -180,9 +180,9 @@ bool pass::RecurrentGraphRewrite::run_on_function(shared_ptr<Function> f)
 {
     bool changed = false;
     size_t i = 0;
-    bool is_dyn_func = f->is_dynamic();
 
     auto run_matchers = [&]() -> bool {
+        bool is_dyn_func = f->is_dynamic();
         for (auto node : f->get_ops())
         {
             for (auto& closure : m_matchers)
