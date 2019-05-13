@@ -25,6 +25,9 @@ namespace ngraph
         class LikeReplacement : public FunctionPass
         {
         public:
+            LikeReplacement() {
+                set_property(PassProperty::REQUIRE_STATIC_SHAPE, false);
+            }
             bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
         };
     }

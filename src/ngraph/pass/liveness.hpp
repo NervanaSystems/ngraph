@@ -30,5 +30,8 @@ namespace ngraph
 class ngraph::pass::Liveness : public FunctionPass
 {
 public:
+    Liveness() {
+        set_property(PassProperty::REQUIRE_STATIC_SHAPE, false);
+    }
     bool run_on_function(std::shared_ptr<ngraph::Function>) override;
 };

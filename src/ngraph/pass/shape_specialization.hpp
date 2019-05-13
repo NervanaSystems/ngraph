@@ -28,6 +28,8 @@ namespace ngraph
             ShapeSpecialization()
                 : FunctionPass()
             {
+              set_property(PassProperty::REQUIRE_STATIC_SHAPE, false);
+              set_property(PassProperty::CHANGE_FUNCTION_STATE, true);
             }
             virtual bool run_on_function(std::shared_ptr<ngraph::Function> f) override;
         };

@@ -34,6 +34,7 @@ pass::MemoryLayout::MemoryLayout(size_t alignment, bool disable_memory_sharing)
     : m_alignment(alignment)
     , m_disable_memory_sharing(disable_memory_sharing)
 {
+    set_property(PassProperty::REQUIRE_STATIC_SHAPE, false);
     if (m_alignment == 0)
     {
         throw invalid_argument("Memory alignment must be > 0");
