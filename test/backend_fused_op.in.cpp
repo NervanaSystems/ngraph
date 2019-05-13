@@ -715,3 +715,20 @@ NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_variance_normalization_split_channels)
 
     test_case.run();
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, squared_difference)
+{
+    const auto x1 = make_shared<op::Parameter>(element::f64, Shape{2, 2});
+    const auto x2 = make_shared<op::Parameter>(element::f64, Shape{2, 2});
+
+    auto tested_op = make_shared<op::SquaredDifference>(x1, x2);
+    auto function = make_shared<Function>(tested_op, ParameterVector{x1, x2});
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<double>({1.0, 16.0, 0.0, 1.234567});
+    test_case.add_input<double>({1.0, 8.0, -3.0, 3.456789});
+
+    test_case.add_expected_output<double>(Shape{2, 2}, {0.0, 64.0, 9.0, 4.938270617284});
+
+    test_case.run();
+}
