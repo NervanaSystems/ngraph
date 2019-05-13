@@ -22,8 +22,10 @@
 #include "ngraph/op/experimental/layers/prior_box.hpp"
 #include "ngraph/op/experimental/layers/prior_box_clustered.hpp"
 #include "ngraph/op/experimental/layers/proposal.hpp"
+#include "ngraph/op/experimental/layers/psroi_pooling.hpp"
 #include "ngraph/op/experimental/layers/region_yolo.hpp"
 #include "ngraph/op/experimental/layers/reorg_yolo.hpp"
+#include "ngraph/op/experimental/layers/roi_pooling.hpp"
 
 #include <memory>
 using namespace std;
@@ -202,4 +204,20 @@ TEST(type_prop_layers, reorg_yolo)
     auto inputs = make_shared<op::Parameter>(element::f32, Shape{2, 24, 34, 62});
     auto op = make_shared<op::ReorgYolo>(inputs, Strides{2});
     ASSERT_EQ(op->get_shape(), (Shape{2, 96, 17, 31}));
+}
+
+TEST(type_prop_layers, psroi_pooling)
+{
+    auto inputs = make_shared<op::Parameter>(element::f32, Shape{1, 3, 4, 5});
+    auto coords = make_shared<op::Parameter>(element::f32, Shape{150, 5});
+    auto op = make_shared<op::PSROIPooling>(inputs, coords, 2, 6, 0.0625, Shape{}, "Avg");
+    ASSERT_EQ(op->get_shape(), (Shape{150, 2, 6, 6}));
+}
+
+TEST(type_prop_layers, roi_pooling)
+{
+    auto inputs = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5});
+    auto coords = make_shared<op::Parameter>(element::f32, Shape{150, 5});
+    auto op = make_shared<op::ROIPooling>(inputs, coords, Shape{6, 6}, 0.0625, "Max");
+    ASSERT_EQ(op->get_shape(), (Shape{150, 3, 6, 6}));
 }
