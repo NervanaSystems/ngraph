@@ -18,32 +18,17 @@ include(ExternalProject)
 
 find_package(ZLIB REQUIRED)
 
-set(HALIDE_LLVM_TARBALL_URL https://releases.llvm.org/6.0.1/clang+llvm-6.0.1-x86_64-linux-gnu-ubuntu-16.04.tar.xz)
-set(HALIDE_LLVM_SHA1_HASH c7db0162fbf4cc32193b6a85f84f4abee3d107b9)
-
-ExternalProject_Add(
-    ext_halide_llvm
-    PREFIX halide_llvm
-    URL ${HALIDE_LLVM_TARBALL_URL}
-    URL_HASH SHA1=${HALIDE_LLVM_SHA1_HASH}
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ""
-    UPDATE_COMMAND ""
-    EXCLUDE_FROM_ALL TRUE
-    )
-
-ExternalProject_Get_Property(ext_halide_llvm SOURCE_DIR)
+ExternalProject_Get_Property(ext_llvm SOURCE_DIR)
 
 set(HALIDE_LLVM_DIR "${SOURCE_DIR}/lib/cmake/llvm")
 
 set(HALIDE_GIT_REPO_URL https://github.com/halide/Halide)
-set(HALIDE_GIT_TAG "ea9c863")
+set(HALIDE_GIT_TAG "7fba680")
 
 ExternalProject_Add(
     ext_halide
     PREFIX halide
-    DEPENDS ext_halide_llvm
+    DEPENDS ext_llvm
     GIT_REPOSITORY ${HALIDE_GIT_REPO_URL}
     GIT_TAG ${HALIDE_GIT_TAG}
     UPDATE_COMMAND ""
@@ -58,6 +43,7 @@ ExternalProject_Add(
     -DWITH_APPS=OFF
     -DWITH_TUTORIALS=OFF
     -DWITH_TESTS=OFF
+    -DWITH_UTILS=OFF
     -DCMAKE_POSITION_INDEPENDENT_CODE=ON
     -DTARGET_ARM=OFF
     -DTARGET_AARCH64=OFF
@@ -97,6 +83,7 @@ set(HALIDE_LLVM_LINK_LIBS
     ${SOURCE_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMTarget${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${SOURCE_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMCoroutines${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${SOURCE_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMipo${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${SOURCE_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMAggressiveInstCombine${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${SOURCE_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMInstrumentation${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${SOURCE_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMVectorize${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${SOURCE_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMScalarOpts${CMAKE_STATIC_LIBRARY_SUFFIX}
@@ -115,9 +102,10 @@ set(HALIDE_LLVM_LINK_LIBS
     ${SOURCE_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMCore${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${SOURCE_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMBinaryFormat${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${SOURCE_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMSupport${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${SOURCE_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMDemangle${CMAKE_STATIC_LIBRARY_SUFFIX}
 )
 
 add_library(libhalidellvm INTERFACE)
-add_dependencies(libhalidellvm ext_halide_llvm)
-target_include_directories(libhalidellvm SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/halide_llvm/include)
+add_dependencies(libhalidellvm ext_llvm)
+target_include_directories(libhalidellvm SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/halide/include)
 target_link_libraries(libhalidellvm INTERFACE ${HALIDE_LLVM_LINK_LIBS})

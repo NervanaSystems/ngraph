@@ -182,7 +182,7 @@ namespace ngraph
                 {
                     return subgraph_param_sizes;
                 }
-                std::unordered_map<std::string, size_t>> &get_subgraph_param_indices()
+                std::unordered_map<std::string, size_t> &get_subgraph_param_indices()
                 {
                     return subgraph_param_indices;
                 }

@@ -255,6 +255,7 @@ endif()
 
 if (NGRAPH_HALIDE)
     target_compile_definitions(unit-test PRIVATE "NGRAPH_HALIDE")
+    target_link_libraries(unit-test PRIVATE libhalidellvm)
 endif()
 
 if (NGRAPH_INTERPRETER_ENABLE)
