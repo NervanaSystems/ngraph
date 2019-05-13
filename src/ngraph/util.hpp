@@ -237,12 +237,13 @@ namespace ngraph
 
     using BuildNodeExecutorMap = std::unordered_map<std::type_index, BuildNodeExecutor>;
 
-    enum class CPUTensorRole
+    enum class TensorRole
     {
         INPUT,
         CONSTANT,
         OUTPUT,
-        INTERMEDIATE
+        INTERMEDIATE,
+        UNKNOWN
     };
 
     /**

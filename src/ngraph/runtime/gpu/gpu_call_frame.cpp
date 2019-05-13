@@ -64,7 +64,7 @@ void runtime::gpu::GPUCallFrame::resolve_outputs(void** outputs, size_t num_outp
     }
 }
 
-// returns pointers of any GPUTensorWrapper::TensorType
+// returns pointers of any TensorRole
 std::vector<void*>
     runtime::gpu::GPUCallFrame::get_tensor_io(const std::vector<GPUTensorWrapper>& tensors)
 {
@@ -78,18 +78,18 @@ std::vector<void*>
     return ptrs;
 }
 
-void* runtime::gpu::GPUCallFrame::get_pointer(const TensorType& type,
+void* runtime::gpu::GPUCallFrame::get_pointer(const TensorRole& type,
                                               const size_t& offset,
                                               const std::string& name)
 {
     switch (type)
     {
-    case TensorType::CONSTANT:
-    case TensorType::INTERMEDIATE:
+    case TensorRole::CONSTANT:
+    case TensorRole::INTERMEDIATE:
         return static_cast<void*>(m_memory_reservations.at(name) + offset);
-    case TensorType::INPUT: return static_cast<void*>(m_inputs.at(offset));
-    case TensorType::OUTPUT: return static_cast<void*>(m_outputs.at(offset));
-    case TensorType::UNKNOWN:
+    case TensorRole::INPUT: return static_cast<void*>(m_inputs.at(offset));
+    case TensorRole::OUTPUT: return static_cast<void*>(m_outputs.at(offset));
+    case TensorRole::UNKNOWN:
     default: throw ngraph_error("GPUCallFrame encountered unknown or uninitialized tensor type");
     };
 }

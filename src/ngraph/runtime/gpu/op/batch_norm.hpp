@@ -38,6 +38,8 @@ namespace ngraph
                                            std::shared_ptr<Node> beta,
                                            std::shared_ptr<Node> input);
 
+                void validate_and_infer_types() override;
+
             protected:
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;

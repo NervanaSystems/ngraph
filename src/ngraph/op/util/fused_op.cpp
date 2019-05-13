@@ -38,7 +38,10 @@ void op::util::FusedOp::validate_and_infer_types()
     {
         for (size_t j = 0; j < output_node->get_output_size(); j++, i++)
         {
-            set_output_size(i + 1);
+            if (i >= get_output_size())
+            {
+                set_output_size(i + 1);
+            }
             set_output_type(
                 i, output_node->get_output_element_type(j), output_node->get_output_shape(j));
         }

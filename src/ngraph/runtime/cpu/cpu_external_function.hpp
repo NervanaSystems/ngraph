@@ -264,7 +264,7 @@ namespace ngraph
                 std::unordered_map<std::string, std::pair<std::size_t, std::size_t>>
                     m_variable_output_index_offset_map;
 
-                std::unordered_map<std::string, ngraph::CPUTensorRole> m_tensor_roles;
+                std::unordered_map<std::string, ngraph::TensorRole> m_tensor_roles;
 
                 LayoutDescriptorPtrs parameter_layout_descriptors;
                 LayoutDescriptorPtrs result_layout_descriptors;
@@ -287,12 +287,12 @@ namespace ngraph
                 std::unordered_map<std::string, bool> tensor_stale;
                 // Each tensor is put into one buffer set.
                 // All the tensors in the same buffer set share the same memory buffer.
-                // bufferID_to_tensorSets maps bufferID to the pair of CPUTensorRole and buffer set.
-                // CPUTensorRole is INPUT, CONSTANT, OUTPUT, or INTERMEDIATE,
+                // bufferID_to_tensorSets maps bufferID to the pair of TensorRole and buffer set.
+                // TensorRole is INPUT, CONSTANT, OUTPUT, or INTERMEDIATE,
                 // which tells from where the memory buffer comes.
                 std::unordered_map<
                     size_t,
-                    std::pair<ngraph::CPUTensorRole, std::unordered_set<descriptor::Tensor*>>>
+                    std::pair<ngraph::TensorRole, std::unordered_set<descriptor::Tensor*>>>
                     bufferID_to_tensorSets;
                 // tensor_to_bufferID maps tensor to the ID of the buffer set it belongs to.
                 std::unordered_map<descriptor::Tensor*, size_t> tensor_to_bufferID;
