@@ -457,16 +457,5 @@ NGRAPH_TEST(${BACKEND_NAME}, squeeze_dynamic)
 {
     auto data_param = make_shared<op::Parameter>(element::f32, Shape{1, 4, 1, 1, 2});
     auto axes_param = make_shared<op::Parameter>(element::i64, Shape{2});
-    auto squeeze = make_shared<op::Squeeze>(data_param, axes_param);
-
-    auto function =
-        make_shared<Function>(NodeVector{squeeze}, ParameterVector{data_param, axes_param});
-    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
-
-    auto data = vector<float>{1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f};
-    test_case.add_input(data);
-    test_case.add_input<std::int64_t>({0, 2});
-    test_case.add_expected_output<float>(Shape{4, 2}, data);
-
-    EXPECT_THROW(test_case.run(), CheckFailure);
+    EXPECT_THROW(make_shared<op::Squeeze>(data_param, axes_param), CheckFailure);
 }
