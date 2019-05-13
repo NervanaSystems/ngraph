@@ -33,7 +33,7 @@ using llvm::Twine;
 
 namespace ngraph
 {
-    using namespace runtime::cpu;
+    using namespace runtime::ngmlir;
     /// Creates TensorType objects. They all point to the same storage if
     /// element type and shape are the same.
     NGTensorType NGTensorType::get(mlir::MLIRContext* context, EltType eltType, Shape shape)

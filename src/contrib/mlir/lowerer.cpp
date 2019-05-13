@@ -28,14 +28,14 @@
 #include "dialect/ops.hpp"
 #include "dialect/type.hpp"
 
-using namespace ngraph::runtime::cpu;
+using namespace ngraph::runtime::ngmlir;
 // anonymous namespace
 // no need to expose any of the following outside of this file
 namespace
 {
     using namespace mlir;
     using namespace mlir::edsc;
-    using namespace ngraph::runtime::cpu;
+    using namespace ngraph::runtime::ngmlir;
 
     class DialectLoweringPass;
 #include "op_lowerers.inc"
@@ -393,7 +393,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace cpu
+        namespace ngmlir
         {
             Pass* createDialectLoweringPass(MLIRCompiler* compiler)
             {

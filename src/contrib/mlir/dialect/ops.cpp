@@ -31,7 +31,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace cpu
+        namespace ngmlir
         {
             template <typename T>
             static mlir::LogicalResult verifyBinOperands(T* op)
@@ -69,20 +69,20 @@ namespace ngraph
         }
     }
 
-    void runtime::cpu::NG_FakeInput::build(mlir::Builder* builder,
+    void runtime::ngmlir::NG_FakeInput::build(mlir::Builder* builder,
                                            mlir::OperationState* state,
                                            mlir::Type resultType)
     {
         state->types.push_back(std::move(resultType));
     }
 
-    mlir::LogicalResult runtime::cpu::NG_FakeInput::verify()
+    mlir::LogicalResult runtime::ngmlir::NG_FakeInput::verify()
     {
         // TODO: Verify returned tensor types must match function return type.
         return mlir::success();
     }
 
-    void runtime::cpu::NG_AddOp::build(mlir::Builder* builder,
+    void runtime::ngmlir::NG_AddOp::build(mlir::Builder* builder,
                                        mlir::OperationState* state,
                                        mlir::Value* lhs,
                                        mlir::Value* rhs)
@@ -92,14 +92,14 @@ namespace ngraph
         state->operands.push_back(rhs);
     }
 
-    mlir::LogicalResult runtime::cpu::NG_AddOp::verify()
+    mlir::LogicalResult runtime::ngmlir::NG_AddOp::verify()
     {
         // TODO: verify matching elt types
         verifyBinOperands(this);
         return mlir::success();
     }
 
-    void runtime::cpu::NG_MatmulBiasOp::build(mlir::Builder* builder,
+    void runtime::ngmlir::NG_MatmulBiasOp::build(mlir::Builder* builder,
                                               mlir::OperationState* state,
                                               mlir::Value* lhs,
                                               mlir::Value* rhs)
@@ -109,7 +109,7 @@ namespace ngraph
         state->operands.push_back(rhs);
     }
 
-    mlir::LogicalResult runtime::cpu::NG_MatmulBiasOp::verify()
+    mlir::LogicalResult runtime::ngmlir::NG_MatmulBiasOp::verify()
     {
         // Verify that we have 3 operands
         if (getNumOperands() != 3)
@@ -146,7 +146,7 @@ namespace ngraph
         return mlir::success();
     }
 
-    void runtime::cpu::NG_ReturnOp::build(mlir::Builder* builder,
+    void runtime::ngmlir::NG_ReturnOp::build(mlir::Builder* builder,
                                           mlir::OperationState* state,
                                           std::vector<mlir::Value*> value_list)
     {
@@ -157,7 +157,7 @@ namespace ngraph
         }
     }
 
-    mlir::LogicalResult runtime::cpu::NG_ReturnOp::verify()
+    mlir::LogicalResult runtime::ngmlir::NG_ReturnOp::verify()
     {
         // TODO: Verify returned tensor types must match function return type.
         return mlir::success();

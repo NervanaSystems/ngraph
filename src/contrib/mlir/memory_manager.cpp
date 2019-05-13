@@ -14,15 +14,14 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "memory_manager.hpp"
-#include <llvm/ADT/STLExtras.h>
 #include <memory>
-#include "compiler.hpp"
-#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
-using namespace ngraph::runtime::cpu;
+#include "memory_manager.hpp"
+#include "ngraph/ngraph_visibility.hpp"
+
+using namespace ngraph::runtime::ngmlir;
 
 /// Call back to allocate memory for temps from JIT'ed code
-extern "C" CPU_BACKEND_API void* __mlir_allocate(MLIRMemMgr* mem_mgr, size_t size)
+extern "C" NGRAPH_API void* __mlir_allocate(MLIRMemMgr* mem_mgr, size_t size)
 {
     return mem_mgr->allocate(size);
 }

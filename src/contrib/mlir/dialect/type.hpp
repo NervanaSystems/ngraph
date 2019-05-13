@@ -27,7 +27,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace cpu
+        namespace ngmlir
         {
             using llvm::raw_ostream;
 

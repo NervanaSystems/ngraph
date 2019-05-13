@@ -28,7 +28,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace cpu
+        namespace ngmlir
         {
             class NGDialect : public mlir::Dialect
             {

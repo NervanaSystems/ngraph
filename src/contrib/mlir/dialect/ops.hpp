@@ -26,7 +26,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace cpu
+        namespace ngmlir
         {
             // Fake instructions
 

@@ -22,7 +22,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace cpu
+        namespace ngmlir
         {
             /// Memory manager for temporaries in MLIR compiled sub-graph
             /// It handles call-backs from the code and returns pointer to allocated memory

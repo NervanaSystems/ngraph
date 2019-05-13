@@ -23,7 +23,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace cpu
+        namespace ngmlir
         {
             class MLIRCompiler;
 

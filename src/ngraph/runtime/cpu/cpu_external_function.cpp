@@ -1400,7 +1400,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
     if (std::getenv("NGRAPH_MLIR") != nullptr)
     {
         // Initialize MLIR compiler
-        MLIRCompiler::init_mlir();
+        ngmlir::MLIRCompiler::init_mlir();
     }
 #endif
 

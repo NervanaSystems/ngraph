@@ -47,7 +47,7 @@
 using llvm::SmallVector;
 using llvm::StringRef;
 using llvm::make_unique;
-using namespace ngraph::runtime::cpu;
+using namespace ngraph::runtime::ngmlir;
 
 #define COMPILE_OP_DECL(op_name)                                                                   \
     create_op<op_name>(MLIRCompiler & compiler, const ngraph::Node* ng_node)
