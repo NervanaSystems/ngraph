@@ -22,6 +22,7 @@
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/util/reshape.hpp"
+#include "ngraph/shape.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -39,7 +40,7 @@ void op::GRN::pre_validate_and_infer_types()
 
     if (data_pshape.is_static())
     {
-        const auto& data_shape{data_pshape.to_shape()};
+        const Shape& data_shape{data_pshape.to_shape()};
 
         // Input data must be 2, 3 or 4D tensor.
         NODE_VALIDATION_CHECK(this,
@@ -53,10 +54,9 @@ void op::GRN::pre_validate_and_infer_types()
 
 NodeVector op::GRN::decompose_op() const
 {
-    const auto input_node{get_argument(0)};
-    const auto& input_shape{input_node->get_shape()};
+    shared_ptr<Node> data{get_argument(0)};
+    const Shape& input_shape{data->get_shape()};
 
-    auto data{input_node};
     // Reshape to 4D tensor.
     if (input_shape.size() != 4)
     {

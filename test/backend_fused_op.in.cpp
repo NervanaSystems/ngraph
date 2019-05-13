@@ -718,12 +718,12 @@ NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_variance_normalization_split_channels)
 
 NGRAPH_TEST(${BACKEND_NAME}, grn_4d)
 {
-    Shape data_shape{1, 2, 3, 4};
-    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    const Shape data_shape{1, 2, 3, 4};
+    const auto data = make_shared<op::Parameter>(element::f32, data_shape);
     float bias{1e-6f};
 
-    auto grn = make_shared<op::GRN>(data, bias);
-    auto function = make_shared<Function>(NodeVector{grn}, ParameterVector{data});
+    const auto grn = make_shared<op::GRN>(data, bias);
+    const auto function = make_shared<Function>(NodeVector{grn}, ParameterVector{data});
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
 
@@ -742,12 +742,12 @@ NGRAPH_TEST(${BACKEND_NAME}, grn_4d)
 
 NGRAPH_TEST(${BACKEND_NAME}, grn_2d_with_bias)
 {
-    Shape data_shape{3, 4};
-    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    const Shape data_shape{3, 4};
+    const auto data = make_shared<op::Parameter>(element::f32, data_shape);
     float bias{2.25f};
 
-    auto grn = make_shared<op::GRN>(data, bias);
-    auto function = make_shared<Function>(NodeVector{grn}, ParameterVector{data});
+    const auto grn = make_shared<op::GRN>(data, bias);
+    const auto function = make_shared<Function>(NodeVector{grn}, ParameterVector{data});
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
 
@@ -756,8 +756,18 @@ NGRAPH_TEST(${BACKEND_NAME}, grn_2d_with_bias)
 
     test_case.add_input<float>(input_data);
 
-    test_case.add_expected_output<float>(
-        data_shape, {0.5547002f, 0.8f,        0.8944272f, 0.9363292f, 0.95782626f, 0.9701425f,
-                     0.9778024f, 0.98287225f, 0.9863939f, 0.9889363f, 0.9908301f,  0.99227786f});
+    test_case.add_expected_output<float>(data_shape,
+                                         {0.5547002f,
+                                          0.8f,
+                                          0.8944272f,
+                                          0.9363292f,
+                                          0.95782626f,
+                                          0.9701425f,
+                                          0.9778024f,
+                                          0.98287225f,
+                                          0.9863939f,
+                                          0.9889363f,
+                                          0.9908301f,
+                                          0.99227786f});
     test_case.run();
 }
