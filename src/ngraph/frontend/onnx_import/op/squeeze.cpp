@@ -16,6 +16,7 @@
 
 #include <vector>
 
+#include "exceptions.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/fused/squeeze.hpp"
 #include "squeeze.hpp"
@@ -32,6 +33,14 @@ namespace ngraph
                 {
                     auto data = node.get_ng_inputs().at(0);
                     auto axes = node.get_attribute_value<std::vector<std::int64_t>>("axes", {});
+
+                    for (auto axis : axes)
+                    {
+                        ASSERT_VALID_ARGUMENT(node, axis >= 0)
+                            << "provided axes attribute is invalid. Only non-negative "
+                            << "integers are allowed, got " << axis << ".";
+                    }
+
                     auto axes_node = std::make_shared<ngraph::op::Constant>(
                         element::u64, Shape{axes.size()}, axes);
                     return {std::make_shared<ngraph::op::Squeeze>(data, axes_node)};

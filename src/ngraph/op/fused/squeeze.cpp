@@ -39,7 +39,7 @@ NodeVector op::Squeeze::decompose_op() const
 
     // Currently only support Constant node for axes.
     NODE_VALIDATION_CHECK(this,
-                          axes_node->description() == "Constant",
+                          axes_node->is_constant(),
                           "doesn't support 'axes' input of other type than a Constant.");
 
     // Get value of axes from Constant
