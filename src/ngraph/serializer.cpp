@@ -76,6 +76,7 @@
 #include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/normalize.hpp"
 #include "ngraph/op/fused/prelu.hpp"
+#include "ngraph/op/fused/scale_shift.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/gather_nd.hpp"
@@ -1365,6 +1366,11 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::ScalarConstantLike>(args[0], value);
                 break;
             }
+            case OP_TYPEID::ScaleShift:
+            {
+                node = make_shared<op::ScaleShift>(args[0], args[1], args[2]);
+                break;
+            }
             case OP_TYPEID::Select:
             {
                 node = make_shared<op::Select>(args[0], args[1], args[2]);
@@ -2117,6 +2123,8 @@ static json write(const Node& n, bool binary_constant_data)
         node["value"] = constant->get_value_strings()[0];
         node["element_type"] = write_element_type(constant->get_element_type());
         break;
+    }
+    case OP_TYPEID::ScaleShift: { break;
     }
     case OP_TYPEID::Select: { break;
     }
