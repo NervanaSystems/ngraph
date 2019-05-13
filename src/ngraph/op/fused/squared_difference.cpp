@@ -17,16 +17,16 @@
 #include "ngraph/op/fused/squared_difference.hpp"
 
 #include "ngraph/node.hpp"
-#include "ngraph/op/subtract.hpp"
 #include "ngraph/op/multiply.hpp"
-#include "ngraph/op/util/fused_op.hpp"
+#include "ngraph/op/subtract.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
+#include "ngraph/op/util/fused_op.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 op::SquaredDifference::SquaredDifference(const shared_ptr<Node>& x1, const shared_ptr<Node>& x2)
-        : FusedOp("SquaredDifference", {x1, x2})
+    : FusedOp("SquaredDifference", {x1, x2})
 {
     constructor_validate_and_infer_types();
 }
