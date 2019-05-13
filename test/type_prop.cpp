@@ -14183,4 +14183,3 @@ TEST(type_prop, scale_shift)
     EXPECT_EQ(scale_shift_func->get_element_type(), element::f64);
     EXPECT_EQ(scale_shift_func->get_shape(), (Shape{3, 6}));
 }
-
