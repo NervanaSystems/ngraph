@@ -739,3 +739,25 @@ NGRAPH_TEST(${BACKEND_NAME}, grn_4d)
                      0.9383431f,  0.9284767f,  0.91914505f, 0.9103665f,  0.9021342f,  0.8944272f});
     test_case.run();
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, grn_2d_with_bias)
+{
+    Shape data_shape{3, 4};
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    float bias{2.25f};
+
+    auto grn = make_shared<op::GRN>(data, bias);
+    auto function = make_shared<Function>(NodeVector{grn}, ParameterVector{data});
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    vector<float> input_data(shape_size(data_shape));
+    iota(begin(input_data), end(input_data), 1);
+
+    test_case.add_input<float>(input_data);
+
+    test_case.add_expected_output<float>(
+        data_shape, {0.5547002f, 0.8f,        0.8944272f, 0.9363292f, 0.95782626f, 0.9701425f,
+                     0.9778024f, 0.98287225f, 0.9863939f, 0.9889363f, 0.9908301f,  0.99227786f});
+    test_case.run();
+}
