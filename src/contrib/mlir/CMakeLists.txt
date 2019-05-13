@@ -23,6 +23,7 @@ set(SRC
     memory_manager.cpp
 )
 if (NGRAPH_MLIR_ENABLE)
+
     add_library(mlir_backend SHARED ${SRC})
 
     message(STATUS "LLVM Directory: ${LLVM_DIR}")

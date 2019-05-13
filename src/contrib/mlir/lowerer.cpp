@@ -25,8 +25,8 @@
 #include "mlir/IR/StandardTypes.h"
 #include "mlir/Transforms/DialectConversion.h"
 #include "ngraph/assertion.hpp"
-#include "ngraph/runtime/mlir/dialect/ops.hpp"
-#include "ngraph/runtime/mlir/dialect/type.hpp"
+#include "dialect/ops.hpp"
+#include "dialect/type.hpp"
 
 using namespace ngraph::runtime::cpu;
 // anonymous namespace

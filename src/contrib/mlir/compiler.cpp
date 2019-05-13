@@ -20,11 +20,12 @@
 #include "ngraph/node_vector.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
-#include "ngraph/runtime/mlir/dialect/dialect.hpp"
-#include "ngraph/runtime/mlir/dialect/ops.hpp"
-#include "ngraph/runtime/mlir/dialect/type.hpp"
-#include "ngraph/runtime/mlir/lowerer.hpp"
 #include "ngraph/type/element_type.hpp"
+
+#include "dialect/dialect.hpp"
+#include "dialect/ops.hpp"
+#include "dialect/type.hpp"
+#include "lowerer.hpp"
 
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/IR/Module.h>
