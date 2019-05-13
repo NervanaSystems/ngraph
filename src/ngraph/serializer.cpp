@@ -1381,7 +1381,7 @@ static shared_ptr<ngraph::Function>
             case OP_TYPEID::ScatterNDAdd:
             {
                 node = make_shared<op::ScatterNDAdd>(args[0], args[1], args[2]);
-                breal;
+                break;
             }
             case OP_TYPEID::Select:
             {
