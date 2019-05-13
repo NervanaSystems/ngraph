@@ -82,6 +82,10 @@
 #include "ngraph/op/fused/elu.hpp"
 #include "ngraph/op/fused/gemm.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/fused/hard_sigmoid.hpp"
+#include "ngraph/op/fused/mvn.hpp"
+#include "ngraph/op/fused/normalize.hpp"
+#include "ngraph/op/fused/scale_shift.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
@@ -800,6 +804,53 @@ shared_ptr<runtime::Executable>
                                  op->get_output_element_type(0),
                                  axes_count);
             }
+            break;
+        }
+        case OP_TYPEID::Gemm:
+        {
+            arguments_check(op, 3, 1);
+
+            const shared_ptr<op::Gemm> gemm_op = static_pointer_cast<op::Gemm>(op);
+            const double alpha = gemm_op->get_alpha();
+            const double beta = gemm_op->get_beta();
+            const bool transA = gemm_op->get_transA();
+            const bool transB = gemm_op->get_transB();
+
+            if (op->get_input_element_type(0) == element::f32 &&
+                op->get_input_element_type(1) == element::f32 &&
+                op->get_input_element_type(2) == element::f32 &&
+                op->get_output_element_type(0) == element::f32)
+            {
+                const cldnn::gemm gemm_op(op->get_output_tensor_name(0),
+                                          op->get_input_tensor_name(0),
+                                          op->get_input_tensor_name(1),
+                                          op->get_input_tensor_name(2),
+                                          transA,
+                                          transB,
+                                          (float)alpha,
+                                          (float)beta);
+                topology.add(gemm_op);
+            }
+            else
+            {
+                if (alpha == 1.0 && beta == 0.0 && transA == false && transB == false)
+                {
+                    do_dot_operation(topology,
+                                     op->get_input_tensor_name(0),
+                                     op->get_input_shape(0),
+                                     op->get_input_tensor_name(1),
+                                     op->get_input_shape(1),
+                                     op->get_output_tensor_name(0),
+                                     op->get_output_shape(0),
+                                     op->get_output_element_type(0),
+                                     0);
+                }
+                else
+                {
+                    kern.emit<op::Gemm>(gemm_op);
+                }
+            }
+
             break;
         }
         case OP_TYPEID::MaxPool:
@@ -1976,6 +2027,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::BatchMatMul:
         case OP_TYPEID::BroadcastDistributed:
         case OP_TYPEID::BroadcastLike:
+        case OP_TYPEID::Clamp:
         case OP_TYPEID::DepthToSpace:
         case OP_TYPEID::DynBroadcast:
         case OP_TYPEID::DynPad:
@@ -1986,8 +2038,10 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::Erf:
         case OP_TYPEID::Gather:
         case OP_TYPEID::GatherND:
-        case OP_TYPEID::Gemm:
         case OP_TYPEID::GenerateMask:
+        case OP_TYPEID::HardSigmoid:
+        case OP_TYPEID::MVN:
+        case OP_TYPEID::Normalize:
         case OP_TYPEID::PRelu:
         case OP_TYPEID::Passthrough:
         case OP_TYPEID::QuantizedAvgPool:
@@ -2001,6 +2055,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::QuantizedMaxPool:
         case OP_TYPEID::ReplaceSlice:
         case OP_TYPEID::ScalarConstantLike:
+        case OP_TYPEID::ScaleShift:
         case OP_TYPEID::ScatterAdd:
         case OP_TYPEID::ScatterNDAdd:
         case OP_TYPEID::ShapeOf:

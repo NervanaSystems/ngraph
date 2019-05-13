@@ -19,19 +19,6 @@
 #include "gtest/gtest.h"
 #include "ngraph/assertion.hpp"
 
-std::map<ngraph::element::Type_t, ngraph::test::NgraphTestCase::value_comparator_function>
-    ngraph::test::NgraphTestCase::m_value_comparators = {
-        {ngraph::element::Type_t::f32, NgraphTestCase::compare_values<float>},
-        {ngraph::element::Type_t::f64, NgraphTestCase::compare_values<double>},
-        {ngraph::element::Type_t::i8, NgraphTestCase::compare_values<int8_t>},
-        {ngraph::element::Type_t::i16, NgraphTestCase::compare_values<int16_t>},
-        {ngraph::element::Type_t::i32, NgraphTestCase::compare_values<int32_t>},
-        {ngraph::element::Type_t::i64, NgraphTestCase::compare_values<int64_t>},
-        {ngraph::element::Type_t::u8, NgraphTestCase::compare_values<uint8_t>},
-        {ngraph::element::Type_t::u16, NgraphTestCase::compare_values<uint16_t>},
-        {ngraph::element::Type_t::u32, NgraphTestCase::compare_values<uint32_t>},
-        {ngraph::element::Type_t::u64, NgraphTestCase::compare_values<uint64_t>}};
-
 void ngraph::test::NgraphTestCase::run()
 {
     const auto& function_results = m_function->get_results();
@@ -63,4 +50,16 @@ void ngraph::test::NgraphTestCase::run()
             EXPECT_TRUE(values_match(expected_result_constant, result_tensor));
         }
     }
+}
+
+ngraph::test::NgraphTestCase& ngraph::test::NgraphTestCase::set_tolerance(int tolerance_bits)
+{
+    m_tolerance_bits = tolerance_bits;
+    return *this;
+}
+
+ngraph::test::NgraphTestCase& ngraph::test::NgraphTestCase::dump_results(bool dump)
+{
+    m_dump_results = dump;
+    return *this;
 }

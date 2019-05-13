@@ -25,7 +25,6 @@
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
-#include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/hybrid/hybrid_backend.hpp"
 #include "ngraph/runtime/hybrid/hybrid_util.hpp"
 #include "ngraph/runtime/hybrid/op/function_call.hpp"
@@ -50,7 +49,7 @@ static runtime::BackendConstructor* hybrid_creator()
             vector<string> unsupported_1 = {"Multiply"};
             vector<shared_ptr<runtime::Backend>> backend_list = {
                 make_shared<runtime::interpreter::INTBackend>(unsupported_0),
-                make_shared<runtime::cpu::CPU_Backend>()};
+                runtime::Backend::create("CPU")};
 
             return make_shared<runtime::hybrid::HybridBackend>(backend_list);
         }

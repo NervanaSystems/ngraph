@@ -2596,17 +2596,16 @@ namespace ngraph
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    size_t max_pool_index = external_function->get_primitive_index(node);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(max_pool_index);
+                    size_t max_pool_index;
+                    std::vector<std::size_t> deps;
+                    emit_build_primitives(external_function, node, writer, max_pool_index, deps);
 
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
-                           << ", " << args[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
-                           << ", " << out[0].get_name() << ");\n";
-
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(max_pool_index) << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
+                           << args[0].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
+                           << out[0].get_name() << ");\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(max_pool_index)
+                           << ");\n";
                 }
                 else
                 {
@@ -2629,16 +2628,16 @@ namespace ngraph
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    size_t qmax_pool_index = external_function->get_primitive_index(node);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(qmax_pool_index);
+                    size_t max_pool_index;
+                    std::vector<std::size_t> deps;
+                    emit_build_primitives(external_function, node, writer, max_pool_index, deps);
 
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
-                           << ", " << args[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
-                           << ", " << out[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(qmax_pool_index) << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
+                           << args[0].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
+                           << out[0].get_name() << ");\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(max_pool_index)
+                           << ");\n";
                 }
                 else
                 {
@@ -2651,15 +2650,16 @@ namespace ngraph
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    size_t qavg_pool_index = external_function->get_primitive_index(node);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(qavg_pool_index);
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
-                           << ", " << args[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
-                           << ", " << out[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(qavg_pool_index) << ");\n";
+                    size_t avg_pool_index;
+                    std::vector<std::size_t> deps;
+                    emit_build_primitives(external_function, node, writer, avg_pool_index, deps);
+
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
+                           << args[0].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
+                           << out[0].get_name() << ");\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(avg_pool_index)
+                           << ");\n";
                 }
                 else
                 {
@@ -2794,17 +2794,16 @@ namespace ngraph
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    size_t avg_pool_index = external_function->get_primitive_index(node);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(avg_pool_index);
+                    size_t avg_pool_index;
+                    std::vector<std::size_t> deps;
+                    emit_build_primitives(external_function, node, writer, avg_pool_index, deps);
 
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
-                           << ", " << args[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
-                           << ", " << out[0].get_name() << ");\n";
-
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(avg_pool_index) << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
+                           << args[0].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
+                           << out[0].get_name() << ");\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(avg_pool_index)
+                           << ");\n";
                 }
                 else
                 {
