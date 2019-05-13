@@ -16,12 +16,12 @@
 
 #include <memory>
 
-#include "ngraph/shape.hpp"
+#include "core/node.hpp"
 #include "exceptions.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/fused/leaky_relu.hpp"
-#include "core/node.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/fused/leaky_relu.hpp"
+#include "ngraph/shape.hpp"
 
 namespace ngraph
 {

@@ -14,17 +14,17 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "ngraph/op/fused/leaky_relu.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/multiply.hpp"
-#include "ngraph/op/fused/leaky_relu.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 op::LeakyRelu::LeakyRelu(const shared_ptr<Node>& data, const shared_ptr<Node>& alpha)
-        : FusedOp("LeakyRelu", {data, alpha})
+    : FusedOp("LeakyRelu", {data, alpha})
 {
     constructor_validate_and_infer_types();
 }
