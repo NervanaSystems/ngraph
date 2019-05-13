@@ -22,8 +22,7 @@
 
 namespace vp = vertexai::plaidml;
 
-ngraph::runtime::plaidml::PlaidML_Tensor::PlaidML_Tensor(Backend* parent,
-                                                         Config* config,
+ngraph::runtime::plaidml::PlaidML_Tensor::PlaidML_Tensor(Config* config,
                                                          const ngraph::element::Type& element_type,
                                                          const ngraph::Shape& shape,
                                                          const std::string& name,

@@ -32,14 +32,14 @@ std::shared_ptr<ngraph::runtime::Tensor> ngraph::runtime::plaidml::PlaidML_Backe
     const ngraph::element::Type& element_type, const ngraph::Shape& shape)
 {
     return std::make_shared<PlaidML_Tensor>(
-        this, &m_config, element_type, shape, "direct_data", nullptr);
+        &m_config, element_type, shape, "direct_data", nullptr);
 }
 
 std::shared_ptr<ngraph::runtime::Tensor> ngraph::runtime::plaidml::PlaidML_Backend::create_tensor(
     const ngraph::element::Type& element_type, const Shape& shape, void* memory_pointer)
 {
     return std::make_shared<PlaidML_Tensor>(
-        this, &m_config, element_type, shape, "direct_data", memory_pointer);
+        &m_config, element_type, shape, "direct_data", memory_pointer);
 }
 
 std::shared_ptr<ngraph::runtime::Executable>
