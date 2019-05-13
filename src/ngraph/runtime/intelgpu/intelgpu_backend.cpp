@@ -322,9 +322,13 @@ runtime::intelgpu::IntelGPUBackend::IntelGPUBackend()
     }
 
     // Disables the backend Function (graph) level optimizations
-    if (getenv("NGRAPH_INTELGPU_DISABLE_OPTIMIZATIONS") != nullptr)
+    // 0 or undefined - All optimization passes are enabled
+    // 1 - Disable optimization passes except FusedOpDecomposition
+    // >1 - Disable all optimization passes
+    const char* disable_backend_optimizations = getenv("NGRAPH_INTELGPU_DISABLE_OPTIMIZATIONS");
+    if (disable_backend_optimizations != nullptr)
     {
-        m_disable_backend_optimizations = true;
+        m_disable_backend_optimizations = strtol(disable_backend_optimizations, nullptr, 10);
     }
 
     // Disables clDNN (cldnn::network) level optimizations
@@ -411,10 +415,14 @@ shared_ptr<runtime::Executable>
     }
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>(
-        runtime::intelgpu::IntelGPUBackend::is_supported_impl);
 
-    if (!m_disable_backend_optimizations)
+    if (m_disable_backend_optimizations < 2)
+    {
+        pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>(
+            IntelGPUBackend::is_supported_impl);
+    }
+
+    if (m_disable_backend_optimizations < 1)
     {
         pass_manager.register_pass<ngraph::pass::NopElimination>();
         pass_manager.register_pass<ngraph::pass::BatchFusion>();
@@ -425,7 +433,10 @@ shared_ptr<runtime::Executable>
 
         // GetOutputElementElimination must be after CommonSubexpressionElimination
         pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
+    }
 
+    if (m_disable_backend_optimizations < 2)
+    {
         pass_manager.run_passes(func);
 
         if (m_dump_graph_enable)
@@ -2089,7 +2100,7 @@ bool runtime::intelgpu::IntelGPUBackend::is_supported_property(const Property pr
 
 bool runtime::intelgpu::IntelGPUBackend::is_supported(const Node& node) const
 {
-    return runtime::intelgpu::IntelGPUBackend::is_supported_impl(node);
+    return is_supported_impl(node);
 }
 
 bool runtime::intelgpu::IntelGPUBackend::is_supported_impl(const Node& node)
@@ -2105,10 +2116,7 @@ bool runtime::intelgpu::IntelGPUBackend::is_supported_impl(const Node& node)
     case OP_TYPEID::MVN:
     case OP_TYPEID::Normalize:
     case OP_TYPEID::PRelu:
-    case OP_TYPEID::SpaceToDepth:
-    {
-        return false;
-        break;
+    case OP_TYPEID::SpaceToDepth: { return false;
     }
     default: { return true;
     }

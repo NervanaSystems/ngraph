@@ -66,6 +66,6 @@ private:
     bool m_cldnn_graph_optimize = true;
     bool m_cldnn_dump_enable = false;
     bool m_function_cache_disabled = false;
-    bool m_disable_backend_optimizations = false;
+    long m_disable_backend_optimizations = 0;
     std::string m_cldnn_dump_dir = std::string("intelgpu_codegen");
 };
