@@ -31,8 +31,7 @@ ngraph::runtime::plaidml::PlaidML_Backend::PlaidML_Backend(const char* configura
 std::shared_ptr<ngraph::runtime::Tensor> ngraph::runtime::plaidml::PlaidML_Backend::create_tensor(
     const ngraph::element::Type& element_type, const ngraph::Shape& shape)
 {
-    return std::make_shared<PlaidML_Tensor>(
-        &m_config, element_type, shape, "direct_data", nullptr);
+    return std::make_shared<PlaidML_Tensor>(&m_config, element_type, shape, "direct_data", nullptr);
 }
 
 std::shared_ptr<ngraph::runtime::Tensor> ngraph::runtime::plaidml::PlaidML_Backend::create_tensor(
