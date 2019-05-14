@@ -778,7 +778,8 @@ NGRAPH_TEST(${BACKEND_NAME}, squeeze)
 NGRAPH_TEST(${BACKEND_NAME}, squeeze_default_axes)
 {
     const auto data_node = make_shared<op::Parameter>(element::f32, Shape{1, 4, 1, 1, 2});
-    const auto axes_node = make_shared<ngraph::op::Constant>(element::u64, Shape{0}, vector<int64_t>{});
+    const auto axes_node =
+        make_shared<ngraph::op::Constant>(element::u64, Shape{0}, vector<int64_t>{});
     const auto squeeze = make_shared<op::Squeeze>(data_node, axes_node);
 
     const auto function = make_shared<Function>(NodeVector{squeeze}, ParameterVector{data_node});
@@ -796,4 +797,3 @@ NGRAPH_TEST(${BACKEND_NAME}, squeeze_dynamic)
     const auto axes_param = make_shared<op::Parameter>(element::i64, Shape{2});
     EXPECT_THROW(make_shared<op::Squeeze>(data_param, axes_param), CheckFailure);
 }
-
