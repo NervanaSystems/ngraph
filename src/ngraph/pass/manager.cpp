@@ -117,7 +117,13 @@ void pass::Manager::run_passes(shared_ptr<Function> func, bool transitive)
                     continue;
                 }
                 bool function_modified = function_pass->run_on_function(f);
-                f_pair.second = (function_modified == true) ? f->is_dynamic() : f_pair.second;
+                // If the pass may change the function's is_dynamic property, we need to
+                // update the cached value.
+                if (function_modified &&
+                    function_pass->get_property(PassProperty::CHANGE_DYNAMIC_STATE))
+                {
+                    f_pair.second = f->is_dynamic();
+                }
             }
         }
         else if (node_pass)

@@ -94,7 +94,12 @@ bool pass::GraphRewrite::run_on_function(shared_ptr<Function> f)
                     if (closure.callback(*closure.matcher.get()))
                     {
                         rewritten = true;
-                        is_dyn_func = f->is_dynamic();
+                        // If call back may change function's is_dynamic state, we need to
+                        // update the cached value.
+                        if (closure.property.is_set(PassProperty::CHANGE_DYNAMIC_STATE))
+                        {
+                            is_dyn_func = f->is_dynamic();
+                        }
                         break;
                     }
                 }
@@ -148,6 +153,12 @@ void pass::GraphRewrite::add_matcher(const shared_ptr<pattern::Matcher>& m,
     if (is_enabled(m))
     {
         m_matchers.push_back({m, callback, property});
+        // If any matcher call back may change dynamic state, we need to
+        // update the pass property.
+        if (property.is_set(PassProperty::CHANGE_DYNAMIC_STATE))
+        {
+            set_property(PassProperty::CHANGE_DYNAMIC_STATE, true);
+        }
     }
 }
 
@@ -165,6 +176,12 @@ void pass::RecurrentGraphRewrite::add_matcher(
     const PassPropertyMask& property)
 {
     m_matchers.push_back({m, callback, property});
+    // If any matcher call back may change dynamic state, we need to
+    // update the pass property.
+    if (property.is_set(PassProperty::CHANGE_DYNAMIC_STATE))
+    {
+        set_property(PassProperty::CHANGE_DYNAMIC_STATE, true);
+    }
 }
 
 void pass::RecurrentGraphRewrite::add_matcher(
@@ -202,7 +219,12 @@ bool pass::RecurrentGraphRewrite::run_on_function(shared_ptr<Function> f)
                                  << node->get_name();
                     if (closure.callback(*closure.matcher.get()))
                     {
-                        is_dyn_func = f->is_dynamic();
+                        // If call back may change function's is_dynamic state, we need to
+                        // update the cached value.
+                        if (closure.property.is_set(PassProperty::CHANGE_DYNAMIC_STATE))
+                        {
+                            is_dyn_func = f->is_dynamic();
+                        }
                         return true;
                     }
                 }

@@ -287,13 +287,13 @@ namespace ngraph
             }
         }
         value_type value() const { return m_value; }
-        /// Check if any of the enum bit mask match
+        /// Check if any of the input parameter enum bit mask match
         bool is_any_set(const EnumMask& p) const { return m_value & p.m_value; }
-        /// Check if all of the enum bit mask match
+        /// Check if all of the input parameter enum bit mask match
         bool is_set(const EnumMask& p) const { return (m_value & p.m_value) == p.m_value; }
-        /// Check if any of the enum bit mask does not match
+        /// Check if any of the input parameter enum bit mask does not match
         bool is_any_clear(const EnumMask& p) const { return !is_set(p); }
-        /// Check if all of the enum bit mask do not match
+        /// Check if all of the input parameter enum bit mask do not match
         bool is_clear(const EnumMask& p) const { return !is_any_set(p); }
         void set(const EnumMask& p) { m_value |= p.m_value; }
         void clear(const EnumMask& p) { m_value &= ~p.m_value; }

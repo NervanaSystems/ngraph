@@ -191,3 +191,10 @@ TEST(zero_dim_tensor_elimination, zero_const_slice)
     EXPECT_EQ(count_ops_of_type<op::Broadcast>(f), 1);
     EXPECT_EQ(count_ops_of_type<op::Slice>(f), 0);
 }
+
+TEST(zero_dim_tensor_elimination, pass_property)
+{
+    auto pass = std::make_shared<ngraph::pass::ZeroDimTensorElimination>();
+    ASSERT_EQ(true, pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
+    ASSERT_EQ(false, pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
+}
