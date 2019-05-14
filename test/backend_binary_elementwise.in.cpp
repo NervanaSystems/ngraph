@@ -80,6 +80,30 @@ NGRAPH_TEST(${BACKEND_NAME}, add_overload)
                                   (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector()));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, add_bcast)
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape{2, 3});
+    auto B = make_shared<op::Parameter>(element::f32, Shape{3});
+    auto f = make_shared<Function>(make_shared<op::Add>(A, B, op::AutoBcastType::NUMPY),
+                                   ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, Shape{2, 3});
+    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::f32, Shape{3});
+    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::f32, Shape{2, 3});
+
+    copy_data(a, test::NDArray<float, 2>({{1, 2, 3}, {4, 5, 6}}).get_vector());
+    copy_data(b, test::NDArray<float, 1>({{5, 6, 7}}).get_vector());
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b});
+    EXPECT_TRUE(
+        test::all_close_f(read_vector<float>(result),
+                          (test::NDArray<float, 2>({{6, 8, 10}, {9, 11, 13}})).get_vector()));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, multiply)
 {
     Shape shape{2, 2};

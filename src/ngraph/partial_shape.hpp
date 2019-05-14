@@ -19,6 +19,7 @@
 #include <stddef.h>
 
 #include "ngraph/dimension.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/rank.hpp"
 #include "ngraph/shape.hpp"
 
@@ -203,6 +204,10 @@ namespace ngraph
         /// successful; if merging is unsuccessful, the function returns `false` and may make
         /// unspecified changes to `dst`.
         static bool merge_into(PartialShape& dst, const PartialShape& src);
+
+        static bool bcast_merge_into(PartialShape& dst,
+                                     const PartialShape& src,
+                                     const op::AutoBcastType autob);
 
     private:
         // Private constructor for PartialShape::dynamic().

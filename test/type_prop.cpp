@@ -14446,3 +14446,22 @@ TEST(type_prop, scale_shift)
     EXPECT_EQ(scale_shift_func->get_element_type(), element::f64);
     EXPECT_EQ(scale_shift_func->get_shape(), (Shape{3, 6}));
 }
+
+TEST(type_prop, add_bcast)
+{
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{1, 3, 6});
+    auto param2 = make_shared<op::Parameter>(element::f32, Shape{3, 1});
+    auto param3 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 6});
+    auto param4 = make_shared<op::Parameter>(element::f32, Shape{6});
+    EXPECT_EQ(make_shared<op::Add>(param1, param2, op::AutoBcastType::NUMPY)->get_shape(),
+              (Shape{1, 3, 6}));
+    EXPECT_EQ(make_shared<op::Add>(param1, param3, op::AutoBcastType::NUMPY)->get_shape(),
+              (Shape{2, 3, 6}));
+    EXPECT_EQ(make_shared<op::Add>(param4, param3, op::AutoBcastType::NUMPY)->get_shape(),
+              (Shape{2, 3, 6}));
+
+    auto pp1 = make_shared<op::Parameter>(element::f32, PartialShape{1, Dimension::dynamic(), 6});
+    auto pp2 = make_shared<op::Parameter>(element::f32, PartialShape{3, 1});
+    EXPECT_EQ(make_shared<op::Add>(pp1, pp2, op::AutoBcastType::NUMPY)->get_shape(),
+              (Shape{1, 3, 6}));
+}

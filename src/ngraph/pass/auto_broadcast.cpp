@@ -14,31 +14,32 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "ngraph/pass/auto_broadcast.hpp"
+
+#include "ngraph/graph_util.hpp"
+#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/util/binary_elementwise_arithmetic.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::util::BinaryElementwiseArithmetic::BinaryElementwiseArithmetic(
-    const std::string& node_type,
-    const std::shared_ptr<Node>& arg0,
-    const std::shared_ptr<Node>& arg1,
-    const AutoBcastType autob)
-    : Op(node_type, check_single_output_args({arg0, arg1}))
-    , m_autob(autob)
+bool ngraph::pass::AutoBroadcast::run_on_node(std::shared_ptr<ngraph::Node> node)
 {
-}
+    bool modified = false;
 
-void op::util::BinaryElementwiseArithmetic::validate_and_infer_types()
-{
-    validate_and_infer_elementwise_arithmetic(m_autob);
-}
-
-NodeVector op::util::BinaryElementwiseArithmetic::auto_broadcast()
-{
-    if (m_autob == op::AutoBcastType::NUMPY)
+    if (auto op = std::dynamic_pointer_cast<ngraph::op::util::BinaryElementwiseArithmetic>(node))
     {
-        return op::numpy_style_broadcast(get_arguments());
+        if (op->get_autob() != op::AutoBcastType::NONE)
+        {
+            auto new_args = op->auto_broadcast();
+            size_t i = 0;
+            for (size_t i = 0; i < new_args.size(); i++)
+            {
+                op->input(i).replace_source_output(new_args[i]->output(0));
+            }
+            modified = true;
+        };
     }
+
+    return modified;
 }

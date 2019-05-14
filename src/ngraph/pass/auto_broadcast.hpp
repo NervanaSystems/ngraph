@@ -14,31 +14,18 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/util/binary_elementwise_arithmetic.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
+#pragma once
 
-using namespace std;
-using namespace ngraph;
+#include "ngraph/pass/pass.hpp"
 
-op::util::BinaryElementwiseArithmetic::BinaryElementwiseArithmetic(
-    const std::string& node_type,
-    const std::shared_ptr<Node>& arg0,
-    const std::shared_ptr<Node>& arg1,
-    const AutoBcastType autob)
-    : Op(node_type, check_single_output_args({arg0, arg1}))
-    , m_autob(autob)
+namespace ngraph
 {
-}
-
-void op::util::BinaryElementwiseArithmetic::validate_and_infer_types()
-{
-    validate_and_infer_elementwise_arithmetic(m_autob);
-}
-
-NodeVector op::util::BinaryElementwiseArithmetic::auto_broadcast()
-{
-    if (m_autob == op::AutoBcastType::NUMPY)
+    namespace pass
     {
-        return op::numpy_style_broadcast(get_arguments());
+        class AutoBroadcast : public NodePass
+        {
+        public:
+            bool run_on_node(std::shared_ptr<ngraph::Node> node) override;
+        };
     }
 }

@@ -35,6 +35,7 @@
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/descriptor/tensor.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/placement.hpp"
 #include "ngraph/strides.hpp"
 
@@ -100,8 +101,10 @@ namespace ngraph
         // Called in constructors during transition
         void constructor_validate_and_infer_types();
 
-        std::tuple<element::Type, PartialShape> validate_and_infer_elementwise_args();
-        void validate_and_infer_elementwise_arithmetic();
+        std::tuple<element::Type, PartialShape> validate_and_infer_elementwise_args(
+            const op::AutoBcastType autob = op::AutoBcastType::NONE);
+        void validate_and_infer_elementwise_arithmetic(
+            const op::AutoBcastType autob = op::AutoBcastType::NONE);
         void validate_and_infer_elementwise_logical();
 
         Node(const std::string& node_type, const NodeVector& arguments, size_t output_size = 1);

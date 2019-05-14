@@ -49,5 +49,11 @@ namespace ngraph
             AUTO = SAME_UPPER,
             NOTSET = EXPLICIT
         };
+
+        enum class AutoBcastType
+        {
+            NONE = 0,
+            NUMPY
+        };
     }
 }

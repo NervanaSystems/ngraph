@@ -42,6 +42,7 @@
 #include <CPP/topology.hpp>
 
 #include "ngraph/pass/algebraic_simplification.hpp"
+#include "ngraph/pass/auto_broadcast.hpp"
 #include "ngraph/pass/batch_fusion.hpp"
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/cse.hpp"
@@ -421,6 +422,7 @@ shared_ptr<runtime::Executable>
     {
         pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>(
             IntelGPUBackend::is_supported_impl);
+        pass_manager.register_pass<ngraph::pass::AutoBroadcast>();
     }
 
     if (m_disable_backend_optimizations < 1)

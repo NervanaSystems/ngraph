@@ -18,6 +18,7 @@
 #include <iostream>
 #include <vector>
 
+#include "ngraph/check.hpp"
 #include "ngraph/partial_shape.hpp"
 
 using namespace ngraph;
@@ -241,6 +242,36 @@ bool PartialShape::merge_into(PartialShape& dst, const PartialShape& src)
         {
             success &= Dimension::merge(dst[i], dst[i], src[i]);
         }
+        return success;
+    }
+}
+
+bool PartialShape::bcast_merge_into(PartialShape& dst,
+                                    const PartialShape& src,
+                                    const op::AutoBcastType autob)
+{
+    NGRAPH_CHECK(autob == op::AutoBcastType::NUMPY, "Unsupported auto broadcast type");
+
+    if (dst.rank().is_dynamic() || src.rank().is_dynamic())
+    {
+        dst = PartialShape::dynamic();
+        return true;
+    }
+    else
+    {
+        // Ranks are both static.
+        auto dst_rank = size_t(dst.rank());
+        auto src_rank = size_t(src.rank());
+        auto new_rank = std::max(dst_rank, src_rank);
+        std::vector<Dimension> dims(new_rank);
+        bool success = true;
+        for (size_t i = 0; i < new_rank; i++)
+        {
+            auto dsti = i < (new_rank - dst_rank) ? Dimension(1) : dst[i - (new_rank - dst_rank)];
+            auto srci = i < (new_rank - src_rank) ? Dimension(1) : src[i - (new_rank - src_rank)];
+            success &= Dimension::merge_bcast(dims[i], dsti, srci);
+        }
+        dst = PartialShape(dims);
         return success;
     }
 }
