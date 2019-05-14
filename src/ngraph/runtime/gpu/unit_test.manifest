@@ -165,3 +165,6 @@ scatter_add_1d_indices
 scatter_add_scalar_indices
 scatter_nd_add_batch_2d_to_3d
 scatter_nd_add_2d_to_3d
+fake_quantize
+fake_quantize_with_clip
+fake_quantize_with_clip_across_channels

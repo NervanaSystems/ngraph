@@ -80,6 +80,7 @@
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/depth_to_space.hpp"
 #include "ngraph/op/fused/elu.hpp"
+#include "ngraph/op/fused/fake_quantize.hpp"
 #include "ngraph/op/fused/gemm.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
@@ -2036,6 +2037,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::Elu:
         case OP_TYPEID::EmbeddingLookup:
         case OP_TYPEID::Erf:
+        case OP_TYPEID::FakeQuantize:
         case OP_TYPEID::Gather:
         case OP_TYPEID::GatherND:
         case OP_TYPEID::GenerateMask:

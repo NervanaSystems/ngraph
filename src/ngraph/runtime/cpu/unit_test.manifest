@@ -10,3 +10,6 @@ max_3d_to_scalar_int32
 # Not implemented
 erf
 zero_sized_erf
+fake_quantize
+fake_quantize_with_clip
+fake_quantize_with_clip_across_channels
