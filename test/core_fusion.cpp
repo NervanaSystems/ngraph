@@ -535,7 +535,7 @@ TEST(core_fusion, pass_property)
 
 TEST(batch_fusion, pass_property)
 {
-    auto pass = std::make_shared<ngraph::pass::CoreFusion>();
+    auto pass = std::make_shared<ngraph::pass::BatchFusion>();
     ASSERT_EQ(true, pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
     ASSERT_EQ(false, pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
 }

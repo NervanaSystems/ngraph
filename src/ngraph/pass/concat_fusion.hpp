@@ -47,7 +47,7 @@ private:
 class ngraph::pass::SelfConcatFusion : public ngraph::pass::FunctionPass
 {
 public:
-    SelfConcatFusion() { set_property({PassProperty::REQUIRE_STATIC_SHAPE}, true); }
+    SelfConcatFusion() { set_property(PassProperty::REQUIRE_STATIC_SHAPE, true); }
     virtual bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
 
 private:
